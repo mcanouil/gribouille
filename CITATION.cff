@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+title: "Gribouille"
+message: "If you use this project, please cite it as below."
+type: software
+authors:
+  - name: "Mickaël Canouil"
+repository-code: "https://github.com/mcanouil/gribouille"
+license: MIT
+date-released: "2026-04-18"

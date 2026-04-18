@@ -1,0 +1,26 @@
+title: "The (missing) feature you want to discuss"
+labels:
+  - "Type: Enhancement :bulb:"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        First, please check if your feature request has already been discussed.
+        If it has, please consider adding a comment to the existing discussion instead of creating a new one.
+
+        If you want to ask for help, please consider using the Q&A GitHub Discussions, as it is better suited for answering your question.
+
+        Finally, try to describe the best you can what you want to achieve and why you think it is important.
+        This will help us to understand your request and prioritise it.
+
+        _Thank you for opening this feature request!_
+  - type: textarea
+    attributes:
+      label: Description
+      description: Start your discussion!
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        _Thank you for opening this feature request!_
