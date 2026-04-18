@@ -3,7 +3,11 @@ title: "Gribouille"
 message: "If you use this project, please cite it as below."
 type: software
 authors:
-  - name: "Mickaël Canouil"
+  - family-names: "Canouil"
+    given-names: "Mickaël"
+    orcid: "https://orcid.org/0000-0002-3396-4549"
 repository-code: "https://github.com/mcanouil/gribouille"
-license: MIT
+url: "https://m.canouil.dev/gribouille/"
+license: "MIT"
 date-released: "2026-04-18"
+version: 0.0.0
