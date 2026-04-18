@@ -1,0 +1,41 @@
+---
+title: theme-grey
+subtitle: "Grey theme: light grey panel with white gridlines."
+category: Themes
+since: 0.1.0
+engine: markdown
+---
+
+
+This is the gribouille default, equivalent to ggplot2's `theme_gray()`.
+
+## Usage
+
+```typst
+theme-grey()
+```
+
+
+
+## Returns
+
+Theme dictionary consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/theme-grey-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 10).map(i => (x: i, y: i * 0.5))
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(size: 2pt),),
+  theme: theme-grey(),
+)
+```
+
+## See also
+
+[`theme-minimal`](theme-minimal.qmd), [`theme-classic`](theme-classic.qmd), [`theme-void`](theme-void.qmd), [`theme`](theme.qmd).

@@ -1,0 +1,50 @@
+---
+title: stat-bin
+subtitle: "Bin statistic: partition x into uniform-width bins, count rows per bin."
+category: Stats
+since: 0.1.0
+engine: markdown
+---
+
+
+Either `bins` or `binwidth` fixes the partition; if both are supplied,
+`binwidth` wins.
+
+## Usage
+
+```typst
+stat-bin(
+  bins: 30,
+  binwidth: none,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `bins` | `30` | Target number of bins when `binwidth` is `none`. |
+| `binwidth` | `none` | Fixed bin width. Overrides `bins` when set. |
+
+## Returns
+
+Statistic object with `name: "bin"`, consumed by geom layers.
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/stat-bin-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 40).map(i => (x: i * 0.25))
+#plot(
+  data: d,
+  mapping: aes(x: "x"),
+  layers: (geom-histogram(bins: 8),),
+)
+```
+
+## See also
+
+[`geom-histogram`](../geoms/geom-histogram.qmd), [`stat-count`](stat-count.qmd).

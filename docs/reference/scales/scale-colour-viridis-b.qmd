@@ -1,0 +1,57 @@
+---
+title: scale-colour-viridis-b
+subtitle: Binned viridis colour scale.
+category: Scales
+since: 0.1.0
+engine: markdown
+---
+
+
+Partitions the continuous domain into `n-breaks` equal segments, each
+coloured from the chosen viridis palette.
+
+## Usage
+
+```typst
+scale-colour-viridis-b(
+  option: "viridis",
+  n-breaks: 5,
+  name: none,
+  limits: none,
+  labels: auto,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `option` | `"viridis"` | Palette name: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`, or `"cividis"`. |
+| `n-breaks` | `5` | Number of bins to partition the domain into. |
+| `name` | `none` | Legend title. Overrides any name set via [`labs`](../labs/labs.qmd) when both are present. |
+| `limits` | `none` | Pair `(lo, hi)` clipping the trained domain, or `none`. |
+| `labels` | `auto` | Array of legend labels aligned with the bins, or `auto`. |
+
+## Returns
+
+Scale object consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/scale-colour-viridis-b-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 12).map(i => (x: i, y: i, z: i * 0.5))
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y", colour: "z"),
+  layers: (geom-point(size: 3pt),),
+  scales: (scale-colour-viridis-b(n-breaks: 4),),
+)
+```
+
+## See also
+
+[`scale-colour-viridis-c`](scale-colour-viridis-c.qmd), [`scale-colour-viridis-d`](scale-colour-viridis-d.qmd), [`scale-fill-viridis-b`](scale-fill-viridis-b.qmd).

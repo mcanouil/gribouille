@@ -1,0 +1,47 @@
+---
+title: stat-count
+subtitle: "Count statistic: one output row per distinct x level with `y = count`."
+category: Stats
+since: 0.1.0
+engine: markdown
+---
+
+
+Empty strings and `none` x values are dropped. Output rows preserve the
+first-seen order of x levels.
+
+## Usage
+
+```typst
+stat-count()
+```
+
+
+
+## Returns
+
+Statistic object with `name: "count"`, consumed by geom layers.
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/stat-count-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (grp: "a"),
+  (grp: "b"),
+  (grp: "a"),
+  (grp: "c"),
+  (grp: "a"),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "grp"),
+  layers: (geom-bar(),),
+)
+```
+
+## See also
+
+[`geom-bar`](../geoms/geom-bar.qmd), [`stat-bin`](stat-bin.qmd), [`stat-identity`](stat-identity.qmd).

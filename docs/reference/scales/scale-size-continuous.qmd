@@ -1,0 +1,55 @@
+---
+title: scale-size-continuous
+subtitle: Continuous size scale mapping a numeric column to a size range.
+category: Scales
+since: 0.1.0
+engine: markdown
+---
+
+
+
+## Usage
+
+```typst
+scale-size-continuous(
+  name: none,
+  range: (1pt, 6pt),
+  limits: none,
+  breaks: auto,
+  labels: auto,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `name` | `none` | Legend title. Overrides any name set via [`labs`](../labs/labs.qmd) when both are present. |
+| `range` | `(1pt, 6pt)` | Pair of Typst lengths `(min, max)` bounding the output size. |
+| `limits` | `none` | Pair `(lo, hi)` clipping the trained domain, or `none`. |
+| `breaks` | `auto` | Array of break values for the legend, or `auto`. |
+| `labels` | `auto` | Array of legend labels aligned with `breaks`, or `auto`. |
+
+## Returns
+
+Scale object consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/scale-size-continuous-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 10).map(i => (x: i, y: i, w: i + 1))
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y", size: "w"),
+  layers: (geom-point(),),
+  scales: (scale-size-continuous(range: (1pt, 6pt)),),
+)
+```
+
+## See also
+
+[`scale-shape`](scale-shape.qmd), [`scale-colour-continuous`](scale-colour-continuous.qmd).

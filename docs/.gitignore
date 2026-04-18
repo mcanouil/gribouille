@@ -1,0 +1,8 @@
+/_extensions/
+/_variables.yml
+/_sidebar-api.yml
+/api/*.qmd
+/changelog.qmd
+
+/.quarto/
+**/*.quarto_ipynb

@@ -1,0 +1,41 @@
+<script id="quarto-external-links" type="text/javascript">
+  // Workaround for https://github.com/quarto-dev/quarto-cli/issues/10730
+  const SIDEBAR_LINK_SELECTOR =
+    '.quarto-alternate-formats a, .quarto-other-links a';
+
+  function addSecurityAttributes(link) {
+    if (link.getAttribute('target') === '_blank') {
+      const currentRel = link.getAttribute('rel') || '';
+      const relValues = new Set(currentRel.split(/\s+/).filter(Boolean));
+      relValues.add('noopener');
+      relValues.add('noreferrer');
+      link.setAttribute('rel', Array.from(relValues).join(' '));
+    }
+  }
+
+  function ensureBlankTarget(link) {
+    link.setAttribute('target', '_blank');
+    addSecurityAttributes(link);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a[target="_blank"]').forEach(addSecurityAttributes);
+    document.querySelectorAll(SIDEBAR_LINK_SELECTOR).forEach(ensureBlankTarget);
+
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === 1) {
+            if (node.tagName === 'A') {
+              addSecurityAttributes(node);
+            }
+            node.querySelectorAll('a[target="_blank"]').forEach(addSecurityAttributes);
+            node.querySelectorAll(SIDEBAR_LINK_SELECTOR).forEach(ensureBlankTarget);
+          }
+        });
+      });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+</script>

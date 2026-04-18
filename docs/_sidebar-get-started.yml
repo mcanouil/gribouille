@@ -1,0 +1,19 @@
+website:
+  sidebar:
+    - id: get-started
+      style: docked
+      collapse-level: 2
+      contents:
+        - section: "Get Started"
+          href: get-started/index.qmd
+          contents:
+            - text: "Prerequisites"
+              href: get-started/index.qmd#prerequisites
+            - text: "Installation"
+              href: get-started/index.qmd#installation
+            - text: "Your first plot"
+              href: get-started/index.qmd#your-first-plot
+            - text: "The grammar in four parts"
+              href: get-started/index.qmd#the-grammar-in-four-parts
+            - text: "Next steps"
+              href: get-started/index.qmd#next-steps

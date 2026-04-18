@@ -1,0 +1,77 @@
+---
+title: geom-label
+subtitle: Boxed text label layer reading strings from the `label` aesthetic.
+category: Geoms
+since: 0.1.0
+engine: markdown
+---
+
+
+One boxed text block is drawn per row at the mapped `(x, y)`. The box
+takes its own fill, stroke, inset, and corner radius.
+
+## Usage
+
+```typst
+geom-label(
+  mapping: none,
+  data: none,
+  size: 8pt,
+  colour: rgb("#222222"),
+  fill: rgb("#ffffff"),
+  stroke: 0.4pt + rgb("#888888"),
+  inset: 2pt,
+  radius: 1pt,
+  anchor: "center",
+  dx: 0,
+  dy: 0,
+  inherit-aes: true,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `mapping` | `none` | Layer-specific aesthetic mapping built with [`aes`](../core/aes.qmd). Must map `x`, `y`, and `label`. |
+| `data` | `none` | Layer-specific dataset. Falls back to the plot data when `none`. |
+| `size` | `8pt` | Text size (a Typst length). |
+| `colour` | `rgb("#222222")` | Text colour. |
+| `fill` | `rgb("#ffffff")` | Box fill colour. |
+| `stroke` | `0.4pt + rgb("#888888")` | Box stroke (length + colour). |
+| `inset` | `2pt` | Padding between text and box border (a Typst length). |
+| `radius` | `1pt` | Corner radius of the box (a Typst length). |
+| `anchor` | `"center"` | CeTZ anchor (e.g. `"center"`, `"west"`) controlling placement. |
+| `dx` | `0` | Horizontal offset in canvas units. |
+| `dy` | `0` | Vertical offset in canvas units. |
+| `inherit-aes` | `true` | Whether to merge the plot-level mapping into this layer's mapping. |
+
+## Returns
+
+Layer dictionary consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/geom-label-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (x: 1, y: 2, name: "a"),
+  (x: 2, y: 4, name: "b"),
+  (x: 3, y: 3, name: "c"),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y", label: "name"),
+  layers: (
+    geom-point(size: 2pt),
+    geom-label(dy: 0.25),
+  ),
+)
+```
+
+## See also
+
+[`geom-text`](geom-text.qmd), [`aes`](../core/aes.qmd).

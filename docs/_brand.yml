@@ -1,0 +1,138 @@
+meta:
+  name:
+    full: Gribouille
+    short: Gribouille
+  link:
+    home: https://m.canouil.dev/gribouille/
+
+logo:
+  small:
+    light: assets/images/favicon.svg
+    dark: assets/images/favicon-dark.svg
+  medium:
+    light: assets/images/logo.svg
+    dark: assets/images/logo-dark.svg
+  large:
+    light: assets/images/logo-stacked.svg
+    dark: assets/images/logo-stacked-dark.svg
+
+color:
+  palette:
+    paper-light:      "#FAF6EE"
+    paper-dark:       "#161B1E"
+    ink-light:        "#2B2B2B"
+    ink-dark:         "#F4EDDF"
+    muted-light:      "#5C6660"
+    muted-dark:       "#A9A79E"
+    surface-light:    "#FFFDF7"
+    surface-dark:     "#1F272B"
+    crayon-red:       "#C74F2E"
+    crayon-red-dk:    "#E87858"
+    crayon-teal:      "#2B4A7F"
+    crayon-teal-dk:   "#6683B8"
+    crayon-mustard:   "#D9A021"
+    crayon-must-dk:   "#E8C066"
+    crayon-mint:      "#7FC8A9"
+    crayon-mint-dk:   "#9CDCC0"
+  foreground: ink-light
+  background: paper-light
+  primary:   crayon-red
+  secondary: crayon-teal
+  tertiary:  crayon-mustard
+  success:   crayon-mint
+  info:      crayon-teal
+  warning:   crayon-mustard
+  danger:    "#B23A2B"
+  light:     paper-light
+  dark:      ink-light
+
+typography:
+  fonts:
+    - source: file
+      family: Fraunces
+      files:
+        - path: assets/fonts/fraunces-wght-normal.woff2
+          style: normal
+          weight: 400
+        - path: assets/fonts/fraunces-wght-normal.woff2
+          style: normal
+          weight: 500
+        - path: assets/fonts/fraunces-wght-normal.woff2
+          style: normal
+          weight: 600
+        - path: assets/fonts/fraunces-wght-normal.woff2
+          style: normal
+          weight: 700
+        - path: assets/fonts/fraunces-wght-italic.woff2
+          style: italic
+          weight: 400
+        - path: assets/fonts/fraunces-wght-italic.woff2
+          style: italic
+          weight: 500
+        - path: assets/fonts/fraunces-wght-italic.woff2
+          style: italic
+          weight: 600
+        - path: assets/fonts/fraunces-wght-italic.woff2
+          style: italic
+          weight: 700
+    - source: file
+      family: Inter
+      files:
+        - path: assets/fonts/inter-wght-normal.woff2
+          style: normal
+          weight: 400
+        - path: assets/fonts/inter-wght-normal.woff2
+          style: normal
+          weight: 500
+        - path: assets/fonts/inter-wght-normal.woff2
+          style: normal
+          weight: 600
+        - path: assets/fonts/inter-wght-normal.woff2
+          style: normal
+          weight: 700
+        - path: assets/fonts/inter-wght-italic.woff2
+          style: italic
+          weight: 400
+        - path: assets/fonts/inter-wght-italic.woff2
+          style: italic
+          weight: 500
+        - path: assets/fonts/inter-wght-italic.woff2
+          style: italic
+          weight: 600
+        - path: assets/fonts/inter-wght-italic.woff2
+          style: italic
+          weight: 700
+    - source: file
+      family: JetBrains Mono
+      files:
+        - path: assets/fonts/jetbrains-mono-wght-normal.woff2
+          style: normal
+          weight: 400
+        - path: assets/fonts/jetbrains-mono-wght-normal.woff2
+          style: normal
+          weight: 500
+        - path: assets/fonts/jetbrains-mono-wght-normal.woff2
+          style: normal
+          weight: 700
+        - path: assets/fonts/jetbrains-mono-wght-italic.woff2
+          style: italic
+          weight: 400
+        - path: assets/fonts/jetbrains-mono-wght-italic.woff2
+          style: italic
+          weight: 700
+  base:
+    family: Inter
+    size: 1rem
+    line-height: 1.6
+    weight: 400
+  headings:
+    family: Fraunces
+    weight: 600
+    line-height: 1.2
+  monospace:
+    family: JetBrains Mono
+    size: 0.9em
+  link:
+    decoration: underline
+    color: primary
+    weight: 500

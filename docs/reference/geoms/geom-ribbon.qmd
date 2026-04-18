@@ -1,0 +1,66 @@
+---
+title: geom-ribbon
+subtitle: Filled band between `ymin` and `ymax` along the x aesthetic.
+category: Geoms
+since: 0.1.0
+engine: markdown
+---
+
+
+The mapping must provide `x`, `ymin`, and `ymax`. Rows are sorted by x
+and the polygon is closed between the lower and upper boundaries.
+
+## Usage
+
+```typst
+geom-ribbon(
+  mapping: none,
+  data: none,
+  fill: auto,
+  stroke: none,
+  alpha: 0.3,
+  stat: "identity",
+  position: "identity",
+  inherit-aes: true,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `mapping` | `none` | Layer-specific aesthetic mapping built with [`aes`](../core/aes.qmd). Must map `x`, `ymin`, `ymax`. |
+| `data` | `none` | Layer-specific dataset. Falls back to the plot data when `none`. |
+| `fill` | `auto` | Band fill colour. `auto` resolves via the fill scale or a neutral default. |
+| `stroke` | `none` | Band outline; `none` means no border. |
+| `alpha` | `0.3` | Band opacity in `[0, 1]`. |
+| `stat` | `"identity"` | Statistical transform name. Usually `"identity"`. |
+| `position` | `"identity"` | Position adjustment name. Usually `"identity"`. |
+| `inherit-aes` | `true` | Whether to merge the plot-level mapping into this layer's mapping. |
+
+## Returns
+
+Layer dictionary consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/geom-ribbon-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 10).map(i => (
+  x: i,
+  lo: i * 0.5 - 1,
+  hi: i * 0.5 + 1,
+))
+#plot(
+  data: d,
+  mapping: aes(x: "x", ymin: "lo", ymax: "hi"),
+  layers: (geom-ribbon(alpha: 0.3),),
+)
+```
+
+## See also
+
+[`geom-smooth`](geom-smooth.qmd), [`geom-line`](geom-line.qmd).

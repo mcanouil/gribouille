@@ -1,0 +1,13 @@
+[package]
+name = "gribouille"
+version = "0.1.0"
+compiler = "0.14.0"
+entrypoint = "lib.typ"
+authors = ["Mickaël Canouil <pro@mickael.canouil.dev> (https://mickael.canouil.fr)"]
+license = "MIT"
+description = "A layered grammar of graphics for Typst."
+repository = "https://github.com/mcanouil/gribouille"
+homepage = "https://m.canouil.dev/gribouille"
+keywords = ["plot", "chart", "visualization", "grammar-of-graphics", "ggplot"]
+categories = ["visualization"]
+exclude = [".claude", "tests", "examples"]

@@ -1,0 +1,52 @@
+---
+title: xlab
+subtitle: Shortcut for setting the x axis title.
+category: Labs
+since: 0.1.0
+engine: markdown
+---
+
+
+Equivalent to `labs(x: label)`.
+
+## Usage
+
+```typst
+xlab(
+  label,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `label` |  | Title drawn below the x axis. |
+
+## Returns
+
+Dictionary tagged `kind: "labs"`, consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/xlab-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (x: 1, y: 2),
+  (x: 2, y: 4),
+  (x: 3, y: 3),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(size: 3pt),),
+  labs: xlab("Index"),
+)
+```
+
+## See also
+
+[`labs`](labs.qmd), [`ggtitle`](ggtitle.qmd), [`ylab`](ylab.qmd).

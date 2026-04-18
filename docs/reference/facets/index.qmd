@@ -1,0 +1,8 @@
+---
+title: Facets
+---
+
+## Functions
+
+- [`facet-grid`](facet-grid.qmd) - Grid facets: panels on a row x col grid from two discrete variables.
+- [`facet-wrap`](facet-wrap.qmd) - Wrap facets: one panel per level of a discrete variable.

@@ -1,0 +1,42 @@
+---
+title: element-blank
+subtitle: "Blank element: hides the corresponding theme element."
+category: Themes
+since: 0.1.0
+engine: markdown
+---
+
+
+Pass the result to [`theme`](theme.qmd) under keys like `panel-grid` or `axis-line`
+to turn them off entirely.
+
+## Usage
+
+```typst
+element-blank()
+```
+
+
+
+## Returns
+
+Element dictionary consumed by [`theme`](theme.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/element-blank-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 10).map(i => (x: i, y: i * 0.5))
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(size: 2pt),),
+  theme: theme(panel-grid: element-blank()),
+)
+```
+
+## See also
+
+[`theme`](theme.qmd), [`element-text`](element-text.qmd), [`element-line`](element-line.qmd), [`element-rect`](element-rect.qmd).

@@ -1,0 +1,19 @@
+---
+title: Geoms
+---
+
+## Functions
+
+- [`geom-abline`](geom-abline.qmd) - Straight reference line described by slope and intercept.
+- [`geom-bar`](geom-bar.qmd) - Bar layer that counts rows per x level (stat-count).
+- [`geom-boxplot`](geom-boxplot.qmd) - Boxplot layer drawn from pre-computed quantile columns.
+- [`geom-col`](geom-col.qmd) - Bar layer with heights taken from the y aesthetic.
+- [`geom-histogram`](geom-histogram.qmd) - Histogram layer: bars of binned counts along the x aesthetic.
+- [`geom-hline`](geom-hline.qmd) - Horizontal reference line at one or more y intercepts.
+- [`geom-label`](geom-label.qmd) - Boxed text label layer reading strings from the `label` aesthetic.
+- [`geom-line`](geom-line.qmd) - Line layer connecting observations in x order, one path per group.
+- [`geom-point`](geom-point.qmd) - Scatterplot layer drawing a marker for each row at `(x, y)`.
+- [`geom-ribbon`](geom-ribbon.qmd) - Filled band between `ymin` and `ymax` along the x aesthetic.
+- [`geom-smooth`](geom-smooth.qmd) - Fitted trend line with an optional confidence ribbon.
+- [`geom-text`](geom-text.qmd) - Text label layer reading strings from the `label` aesthetic.
+- [`geom-vline`](geom-vline.qmd) - Vertical reference line at one or more x intercepts.

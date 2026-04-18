@@ -1,0 +1,45 @@
+---
+title: position-identity
+subtitle: "Identity position adjustment: no offset applied to any row."
+category: Positions
+since: 0.1.0
+engine: markdown
+---
+
+
+Typically set on a layer as `position: "identity"` rather than constructed
+directly; the constructor exists for symmetry with the other positions.
+
+## Usage
+
+```typst
+position-identity()
+```
+
+
+
+## Returns
+
+Position dictionary with `name: "identity"`, consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/position-identity-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (x: 1, y: 2),
+  (x: 2, y: 4),
+  (x: 3, y: 3),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(size: 3pt, position: "identity"),),
+)
+```
+
+## See also
+
+[`position-stack`](position-stack.qmd), [`position-dodge`](position-dodge.qmd), [`position-fill`](position-fill.qmd).

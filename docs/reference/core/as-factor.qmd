@@ -1,0 +1,61 @@
+---
+title: as-factor
+subtitle: Coerce a column to string factors, or tag an aesthetic as discrete.
+category: Core
+since: 0.1.0
+engine: markdown
+---
+
+
+Two call forms:
+when given `(data, col)` it returns a new dataset with `col` stringified in
+every row; when given `(col)` alone it returns a mapping-ref annotation
+that [`aes`](aes.qmd) accepts in place of a column name, forcing the scale system to
+treat that channel as discrete.
+
+## Usage
+
+```typst
+as-factor(data, col)
+```
+
+```typst
+as-factor(col)
+```
+
+## Arities
+
+- `as-factor(data, col)`: Return a new dataset with `col` coerced to strings (preserving `none`).
+- `as-factor(col)`: Return a `mapping-ref` dict tagging `col` as discrete for [`aes`](aes.qmd).
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `..args` |  | Either `(data, col)` or `(col)`. See arities. |
+
+## Returns
+
+New dataset (2-arg) or mapping-ref dict (1-arg).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/as-factor-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let iris = (
+  (sl: 5.1, sp: 1),
+  (sl: 7.0, sp: 2),
+  (sl: 6.3, sp: 3),
+)
+#plot(
+  data: iris,
+  mapping: aes(x: as-factor("sp"), y: "sl", fill: as-factor("sp")),
+  layers: (geom-col(),),
+)
+```
+
+## See also
+
+[`as-numeric`](as-numeric.qmd), [`aes`](aes.qmd).

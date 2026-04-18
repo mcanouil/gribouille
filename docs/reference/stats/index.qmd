@@ -1,0 +1,10 @@
+---
+title: Stats
+---
+
+## Functions
+
+- [`stat-bin`](stat-bin.qmd) - Bin statistic: partition x into uniform-width bins, count rows per bin.
+- [`stat-count`](stat-count.qmd) - Count statistic: one output row per distinct x level with `y = count`.
+- [`stat-identity`](stat-identity.qmd) - Identity statistic: returns data and mapping unchanged.
+- [`stat-smooth`](stat-smooth.qmd) - Smoother statistic: closed-form linear fit with a pointwise confidence band.

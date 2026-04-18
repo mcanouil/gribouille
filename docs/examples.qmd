@@ -1,0 +1,112 @@
+---
+title: "Examples"
+subtitle: "Rendered plots with a link to the source for each."
+toc: false
+engine: markdown
+---
+
+Every example below lives in the [`examples/`](https://github.com/mcanouil/gribouille/tree/main/examples) directory of the repository.
+Open the source link to see the full Typst snippet, data and all.
+
+::: {.gallery}
+
+::: {.gallery-item}
+```{typst}
+//| output-filename: "/assets/examples/minimal.svg"
+#include "/examples/minimal.typ"
+```
+
+### Minimal scatter
+Inline iris sample plotted with a single [`geom-point`](reference/geoms/geom-point.qmd) layer and continuous x/y scales.
+
+[Source](https://github.com/mcanouil/gribouille/blob/main/examples/minimal.typ)
+:::
+
+::: {.gallery-item}
+```{typst}
+//| output-filename: "/assets/examples/multilayer.svg"
+#include "/examples/multilayer.typ"
+```
+
+### Multilayer trend
+Lines and points share a discrete colour mapping.
+[`geom-line`](reference/geoms/geom-line.qmd) + [`geom-point`](reference/geoms/geom-point.qmd).
+
+[Source](https://github.com/mcanouil/gribouille/blob/main/examples/multilayer.typ)
+:::
+
+::: {.gallery-item}
+```{typst}
+//| output-filename: "/assets/examples/histogram.svg"
+#include "/examples/histogram.typ"
+```
+
+### Histogram
+Continuous x binned with [`stat-bin`](reference/stats/stat-bin.qmd) via [`geom-histogram`](reference/geoms/geom-histogram.qmd).
+
+[Source](https://github.com/mcanouil/gribouille/blob/main/examples/histogram.typ)
+:::
+
+::: {.gallery-item}
+```{typst}
+//| output-filename: "/assets/examples/smooth.svg"
+#include "/examples/smooth.typ"
+```
+
+### Smoother
+Scatter plus a linear fit with a 95% confidence ribbon from [`geom-smooth`](reference/geoms/geom-smooth.qmd).
+
+[Source](https://github.com/mcanouil/gribouille/blob/main/examples/smooth.typ)
+:::
+
+::: {.gallery-item}
+```{typst}
+//| output-filename: "/assets/examples/bar-simple.svg"
+#include "/examples/bar-simple.typ"
+```
+
+### Simple bars
+Discrete x counted with [`geom-bar`](reference/geoms/geom-bar.qmd).
+
+[Source](https://github.com/mcanouil/gribouille/blob/main/examples/bar-simple.typ)
+:::
+
+::: {.gallery-item}
+```{typst}
+//| output-filename: "/assets/examples/facets.svg"
+#include "/examples/facets.typ"
+```
+
+### Facets
+One panel per level of a discrete variable via [`facet-wrap`](reference/facets/facet-wrap.qmd).
+
+[Source](https://github.com/mcanouil/gribouille/blob/main/examples/facets.typ)
+:::
+
+::: {.gallery-item}
+```{typst}
+//| output-filename: "/assets/examples/themed.svg"
+#include "/examples/themed.typ"
+```
+
+### Themed plot
+Per-element overrides with [`theme`](reference/themes/theme.qmd) on top of [`theme-minimal`](reference/themes/theme-minimal.qmd).
+
+[Source](https://github.com/mcanouil/gribouille/blob/main/examples/themed.typ)
+:::
+
+::: {.gallery-item}
+```{typst}
+//| output-filename: "/assets/examples/penguins.svg"
+#include "/examples/penguins.typ"
+```
+
+### Penguins
+CSV-loaded dataset: flipper length vs body mass, coloured by species.
+
+[Source](https://github.com/mcanouil/gribouille/blob/main/examples/penguins.typ)
+:::
+
+:::
+
+More snippets (bars dodged, stacked, filled, colour bars, reference lines, ribbons, shapes, text labels, coord clip) live in the [`examples/`](https://github.com/mcanouil/gribouille/tree/main/examples) directory alongside their sources.

@@ -1,0 +1,68 @@
+---
+title: geom-histogram
+subtitle: "Histogram layer: bars of binned counts along the x aesthetic."
+category: Geoms
+since: 0.1.0
+engine: markdown
+---
+
+
+The layer runs [`stat-bin`](../stats/stat-bin.qmd) over the x column, then draws one bar per bin.
+Supply `bins` for a target bin count or `binwidth` to fix the width.
+
+## Usage
+
+```typst
+geom-histogram(
+  mapping: none,
+  data: none,
+  bins: 30,
+  binwidth: none,
+  width: 1.0,
+  fill: auto,
+  stroke: none,
+  alpha: 1,
+  position: "identity",
+  inherit-aes: true,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `mapping` | `none` | Layer-specific aesthetic mapping built with [`aes`](../core/aes.qmd). Must map `x`. |
+| `data` | `none` | Layer-specific dataset. Falls back to the plot data when `none`. |
+| `bins` | `30` | Target number of bins when `binwidth` is `none`. |
+| `binwidth` | `none` | Fixed bin width. Overrides `bins` when set. |
+| `width` | `1.0` | Bar width as a fraction of the bin width (0 to 1). |
+| `fill` | `auto` | Bar fill colour. `auto` resolves via the fill scale or a neutral default. |
+| `stroke` | `none` | Bar outline; `none` means no border. |
+| `alpha` | `1` | Bar opacity in `[0, 1]`. |
+| `position` | `"identity"` | Position adjustment name. Usually `"identity"`. |
+| `inherit-aes` | `true` | Whether to merge the plot-level mapping into this layer's mapping. |
+
+## Returns
+
+Layer dictionary consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/geom-histogram-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 40).map(i => (
+  x: calc.sin(i * 0.3) * 5 + i * 0.2,
+))
+#plot(
+  data: d,
+  mapping: aes(x: "x"),
+  layers: (geom-histogram(bins: 12),),
+)
+```
+
+## See also
+
+[`stat-bin`](../stats/stat-bin.qmd), [`geom-bar`](geom-bar.qmd), [`geom-col`](geom-col.qmd).

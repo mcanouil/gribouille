@@ -1,0 +1,80 @@
+---
+title: "Get Started"
+subtitle: "Install gribouille and render your first plot."
+---
+
+## Prerequisites
+
+- [Typst](https://typst.app) 0.14 or later.
+- Familiarity with Typst `#import` syntax.
+No prior experience with the grammar of graphics is assumed, but if you have used `ggplot2` in R the mental model will feel familiar.
+
+## Installation
+
+Until *gribouille* is published on Typst Universe, import it directly from a local checkout or a Git tag.
+
+### From Typst Universe *(once published)*
+
+```typst
+#import "@preview/gribouille:{{< env VERSION >}}": *
+```
+
+### From a local clone
+
+```typst
+#import "./path/to/gribouille/lib.typ": *
+```
+
+This imports every public symbol so you can call `plot`, `aes`, `geom-point`, and friends directly.
+
+## Your first plot
+
+Drop the following into a `.typ` file alongside a CSV and render with `typst compile`:
+
+```typst
+#import "@preview/gribouille:{{< env VERSION >}}": *
+
+#let mtcars = (
+  (wt: 2.62, mpg: 21.0, cyl: 6),
+  (wt: 2.88, mpg: 21.0, cyl: 6),
+  (wt: 2.32, mpg: 22.8, cyl: 4),
+  (wt: 3.21, mpg: 21.4, cyl: 6),
+  (wt: 3.44, mpg: 18.7, cyl: 8),
+  (wt: 3.46, mpg: 18.1, cyl: 6),
+  (wt: 3.57, mpg: 14.3, cyl: 8),
+  (wt: 3.19, mpg: 24.4, cyl: 4),
+)
+
+#plot(
+  data: mtcars,
+  mapping: aes(x: "wt", y: "mpg", colour: "cyl"),
+  layers: (
+    geom-point(size: 2pt),
+    geom-smooth(method: "lm"),
+  ),
+  theme: theme-minimal(),
+)
+```
+
+## The grammar in four parts
+
+Data
+: A list of dictionaries.
+Columns are dictionary keys; rows are entries.
+CSV files opened with `csv("file.csv", row-type: dictionary)` work out of the box.
+
+Aesthetic mapping
+: [`aes`](../reference/core/aes.qmd) binds column names to visual channels: x, y, colour, fill, size, group, and so on.
+
+Layers
+: Each layer is a geom: [`geom-point`](../reference/geoms/geom-point.qmd), [`geom-line`](../reference/geoms/geom-line.qmd), [`geom-col`](../reference/geoms/geom-col.qmd), [`geom-smooth`](../reference/geoms/geom-smooth.qmd), and more.
+Layers inherit the plot-level mapping but can override it.
+
+Plot-level settings
+: [`scales`](../reference/scales/index.qmd) to control axes and colour ramps; [`coord`](../reference/coord/index.qmd) for coordinate systems; [`facet-wrap`](../reference/facets/facet-wrap.qmd)/[`facet-grid`](../reference/facets/facet-grid.qmd) for small multiples; [`theme`](../reference/themes/theme.qmd) for typography and grid styling.
+
+## Next steps
+
+- Read the [Reference](../reference/index.qmd) to see every function the library exposes.
+- Browse the [Examples](../examples.qmd) gallery for idiomatic usage.
+- Keep an eye on the [Changelog](../changelog.qmd) for API changes during the development phase.

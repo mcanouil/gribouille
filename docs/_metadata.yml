@@ -1,0 +1,7 @@
+# Shared metadata for all pages.
+
+lang: en-GB
+# date-modified: last-modified
+
+# Enable lightbox for images.
+lightbox: auto

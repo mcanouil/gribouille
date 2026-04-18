@@ -1,0 +1,933 @@
+/*-- scss:defaults --*/
+
+// Palette tokens (kept in sync with docs/_brand.yml).
+$paper-light:        #FFFAF0;
+$paper-dark:         #161B1E;
+$ink-light:          #1A1A1A;
+$ink-dark:           #F4EDDF;
+$muted-light:        #5C5A52;
+$muted-dark:         #A9A79E;
+$surface-light:      #FFFDF7;
+$surface-dark:       #1F272B;
+$crayon-red:         #E94C3D;
+$crayon-red-dk:      #FF6F60;
+$crayon-teal:        #1F7A8C;
+$crayon-teal-dk:     #5BB5C7;
+$crayon-mustard:     #F4B740;
+$crayon-mustard-dk:  #FFD166;
+$crayon-mint:        #7FC8A9;
+$crayon-mint-dk:     #9CDCC0;
+$danger-ink:         #B23A2B;
+
+// Fonts.
+$font-family-sans-serif: "Inter", "Helvetica Neue", Arial, sans-serif !default;
+$font-family-serif:      "Fraunces", Georgia, serif !default;
+$font-family-monospace:  "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace !default;
+$headings-font-family:   $font-family-serif !default;
+$headings-font-weight:   600 !default;
+$headings-line-height:   1.2 !default;
+
+// Bootstrap spacing, radius, shadow.
+$border-radius:    0.625rem !default;
+$border-radius-sm: 0.375rem !default;
+$border-radius-lg: 1rem !default;
+$box-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04) !default;
+$box-shadow:    0 2px 4px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06) !default;
+$box-shadow-lg: 0 4px 8px rgb(0 0 0 / 0.05), 0 20px 48px rgb(0 0 0 / 0.08) !default;
+
+// Brand colour mapping for Bootstrap.
+$primary:   $crayon-red !default;
+$secondary: $crayon-teal !default;
+$success:   $crayon-mint !default;
+$info:      $crayon-teal !default;
+$warning:   $crayon-mustard !default;
+$danger:    $danger-ink !default;
+
+// Typography scale.
+$font-size-base: 1rem !default;
+$line-height-base: 1.6 !default;
+$h1-font-size: 2.5rem !default;
+$h2-font-size: 1.875rem !default;
+$h3-font-size: 1.5rem !default;
+$h4-font-size: 1.25rem !default;
+$h5-font-size: 1.125rem !default;
+
+// Bootstrap table defaults — calm rules, no zebra.
+$table-striped-bg: transparent !default;
+$table-border-color: rgb(0 0 0 / 0.08) !default;
+$table-cell-padding-y: 0.6rem !default;
+$table-cell-padding-x: 0.9rem !default;
+
+// Navbar defaults.
+$navbar-padding-y: 0.9rem !default;
+
+/*-- scss:mixins --*/
+
+@mixin soft-card {
+  background: var(--gb-surface);
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-lg);
+  box-shadow: var(--gb-shadow-soft);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--gb-shadow-lift);
+  }
+}
+
+@mixin marker-border {
+  border: 1.5px solid var(--gb-ink);
+  border-radius: var(--gb-radius-lg);
+  box-shadow: 4px 4px 0 0 var(--gb-ink);
+}
+
+/*-- scss:rules --*/
+
+// --- Mode-agnostic design tokens. ---------------------------------------
+:root {
+  --gb-radius-sm: 0.375rem;
+  --gb-radius-md: 0.625rem;
+  --gb-radius-lg: 1rem;
+
+  --gb-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --gb-underline: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMTQiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPgogIDxwYXRoIGQ9Ik0zIDkgQyAyMCAzLCA0MCAxMiwgNjAgNyBTIDEwMCAzLCAxMjAgOSBTIDE2MCA0LCAxOTcgOCIKICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=");
+}
+
+// --- Light mode (default + explicit). ------------------------------------
+:root,
+[data-bs-theme="light"],
+.quarto-light {
+  --gb-paper:     #{$paper-light};
+  --gb-ink:       #{$ink-light};
+  --gb-muted:     #{$muted-light};
+  --gb-surface:   #{$surface-light};
+  --gb-primary:   #{$crayon-red};
+  --gb-secondary: #{$crayon-teal};
+  --gb-signal:    #{$crayon-mustard};
+  --gb-accent:    #{$crayon-mint};
+
+  --gb-hairline:          rgb(26 26 26 / 0.10);
+  --gb-tint-primary:      rgb(233 76 61 / 0.10);
+  --gb-tint-secondary:    rgb(31 122 140 / 0.10);
+  --gb-tint-signal:       rgb(244 183 64 / 0.14);
+  --gb-tint-accent:       rgb(127 200 169 / 0.16);
+
+  --gb-shadow-soft: 0 2px 4px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
+  --gb-shadow-lift: 0 6px 10px rgb(0 0 0 / 0.06), 0 24px 48px rgb(0 0 0 / 0.08);
+
+  --gb-grain: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCI+CiAgPGcgZmlsbD0iIzAwMCIgZmlsbC1vcGFjaXR5PSIwLjA1Ij4KICAgIDxjaXJjbGUgY3g9IjYiIGN5PSIxMiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIyOCIgY3k9IjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDIiIGN5PSIyMCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1OCIgY3k9IjkiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzIiIGN5PSIzMCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4OCIgY3k9IjE0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjEwNCIgY3k9IjIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyMCIgY3k9IjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTM4IiBjeT0iMTgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU0IiBjeT0iMTAiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTcwIiBjeT0iMjQiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIzOCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIyNCIgY3k9IjU0IiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNTYiIGN5PSI2MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI3MCIgY3k9IjQ4IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9Ijg2IiBjeT0iNTgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNDIiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTE2IiBjeT0iNTYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTMyIiBjeT0iNDYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTQ4IiBjeT0iNjAiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTY0IiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNCIgY3k9Ijc0IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iODgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMzYiIGN5PSI3OCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1MiIgY3k9Ijk0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjY4IiBjeT0iODIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iODQiIGN5PSI5NiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMTYiIGN5PSI5MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMzIiIGN5PSI3OCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDgiIGN5PSI5NCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNjQiIGN5PSI4MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTEwIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjI2IiBjeT0iMTIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQ0IiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iMTI4IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9Ijc2IiBjeT0iMTE2IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjkyIiBjeT0iMTMwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEwOCIgY3k9IjExNCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMjQiIGN5PSIxMjYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTQwIiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE1NiIgY3k9IjEyOCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNzIiIGN5PSIxMTYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTIiIGN5PSIxNDYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMzAiIGN5PSIxNTgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDYiIGN5PSIxNDgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iNjIiIGN5PSIxNjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzgiIGN5PSIxNTIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iOTQiIGN5PSIxNjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTEwIiBjeT0iMTUwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyNiIgY3k9IjE2MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDIiIGN5PSIxNDgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTY0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE3NCIgY3k9IjE1MiIgcj0iMC42Ii8+CiAgPC9nPgo8L3N2Zz4K");
+}
+
+// --- Dark mode. ----------------------------------------------------------
+[data-bs-theme="dark"],
+.quarto-dark {
+  --gb-paper:     #{$paper-dark};
+  --gb-ink:       #{$ink-dark};
+  --gb-muted:     #{$muted-dark};
+  --gb-surface:   #{$surface-dark};
+  --gb-primary:   #{$crayon-red-dk};
+  --gb-secondary: #{$crayon-teal-dk};
+  --gb-signal:    #{$crayon-mustard-dk};
+  --gb-accent:    #{$crayon-mint-dk};
+
+  --gb-hairline:          rgb(244 237 223 / 0.12);
+  --gb-tint-primary:      rgb(255 111 96 / 0.14);
+  --gb-tint-secondary:    rgb(91 181 199 / 0.14);
+  --gb-tint-signal:       rgb(255 209 102 / 0.16);
+  --gb-tint-accent:       rgb(156 220 192 / 0.16);
+
+  --gb-shadow-soft: 0 2px 4px rgb(0 0 0 / 0.30), 0 8px 24px rgb(0 0 0 / 0.40);
+  --gb-shadow-lift: 0 6px 10px rgb(0 0 0 / 0.35), 0 24px 48px rgb(0 0 0 / 0.50);
+
+  --gb-grain: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCI+CiAgPGcgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjA2Ij4KICAgIDxjaXJjbGUgY3g9IjYiIGN5PSIxMiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIyOCIgY3k9IjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDIiIGN5PSIyMCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1OCIgY3k9IjkiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzIiIGN5PSIzMCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4OCIgY3k9IjE0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjEwNCIgY3k9IjIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyMCIgY3k9IjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTM4IiBjeT0iMTgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU0IiBjeT0iMTAiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTcwIiBjeT0iMjQiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIzOCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIyNCIgY3k9IjU0IiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNTYiIGN5PSI2MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI3MCIgY3k9IjQ4IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9Ijg2IiBjeT0iNTgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNDIiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTE2IiBjeT0iNTYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTMyIiBjeT0iNDYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTQ4IiBjeT0iNjAiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTY0IiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNCIgY3k9Ijc0IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iODgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMzYiIGN5PSI3OCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1MiIgY3k9Ijk0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjY4IiBjeT0iODIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iODQiIGN5PSI5NiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMTYiIGN5PSI5MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMzIiIGN5PSI3OCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDgiIGN5PSI5NCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNjQiIGN5PSI4MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTEwIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjI2IiBjeT0iMTIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQ0IiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iMTI4IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9Ijc2IiBjeT0iMTE2IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjkyIiBjeT0iMTMwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEwOCIgY3k9IjExNCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMjQiIGN5PSIxMjYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTQwIiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE1NiIgY3k9IjEyOCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNzIiIGN5PSIxMTYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTIiIGN5PSIxNDYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMzAiIGN5PSIxNTgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDYiIGN5PSIxNDgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iNjIiIGN5PSIxNjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzgiIGN5PSIxNTIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iOTQiIGN5PSIxNjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTEwIiBjeT0iMTUwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyNiIgY3k9IjE2MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDIiIGN5PSIxNDgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTY0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE3NCIgY3k9IjE1MiIgcj0iMC42Ii8+CiAgPC9nPgo8L3N2Zz4K");
+}
+
+// --- Base typography and body. ------------------------------------------
+html {
+  font-feature-settings: "ss01", "cv11", "tnum";
+}
+
+body {
+  background-color: var(--gb-paper);
+  background-image: var(--gb-grain);
+  background-repeat: repeat;
+  background-size: 180px 180px;
+  color: var(--gb-ink);
+  font-family: $font-family-sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family-serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+  color: var(--gb-ink);
+}
+
+h1 { font-weight: 600; }
+h2 { font-weight: 600; border-bottom: 1px solid var(--gb-hairline); padding-bottom: 0.4rem; margin-top: 2.5rem; }
+h3 { font-weight: 500; margin-top: 2rem; }
+
+p, li { color: var(--gb-ink); }
+
+// Muted meta text (subtitle, caption, frontmatter-rendered dates).
+.subtitle, .quarto-title-meta, .figure-caption, figcaption, .page-footer {
+  color: var(--gb-muted);
+}
+
+// Inline ink emphasis used in hero subtitle ("Typst").
+.ink {
+  color: var(--gb-ink);
+  font-weight: 600;
+}
+
+// --- Links. --------------------------------------------------------------
+a {
+  color: var(--gb-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--gb-hairline);
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  transition: color 150ms var(--gb-ease), text-decoration-color 150ms var(--gb-ease);
+}
+
+a:hover, a:focus-visible {
+  color: var(--gb-primary);
+  text-decoration-color: var(--gb-primary);
+  text-decoration-thickness: 2px;
+}
+
+// --- Navbar. -------------------------------------------------------------
+.navbar {
+  background: var(--gb-paper) !important;
+  border-bottom: 1px solid var(--gb-hairline);
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
+  backdrop-filter: saturate(180%) blur(6px);
+}
+
+.navbar-brand, .navbar .nav-link {
+  font-family: $font-family-sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--gb-ink) !important;
+  text-transform: none;
+  text-decoration: none;
+}
+
+.navbar .nav-link {
+  position: relative;
+  padding: 0.4rem 0.8rem;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  color: var(--gb-primary) !important;
+}
+
+.navbar .nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 0.8rem;
+  right: 0.8rem;
+  bottom: 0.15rem;
+  height: 2px;
+  background: var(--gb-primary);
+  border-radius: 2px;
+}
+
+// --- Colour-scheme toggle (sun/moon). -----------------------------------
+// Quarto auto-injects the toggle when both light and dark themes are set;
+// it swaps .bi-sun ↔ .bi-moon based on the active mode. We only style it.
+.quarto-color-scheme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  color: var(--gb-ink) !important;
+  text-decoration: none;
+  transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease);
+
+  .bi {
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+}
+
+.quarto-color-scheme-toggle:hover,
+.quarto-color-scheme-toggle:focus-visible {
+  color: var(--gb-primary) !important;
+  background: var(--gb-tint-primary);
+  text-decoration: none;
+}
+
+// --- Sidebar. ------------------------------------------------------------
+.sidebar {
+  background: transparent;
+  font-family: $font-family-sans-serif;
+}
+
+.sidebar nav .sidebar-item a.sidebar-link {
+  color: var(--gb-ink);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  padding: 0.3rem 0.8rem;
+  border-radius: 0 var(--gb-radius-sm) var(--gb-radius-sm) 0;
+  transition: background 150ms var(--gb-ease), border-color 150ms var(--gb-ease);
+}
+
+.sidebar nav .sidebar-item a.sidebar-link:hover {
+  background: var(--gb-tint-primary);
+}
+
+.sidebar nav .sidebar-item.active > a.sidebar-link,
+.sidebar nav .sidebar-item a.sidebar-link.active {
+  background: var(--gb-tint-primary);
+  border-left-color: var(--gb-primary);
+  color: var(--gb-primary);
+  font-weight: 500;
+}
+
+.sidebar nav .sidebar-section .sidebar-item-text {
+  font-family: $font-family-serif;
+  font-weight: 500;
+  color: var(--gb-ink);
+  letter-spacing: -0.005em;
+}
+
+// --- Cards (landing and category index). --------------------------------
+.card, .quarto-listing-default .quarto-post {
+  @include soft-card;
+  padding: 1.25rem 1.4rem;
+}
+
+.card .card-title, .card h3 {
+  font-family: $font-family-serif;
+  margin-top: 0;
+}
+
+// --- Code blocks. -------------------------------------------------------
+// Pandoc's github-light/github-dark themes hard-code a background on the
+// .sourceCode wrapper and Bootstrap sets --bs-code-color on inline code, so
+// the brand surface and brand inline tint need !important to win.
+// Token colours stay with Quarto's --quarto-hl-* variables.
+div.sourceCode,
+pre.sourceCode,
+pre > code.sourceCode,
+pre.sourceCode > code,
+.cell-output,
+.cell-output-stdout,
+.cell-output-stderr,
+.cell-output-display,
+.cell-output pre {
+  background: var(--gb-surface) !important;
+  color: var(--gb-ink);
+  font-family: $font-family-monospace;
+  font-size: 0.9em;
+  line-height: 1.55;
+}
+
+pre {
+  background: var(--gb-surface);
+  color: var(--gb-ink);
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-md);
+  font-family: $font-family-monospace;
+  font-size: 0.9em;
+  line-height: 1.55;
+  padding: 1rem 1.1rem;
+  box-shadow: none;
+}
+
+// Outer .sourceCode wrapper carries the brand chrome; the inner <pre>
+// drops its own border so we don't get a double box.
+div.sourceCode {
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-md);
+  margin: 1rem 0;
+}
+
+div.sourceCode > pre,
+div.sourceCode > pre.sourceCode {
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+
+// Pandoc tokens drive their own colour; reset any inherited background.
+pre code.sourceCode,
+pre code.sourceCode span {
+  background: transparent !important;
+}
+
+// Cell output panels.
+.cell-output,
+.cell-output pre {
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-md);
+  color: var(--gb-muted);
+}
+
+// Code-with-filename header sits on top of the brand surface.
+.code-with-filename .code-with-filename-file {
+  background: var(--gb-surface) !important;
+  color: var(--gb-muted);
+  border: 1px solid var(--gb-hairline);
+  border-bottom: 0;
+  border-radius: var(--gb-radius-md) var(--gb-radius-md) 0 0;
+  font-family: $font-family-monospace;
+  font-size: 0.85em;
+  padding: 0.4rem 0.9rem;
+
+  pre {
+    background: transparent !important;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+}
+
+.code-with-filename div.sourceCode {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-top: 0;
+}
+
+// --- Inline code. -------------------------------------------------------
+// Restrict to true inline contexts so tokens inside pre.sourceCode stay
+// untouched. Override --bs-code-color so Bootstrap doesn't repaint it.
+:not(pre) > code,
+p code,
+li code,
+td code,
+a code {
+  --bs-code-color: var(--gb-secondary);
+  background: var(--gb-tint-secondary);
+  color: var(--gb-secondary);
+  border-radius: var(--gb-radius-sm);
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+  font-family: $font-family-monospace;
+}
+
+// --- Copy-to-clipboard button. ------------------------------------------
+.code-copy-button {
+  --bs-btn-color: var(--gb-muted);
+  --bs-btn-hover-color: var(--gb-primary);
+  color: var(--gb-muted);
+  background: transparent;
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-sm);
+  transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease);
+}
+
+.code-copy-button:hover,
+.code-copy-button-checked {
+  color: var(--gb-primary);
+  background: var(--gb-tint-primary);
+}
+
+// --- Callouts — rebuilt with left rule + tint. --------------------------
+.callout {
+  border: 1px solid var(--gb-hairline);
+  border-left: 4px solid var(--gb-muted);
+  border-radius: var(--gb-radius-md);
+  background: var(--gb-surface);
+  box-shadow: none;
+  padding: 0;
+  margin: 1.25rem 0;
+}
+
+.callout-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--gb-hairline);
+  font-family: $font-family-serif;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+}
+
+.callout-body-container {
+  padding: 0.8rem 1rem;
+}
+
+.callout.callout-note          { border-left-color: var(--gb-secondary); background: var(--gb-tint-secondary); }
+.callout.callout-tip           { border-left-color: var(--gb-accent);    background: var(--gb-tint-accent); }
+.callout.callout-important     { border-left-color: var(--gb-primary);   background: var(--gb-tint-primary); }
+.callout.callout-warning       { border-left-color: var(--gb-signal);    background: var(--gb-tint-signal); }
+.callout.callout-caution       { border-left-color: var(--gb-signal);    background: var(--gb-tint-signal); }
+
+// --- Tables — thin rules, tabular numerals. -----------------------------
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+table th, table td {
+  border-top: 1px solid var(--gb-hairline);
+  border-bottom: none;
+  padding: 0.6rem 0.9rem;
+  vertical-align: top;
+}
+
+table thead th {
+  border-top: none;
+  border-bottom: 1px solid var(--gb-hairline);
+  font-family: $font-family-sans-serif;
+  font-weight: 600;
+  color: var(--gb-muted);
+  text-align: left;
+}
+
+table tbody tr:last-child td {
+  border-bottom: 1px solid var(--gb-hairline);
+}
+
+table code {
+  font-variant-numeric: tabular-nums;
+}
+
+// --- Buttons. ------------------------------------------------------------
+.btn {
+  border-radius: var(--gb-radius-md);
+  font-family: $font-family-sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 0.5rem 1rem;
+  transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease),
+              border-color 150ms var(--gb-ease), transform 150ms var(--gb-ease);
+}
+
+.btn:hover { transform: translateY(-1px); }
+
+.btn-lg {
+  padding: 0.7rem 1.4rem;
+  font-size: 1.05rem;
+}
+
+.btn-primary {
+  background: var(--gb-primary);
+  border-color: var(--gb-primary);
+  color: var(--gb-paper);
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  background: color-mix(in srgb, var(--gb-primary) 88%, var(--gb-ink));
+  border-color: color-mix(in srgb, var(--gb-primary) 88%, var(--gb-ink));
+  color: var(--gb-paper);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--gb-ink);
+  color: var(--gb-ink);
+}
+
+.btn-outline:hover,
+.btn-outline:focus-visible {
+  background: var(--gb-ink);
+  color: var(--gb-paper);
+  border-color: var(--gb-ink);
+}
+
+// --- Reference-page title block. ----------------------------------------
+header#title-block-header {
+  border-bottom: 1px solid var(--gb-hairline);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+header#title-block-header .subtitle {
+  font-family: $font-family-serif;
+  font-style: italic;
+  color: var(--gb-muted);
+  font-weight: 400;
+}
+
+// --- Figure/typst-render output. ----------------------------------------
+.quarto-figure, figure {
+  margin: 1.5rem auto;
+}
+
+.quarto-figure img, figure img {
+  border-radius: var(--gb-radius-md);
+  background: transparent;
+}
+
+// --- Footer. ------------------------------------------------------------
+.page-footer, .nav-footer {
+  border-top: 1px solid var(--gb-hairline);
+  background: transparent;
+  color: var(--gb-muted);
+  font-size: 0.9rem;
+  padding: 1.5rem 0;
+}
+
+// --- Misc. --------------------------------------------------------------
+hr {
+  border: 0;
+  border-top: 1px solid var(--gb-hairline);
+  margin: 2rem 0;
+}
+
+blockquote {
+  border-left: 3px solid var(--gb-secondary);
+  background: var(--gb-tint-secondary);
+  margin: 1.25rem 0;
+  padding: 0.6rem 1rem;
+  border-radius: 0 var(--gb-radius-md) var(--gb-radius-md) 0;
+  color: var(--gb-ink);
+}
+
+// Selection colour.
+::selection {
+  background: var(--gb-tint-primary);
+  color: var(--gb-ink);
+}
+
+// Examples gallery.
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.gallery-item {
+  background: var(--gb-surface);
+  border-radius: var(--gb-radius-lg);
+  box-shadow: var(--gb-shadow-soft);
+  padding: 1rem;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--gb-shadow-lift);
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--gb-radius-md);
+    margin-bottom: 0.75rem;
+    background: var(--gb-paper);
+  }
+
+  h3 {
+    margin: 0.25rem 0 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  p {
+    margin: 0 0 0.5rem;
+    color: var(--gb-muted);
+    font-size: 0.95em;
+  }
+
+  a {
+    text-decoration: none;
+  }
+}
+
+// ========================================================================
+// Home page — sketch/crayon landing blocks.
+// ========================================================================
+
+// --- Hero. --------------------------------------------------------------
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  padding: 3rem 0 2.5rem;
+  position: relative;
+}
+
+.hero-content h1 {
+  font-size: clamp(2.8rem, 5.5vw, 4.5rem);
+  line-height: 1;
+  margin: 0.5rem 0 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.hero-content h3 {
+  font-family: $font-family-serif;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--gb-muted);
+  margin: 0 0 1rem;
+  border: none;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+}
+
+.hero-content p {
+  font-size: 1.05rem;
+  margin-bottom: 1.5rem;
+  max-width: 40ch;
+}
+
+.hero-content .pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: var(--gb-tint-signal);
+  color: color-mix(in srgb, var(--gb-signal) 40%, var(--gb-ink));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: $font-family-sans-serif;
+}
+
+.hero-highlight {
+  position: relative;
+  display: inline-block;
+  color: var(--gb-primary);
+}
+
+.hero-highlight::after {
+  content: "";
+  position: absolute;
+  left: -0.05em;
+  right: -0.05em;
+  bottom: -0.1em;
+  height: 0.32em;
+  background: var(--gb-primary);
+  -webkit-mask: var(--gb-underline) no-repeat center / 100% 100%;
+          mask: var(--gb-underline) no-repeat center / 100% 100%;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.hero-content .btn + .btn { margin-left: 0.5rem; }
+
+.hero-art {
+  @include marker-border;
+  padding: 0.75rem;
+  background: var(--gb-surface);
+  transform: rotate(-1.25deg);
+  transition: transform 240ms var(--gb-ease);
+}
+
+.hero-art:hover { transform: rotate(-0.4deg); }
+
+.hero-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--gb-radius-md);
+}
+
+// --- 3-step explainer. --------------------------------------------------
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin: 2rem 0 3.5rem;
+}
+
+.step {
+  padding: 1.15rem 1.35rem;
+  background: var(--gb-surface);
+  border: 1px solid var(--gb-hairline);
+  border-left: 4px solid var(--gb-primary);
+  border-radius: 0 var(--gb-radius-md) var(--gb-radius-md) 0;
+}
+
+.step h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--gb-primary);
+  border: none;
+  padding: 0;
+}
+
+.step p { margin: 0; color: var(--gb-muted); }
+
+.step:nth-child(2) { border-left-color: var(--gb-secondary); }
+.step:nth-child(2) h3 { color: var(--gb-secondary); }
+.step:nth-child(3) { border-left-color: var(--gb-accent); }
+.step:nth-child(3) h3 { color: color-mix(in srgb, var(--gb-accent) 70%, var(--gb-ink)); }
+
+// --- Showcase (code | output). ------------------------------------------
+.showcase {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin: 1.5rem 0 3rem;
+}
+
+.showcase-code pre {
+  margin: 0;
+  height: 100%;
+}
+
+.showcase-output {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.showcase-output img {
+  @include marker-border;
+  background: var(--gb-surface);
+  padding: 0.5rem;
+  width: 100%;
+  height: auto;
+  transform: rotate(0.75deg);
+  transition: transform 240ms var(--gb-ease);
+}
+
+.showcase-output img:hover { transform: rotate(0.25deg); }
+
+// --- Feature grid. ------------------------------------------------------
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin: 1.5rem 0 3rem;
+}
+
+@media (max-width: 900px) {
+  .feature-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .feature-grid { grid-template-columns: 1fr; }
+}
+
+.feature {
+  padding: 1.2rem 1.35rem;
+  background: var(--gb-surface);
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-lg);
+  transition: transform 180ms var(--gb-ease), box-shadow 180ms var(--gb-ease);
+}
+
+.feature:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--gb-shadow-soft);
+}
+
+.feature h4 {
+  margin: 0 0 0.4rem;
+  color: var(--gb-primary);
+  font-family: $font-family-serif;
+  font-weight: 600;
+}
+
+.feature p { margin: 0; color: var(--gb-muted); font-size: 0.95em; }
+
+.feature:nth-child(6n+2) h4 { color: var(--gb-secondary); }
+.feature:nth-child(6n+3) h4 { color: color-mix(in srgb, var(--gb-signal) 55%, var(--gb-ink)); }
+.feature:nth-child(6n+4) h4 { color: color-mix(in srgb, var(--gb-accent) 65%, var(--gb-ink)); }
+.feature:nth-child(6n+5) h4 { color: var(--gb-secondary); }
+
+// --- Gallery preview. ---------------------------------------------------
+.gallery-preview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .gallery-preview { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .gallery-preview { grid-template-columns: repeat(2, 1fr); }
+}
+
+.gallery-preview p { display: contents; margin: 0; }
+
+.gallery-preview a {
+  display: block;
+  text-decoration: none;
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-md);
+  background: var(--gb-surface);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  transition: transform 180ms var(--gb-ease), box-shadow 180ms var(--gb-ease);
+}
+
+.gallery-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.25rem;
+}
+
+.gallery-preview a:hover {
+  transform: scale(1.03);
+  box-shadow: var(--gb-shadow-soft);
+}
+
+// --- Install band. ------------------------------------------------------
+.install-band {
+  position: relative;
+  background: var(--gb-tint-primary);
+  border: 1.5px solid var(--gb-ink);
+  border-radius: var(--gb-radius-lg);
+  box-shadow: 6px 6px 0 0 var(--gb-ink);
+  padding: 2rem 2.25rem;
+  margin: 3rem 0;
+}
+
+.install-band h2 {
+  border: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.install-band pre {
+  background: var(--gb-paper);
+  margin: 0 0 1.25rem;
+}
+
+// --- Fine print. --------------------------------------------------------
+.fine-print {
+  color: var(--gb-muted);
+  font-size: 0.9rem;
+  margin: 2rem 0;
+}
+
+// --- Hand-drawn underline under home-page h2 headings. ------------------
+main .hero + * h2,
+main .showcase ~ h2,
+.page-columns main > h2 {
+  border-bottom: none;
+  padding-bottom: 0.6rem;
+  background-image: var(--gb-underline);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 180px 0.5em;
+}
+
+// --- Responsive. --------------------------------------------------------
+@media (max-width: 800px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding-top: 2rem;
+  }
+  .hero-art { transform: none; }
+  .hero-art:hover { transform: none; }
+  .showcase { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; }
+  .install-band { padding: 1.5rem 1.5rem; }
+}

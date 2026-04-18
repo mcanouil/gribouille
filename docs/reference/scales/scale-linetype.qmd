@@ -1,0 +1,62 @@
+---
+title: scale-linetype
+subtitle: "Discrete linetype scale: maps levels to dash-pattern keywords."
+category: Scales
+since: 0.1.0
+engine: markdown
+---
+
+
+Pass a custom array of keywords via `palette` to override the default
+linetype set.
+
+## Usage
+
+```typst
+scale-linetype(
+  name: none,
+  palette: auto,
+  limits: none,
+  labels: auto,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `name` | `none` | Legend title. Overrides any name set via [`labs`](../labs/labs.qmd) when both are present. |
+| `palette` | `auto` | Array of dash keywords, or `auto` for the library default. |
+| `limits` | `none` | Array of level names controlling order and inclusion, or `none`. |
+| `labels` | `auto` | Array of legend labels aligned with `limits`, or `auto`. |
+
+## Returns
+
+Scale object consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/scale-linetype-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (x: 1, y: 2, grp: "a"),
+  (x: 2, y: 4, grp: "a"),
+  (x: 3, y: 3, grp: "a"),
+  (x: 1, y: 1, grp: "b"),
+  (x: 2, y: 2, grp: "b"),
+  (x: 3, y: 4, grp: "b"),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y", linetype: "grp"),
+  layers: (geom-line(stroke: 1pt),),
+  scales: (scale-linetype(),),
+)
+```
+
+## See also
+
+[`scale-linetype-manual`](scale-linetype-manual.qmd), [`geom-line`](../geoms/geom-line.qmd).

@@ -1,0 +1,53 @@
+---
+title: coord-cartesian
+subtitle: Cartesian coordinate system with optional panel clipping.
+category: Coord
+since: 0.1.0
+engine: markdown
+---
+
+
+Clipping via `xlim`/`ylim` preserves the trained scales; rows outside
+are still used for training but drawn off-panel.
+
+## Usage
+
+```typst
+coord-cartesian(
+  xlim: none,
+  ylim: none,
+  expand: true,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `xlim` | `none` | Pair `(lo, hi)` clipping the drawn x range, or `none`. |
+| `ylim` | `none` | Pair `(lo, hi)` clipping the drawn y range, or `none`. |
+| `expand` | `true` | Whether to add a small margin around the data range. |
+
+## Returns
+
+Coordinate dictionary consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/coord-cartesian-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 20).map(i => (x: i, y: i * 0.5))
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(size: 2pt),),
+  coord: coord-cartesian(xlim: (2, 15), ylim: (0, 8)),
+)
+```
+
+## See also
+
+[`plot`](../core/plot.qmd), [`scale-x-continuous`](../scales/scale-x-continuous.qmd).

@@ -1,0 +1,54 @@
+---
+title: ggtitle
+subtitle: Shortcut for setting the plot title (and optional subtitle).
+category: Labs
+since: 0.1.0
+engine: markdown
+---
+
+
+Equivalent to `labs(title: title, subtitle: subtitle)`.
+
+## Usage
+
+```typst
+ggtitle(
+  title,
+  subtitle: none,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `title` |  | Plot title drawn above the panel. |
+| `subtitle` | `none` | Optional smaller line drawn below the title. |
+
+## Returns
+
+Dictionary tagged `kind: "labs"`, consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/ggtitle-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (x: 1, y: 2),
+  (x: 2, y: 4),
+  (x: 3, y: 3),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(size: 3pt),),
+  labs: ggtitle("Quick look", subtitle: "Three points"),
+)
+```
+
+## See also
+
+[`labs`](labs.qmd), [`xlab`](xlab.qmd), [`ylab`](ylab.qmd).

@@ -1,0 +1,69 @@
+---
+title: geom-text
+subtitle: Text label layer reading strings from the `label` aesthetic.
+category: Geoms
+since: 0.1.0
+engine: markdown
+---
+
+
+One text block is drawn per row at the mapped `(x, y)` with an optional
+pixel offset via `dx` and `dy`.
+
+## Usage
+
+```typst
+geom-text(
+  mapping: none,
+  data: none,
+  size: 8pt,
+  colour: rgb("#222222"),
+  anchor: "center",
+  dx: 0,
+  dy: 0,
+  inherit-aes: true,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `mapping` | `none` | Layer-specific aesthetic mapping built with [`aes`](../core/aes.qmd). Must map `x`, `y`, and `label`. |
+| `data` | `none` | Layer-specific dataset. Falls back to the plot data when `none`. |
+| `size` | `8pt` | Text size (a Typst length). |
+| `colour` | `rgb("#222222")` | Fixed text colour. Used when no colour mapping is active. |
+| `anchor` | `"center"` | CeTZ anchor (e.g. `"center"`, `"west"`) controlling placement. |
+| `dx` | `0` | Horizontal offset in canvas units. |
+| `dy` | `0` | Vertical offset in canvas units. |
+| `inherit-aes` | `true` | Whether to merge the plot-level mapping into this layer's mapping. |
+
+## Returns
+
+Layer dictionary consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/geom-text-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (x: 1, y: 2, name: "a"),
+  (x: 2, y: 4, name: "b"),
+  (x: 3, y: 3, name: "c"),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y", label: "name"),
+  layers: (
+    geom-point(size: 2pt),
+    geom-text(dy: 0.2),
+  ),
+)
+```
+
+## See also
+
+[`geom-label`](geom-label.qmd), [`aes`](../core/aes.qmd).

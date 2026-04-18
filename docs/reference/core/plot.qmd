@@ -1,0 +1,75 @@
+---
+title: plot
+subtitle: Compose a layered plot from data, aesthetics, and geom layers.
+category: Core
+since: 0.1.0
+engine: markdown
+---
+
+
+`plot` is the entry point of the grammar: it resolves the dataset, wires up
+the aesthetic mapping, trains scales against the data, applies coordinate,
+facet, theme, and label choices, and dispatches to the internal renderer.
+Call it once per figure, passing the layers you want to stack.
+
+## Usage
+
+```typst
+plot(
+  data: none,
+  mapping: none,
+  layers: (),
+  scales: (),
+  coord: none,
+  facet: none,
+  theme: none,
+  labs: none,
+  width: 10cm,
+  height: 7cm,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `data` | `none` | Array of row dictionaries. Each row is a `(column: value, ...)` dict. |
+| `mapping` | `none` | Aesthetic mapping built with [`aes`](aes.qmd). Maps column names to visual channels. |
+| `layers` | `()` | Array of geom layers (e.g. [`geom-point`](../geoms/geom-point.qmd), [`geom-line`](../geoms/geom-line.qmd)). Drawn in order. |
+| `scales` | `()` | Array of scale objects overriding defaults ([`scale-x-continuous`](../scales/scale-x-continuous.qmd), [`scale-colour-viridis-d`](../scales/scale-colour-viridis-d.qmd), etc.). |
+| `coord` | `none` | Coordinate system. Defaults to [`coord-cartesian`](../coord/coord-cartesian.qmd) when `none`. |
+| `facet` | `none` | Faceting specification built with [`facet-wrap`](../facets/facet-wrap.qmd) or [`facet-grid`](../facets/facet-grid.qmd). |
+| `theme` | `none` | Theme object (e.g. [`theme-grey`](../themes/theme-grey.qmd), [`theme-minimal`](../themes/theme-minimal.qmd), [`theme-classic`](../themes/theme-classic.qmd)). Controls non-data ink. |
+| `labs` | `none` | Labels dictionary built with [`labs`](../labs/labs.qmd) (title, subtitle, caption, axis titles). |
+| `width` | `10cm` | Total plot width, including axes and legends. |
+| `height` | `7cm` | Total plot height, including axes and legends. |
+
+## Returns
+
+Typst content block containing the rendered figure.
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/plot-1.svg"
+//| width: 12cm
+//| height: 7cm
+#let mtcars = (
+  (mpg: 21.0, wt: 2.620, cyl: "6"),
+  (mpg: 22.8, wt: 2.320, cyl: "4"),
+  (mpg: 18.7, wt: 3.440, cyl: "8"),
+  (mpg: 16.4, wt: 4.070, cyl: "8"),
+  (mpg: 33.9, wt: 1.835, cyl: "4"),
+)
+#plot(
+  data: mtcars,
+  mapping: aes(x: "wt", y: "mpg", colour: "cyl"),
+  layers: (geom-point(size: 3pt),),
+  labs: labs(title: "Fuel economy vs. weight"),
+)
+```
+
+## See also
+
+[`aes`](aes.qmd), [`geom-point`](../geoms/geom-point.qmd), [`coord-cartesian`](../coord/coord-cartesian.qmd), [`facet-wrap`](../facets/facet-wrap.qmd), [`theme-grey`](../themes/theme-grey.qmd), [`labs`](../labs/labs.qmd).

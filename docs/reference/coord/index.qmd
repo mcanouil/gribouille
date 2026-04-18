@@ -1,0 +1,7 @@
+---
+title: Coord
+---
+
+## Functions
+
+- [`coord-cartesian`](coord-cartesian.qmd) - Cartesian coordinate system with optional panel clipping.

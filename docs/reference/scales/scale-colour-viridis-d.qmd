@@ -1,0 +1,60 @@
+---
+title: scale-colour-viridis-d
+subtitle: Discrete viridis colour scale.
+category: Scales
+since: 0.1.0
+engine: markdown
+---
+
+
+`option` selects between `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`,
+and `"cividis"`.
+
+## Usage
+
+```typst
+scale-colour-viridis-d(
+  option: "viridis",
+  name: none,
+  limits: none,
+  labels: auto,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `option` | `"viridis"` | Palette name: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`, or `"cividis"`. |
+| `name` | `none` | Legend title. Overrides any name set via [`labs`](../labs/labs.qmd) when both are present. |
+| `limits` | `none` | Array of level names controlling order and inclusion, or `none`. |
+| `labels` | `auto` | Array of legend labels aligned with `limits`, or `auto`. |
+
+## Returns
+
+Scale object consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/scale-colour-viridis-d-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (x: 1, y: 2, sp: "a"),
+  (x: 2, y: 4, sp: "b"),
+  (x: 3, y: 3, sp: "c"),
+  (x: 4, y: 5, sp: "d"),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y", colour: "sp"),
+  layers: (geom-point(size: 3pt),),
+  scales: (scale-colour-viridis-d(option: "plasma"),),
+)
+```
+
+## See also
+
+[`scale-colour-viridis-c`](scale-colour-viridis-c.qmd), [`scale-colour-viridis-b`](scale-colour-viridis-b.qmd), [`scale-fill-viridis-d`](scale-fill-viridis-d.qmd).

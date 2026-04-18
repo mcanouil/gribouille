@@ -1,0 +1,61 @@
+---
+title: scale-fill-manual
+subtitle: "Manual discrete fill scale: supply the colour array directly."
+category: Scales
+since: 0.1.0
+engine: markdown
+---
+
+
+Colours cycle through `values` in the order levels appear, unless
+`limits` fixes the level order.
+
+## Usage
+
+```typst
+scale-fill-manual(
+  values: (),
+  name: none,
+  limits: none,
+  labels: auto,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `values` | `()` | Array of colours, one per level. |
+| `name` | `none` | Legend title. Overrides any name set via [`labs`](../labs/labs.qmd) when both are present. |
+| `limits` | `none` | Array of level names controlling order and inclusion, or `none`. |
+| `labels` | `auto` | Array of legend labels aligned with `limits`, or `auto`. |
+
+## Returns
+
+Scale object consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/scale-fill-manual-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (grp: "a", y: 1),
+  (grp: "b", y: 2),
+  (grp: "c", y: 3),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "grp", y: "y", fill: "grp"),
+  layers: (geom-col(),),
+  scales: (scale-fill-manual(values: (
+    rgb("#66c2a5"), rgb("#fc8d62"), rgb("#8da0cb"),
+  )),),
+)
+```
+
+## See also
+
+[`scale-fill-discrete`](scale-fill-discrete.qmd), [`scale-colour-manual`](scale-colour-manual.qmd).

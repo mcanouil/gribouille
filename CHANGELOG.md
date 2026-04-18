@@ -1,5 +1,5 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## Unreleased
 
-## [Unreleased]
+- feat: initial version of Gribouille.

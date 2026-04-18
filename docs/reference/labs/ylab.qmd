@@ -1,0 +1,52 @@
+---
+title: ylab
+subtitle: Shortcut for setting the y axis title.
+category: Labs
+since: 0.1.0
+engine: markdown
+---
+
+
+Equivalent to `labs(y: label)`.
+
+## Usage
+
+```typst
+ylab(
+  label,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `label` |  | Title drawn beside the y axis. |
+
+## Returns
+
+Dictionary tagged `kind: "labs"`, consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/ylab-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (x: 1, y: 2),
+  (x: 2, y: 4),
+  (x: 3, y: 3),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(size: 3pt),),
+  labs: ylab("Value"),
+)
+```
+
+## See also
+
+[`labs`](labs.qmd), [`ggtitle`](ggtitle.qmd), [`xlab`](xlab.qmd).

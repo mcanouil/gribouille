@@ -1,0 +1,15 @@
+---
+title: Themes
+---
+
+## Functions
+
+- [`element-blank`](element-blank.qmd) - Blank element: hides the corresponding theme element.
+- [`element-line`](element-line.qmd) - Line element: colour and thickness.
+- [`element-rect`](element-rect.qmd) - Rectangle element: fill and stroke.
+- [`element-text`](element-text.qmd) - Text element: font size, weight, colour, and angle.
+- [`theme`](theme.qmd) - Build a custom theme from per-element overrides.
+- [`theme-classic`](theme-classic.qmd) - Classic theme: white panel, axis borders, no gridlines.
+- [`theme-grey`](theme-grey.qmd) - Grey theme: light grey panel with white gridlines.
+- [`theme-minimal`](theme-minimal.qmd) - Minimal theme: white panel, light grey gridlines, no axis lines.
+- [`theme-void`](theme-void.qmd) - Void theme: no axes, no grid, no panel background.

@@ -1,0 +1,57 @@
+---
+title: scale-fill-discrete
+subtitle: Discrete fill scale mapping categorical levels to fill colours.
+category: Scales
+since: 0.1.0
+engine: markdown
+---
+
+
+
+## Usage
+
+```typst
+scale-fill-discrete(
+  name: none,
+  palette: auto,
+  limits: none,
+  labels: auto,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `name` | `none` | Legend title. Overrides any name set via [`labs`](../labs/labs.qmd) when both are present. |
+| `palette` | `auto` | Colour source: an array of colours, or `auto`. |
+| `limits` | `none` | Array of level names controlling order and inclusion, or `none`. |
+| `labels` | `auto` | Array of legend labels aligned with `limits`, or `auto`. |
+
+## Returns
+
+Scale object consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/scale-fill-discrete-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (grp: "a", y: 1),
+  (grp: "b", y: 2),
+  (grp: "c", y: 3),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "grp", y: "y", fill: "grp"),
+  layers: (geom-col(),),
+  scales: (scale-fill-discrete(),),
+)
+```
+
+## See also
+
+[`scale-fill-manual`](scale-fill-manual.qmd), [`scale-fill-viridis-d`](scale-fill-viridis-d.qmd), [`scale-colour-discrete`](scale-colour-discrete.qmd).

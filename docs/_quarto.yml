@@ -1,0 +1,97 @@
+project:
+  type: website
+  lib-dir: lib
+  output-dir: _site
+  resources:
+    - assets/fonts/
+    - assets/images/logo-stacked.svg
+    - assets/images/logo-stacked-dark.svg
+    - assets/images/logo-dark.svg
+    - assets/images/favicon-dark.svg
+
+engine: markdown
+
+lang: en-GB
+date-format: "dddd[, the] Do [of] MMMM, YYYY"
+
+website:
+  title: "Gribouille {{< env VERSION >}}"
+  description: "A layered grammar of graphics for Typst."
+  favicon: assets/images/favicon.svg
+  site-url: https://m.canouil.dev/gribouille/
+  repo-url: https://github.com/mcanouil/gribouille
+  repo-actions: [ edit, issue ]
+  repo-link-target: _blank
+  repo-link-rel: noopener noreferrer
+  open-graph: true
+  twitter-card: true
+  page-navigation: true
+  back-to-top-navigation: true
+
+  page-footer:
+    border: true
+    left: |
+      Powered by [Quarto](https://quarto.org).
+    center: |
+      &copy; []{#current-year} [Mickaël Canouil](https://github.com/mcanouil).
+    right: |
+      Licence: [MIT](https://github.com/mcanouil/gribouille?tab=MIT-1-ov-file#readme).
+
+  navbar:
+    title: "Gribouille"
+    logo: assets/images/logo-dark.svg
+    logo-alt: "Gribouille"
+    background: dark
+    search: true
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Get Started"
+        href: get-started/index.qmd
+      - text: "Reference"
+        href: reference/index.qmd
+      - text: "Examples"
+        href: examples.qmd
+      - text: "Changelog"
+        href: changelog.qmd
+    right:
+      - icon: github
+        href: https://github.com/mcanouil/gribouille
+        aria-label: "GitHub"
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-link: false
+    code-overflow: wrap
+    link-external-newwindow: true
+    fig-align: center
+    grid:
+      sidebar-width: 300px
+      body-width: 1100px
+      margin-width: 300px
+    theme:
+      light:
+        - cosmo
+        - brand
+        - assets/stylesheets/theme.scss
+      dark:
+        - cosmo
+        - brand
+        - assets/stylesheets/theme.scss
+    syntax-highlighting:
+      light: github-light
+      dark: github-dark
+    include-after-body:
+      - file: assets/scripts/current-year.html
+      - file: assets/scripts/external-links.html
+
+execute:
+  freeze: auto
+
+metadata-files:
+  - _extensions-metadata.yml
+  - _sidebar-reference.yml
+  - _sidebar-get-started.yml

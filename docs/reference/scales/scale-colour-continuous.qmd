@@ -1,0 +1,55 @@
+---
+title: scale-colour-continuous
+subtitle: Continuous colour scale mapping a numeric column to stroke colours.
+category: Scales
+since: 0.1.0
+engine: markdown
+---
+
+
+
+## Usage
+
+```typst
+scale-colour-continuous(
+  name: none,
+  palette: auto,
+  limits: none,
+  breaks: auto,
+  labels: auto,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `name` | `none` | Legend title. Overrides any name set via [`labs`](../labs/labs.qmd) when both are present. |
+| `palette` | `auto` | Colour source: a gradient, an array of colours, or `auto`. |
+| `limits` | `none` | Pair `(lo, hi)` clipping the trained domain, or `none`. |
+| `breaks` | `auto` | Array of break values for the legend, or `auto`. |
+| `labels` | `auto` | Array of legend labels aligned with `breaks`, or `auto`. |
+
+## Returns
+
+Scale object consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/scale-colour-continuous-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 12).map(i => (x: i, y: i, z: i * 0.5))
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y", colour: "z"),
+  layers: (geom-point(size: 3pt),),
+  scales: (scale-colour-continuous(),),
+)
+```
+
+## See also
+
+[`scale-colour-viridis-c`](scale-colour-viridis-c.qmd), [`scale-colour-discrete`](scale-colour-discrete.qmd), [`scale-fill-continuous`](scale-fill-continuous.qmd).

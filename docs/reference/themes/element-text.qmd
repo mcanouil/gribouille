@@ -1,0 +1,55 @@
+---
+title: element-text
+subtitle: "Text element: font size, weight, colour, and angle."
+category: Themes
+since: 0.1.0
+engine: markdown
+---
+
+
+Pass the result to [`theme`](theme.qmd) under keys like `axis-text`, `axis-title`,
+`legend-text`, or `legend-title`.
+
+## Usage
+
+```typst
+element-text(
+  size: none,
+  weight: none,
+  colour: none,
+  angle: none,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `size` | `none` | Text size (a Typst length), or `none` to inherit. |
+| `weight` | `none` | Font weight (e.g. `"regular"`, `"bold"`), or `none`. |
+| `colour` | `none` | Text colour, or `none` to inherit. |
+| `angle` | `none` | Rotation angle (a Typst angle), or `none`. |
+
+## Returns
+
+Element dictionary consumed by [`theme`](theme.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/element-text-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = range(0, 10).map(i => (x: i, y: i * 0.5))
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(size: 2pt),),
+  theme: theme(axis-title: element-text(size: 14pt)),
+)
+```
+
+## See also
+
+[`theme`](theme.qmd), [`element-line`](element-line.qmd), [`element-rect`](element-rect.qmd), [`element-blank`](element-blank.qmd).

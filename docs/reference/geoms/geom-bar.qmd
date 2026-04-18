@@ -1,0 +1,70 @@
+---
+title: geom-bar
+subtitle: Bar layer that counts rows per x level (stat-count).
+category: Geoms
+since: 0.1.0
+engine: markdown
+---
+
+
+Maps the `x` aesthetic to a discrete variable; the layer then counts
+rows per x level and draws one bar per count. Use [`geom-col`](geom-col.qmd) instead
+when y is already computed.
+
+## Usage
+
+```typst
+geom-bar(
+  mapping: none,
+  data: none,
+  width: 0.9,
+  fill: auto,
+  stroke: none,
+  alpha: 1,
+  position: "stack",
+  inherit-aes: true,
+)
+```
+
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `mapping` | `none` | Layer-specific aesthetic mapping built with [`aes`](../core/aes.qmd). Falls back to the plot mapping when `none`. |
+| `data` | `none` | Layer-specific dataset. Falls back to the plot data when `none`. |
+| `width` | `0.9` | Bar width as a fraction of the category width (0 to 1). |
+| `fill` | `auto` | Bar fill colour. `auto` resolves via the fill scale or a neutral default. |
+| `stroke` | `none` | Bar outline; `none` means no border. |
+| `alpha` | `1` | Bar opacity in `[0, 1]`. |
+| `position` | `"stack"` | Position adjustment: `"stack"` (default), `"dodge"`, `"fill"`, or `"identity"`. |
+| `inherit-aes` | `true` | Whether to merge the plot-level mapping into this layer's mapping. |
+
+## Returns
+
+Layer dictionary consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/geom-bar-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (grp: "a"),
+  (grp: "b"),
+  (grp: "a"),
+  (grp: "c"),
+  (grp: "b"),
+  (grp: "a"),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "grp"),
+  layers: (geom-bar(),),
+)
+```
+
+## See also
+
+[`geom-col`](geom-col.qmd), [`stat-count`](../stats/stat-count.qmd).

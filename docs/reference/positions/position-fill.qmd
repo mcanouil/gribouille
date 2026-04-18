@@ -1,0 +1,48 @@
+---
+title: position-fill
+subtitle: "Fill position adjustment: stack and normalise each x bucket to sum = 1."
+category: Positions
+since: 0.1.0
+engine: markdown
+---
+
+
+Typically set on a layer as `position: "fill"` rather than constructed
+directly; the constructor exists for symmetry with the other positions.
+
+## Usage
+
+```typst
+position-fill()
+```
+
+
+
+## Returns
+
+Position dictionary with `name: "fill"`, consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/position-fill-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (q: "Q1", grp: "a", y: 3),
+  (q: "Q1", grp: "b", y: 7),
+  (q: "Q2", grp: "a", y: 4),
+  (q: "Q2", grp: "b", y: 6),
+  (q: "Q3", grp: "a", y: 5),
+  (q: "Q3", grp: "b", y: 5),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "q", y: "y", fill: "grp"),
+  layers: (geom-col(position: "fill"),),
+)
+```
+
+## See also
+
+[`position-stack`](position-stack.qmd), [`position-dodge`](position-dodge.qmd), [`position-identity`](position-identity.qmd).

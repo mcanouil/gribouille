@@ -1,2 +1,15 @@
 .DS_Store
 *.log
+*.swp
+
+# Typst build artefacts
+/examples/*.pdf
+/examples/*.png
+
+# Test outputs
+/tests/**/output/
+
+# Quarto build artefacts
+/.quarto/
+/docs/_site/
+**/*.quarto_ipynb

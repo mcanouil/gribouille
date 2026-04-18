@@ -1,0 +1,10 @@
+---
+title: Labs
+---
+
+## Functions
+
+- [`ggtitle`](ggtitle.qmd) - Shortcut for setting the plot title (and optional subtitle).
+- [`labs`](labs.qmd) - Build a label dictionary for the plot title, subtitle, caption, and axes.
+- [`xlab`](xlab.qmd) - Shortcut for setting the x axis title.
+- [`ylab`](ylab.qmd) - Shortcut for setting the y axis title.

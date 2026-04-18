@@ -1,0 +1,48 @@
+---
+title: position-stack
+subtitle: "Stack position adjustment: cumulate y per x bucket."
+category: Positions
+since: 0.1.0
+engine: markdown
+---
+
+
+Typically set on a layer as `position: "stack"` rather than constructed
+directly; the constructor exists for symmetry with the other positions.
+
+## Usage
+
+```typst
+position-stack()
+```
+
+
+
+## Returns
+
+Position dictionary with `name: "stack"`, consumed by [`plot`](../core/plot.qmd).
+
+## Examples
+
+```{typst}
+//| output-filename: "/assets/typst-render/position-stack-1.svg"
+//| width: 10cm
+//| height: 6cm
+#let d = (
+  (q: "Q1", grp: "a", y: 3),
+  (q: "Q1", grp: "b", y: 5),
+  (q: "Q2", grp: "a", y: 4),
+  (q: "Q2", grp: "b", y: 2),
+  (q: "Q3", grp: "a", y: 6),
+  (q: "Q3", grp: "b", y: 4),
+)
+#plot(
+  data: d,
+  mapping: aes(x: "q", y: "y", fill: "grp"),
+  layers: (geom-col(position: "stack"),),
+)
+```
+
+## See also
+
+[`position-dodge`](position-dodge.qmd), [`position-fill`](position-fill.qmd), [`position-identity`](position-identity.qmd).
