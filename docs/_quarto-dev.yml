@@ -1,0 +1,11 @@
+project:
+  output-dir: _site/dev
+
+website:
+  site-url: "https://m.canouil.dev/gribouille/dev"
+  announcement:
+    icon: exclamation-circle
+    dismissable: false
+    content: "**Development** - This documentation is for the development version of Gribouille. For the stable version, please visit [the main documentation](https://m.canouil.dev/gribouille)."
+    type: warning
+    position: above-navbar

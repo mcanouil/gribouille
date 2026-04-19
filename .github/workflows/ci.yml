@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - "ci/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+# One active run per branch; cancel superseded runs on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typst-compile:
+    name: Compile Typst sources
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Typst
+        uses: typst-community/setup-typst@v4
+        with:
+          typst-version: "0.14.0"
+
+      - name: Prepare summary
+        shell: bash
+        run: |
+          {
+            echo "## CI: Typst compile"
+            echo ""
+            echo "| Section | File | Status |"
+            echo "| ------- | ---- | ------ |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Compile unit tests
+        id: unit
+        uses: ./.github/actions/typst-compile
+        with:
+          label: unit
+          glob: "tests/unit/*.typ"
+
+      - name: Compile examples
+        id: examples
+        if: always()
+        uses: ./.github/actions/typst-compile
+        with:
+          label: example
+          glob: "examples/*.typ"
+
+      - name: Totals
+        if: always()
+        shell: bash
+        env:
+          UNIT_PASSED: ${{ steps.unit.outputs.passed }}
+          UNIT_TOTAL: ${{ steps.unit.outputs.total }}
+          EXAMPLES_PASSED: ${{ steps.examples.outputs.passed }}
+          EXAMPLES_TOTAL: ${{ steps.examples.outputs.total }}
+        run: |
+          {
+            echo ""
+            echo "- Unit tests: ${UNIT_PASSED:-0}/${UNIT_TOTAL:-0}"
+            echo "- Examples: ${EXAMPLES_PASSED:-0}/${EXAMPLES_TOTAL:-0}"
+          } >> "${GITHUB_STEP_SUMMARY}"

@@ -1,0 +1,141 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "lib.typ"
+      - "src/**"
+      - "tools/typstdoc/**"
+      - "typst.toml"
+      - "CHANGELOG.md"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+    inputs:
+      use-main-as-release:
+        description: "Render release site from main instead of latest tag"
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      use-main-as-release:
+        description: "Render release site from main instead of latest tag"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# GitHub Pages only accepts one deployment at a time; queue instead of cancel.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy docs
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Typst
+        uses: typst-community/setup-typst@v4
+        with:
+          typst-version: "0.14.0"
+
+      - name: Set up Quarto CLI
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: release
+
+      - name: Resolve latest release tag
+        id: latest-tag
+        shell: bash
+        run: |
+          LATEST_TAG=$(git tag -l --sort=-v:refname 'v[0-9]*' | head -n 1)
+          echo "tag=${LATEST_TAG}" >> "${GITHUB_OUTPUT}"
+          if [ -z "${LATEST_TAG}" ]; then
+            echo "No release tag found; release site will be skipped."
+          else
+            echo "Latest release tag: ${LATEST_TAG}"
+          fi
+
+      - name: Render release site
+        if: ${{ inputs.use-main-as-release != true && steps.latest-tag.outputs.tag != '' }}
+        shell: bash
+        env:
+          LATEST_TAG: ${{ steps.latest-tag.outputs.tag }}
+        run: |
+          git checkout "${LATEST_TAG}"
+          VERSION="${LATEST_TAG}" quarto render docs
+
+      - name: Return to latest default branch
+        shell: bash
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch origin "${DEFAULT_BRANCH}" --quiet
+          git checkout -B "${DEFAULT_BRANCH}" "origin/${DEFAULT_BRANCH}"
+
+      - name: Render release site from main
+        if: ${{ inputs.use-main-as-release == true || steps.latest-tag.outputs.tag == '' }}
+        shell: bash
+        run: |
+          VERSION="$(grep -E '^version[[:space:]]*=' typst.toml | sed -E 's/.*"([^"]+)".*/\1/')" quarto render docs
+
+      - name: Render dev site
+        shell: bash
+        run: |
+          printf 'VERSION=dev\n' > docs/_environment-dev
+          quarto render docs --profile dev
+
+      - name: Prepare site for deployment
+        shell: bash
+        run: touch docs/_site/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: "./docs/_site"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Summary
+        shell: bash
+        env:
+          LATEST_TAG: ${{ steps.latest-tag.outputs.tag }}
+          USE_MAIN: ${{ inputs.use-main-as-release }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          if [ "${USE_MAIN}" = "true" ] || [ -z "${LATEST_TAG}" ]; then
+            RELEASE_SOURCE="main (no tag)"
+          else
+            RELEASE_SOURCE="${LATEST_TAG}"
+          fi
+          {
+            echo "## Documentation deploy"
+            echo ""
+            echo "- Release site source: \`${RELEASE_SOURCE}\`"
+            echo "- Dev site source: \`main\`"
+            echo "- Release URL: ${PAGE_URL}"
+            echo "- Dev URL: ${PAGE_URL}dev/"
+          } >> "${GITHUB_STEP_SUMMARY}"

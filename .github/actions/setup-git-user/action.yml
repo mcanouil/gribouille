@@ -1,0 +1,58 @@
+name: Setup Git User
+description: Create a GitHub App token and configure the git user identity.
+
+inputs:
+  gh-app-id:
+    description: "GitHub App ID"
+    required: false
+    default: ""
+  app-key:
+    description: "GitHub App private key"
+    required: false
+    default: ""
+  gh-token:
+    description: "Fallback GitHub token"
+    required: false
+    default: ""
+
+outputs:
+  token:
+    description: "Resolved token (App token when available, otherwise the fallback)"
+    value: ${{ steps.app-token.outputs.token || inputs.gh-token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Create GitHub App token
+      id: app-token
+      if: ${{ inputs.gh-app-id != '' }}
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ inputs.gh-app-id }}
+        private-key: ${{ inputs.app-key }}
+
+    - name: Get GitHub App user id
+      id: get-user-id
+      if: ${{ steps.app-token.outputs.app-slug != '' }}
+      env:
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+      shell: bash
+      run: |
+        echo "user-id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)" >> "${GITHUB_OUTPUT}"
+
+    - name: Configure git user
+      env:
+        APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        USER_ID: ${{ steps.get-user-id.outputs.user-id }}
+      shell: bash
+      run: |
+        if [ -z "${APP_SLUG}" ]; then
+          USER_NAME="github-actions[bot]"
+          USER_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
+        else
+          USER_NAME="${APP_SLUG}[bot]"
+          USER_EMAIL="${USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+        fi
+        git config --global user.name "${USER_NAME}"
+        git config --global user.email "${USER_EMAIL}"

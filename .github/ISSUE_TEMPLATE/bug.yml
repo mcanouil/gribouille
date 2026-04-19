@@ -30,12 +30,12 @@ body:
 
   - type: textarea
     attributes:
-      label: Actual behavior
+      label: Actual behaviour
       description: Tell us what happens instead.
 
   - type: textarea
     attributes:
-      label: Expected behavior
+      label: Expected behaviour
       description: Tell us what should happen.
 
   - type: textarea

@@ -1,0 +1,55 @@
+name: Compile Typst sources
+description: Compile every Typst file in a directory and report pass/fail counts.
+
+inputs:
+  label:
+    description: "Human label shown in the summary (e.g. 'unit', 'example')."
+    required: true
+  glob:
+    description: "Glob pattern for files to compile (e.g. 'tests/unit/*.typ')."
+    required: true
+  root:
+    description: "Typst project root passed with --root."
+    required: false
+    default: "."
+
+outputs:
+  passed:
+    description: "Number of files that compiled successfully."
+    value: ${{ steps.compile.outputs.passed }}
+  total:
+    description: "Total number of files considered."
+    value: ${{ steps.compile.outputs.total }}
+
+runs:
+  using: composite
+  steps:
+    - id: compile
+      shell: bash
+      env:
+        LABEL: ${{ inputs.label }}
+        GLOB: ${{ inputs.glob }}
+        ROOT: ${{ inputs.root }}
+      run: |
+        shopt -s nullglob
+        FAILED=0
+        PASSED=0
+        TOTAL=0
+        for f in ${GLOB}; do
+          TOTAL=$((TOTAL + 1))
+          echo "::group::Compile ${f}"
+          if typst compile "${f}" --root "${ROOT}" "/tmp/$(basename "${f%.typ}").pdf"; then
+            PASSED=$((PASSED + 1))
+            echo "| ${LABEL} | \`${f}\` | pass |" >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "::error file=${f}::Typst compilation failed"
+            FAILED=1
+            echo "| ${LABEL} | \`${f}\` | **fail** |" >> "${GITHUB_STEP_SUMMARY}"
+          fi
+          echo "::endgroup::"
+        done
+        {
+          echo "passed=${PASSED}"
+          echo "total=${TOTAL}"
+        } >> "${GITHUB_OUTPUT}"
+        exit "${FAILED}"

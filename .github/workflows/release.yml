@@ -1,0 +1,479 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: choice
+        description: "Version bump (applied when 'Create release' is ticked)"
+        default: "minor"
+        options:
+          - "patch"
+          - "minor"
+          - "major"
+      create_release:
+        type: boolean
+        description: "Bump versions, tag, and create a GitHub Release"
+        default: true
+      publish_typst_universe:
+        type: boolean
+        description: "Submit PR to typst/packages (Typst Universe)"
+        default: true
+      deploy_pages:
+        type: boolean
+        description: "Deploy documentation to GitHub Pages"
+        default: true
+
+permissions:
+  contents: read
+
+# Serialise releases on a ref and never cancel in-flight runs; aborting
+# mid-release could leave the bump PR merged but the tag/release absent.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Compile Typst sources
+    if: ${{ inputs.create_release || inputs.publish_typst_universe ||
+      inputs.deploy_pages }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Typst
+        uses: typst-community/setup-typst@v4
+        with:
+          typst-version: "0.14.0"
+
+      - name: Prepare summary
+        shell: bash
+        run: |
+          {
+            echo "## Release validate"
+            echo ""
+            echo "| Section | File | Status |"
+            echo "| ------- | ---- | ------ |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Compile unit tests
+        id: unit
+        uses: ./.github/actions/typst-compile
+        with:
+          label: unit
+          glob: "tests/unit/*.typ"
+
+      - name: Totals
+        if: always()
+        shell: bash
+        env:
+          UNIT_PASSED: ${{ steps.unit.outputs.passed }}
+          UNIT_TOTAL: ${{ steps.unit.outputs.total }}
+        run: |
+          {
+            echo ""
+            echo "- Unit tests: ${UNIT_PASSED:-0}/${UNIT_TOTAL:-0}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  bump-version:
+    name: Bump version
+    needs: validate
+    if: ${{ inputs.create_release }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    env:
+      BRANCH: ci/bump-version
+      BUMP: ${{ inputs.version }}
+
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      release_date: ${{ steps.bump.outputs.release_date }}
+      pr_url: ${{ steps.bump.outputs.pr_url }}
+      commit_sha: ${{ steps.bump.outputs.commit_sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Git user
+        id: setup-git
+        uses: ./.github/actions/setup-git-user
+        with:
+          gh-app-id: ${{ vars.APP_ID }}
+          app-key: ${{ secrets.APP_KEY }}
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify auto-merge is allowed
+        env:
+          GH_TOKEN: ${{ steps.setup-git.outputs.token }}
+        shell: bash
+        run: |
+          if [ "$(gh repo view --json autoMergeAllowed --jq .autoMergeAllowed)" != "true" ]; then
+            echo "::error::Auto-merge is disabled on this repository. Enable 'Allow auto-merge' in Settings → General before running this workflow."
+            exit 1
+          fi
+
+      - name: Compute next version and update sources
+        id: bump
+        env:
+          GH_TOKEN: ${{ steps.setup-git.outputs.token }}
+        shell: bash
+        run: |
+          CURRENT=$(grep -E '^version[[:space:]]*=' typst.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${CURRENT}"
+          case "${BUMP}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+            *) echo "::error::Unknown bump: ${BUMP}"; exit 1 ;;
+          esac
+          VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          DATE=$(date -u +%Y-%m-%d)
+
+          if git show-ref --quiet "refs/heads/${BRANCH}"; then
+            git branch -D "${BRANCH}"
+          fi
+          if git ls-remote --exit-code --heads origin "${BRANCH}" >/dev/null 2>&1; then
+            git push origin --delete "${BRANCH}"
+          fi
+          git checkout -b "${BRANCH}"
+
+          sed -E -i 's/^(version[[:space:]]*=[[:space:]]*")[^"]+/\1'"${VERSION}"'/' typst.toml
+          sed -E -i 's/^(version:[[:space:]]*).*/\1'"${VERSION}"'/' CITATION.cff
+          sed -E -i 's/^(date-released:[[:space:]]*).*/\1"'"${DATE}"'"/' CITATION.cff
+          sed -i "s/^## Unreleased/## ${VERSION} (${DATE})/" CHANGELOG.md
+
+          git add typst.toml CITATION.cff CHANGELOG.md
+          git commit -m "ci: bump version to ${VERSION} :rocket:"
+          COMMIT_SHA=$(git rev-parse HEAD)
+          git push --force origin "${BRANCH}"
+
+          sleep 5
+          PR_URL=$(gh pr create \
+            --fill-first \
+            --base "${GITHUB_REF_NAME}" \
+            --head "${BRANCH}" \
+            --label "Type: CI/CD :robot:")
+          sleep 5
+          gh pr merge --auto --squash --delete-branch "${BRANCH}"
+
+          {
+            echo "version=${VERSION}"
+            echo "release_date=${DATE}"
+            echo "commit_sha=${COMMIT_SHA}"
+            echo "pr_url=${PR_URL}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Summary
+        shell: bash
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          DATE: ${{ steps.bump.outputs.release_date }}
+          PR_URL: ${{ steps.bump.outputs.pr_url }}
+          COMMIT_SHA: ${{ steps.bump.outputs.commit_sha }}
+        run: |
+          {
+            echo "## Version bump"
+            echo ""
+            echo "- Version: \`${VERSION}\`"
+            echo "- Release date: \`${DATE}\`"
+            echo "- Bump commit: \`${COMMIT_SHA}\`"
+            echo "- PR: ${PR_URL}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  github-release:
+    name: Create GitHub Release
+    needs: [ validate, bump-version ]
+    if: ${{ inputs.create_release }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    env:
+      VERSION: ${{ needs.bump-version.outputs.version }}
+      COMMIT_SHA: ${{ needs.bump-version.outputs.commit_sha }}
+      PR_URL: ${{ needs.bump-version.outputs.pr_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git user
+        id: git-user
+        uses: ./.github/actions/setup-git-user
+        with:
+          gh-app-id: ${{ vars.APP_ID }}
+          app-key: ${{ secrets.APP_KEY }}
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for bump PR to merge on main
+        env:
+          GH_TOKEN: ${{ steps.git-user.outputs.token }}
+        shell: bash
+        run: |
+          STATE=""
+          for attempt in {1..30}; do
+            if ! STATE=$(gh pr view "${PR_URL}" --json state --jq .state 2>err.log); then
+              echo "::error::gh pr view failed for ${PR_URL}:"
+              cat err.log
+              exit 1
+            fi
+            if [ "${STATE}" = "MERGED" ]; then
+              echo "Bump PR merged."
+              break
+            fi
+            echo "PR state: ${STATE}. Waiting (attempt ${attempt}/30)..."
+            sleep 10
+          done
+          if [ "${STATE}" != "MERGED" ]; then
+            echo "::error::Bump PR ${PR_URL} did not merge within the timeout (final state: ${STATE})."
+            exit 1
+          fi
+
+          git fetch origin main --quiet
+          if ! git log origin/main --format='%H' -n 20 | grep -qF "${COMMIT_SHA}"; then
+            echo "::error::Bump commit ${COMMIT_SHA} not found on origin/main after waiting."
+            exit 1
+          fi
+          git checkout main
+          git reset --hard origin/main
+
+      - name: Extract release notes from CHANGELOG
+        shell: bash
+        run: |
+          HEADING="## ${VERSION}"
+          awk -v heading="${HEADING}" '
+            index($0, heading) == 1 { flag = 1; next }
+            /^## / && flag { flag = 0 }
+            flag
+          ' CHANGELOG.md | sed '/./,$!d' > "CHANGELOG-${VERSION}.md"
+          if [ ! -s "CHANGELOG-${VERSION}.md" ]; then
+            echo "::error::No release notes found for ${HEADING} in CHANGELOG.md."
+            exit 1
+          fi
+          echo "CHANGELOG_FILE=CHANGELOG-${VERSION}.md" >> "${GITHUB_ENV}"
+
+      - name: Stage release archives
+        shell: bash
+        run: |
+          STAGE="release_assets/gribouille-${VERSION}"
+          mkdir -p "${STAGE}"
+          cp typst.toml lib.typ LICENSE README.md CHANGELOG.md "${STAGE}/"
+          cp -r src "${STAGE}/"
+
+          tar -czf "release_assets/gribouille-${VERSION}.tar.gz" \
+            -C release_assets "gribouille-${VERSION}"
+          (cd release_assets && zip -qr "gribouille-${VERSION}.zip" "gribouille-${VERSION}")
+          rm -rf "${STAGE}"
+
+      - name: Upload release archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: gribouille-${{ env.VERSION }}
+          path: |
+            release_assets/gribouille-${{ env.VERSION }}.tar.gz
+            release_assets/gribouille-${{ env.VERSION }}.zip
+          retention-days: 7
+
+      - name: Create GitHub Release
+        id: release
+        env:
+          GH_TOKEN: ${{ steps.git-user.outputs.token }}
+        shell: bash
+        run: |
+          gh release create "v${VERSION}" \
+            "./release_assets/gribouille-${VERSION}.tar.gz#gribouille ${VERSION} (tar.gz)" \
+            "./release_assets/gribouille-${VERSION}.zip#gribouille ${VERSION} (zip)" \
+            --title "v${VERSION}" \
+            --notes-file "${CHANGELOG_FILE}" \
+            --generate-notes
+          RELEASE_URL=$(gh release view "v${VERSION}" --json url --jq .url)
+          echo "release_url=${RELEASE_URL}" >> "${GITHUB_OUTPUT}"
+
+      - name: Summary
+        shell: bash
+        env:
+          RELEASE_URL: ${{ steps.release.outputs.release_url }}
+        run: |
+          {
+            echo "## GitHub Release"
+            echo ""
+            echo "- Tag: \`v${VERSION}\`"
+            echo "- Release: ${RELEASE_URL}"
+            echo "- Assets: \`gribouille-${VERSION}.tar.gz\`, \`gribouille-${VERSION}.zip\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  pages:
+    name: Deploy Pages
+    needs: [ validate, github-release ]
+    if: ${{ always() && needs.validate.result == 'success' && (inputs.deploy_pages
+      || inputs.publish_typst_universe) && (needs.github-release.result ==
+      'success' || needs.github-release.result == 'skipped') }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      use-main-as-release: false
+
+  typst-universe:
+    name: Submit to Typst Universe
+    needs: [ validate, bump-version, github-release, pages ]
+    if: ${{ always() && inputs.publish_typst_universe && needs.validate.result ==
+      'success' && needs.pages.result == 'success' &&
+      (needs.github-release.result == 'success' || needs.github-release.result
+      == 'skipped') && (needs.bump-version.result == 'success' ||
+      needs.bump-version.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    env:
+      FORK: ${{ vars.TYPST_PACKAGES_FORK }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git user
+        id: git-user
+        uses: ./.github/actions/setup-git-user
+        with:
+          gh-app-id: ${{ vars.APP_ID }}
+          app-key: ${{ secrets.APP_KEY }}
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure gh to back git operations
+        env:
+          GH_TOKEN: ${{ steps.git-user.outputs.token }}
+        shell: bash
+        run: gh auth setup-git
+
+      - name: Resolve package version
+        id: resolve-version
+        env:
+          BUMP_VERSION: ${{ needs.bump-version.outputs.version }}
+        shell: bash
+        run: |
+          if [ -n "${BUMP_VERSION}" ]; then
+            VERSION="${BUMP_VERSION}"
+            REF="v${VERSION}"
+          else
+            VERSION=$(grep -E '^version[[:space:]]*=' typst.toml | sed -E 's/.*"([^"]+)".*/\1/')
+            REF=$(git tag -l --sort=-v:refname "v${VERSION}" | head -n1)
+            if [ -z "${REF}" ]; then
+              REF=$(git rev-parse HEAD)
+            fi
+          fi
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "ref=${REF}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout release ref
+        shell: bash
+        env:
+          REF: ${{ steps.resolve-version.outputs.ref }}
+        run: |
+          git fetch --tags --force
+          git checkout "${REF}"
+
+      - name: Stage package payload
+        env:
+          VERSION: ${{ steps.resolve-version.outputs.version }}
+        shell: bash
+        run: |
+          STAGE="/tmp/stage/gribouille/${VERSION}"
+          mkdir -p "${STAGE}"
+          cp typst.toml lib.typ LICENSE README.md "${STAGE}/"
+          cp -r src "${STAGE}/"
+
+      - name: Clone fork of typst/packages
+        env:
+          GH_TOKEN: ${{ steps.git-user.outputs.token }}
+          VERSION: ${{ steps.resolve-version.outputs.version }}
+        shell: bash
+        run: |
+          if [ -z "${FORK}" ]; then
+            echo "::error::Repository variable TYPST_PACKAGES_FORK is not set."
+            exit 1
+          fi
+          gh repo clone "${FORK}" typst-packages -- --depth 50
+          cd typst-packages
+          git remote add upstream https://github.com/typst/packages.git
+          git fetch upstream main --depth 1
+          git checkout -B "gribouille-${VERSION}" upstream/main
+
+      - name: Copy payload into packages/preview
+        env:
+          VERSION: ${{ steps.resolve-version.outputs.version }}
+        shell: bash
+        run: |
+          DEST="typst-packages/packages/preview/gribouille/${VERSION}"
+          if [ -d "${DEST}" ]; then
+            echo "::error::Destination ${DEST} already exists in fork."
+            exit 1
+          fi
+          mkdir -p "$(dirname "${DEST}")"
+          cp -r "/tmp/stage/gribouille/${VERSION}" "${DEST}"
+
+      - name: Commit and push to fork
+        env:
+          GH_TOKEN: ${{ steps.git-user.outputs.token }}
+          VERSION: ${{ steps.resolve-version.outputs.version }}
+        shell: bash
+        working-directory: typst-packages
+        run: |
+          git add "packages/preview/gribouille/${VERSION}"
+          git commit -m "Add gribouille:${VERSION}"
+          git push --force origin "gribouille-${VERSION}"
+
+      - name: Open PR against typst/packages
+        id: open-pr
+        env:
+          GH_TOKEN: ${{ steps.git-user.outputs.token }}
+          VERSION: ${{ steps.resolve-version.outputs.version }}
+        shell: bash
+        working-directory: typst-packages
+        run: |
+          FORK_OWNER="${FORK%%/*}"
+          BODY_FILE="$(mktemp)"
+          {
+            printf 'Adds `gribouille`, a layered grammar of graphics for Typst, at version `%s`.\n\n' "${VERSION}"
+            printf -- '- Upstream repository: https://github.com/mcanouil/gribouille\n'
+            printf -- '- Release: https://github.com/mcanouil/gribouille/releases/tag/v%s\n' "${VERSION}"
+            printf -- '- Homepage: https://m.canouil.dev/gribouille\n'
+          } > "${BODY_FILE}"
+
+          PR_URL=$(gh pr create \
+            --repo typst/packages \
+            --base main \
+            --head "${FORK_OWNER}:gribouille-${VERSION}" \
+            --title "gribouille:${VERSION}" \
+            --body-file "${BODY_FILE}")
+          echo "pr_url=${PR_URL}" >> "${GITHUB_OUTPUT}"
+
+      - name: Summary
+        shell: bash
+        env:
+          VERSION: ${{ steps.resolve-version.outputs.version }}
+          PR_URL: ${{ steps.open-pr.outputs.pr_url }}
+        run: |
+          {
+            echo "## Typst Universe submission"
+            echo ""
+            echo "- Package: \`gribouille:${VERSION}\`"
+            echo "- Fork branch: \`${FORK}:gribouille-${VERSION}\`"
+            echo "- PR: ${PR_URL}"
+          } >> "${GITHUB_STEP_SUMMARY}"

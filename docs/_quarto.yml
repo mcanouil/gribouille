@@ -2,6 +2,9 @@ project:
   type: website
   lib-dir: lib
   output-dir: _site
+  pre-render:
+    - bash -c "cd .. && lua tools/typstdoc/main.lua"
+    - bash -c "cd .. && lua tools/changelog/main.lua"
   resources:
     - assets/fonts/
     - assets/images/logo-stacked.svg
