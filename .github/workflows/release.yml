@@ -47,7 +47,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up Typst
-        uses: typst-community/setup-typst@v4
+        uses: typst-community/setup-typst@v5
         with:
           typst-version: "0.14.0"
 
@@ -277,7 +277,7 @@ jobs:
           rm -rf "${STAGE}"
 
       - name: Upload release archives
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gribouille-${{ env.VERSION }}
           path: |
