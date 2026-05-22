@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 (2026-05-22)
 
 - fix: centre collected `compose` side legends against the panel grid. (994c9e8)
 - fix: apply plot background inset/outset even without a fill. (2f24982)
