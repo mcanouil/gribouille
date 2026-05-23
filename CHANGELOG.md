@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: `width`/`height` accept `auto` to fill the available space of a bounded container. (070accb)
 - fix: `width`/`height` now bound the whole image, including title, subtitle, caption, and plot-background padding; the data panel shrinks to fit and long titles wrap. (b53fab2)
 
 ## 0.1.1 (2026-05-22)
