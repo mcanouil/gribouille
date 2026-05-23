@@ -30,9 +30,9 @@
 ///
 /// \@param guides Per-aesthetic guide overrides built with\@guides (e.g., `guides(colour: guide-legend(reverse: true))`).
 ///
-/// \@param width Total image width, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome; long titles wrap to fit. Chrome larger than `width` raises an error.
+/// \@param width Total image width, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome; long titles wrap to fit. Chrome larger than `width` raises an error. Pass `auto` to fill the available width of the container the plot sits in (resolved through Typst `layout`); not supported with `defer: true`.
 ///
-/// \@param height Total image height, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome. Chrome larger than `height` raises an error.
+/// \@param height Total image height, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome. Chrome larger than `height` raises an error. Pass `auto` to fill the available height of the container (resolved through Typst `layout`); most predictable inside a fixed-height container such as a `box` or `block` with a set height, and not supported with `defer: true`.
 ///
 /// \@param alt Alt text describing the figure. When set, the rendered plot is wrapped in a `figure` (kind `"gribouille-plot"`, no number, no caption) carrying this string as its PDF alternative text, so a screen reader on a tagged PDF announces the description instead of the raw axis and legend labels. When `none`, the plot renders without the figure wrapper. Quarto authors embedding plots through `typst-render` should set the block-level `alt` cell option for HTML output; this parameter only affects direct Typst compilation.
 ///
@@ -108,6 +108,11 @@
   // content; compose() resolves the active theme from its own context
   // before handing the spec to the renderer.
   if defer {
+    if width == auto or height == auto {
+      panic(
+        "plot: `auto` width/height not supported with `defer: true`; compose() needs concrete panel dimensions",
+      )
+    }
     return (
       data: _normalise-data(data),
       mapping: mapping,
@@ -124,7 +129,16 @@
       strict: strict,
     )
   }
-  context {
+  layout(size => context {
+    let resolved-width = if width == auto { size.width } else { width }
+    let resolved-height = if height == auto { size.height } else { height }
+    if not (
+      resolved-width.pt() < float.inf and resolved-height.pt() < float.inf
+    ) {
+      panic(
+        "plot: `auto` width/height needs a bounded container; wrap the plot in a `box` or `block` with a fixed size, or pass a concrete length",
+      )
+    }
     let spec = (
       data: _normalise-data(data),
       mapping: mapping,
@@ -135,8 +149,8 @@
       theme: theme,
       labs: labs,
       guides: guides,
-      width: width,
-      height: height,
+      width: resolved-width,
+      height: resolved-height,
       alt: alt,
       strict: strict,
     )
@@ -153,7 +167,7 @@
     } else {
       rendered
     }
-  }
+  })
 }
 
 /// Read the alt text stored on a plot spec.

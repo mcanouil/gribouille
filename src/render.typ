@@ -3163,6 +3163,10 @@
   // Canvas dims known up-front from `spec.width` / `spec.height`; cetz
   // draw sites resolve their own rect `%` insets against per-rect natural
   // dims, but layout-time `outset` reservation references the canvas.
+  assert(
+    type(spec.width) == length and type(spec.height) == length,
+    message: "render-plot: width/height must be resolved to concrete lengths before rendering",
+  )
   let width-units-early = spec.width / 1cm
   let height-units-early = spec.height / 1cm
   // `width` / `height` bound the whole image: build the title/subtitle/caption
