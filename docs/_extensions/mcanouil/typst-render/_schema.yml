@@ -57,7 +57,7 @@ options:
       extensions: [.typ]
   root:
     type: string
-    description: "Global only. Root directory for Typst compilation. Defaults to the Quarto project directory."
+    description: "Global only. Root directory for Typst compilation. Relative paths resolve against the document directory; a leading '/' means the project root. Defaults to the document directory."
     completion:
       type: directory
   font-path:
@@ -97,7 +97,7 @@ options:
   include:
     type: boolean
     default: true
-    description: "Include block in output. Set false to suppress entirely."
+    description: "Embed block output in the document. Set false to still compile and write output files, but embed nothing."
   output:
     type: [boolean, string]
     enum: [true, false, asis]
@@ -191,7 +191,7 @@ attributes:
       description: "Compile this block to image."
     include:
       type: boolean
-      description: "Include this block in output. Set false to suppress entirely."
+      description: "Embed this block's output in the document. Set false to still compile and write output files, but embed nothing."
     output:
       type: [boolean, string]
       enum: [true, false, asis]

@@ -1,5 +1,5 @@
 --- Typst Render - Filter
---- @module typst-render
+--- @module "typst-render"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
@@ -1021,10 +1021,10 @@ local function compile_typst(source, opts, img_format)
   end
   dpi = tostring(math.floor(dpi))
 
-  -- Resolve root early: needed for import scanning before cache key is built
-  local resolved_root = global_config.root
-      and paths.resolve_project_path(global_config.root)
-      or quarto.project.directory
+  -- Resolve root early: needed for import scanning before cache key is built.
+  -- Defaults to the document's directory; a relative root resolves against it,
+  -- a leading '/' means the project root (see resolve_to_absolute).
+  local resolved_root = pandoc.path.normalize(resolve_to_absolute(global_config.root or '.'))
 
   -- Merge global and per-block input variables
   local merged_input = merge_inputs(opts.input, opts._block_input)
@@ -1193,6 +1193,14 @@ local function create_image_element(img_path, opts)
     if not is_known_key(k) and type(v) == 'string' then
       kvpairs[#kvpairs + 1] = { k, v }
     end
+  end
+
+  -- Carry the alt text as `fig-alt` so Quarto's figure pipeline copies it onto
+  -- the rendered `<img alt>` (and LaTeX/Typst equivalents). When the image is
+  -- wrapped in a FloatRefTarget, its caption inlines are consumed as the
+  -- caption, so the attribute is the only path that reaches the image alt.
+  if alt_text ~= '' then
+    kvpairs[#kvpairs + 1] = { 'fig-alt', alt_text }
   end
 
   local img = pandoc.Image(
@@ -1544,10 +1552,7 @@ local function process_codeblock(el)
     end
   end
 
-  if not cell.should_include(opts) then
-    return pandoc.Null()
-  end
-
+  local do_include = cell.should_include(opts)
   local do_eval = opts.eval ~= false
   local do_echo = opts.echo == true or opts.echo == 'fenced'
   local is_fenced = opts.echo == 'fenced'
@@ -1562,19 +1567,24 @@ local function process_codeblock(el)
   local code = clean_code
   if opts.file then
     code = read_external_file(opts.file)
-    if not code then return el end
+    if not code then
+      return do_include and el or pandoc.Null()
+    end
   end
 
   opts._source = code:sub(1, 200)
 
   -- Echo-only: show source listing without compilation
   if not do_eval then
+    if not do_include then
+      return pandoc.Null()
+    end
     return cell.create_echo_block(code, is_fenced, option_lines)
   end
 
   -- Output suppressed: skip compilation, show echo block only
   if output_mode == 'false' then
-    if do_echo then
+    if do_echo and do_include then
       return cell.create_echo_block(code, is_fenced, option_lines)
     end
     return pandoc.Null()
@@ -1582,6 +1592,9 @@ local function process_codeblock(el)
 
   -- Native Typst output: pass through as scoped RawBlock, wrapped in crossref if needed
   if quarto.format.is_typst_output() and output_mode == 'asis' then
+    if not do_include then
+      return pandoc.Null()
+    end
     local typst_opts = has_dual_mode_colours(opts)
         and resolve_opts_colours(opts, global_brand_mode)
         or opts
@@ -1663,6 +1676,9 @@ local function process_codeblock(el)
 
     if not light_content and not dark_content then
       log.log_warning(EXTENSION_NAME, 'Compilation failed; returning error block.')
+      if not do_include then
+        return pandoc.Null()
+      end
       local error_block = create_error_block(light_err or dark_err)
       if do_echo then
         local echo_block = cell.create_echo_block(code, is_fenced, option_lines)
@@ -1717,6 +1733,9 @@ local function process_codeblock(el)
     if not content then
       if compile_err then
         log.log_warning(EXTENSION_NAME, 'Compilation failed; returning error block.')
+        if not do_include then
+          return pandoc.Null()
+        end
         local error_block = create_error_block(compile_err)
         if do_echo then
           local echo_block = cell.create_echo_block(code, is_fenced, option_lines)
@@ -1743,6 +1762,11 @@ local function process_codeblock(el)
     end
 
     result = cell.wrap_crossref(content, opts, REF_TYPE_NAMES)
+  end
+
+  -- Compilation and file-save side effects have run; suppress embedding if include is false.
+  if not do_include then
+    return pandoc.Null()
   end
 
   local output_location = cell.resolve_output_location(opts, EXTENSION_NAME)
