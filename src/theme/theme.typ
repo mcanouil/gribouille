@@ -306,7 +306,7 @@
 /// \@param theme Merged theme dictionary.
 ///
 /// \@param surface Text surface key, e.g., `"axis-text"`.
-/// \@returns Dict with `size`, `fill`, `weight`, `typst`, `margin`.
+/// \@returns Dict with `size`, `fill`, `weight`, `typst`, `margin`, `align`.
 #let _text-style(theme, surface) = {
   let el = resolve-element(theme, surface)
   let blank = el.at("kind", default: none) == "element-blank"
@@ -320,6 +320,8 @@
     weight: if weight != none { weight } else { "regular" },
     typst: el.at("kind", default: none) == "element-typst",
     margin: _normalise-margin(el.at("margin", default: none)),
+    // `none` when unset; each draw site applies its per-surface default.
+    align: el.at("align", default: none),
   )
 }
 
