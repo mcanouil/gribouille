@@ -1,7 +1,8 @@
 # Used by the tagged-release docs build.
-# feature-matrix.qmd is a development-only coverage table; keep it off the public site.
+# feature-matrix.qmd and install-dev.qmd are development-only; keep them off the public site.
 project:
   render:
     - "*.qmd"
     - "**/*.qmd"
     - "!feature-matrix.qmd"
+    - "!install-dev.qmd"

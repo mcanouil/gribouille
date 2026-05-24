@@ -1,0 +1,60 @@
+---
+title: "Install the development version"
+subtitle: "Download and try the latest *Gribouille* build from `main`, ahead of Typst Universe."
+toc: true
+engine: markdown
+---
+
+The development build tracks the `main` branch and is published here as a downloadable package.
+Use it to try unreleased changes before they reach [Typst Universe](https://typst.app/universe/package/gribouille).
+
+::: {.callout-warning}
+This is not a stable release.
+It is rebuilt from `main` and can change without notice, so pin a stable version for production documents.
+:::
+
+## Download
+
+- [`gribouille.tar.gz`](gribouille.tar.gz).
+- [`gribouille.zip`](gribouille.zip).
+
+The bundled `typst.toml` carries a comment naming the exact source commit, so you can always tell which build you have.
+
+## Install as a local package
+
+The package version is the UTC build date, `{{< env DEV_VERSION >}}`.
+Typst versions are three integers, so there is no `-dev` suffix; the date is the development marker and sorts above any published release.
+
+Extract the archive into Typst's local package directory under that version, then import it like any other package.
+
+On macOS:
+
+```bash
+DEST="$HOME/Library/Application Support/typst/packages/local/gribouille/{{< env DEV_VERSION >}}"
+mkdir -p "$DEST"
+tar -xzf gribouille.tar.gz --strip-components=1 -C "$DEST"
+```
+
+On Linux:
+
+```bash
+DEST="${XDG_DATA_HOME:-$HOME/.local/share}/typst/packages/local/gribouille/{{< env DEV_VERSION >}}"
+mkdir -p "$DEST"
+tar -xzf gribouille.tar.gz --strip-components=1 -C "$DEST"
+```
+
+Then import it:
+
+```typst
+#import "@local/gribouille:{{< env DEV_VERSION >}}": *
+```
+
+The `@local` namespace is separate from `@preview`, so this never clashes with a Typst Universe install of *Gribouille*.
+
+## Import without installing
+
+If you would rather not install it, extract the archive anywhere and import the entry point by path:
+
+```typst
+#import "/path/to/gribouille-{{< env DEV_VERSION >}}/lib.typ": *
+```
