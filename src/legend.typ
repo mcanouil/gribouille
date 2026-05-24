@@ -53,15 +53,29 @@
 
 // Layer `over`'s placement onto `base`, treating an `auto` side / direction as
 // "inherit from `base`". Lets `guide-legend(position: auto)` fall through to a
-// `guides(default: ...)` placement and then to the natural default.
+// `guides(default: ...)` placement and then to the natural default. An `auto`
+// position carries no positional information, so the inherited side, corner
+// (`align`), and offsets (`dx` / `dy`) all come from `base`; a `direction`
+// override still applies on its own.
 #let _merge-placement(base, over) = {
-  let side = if over.at("side", default: auto) == auto {
-    base.side
-  } else { over.side }
   let direction = if over.at("direction", default: auto) == auto {
     base.direction
   } else { over.direction }
-  (..base, ..over, side: side, direction: direction)
+  if over.at("side", default: auto) == auto {
+    (
+      (
+        ..base,
+        ..over,
+        side: base.side,
+        align: base.align,
+        dx: base.dx,
+        dy: base.dy,
+        direction: direction,
+      )
+    )
+  } else {
+    (..base, ..over, direction: direction)
+  }
 }
 
 // Equality key for placement comparisons. Two candidates with different keys
@@ -288,6 +302,15 @@
   let override = overrides.at(aes-name, default: none)
   let default-guide = overrides.at("default", default: none)
   if override != none and override.at("suppress", default: false) {
+    return none
+  }
+  // `guides(default: guide-none())` hides every legend that has no override of
+  // its own.
+  if (
+    override == none
+      and default-guide != none
+      and default-guide.at("suppress", default: false)
+  ) {
     return none
   }
 

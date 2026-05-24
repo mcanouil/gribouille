@@ -18,7 +18,8 @@
 ///   `default` sets a fallback guide whose unset fields (e.g. an `auto`
 ///   `position`) are inherited by every aesthetic without its own override, so
 ///   `guides(default: guide-legend(position: "bottom"))` moves all legends to
-///   the bottom in one call.
+///   the bottom in one call. `guides(default: guide-none())` hides every legend
+///   that has no override of its own.
 ///
 /// \@returns Dictionary mapping aesthetic name to guide spec.
 ///
