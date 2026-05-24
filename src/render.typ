@@ -182,10 +182,19 @@
   _strip-mapping-refs(merge-mapping(layer, plot-mapping))
 }
 
-// Axis title fallback: trained scale's `spec.name` wins; otherwise the bare
-// mapping column name (which may be `none` when neither is set). Used by
-// the cartesian title path and the faceted (wrap/grid) finishers.
+// Axis title fallback: a `labs(x: none)` suppression (`spec.blank`) wins and
+// yields no title; otherwise the trained scale's `spec.name`, else the bare
+// mapping column name (which may be `none` when neither is set). Used by the
+// cartesian title path and the faceted (wrap/grid) finishers.
 #let _axis-title(trained, mapping-name) = {
+  if (
+    trained != none
+      and trained.spec != none
+      and trained.spec.at(
+        "blank",
+        default: false,
+      )
+  ) { return none }
   let from-scale = if trained != none and trained.spec != none {
     trained.spec.name
   } else { none }
@@ -1817,18 +1826,21 @@
 }
 
 // Inject labs `x`/`y`/... names into trained scale specs so axis and legend
-// titles follow labs() overrides.
+// titles follow labs() overrides. `auto` (the labs default) keeps the
+// scale-derived name; `none` sets `spec.blank` to suppress the title and
+// collapse its reserved space; a string overrides the name.
 #let _apply-labs(trained, labs) = {
   if labs == none { return trained }
   for (aes-name, label) in labs.axes.pairs() {
-    if label == none { continue }
+    if label == auto { continue }
     let t = trained.at(aes-name, default: none)
     if t == none { continue }
     let spec = t.at("spec", default: none)
-    let new-spec = if spec == none { (aesthetic: aes-name, name: label) } else {
-      let s = spec
-      s.insert("name", label)
-      s
+    let base = if spec == none { (aesthetic: aes-name) } else { spec }
+    let new-spec = if label == none {
+      base + (blank: true)
+    } else {
+      base + (name: label)
     }
     let new-t = t
     new-t.insert("spec", new-spec)
@@ -3033,7 +3045,12 @@
   let caption = _text-style(theme, "plot-caption")
   // Box each chrome label to the inner width so it wraps; `..text-args` carries
   // the per-label `weight` / `style` that `text()` rejects when set to `none`.
-  let _chrome-block(value, style, ..text-args) = if value != none {
+  let _chrome-block(value, style, ..text-args) = if (
+    value != none
+      and (
+        value != auto
+      )
+  ) {
     box(
       width: inner-w,
       text(
@@ -3387,18 +3404,37 @@
   let y-label-width = if labels-on {
     _y-label-width-stack(y-guide, y-extents.width, y-extents.height)
   } else { 0.0 }
+  // A suppressed (`labs(x: none)`) or nameless axis title reserves no extent;
+  // mirror the draw-side gate so the panel reclaims the freed depth.
+  let _flipped = _is-flipped(coord)
+  let _x-title-name = if spec.mapping == none { none } else {
+    mapping-display-name(
+      spec.mapping.at(if _flipped { "y" } else { "x" }, default: none),
+    )
+  }
+  let _y-title-name = if spec.mapping == none { none } else {
+    mapping-display-name(
+      spec.mapping.at(if _flipped { "x" } else { "y" }, default: none),
+    )
+  }
+  let x-title = _axis-title(trained.at("x", default: none), _x-title-name)
+  let y-title = _axis-title(trained.at("y", default: none), _y-title-name)
   // Only reserve the title-to-label gap when a title actually renders;
   // a `0pt` axis title (e.g., `theme-void`) needs no gap, and the absolute
   // `_AX-TITLE-LABEL-GAP` would otherwise tip `bottom-extent` over the floor
   // threshold and invert the panel rect on short plots.
-  let bottom-gap = if ax-title.xb.size > 0pt {
+  let bottom-gap = if x-title != none and ax-title.xb.size > 0pt {
     _text-margin-cm(ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   } else { 0.0 }
-  let left-gap = if ax-title.yl.size > 0pt {
+  let left-gap = if y-title != none and ax-title.yl.size > 0pt {
     _text-margin-cm(ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   } else { 0.0 }
-  let x-title-cm = _ax-text-cm(ax-title.xb.size)
-  let y-title-cm = _ax-text-cm(ax-title.yl.size)
+  let x-title-cm = if x-title != none { _ax-text-cm(ax-title.xb.size) } else {
+    0.0
+  }
+  let y-title-cm = if y-title != none { _ax-text-cm(ax-title.yl.size) } else {
+    0.0
+  }
   let bottom-extent = (
     tick-len.xb + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05
   )
