@@ -399,11 +399,15 @@
             tight-sides: tight-sides,
           ).content
         } else {
-          let aw = spec.width / 1cm
-          let ah = spec.height / 1cm
-          let scale = calc.min(cell-w / aw, cell-h / ah)
+          let aspect-w = spec.width / 1cm
+          let aspect-h = spec.height / 1cm
+          let scale = calc.min(cell-w / aspect-w, cell-h / aspect-h)
           let inner = render-plot-deferred(
-            (..spec, width: aw * scale * 1cm, height: ah * scale * 1cm),
+            (
+              ..spec,
+              width: aspect-w * scale * 1cm,
+              height: aspect-h * scale * 1cm,
+            ),
             suppress-aesthetics: hoisted,
             tight-sides: tight-sides,
           ).content
