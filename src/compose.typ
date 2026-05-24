@@ -323,14 +323,14 @@
       hoisted-guides.len() > 0 and guides-placement == "right"
     ) { legend-mod.legend-gap(theme) } else { 0.0 }
 
-    // `sized` when both axes are bounded: an explicit length, or `auto` inside
-    // a bounded container. Otherwise compose falls back to intrinsic layout,
-    // sizing each panel at its own declared `width`/`height` (the historical
-    // behaviour) so an unwrapped composition still renders.
-    let sized = (
-      (width != auto or container.width.pt() < float.inf)
-        and (height != auto or container.height.pt() < float.inf)
-    )
+    // An axis is bounded when it is an explicit length, or `auto` inside a
+    // bounded container. When both are bounded compose sizes panels to the
+    // canvas; otherwise it falls back to intrinsic layout, sizing each panel at
+    // its own declared `width`/`height` (the historical behaviour) so an
+    // unwrapped composition still renders.
+    let width-bounded = width != auto or container.width.pt() < float.inf
+    let height-bounded = height != auto or container.height.pt() < float.inf
+    let sized = width-bounded and height-bounded
 
     let panel-block = if sized {
       let area-w = (if width == auto { container.width } else { width }) / 1cm
@@ -362,10 +362,22 @@
         col-ratios = widths
         row-ratios = heights
       } else if direction == ttb or direction == btt {
+        if widths != none {
+          panic(
+            "compose: `widths` has no effect on a vertical stack; size it "
+              + "with `heights`",
+          )
+        }
         cols = 1
         rows = n
         row-ratios = heights
       } else {
+        if heights != none {
+          panic(
+            "compose: `heights` has no effect on a horizontal stack; size it "
+              + "with `widths`",
+          )
+        }
         cols = n
         rows = 1
         col-ratios = widths
@@ -433,9 +445,14 @@
       }
     } else {
       if widths != none or heights != none {
+        let unbounded = ()
+        if not width-bounded { unbounded.push("width") }
+        if not height-bounded { unbounded.push("height") }
         panic(
-          "compose: `widths`/`heights` need a bounded `width`/`height`; set "
-            + "them or wrap the composition in a sized box",
+          "compose: `widths`/`heights` need a bounded composition size, but "
+            + unbounded.join(" and ")
+            + " is unbounded; pass a concrete length or wrap the composition "
+            + "in a sized box",
         )
       }
       let final-panels = if hoisted.len() == 0 {
