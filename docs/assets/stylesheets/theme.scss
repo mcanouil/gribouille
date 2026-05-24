@@ -440,6 +440,33 @@ a.navbar-brand {
   letter-spacing: -0.005em;
 }
 
+// --- Tabsets (.panel-tabset). -------------------------------------------
+.panel-tabset .nav-tabs {
+  border-bottom: 1px solid var(--gb-hairline);
+}
+
+.panel-tabset .nav-tabs .nav-link {
+  color: var(--gb-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-top-left-radius: var(--gb-radius-sm);
+  border-top-right-radius: var(--gb-radius-sm);
+  font-family: $font-family-sans-serif;
+  transition: color 150ms var(--gb-ease), border-color 150ms var(--gb-ease);
+}
+
+.panel-tabset .nav-tabs .nav-link:hover,
+.panel-tabset .nav-tabs .nav-link:focus-visible {
+  color: var(--gb-primary);
+}
+
+.panel-tabset .nav-tabs .nav-link.active {
+  color: var(--gb-primary);
+  background: transparent;
+  border-color: var(--gb-hairline);
+  border-bottom-color: var(--gb-paper);
+}
+
 // --- Cards (landing and category index). --------------------------------
 .card, .quarto-listing-default .quarto-post {
   @include soft-card;
