@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: the `compose` collected legend placed on `top` or `bottom` no longer clips its first swatch and is centred under the panels. (#19)
 - docs: callout headers now sit on the type tint as a distinct band while the body uses the plain surface, and caution gets its own deeper mustard so it no longer matches warning. (#16)
 - docs: tabset (panel-tabset) labels now follow the light/dark theme; the active tab label uses the brand primary colour in both schemes. (#15)
 - docs: the development version is now downloadable from the dev documentation site and installable as a local package; release, Typst Universe, and development archives share an identical payload. (#14)
