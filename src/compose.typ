@@ -4,6 +4,11 @@
 #import "theme/defaults.typ": merge-theme
 #import "theme/elements.typ": margin
 
+// The public `compose` parameter `layout` shadows Typst's builtin `layout`
+// function inside the body; capture the builtin here so the container size is
+// still reachable.
+#let _layout = layout
+
 #let _is-plot-spec(x) = (
   type(x) == dictionary
     and "layers" in x
@@ -68,6 +73,21 @@
   }
 }
 
+// Split `total` cm into `count` track lengths separated by `gutter` cm gaps,
+// distributed by `ratios` (relative weights) or equally when `ratios` is
+// `none`. Returns an array of cm floats summing to `total - gutter * (count -
+// 1)`.
+#let _tracks(total, count, gutter, ratios) = {
+  let usable = calc.max(total - gutter * (count - 1), 0.0)
+  let weights = if ratios == none {
+    range(count).map(_ => 1.0)
+  } else {
+    ratios.map(r => float(r))
+  }
+  let sum = weights.fold(0.0, (a, b) => a + b)
+  weights.map(w => usable * w / sum)
+}
+
 /// Arrange multiple plots into a grid or stack with a shared, hoisted legend.
 ///
 /// `compose` is the multi-plot orchestrator: it takes deferred plots, probes
@@ -98,6 +118,23 @@
 ///
 /// \@param gutter Spacing between panels and between the panel block and the
 ///   shared legend.
+///
+/// \@param widths Relative column widths (grid) or panel widths along a
+///   horizontal stack, as an array of weights (e.g. `(2, 1)`). When set, the
+///   child plots' own `width`/`height` are discarded and panels fill their
+///   cells. Length must match the column count. Requires a bounded composition
+///   `width`.
+///
+/// \@param heights Relative row heights (grid) or panel heights along a
+///   vertical stack. Same rules as `widths`; length must match the row count
+///   and it requires a bounded composition `height`.
+///
+/// \@param width Total composition width. `auto` (default) fills the available
+///   width of a bounded container (resolved through Typst `layout`). When the
+///   container is unbounded and `width` is `auto`, compose falls back to laying
+///   panels at their own declared sizes.
+///
+/// \@param height Total composition height. Same semantics as `width`.
 ///
 /// \@param collect Which aesthetics to hoist into the shared legend.
 ///   - `auto` (default) hoists every aesthetic whose guide is identical across
@@ -170,6 +207,22 @@
 /// )
 /// ```
 ///
+/// \@examples Size the composition to a bounded box and split the two panels
+/// 2:1 with `widths`; the child plots' own dimensions are discarded.
+/// ```
+/// //| alt: "Two mpg scatter panels in a 16 by 6 centimetre canvas where the left panel is twice the width of the right, sharing a colour-by-cylinder legend on the right."
+/// #let panel(map) = plot(
+///   data: mpg, mapping: map,
+///   layers: (geom-point(size: 2pt),),
+///   width: 6cm, height: 4cm, defer: true,
+/// )
+/// #box(width: 16cm, height: 6cm, compose(
+///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
+///   panel(aes(x: "displ", y: "cty", colour: as-factor("cyl"))),
+///   columns: 2, widths: (2, 1),
+/// ))
+/// ```
+///
 /// \@see\@plot,\@aes,\@guides
 #let compose(
   ..panels-positional,
@@ -177,6 +230,10 @@
   columns: 2,
   direction: ttb,
   gutter: 0.5cm,
+  widths: none,
+  heights: none,
+  width: auto,
+  height: auto,
   collect: auto,
   guides-placement: "right",
 ) = {
@@ -205,8 +262,11 @@
         + repr(guides-placement),
     )
   }
+  if layout != "grid" and layout != "stack" {
+    panic("compose: layout must be \"grid\" or \"stack\"; got " + repr(layout))
+  }
 
-  context {
+  _layout(container => context {
     let probes = panels.map(spec => render-plot-deferred(spec))
     let per-panel = probes.map(p => _index-by-aesthetic(p.guides))
 
@@ -244,52 +304,168 @@
     // top/right) actually need.
     let tight-sides = (guides-placement,)
 
-    let final-panels = if hoisted.len() == 0 {
-      probes.map(p => p.content)
-    } else {
-      panels.map(spec => {
-        render-plot-deferred(
-          spec,
-          suppress-aesthetics: hoisted,
-          tight-sides: tight-sides,
-        ).content
-      })
-    }
+    let first-theme = panels.first().theme
+    let theme = merge-theme(
+      if first-theme != none { first-theme } else { _theme-state.get() },
+    )
 
-    let panel-block = if layout == "grid" {
-      grid(columns: columns, gutter: gutter, ..final-panels)
-    } else if layout == "stack" {
-      stack(dir: direction, spacing: gutter, ..final-panels)
-    } else {
-      panic(
-        "compose: layout must be \"grid\" or \"stack\"; got " + repr(layout),
+    // Legend footprint, reserved from the canvas in sized mode so the panel
+    // block plus legend total back to the requested dimensions.
+    let legend-size = if hoisted-guides.len() > 0 {
+      _legend-canvas-size(hoisted-guides, guides-placement)
+    } else { (width: 0.0, height: 0.0) }
+    // For right placement the panel-margin override trims the panel's right
+    // side to 0 cm; with no intrinsic cetz padding on that side the legend
+    // would butt against the panel data area, so add `legend-gap` to match a
+    // single-plot side-legend offset. Other sides leave the panel-block's own
+    // axis-text / cetz-baseline padding to provide the visual gap.
+    let right-gap-cm = if (
+      hoisted-guides.len() > 0 and guides-placement == "right"
+    ) { legend-mod.legend-gap(theme) } else { 0.0 }
+
+    // `sized` when both axes are bounded: an explicit length, or `auto` inside
+    // a bounded container. Otherwise compose falls back to intrinsic layout,
+    // sizing each panel at its own declared `width`/`height` (the historical
+    // behaviour) so an unwrapped composition still renders.
+    let sized = (
+      (width != auto or container.width.pt() < float.inf)
+        and (height != auto or container.height.pt() < float.inf)
+    )
+
+    let panel-block = if sized {
+      let area-w = (if width == auto { container.width } else { width }) / 1cm
+      let area-h = (
+        (
+          if height == auto { container.height } else { height }
+        )
+          / 1cm
       )
+      if guides-placement == "right" {
+        area-w -= legend-size.width + right-gap-cm
+      } else if guides-placement == "left" {
+        area-w -= legend-size.width
+      } else {
+        area-h -= legend-size.height
+      }
+
+      let n = panels.len()
+      // `widths`/`heights` make panels fill their cells; without them each
+      // panel keeps its aspect ratio and is letterboxed in an equal cell.
+      let fill-mode = widths != none or heights != none
+      let cols = 0
+      let rows = 0
+      let col-ratios = none
+      let row-ratios = none
+      if layout == "grid" {
+        cols = if type(columns) == int { columns } else { columns.len() }
+        rows = calc.ceil(n / cols)
+        col-ratios = widths
+        row-ratios = heights
+      } else if direction == ttb or direction == btt {
+        cols = 1
+        rows = n
+        row-ratios = heights
+      } else {
+        cols = n
+        rows = 1
+        col-ratios = widths
+      }
+      if col-ratios != none and col-ratios.len() != cols {
+        panic(
+          "compose: `widths` needs one entry per column ("
+            + str(cols)
+            + "); got "
+            + str(col-ratios.len()),
+        )
+      }
+      if row-ratios != none and row-ratios.len() != rows {
+        panic(
+          "compose: `heights` needs one entry per row ("
+            + str(rows)
+            + "); got "
+            + str(row-ratios.len()),
+        )
+      }
+
+      let gutter-cm = gutter / 1cm
+      let col-tracks = _tracks(area-w, cols, gutter-cm, col-ratios)
+      let row-tracks = _tracks(area-h, rows, gutter-cm, row-ratios)
+
+      let render-cell(spec, cell-w, cell-h) = {
+        if fill-mode {
+          render-plot-deferred(
+            (..spec, width: cell-w * 1cm, height: cell-h * 1cm),
+            suppress-aesthetics: hoisted,
+            tight-sides: tight-sides,
+          ).content
+        } else {
+          let aw = spec.width / 1cm
+          let ah = spec.height / 1cm
+          let scale = calc.min(cell-w / aw, cell-h / ah)
+          let inner = render-plot-deferred(
+            (..spec, width: aw * scale * 1cm, height: ah * scale * 1cm),
+            suppress-aesthetics: hoisted,
+            tight-sides: tight-sides,
+          ).content
+          box(
+            width: cell-w * 1cm,
+            height: cell-h * 1cm,
+            align(center + horizon, inner),
+          )
+        }
+      }
+
+      let cells = ()
+      for (i, spec) in panels.enumerate() {
+        let col = calc.rem(i, cols)
+        let row = calc.quo(i, cols)
+        cells.push(render-cell(spec, col-tracks.at(col), row-tracks.at(row)))
+      }
+
+      if layout == "grid" {
+        grid(columns: cols, gutter: gutter, ..cells)
+      } else {
+        stack(dir: direction, spacing: gutter, ..cells)
+      }
+    } else {
+      if widths != none or heights != none {
+        panic(
+          "compose: `widths`/`heights` need a bounded `width`/`height`; set "
+            + "them or wrap the composition in a sized box",
+        )
+      }
+      let final-panels = if hoisted.len() == 0 {
+        probes.map(p => p.content)
+      } else {
+        panels.map(spec => {
+          render-plot-deferred(
+            spec,
+            suppress-aesthetics: hoisted,
+            tight-sides: tight-sides,
+          ).content
+        })
+      }
+      if layout == "grid" {
+        grid(columns: columns, gutter: gutter, ..final-panels)
+      } else {
+        stack(dir: direction, spacing: gutter, ..final-panels)
+      }
     }
 
     if hoisted-guides.len() == 0 {
       return panel-block
     }
 
-    let first-theme = panels.first().theme
-    let theme = merge-theme(
-      if first-theme != none { first-theme } else { _theme-state.get() },
-    )
     let trained = probes.first().trained
-    let size = _legend-canvas-size(hoisted-guides, guides-placement)
     let legend-canvas = legend-mod.standalone(
       hoisted-guides,
       trained,
       theme,
       guides-placement,
-      size.width,
-      size.height,
+      legend-size.width,
+      legend-size.height,
     )
-    // For right placement the panel-margin override trims the panel's right
-    // side to 0 cm; with no intrinsic cetz padding on that side the legend
-    // would butt against the panel data area, so add `legend-gap` to match a
-    // single-plot side-legend offset. Other sides leave the panel-block's
-    // own axis-text / cetz-baseline padding to provide the visual gap.
-    let right-gap = legend-mod.legend-gap(theme) * 1cm
+    let right-gap = right-gap-cm * 1cm
 
     if guides-placement == "right" {
       grid(
@@ -309,5 +485,5 @@
     } else {
       stack(dir: ttb, align(center, legend-canvas), panel-block)
     }
-  }
+  })
 }
