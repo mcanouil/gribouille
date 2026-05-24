@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: `compose()` gains `width`/`height` (filling a bounded container by default) and relative `widths`/`heights` to size panels against the canvas rather than their own declared dimensions. (#20)
 - fix: the `compose` collected legend placed on `top` or `bottom` no longer clips its first swatch and is centred under the panels. (#19)
 - docs: callout headers now sit on the type tint as a distinct band while the body uses the plain surface, and caution gets its own deeper mustard so it no longer matches warning. (#16)
 - docs: tabset (panel-tabset) labels now follow the light/dark theme; the active tab label uses the brand primary colour in both schemes. (#15)
