@@ -119,6 +119,22 @@
 /// )
 /// ```
 ///
+/// \@examples Pass `none` to suppress a label and reclaim its space; here the
+/// x-axis title is dropped and the panel grows into the freed area while the
+/// y-axis title stays.
+/// ```
+/// //| alt: "Scatter of y against x with the x-axis title suppressed via labs(x: none); the panel extends down into the freed space while the 'Value' y-axis title remains."
+/// #let d = range(0, 10).map(i => (x: i, y: i * 0.5))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (geom-point(size: 2pt),),
+///   labs: labs(x: none, y: "Value"),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@plot
 #let labs(
   title: auto,

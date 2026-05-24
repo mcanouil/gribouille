@@ -343,7 +343,9 @@
 /// Blank element: hides the corresponding theme element.
 ///
 /// Pass the result to \@theme under keys like `panel-grid` or `axis-line`
-/// to turn them off entirely.
+/// to turn them off entirely. On a text surface (`axis-title`, `plot-title`,
+/// `legend-title`, ...) it also collapses the space the text would reserve, so
+/// the data panel grows into the freed area.
 ///
 /// \@category Themes
 /// \@subcategory Theme elements
@@ -379,6 +381,22 @@
 ///     panel-grid: element-blank(),
 ///     axis-line: element-blank(),
 ///   ),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@examples Blank a text surface to drop its ink and reclaim its space; here
+/// the axis titles collapse while tick labels stay.
+/// ```
+/// //| alt: "Scatter plot of y against x with both axis titles removed via element-blank, the panel filling the space the titles would occupy while tick labels remain."
+/// #let d = range(0, 10).map(i => (x: i, y: i * 0.5))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (geom-point(size: 2pt),),
+///   labs: labs(x: "Index", y: "Value"),
+///   theme: theme(axis-title: element-blank()),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
