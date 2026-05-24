@@ -24,7 +24,9 @@
   let dx = 0pt
   let dy = 0pt
 
-  if type(position) == str and _VALID-SIDES.contains(position) {
+  if position == auto {
+    side = auto
+  } else if type(position) == str and _VALID-SIDES.contains(position) {
     side = position
   } else if type(position) == alignment {
     side = "inside"
@@ -46,7 +48,11 @@
   }
 
   let resolved-direction = if direction == auto {
-    if side == "top" or side == "bottom" { "horizontal" } else { "vertical" }
+    if side == auto {
+      auto
+    } else if side == "top" or side == "bottom" {
+      "horizontal"
+    } else { "vertical" }
   } else if direction == "horizontal" or direction == "vertical" {
     direction
   } else {
@@ -85,7 +91,7 @@
 ///
 /// \@param reverse Reverse the order of levels.
 ///
-/// \@param position Where the legend sits. One of `"top"`, `"right"`, `"bottom"`, `"left"`, `"none"`, a Typst alignment (e.g. `top + right`) for inside-panel placement, or a dict `(dx:, dy:)` / `(x:, y:)` for arbitrary offsets. Wide horizontal legends on `"top"` / `"bottom"` can overflow the panel edge.
+/// \@param position Where the legend sits. One of `"top"`, `"right"`, `"bottom"`, `"left"`, `"none"`, a Typst alignment (e.g. `top + right`) for inside-panel placement, or a dict `(dx:, dy:)` / `(x:, y:)` for arbitrary offsets. `auto` (default) inherits the side from a `guides(default: ...)` entry when present, otherwise falls back to `"right"`. Wide horizontal legends on `"top"` / `"bottom"` can overflow the panel edge.
 ///
 /// \@param direction Flow direction of swatch entries: `"horizontal"` or `"vertical"`. `auto` infers from `position` (horizontal for top/bottom, vertical otherwise).
 ///
@@ -152,7 +158,7 @@
   nrow: none,
   ncolumn: none,
   reverse: false,
-  position: "right",
+  position: auto,
   direction: auto,
   order: none,
   byrow: false,

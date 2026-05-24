@@ -14,7 +14,11 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param args Named guide specs keyed by aesthetic name.
+/// \@param args Named guide specs keyed by aesthetic name. The reserved key
+///   `default` sets a fallback guide whose unset fields (e.g. an `auto`
+///   `position`) are inherited by every aesthetic without its own override, so
+///   `guides(default: guide-legend(position: "bottom"))` moves all legends to
+///   the bottom in one call.
 ///
 /// \@returns Dictionary mapping aesthetic name to guide spec.
 ///
@@ -55,6 +59,29 @@
 ///     fill: guide-none(),
 ///   ),
 ///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@examples Use `default` to place every legend at the bottom in one call;
+/// the per-aesthetic `colour` override inherits that side and only changes its
+/// column count.
+/// ```
+/// //| alt: "Scatter chart whose colour and shape legends both sit below the panel, with the colour legend laid out across three columns."
+/// #let d = (
+///   (x: 1, y: 1, g: "a", s: "p"),
+///   (x: 2, y: 2, g: "b", s: "q"),
+///   (x: 3, y: 3, g: "c", s: "p"),
+/// )
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y", colour: "g", shape: "s"),
+///   layers: (geom-point(size: 3pt),),
+///   guides: guides(
+///     default: guide-legend(position: "bottom"),
+///     colour: guide-legend(ncolumn: 3),
+///   ),
+///   width: 9cm,
 ///   height: 6cm,
 /// )
 /// ```
