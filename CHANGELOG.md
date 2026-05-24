@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: `guides()` accepts a `default` entry that sets fallback guide options (such as the legend side) inherited by every aesthetic without its own override, in both `plot()` and `compose()`; `guide-legend`'s `position` now defaults to `auto` and inherits from it. (#21)
 - feat: `compose()` gains `width`/`height` (filling a bounded container by default) and relative `widths`/`heights` to size panels against the canvas rather than their own declared dimensions. (#20)
 - fix: the `compose` collected legend placed on `top` or `bottom` no longer clips its first swatch and is centred under the panels. (#19)
 - docs: callout headers now sit on the type tint as a distinct band while the body uses the plain surface, and caution gets its own deeper mustard so it no longer matches warning. (#16)
