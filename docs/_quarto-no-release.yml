@@ -14,3 +14,7 @@ website:
       without notice."
     type: warning
     position: above-navbar
+  navbar:
+    left:
+      - text: "Dev install"
+        href: install-dev.qmd
