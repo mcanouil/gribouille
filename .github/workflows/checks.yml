@@ -264,10 +264,7 @@ jobs:
         run: |
           set -euo pipefail
           STAGE="/tmp/stage/gribouille/${VERSION}"
-          mkdir -p "${STAGE}"
-          cp typst.toml lib.typ LICENSE "${STAGE}/"
-          tools/stage-readme.sh README.md "${STAGE}"
-          cp -r src "${STAGE}/"
+          tools/package.sh stage "${STAGE}"
           echo "STAGE=${STAGE}" >> "${GITHUB_ENV}"
 
       - name: Run typst-package-check

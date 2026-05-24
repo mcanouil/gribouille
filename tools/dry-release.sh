@@ -32,10 +32,7 @@ cleanup() {
 trap cleanup EXIT
 
 rm -rf "${STAGE_ROOT}"
-mkdir -p "${STAGE}"
-cp typst.toml lib.typ LICENSE "${STAGE}/"
-tools/stage-readme.sh README.md "${STAGE}"
-cp -r src "${STAGE}/"
+tools/package.sh stage "${STAGE}"
 printf 'Staged payload at %s\n' "${STAGE}"
 
 mkdir -p "${INSTALL_DIR}"

@@ -312,17 +312,7 @@ jobs:
 
       - name: Stage release archives
         shell: bash
-        run: |
-          STAGE="release_assets/gribouille-${VERSION}"
-          mkdir -p "${STAGE}"
-          cp typst.toml lib.typ LICENSE README.md CHANGELOG.md "${STAGE}/"
-          cp -r src "${STAGE}/"
-          rm -f "${STAGE}/src/GLOSSARY.md"
-
-          tar -czf "release_assets/gribouille-${VERSION}.tar.gz" \
-            -C release_assets "gribouille-${VERSION}"
-          (cd release_assets && zip -qr "gribouille-${VERSION}.zip" "gribouille-${VERSION}")
-          rm -rf "${STAGE}"
+        run: tools/package.sh archive release_assets
 
       - name: Upload release archives
         uses: actions/upload-artifact@v7
