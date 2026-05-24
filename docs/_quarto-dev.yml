@@ -15,8 +15,6 @@ website:
     left:
       - text: "Coverage"
         href: feature-matrix.qmd
-      - text: "Dev install"
-        href: install-dev.qmd
 
 format:
   html:
