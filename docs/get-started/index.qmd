@@ -34,14 +34,66 @@ Download the `.tar.gz` or `.zip` attached to a [GitHub release](https://github.c
 
 :::
 
-::: {.content-visible unless-profile="release"}
+:::: {.content-visible unless-profile="release"}
 
 ### From the development build
 
 You are reading the development documentation built from `main`.
-For step-by-step download and install instructions, see [Install the development version](../install-dev.qmd).
+Install the latest development build to try unreleased changes before they reach Typst Universe.
+
+::: {.callout-warning}
+This is not a stable release.
+It is rebuilt from `main` and can change without notice, so pin a stable version for production documents.
+:::
+
+Download the archive, unpack it into Typst's local package directory, then import it.
+The version is the current build date, `{{< env DEV_VERSION >}}`.
+
+::: {.panel-tabset}
+
+#### macOS
+
+```bash
+VERSION="{{< env DEV_VERSION >}}"
+DEST="${HOME}/Library/Application Support/typst/packages/local/gribouille/${VERSION}"
+
+curl -fLO https://m.canouil.dev/gribouille/dev/gribouille.tar.gz
+mkdir -p "${DEST}"
+tar -xzf gribouille.tar.gz --strip-components=1 -C "${DEST}"
+```
+
+#### Linux
+
+```bash
+VERSION="{{< env DEV_VERSION >}}"
+DEST="${XDG_DATA_HOME:-${HOME}/.local/share}/typst/packages/local/gribouille/${VERSION}"
+
+curl -fLO https://m.canouil.dev/gribouille/dev/gribouille.tar.gz
+mkdir -p "${DEST}"
+tar -xzf gribouille.tar.gz --strip-components=1 -C "${DEST}"
+```
+
+#### Windows
+
+```powershell
+$Version = "{{< env DEV_VERSION >}}"
+$Dest = "$env:APPDATA\typst\packages\local\gribouille\$Version"
+
+Invoke-WebRequest -Uri https://m.canouil.dev/gribouille/dev/gribouille.zip -OutFile gribouille.zip
+Expand-Archive -Path gribouille.zip -DestinationPath $env:TEMP -Force
+New-Item -ItemType Directory -Force -Path $Dest | Out-Null
+Move-Item -Path "$env:TEMP\gribouille-$Version\*" -Destination $Dest -Force
+```
 
 :::
+
+Then import it:
+
+```typst
+#import "@local/gribouille:{{< env DEV_VERSION >}}": *
+```
+
+::::
 
 ### From a local clone
 
