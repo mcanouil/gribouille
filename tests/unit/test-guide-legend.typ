@@ -3,7 +3,11 @@
 #import "../../src/guide/legend.typ": guide-legend
 #import "../../src/guide/none.typ": guide-none
 #import "../../src/guides.typ": guides
+#import "../../src/legend.typ": _default-placement, _merge-placement
 
+// `position` defaults to `auto` so an unset side inherits from
+// `guides(default: ...)`; `direction` is likewise `auto` until the side is
+// known.
 #let g = guide-legend(reverse: true)
 #assert.eq(g.kind, "guide")
 #assert.eq(g.aesthetic, none)
@@ -11,11 +15,16 @@
 #assert.eq(g.nrow, none)
 #assert.eq(g.ncolumn, none)
 #assert.eq(g.reverse, true)
-#assert.eq(g.placement.side, "right")
+#assert.eq(g.placement.side, auto)
 #assert.eq(g.placement.align, none)
-#assert.eq(g.placement.direction, "vertical")
+#assert.eq(g.placement.direction, auto)
 #assert.eq(g.placement.order, none)
 #assert.eq(g.placement.byrow, false)
+
+// An explicit direction with no position keeps the side `auto`.
+#let g-dir = guide-legend(direction: "horizontal")
+#assert.eq(g-dir.placement.side, auto)
+#assert.eq(g-dir.placement.direction, "horizontal")
 
 #let g2 = guide-legend(title: "Group", ncolumn: 2)
 #assert.eq(g2.title, "Group")
@@ -61,5 +70,40 @@
 #assert.eq(type(bound), dictionary)
 #assert.eq(bound.colour.reverse, true)
 #assert.eq(bound.fill.suppress, true)
+
+// `guides()` stores a `default` fallback under its own key.
+#let with-default = guides(default: guide-legend(position: "bottom"))
+#assert.eq(with-default.default.placement.side, "bottom")
+
+// `_merge-placement`: an `auto`-position override inherits side, corner, and
+// offsets from the base; a direction override still applies; a concrete side
+// replaces the placement.
+#let base = (
+  .._default-placement,
+  side: "inside",
+  align: top + right,
+  dx: 1cm,
+  dy: 2cm,
+  direction: "horizontal",
+)
+#let merged-auto = _merge-placement(base, guide-legend(ncolumn: 2).placement)
+#assert.eq(merged-auto.side, "inside")
+#assert.eq(merged-auto.align, top + right)
+#assert.eq(merged-auto.dx, 1cm)
+#assert.eq(merged-auto.dy, 2cm)
+#assert.eq(merged-auto.direction, "horizontal")
+
+#let merged-dir = _merge-placement(
+  base,
+  guide-legend(direction: "vertical").placement,
+)
+#assert.eq(merged-dir.side, "inside")
+#assert.eq(merged-dir.direction, "vertical")
+
+#let merged-side = _merge-placement(
+  base,
+  guide-legend(position: "left").placement,
+)
+#assert.eq(merged-side.side, "left")
 
 Guide-legend tests passed.
