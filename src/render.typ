@@ -3046,10 +3046,7 @@
   // Box each chrome label to the inner width so it wraps; `..text-args` carries
   // the per-label `weight` / `style` that `text()` rejects when set to `none`.
   let _chrome-block(value, style, ..text-args) = if (
-    value != none
-      and (
-        value != auto
-      )
+    value != none and value != auto
   ) {
     box(
       width: inner-w,
