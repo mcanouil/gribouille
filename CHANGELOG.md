@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat: `labs()` fields default to `auto`; pass `none` to suppress an axis or legend title and reclaim the space it reserved. (094da56)
+- feat: `element-blank()` on a text surface (axis, plot, or legend title) collapses the space the text would reserve. (37b68a8)
 - feat: `width`/`height` accept `auto` to fill the available space of a bounded container. (#10)
 - fix: `width`/`height` now bound the whole image, including title, subtitle, caption, and plot-background padding; the data panel shrinks to fit and long titles wrap. (b53fab2)
 
