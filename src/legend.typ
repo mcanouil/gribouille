@@ -1341,6 +1341,12 @@
     canvas-h: height-cm,
   )
   let panel-h = if side == "right" or side == "left" { height-cm } else { 0.0 }
+  // Top/bottom guides centre horizontally over the panel width via
+  // `_draw-side`'s `px + (chrome-w - total-w) / 2`. With a zero-width panel
+  // that origin is negative and `clip: true` cuts the first swatch, so hand
+  // the canvas width in as the panel width: the row then centres at
+  // `(width-cm - total-w) / 2 >= 0`.
+  let panel-w = if side == "top" or side == "bottom" { width-cm } else { 0.0 }
   let margin = (
     left: 0.0,
     right: 0.0,
@@ -1360,7 +1366,7 @@
       draw(
         guides,
         ctx,
-        panel-rect: (x: 0.0, y: 0.0, w: 0.0, h: panel-h),
+        panel-rect: (x: 0.0, y: 0.0, w: panel-w, h: panel-h),
         margin: margin,
         theme: theme,
       )
