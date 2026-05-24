@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- docs: callout headers now sit on the type tint as a distinct band while the body uses the plain surface, and caution gets its own deeper mustard so it no longer matches warning. (#16)
 - docs: tabset (panel-tabset) labels now follow the light/dark theme; the active tab label uses the brand primary colour in both schemes. (#15)
 - docs: the development version is now downloadable from the dev documentation site and installable as a local package; release, Typst Universe, and development archives share an identical payload. (#14)
 - feat: `element-text()`/`element-typst()` gain an `align` parameter setting per-surface text alignment, independent of the container; title and subtitle default left, caption right, axis titles and strip text centred. (#13)
