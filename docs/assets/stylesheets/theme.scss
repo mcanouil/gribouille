@@ -605,7 +605,7 @@ pre code.sourceCode span {
 // --- Callouts — rebuilt with left rule + tint. --------------------------
 .callout {
   border: 1px solid var(--gb-hairline);
-  border-left: 4px solid var(--gb-muted);
+  border-left: 4px solid var(--gb-callout-accent, var(--gb-muted));
   border-radius: var(--gb-radius-md);
   background: var(--gb-surface);
   box-shadow: none;
@@ -614,7 +614,7 @@ pre code.sourceCode span {
 }
 
 .callout-header {
-  background: transparent !important;
+  background: var(--gb-callout-tint, transparent) !important;
   border-bottom: 1px solid var(--gb-hairline);
   font-family: $font-family-serif;
   font-weight: 500;
@@ -622,14 +622,19 @@ pre code.sourceCode span {
 }
 
 .callout-body-container {
-  padding: 0.8rem 1rem;
+  padding: 0.25rem 0.25rem;
 }
 
-.callout.callout-note          { border-left-color: var(--gb-secondary); background: var(--gb-tint-secondary); }
-.callout.callout-tip           { border-left-color: var(--gb-accent);    background: var(--gb-tint-accent); }
-.callout.callout-important     { border-left-color: var(--gb-primary);   background: var(--gb-tint-primary); }
-.callout.callout-warning       { border-left-color: var(--gb-signal);    background: var(--gb-tint-signal); }
-.callout.callout-caution       { border-left-color: var(--gb-signal);    background: var(--gb-tint-signal); }
+// Per type: drive header tint + left accent from one pair of tokens.
+.callout.callout-note      { --gb-callout-accent: var(--gb-secondary); --gb-callout-tint: var(--gb-tint-secondary); }
+.callout.callout-tip       { --gb-callout-accent: var(--gb-accent);    --gb-callout-tint: var(--gb-tint-accent); }
+.callout.callout-important { --gb-callout-accent: var(--gb-primary);   --gb-callout-tint: var(--gb-tint-primary); }
+.callout.callout-warning   { --gb-callout-accent: var(--gb-signal);    --gb-callout-tint: var(--gb-tint-signal); }
+.callout.callout-caution   {
+  --gb-caution: color-mix(in srgb, var(--gb-signal) 60%, var(--gb-primary));
+  --gb-callout-accent: var(--gb-caution);
+  --gb-callout-tint: color-mix(in srgb, var(--gb-caution) 16%, transparent);
+}
 
 // --- Tables — thin rules, tabular numerals. -----------------------------
 table {
