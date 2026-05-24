@@ -916,6 +916,28 @@
 // when no actual labels are measured (e.g., an axis with no breaks).
 #let _ax-text-cm(size-pt) = size-pt / 1pt * 0.0353
 
+// Map a horizontal-axis title alignment to its coordinate along the panel's
+// x span (`lo`/`hi` are the left/right canvas x) and the cetz anchor that
+// pins it there. `none` keeps the ggplot2 default of centred.
+#let _x-title-place(align, lo, hi) = if align == left {
+  (lo, "south-west")
+} else if align == right {
+  (hi, "south-east")
+} else {
+  ((lo + hi) / 2, "south")
+}
+
+// Same for a vertical-axis title; it is drawn rotated 90deg, so along its
+// reading direction `left` is the panel bottom (`lo`) and `right` the top
+// (`hi`). `none` keeps the default of centred.
+#let _y-title-place(align, lo, hi) = if align == left {
+  (lo, "south")
+} else if align == right {
+  (hi, "north")
+} else {
+  ((lo + hi) / 2, "center")
+}
+
 // Resolve every side of an axis-* family into a record keyed by short side
 // codes (xb=x-bottom, xt=x-top, yl=y-left, yr=y-right). The builder receives
 // `(prefix, side, axis)` so it can either build a full surface key
@@ -1450,17 +1472,15 @@
         "bottom",
         _AX-TITLE-LABEL-GAP,
       )
+      let (cx, x-anchor) = _x-title-place(_ax-title.xt.align, px-lo, px-hi)
       content(
-        (
-          (px-lo + px-hi) / 2,
-          py-hi + _tick-len.xt + 0.1 + x-sec-depth + x-sec-gap,
-        ),
+        (cx, py-hi + _tick-len.xt + 0.1 + x-sec-depth + x-sec-gap),
         text(
           size: _ax-title.xt.size,
           fill: _ax-title.xt.fill,
           weight: _ax-title.xt.weight,
         )[#resolve-prose(_x-sec.name, eval-strings: _ax-title.xt.typst)],
-        anchor: "south",
+        anchor: x-anchor,
       )
     }
   }
@@ -1506,6 +1526,7 @@
       )
       let title-text-cm = _ax-text-cm(_ax-title.yr.size)
       let y-sec-gap = _text-margin-cm(_ax-title.yr, "left", _AX-TITLE-LABEL-GAP)
+      let (cy, y-anchor) = _y-title-place(_ax-title.yr.align, py-lo, py-hi)
       content(
         (
           px-hi
@@ -1514,7 +1535,7 @@
             + y-sec-width
             + y-sec-gap
             + title-text-cm / 2,
-          (py-lo + py-hi) / 2,
+          cy,
         ),
         text(
           size: _ax-title.yr.size,
@@ -1522,6 +1543,7 @@
           weight: _ax-title.yr.weight,
         )[#resolve-prose(_y-sec.name, eval-strings: _ax-title.yr.typst)],
         angle: 90deg,
+        anchor: y-anchor,
       )
     }
   }
@@ -1788,25 +1810,28 @@
   let x-edge-offset = _tick-len.xb + 0.1 + x-label-depth + x-title-gap
   let y-edge-offset = _tick-len.yl + 0.1 + y-label-width + y-title-gap
   if show-x-title and x-title != none and _ax-title.xb.size > 0pt {
+    let (cx, x-anchor) = _x-title-place(_ax-title.xb.align, px-lo, px-hi)
     content(
-      ((px-lo + px-hi) / 2, oy - (x-edge-offset + x-title-cm)),
+      (cx, oy - (x-edge-offset + x-title-cm)),
       text(
         size: _ax-title.xb.size,
         fill: _ax-title.xb.fill,
         weight: _ax-title.xb.weight,
       )[#resolve-prose(x-title, eval-strings: _ax-title.xb.typst)],
-      anchor: "south",
+      anchor: x-anchor,
     )
   }
   if show-y-title and y-title != none and _ax-title.yl.size > 0pt {
+    let (cy, y-anchor) = _y-title-place(_ax-title.yl.align, py-lo, py-hi)
     content(
-      (px-lo - (y-edge-offset + y-title-cm / 2), (py-lo + py-hi) / 2),
+      (px-lo - (y-edge-offset + y-title-cm / 2), cy),
       text(
         size: _ax-title.yl.size,
         fill: _ax-title.yl.fill,
         weight: _ax-title.yl.weight,
       )[#resolve-prose(y-title, eval-strings: _ax-title.yl.typst)],
       angle: 90deg,
+      anchor: y-anchor,
     )
   }
 
@@ -2214,14 +2239,32 @@
     (corner-lo.at(0) + corner-hi.at(0)) / 2,
     (corner-lo.at(1) + corner-hi.at(1)) / 2,
   )
+  // Default centred. `left`/`right` slide the label to the matching end of
+  // the band: along x for the top strip, along the reading direction (top
+  // strip rotated, bottom is `right`) for the -90deg row strip.
+  let a = style.strip-text.align
+  let (sx, sy, s-anchor) = if angle == 0deg {
+    if a == left {
+      (corner-lo.at(0), cy, "west")
+    } else if a == right {
+      (corner-hi.at(0), cy, "east")
+    } else { (cx, cy, "center") }
+  } else {
+    if a == left {
+      (cx, corner-hi.at(1), "north")
+    } else if a == right {
+      (cx, corner-lo.at(1), "south")
+    } else { (cx, cy, "center") }
+  }
   cetz.draw.content(
-    (cx, cy),
+    (sx, sy),
     text(
       size: style.strip-text.size,
       fill: style.strip-text.fill,
       weight: style.strip-text.weight,
     )[#resolve-prose(label-text, eval-strings: style.strip-text.typst)],
     angle: angle,
+    anchor: s-anchor,
   )
 }
 
@@ -3045,26 +3088,34 @@
   let caption = _text-style(theme, "plot-caption")
   // Box each chrome label to the inner width so it wraps; `..text-args` carries
   // the per-label `weight` / `style` that `text()` rejects when set to `none`.
-  let _chrome-block(value, style, ..text-args) = if (
+  // `align(...)` inside the definite-width box makes each label's horizontal
+  // alignment explicit, so it no longer inherits the host document's ambient
+  // `set align(...)`. `default-align` is the per-surface ggplot2 default used
+  // when the theme element leaves `align` unset.
+  let _chrome-block(value, style, default-align, ..text-args) = if (
     value != none and value != auto and style.size > 0pt
   ) {
+    let a = if style.align != none { style.align } else { default-align }
     box(
       width: inner-w,
-      text(
-        size: style.size,
-        fill: style.fill,
-        ..text-args,
-      )[#resolve-prose(value, eval-strings: style.typst)],
+      align(
+        a,
+        text(
+          size: style.size,
+          fill: style.fill,
+          ..text-args,
+        )[#resolve-prose(value, eval-strings: style.typst)],
+      ),
     )
   } else { none }
   let title-block = if labs != none {
-    _chrome-block(labs.title, title, weight: title.weight)
+    _chrome-block(labs.title, title, left, weight: title.weight)
   } else { none }
   let subtitle-block = if labs != none {
-    _chrome-block(labs.subtitle, subtitle)
+    _chrome-block(labs.subtitle, subtitle, left)
   } else { none }
   let caption-block = if labs != none {
-    _chrome-block(labs.caption, caption, style: "italic")
+    _chrome-block(labs.caption, caption, right, style: "italic")
   } else { none }
 
   // Multiplied by 1cm so the resolved em is baked in against the upstream
