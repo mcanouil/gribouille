@@ -80,10 +80,10 @@ jobs:
           if [ -n "${LATEST_TAG}" ]; then
             # Release at root (tagged ref), dev at /dev/ (triggering ref, i.e. main).
             # Switch link: release points to dev, dev points back to the stable root.
-            matrix='{"include":[{"profile":"release","ref":"'"${LATEST_TAG}"'","version":"'"${LATEST_TAG}"'","switch_label":"Development version","switch_href":"'"${SITE_URL}/dev/"'"},{"profile":"dev","ref":"","version":"dev","switch_label":"Stable ('"${LATEST_TAG}"')","switch_href":"'"${SITE_URL}/"'"}]}'
+            matrix='{"include":[{"profile":"release","ref":"'"${LATEST_TAG}"'","version":"'"${LATEST_TAG}"'","switch_label":"Development version","switch_href":"'"${SITE_URL}/dev/"'","assets_dir":""},{"profile":"dev","ref":"","version":"dev","switch_label":"Stable ('"${LATEST_TAG}"')","switch_href":"'"${SITE_URL}/"'","assets_dir":"docs/_site/dev"}]}'
           else
             # No release yet: dev content at root, single site with nothing to switch to.
-            matrix='{"include":[{"profile":"no-release","ref":"","version":"dev","switch_label":"","switch_href":""}]}'
+            matrix='{"include":[{"profile":"no-release","ref":"","version":"dev","switch_label":"","switch_href":"","assets_dir":"docs/_site"}]}'
           fi
           echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
 
@@ -128,9 +128,21 @@ jobs:
         with:
           version: release
 
+      # Computed once so the install page and the downloadable archive carry the
+      # same dated version. A date is a valid Typst (3-integer) version and marks
+      # the build as a development snapshot.
+      - name: Resolve dev version
+        shell: bash
+        run: echo "DEV_VERSION=$(date -u +%Y.%-m.%-d)" >> "${GITHUB_ENV}"
+
       - name: Render site
         shell: bash
         run: quarto render docs --profile "${{ matrix.profile }}"
+
+      - name: Package development version
+        if: ${{ matrix.assets_dir != '' }}
+        shell: bash
+        run: tools/package.sh archive "${{ matrix.assets_dir }}" gribouille "${DEV_VERSION}"
 
       - name: Upload site artifact
         uses: actions/upload-artifact@v7
