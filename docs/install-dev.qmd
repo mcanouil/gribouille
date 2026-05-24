@@ -13,35 +13,48 @@ This is not a stable release.
 It is rebuilt from `main` and can change without notice, so pin a stable version for production documents.
 :::
 
-## Download
-
-- [`gribouille.tar.gz`](gribouille.tar.gz).
-- [`gribouille.zip`](gribouille.zip).
-
-The bundled `typst.toml` carries a comment naming the exact source commit, so you can always tell which build you have.
-
 ## Install as a local package
 
-The package version is the UTC build date, `{{< env DEV_VERSION >}}`.
-Typst versions are three integers, so there is no `-dev` suffix; the date is the development marker and sorts above any published release.
+Download the archive, unpack it into Typst's local package directory, then import it.
+The version is the current build date, `{{< env DEV_VERSION >}}`.
 
-Extract the archive into Typst's local package directory under that version, then import it like any other package.
+::: {.panel-tabset}
 
-On macOS:
-
-```bash
-DEST="$HOME/Library/Application Support/typst/packages/local/gribouille/{{< env DEV_VERSION >}}"
-mkdir -p "$DEST"
-tar -xzf gribouille.tar.gz --strip-components=1 -C "$DEST"
-```
-
-On Linux:
+### macOS
 
 ```bash
-DEST="${XDG_DATA_HOME:-$HOME/.local/share}/typst/packages/local/gribouille/{{< env DEV_VERSION >}}"
-mkdir -p "$DEST"
-tar -xzf gribouille.tar.gz --strip-components=1 -C "$DEST"
+VERSION="{{< env DEV_VERSION >}}"
+DEST="${HOME}/Library/Application Support/typst/packages/local/gribouille/${VERSION}"
+
+curl -fLO https://m.canouil.dev/gribouille/dev/gribouille.tar.gz
+mkdir -p "${DEST}"
+tar -xzf gribouille.tar.gz --strip-components=1 -C "${DEST}"
 ```
+
+### Linux
+
+```bash
+VERSION="{{< env DEV_VERSION >}}"
+DEST="${XDG_DATA_HOME:-${HOME}/.local/share}/typst/packages/local/gribouille/${VERSION}"
+
+curl -fLO https://m.canouil.dev/gribouille/dev/gribouille.tar.gz
+mkdir -p "${DEST}"
+tar -xzf gribouille.tar.gz --strip-components=1 -C "${DEST}"
+```
+
+### Windows
+
+```powershell
+$Version = "{{< env DEV_VERSION >}}"
+$Dest = "$env:APPDATA\typst\packages\local\gribouille\$Version"
+
+Invoke-WebRequest -Uri https://m.canouil.dev/gribouille/dev/gribouille.zip -OutFile gribouille.zip
+Expand-Archive -Path gribouille.zip -DestinationPath $env:TEMP -Force
+New-Item -ItemType Directory -Force -Path $Dest | Out-Null
+Move-Item -Path "$env:TEMP\gribouille-$Version\*" -Destination $Dest -Force
+```
+
+:::
 
 Then import it:
 
@@ -49,11 +62,9 @@ Then import it:
 #import "@local/gribouille:{{< env DEV_VERSION >}}": *
 ```
 
-The `@local` namespace is separate from `@preview`, so this never clashes with a Typst Universe install of *Gribouille*.
-
 ## Import without installing
 
-If you would rather not install it, extract the archive anywhere and import the entry point by path:
+Extract the archive anywhere and import the entry point by path:
 
 ```typst
 #import "/path/to/gribouille-{{< env DEV_VERSION >}}/lib.typ": *
