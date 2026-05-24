@@ -309,10 +309,13 @@
 /// \@returns Dict with `size`, `fill`, `weight`, `typst`, `margin`.
 #let _text-style(theme, surface) = {
   let el = resolve-element(theme, surface)
+  let blank = el.at("kind", default: none) == "element-blank"
   let colour = el.at("colour", default: none)
   let weight = el.at("weight", default: none)
   (
-    size: el.at("size", default: 9pt),
+    // `element-blank()` collapses the surface: a `0pt` size makes every
+    // consumer that gates on `size > 0pt` skip both ink and reserved space.
+    size: if blank { 0pt } else { el.at("size", default: 9pt) },
     fill: if colour != none { colour } else { theme.ink },
     weight: if weight != none { weight } else { "regular" },
     typst: el.at("kind", default: none) == "element-typst",

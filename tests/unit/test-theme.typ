@@ -1,7 +1,7 @@
 // theme() stores element records verbatim; merge-theme overlays them on the
 // defaults.
 
-#import "../../src/theme/theme.typ": resolve-element, theme
+#import "../../src/theme/theme.typ": _text-style, resolve-element, theme
 #import "../../src/theme/elements.typ": (
   element-blank, element-line, element-rect, element-text,
 )
@@ -111,5 +111,14 @@
 #assert.eq(_scalar-cascade(len-side, "tick-length", "x-bottom", "x"), 0.5cm)
 #assert.eq(_scalar-cascade(len-side, "tick-length", "x-top", "x"), 0.2cm)
 #assert.eq(_scalar-cascade(len-side, "tick-length", "y-right", "y"), 0.1cm)
+
+// element-blank on a text surface collapses to a 0pt size so every consumer
+// that gates on `size > 0pt` skips both the ink and its reserved space.
+#let blank-title = merge-theme(theme(axis-title: element-blank()))
+#assert.eq(_text-style(blank-title, "axis-title").size, 0pt)
+#let blank-plot-title = merge-theme(theme(plot-title: element-blank()))
+#assert.eq(_text-style(blank-plot-title, "plot-title").size, 0pt)
+// A normal text element keeps its declared size.
+#assert.eq(_text-style(merge-theme(theme()), "axis-title").size, 9pt)
 
 Theme tests passed.
