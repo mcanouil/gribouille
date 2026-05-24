@@ -14,13 +14,34 @@ engine: markdown
 
 ## Installation
 
-Import _Gribouille_ from Typst Universe, or from a local clone of the repository.
+Import _Gribouille_ from Typst Universe, from the published archives, or from a local clone of the repository.
 
 ### From Typst Universe
 
 ```typst
 #import "@preview/gribouille:{{< env VERSION >}}": *
 ```
+
+::: {.content-visible when-profile="release"}
+
+### From release assets
+
+Download the `.tar.gz` or `.zip` attached to a [GitHub release](https://github.com/mcanouil/gribouille/releases), unpack it into Typst's local package directory under `gribouille/{{< env VERSION >}}`, then import it.
+
+```typst
+#import "@local/gribouille:{{< env VERSION >}}": *
+```
+
+:::
+
+::: {.content-visible unless-profile="release"}
+
+### From the development build
+
+You are reading the development documentation built from `main`.
+For step-by-step download and install instructions, see [Install the development version](../install-dev.qmd).
+
+:::
 
 ### From a local clone
 
