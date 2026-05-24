@@ -62,6 +62,13 @@
 )
 
 #let _guide-title(t, spec, aes-name) = {
+  // `labs(colour: none)` sets `spec.blank` to suppress the legend title and
+  // collapse the space it would reserve.
+  if (
+    t.at("spec", default: none) != none and t.spec.at("blank", default: false)
+  ) {
+    return none
+  }
   if (
     t.at("spec", default: none) != none
       and t.spec.at("name", default: none) != none
@@ -496,6 +503,10 @@
   0.0
 } else { _font-cm(size-pt) * 1.8 }
 
+// A titleless guide (`labs(... : none)`) reserves no title height; otherwise
+// the resolved `title-h` applies.
+#let _title-prefix(g, title-h) = if g.title == none { 0.0 } else { title-h }
+
 // Tight slack below the last row so the glyph isn't flush with the rect
 // edge.
 #let _glyph-bottom-slack(size-pt) = _font-cm(size-pt) * 0.2
@@ -514,29 +525,37 @@
     guide.ncolumn,
     guide.placement.direction,
   )
-  title-h + _row-stack-height(shape.rows, _swatch-line-h-cm(size-pt), size-pt)
+  (
+    _title-prefix(guide, title-h)
+      + _row-stack-height(
+        shape.rows,
+        _swatch-line-h-cm(size-pt),
+        size-pt,
+      )
+  )
 }
 
 #let _size-ladder-height(guide, title-h, size-pt) = {
+  let prefix = _title-prefix(guide, title-h)
   if guide.placement.direction == "horizontal" {
-    title-h + _LADDER-H-COL-H + _LADDER-H-LABEL-H
+    prefix + _LADDER-H-COL-H + _LADDER-H-LABEL-H
   } else {
     let line-h = _ladder-line-h-cm(size-pt)
-    title-h + _row-stack-height(guide.breaks.len(), line-h, size-pt)
+    prefix + _row-stack-height(guide.breaks.len(), line-h, size-pt)
   }
 }
 
 #let _colourbar-height(guide, title-h) = {
+  let prefix = _title-prefix(guide, title-h)
   if guide.placement.direction == "horizontal" {
-    title-h + _COLOURBAR-H-H + _COLOURBAR-H-LABEL-H
+    prefix + _COLOURBAR-H-H + _COLOURBAR-H-LABEL-H
   } else {
-    title-h + _COLOURBAR-V-H + _COLOURBAR-PAD-V
+    prefix + _COLOURBAR-V-H + _COLOURBAR-PAD-V
   }
 }
 
 #let _custom-height(guide, title-h) = {
-  let prefix = if guide.title != none { title-h } else { 0.0 }
-  prefix + guide.cm-height + 0.2
+  _title-prefix(guide, title-h) + guide.cm-height + 0.2
 }
 
 #let _guide-height(g, size-pt) = {
@@ -778,8 +797,8 @@
   let line-h = _swatch-line-h-cm(size-pt)
   let glyph-size = 0.12
 
-  _draw-title(ox, cursor, theme, guide.title)
-  let top = cursor - title-h
+  if guide.title != none { _draw-title(ox, cursor, theme, guide.title) }
+  let top = cursor - _title-prefix(guide, title-h)
   let byrow = guide.placement.byrow
   let shape = _grid-shape(
     guide.levels.len(),
@@ -833,8 +852,8 @@
   let typst-mark = guide.at("typst-mark", default: false)
   let key-kind = guide.at("key", default: "point")
 
-  _draw-title(ox, cursor, theme, guide.title)
-  let top = cursor - title-h
+  if guide.title != none { _draw-title(ox, cursor, theme, guide.title) }
+  let top = cursor - _title-prefix(guide, title-h)
 
   if guide.placement.direction == "horizontal" {
     let label-w = 0.0
@@ -930,8 +949,8 @@
   let text-size = _legend-text.size
   let (lo, hi) = guide.domain
 
-  _draw-title(ox, cursor, theme, guide.title)
-  let bar-top = cursor - title-h
+  if guide.title != none { _draw-title(ox, cursor, theme, guide.title) }
+  let bar-top = cursor - _title-prefix(guide, title-h)
   let bar-bottom = bar-top - bar-h
   let bar-left = ox
   let bar-right = ox + bar-w

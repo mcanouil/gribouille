@@ -3,7 +3,9 @@
 // then wraps. `_grid-shape` also defaults to a single row when direction is
 // horizontal so a top/bottom legend lays out as a single line of entries.
 
-#import "../../src/legend.typ": _grid-shape, _swatch-index, _swatch-rc
+#import "../../src/legend.typ": (
+  _grid-shape, _guide-title, _swatch-index, _swatch-rc, _title-prefix,
+)
 
 // Default vertical layout: single column.
 #let s-vert = _grid-shape(4, none, none, "vertical")
@@ -44,5 +46,27 @@
   let rc-row = _swatch-rc(i, s23, true)
   assert.eq(_swatch-index(rc-row.row, rc-row.col, s23, true), i)
 }
+
+// `labs(colour: none)` sets `spec.blank`, suppressing the legend title; a named
+// scale keeps it, and a titleless guide reserves no title height.
+#let _pspec = (mapping: (colour: "sp"))
+#assert.eq(
+  _guide-title(
+    (spec: (aesthetic: "colour", name: "Species")),
+    _pspec,
+    "colour",
+  ),
+  "Species",
+)
+#assert.eq(
+  _guide-title(
+    (spec: (aesthetic: "colour", name: "Species", blank: true)),
+    _pspec,
+    "colour",
+  ),
+  none,
+)
+#assert.eq(_title-prefix((title: none), 0.5), 0.0)
+#assert.eq(_title-prefix((title: "X"), 0.5), 0.5)
 
 Legend-layout tests passed.
