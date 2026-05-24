@@ -161,6 +161,12 @@
   description: 'Custom text sizes, panel fill, and grid colour passed through [`theme`](../reference/themes/theme.qmd).'
   alt: "Line and point chart of the curve y equals 0.1 times x squared over 12 steps, rendered with enlarged axis titles and a cream panel background."
 
+- slug: theme-text-align
+  section: themes
+  title: "Text alignment"
+  description: 'Per-surface horizontal alignment via [`element-text`](../reference/themes/element-text.qmd) `align`: title and subtitle default left, caption right, axis titles centred.'
+  alt: "Line and point chart of the curve y equals 0.1 times x squared with a centred title, a left subtitle, a right caption, and the x-axis title pushed to the right end of the axis."
+
 - slug: guide-axis
   section: guides
   title: "Rotating axis tick labels"
