@@ -34,7 +34,7 @@ Download the `.tar.gz` or `.zip` attached to a [GitHub release](https://github.c
 
 :::
 
-:::: {.content-visible unless-profile="release"}
+::: {.content-visible unless-profile="release"}
 
 ### From the development build
 
@@ -93,7 +93,7 @@ Then import it:
 #import "@local/gribouille:{{< env DEV_VERSION >}}": *
 ```
 
-::::
+:::
 
 ### From a local clone
 
