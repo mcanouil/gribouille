@@ -51,6 +51,19 @@
   byrow: false,
 )
 
+// Layer `over`'s placement onto `base`, treating an `auto` side / direction as
+// "inherit from `base`". Lets `guide-legend(position: auto)` fall through to a
+// `guides(default: ...)` placement and then to the natural default.
+#let _merge-placement(base, over) = {
+  let side = if over.at("side", default: auto) == auto {
+    base.side
+  } else { over.side }
+  let direction = if over.at("direction", default: auto) == auto {
+    base.direction
+  } else { over.direction }
+  (..base, ..over, side: side, direction: direction)
+}
+
 // Equality key for placement comparisons. Two candidates with different keys
 // never merge into a single guide.
 #let _placement-key(placement) = (
@@ -273,30 +286,56 @@
   if t == none { return none }
   if t.type == "identity" { return none }
   let override = overrides.at(aes-name, default: none)
+  let default-guide = overrides.at("default", default: none)
   if override != none and override.at("suppress", default: false) {
     return none
   }
-  let placement = if override != none {
-    override.at("placement", default: _default-placement)
-  } else { _default-placement }
+
+  // Resolve placement: per-aesthetic override over `guides(default: ...)` over
+  // the natural default. `auto` side / direction inherit from the layer below,
+  // so `guide-legend(ncolumn: 2)` still picks up a `default:` side.
+  let placement = _default-placement
+  let default-placement = if default-guide != none {
+    default-guide.at("placement", default: none)
+  } else { none }
+  if default-placement != none {
+    placement = _merge-placement(placement, default-placement)
+  }
+  let override-placement = if override != none {
+    override.at("placement", default: none)
+  } else { none }
+  if override-placement != none {
+    placement = _merge-placement(placement, override-placement)
+  }
+  let resolved-direction = if placement.direction == auto {
+    if placement.side == "top" or placement.side == "bottom" {
+      "horizontal"
+    } else { "vertical" }
+  } else { placement.direction }
+  placement = (..placement, direction: resolved-direction)
   if placement.side == "none" { return none }
 
   let contributors = _mapped-contributors(spec, aes-name)
   if contributors.len() == 0 { return none }
 
+  // Per-aesthetic override wins, then `guides(default: ...)`, then the value
+  // trained from the scale / labs.
+  let _pick(name, fallback) = if (
+    override != none and override.at(name, default: none) != none
+  ) {
+    override.at(name)
+  } else if (
+    default-guide != none and default-guide.at(name, default: none) != none
+  ) {
+    default-guide.at(name)
+  } else { fallback }
+
   let title = _guide-title(t, spec, aes-name)
-  if override != none and override.at("title", default: none) != none {
-    title = override.title
-  }
-  let nrow = if override != none { override.at("nrow", default: none) } else {
-    none
-  }
-  let ncolumn = if override != none {
-    override.at("ncolumn", default: none)
-  } else { none }
-  let reverse = if override != none {
-    override.at("reverse", default: false)
-  } else { false }
+  let title-override = _pick("title", none)
+  if title-override != none { title = title-override }
+  let nrow = _pick("nrow", none)
+  let ncolumn = _pick("ncolumn", none)
+  let reverse = _pick("reverse", false)
 
   let cand = (
     aes: aes-name,
