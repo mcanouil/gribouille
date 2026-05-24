@@ -51,8 +51,11 @@ stage() {
 archive() {
   local out_dir="${1:?archive: output dir required}"
   local basename="${2:-}"
-  local version="${3:-}"
+  local override="${3:-}"
 
+  # Only an explicit caller version is forwarded to stage (triggering the
+  # dev-build rewrite); the resolved default just names the archive.
+  local version="${override}"
   [[ -n "${version}" ]] || version="$(read_version)"
   [[ -n "${version}" ]] || { echo "archive: version not found in typst.toml" >&2; exit 1; }
   [[ -n "${basename}" ]] || basename="gribouille-${version}"
@@ -61,7 +64,7 @@ archive() {
   tmp="$(mktemp -d)"
   trap 'rm -rf "${tmp}"' RETURN
   leaf="gribouille-${version}"
-  stage "${tmp}/${leaf}" "${3:-}"
+  stage "${tmp}/${leaf}" "${override}"
 
   mkdir -p "${out_dir}"
   out_dir="$(cd "${out_dir}" && pwd)"
