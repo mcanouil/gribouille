@@ -4,7 +4,29 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "src/**"
+      - "lib.typ"
+      - "examples/**"
+      - "tests/**"
+      - "typst.toml"
+      - "tools/**"
+      - "README.md"
+      - "LICENSE"
+      - ".github/actions/**"
+      - ".github/workflows/checks.yml"
   pull_request:
+    paths:
+      - "src/**"
+      - "lib.typ"
+      - "examples/**"
+      - "tests/**"
+      - "typst.toml"
+      - "tools/**"
+      - "README.md"
+      - "LICENSE"
+      - ".github/actions/**"
+      - ".github/workflows/checks.yml"
 
 permissions:
   contents: read
