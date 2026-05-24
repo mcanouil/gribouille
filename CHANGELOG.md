@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: `element-text()`/`element-typst()` gain an `align` parameter setting per-surface text alignment, independent of the container; title and subtitle default left, caption right, axis titles and strip text centred. (#13)
 - feat: `labs()` fields default to `auto`; pass `none` to suppress an axis or legend title and reclaim the space it reserved. (#12)
 - feat: `element-blank()` on a text surface (axis, plot, or legend title) collapses the space the text would reserve. (#12)
 - feat: `width`/`height` accept `auto` to fill the available space of a bounded container. (#10)
