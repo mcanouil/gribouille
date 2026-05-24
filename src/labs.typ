@@ -9,6 +9,11 @@
 /// Axis names (x, y, colour, fill, ...) override the corresponding scale
 /// `name` at render time, so legends and axis titles pick them up.
 ///
+/// Every field defaults to `auto`: the label is derived from the scale or
+/// mapping (axis and legend titles) or simply omitted (title, subtitle,
+/// caption, tag, alt). Pass `none` to suppress a label explicitly and collapse
+/// the space it would otherwise reserve, mirroring ggplot2's `labs(x = NULL)`.
+///
 /// \@category Labs
 /// \@stability stable
 /// \@since 0.0.1
@@ -116,21 +121,21 @@
 ///
 /// \@see \@plot
 #let labs(
-  title: none,
-  subtitle: none,
-  caption: none,
-  tag: none,
-  alt: none,
-  x: none,
-  y: none,
-  colour: none,
-  fill: none,
-  size: none,
-  alpha: none,
-  linewidth: none,
-  shape: none,
-  linetype: none,
-  stroke: none,
+  title: auto,
+  subtitle: auto,
+  caption: auto,
+  tag: auto,
+  alt: auto,
+  x: auto,
+  y: auto,
+  colour: auto,
+  fill: auto,
+  size: auto,
+  alpha: auto,
+  linewidth: auto,
+  shape: auto,
+  linetype: auto,
+  stroke: auto,
 ) = (
   kind: "labs",
   title: title,
