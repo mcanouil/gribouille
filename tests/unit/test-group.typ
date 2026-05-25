@@ -1,6 +1,8 @@
 // Group-key and group-cols utility tests.
 
-#import "../../src/utils/group.typ": group-aesthetics, group-cols, group-key
+#import "../../src/utils/group.typ": (
+  expose-shared-positional, group-aesthetics, group-cols, group-key,
+)
 #import "../../src/aes.typ": aes
 #import "../../src/data.typ": as-factor
 
@@ -87,5 +89,44 @@
 // fill mapped to same column as x → excluded.
 #let m-fill-is-x = aes(x: "x", y: "y", fill: "x")
 #assert.eq(group-cols(m-fill-is-x), ())
+
+// --- expose-shared-positional ---
+
+// Stat output rows keyed by the generic "x"; the source column was "g" and a
+// grouping aesthetic reuses it, so "g" is exposed carrying the "x" value.
+#let stat-rows = ((x: "a", y: 1.0), (x: "b", y: 2.0))
+#let m-same = aes(x: "g", y: "y", fill: "g")
+#let out-map = (x: "x", y: "y")
+#let exposed = expose-shared-positional(stat-rows, m-same, out-map)
+#assert.eq(exposed.at(0).at("g"), "a")
+#assert.eq(exposed.at(1).at("g"), "b")
+// The generic key is preserved alongside the exposed source column.
+#assert.eq(exposed.at(0).x, "a")
+
+// Differing-column case: fill maps to a column other than x → no-op.
+#let m-diff = aes(x: "g", y: "y", fill: "k")
+#let not-exposed = expose-shared-positional(stat-rows, m-diff, out-map)
+#assert.eq(not-exposed.at(0).keys().contains("g"), false)
+
+// No grouping aesthetic → no-op.
+#let m-plain = aes(x: "g", y: "y")
+#assert.eq(
+  expose-shared-positional(stat-rows, m-plain, out-map)
+    .at(0)
+    .keys()
+    .contains("g"),
+  false,
+)
+
+// Already-present source column is not overwritten.
+#let pre-rows = ((x: "a", g: "keep"),)
+#let pre = expose-shared-positional(pre-rows, m-same, (x: "x"))
+#assert.eq(pre.at(0).at("g"), "keep")
+
+// y reused by a grouping aesthetic is exposed too (axis: "x" summary path).
+#let y-rows = ((x: 1.0, y: "lo"),)
+#let m-fill-is-y = aes(x: "x", y: "h", fill: "h")
+#let y-exposed = expose-shared-positional(y-rows, m-fill-is-y, (x: "x", y: "y"))
+#assert.eq(y-exposed.at(0).at("h"), "lo")
 
 Group tests passed.

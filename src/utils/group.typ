@@ -109,3 +109,43 @@
   }
   out
 }
+
+/// Copy each positional aesthetic's value into a column named after its source
+/// when a grouping aesthetic reuses that same column.
+///
+/// `group-cols` cannot re-inject a column equal to x or y, so after an
+/// aggregating stat renames the positional column to a generic key (`"x"` /
+/// `"y"`), a `fill`/`colour`/... mapped to that same column would find no
+/// value and resolve to the default ink with an empty guide. This exposes the
+/// stat's positional value under the source column name so the (already
+/// re-attached) grouping mapping resolves. The mapping is left untouched, and
+/// the work runs only for the same-column reuse case.
+/// \@param data Stat output rows (after compute-group recombination).
+///
+/// \@param input-mapping The layer's pre-stat mapping carrying the source columns.
+///
+/// \@param output-mapping The stat's output mapping naming the positional columns.
+/// \@returns `data` with the source column added wherever a positional aesthetic is reused.
+/// \@internal
+#let expose-shared-positional(data, input-mapping, output-mapping) = {
+  if input-mapping == none { return data }
+  let new-data = data
+  for axis in ("x", "y") {
+    let src = mapping-ref-col(input-mapping.at(axis, default: none))
+    if src == none { continue }
+    let out-col = output-mapping.at(axis, default: none)
+    if out-col == none or out-col == src { continue }
+    let reused = group-aesthetics.any(a => (
+      mapping-ref-col(input-mapping.at(a, default: none)) == src
+    ))
+    if not reused { continue }
+    new-data = new-data.map(row => {
+      let v = row.at(out-col, default: none)
+      if v == none or row.at(src, default: none) != none { return row }
+      let r = row
+      r.insert(src, v)
+      r
+    })
+  }
+  new-data
+}

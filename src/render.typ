@@ -22,7 +22,9 @@
 #import "utils/format.typ": format-break
 #import "utils/palette.typ": default-discrete, palette-at, spec-palette
 #import "utils/colour.typ": resolve-continuous-colour
-#import "utils/group.typ": group-aesthetics, group-cols, partition-by-group
+#import "utils/group.typ": (
+  expose-shared-positional, group-aesthetics, group-cols, partition-by-group,
+)
 #import "utils/typst-markup.typ": is-typst-markup, resolve-prose
 #import "utils/aes-resolve.typ": merge-mapping, resolve-label
 #import "utils/late-binding.typ": (
@@ -463,6 +465,9 @@
         last-mapping.insert(gc-key, v)
       }
     }
+    // Expose a positional column reused by a grouping aesthetic (e.g. fill ==
+    // x) under its source name; `group-cols` cannot re-inject an x/y column.
+    combined = expose-shared-positional(combined, mapping, last-mapping)
     stat-data = combined
     stat-mapping = last-mapping
   }
