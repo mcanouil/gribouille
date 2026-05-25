@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: `plot(width: auto, height: auto)` is allowed on an unbounded page, falling back to the default `10cm` by `7cm` instead of panicking. (#27)
 - fix: `compose()` panels fill their cells instead of being letterboxed; their own `width`/`height` are discarded once the composition has a size, and the composition size falls back to `16cm` by `12cm` when the container is unbounded. (#26)
 - fix: legend labels wider than 2 cm no longer overlap the next swatch; each legend column reserves the label's full width, most visible in horizontal legends. (#25)
 - feat: `compose()` accepts `defer: true` to return a spec usable as a panel of another `compose`, enabling nested compositions; `tag-levels` accepts a per-depth array (with `tag-sep`) so nested panels continue the numbering (e.g., `B.1`, `B.2`). (#24)
