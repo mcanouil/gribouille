@@ -393,12 +393,13 @@
 #let _bin-info(t, default-n: 5) = {
   let spec = t.at("spec", default: none)
   if spec == none {
-    return (labels: auto, binned: false, n-breaks: default-n)
+    return (labels: auto, binned: false, n-breaks: default-n, breaks: auto)
   }
   (
     labels: spec.at("labels", default: auto),
     binned: spec.at("binned", default: false),
     n-breaks: spec.at("n-breaks", default: default-n),
+    breaks: spec.at("breaks", default: auto),
   )
 }
 
@@ -697,7 +698,9 @@
       let info = _bin-info(first.t)
       let lo = first.domain.first()
       let hi = first.domain.last()
-      let breaks = if info.binned {
+      let breaks = if info.breaks != auto {
+        info.breaks.filter(b => b >= lo and b <= hi)
+      } else if info.binned {
         range(info.n-breaks + 1).map(i => lo + i * (hi - lo) / info.n-breaks)
       } else { pretty(lo, hi, n: 5) }
       (
@@ -717,7 +720,9 @@
       let info = _bin-info(first.t)
       let lo = first.domain.first()
       let hi = first.domain.last()
-      let breaks = if info.binned {
+      let breaks = if info.breaks != auto {
+        info.breaks.filter(b => b >= lo and b <= hi)
+      } else if info.binned {
         range(info.n-breaks).map(i => (
           lo + (i + 0.5) * (hi - lo) / info.n-breaks
         ))

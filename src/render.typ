@@ -607,6 +607,12 @@
   } else {
     trained.domain
   }
+  let user-breaks = if spec == none { auto } else {
+    spec.at("breaks", default: auto)
+  }
+  if user-breaks != auto {
+    return user-breaks.filter(b => b >= lo and b <= hi)
+  }
   if transform == "log10" { return pretty-log10(lo, hi) }
   if transform == "sqrt" { return pretty-sqrt(lo, hi) }
   pretty(lo, hi, n: 5)
