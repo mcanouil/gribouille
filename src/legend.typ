@@ -699,7 +699,7 @@
       let lo = first.domain.first()
       let hi = first.domain.last()
       let breaks = if info.breaks != auto {
-        info.breaks.filter(b => b >= lo and b <= hi)
+        info.breaks.filter(b => b >= calc.min(lo, hi) and b <= calc.max(lo, hi))
       } else if info.binned {
         range(info.n-breaks + 1).map(i => lo + i * (hi - lo) / info.n-breaks)
       } else { pretty(lo, hi, n: 5) }
@@ -721,7 +721,7 @@
       let lo = first.domain.first()
       let hi = first.domain.last()
       let breaks = if info.breaks != auto {
-        info.breaks.filter(b => b >= lo and b <= hi)
+        info.breaks.filter(b => b >= calc.min(lo, hi) and b <= calc.max(lo, hi))
       } else if info.binned {
         range(info.n-breaks).map(i => (
           lo + (i + 0.5) * (hi - lo) / info.n-breaks
