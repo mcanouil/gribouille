@@ -30,9 +30,9 @@
 ///
 /// \@param guides Per-aesthetic guide overrides built with\@guides (e.g., `guides(colour: guide-legend(reverse: true))`).
 ///
-/// \@param width Total image width, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome; long titles wrap to fit. Chrome larger than `width` raises an error. Pass `auto` to fill the available width of the container the plot sits in (resolved through Typst `layout`); not supported with `defer: true`.
+/// \@param width Total image width, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome; long titles wrap to fit. Chrome larger than `width` raises an error. Pass `auto` to fill the available width of the container the plot sits in (resolved through Typst `layout`); when that container is unbounded (e.g., an auto-width page) it falls back to `10cm`. Not supported with `defer: true`.
 ///
-/// \@param height Total image height, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome. Chrome larger than `height` raises an error. Pass `auto` to fill the available height of the container (resolved through Typst `layout`); most predictable inside a fixed-height container such as a `box` or `block` with a set height, and not supported with `defer: true`.
+/// \@param height Total image height, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome. Chrome larger than `height` raises an error. Pass `auto` to fill the available height of the container (resolved through Typst `layout`); most predictable inside a fixed-height container such as a `box` or `block` with a set height, and falls back to `7cm` when the container is unbounded. Not supported with `defer: true`.
 ///
 /// \@param alt Alt text describing the figure. When set, the rendered plot is wrapped in a `figure` (kind `"gribouille-plot"`, no number, no caption) carrying this string as its PDF alternative text, so a screen reader on a tagged PDF announces the description instead of the raw axis and legend labels. When `none`, the plot renders without the figure wrapper. Quarto authors embedding plots through `typst-render` should set the block-level `alt` cell option for HTML output; this parameter only affects direct Typst compilation.
 ///
@@ -130,15 +130,19 @@
     )
   }
   layout(size => context {
-    let resolved-width = if width == auto { size.width } else { width }
-    let resolved-height = if height == auto { size.height } else { height }
-    if not (
-      resolved-width.pt() < float.inf and resolved-height.pt() < float.inf
-    ) {
-      panic(
-        "plot: `auto` width/height needs a bounded container; wrap the plot in a `box` or `block` with a fixed size, or pass a concrete length",
-      )
-    }
+    // `auto` fills the container; when the container is unbounded (e.g., a
+    // `width: auto` page) there is no size to take, so fall back to the same
+    // default dimensions the signature uses.
+    let resolved-width = if width != auto {
+      width
+    } else if size.width.pt() < float.inf {
+      size.width
+    } else { 10cm }
+    let resolved-height = if height != auto {
+      height
+    } else if size.height.pt() < float.inf {
+      size.height
+    } else { 7cm }
     let spec = (
       data: _normalise-data(data),
       mapping: mapping,
