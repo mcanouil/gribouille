@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: legend labels wider than 2 cm no longer overlap the next swatch; each legend column reserves the label's full width, most visible in horizontal legends. (#25)
 - feat: `compose()` accepts `defer: true` to return a spec usable as a panel of another `compose`, enabling nested compositions; `tag-levels` accepts a per-depth array (with `tag-sep`) so nested panels continue the numbering (e.g. `B.1`, `B.2`). (#24)
 - feat: `compose()` can number panels with a tag pattern (`tag-levels` `"A"`/`"a"`/`"1"`/`"I"`/`"i"`, plus `tag-prefix`/`tag-suffix`/`tag-corner`), styled by the new `plot-tag` theme element. (#23)
 - feat: `compose()` accepts composition-level `labs` (title/subtitle/caption) and `alt`, and now controls the collected legend's side through `guides` (e.g. `guides(default: guide-legend(position: "bottom"))`); the `guides-placement` parameter is removed. (#22)
