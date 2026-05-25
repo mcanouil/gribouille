@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: `compose()` accepts composition-level `labs` (title/subtitle/caption) and `alt`, and now controls the collected legend's side through `guides` (e.g. `guides(default: guide-legend(position: "bottom"))`); the `guides-placement` parameter is removed. (#22)
 - feat: `guides()` accepts a `default` entry that sets fallback guide options (such as the legend side) inherited by every aesthetic without its own override, in both `plot()` and `compose()`; `guide-legend`'s `position` now defaults to `auto` and inherits from it. (#21)
 - feat: `compose()` gains `width`/`height` (filling a bounded container by default) and relative `widths`/`heights` to size panels against the canvas rather than their own declared dimensions. (#20)
 - fix: the `compose` collected legend placed on `top` or `bottom` no longer clips its first swatch and is centred under the panels. (#19)
