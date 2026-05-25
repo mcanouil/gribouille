@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: `geom-ribbon()` draws one band per discrete `fill`/`colour`/`group` instead of merging every group into a single ribbon. (#29)
 - fix: `plot(width: auto, height: auto)` is allowed on an unbounded page, falling back to the default `10cm` by `7cm` instead of panicking. (#27)
 - fix: `compose()` panels fill their cells instead of being letterboxed; their own `width`/`height` are discarded once the composition has a size, and the composition size falls back to `16cm` by `12cm` when the container is unbounded. (#26)
 - fix: legend labels wider than 2 cm no longer overlap the next swatch; each legend column reserves the label's full width, most visible in horizontal legends. (#25)
