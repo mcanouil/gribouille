@@ -164,9 +164,9 @@
 }
 
 // Render a compose spec into content at `container` size; `container.width` /
-// `.height` may be `auto` (unbounded). Recurses for nested compose panels.
-// Split out from `compose` so a deferred compose spec can be rendered as a
-// panel of another composition.
+// `.height` are always concrete lengths (`float.inf` for an unbounded page),
+// never `auto`. Recurses for nested compose panels. Split out from `compose` so
+// a deferred compose spec can be rendered as a panel of another composition.
 #let _render-compose(spec, container) = {
   let panels = spec.panels
   let layout = spec.layout
