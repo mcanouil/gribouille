@@ -10,6 +10,9 @@
 
 // Latin upper / lower, with spreadsheet-style wrap past Z.
 #assert.eq(_tag-symbol("A", 0), "A")
+// Second top-level panel is `B`; a nested compose there descends to `B.<sep>`.
+#assert.eq(_tag-symbol("A", 1), "B")
+#assert.eq(_tag-symbol("A", 1) + "." + _tag-symbol("1", 0), "B.1")
 #assert.eq(_tag-symbol("A", 25), "Z")
 #assert.eq(_tag-symbol("A", 26), "AA")
 #assert.eq(_tag-symbol("A", 27), "AB")
