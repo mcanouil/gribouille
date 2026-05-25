@@ -19,89 +19,20 @@
   defer: true,
 )
 
-= `collect: none` keeps each plot's legend in place
-
+// Gallery showcase: a single squared two-by-two composition with a shared
+// colour legend, panel tags, and a composition title. The full set of
+// `collect` / legend-placement / `labs` / stack variations lives in the
+// typstdoc `@examples` on the reference page.
 #compose(
   panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
   panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
-  layout: "grid",
+  panel(aes(x: "wt", y: "hp", colour: as-factor("cyl"))),
+  panel(aes(x: "hp", y: "wt", colour: as-factor("cyl"))),
   columns: 2,
-  collect: none,
-)
-
-= `collect: auto` (default) hoists every aesthetic identical across panels
-
-#compose(
-  panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
-  panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
-  layout: "grid",
-  columns: 2,
-)
-
-= `collect: ("colour",)` hoists colour only; per-plot `size` ladders stay
-
-#compose(
-  panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"), size: "hp")),
-  panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"), size: "wt")),
-  layout: "grid",
-  columns: 2,
-  collect: ("colour",),
-)
-
-= Mismatched legends never hoist (`colour` keys differ across panels)
-
-#compose(
-  panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
-  panel(aes(x: "hp", y: "mpg", colour: "hp")),
-  layout: "grid",
-  columns: 2,
-)
-
-= Shared legend on the left via `guides(default: ...)`
-
-#compose(
-  panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
-  panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
-  layout: "grid",
-  columns: 2,
-  guides: guides(default: guide-legend(position: "left")),
-)
-
-= Shared legend on top (laid out horizontally above the panels)
-
-#compose(
-  panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
-  panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
-  layout: "grid",
-  columns: 2,
-  guides: guides(default: guide-legend(position: "top")),
-)
-
-= Shared legend on the bottom
-
-#compose(
-  panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
-  panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
-  layout: "grid",
-  columns: 2,
-  guides: guides(default: guide-legend(position: "bottom")),
-)
-
-= Composition title and caption via `labs`
-
-#box(width: 14cm, height: 5cm, compose(
-  panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
-  panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
-  layout: "grid",
-  columns: 2,
-  labs: labs(title: "Fuel economy", caption: "Source: mtcars"),
-))
-
-= Vertical stack with shared legend on the right (`layout: "stack"`)
-
-#compose(
-  panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
-  panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
-  layout: "stack",
-  direction: ttb,
+  tag-levels: "A",
+  tag-prefix: "(",
+  tag-suffix: ")",
+  labs: labs(title: "Motor Trend road tests", caption: "Source: mtcars"),
+  width: 13cm,
+  height: 10cm,
 )
