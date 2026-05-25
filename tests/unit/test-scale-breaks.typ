@@ -60,3 +60,12 @@
   data: df,
 )
 #assert.eq(_axis-breaks(trained-rev.x), (2012.0, 2016.0, 2020.0))
+
+// A scalar `breaks` is coerced to a one-element array, not panicked on.
+#let trained-scalar = train(
+  scales: (scale-x-continuous(limits: (0, 10), breaks: 5),),
+  layers: layers,
+  mapping: aes(x: "x", y: "y"),
+  data: df,
+)
+#assert.eq(_axis-breaks(trained-scalar.x), (5.0,))
