@@ -395,11 +395,13 @@
   if spec == none {
     return (labels: auto, binned: false, n-breaks: default-n, breaks: auto)
   }
+  let breaks = spec.at("breaks", default: auto)
+  if breaks != auto and type(breaks) != array { breaks = (breaks,) }
   (
     labels: spec.at("labels", default: auto),
     binned: spec.at("binned", default: false),
     n-breaks: spec.at("n-breaks", default: default-n),
-    breaks: spec.at("breaks", default: auto),
+    breaks: breaks,
   )
 }
 
