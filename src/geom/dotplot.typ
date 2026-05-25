@@ -65,8 +65,8 @@
 ///   data: d,
 ///   mapping: aes(x: "x"),
 ///   layers: (geom-dotplot(bins: 12),),
-///   width: 10cm,
-///   height: 4cm,
+///   width: 12cm,
+///   height: 9cm,
 /// )
 /// ```
 ///
