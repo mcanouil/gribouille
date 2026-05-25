@@ -4,6 +4,7 @@
 #import "legend.typ" as legend-mod
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
+#import "theme/theme.typ": _text-style
 #import "theme/elements.typ": margin
 
 // The public `compose` parameter `layout` shadows Typst's builtin `layout`
@@ -53,6 +54,75 @@
   for (k, v) in extra { out.insert(k, v) }
   out
 }
+
+// Spreadsheet-style letters for a 0-based index: 0 -> A, 25 -> Z, 26 -> AA.
+#let _alpha-symbol(index, upper) = {
+  let base = if upper { 65 } else { 97 }
+  let out = ""
+  let n = index
+  while n >= 0 {
+    out = str.from-unicode(base + calc.rem(n, 26)) + out
+    n = calc.quo(n, 26) - 1
+  }
+  out
+}
+
+// Uppercase Roman numeral for a positive integer.
+#let _roman-symbol(num) = {
+  let table = (
+    (1000, "M"),
+    (900, "CM"),
+    (500, "D"),
+    (400, "CD"),
+    (100, "C"),
+    (90, "XC"),
+    (50, "L"),
+    (40, "XL"),
+    (10, "X"),
+    (9, "IX"),
+    (5, "V"),
+    (4, "IV"),
+    (1, "I"),
+  )
+  let out = ""
+  let n = num
+  for (value, sym) in table {
+    while n >= value {
+      out += sym
+      n -= value
+    }
+  }
+  out
+}
+
+// Tag symbol for a 0-based panel index under a `tag-levels` code:
+// `"A"`/`"a"` latin, `"1"` arabic, `"I"`/`"i"` roman.
+#let _tag-symbol(code, index) = {
+  if code == "1" {
+    str(index + 1)
+  } else if code == "A" {
+    _alpha-symbol(index, true)
+  } else if code == "a" {
+    _alpha-symbol(index, false)
+  } else if code == "I" {
+    _roman-symbol(index + 1)
+  } else if code == "i" {
+    lower(_roman-symbol(index + 1))
+  } else {
+    panic(
+      "compose: tag-levels code must be \"A\", \"a\", \"1\", \"I\", or "
+        + "\"i\"; got "
+        + repr(code),
+    )
+  }
+}
+
+#let _TAG-CORNERS = (
+  "top-left": top + left,
+  "top-right": top + right,
+  "bottom-left": bottom + left,
+  "bottom-right": bottom + right,
+)
 
 #let _legend-canvas-size(guides, side) = {
   let extents = legend-mod.estimate-extents(guides)
@@ -156,6 +226,20 @@
 ///   They reuse the same chrome as a single plot, so a composition reads like
 ///   one figure.
 ///
+/// \@param tag-levels Per-panel tag numbering. One of `"A"` / `"a"` (latin),
+///   `"1"` (arabic), or `"I"` / `"i"` (roman); `none` (default) draws no tags.
+///   Panels are numbered in layout order.
+///
+/// \@param tag-prefix String placed before each generated tag symbol (e.g.
+///   `"("`).
+///
+/// \@param tag-suffix String placed after each generated tag symbol (e.g.
+///   `")"` or `"."`).
+///
+/// \@param tag-corner Corner of each panel where its tag sits: `"top-left"`
+///   (default), `"top-right"`, `"bottom-left"`, or `"bottom-right"`. Styled by
+///   the theme's `plot-tag` element.
+///
 /// \@param alt Alt text for the whole composition. When set, the result is
 ///   wrapped in a `figure` (kind `"gribouille-plot"`) carrying this PDF
 ///   alternative text, exactly as\@plot does.
@@ -244,6 +328,23 @@
 /// ))
 /// ```
 ///
+/// \@examples Number the panels `(A)`, `(B)`, ... in the top-left corner with
+/// a tag pattern.
+/// ```
+/// //| alt: "Two mpg scatter panels each tagged (A) and (B) in the top-left corner, sharing a colour-by-cylinder legend on the right."
+/// #let panel(map) = plot(
+///   data: mpg, mapping: map,
+///   layers: (geom-point(size: 2pt),),
+///   width: 6cm, height: 4cm, defer: true,
+/// )
+/// #box(width: 15cm, height: 5cm, compose(
+///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
+///   panel(aes(x: "displ", y: "cty", colour: as-factor("cyl"))),
+///   columns: 2,
+///   tag-levels: "A", tag-prefix: "(", tag-suffix: ")",
+/// ))
+/// ```
+///
 /// \@see\@plot,\@aes,\@guides,\@labs
 #let compose(
   ..panels-positional,
@@ -258,6 +359,10 @@
   collect: auto,
   guides: (:),
   labs: none,
+  tag-levels: none,
+  tag-prefix: "",
+  tag-suffix: "",
+  tag-corner: "top-left",
   alt: none,
 ) = {
   let panels = panels-positional.pos()
@@ -280,6 +385,22 @@
   }
   if layout != "grid" and layout != "stack" {
     panic("compose: layout must be \"grid\" or \"stack\"; got " + repr(layout))
+  }
+  if (
+    tag-levels != none and not ("A", "a", "1", "I", "i").contains(tag-levels)
+  ) {
+    panic(
+      "compose: tag-levels must be `none` or one of \"A\", \"a\", \"1\", "
+        + "\"I\", \"i\"; got "
+        + repr(tag-levels),
+    )
+  }
+  if not _TAG-CORNERS.keys().contains(tag-corner) {
+    panic(
+      "compose: tag-corner must be \"top-left\", \"top-right\", "
+        + "\"bottom-left\", or \"bottom-right\"; got "
+        + repr(tag-corner),
+    )
   }
 
   _layout(container => context {
@@ -355,6 +476,24 @@
     // `tight-sides` drops the conservative axis-side floor on the hoisted side
     // so the panel chrome shrinks to butt against the shared legend.
     let tight-sides = if legend-side != none { (legend-side,) } else { () }
+
+    // Overlay a panel's tag in `tag-corner` without disturbing its size.
+    let tag-style = _text-style(theme, "plot-tag")
+    let with-tag(content, index) = {
+      if tag-levels == none or tag-style.size == 0pt { return content }
+      let label = tag-prefix + _tag-symbol(tag-levels, index) + tag-suffix
+      box({
+        content
+        place(
+          _TAG-CORNERS.at(tag-corner),
+          pad(0.15cm, text(
+            size: tag-style.size,
+            fill: tag-style.fill,
+            weight: tag-style.weight,
+          )[#label]),
+        )
+      })
+    }
 
     let legend-size = if hoisted-guides.len() > 0 {
       _legend-canvas-size(hoisted-guides, legend-side)
@@ -487,7 +626,10 @@
       for (i, spec) in panels.enumerate() {
         let col = calc.rem(i, cols)
         let row = calc.quo(i, cols)
-        cells.push(render-cell(spec, col-tracks.at(col), row-tracks.at(row)))
+        cells.push(with-tag(
+          render-cell(spec, col-tracks.at(col), row-tracks.at(row)),
+          i,
+        ))
       }
 
       if layout == "grid" {
@@ -510,13 +652,16 @@
       // Re-render from the original spec (not the merged-guides probe) so
       // compose-level `guides` only shape the collected legend, never a
       // panel's own non-collected legends.
-      let final-panels = panels.map(spec => {
-        render-plot-deferred(
-          spec,
-          suppress-aesthetics: hoisted,
-          tight-sides: tight-sides,
-        ).content
-      })
+      let final-panels = panels
+        .enumerate()
+        .map(((i, spec)) => with-tag(
+          render-plot-deferred(
+            spec,
+            suppress-aesthetics: hoisted,
+            tight-sides: tight-sides,
+          ).content,
+          i,
+        ))
       if layout == "grid" {
         grid(columns: columns, gutter: gutter, ..final-panels)
       } else {

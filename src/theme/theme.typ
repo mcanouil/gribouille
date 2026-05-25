@@ -24,6 +24,7 @@
     "plot-title": "text",
     "plot-subtitle": "text",
     "plot-caption": "text",
+    "plot-tag": "text",
     "panel-grid": "line",
     "axis-line": "line",
     "axis-ticks": "line",
