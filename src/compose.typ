@@ -21,6 +21,10 @@
     and "guides" in x
 )
 
+#let _is-compose-spec(x) = (
+  type(x) == dictionary and x.at("kind", default: none) == "compose"
+)
+
 #let _index-by-aesthetic(guides) = {
   let out = (:)
   for g in guides {
@@ -152,6 +156,400 @@
   weights.map(w => usable * w / sum)
 }
 
+// Render a compose spec into content at `container` size; `container.width` /
+// `.height` may be `auto` (unbounded). Recurses for nested compose panels.
+// Split out from `compose` so a deferred compose spec can be rendered as a
+// panel of another composition.
+#let _render-compose(spec, container) = {
+  let panels = spec.panels
+  let layout = spec.layout
+  let columns = spec.columns
+  let direction = spec.direction
+  let gutter = spec.gutter
+  let widths = spec.widths
+  let heights = spec.heights
+  let width = spec.width
+  let height = spec.height
+  let collect = spec.collect
+  let guides = spec.guides
+  let labs = spec.labs
+  let alt = spec.alt
+  let tag-ctx = spec.at("tag-ctx", default: none)
+
+  let first-theme = panels.first().theme
+  let theme = merge-theme(
+    if first-theme != none { first-theme } else { _theme-state.get() },
+  )
+
+  // Probe only plot panels with compose-level `guides` merged in; a nested
+  // compose collects its own guides internally (guide collection is per level),
+  // so it contributes none here and never hoists.
+  let probes = panels.map(p => if _is-plot-spec(p) {
+    render-plot-deferred((..p, guides: _merge-guides(p.guides, guides)))
+  } else { none })
+  let per-panel = probes.map(p => if p == none { (:) } else {
+    _index-by-aesthetic(p.guides)
+  })
+
+  let candidates = if collect == auto {
+    let all = ()
+    for idx in per-panel {
+      for a in idx.keys() {
+        if not all.contains(a) { all.push(a) }
+      }
+    }
+    all
+  } else if collect == none {
+    ()
+  } else {
+    collect
+  }
+
+  let hoisted = ()
+  let hoisted-guides = ()
+  for a in candidates {
+    if not _all-mergeable(per-panel, a) { continue }
+    hoisted.push(a)
+    let g = per-panel.first().at(a)
+    if not hoisted-guides.any(h => h.aesthetics == g.aesthetics) {
+      hoisted-guides.push(g)
+    }
+  }
+
+  // The collected legend's side comes from the (merged) guides; every hoisted
+  // guide must agree on it.
+  let legend-side = none
+  for g in hoisted-guides {
+    let s = g.placement.side
+    if legend-side == none {
+      legend-side = s
+    } else if legend-side != s {
+      panic(
+        "compose: collected guides resolve to different sides ("
+          + repr(legend-side)
+          + " vs "
+          + repr(s)
+          + "); set a shared side with "
+          + "`guides(default: guide-legend(position: ...))`",
+      )
+    }
+  }
+  if (
+    legend-side != none
+      and not ("right", "left", "top", "bottom").contains(legend-side)
+  ) {
+    panic(
+      "compose: a collected legend must sit on \"right\", \"left\", \"top\", "
+        + "or \"bottom\"; got "
+        + repr(legend-side),
+    )
+  }
+
+  let tight-sides = if legend-side != none { (legend-side,) } else { () }
+  let fill-mode = widths != none or heights != none
+
+  // Tag descent: a nested compose inherits the ancestor's `tag-ctx` (levels,
+  // separator, affixes, corner, and the accumulated prefix); a top-level
+  // compose uses its own params, normalising `tag-levels` to an array.
+  let effective-levels = if tag-ctx != none {
+    tag-ctx.levels
+  } else if spec.tag-levels == none {
+    ()
+  } else if type(spec.tag-levels) == array {
+    spec.tag-levels
+  } else {
+    (spec.tag-levels,)
+  }
+  let eff-sep = if tag-ctx != none { tag-ctx.sep } else { spec.tag-sep }
+  let eff-prefix = if tag-ctx != none { tag-ctx.prefix } else { "" }
+  let eff-tag-prefix = if tag-ctx != none {
+    tag-ctx.tag-prefix
+  } else { spec.tag-prefix }
+  let eff-tag-suffix = if tag-ctx != none {
+    tag-ctx.tag-suffix
+  } else { spec.tag-suffix }
+  let eff-corner = if tag-ctx != none { tag-ctx.corner } else {
+    spec.tag-corner
+  }
+  let level-code = if effective-levels.len() > 0 {
+    effective-levels.first()
+  } else { none }
+
+  let tag-style = _text-style(theme, "plot-tag")
+  let tag-overlay(content, label) = if (
+    tag-style.size == 0pt or label == none
+  ) { content } else {
+    box({
+      content
+      place(
+        _TAG-CORNERS.at(eff-corner),
+        pad(0.15cm, text(
+          size: tag-style.size,
+          fill: tag-style.fill,
+          weight: tag-style.weight,
+        )[#label]),
+      )
+    })
+  }
+
+  // Render one panel (leaf plot or nested compose) at `target` `(w, h)` cm, or
+  // `none` for intrinsic sizing (the panel's own declared size).
+  let make-cell(panel, i, target) = {
+    let symbol = if level-code != none {
+      _tag-symbol(level-code, i)
+    } else { none }
+    let acc = eff-prefix + (if symbol != none { symbol } else { "" })
+    if _is-plot-spec(panel) {
+      let content = if target == none {
+        render-plot-deferred(
+          panel,
+          suppress-aesthetics: hoisted,
+          tight-sides: tight-sides,
+        ).content
+      } else if fill-mode {
+        render-plot-deferred(
+          (..panel, width: target.w * 1cm, height: target.h * 1cm),
+          suppress-aesthetics: hoisted,
+          tight-sides: tight-sides,
+        ).content
+      } else {
+        let aspect-w = panel.width / 1cm
+        let aspect-h = panel.height / 1cm
+        let scale = calc.min(target.w / aspect-w, target.h / aspect-h)
+        let inner = render-plot-deferred(
+          (
+            ..panel,
+            width: aspect-w * scale * 1cm,
+            height: aspect-h * scale * 1cm,
+          ),
+          suppress-aesthetics: hoisted,
+          tight-sides: tight-sides,
+        ).content
+        box(
+          width: target.w * 1cm,
+          height: target.h * 1cm,
+          align(center + horizon, inner),
+        )
+      }
+      let label = if symbol == none {
+        none
+      } else { eff-tag-prefix + acc + eff-tag-suffix }
+      tag-overlay(content, label)
+    } else {
+      // Nested compose: descend one tag level (the slot itself is untagged).
+      let child = if effective-levels.len() > 0 {
+        (
+          ..panel,
+          tag-ctx: (
+            prefix: acc
+              + (if effective-levels.len() > 1 { eff-sep } else { "" }),
+            levels: if effective-levels.len() > 1 {
+              effective-levels.slice(1)
+            } else { () },
+            sep: eff-sep,
+            tag-prefix: eff-tag-prefix,
+            tag-suffix: eff-tag-suffix,
+            corner: eff-corner,
+          ),
+        )
+      } else { panel }
+      if target == none {
+        _render-compose(child, (width: panel.width, height: panel.height))
+      } else {
+        _render-compose(child, (width: target.w * 1cm, height: target.h * 1cm))
+      }
+    }
+  }
+
+  let width-bounded = (
+    width != auto
+      or (
+        container.width != auto and container.width.pt() < float.inf
+      )
+  )
+  let height-bounded = (
+    height != auto
+      or (
+        container.height != auto and container.height.pt() < float.inf
+      )
+  )
+  let sized = width-bounded and height-bounded
+
+  let resolved-width = if width != auto { width } else { container.width }
+  let resolved-height = if height != auto { height } else { container.height }
+  let deco-parts = if labs != none and sized {
+    _decorate-parts(labs, theme, resolved-width / 1cm, resolved-height / 1cm)
+  } else { none }
+  let deco = if deco-parts != none {
+    _decorate-extents(deco-parts)
+  } else { (top: 0.0, bottom: 0.0, left: 0.0, right: 0.0) }
+
+  let legend-size = if hoisted-guides.len() > 0 {
+    _legend-canvas-size(hoisted-guides, legend-side)
+  } else { (width: 0.0, height: 0.0) }
+  let right-gap-cm = if legend-side == "right" {
+    legend-mod.legend-gap(theme)
+  } else { 0.0 }
+
+  let panel-block = if sized {
+    let area-w = resolved-width / 1cm - deco.left - deco.right
+    let area-h = resolved-height / 1cm - deco.top - deco.bottom
+    if legend-side == "right" {
+      area-w -= legend-size.width + right-gap-cm
+    } else if legend-side == "left" {
+      area-w -= legend-size.width
+    } else if legend-side == "top" or legend-side == "bottom" {
+      area-h -= legend-size.height
+    }
+
+    let n = panels.len()
+    let cols = 0
+    let rows = 0
+    let col-ratios = none
+    let row-ratios = none
+    if layout == "grid" {
+      cols = if type(columns) == int { columns } else { columns.len() }
+      rows = calc.ceil(n / cols)
+      col-ratios = widths
+      row-ratios = heights
+    } else if direction == ttb or direction == btt {
+      if widths != none {
+        panic(
+          "compose: `widths` has no effect on a vertical stack; size it with "
+            + "`heights`",
+        )
+      }
+      cols = 1
+      rows = n
+      row-ratios = heights
+    } else {
+      if heights != none {
+        panic(
+          "compose: `heights` has no effect on a horizontal stack; size it "
+            + "with `widths`",
+        )
+      }
+      cols = n
+      rows = 1
+      col-ratios = widths
+    }
+    if col-ratios != none and col-ratios.len() != cols {
+      panic(
+        "compose: `widths` needs one entry per column ("
+          + str(cols)
+          + "); got "
+          + str(col-ratios.len()),
+      )
+    }
+    if row-ratios != none and row-ratios.len() != rows {
+      panic(
+        "compose: `heights` needs one entry per row ("
+          + str(rows)
+          + "); got "
+          + str(row-ratios.len()),
+      )
+    }
+
+    let gutter-cm = gutter / 1cm
+    let col-tracks = _tracks(area-w, cols, gutter-cm, col-ratios)
+    let row-tracks = _tracks(area-h, rows, gutter-cm, row-ratios)
+
+    let cells = ()
+    for (i, panel) in panels.enumerate() {
+      let col = calc.rem(i, cols)
+      let row = calc.quo(i, cols)
+      cells.push(make-cell(
+        panel,
+        i,
+        (w: col-tracks.at(col), h: row-tracks.at(row)),
+      ))
+    }
+    if layout == "grid" {
+      grid(columns: cols, gutter: gutter, ..cells)
+    } else {
+      stack(dir: direction, spacing: gutter, ..cells)
+    }
+  } else {
+    if widths != none or heights != none {
+      let unbounded = ()
+      if not width-bounded { unbounded.push("width") }
+      if not height-bounded { unbounded.push("height") }
+      panic(
+        "compose: `widths`/`heights` need a bounded composition size, but "
+          + unbounded.join(" and ")
+          + " is unbounded; pass a concrete length or wrap the composition in "
+          + "a sized box",
+      )
+    }
+    let final-panels = panels
+      .enumerate()
+      .map(((i, panel)) => make-cell(panel, i, none))
+    if layout == "grid" {
+      grid(columns: columns, gutter: gutter, ..final-panels)
+    } else {
+      stack(dir: direction, spacing: gutter, ..final-panels)
+    }
+  }
+
+  let composed = if hoisted-guides.len() == 0 {
+    panel-block
+  } else {
+    let trained = probes.find(p => p != none).trained
+    let legend-canvas = legend-mod.standalone(
+      hoisted-guides,
+      trained,
+      theme,
+      legend-side,
+      legend-size.width,
+      legend-size.height,
+    )
+    let right-gap = right-gap-cm * 1cm
+    if legend-side == "right" {
+      grid(
+        columns: (auto, auto),
+        align: horizon,
+        gutter: right-gap,
+        panel-block, legend-canvas,
+      )
+    } else if legend-side == "left" {
+      grid(
+        columns: (auto, auto),
+        align: horizon,
+        legend-canvas, panel-block,
+      )
+    } else if legend-side == "bottom" {
+      stack(dir: ttb, panel-block, align(center, legend-canvas))
+    } else {
+      stack(dir: ttb, align(center, legend-canvas), panel-block)
+    }
+  }
+
+  let decorated = if labs == none {
+    composed
+  } else {
+    let parts = if deco-parts != none {
+      deco-parts
+    } else {
+      let m = measure(composed)
+      _decorate-parts(labs, theme, m.width / 1cm, m.height / 1cm)
+    }
+    _render-decorate(composed, parts)
+  }
+
+  if alt != none {
+    figure(
+      pdf.artifact(decorated),
+      alt: alt,
+      kind: "gribouille-plot",
+      supplement: none,
+      numbering: none,
+      caption: none,
+    )
+  } else {
+    decorated
+  }
+}
+
 /// Arrange multiple plots into a grid or stack with a shared, hoisted legend.
 ///
 /// `compose` is the multi-plot orchestrator: it takes deferred plots, probes
@@ -226,15 +624,23 @@
 ///   They reuse the same chrome as a single plot, so a composition reads like
 ///   one figure.
 ///
-/// \@param tag-levels Per-panel tag numbering. One of `"A"` / `"a"` (latin),
-///   `"1"` (arabic), or `"I"` / `"i"` (roman); `none` (default) draws no tags.
-///   Panels are numbered in layout order.
+/// \@param tag-levels Per-panel tag numbering. A single code numbers this
+///   composition's panels in layout order; an array of codes assigns one per
+///   nesting depth, so a nested `compose` panel continues the sequence (e.g.
+///   `("A", "1")` gives `A` to a top-level panel and `A1`, `A2` inside a nested
+///   compose). Each code is `"A"` / `"a"` (latin), `"1"` (arabic), or `"I"` /
+///   `"i"` (roman); `none` (default) draws no tags. When set, this
+///   composition's `tag-levels` drives any nested compose and overrides its
+///   own.
 ///
 /// \@param tag-prefix String placed before each generated tag symbol (e.g.
 ///   `"("`).
 ///
 /// \@param tag-suffix String placed after each generated tag symbol (e.g.
 ///   `")"` or `"."`).
+///
+/// \@param tag-sep Separator inserted between nested tag levels (e.g. `"."`
+///   gives `A.1`). Ignored for a single-level `tag-levels`.
 ///
 /// \@param tag-corner Corner of each panel where its tag sits: `"top-left"`
 ///   (default), `"top-right"`, `"bottom-left"`, or `"bottom-right"`. Styled by
@@ -244,9 +650,15 @@
 ///   wrapped in a `figure` (kind `"gribouille-plot"`) carrying this PDF
 ///   alternative text, exactly as\@plot does.
 ///
+/// \@param defer When `true`, return a compose spec dict instead of content so
+///   this composition can be passed as a panel to another `compose`. Guide
+///   collection stays per level (a nested compose draws its own collected
+///   legend); only tag numbering descends across nesting.
+///
 /// \@returns Typst content block: the panel layout with the shared legend and
 ///   any composition labels, or the bare panel layout when no aesthetic ends up
-///   hoisted; wrapped in a `figure` when `alt` is set.
+///   hoisted; wrapped in a `figure` when `alt` is set. Returns a spec dict when
+///   `defer: true`.
 ///
 /// \@examples Auto-collect: identical `colour` legend hoisted to the right.
 /// ```
@@ -345,6 +757,28 @@
 /// ))
 /// ```
 ///
+/// \@examples Nest a deferred `compose` as a panel; `tag-levels: ("A", "1")`
+/// numbers the outer panel `A` and the nested panels `A.1`, `A.2`.
+/// ```
+/// //| alt: "A left scatter panel tagged A beside a nested column of two scatter panels tagged A.1 and A.2."
+/// #let p(map) = plot(
+///   data: mpg, mapping: map,
+///   layers: (geom-point(size: 2pt),),
+///   width: 5cm, height: 3.5cm, defer: true,
+/// )
+/// #let inner = compose(
+///   p(aes(x: "displ", y: "hwy")),
+///   p(aes(x: "displ", y: "cty")),
+///   columns: 1, defer: true,
+/// )
+/// #box(width: 14cm, height: 7cm, compose(
+///   p(aes(x: "displ", y: "hwy")),
+///   inner,
+///   columns: 2,
+///   tag-levels: ("A", "1"), tag-sep: ".",
+/// ))
+/// ```
+///
 /// \@see\@plot,\@aes,\@guides,\@labs
 #let compose(
   ..panels-positional,
@@ -362,18 +796,20 @@
   tag-levels: none,
   tag-prefix: "",
   tag-suffix: "",
+  tag-sep: "",
   tag-corner: "top-left",
   alt: none,
+  defer: false,
 ) = {
   let panels = panels-positional.pos()
   if panels.len() == 0 {
     panic("compose: at least one deferred plot is required")
   }
   for p in panels {
-    if not _is-plot-spec(p) {
+    if not (_is-plot-spec(p) or _is-compose-spec(p)) {
       panic(
-        "compose: every positional argument must be `plot(..., defer: true)`; "
-          + "got "
+        "compose: every positional argument must be `plot(..., defer: true)` "
+          + "or `compose(..., defer: true)`; got "
           + repr(p),
       )
     }
@@ -386,14 +822,19 @@
   if layout != "grid" and layout != "stack" {
     panic("compose: layout must be \"grid\" or \"stack\"; got " + repr(layout))
   }
-  if (
-    tag-levels != none and not ("A", "a", "1", "I", "i").contains(tag-levels)
-  ) {
-    panic(
-      "compose: tag-levels must be `none` or one of \"A\", \"a\", \"1\", "
-        + "\"I\", \"i\"; got "
-        + repr(tag-levels),
-    )
+  if tag-levels != none {
+    let codes = if type(tag-levels) == array { tag-levels } else {
+      (tag-levels,)
+    }
+    for c in codes {
+      if not ("A", "a", "1", "I", "i").contains(c) {
+        panic(
+          "compose: tag-levels codes must be \"A\", \"a\", \"1\", \"I\", or "
+            + "\"i\"; got "
+            + repr(c),
+        )
+      }
+    }
   }
   if not _TAG-CORNERS.keys().contains(tag-corner) {
     panic(
@@ -403,330 +844,28 @@
     )
   }
 
-  _layout(container => context {
-    let first-theme = panels.first().theme
-    let theme = merge-theme(
-      if first-theme != none { first-theme } else { _theme-state.get() },
-    )
-
-    // Probe each panel with the compose-level `guides` merged over its own, so
-    // the collected guide objects already carry the placement and styling the
-    // user asked for (including a `guides(default: ...)` side).
-    let probes = panels.map(spec => render-plot-deferred(
-      (..spec, guides: _merge-guides(spec.guides, guides)),
-    ))
-    let per-panel = probes.map(p => _index-by-aesthetic(p.guides))
-
-    let candidates = if collect == auto {
-      let all = ()
-      for idx in per-panel {
-        for a in idx.keys() {
-          if not all.contains(a) { all.push(a) }
-        }
-      }
-      all
-    } else if collect == none {
-      ()
-    } else {
-      collect
-    }
-
-    let hoisted = ()
-    let hoisted-guides = ()
-    for a in candidates {
-      if not _all-mergeable(per-panel, a) { continue }
-      hoisted.push(a)
-      let g = per-panel.first().at(a)
-      // A merged guide (e.g., colour+fill on the same column) is reached
-      // through every aesthetic it carries, so dedup by aesthetic mix.
-      if not hoisted-guides.any(h => h.aesthetics == g.aesthetics) {
-        hoisted-guides.push(g)
-      }
-    }
-
-    // The collected legend's side comes from the (merged) guides; every hoisted
-    // guide must agree on it.
-    let legend-side = none
-    for g in hoisted-guides {
-      let s = g.placement.side
-      if legend-side == none {
-        legend-side = s
-      } else if legend-side != s {
-        panic(
-          "compose: collected guides resolve to different sides ("
-            + repr(legend-side)
-            + " vs "
-            + repr(s)
-            + "); set a shared side with "
-            + "`guides(default: guide-legend(position: ...))`",
-        )
-      }
-    }
-    if (
-      legend-side != none
-        and not ("right", "left", "top", "bottom").contains(legend-side)
-    ) {
-      panic(
-        "compose: a collected legend must sit on \"right\", \"left\", "
-          + "\"top\", or \"bottom\"; got "
-          + repr(legend-side),
-      )
-    }
-
-    // `tight-sides` drops the conservative axis-side floor on the hoisted side
-    // so the panel chrome shrinks to butt against the shared legend.
-    let tight-sides = if legend-side != none { (legend-side,) } else { () }
-
-    // Overlay a panel's tag in `tag-corner` without disturbing its size.
-    let tag-style = _text-style(theme, "plot-tag")
-    let with-tag(content, index) = {
-      if tag-levels == none or tag-style.size == 0pt { return content }
-      let label = tag-prefix + _tag-symbol(tag-levels, index) + tag-suffix
-      box({
-        content
-        place(
-          _TAG-CORNERS.at(tag-corner),
-          pad(0.15cm, text(
-            size: tag-style.size,
-            fill: tag-style.fill,
-            weight: tag-style.weight,
-          )[#label]),
-        )
-      })
-    }
-
-    let legend-size = if hoisted-guides.len() > 0 {
-      _legend-canvas-size(hoisted-guides, legend-side)
-    } else { (width: 0.0, height: 0.0) }
-    // For right placement the panel-margin override trims the panel's right
-    // side to 0 cm; with no intrinsic cetz padding on that side the legend
-    // would butt against the panel data area, so add `legend-gap` to match a
-    // single-plot side-legend offset.
-    let right-gap-cm = if legend-side == "right" {
-      legend-mod.legend-gap(theme)
-    } else { 0.0 }
-
-    // An axis is bounded when it is an explicit length, or `auto` inside a
-    // bounded container. When both are bounded compose sizes panels to the
-    // canvas; otherwise it falls back to intrinsic layout, sizing each panel at
-    // its own declared `width`/`height` (the historical behaviour) so an
-    // unwrapped composition still renders.
-    let width-bounded = width != auto or container.width.pt() < float.inf
-    let height-bounded = height != auto or container.height.pt() < float.inf
-    let sized = width-bounded and height-bounded
-
-    // Composition title / subtitle / caption reuse the single-plot chrome
-    // pipeline. In sized mode their extents are reserved up front so the whole
-    // image totals the requested dimensions; in intrinsic mode they wrap the
-    // measured composition (computed after `composed` below).
-    let resolved-width = if width == auto { container.width } else { width }
-    let resolved-height = if height == auto { container.height } else { height }
-    let deco-parts = if labs != none and sized {
-      _decorate-parts(labs, theme, resolved-width / 1cm, resolved-height / 1cm)
-    } else { none }
-    let deco = if deco-parts != none {
-      _decorate-extents(deco-parts)
-    } else { (top: 0.0, bottom: 0.0, left: 0.0, right: 0.0) }
-
-    let panel-block = if sized {
-      let area-w = resolved-width / 1cm - deco.left - deco.right
-      let area-h = resolved-height / 1cm - deco.top - deco.bottom
-      if legend-side == "right" {
-        area-w -= legend-size.width + right-gap-cm
-      } else if legend-side == "left" {
-        area-w -= legend-size.width
-      } else if legend-side == "top" or legend-side == "bottom" {
-        area-h -= legend-size.height
-      }
-
-      let n = panels.len()
-      // `widths`/`heights` make panels fill their cells; without them each
-      // panel keeps its aspect ratio and is letterboxed in an equal cell.
-      let fill-mode = widths != none or heights != none
-      let cols = 0
-      let rows = 0
-      let col-ratios = none
-      let row-ratios = none
-      if layout == "grid" {
-        cols = if type(columns) == int { columns } else { columns.len() }
-        rows = calc.ceil(n / cols)
-        col-ratios = widths
-        row-ratios = heights
-      } else if direction == ttb or direction == btt {
-        if widths != none {
-          panic(
-            "compose: `widths` has no effect on a vertical stack; size it "
-              + "with `heights`",
-          )
-        }
-        cols = 1
-        rows = n
-        row-ratios = heights
-      } else {
-        if heights != none {
-          panic(
-            "compose: `heights` has no effect on a horizontal stack; size it "
-              + "with `widths`",
-          )
-        }
-        cols = n
-        rows = 1
-        col-ratios = widths
-      }
-      if col-ratios != none and col-ratios.len() != cols {
-        panic(
-          "compose: `widths` needs one entry per column ("
-            + str(cols)
-            + "); got "
-            + str(col-ratios.len()),
-        )
-      }
-      if row-ratios != none and row-ratios.len() != rows {
-        panic(
-          "compose: `heights` needs one entry per row ("
-            + str(rows)
-            + "); got "
-            + str(row-ratios.len()),
-        )
-      }
-
-      let gutter-cm = gutter / 1cm
-      let col-tracks = _tracks(area-w, cols, gutter-cm, col-ratios)
-      let row-tracks = _tracks(area-h, rows, gutter-cm, row-ratios)
-
-      let render-cell(spec, cell-w, cell-h) = {
-        if fill-mode {
-          render-plot-deferred(
-            (..spec, width: cell-w * 1cm, height: cell-h * 1cm),
-            suppress-aesthetics: hoisted,
-            tight-sides: tight-sides,
-          ).content
-        } else {
-          let aspect-w = spec.width / 1cm
-          let aspect-h = spec.height / 1cm
-          let scale = calc.min(cell-w / aspect-w, cell-h / aspect-h)
-          let inner = render-plot-deferred(
-            (
-              ..spec,
-              width: aspect-w * scale * 1cm,
-              height: aspect-h * scale * 1cm,
-            ),
-            suppress-aesthetics: hoisted,
-            tight-sides: tight-sides,
-          ).content
-          box(
-            width: cell-w * 1cm,
-            height: cell-h * 1cm,
-            align(center + horizon, inner),
-          )
-        }
-      }
-
-      let cells = ()
-      for (i, spec) in panels.enumerate() {
-        let col = calc.rem(i, cols)
-        let row = calc.quo(i, cols)
-        cells.push(with-tag(
-          render-cell(spec, col-tracks.at(col), row-tracks.at(row)),
-          i,
-        ))
-      }
-
-      if layout == "grid" {
-        grid(columns: cols, gutter: gutter, ..cells)
-      } else {
-        stack(dir: direction, spacing: gutter, ..cells)
-      }
-    } else {
-      if widths != none or heights != none {
-        let unbounded = ()
-        if not width-bounded { unbounded.push("width") }
-        if not height-bounded { unbounded.push("height") }
-        panic(
-          "compose: `widths`/`heights` need a bounded composition size, but "
-            + unbounded.join(" and ")
-            + " is unbounded; pass a concrete length or wrap the composition "
-            + "in a sized box",
-        )
-      }
-      // Re-render from the original spec (not the merged-guides probe) so
-      // compose-level `guides` only shape the collected legend, never a
-      // panel's own non-collected legends.
-      let final-panels = panels
-        .enumerate()
-        .map(((i, spec)) => with-tag(
-          render-plot-deferred(
-            spec,
-            suppress-aesthetics: hoisted,
-            tight-sides: tight-sides,
-          ).content,
-          i,
-        ))
-      if layout == "grid" {
-        grid(columns: columns, gutter: gutter, ..final-panels)
-      } else {
-        stack(dir: direction, spacing: gutter, ..final-panels)
-      }
-    }
-
-    let composed = if hoisted-guides.len() == 0 {
-      panel-block
-    } else {
-      let trained = probes.first().trained
-      let legend-canvas = legend-mod.standalone(
-        hoisted-guides,
-        trained,
-        theme,
-        legend-side,
-        legend-size.width,
-        legend-size.height,
-      )
-      let right-gap = right-gap-cm * 1cm
-      if legend-side == "right" {
-        grid(
-          columns: (auto, auto),
-          align: horizon,
-          gutter: right-gap,
-          panel-block, legend-canvas,
-        )
-      } else if legend-side == "left" {
-        grid(
-          columns: (auto, auto),
-          align: horizon,
-          legend-canvas, panel-block,
-        )
-      } else if legend-side == "bottom" {
-        stack(dir: ttb, panel-block, align(center, legend-canvas))
-      } else {
-        stack(dir: ttb, align(center, legend-canvas), panel-block)
-      }
-    }
-
-    // Composition labels: reuse the parts precomputed in sized mode, else
-    // measure the assembled composition and wrap to that size.
-    let decorated = if labs == none {
-      composed
-    } else {
-      let parts = if deco-parts != none {
-        deco-parts
-      } else {
-        let m = measure(composed)
-        _decorate-parts(labs, theme, m.width / 1cm, m.height / 1cm)
-      }
-      _render-decorate(composed, parts)
-    }
-
-    if alt != none {
-      figure(
-        pdf.artifact(decorated),
-        alt: alt,
-        kind: "gribouille-plot",
-        supplement: none,
-        numbering: none,
-        caption: none,
-      )
-    } else {
-      decorated
-    }
-  })
+  let spec = (
+    kind: "compose",
+    panels: panels,
+    layout: layout,
+    columns: columns,
+    direction: direction,
+    gutter: gutter,
+    widths: widths,
+    heights: heights,
+    width: width,
+    height: height,
+    collect: collect,
+    guides: guides,
+    labs: labs,
+    tag-levels: tag-levels,
+    tag-prefix: tag-prefix,
+    tag-suffix: tag-suffix,
+    tag-sep: tag-sep,
+    tag-corner: tag-corner,
+    alt: alt,
+    tag-ctx: none,
+  )
+  if defer { return spec }
+  _layout(container => context { _render-compose(spec, container) })
 }
