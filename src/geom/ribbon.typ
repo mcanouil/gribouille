@@ -10,6 +10,7 @@
 #import "../layer.typ": make-layer
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
+#import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": project-point
 #import "../utils/stroke.typ": resolve-stroke-spec
@@ -18,10 +19,12 @@
   geom-linewidth,
 )
 
-/// Filled band between `ymin` and `ymax` along the x aesthetic.
+/// Filled band between `ymin` and `ymax` along the x aesthetic, per group.
 ///
-/// The mapping must provide `x`, `ymin`, and `ymax`. Rows are sorted by x
-/// and the polygon is closed between the lower and upper boundaries.
+/// The mapping must provide `x`, `ymin`, and `ymax`. Within each group rows are
+/// sorted by x and the polygon is closed between the lower and upper
+/// boundaries. Discrete colour, fill, or `group` mappings split rows into
+/// separate bands.
 ///
 /// \@category Geoms
 /// \@subcategory Areas and ribbons
@@ -84,6 +87,25 @@
 /// )
 /// ```
 ///
+/// \@examples Map `fill` to a discrete column to draw one band per group.
+/// ```
+/// //| alt: "Two translucent uncertainty bands over x = 0 to 9, group a lower and group b higher, each filled by the fill aesthetic and drawn as a separate ribbon."
+/// #let d = ()
+/// #for grp in ("a", "b") {
+///   for i in range(0, 10) {
+///     let mid = i * 0.5 + (if grp == "b" { 3 } else { 0 })
+///     d.push((x: i, lo: mid - 0.8, hi: mid + 0.8, grp: grp))
+///   }
+/// }
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", ymin: "lo", ymax: "hi", fill: "grp"),
+///   layers: (geom-ribbon(alpha: 0.4),),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@geom-smooth, \@geom-line
 #let geom-ribbon(
   mapping: none,
@@ -117,23 +139,6 @@
   let y-trained = ctx.trained.at("y", default: none)
   if x-trained == none or y-trained == none { return }
 
-  let sorted = data
-    .map(row => {
-      let x = parse-number(row.at(x-col, default: none))
-      let lo = parse-number(row.at(lo-col, default: none))
-      let hi = parse-number(row.at(hi-col, default: none))
-      (x: x, lo: lo, hi: hi)
-    })
-    .filter(p => p.x != none and p.lo != none and p.hi != none)
-    .sorted(key: p => p.x)
-
-  if sorted.len() < 2 { return }
-
-  let upper = sorted.map(p => project-point(ctx, p.x, p.hi))
-  let lower = sorted.rev().map(p => project-point(ctx, p.x, p.lo))
-  let pts = upper + lower
-  if pts.any(p => p == none) { return }
-
   let g-defaults = geom-defaults(ctx.theme)
   let default-thickness = geom-linewidth(g-defaults)
   let (default-colour, default-fill) = resolve-pair-defaults(
@@ -143,30 +148,49 @@
     geom-fill-default(g-defaults, role: "tint"),
   )
 
-  let leader = data.first()
-  let final-fill = resolve-channel(
-    "fill",
-    layer,
-    mapping,
-    ctx,
-    leader,
-    default-fill,
-    colour-fallback: false,
-    default-alpha: 0.3,
-  )
-  let stroke-spec = resolve-stroke-spec(
-    layer,
-    mapping,
-    ctx,
-    leader,
-    default-colour,
-    default-thickness: default-thickness,
-  )
+  for g in partition-by-group(data, mapping, trained: ctx.trained) {
+    let rows = g.data
+    let sorted = rows
+      .map(row => {
+        let x = parse-number(row.at(x-col, default: none))
+        let lo = parse-number(row.at(lo-col, default: none))
+        let hi = parse-number(row.at(hi-col, default: none))
+        (x: x, lo: lo, hi: hi)
+      })
+      .filter(p => p.x != none and p.lo != none and p.hi != none)
+      .sorted(key: p => p.x)
+    if sorted.len() < 2 { continue }
 
-  cetz.draw.line(
-    ..pts,
-    close: true,
-    fill: final-fill,
-    stroke: stroke-spec,
-  )
+    let upper = sorted.map(p => project-point(ctx, p.x, p.hi))
+    let lower = sorted.rev().map(p => project-point(ctx, p.x, p.lo))
+    let pts = upper + lower
+    if pts.any(p => p == none) { continue }
+
+    let leader = rows.first()
+    let final-fill = resolve-channel(
+      "fill",
+      layer,
+      mapping,
+      ctx,
+      leader,
+      default-fill,
+      colour-fallback: false,
+      default-alpha: 0.3,
+    )
+    let stroke-spec = resolve-stroke-spec(
+      layer,
+      mapping,
+      ctx,
+      leader,
+      default-colour,
+      default-thickness: default-thickness,
+    )
+
+    cetz.draw.line(
+      ..pts,
+      close: true,
+      fill: final-fill,
+      stroke: stroke-spec,
+    )
+  }
 }
