@@ -611,7 +611,9 @@
     spec.at("breaks", default: auto)
   }
   if user-breaks != auto {
-    return user-breaks.filter(b => b >= lo and b <= hi)
+    let blo = calc.min(lo, hi)
+    let bhi = calc.max(lo, hi)
+    return user-breaks.filter(b => b >= blo and b <= bhi)
   }
   if transform == "log10" { return pretty-log10(lo, hi) }
   if transform == "sqrt" { return pretty-sqrt(lo, hi) }

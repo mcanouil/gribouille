@@ -2,7 +2,9 @@
 // auto `pretty()` set, and breaks outside the domain are dropped.
 
 #import "../../src/scale/train.typ": train
-#import "../../src/scale/continuous.typ": scale-x-continuous, scale-y-continuous
+#import "../../src/scale/continuous.typ": (
+  scale-x-continuous, scale-x-reverse, scale-y-continuous,
+)
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/aes.typ": aes
 #import "../../src/render.typ": _axis-breaks
@@ -48,3 +50,13 @@
   data: df,
 )
 #assert.eq(_axis-breaks(trained-y.y), (15.0,))
+
+// A reversed scale with descending `limits` stores its domain as `(hi, lo)`;
+// in-range breaks must still survive the domain filter.
+#let trained-rev = train(
+  scales: (scale-x-reverse(limits: (2024, 2010), breaks: (2012, 2016, 2020)),),
+  layers: layers,
+  mapping: aes(x: "x", y: "y"),
+  data: df,
+)
+#assert.eq(_axis-breaks(trained-rev.x), (2012.0, 2016.0, 2020.0))
