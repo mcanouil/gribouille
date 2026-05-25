@@ -140,7 +140,7 @@
   }
 
   // White marker text reads on every palette entry except yellow.
-  let _num-fill(c) = if c == _palette.c7 { _ink } else { white }
+  let _num-fill(c) = if c == _palette.c7 { rgb("#1f2328") } else { white }
 
   let badge(e) = text(size: 7pt, weight: "bold", fill: _num-fill(
     e.colour,
