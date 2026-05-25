@@ -113,8 +113,10 @@
   let parsed-x = parse-number(raw-x)
   let x-value = if parsed-x != none { parsed-x } else { raw-x }
 
-  (
-    x: x-value,
+  // Keep the x value under its original column name (like stat-count) so a
+  // grouping aesthetic mapped to the same column (e.g. fill == x) still finds
+  // its value after the stat runs.
+  let summary = (
     lower: lower,
     middle: middle,
     upper: upper,
@@ -124,6 +126,8 @@
     "whisker-hi": whisker-hi,
     outliers: outliers,
   )
+  summary.insert(x-col, x-value)
+  summary
 }
 
 #let apply(data, mapping, params: (:)) = {
@@ -166,5 +170,9 @@
     out.push(summary)
   }
 
-  (data: out, mapping: base-mapping)
+  // Report x under its source column name so the summary rows and mapping
+  // agree (matching `_summarise` above and `stat-count`'s convention).
+  let out-mapping = base-mapping
+  out-mapping.insert("x", x-col)
+  (data: out, mapping: out-mapping)
 }

@@ -21,7 +21,9 @@
 #assert.eq(row1.at("whisker-lo"), 1.0)
 #assert.eq(row1.at("whisker-hi"), 9.0)
 #assert.eq(row1.outliers, ())
-#assert.eq(row1.x, "a")
+// x is reported under its source column name, not a generic "x" key.
+#assert.eq(row1.at("g"), "a")
+#assert.eq(row1.keys().contains("x"), false)
 
 // --- linear interpolation between neighbours ---
 // Sorted (1..8, n=8) -> Q1 at position 0.25 * 7 = 1.75 -> 2 + 0.75 * 1 = 2.75.
@@ -50,7 +52,7 @@
 
 // --- output mapping shape ---
 
-#assert.eq(r1.mapping.x, "x")
+#assert.eq(r1.mapping.x, "g")
 #assert.eq(r1.mapping.lower, "lower")
 #assert.eq(r1.mapping.middle, "middle")
 #assert.eq(r1.mapping.upper, "upper")
@@ -74,7 +76,15 @@
 )
 #let r5 = apply-stat("boxplot", df5, (x: "g", y: "y"), (:))
 #assert.eq(r5.data.len(), 2)
-#assert.eq(r5.data.at(0).x, "b")
-#assert.eq(r5.data.at(1).x, "a")
+#assert.eq(r5.data.at(0).at("g"), "b")
+#assert.eq(r5.data.at(1).at("g"), "a")
+
+// --- same-column grouping aesthetic (fill == x) resolves ---
+// The summary must expose the x column so a fill/colour aesthetic mapped to
+// that same column trains its scale and resolves per group rather than
+// collapsing to the default ink.
+#let r6 = apply-stat("boxplot", df1, (x: "g", y: "y", fill: "g"), (:))
+#assert.eq(r6.data.at(0).keys().contains("g"), true)
+#assert.eq(r6.data.at(0).at("g"), "a")
 
 Stat boxplot tests passed.
