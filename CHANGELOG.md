@@ -11,6 +11,7 @@
 - feat: `labs()` fields default to `auto`; pass `none` to suppress an axis or legend title and reclaim the space it reserved. (#12)
 - feat: `element-blank()` on a text surface (axis, plot, or legend title) collapses the space the text would reserve. (#12)
 - feat: `width`/`height` accept `auto` to fill the available space of a bounded container. (#10)
+- fix: a discrete `fill` or `colour` mapped to the same column as `x` (e.g., `aes(x: "class", fill: "class")`) colours each `geom-boxplot` box per group instead of rendering them all in the ink colour. (#31)
 - fix: continuous scales honour an explicit `breaks` argument for axis ticks and continuous legend guides instead of ignoring it; breaks outside the domain are dropped. (#30)
 - fix: `geom-ribbon()` draws one band per discrete `fill`/`colour`/`group` instead of merging every group into a single ribbon. (#29)
 - fix: `plot(width: auto, height: auto)` is allowed on an unbounded page, falling back to the default `10cm` by `7cm` instead of panicking. (#27)
