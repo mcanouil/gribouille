@@ -67,6 +67,8 @@
     axis-text-y-left: element-text(colour: _palette.c4),
     axis-title-y-left: element-text(colour: _palette.c4),
     axis-ticks-y-left: element-line(colour: _palette.c4, stroke: 0.8pt),
+    legend-title: element-text(colour: _palette.c7.darken(60%)),
+    legend-text: element-text(colour: _palette.c7.darken(60%)),
     strip-background: element-rect(
       fill: _palette.c5.lighten(85%),
       colour: _palette.c5,
