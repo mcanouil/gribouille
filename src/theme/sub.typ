@@ -412,6 +412,8 @@
 ///
 /// \@param caption Same for `plot-caption`.
 ///
+/// \@param tag Same for `plot-tag` (the per-panel tag drawn by\@compose).
+///
 /// \@returns Theme dictionary with the named plot overrides applied.
 ///
 /// \@examples Bold plot title and smaller subtitle via the plot shortcut.
@@ -437,10 +439,12 @@
   title: none,
   subtitle: none,
   caption: none,
+  tag: none,
 ) = theme(
   plot-title: title,
   plot-subtitle: subtitle,
   plot-caption: caption,
+  plot-tag: tag,
 )
 
 /// Shortcut for facet strip text and background.

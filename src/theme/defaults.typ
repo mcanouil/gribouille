@@ -44,6 +44,7 @@
   plot-title: element-text(size: 12pt, weight: "bold"),
   plot-subtitle: element-text(size: 9pt),
   plot-caption: element-text(size: 8pt),
+  plot-tag: element-text(size: 11pt, weight: "bold"),
 
   // Per-surface line records
   panel-grid: element-line(stroke: default-stroke-thickness),
