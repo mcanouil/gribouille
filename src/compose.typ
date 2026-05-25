@@ -507,17 +507,16 @@
             + "in a sized box",
         )
       }
-      let final-panels = if hoisted.len() == 0 {
-        probes.map(p => p.content)
-      } else {
-        panels.map(spec => {
-          render-plot-deferred(
-            spec,
-            suppress-aesthetics: hoisted,
-            tight-sides: tight-sides,
-          ).content
-        })
-      }
+      // Re-render from the original spec (not the merged-guides probe) so
+      // compose-level `guides` only shape the collected legend, never a
+      // panel's own non-collected legends.
+      let final-panels = panels.map(spec => {
+        render-plot-deferred(
+          spec,
+          suppress-aesthetics: hoisted,
+          tight-sides: tight-sides,
+        ).content
+      })
       if layout == "grid" {
         grid(columns: columns, gutter: gutter, ..final-panels)
       } else {

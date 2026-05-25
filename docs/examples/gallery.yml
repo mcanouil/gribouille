@@ -710,5 +710,5 @@
 - slug: compose
   section: guides
   title: "Composed panels with shared legends"
-  description: '[`compose`](../reference/core/compose.qmd) arranges several deferred plots and hoists legends shared across panels via `collect`, with `guides-placement` controlling where the merged legend sits.'
+  description: '[`compose`](../reference/core/compose.qmd) arranges several deferred plots and hoists legends shared across panels via `collect`, with `guides(default: guide-legend(position: ...))` controlling where the merged legend sits.'
   alt: "A grid of fuel-economy scatter panels sharing a single cylinder-count colour legend, shown under several legend collection modes and placement settings."
