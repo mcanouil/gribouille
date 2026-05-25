@@ -89,7 +89,7 @@
     axis-line: element-blank(),
   ),
   width: 12cm,
-  height: 6.5cm,
+  height: 9cm,
 )
 
 // Flip to `true` to overlay a coord grid for tuning badge / legend positions.
@@ -167,7 +167,7 @@
     (
       num: 1,
       colour: _palette.c1,
-      marker: (4.4, 12.4),
+      marker: (4.4, 13.1),
       legend: (3.2 + 1, 13.0 - 1.5),
       legend-anchor: "north-east",
       name: "Outer canvas",
@@ -176,7 +176,7 @@
     (
       num: 2,
       colour: _palette.c2,
-      marker: (7.5, 12),
+      marker: (9, 12.5),
       legend: (3.2 + 1, 11.5 - 1.5),
       legend-anchor: "north-east",
       name: "Title block",
@@ -185,7 +185,7 @@
     (
       num: 3,
       colour: _palette.c4,
-      marker: (5, 9.7),
+      marker: (5, 10),
       legend: (3.2 + 1, 9.7 - 1.5),
       legend-anchor: "north-east",
       name: "Left axis",
@@ -199,7 +199,7 @@
     (
       num: 4,
       colour: _palette.c3,
-      marker: (4.9, 5),
+      marker: (12, 4.5),
       legend: (3.2 + 1, 7.0 - 1.5),
       legend-anchor: "north-east",
       name: "Caption",
@@ -208,8 +208,8 @@
     (
       num: 5,
       colour: _palette.c5,
-      marker: (15.1, 11.1),
-      legend: (18.0 - 0.3, 13.0 - 0.8),
+      marker: (14.85, 11.85),
+      legend: (18.0 - 0.7, 13.0 - 0.8),
       legend-anchor: "north-west",
       name: "Facet strip",
       keys: [`strip-background` \ `strip-text`],
@@ -217,8 +217,8 @@
     (
       num: 6,
       colour: _palette.c6,
-      marker: (12.55, 8.8),
-      legend: (18.0 - 0.3, 11.5 - 0.8),
+      marker: (12.6, 8.7),
+      legend: (18.0 - 0.7, 11.5 - 0.8),
       legend-anchor: "north-west",
       name: "Panel",
       keys: [`panel-background` \ `panel-grid`],
@@ -226,8 +226,8 @@
     (
       num: 7,
       colour: _palette.c7,
-      marker: (16.6, 9.3),
-      legend: (18.0 - 0.3, 10.0 - 0.8),
+      marker: (16.3, 9.5),
+      legend: (18.0 - 0.7, 10.0 - 0.8),
       legend-anchor: "north-west",
       name: "Legend",
       keys: [
@@ -241,8 +241,8 @@
     (
       num: 8,
       colour: _palette.c8,
-      marker: (11.6, 5.2),
-      legend: (18.0 - 0.3, 6.5),
+      marker: (9, 4.9),
+      legend: (18.0 - 0.7, 6.5),
       legend-anchor: "north-west",
       name: "Bottom axis",
       keys: [
