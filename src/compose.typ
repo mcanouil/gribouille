@@ -1,4 +1,6 @@
-#import "render.typ": render-plot-deferred
+#import "render.typ": (
+  _decorate-extents, _decorate-parts, _render-decorate, render-plot-deferred,
+)
 #import "legend.typ" as legend-mod
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
@@ -42,23 +44,15 @@
   first != none
 }
 
-// Compose's heuristic sizing pass uses the default 9pt body. The visible
-// legend is re-rendered via `standalone()` later with the actual theme.
-#let _COMPOSE-SIZE-PT = 9
-
-#let _coerce-placement(g, side) = legend-mod.recompute-extent(
-  (
-    ..g,
-    placement: (
-      ..g.placement,
-      side: side,
-      direction: if side == "top" or side == "bottom" {
-        "horizontal"
-      } else { "vertical" },
-    ),
-  ),
-  _COMPOSE-SIZE-PT,
-)
+// Overlay compose-level `guides` (including a `default` entry) onto a panel's
+// own guides for the probe pass, so the collected legend reflects the
+// composition's guide settings while the panels keep their own for
+// non-collected aesthetics.
+#let _merge-guides(base, extra) = {
+  let out = base
+  for (k, v) in extra { out.insert(k, v) }
+  out
+}
 
 #let _legend-canvas-size(guides, side) = {
   let extents = legend-mod.estimate-extents(guides)
@@ -150,14 +144,25 @@
 ///   `ncol`); compose forces a single shared side and grid layout for the
 ///   hoisted block. Custom guides (`guide-custom`) never hoist.
 ///
-/// \@param guides-placement Side where the shared legend appears, relative to
-///   the panel block. One of `"right"` (default), `"left"`, `"top"`, or
-///   `"bottom"`. The hoisted guides' direction is set automatically:
-///   `"vertical"` for left/right, `"horizontal"` for top/bottom.
+/// \@param guides Per-aesthetic guide overrides applied to the collected
+///   legend, built with\@guides, exactly as for\@plot. The collected legend's
+///   side comes from here: set it per aesthetic via `guide-legend(position:
+///   ...)` or for all at once via `guides(default: guide-legend(position:
+///   ...))`. All collected guides must resolve to one side, otherwise compose
+///   panics. Defaults to the guides' natural side (`"right"`).
 ///
-/// \@returns Typst content block: the panel layout with the shared legend
-///   stacked on `guides-placement`, or the bare panel layout when no aesthetic
-///   ends up hoisted.
+/// \@param labs Composition-level labels built with\@labs; only `title`,
+///   `subtitle`, and `caption` apply (panel-level labels stay on each\@plot).
+///   They reuse the same chrome as a single plot, so a composition reads like
+///   one figure.
+///
+/// \@param alt Alt text for the whole composition. When set, the result is
+///   wrapped in a `figure` (kind `"gribouille-plot"`) carrying this PDF
+///   alternative text, exactly as\@plot does.
+///
+/// \@returns Typst content block: the panel layout with the shared legend and
+///   any composition labels, or the bare panel layout when no aesthetic ends up
+///   hoisted; wrapped in a `figure` when `alt` is set.
 ///
 /// \@examples Auto-collect: identical `colour` legend hoisted to the right.
 /// ```
@@ -203,7 +208,7 @@
 ///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
 ///   panel(aes(x: "displ", y: "cty", colour: as-factor("cyl"))),
 ///   layout: "grid", columns: (auto, auto),
-///   guides-placement: "bottom",
+///   guides: guides(default: guide-legend(position: "bottom")),
 /// )
 /// ```
 ///
@@ -223,7 +228,23 @@
 /// ))
 /// ```
 ///
-/// \@see\@plot,\@aes,\@guides
+/// \@examples Give the composition its own title and caption with `labs`.
+/// ```
+/// //| alt: "Two mpg scatter panels under a shared title 'Fuel economy' and a source caption, with a colour-by-cylinder legend on the right."
+/// #let panel(map) = plot(
+///   data: mpg, mapping: map,
+///   layers: (geom-point(size: 2pt),),
+///   width: 6cm, height: 4cm, defer: true,
+/// )
+/// #box(width: 15cm, height: 7cm, compose(
+///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
+///   panel(aes(x: "displ", y: "cty", colour: as-factor("cyl"))),
+///   columns: 2,
+///   labs: labs(title: "Fuel economy", caption: "Source: mpg"),
+/// ))
+/// ```
+///
+/// \@see\@plot,\@aes,\@guides,\@labs
 #let compose(
   ..panels-positional,
   layout: "grid",
@@ -235,7 +256,9 @@
   width: auto,
   height: auto,
   collect: auto,
-  guides-placement: "right",
+  guides: (:),
+  labs: none,
+  alt: none,
 ) = {
   let panels = panels-positional.pos()
   if panels.len() == 0 {
@@ -255,19 +278,22 @@
       "compose: `collect` must be `auto`, `none`, or an array of aesthetic names",
     )
   }
-  if not ("right", "left", "top", "bottom").contains(guides-placement) {
-    panic(
-      "compose: guides-placement must be \"right\", \"left\", \"top\", or "
-        + "\"bottom\"; got "
-        + repr(guides-placement),
-    )
-  }
   if layout != "grid" and layout != "stack" {
     panic("compose: layout must be \"grid\" or \"stack\"; got " + repr(layout))
   }
 
   _layout(container => context {
-    let probes = panels.map(spec => render-plot-deferred(spec))
+    let first-theme = panels.first().theme
+    let theme = merge-theme(
+      if first-theme != none { first-theme } else { _theme-state.get() },
+    )
+
+    // Probe each panel with the compose-level `guides` merged over its own, so
+    // the collected guide objects already carry the placement and styling the
+    // user asked for (including a `guides(default: ...)` side).
+    let probes = panels.map(spec => render-plot-deferred(
+      (..spec, guides: _merge-guides(spec.guides, guides)),
+    ))
     let per-panel = probes.map(p => _index-by-aesthetic(p.guides))
 
     let candidates = if collect == auto {
@@ -289,7 +315,7 @@
     for a in candidates {
       if not _all-mergeable(per-panel, a) { continue }
       hoisted.push(a)
-      let g = _coerce-placement(per-panel.first().at(a), guides-placement)
+      let g = per-panel.first().at(a)
       // A merged guide (e.g., colour+fill on the same column) is reached
       // through every aesthetic it carries, so dedup by aesthetic mix.
       if not hoisted-guides.any(h => h.aesthetics == g.aesthetics) {
@@ -297,31 +323,49 @@
       }
     }
 
-    // The panel butts up against the hoisted legend by passing `tight-sides`
-    // to render-plot-deferred. `tight-sides` drops the conservative axis-side
-    // floor (1.5 / 1.1 cm) on the hoisted side so the dynamic chrome shrinks
-    // to just what the present decorations (axis title on left/bottom, none on
-    // top/right) actually need.
-    let tight-sides = (guides-placement,)
+    // The collected legend's side comes from the (merged) guides; every hoisted
+    // guide must agree on it.
+    let legend-side = none
+    for g in hoisted-guides {
+      let s = g.placement.side
+      if legend-side == none {
+        legend-side = s
+      } else if legend-side != s {
+        panic(
+          "compose: collected guides resolve to different sides ("
+            + repr(legend-side)
+            + " vs "
+            + repr(s)
+            + "); set a shared side with "
+            + "`guides(default: guide-legend(position: ...))`",
+        )
+      }
+    }
+    if (
+      legend-side != none
+        and not ("right", "left", "top", "bottom").contains(legend-side)
+    ) {
+      panic(
+        "compose: a collected legend must sit on \"right\", \"left\", "
+          + "\"top\", or \"bottom\"; got "
+          + repr(legend-side),
+      )
+    }
 
-    let first-theme = panels.first().theme
-    let theme = merge-theme(
-      if first-theme != none { first-theme } else { _theme-state.get() },
-    )
+    // `tight-sides` drops the conservative axis-side floor on the hoisted side
+    // so the panel chrome shrinks to butt against the shared legend.
+    let tight-sides = if legend-side != none { (legend-side,) } else { () }
 
-    // Legend footprint, reserved from the canvas in sized mode so the panel
-    // block plus legend total back to the requested dimensions.
     let legend-size = if hoisted-guides.len() > 0 {
-      _legend-canvas-size(hoisted-guides, guides-placement)
+      _legend-canvas-size(hoisted-guides, legend-side)
     } else { (width: 0.0, height: 0.0) }
     // For right placement the panel-margin override trims the panel's right
     // side to 0 cm; with no intrinsic cetz padding on that side the legend
     // would butt against the panel data area, so add `legend-gap` to match a
-    // single-plot side-legend offset. Other sides leave the panel-block's own
-    // axis-text / cetz-baseline padding to provide the visual gap.
-    let right-gap-cm = if (
-      hoisted-guides.len() > 0 and guides-placement == "right"
-    ) { legend-mod.legend-gap(theme) } else { 0.0 }
+    // single-plot side-legend offset.
+    let right-gap-cm = if legend-side == "right" {
+      legend-mod.legend-gap(theme)
+    } else { 0.0 }
 
     // An axis is bounded when it is an explicit length, or `auto` inside a
     // bounded container. When both are bounded compose sizes panels to the
@@ -332,19 +376,27 @@
     let height-bounded = height != auto or container.height.pt() < float.inf
     let sized = width-bounded and height-bounded
 
+    // Composition title / subtitle / caption reuse the single-plot chrome
+    // pipeline. In sized mode their extents are reserved up front so the whole
+    // image totals the requested dimensions; in intrinsic mode they wrap the
+    // measured composition (computed after `composed` below).
+    let resolved-width = if width == auto { container.width } else { width }
+    let resolved-height = if height == auto { container.height } else { height }
+    let deco-parts = if labs != none and sized {
+      _decorate-parts(labs, theme, resolved-width / 1cm, resolved-height / 1cm)
+    } else { none }
+    let deco = if deco-parts != none {
+      _decorate-extents(deco-parts)
+    } else { (top: 0.0, bottom: 0.0, left: 0.0, right: 0.0) }
+
     let panel-block = if sized {
-      let area-w = (if width == auto { container.width } else { width }) / 1cm
-      let area-h = (
-        (
-          if height == auto { container.height } else { height }
-        )
-          / 1cm
-      )
-      if guides-placement == "right" {
+      let area-w = resolved-width / 1cm - deco.left - deco.right
+      let area-h = resolved-height / 1cm - deco.top - deco.bottom
+      if legend-side == "right" {
         area-w -= legend-size.width + right-gap-cm
-      } else if guides-placement == "left" {
+      } else if legend-side == "left" {
         area-w -= legend-size.width
-      } else {
+      } else if legend-side == "top" or legend-side == "bottom" {
         area-h -= legend-size.height
       }
 
@@ -473,38 +525,64 @@
       }
     }
 
-    if hoisted-guides.len() == 0 {
-      return panel-block
+    let composed = if hoisted-guides.len() == 0 {
+      panel-block
+    } else {
+      let trained = probes.first().trained
+      let legend-canvas = legend-mod.standalone(
+        hoisted-guides,
+        trained,
+        theme,
+        legend-side,
+        legend-size.width,
+        legend-size.height,
+      )
+      let right-gap = right-gap-cm * 1cm
+      if legend-side == "right" {
+        grid(
+          columns: (auto, auto),
+          align: horizon,
+          gutter: right-gap,
+          panel-block, legend-canvas,
+        )
+      } else if legend-side == "left" {
+        grid(
+          columns: (auto, auto),
+          align: horizon,
+          legend-canvas, panel-block,
+        )
+      } else if legend-side == "bottom" {
+        stack(dir: ttb, panel-block, align(center, legend-canvas))
+      } else {
+        stack(dir: ttb, align(center, legend-canvas), panel-block)
+      }
     }
 
-    let trained = probes.first().trained
-    let legend-canvas = legend-mod.standalone(
-      hoisted-guides,
-      trained,
-      theme,
-      guides-placement,
-      legend-size.width,
-      legend-size.height,
-    )
-    let right-gap = right-gap-cm * 1cm
-
-    if guides-placement == "right" {
-      grid(
-        columns: (auto, auto),
-        align: horizon,
-        gutter: right-gap,
-        panel-block, legend-canvas,
-      )
-    } else if guides-placement == "left" {
-      grid(
-        columns: (auto, auto),
-        align: horizon,
-        legend-canvas, panel-block,
-      )
-    } else if guides-placement == "bottom" {
-      stack(dir: ttb, panel-block, align(center, legend-canvas))
+    // Composition labels: reuse the parts precomputed in sized mode, else
+    // measure the assembled composition and wrap to that size.
+    let decorated = if labs == none {
+      composed
     } else {
-      stack(dir: ttb, align(center, legend-canvas), panel-block)
+      let parts = if deco-parts != none {
+        deco-parts
+      } else {
+        let m = measure(composed)
+        _decorate-parts(labs, theme, m.width / 1cm, m.height / 1cm)
+      }
+      _render-decorate(composed, parts)
+    }
+
+    if alt != none {
+      figure(
+        pdf.artifact(decorated),
+        alt: alt,
+        kind: "gribouille-plot",
+        supplement: none,
+        numbering: none,
+        caption: none,
+      )
+    } else {
+      decorated
     }
   })
 }

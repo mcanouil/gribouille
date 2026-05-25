@@ -57,35 +57,45 @@
   columns: 2,
 )
 
-= `guides-placement: "left"`
+= Shared legend on the left via `guides(default: ...)`
 
 #compose(
   panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
   panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
   layout: "grid",
   columns: 2,
-  guides-placement: "left",
+  guides: guides(default: guide-legend(position: "left")),
 )
 
-= `guides-placement: "top"` (legend laid out horizontally above the panels)
+= Shared legend on top (laid out horizontally above the panels)
 
 #compose(
   panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
   panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
   layout: "grid",
   columns: 2,
-  guides-placement: "top",
+  guides: guides(default: guide-legend(position: "top")),
 )
 
-= `guides-placement: "bottom"`
+= Shared legend on the bottom
 
 #compose(
   panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
   panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
   layout: "grid",
   columns: 2,
-  guides-placement: "bottom",
+  guides: guides(default: guide-legend(position: "bottom")),
 )
+
+= Composition title and caption via `labs`
+
+#box(width: 14cm, height: 5cm, compose(
+  panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
+  panel(aes(x: "hp", y: "mpg", colour: as-factor("cyl"))),
+  layout: "grid",
+  columns: 2,
+  labs: labs(title: "Fuel economy", caption: "Source: mtcars"),
+))
 
 = Vertical stack with shared legend on the right (`layout: "stack"`)
 
