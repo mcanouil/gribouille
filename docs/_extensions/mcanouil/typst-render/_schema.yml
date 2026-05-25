@@ -90,6 +90,15 @@ options:
     enum: [true, false, fenced]
     default: false
     description: "Show Typst source code alongside rendered output. Use 'fenced' to include code block markers."
+  code-fold:
+    type: [boolean, string]
+    enum: [true, false, show]
+    default: false
+    description: "Collapse the echoed source code in a <details> block (HTML output only). Use 'show' to render it expanded."
+  code-summary:
+    type: string
+    default: "Code"
+    description: "Summary text for the code-fold <details> block, rendered as Markdown (HTML output only)."
   eval:
     type: boolean
     default: true
@@ -186,6 +195,13 @@ attributes:
       type: [boolean, string]
       enum: [true, false, fenced]
       description: "Show source code alongside rendered output. Use 'fenced' to include code block markers."
+    code-fold:
+      type: [boolean, string]
+      enum: [true, false, show]
+      description: "Collapse the echoed source code in a <details> block (HTML output only). Use 'show' to render it expanded."
+    code-summary:
+      type: string
+      description: "Summary text for the code-fold <details> block, rendered as Markdown (HTML output only)."
     eval:
       type: boolean
       description: "Compile this block to image."

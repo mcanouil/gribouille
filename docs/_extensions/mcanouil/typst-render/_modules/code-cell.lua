@@ -133,18 +133,48 @@ function M.new(config)
     return merged
   end
 
+  --- Wrap a source listing block in a collapsible `<details>` for HTML output.
+  --- Mimics Quarto's native `code-fold` presentation, reusing its CSS.
+  --- The summary is rendered as Markdown to match Quarto's `code-summary` behaviour.
+  --- Precondition: emits raw HTML, so callers must only invoke this for HTML output.
+  --- @param block pandoc.Block The source listing block to wrap
+  --- @param fold table `{ open = boolean, summary = string|nil }`
+  --- @return pandoc.Blocks The `<details>` open tag, the block, and the close tag
+  function cell.wrap_code_fold(block, fold)
+    local summary = fold.summary
+    if type(summary) ~= 'string' or str.trim(summary) == '' then
+      summary = 'Code'
+    end
+    -- Render the summary as Markdown inlines (no <p> wrapper via Plain).
+    local summary_html = pandoc.write(
+      pandoc.Pandoc(pandoc.Blocks({ pandoc.Plain(quarto.utils.string_to_inlines(summary)) })),
+      'html'
+    ):gsub('%s+$', '')
+    local open_tag = pandoc.RawBlock(
+      'html',
+      '<details' .. (fold.open and ' open' or '') .. ' class="code-fold">\n'
+        .. '<summary>' .. summary_html .. '</summary>'
+    )
+    local close_tag = pandoc.RawBlock('html', '</details>')
+    return pandoc.Blocks({ open_tag, block, close_tag })
+  end
+
   --- Create a source code listing block.
   --- When fenced is true, wraps the code with fenced code block markers and
   --- comment-pipe options to mimic Quarto's `echo: fenced` presentation.
+  --- When fold is given, wraps the listing in a collapsible `<details>`.
   --- @param code string The source code
   --- @param fenced boolean Whether to show fenced code block markers
   --- @param option_lines table|nil Raw comment-pipe lines to include in fenced output
-  --- @return pandoc.CodeBlock A code block for syntax highlighting
-  function cell.create_echo_block(code, fenced, option_lines)
+  --- @param fold table|nil `{ open = boolean, summary = string|nil }` for code-fold
+  --- @return pandoc.Blocks The listing block, optionally wrapped in a `<details>`
+  function cell.create_echo_block(code, fenced, option_lines, fold)
     local meta_patterns = {
       '^%s*' .. escaped_prefix .. '%s*echo:%s*',
       '^%s*' .. escaped_prefix .. '%s*include:%s*',
       '^%s*' .. escaped_prefix .. '%s*output:%s*',
+      '^%s*' .. escaped_prefix .. '%s*code%-fold:%s*',
+      '^%s*' .. escaped_prefix .. '%s*code%-summary:%s*',
     }
     if fenced then
       local lines = { '```{' .. class_name .. '}' }
@@ -164,9 +194,17 @@ function M.new(config)
       end
       lines[#lines + 1] = code
       lines[#lines + 1] = '```'
-      return pandoc.CodeBlock(table.concat(lines, '\n'), pandoc.Attr('', { 'markdown' }, {}))
+      local fenced_block = pandoc.CodeBlock(table.concat(lines, '\n'), pandoc.Attr('', { 'markdown' }, {}))
+      if fold then
+        return cell.wrap_code_fold(fenced_block, fold)
+      end
+      return pandoc.Blocks({ fenced_block })
     end
-    return pandoc.CodeBlock(code, pandoc.Attr('', { class_name }, {}))
+    local plain_block = pandoc.CodeBlock(code, pandoc.Attr('', { class_name }, {}))
+    if fold then
+      return cell.wrap_code_fold(plain_block, fold)
+    end
+    return pandoc.Blocks({ plain_block })
   end
 
   --- Resolve and validate the output-location option.
@@ -194,7 +232,7 @@ function M.new(config)
   end
 
   --- Apply output-location wrapping for Reveal.js presentations.
-  --- @param echo_block pandoc.CodeBlock|nil Echo block (nil when echo is off)
+  --- @param echo_block pandoc.Blocks|nil Echo blocks (nil when echo is off)
   --- @param result pandoc.Block The compiled output block
   --- @param location string The validated output-location value
   --- @return pandoc.Blocks Wrapped output blocks
@@ -206,7 +244,7 @@ function M.new(config)
       local output_classes = location == 'column-fragment'
         and { 'column', 'fragment' }
         or { 'column' }
-      local code_col = pandoc.Div(pandoc.Blocks({ echo_block }), pandoc.Attr('', { 'column' }, {}))
+      local code_col = pandoc.Div(echo_block, pandoc.Attr('', { 'column' }, {}))
       local output_col = pandoc.Div(pandoc.Blocks({ result }), pandoc.Attr('', output_classes, {}))
       local wrapper = pandoc.Div(
         pandoc.Blocks({ code_col, output_col }),
@@ -218,7 +256,10 @@ function M.new(config)
     local wrapper_class = location == 'slide' and 'output-location-slide' or 'fragment'
     local wrapped = pandoc.Div(pandoc.Blocks({ result }), pandoc.Attr('', { wrapper_class }, {}))
     if echo_block then
-      return pandoc.Blocks({ echo_block, wrapped })
+      local blocks = pandoc.Blocks({})
+      blocks:extend(echo_block)
+      blocks:insert(wrapped)
+      return blocks
     end
     return pandoc.Blocks({ wrapped })
   end

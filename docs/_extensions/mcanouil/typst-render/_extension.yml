@@ -1,8 +1,8 @@
 title: Typst Render
 author: Mickaël Canouil
-version: 0.13.4
+version: 0.15.0
 quarto-required: '>=1.6.0'
-source: mcanouil/quarto-typst-render@0.13.4
+source: mcanouil/quarto-typst-render@0.15.0
 source-type: registry
 contributes:
   filters:

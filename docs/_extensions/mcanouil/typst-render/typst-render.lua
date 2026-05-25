@@ -46,6 +46,8 @@ local DEFAULTS = {
   ['output-filename'] = nil,
   input = nil,
   echo = false,
+  ['code-fold'] = false,
+  ['code-summary'] = nil,
   eval = true,
   include = true,
   output = true,
@@ -63,6 +65,7 @@ local DEFAULTS = {
 local KNOWN_KEYS = {
   cap = true,
   alt = true,
+  ['code-summary'] = true,
   _block_input = true,
   _inline = true,
   _alt = true,
@@ -768,10 +771,8 @@ local function compute_cache_stem(source, fmt, dpi, label, inline)
     return 'typst-' .. label .. '-' .. hash
   end
   if inline then
-    inline_counter = inline_counter + 1
     return 'typst-inline-' .. inline_counter .. '-' .. hash
   end
-  block_counter = block_counter + 1
   return 'typst-block-' .. block_counter .. '-' .. hash
 end
 
@@ -1005,6 +1006,7 @@ end
 --- @param opts table Merged options
 --- @param img_format string Target image format
 --- @return table|nil List of paths to compiled images, or nil on failure
+--- @return boolean|nil true when compilation failed (Typst prints its own diagnostic)
 local function compile_typst(source, opts, img_format)
   local bin = resolve_typst_bin()
   if not bin then
@@ -1129,14 +1131,9 @@ local function compile_typst(source, opts, img_format)
   args[#args + 1] = '-'
   args[#args + 1] = abs_output
 
-  local ok, result = pcall(pandoc.pipe, bin, args, source)
+  local ok = pcall(pandoc.pipe, bin, args, source)
   if not ok then
-    local err_msg = tostring(result)
-    log.log_error(
-      EXTENSION_NAME,
-      'Typst compilation failed:\n' .. err_msg
-    )
-    return nil, err_msg
+    return nil, true
   end
 
   if is_paged then
@@ -1267,19 +1264,23 @@ local function wrap_alignment(block, opts)
   )
 end
 
+--- Build a message identifying the failing unit by its identifier.
+--- @param id string Unit identifier (e.g. fig-foo, typst-block-3, typst-inline-2)
+--- @return string Headline message
+local function compilation_failed_message(id)
+  return "Compilation failed for '" .. id .. "'."
+end
+
 --- Create an error block for failed Typst compilation.
---- @param err string|nil Error message from the compiler
+--- @param id string Block identifier (e.g. fig-foo, typst-block-3)
 --- @return pandoc.Div Error block
-local function create_error_block(err)
-  local error_inlines = {
-    pandoc.Strong({ pandoc.Str('[typst-render] Compilation failed for this block.') }),
-  }
-  if err then
-    error_inlines[#error_inlines + 1] = pandoc.LineBreak()
-    error_inlines[#error_inlines + 1] = pandoc.Code(err)
-  end
+local function create_error_block(id)
   return pandoc.Div(
-    pandoc.Blocks({ pandoc.Para(error_inlines) }),
+    pandoc.Blocks({
+      pandoc.Para({
+        pandoc.Strong({ pandoc.Str('[typst-render] ' .. compilation_failed_message(id)) }),
+      }),
+    }),
     pandoc.Attr('', { 'typst-render-error' }, {})
   )
 end
@@ -1290,7 +1291,7 @@ end
 --- @param img_format string Target image format
 --- @return pandoc.Block|nil Result block, or nil on failure
 --- @return table|nil List of selected page paths, or nil on failure
---- @return string|nil Error message on compilation failure
+--- @return boolean|nil true when compilation failed
 local function compile_to_result(code, opts, img_format)
   local full_source = build_typst_source(code, opts)
   local all_pages, compile_err = compile_typst(full_source, opts, img_format)
@@ -1387,7 +1388,8 @@ local function get_configuration(meta)
     -- so we use a separate key list to ensure 'format' etc. are not missed.
     local config_keys = {
       'format', 'dpi', 'width', 'height', 'margin',
-      'cache', 'cache-refresh', 'echo', 'eval', 'include', 'output', 'output-location', 'classes',
+      'cache', 'cache-refresh', 'echo', 'code-fold', 'code-summary',
+      'eval', 'include', 'output', 'output-location', 'classes',
       'root', 'package-path', 'pages', 'layout-ncol', 'align',
       'output-directory',
     }
@@ -1406,6 +1408,25 @@ local function get_configuration(meta)
               global_config[k] = str == 'true'
             end
           end
+        elseif k == 'code-fold' then
+          if type(val) == 'boolean' then
+            global_config[k] = val
+          else
+            local str = pandoc.utils.stringify(val)
+            if str == 'show' then
+              global_config[k] = 'show'
+            elseif str == 'true' then
+              global_config[k] = true
+            elseif str == 'false' then
+              global_config[k] = false
+            else
+              log.log_warning(
+                EXTENSION_NAME,
+                'Invalid code-fold value "' .. str .. '"; expected true, false, or show. Disabling code-fold.'
+              )
+              global_config[k] = false
+            end
+          end
         elseif k == 'output' then
           if type(val) == 'boolean' then
             global_config[k] = val
@@ -1416,6 +1437,21 @@ local function get_configuration(meta)
             else
               global_config[k] = str == 'true'
             end
+          end
+        elseif k == 'code-summary' then
+          -- Preserve Markdown markup; stringify would flatten it. Per-block
+          -- summaries keep their raw string, so global ones must match.
+          -- Only inline metadata round-trips through the Markdown writer;
+          -- other shapes (bool, list, map, blocks) fall back to stringify.
+          if type(val) == 'string' then
+            global_config[k] = val
+          elseif pandoc.utils.type(val) == 'Inlines' then
+            global_config[k] = pandoc.write(
+              pandoc.Pandoc(pandoc.Blocks({ pandoc.Plain(val) })),
+              'markdown'
+            ):gsub('%s+$', '')
+          else
+            global_config[k] = pandoc.utils.stringify(val)
           end
         elseif type(default_val) == 'number' then
           local n = tonumber(pandoc.utils.stringify(val))
@@ -1521,6 +1557,8 @@ local function process_codeblock(el)
     return nil
   end
 
+  block_counter = block_counter + 1
+
   local block_opts, clean_code, option_lines = cell.parse_options(el.text)
 
   if block_opts['cache-refresh'] ~= nil then
@@ -1541,6 +1579,10 @@ local function process_codeblock(el)
   local opts = cell.merge_options(block_opts, global_config, DEFAULTS)
   opts._block_input = block_input_str
 
+  local block_id = (type(opts.label) == 'string' and opts.label ~= '')
+      and opts.label
+      or ('typst-block-' .. block_counter)
+
   -- Resolve per-block colour overrides only. Values inherited from global_config
   -- are already resolved (e.g. 'rgb("#FAF6EE")') and must not be re-wrapped.
   for _, colour_key in ipairs({ 'background', 'foreground' }) do
@@ -1557,6 +1599,20 @@ local function process_codeblock(el)
   local do_echo = opts.echo == true or opts.echo == 'fenced'
   local is_fenced = opts.echo == 'fenced'
   local output_mode = cell.resolve_output_mode(opts)
+
+  -- Code-fold wraps only the echoed source in a collapsible <details>, HTML output only.
+  local cf = opts['code-fold']
+  if cf ~= nil and cf ~= false and cf ~= true and cf ~= 'show' then
+    log.log_warning(
+      EXTENSION_NAME,
+      'Invalid code-fold value "' .. tostring(cf) .. '"; expected true, false, or show. Disabling code-fold.'
+    )
+    cf = false
+  end
+  local fold = nil
+  if quarto.format.is_html_output() and (cf == true or cf == 'show') then
+    fold = { open = cf == 'show', summary = opts['code-summary'] }
+  end
 
   -- Handle eval/echo matrix: both false means hidden block
   if not do_eval and not do_echo then
@@ -1579,13 +1635,13 @@ local function process_codeblock(el)
     if not do_include then
       return pandoc.Null()
     end
-    return cell.create_echo_block(code, is_fenced, option_lines)
+    return cell.create_echo_block(code, is_fenced, option_lines, fold)
   end
 
   -- Output suppressed: skip compilation, show echo block only
   if output_mode == 'false' then
     if do_echo and do_include then
-      return cell.create_echo_block(code, is_fenced, option_lines)
+      return cell.create_echo_block(code, is_fenced, option_lines, fold)
     end
     return pandoc.Null()
   end
@@ -1631,8 +1687,9 @@ local function process_codeblock(el)
     end
     local result = cell.wrap_crossref(pandoc.RawBlock('typst', scoped_code), opts, REF_TYPE_NAMES)
     if do_echo then
-      local echo_block = cell.create_echo_block(code, is_fenced, option_lines)
-      return pandoc.Blocks({ echo_block, result })
+      local echo_block = cell.create_echo_block(code, is_fenced, option_lines, fold)
+      echo_block:insert(result)
+      return echo_block
     end
     return result
   end
@@ -1662,27 +1719,23 @@ local function process_codeblock(el)
   -- Dual-mode rendering for HTML/Reveal.js when both light and dark colours are present
   local dual_mode = quarto.format.is_html_output() and has_dual_mode_colours(opts)
 
-  -- Capture the next block counter value before compilations increment it.
-  -- In dual-mode, compile_to_result is called twice, each incrementing block_counter,
-  -- but we want the first value for the auto-generated output filename.
-  local next_block_counter = block_counter + 1
-
   local result
   if dual_mode then
     local light_opts = resolve_opts_colours(opts, 'light')
     local dark_opts = resolve_opts_colours(opts, 'dark')
-    local light_content, light_pages, light_err = compile_to_result(code, light_opts, img_format)
-    local dark_content, dark_pages, dark_err = compile_to_result(code, dark_opts, img_format)
+    local light_content, light_pages = compile_to_result(code, light_opts, img_format)
+    local dark_content, dark_pages = compile_to_result(code, dark_opts, img_format)
 
     if not light_content and not dark_content then
-      log.log_warning(EXTENSION_NAME, 'Compilation failed; returning error block.')
+      log.log_warning(EXTENSION_NAME, compilation_failed_message(block_id))
       if not do_include then
         return pandoc.Null()
       end
-      local error_block = create_error_block(light_err or dark_err)
+      local error_block = create_error_block(block_id)
       if do_echo then
-        local echo_block = cell.create_echo_block(code, is_fenced, option_lines)
-        return pandoc.Blocks({ echo_block, error_block })
+        local echo_block = cell.create_echo_block(code, is_fenced, option_lines, fold)
+        echo_block:insert(error_block)
+        return echo_block
       end
       return error_block
     end
@@ -1690,7 +1743,7 @@ local function process_codeblock(el)
     local output_path = resolve_output_path(
       global_config['output-directory'], opts['output-directory'],
       opts['output-filename'], opts.label,
-      'typst-block-' .. next_block_counter, img_format
+      'typst-block-' .. block_counter, img_format
     )
 
     -- Save to output directory and rebuild elements using output paths
@@ -1732,14 +1785,15 @@ local function process_codeblock(el)
 
     if not content then
       if compile_err then
-        log.log_warning(EXTENSION_NAME, 'Compilation failed; returning error block.')
+        log.log_warning(EXTENSION_NAME, compilation_failed_message(block_id))
         if not do_include then
           return pandoc.Null()
         end
-        local error_block = create_error_block(compile_err)
+        local error_block = create_error_block(block_id)
         if do_echo then
-          local echo_block = cell.create_echo_block(code, is_fenced, option_lines)
-          return pandoc.Blocks({ echo_block, error_block })
+          local echo_block = cell.create_echo_block(code, is_fenced, option_lines, fold)
+          echo_block:insert(error_block)
+          return echo_block
         end
         return error_block
       end
@@ -1750,7 +1804,7 @@ local function process_codeblock(el)
     local output_path = resolve_output_path(
       global_config['output-directory'], opts['output-directory'],
       opts['output-filename'], opts.label,
-      'typst-block-' .. next_block_counter, img_format
+      'typst-block-' .. block_counter, img_format
     )
 
     -- Save to output directory and rebuild element using output paths
@@ -1771,13 +1825,14 @@ local function process_codeblock(el)
 
   local output_location = cell.resolve_output_location(opts, EXTENSION_NAME)
   if output_location then
-    local echo_block = do_echo and cell.create_echo_block(code, is_fenced, option_lines) or nil
+    local echo_block = do_echo and cell.create_echo_block(code, is_fenced, option_lines, fold) or nil
     return cell.apply_output_location(echo_block, result, output_location)
   end
 
   if do_echo then
-    local echo_block = cell.create_echo_block(code, is_fenced, option_lines)
-    return pandoc.Blocks({ echo_block, result })
+    local echo_block = cell.create_echo_block(code, is_fenced, option_lines, fold)
+    echo_block:insert(result)
+    return echo_block
   end
 
   return result
@@ -1852,6 +1907,9 @@ local function process_inline_code(el)
     return nil
   end
 
+  inline_counter = inline_counter + 1
+  local inline_id = 'typst-inline-' .. inline_counter
+
   if quarto.format.is_powerpoint_output() then
     if not pptx_inline_warned then
       pptx_inline_warned = true
@@ -1906,11 +1964,10 @@ local function process_inline_code(el)
   end
 
   local full_source = build_typst_source(code, opts)
-  local pages, compile_err = compile_typst(full_source, opts, img_format)
+  local pages = compile_typst(full_source, opts, img_format)
 
   if not pages or #pages == 0 then
-    local detail = compile_err and (': ' .. compile_err) or '.'
-    log.log_warning(EXTENSION_NAME, 'Inline Typst compilation failed' .. detail)
+    log.log_warning(EXTENSION_NAME, compilation_failed_message(inline_id))
     return el
   end
 
