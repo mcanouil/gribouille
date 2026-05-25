@@ -2,12 +2,13 @@
 
 ## Unreleased
 
+- fix: `compose()` panels fill their cells instead of being letterboxed; their own `width`/`height` are discarded once the composition has a size, and the composition size falls back to `16cm` by `12cm` when the container is unbounded. (#26)
 - fix: legend labels wider than 2 cm no longer overlap the next swatch; each legend column reserves the label's full width, most visible in horizontal legends. (#25)
-- feat: `compose()` accepts `defer: true` to return a spec usable as a panel of another `compose`, enabling nested compositions; `tag-levels` accepts a per-depth array (with `tag-sep`) so nested panels continue the numbering (e.g. `B.1`, `B.2`). (#24)
+- feat: `compose()` accepts `defer: true` to return a spec usable as a panel of another `compose`, enabling nested compositions; `tag-levels` accepts a per-depth array (with `tag-sep`) so nested panels continue the numbering (e.g., `B.1`, `B.2`). (#24)
 - feat: `compose()` can number panels with a tag pattern (`tag-levels` `"A"`/`"a"`/`"1"`/`"I"`/`"i"`, plus `tag-prefix`/`tag-suffix`/`tag-corner`), styled by the new `plot-tag` theme element. (#23)
-- feat: `compose()` accepts composition-level `labs` (title/subtitle/caption) and `alt`, and now controls the collected legend's side through `guides` (e.g. `guides(default: guide-legend(position: "bottom"))`); the `guides-placement` parameter is removed. (#22)
+- feat: `compose()` accepts composition-level `labs` (title/subtitle/caption) and `alt`, and now controls the collected legend's side through `guides` (e.g., `guides(default: guide-legend(position: "bottom"))`); the `guides-placement` parameter is removed. (#22)
 - feat: `guides()` accepts a `default` entry that sets fallback guide options (such as the legend side) inherited by every aesthetic without its own override, in both `plot()` and `compose()`; `guide-legend`'s `position` now defaults to `auto` and inherits from it. (#21)
-- feat: `compose()` gains `width`/`height` (filling a bounded container by default) and relative `widths`/`heights` to size panels against the canvas rather than their own declared dimensions. (#20)
+- feat: `compose()` gains `width`/`height` (filling a bounded container by default) and relative `widths`/`heights` to set panel proportions relative to one another. (#20)
 - fix: the `compose` collected legend placed on `top` or `bottom` no longer clips its first swatch and is centred under the panels. (#19)
 - docs: callout headers now sit on the type tint as a distinct band while the body uses the plain surface, and caution gets its own deeper mustard so it no longer matches warning. (#16)
 - docs: tabset (panel-tabset) labels now follow the light/dark theme; the active tab label uses the brand primary colour in both schemes. (#15)
