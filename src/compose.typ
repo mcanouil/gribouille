@@ -625,10 +625,12 @@
 ///   one figure.
 ///
 /// \@param tag-levels Per-panel tag numbering. A single code numbers this
-///   composition's panels in layout order; an array of codes assigns one per
-///   nesting depth, so a nested `compose` panel continues the sequence (e.g.
-///   `("A", "1")` gives `A` to a top-level panel and `A1`, `A2` inside a nested
-///   compose). Each code is `"A"` / `"a"` (latin), `"1"` (arabic), or `"I"` /
+///   composition's panels in layout order; an array of codes assigns one code
+///   per nesting depth: top-level panels take the first code (`A`, `B`, ...)
+///   and a nested `compose` panel's own panels continue with the next code,
+///   joined by `tag-sep`. So with `("A", "1")` a top-level leaf is `A` while a
+///   sibling nested compose (the second panel, `B`) tags its panels `B.1`,
+///   `B.2`. Each code is `"A"` / `"a"` (latin), `"1"` (arabic), or `"I"` /
 ///   `"i"` (roman); `none` (default) draws no tags. When set, this
 ///   composition's `tag-levels` drives any nested compose and overrides its
 ///   own.
@@ -758,9 +760,9 @@
 /// ```
 ///
 /// \@examples Nest a deferred `compose` as a panel; `tag-levels: ("A", "1")`
-/// numbers the outer panel `A` and the nested panels `A.1`, `A.2`.
+/// numbers the left leaf panel `A` and the nested column `B.1`, `B.2`.
 /// ```
-/// //| alt: "A left scatter panel tagged A beside a nested column of two scatter panels tagged A.1 and A.2."
+/// //| alt: "A left scatter panel tagged A beside a nested column of two scatter panels tagged B.1 and B.2."
 /// #let p(map) = plot(
 ///   data: mpg, mapping: map,
 ///   layers: (geom-point(size: 2pt),),
