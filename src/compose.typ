@@ -12,6 +12,13 @@
 // still reachable.
 #let _layout = layout
 
+// Fallback canvas size when the composition sits in an unbounded container
+// (e.g., a `width: auto`, `height: auto` page): compose always resolves to a
+// concrete size so panels fill their cells rather than keeping their own
+// declared dimensions.
+#let _DEFAULT-WIDTH = 16cm
+#let _DEFAULT-HEIGHT = 12cm
+
 #let _is-plot-spec(x) = (
   type(x) == dictionary
     and "layers" in x
@@ -246,7 +253,6 @@
   }
 
   let tight-sides = if legend-side != none { (legend-side,) } else { () }
-  let fill-mode = widths != none or heights != none
 
   // Tag descent: a nested compose inherits the ancestor's `tag-ctx` (levels,
   // separator, affixes, corner, and the accumulated prefix); a top-level
@@ -292,45 +298,19 @@
     })
   }
 
-  // Render one panel (leaf plot or nested compose) at `target` `(w, h)` cm, or
-  // `none` for intrinsic sizing (the panel's own declared size).
+  // Render one panel (leaf plot or nested compose) at `target` `(w, h)` cm. The
+  // panel's own declared width/height are discarded so it fills its cell.
   let make-cell(panel, i, target) = {
     let symbol = if level-code != none {
       _tag-symbol(level-code, i)
     } else { none }
     let acc = eff-prefix + (if symbol != none { symbol } else { "" })
     if _is-plot-spec(panel) {
-      let content = if target == none {
-        render-plot-deferred(
-          panel,
-          suppress-aesthetics: hoisted,
-          tight-sides: tight-sides,
-        ).content
-      } else if fill-mode {
-        render-plot-deferred(
-          (..panel, width: target.w * 1cm, height: target.h * 1cm),
-          suppress-aesthetics: hoisted,
-          tight-sides: tight-sides,
-        ).content
-      } else {
-        let aspect-w = panel.width / 1cm
-        let aspect-h = panel.height / 1cm
-        let scale = calc.min(target.w / aspect-w, target.h / aspect-h)
-        let inner = render-plot-deferred(
-          (
-            ..panel,
-            width: aspect-w * scale * 1cm,
-            height: aspect-h * scale * 1cm,
-          ),
-          suppress-aesthetics: hoisted,
-          tight-sides: tight-sides,
-        ).content
-        box(
-          width: target.w * 1cm,
-          height: target.h * 1cm,
-          align(center + horizon, inner),
-        )
-      }
+      let content = render-plot-deferred(
+        (..panel, width: target.w * 1cm, height: target.h * 1cm),
+        suppress-aesthetics: hoisted,
+        tight-sides: tight-sides,
+      ).content
       let label = if symbol == none {
         none
       } else { eff-tag-prefix + acc + eff-tag-suffix }
@@ -353,31 +333,24 @@
           ),
         )
       } else { panel }
-      if target == none {
-        _render-compose(child, (width: panel.width, height: panel.height))
-      } else {
-        _render-compose(child, (width: target.w * 1cm, height: target.h * 1cm))
-      }
+      _render-compose(child, (width: target.w * 1cm, height: target.h * 1cm))
     }
   }
 
-  let width-bounded = (
-    width != auto
-      or (
-        container.width != auto and container.width.pt() < float.inf
-      )
-  )
-  let height-bounded = (
-    height != auto
-      or (
-        container.height != auto and container.height.pt() < float.inf
-      )
-  )
-  let sized = width-bounded and height-bounded
-
-  let resolved-width = if width != auto { width } else { container.width }
-  let resolved-height = if height != auto { height } else { container.height }
-  let deco-parts = if labs != none and sized {
+  // Resolve a concrete canvas size: an explicit length wins, else the bounded
+  // container, else the default fallback. Panels always fill the cells carved
+  // from this size, so their own declared dimensions are discarded.
+  let resolved-width = if width != auto {
+    width
+  } else if container.width.pt() < float.inf {
+    container.width
+  } else { _DEFAULT-WIDTH }
+  let resolved-height = if height != auto {
+    height
+  } else if container.height.pt() < float.inf {
+    container.height
+  } else { _DEFAULT-HEIGHT }
+  let deco-parts = if labs != none {
     _decorate-parts(labs, theme, resolved-width / 1cm, resolved-height / 1cm)
   } else { none }
   let deco = if deco-parts != none {
@@ -391,7 +364,7 @@
     legend-mod.legend-gap(theme)
   } else { 0.0 }
 
-  let panel-block = if sized {
+  let panel-block = {
     let area-w = resolved-width / 1cm - deco.left - deco.right
     let area-h = resolved-height / 1cm - deco.top - deco.bottom
     if legend-side == "right" {
@@ -469,26 +442,6 @@
     } else {
       stack(dir: direction, spacing: gutter, ..cells)
     }
-  } else {
-    if widths != none or heights != none {
-      let unbounded = ()
-      if not width-bounded { unbounded.push("width") }
-      if not height-bounded { unbounded.push("height") }
-      panic(
-        "compose: `widths`/`heights` need a bounded composition size, but "
-          + unbounded.join(" and ")
-          + " is unbounded; pass a concrete length or wrap the composition in "
-          + "a sized box",
-      )
-    }
-    let final-panels = panels
-      .enumerate()
-      .map(((i, panel)) => make-cell(panel, i, none))
-    if layout == "grid" {
-      grid(columns: columns, gutter: gutter, ..final-panels)
-    } else {
-      stack(dir: direction, spacing: gutter, ..final-panels)
-    }
   }
 
   let composed = if hoisted-guides.len() == 0 {
@@ -527,13 +480,7 @@
   let decorated = if labs == none {
     composed
   } else {
-    let parts = if deco-parts != none {
-      deco-parts
-    } else {
-      let m = measure(composed)
-      _decorate-parts(labs, theme, m.width / 1cm, m.height / 1cm)
-    }
-    _render-decorate(composed, parts)
+    _render-decorate(composed, deco-parts)
   }
 
   if alt != none {
@@ -582,21 +529,21 @@
 ///   shared legend.
 ///
 /// \@param widths Relative column widths (grid) or panel widths along a
-///   horizontal stack, as an array of weights (e.g. `(2, 1)`). When set, the
-///   child plots' own `width`/`height` are discarded and panels fill their
-///   cells. Length must match the column count. Requires a bounded composition
-///   `width`.
+///   horizontal stack, as an array of weights (e.g., `(2, 1)`). They set the
+///   relative cell proportions; panels always fill their cells regardless, so
+///   the child plots' own `width`/`height` are discarded either way. Length
+///   must match the column count.
 ///
 /// \@param heights Relative row heights (grid) or panel heights along a
-///   vertical stack. Same rules as `widths`; length must match the row count
-///   and it requires a bounded composition `height`.
+///   vertical stack. Same rules as `widths`; length must match the row count.
 ///
 /// \@param width Total composition width. `auto` (default) fills the available
-///   width of a bounded container (resolved through Typst `layout`). When the
-///   container is unbounded and `width` is `auto`, compose falls back to laying
-///   panels at their own declared sizes.
+///   width of a bounded container (resolved through Typst `layout`); when the
+///   container is unbounded, it falls back to `16cm`. Panels fill the cells
+///   carved from this width, so their own declared `width` is discarded.
 ///
-/// \@param height Total composition height. Same semantics as `width`.
+/// \@param height Total composition height. Same semantics as `width`, with a
+///   `12cm` fallback when the container is unbounded.
 ///
 /// \@param collect Which aesthetics to hoist into the shared legend.
 ///   - `auto` (default) hoists every aesthetic whose guide is identical across
@@ -641,7 +588,7 @@
 /// \@param tag-suffix String placed after each generated tag symbol (e.g.
 ///   `")"` or `"."`).
 ///
-/// \@param tag-sep Separator inserted between nested tag levels (e.g. `"."`
+/// \@param tag-sep Separator inserted between nested tag levels (e.g., `"."`
 ///   gives `A.1`). Ignored for a single-level `tag-levels`.
 ///
 /// \@param tag-corner Corner of each panel where its tag sits: `"top-left"`
