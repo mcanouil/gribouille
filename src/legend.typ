@@ -419,16 +419,16 @@
 // char-count heuristic (~0.55em per char) so the helper works outside a
 // `context` block (unit tests). Non-string content (typst-markup labels)
 // goes through Typst's `measure()`, which requires a context. Empty /
-// `none` labels report `0`. Capped at 2 cm so a single oversized level
-// can't blow out the legend column.
+// `none` labels report `0`. The full label width is reserved so a long
+// label widens its column instead of overflowing into the next swatch.
 #let _label-width(label, size-pt) = {
   if label == none { return 0.0 }
   if type(label) == str {
     if label == "" { return 0.0 }
-    return calc.min(2.0, label.len() * _font-cm(size-pt) * 0.55 + 0.05)
+    return label.len() * _font-cm(size-pt) * 0.55 + 0.05
   }
   let m = measure(text(size: size-pt * 1pt)[#label])
-  calc.min(2.0, m.width / 1cm + 0.05)
+  m.width / 1cm + 0.05
 }
 
 #let _title-width(g, size-pt) = _label-width(
