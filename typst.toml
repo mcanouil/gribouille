@@ -1,6 +1,6 @@
 [package]
 name = "gribouille"
-version = "0.1.1"
+version = "0.2.0"
 compiler = "0.14.2"
 entrypoint = "lib.typ"
 authors = ["Mickaël Canouil <https://mickael.canouil.fr>"]

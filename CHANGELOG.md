@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-06-01)
 
 - feat: a layer's `data` accepts a function applied to the plot data, returning that layer's frame (e.g., `geom-point(data: rows => rows.filter(...))`), for subsetting or per-layer transforms without a separate dataset. (#62)
 - feat: `facet-grid(scales:)` supports free scales (`"free_x"` frees x per column, `"free_y"` frees y per row, `"free"` both), matching ggplot2 facet_grid; non-positional scales stay shared and panels keep equal size. (#60)
