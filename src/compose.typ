@@ -158,6 +158,35 @@
   weights.map(w => usable * w / sum)
 }
 
+// Resolve a composition's chrome theme and propagate an explicit theme into its
+// panels. `panels` are materialised plot/compose spec dicts; `explicit` is the
+// `compose(theme: ...)` value. Returns `(theme: <source>, panels: <panels>)`,
+// where `theme` is the unmerged source the caller passes to `merge-theme`:
+//   - an explicit theme wins and is injected into every panel that sets none (a
+//     panel with its own theme keeps it; a nested compose inherits it and
+//     resolves its own panels in turn);
+//   - otherwise a theme shared by every panel is used (all panels must agree on
+//     the same non-`none` value), falling back to the global theme state.
+// Must run inside `context` so the global fallback can read the theme state.
+#let _resolve-compose-theme(panels, explicit) = {
+  let out-panels = if explicit == none { panels } else {
+    panels.map(p => if p.at("theme", default: none) == none {
+      (..p, theme: explicit)
+    } else { p })
+  }
+  let source = if explicit != none { explicit } else {
+    // No explicit theme: use the one every panel shares, else the global state.
+    let panel-themes = panels.map(p => p.at("theme", default: none))
+    let first = panel-themes.at(0, default: none)
+    if first != none and panel-themes.all(t => t == first) {
+      first
+    } else {
+      _theme-state.get()
+    }
+  }
+  (theme: source, panels: out-panels)
+}
+
 // Render a compose spec into content at `container` size; `container.width` /
 // `.height` are always concrete lengths (`float.inf` for an unbounded page),
 // never `auto`. Recurses for nested compose panels. Split out from `compose` so
@@ -193,10 +222,11 @@
   let align-panels = spec.at("align-panels", default: false)
   let tag-ctx = spec.at("tag-ctx", default: none)
 
-  let first-theme = panels.first().at("theme", default: none)
-  let theme = merge-theme(
-    if first-theme != none { first-theme } else { _theme-state.get() },
-  )
+  // Resolve the chrome theme (labels, hoisted legend, panel tags) and propagate
+  // an explicit `compose(theme: ...)` into panels that set none.
+  let resolved = _resolve-compose-theme(panels, spec.at("theme", default: none))
+  let panels = resolved.panels
+  let theme = merge-theme(resolved.theme)
 
   // Probe only plot panels with compose-level `guides` merged in; a nested
   // compose collects its own guides internally (guide collection is per level),
@@ -659,6 +689,14 @@
 ///   They reuse the same chrome as a single plot, so a composition reads like
 ///   one figure.
 ///
+/// \@param theme Theme object such as\@theme-grey,\@theme-minimal, or
+///   \@theme-classic, controlling the composition's non-data ink: its labels,
+///   the hoisted shared legend, and panel tags. When set, it also propagates
+///   into panels that declare no theme of their own (a panel with its own theme
+///   keeps it, and a nested composition inherits it recursively); otherwise the
+///   theme shared by every panel is used, falling back to the global theme set
+///   with\@theme-set, else the default.
+///
 /// \@param tag-levels Per-panel tag numbering. A single code numbers this
 ///   composition's panels in layout order; an array of codes assigns one code
 ///   per nesting depth: top-level panels take the first code (`A`, `B`, ...)
@@ -847,6 +885,7 @@
   collect: auto,
   guides: (:),
   labs: none,
+  theme: none,
   tag-levels: none,
   tag-prefix: "",
   tag-suffix: "",
@@ -916,6 +955,7 @@
     collect: collect,
     guides: guides,
     labs: labs,
+    theme: theme,
     tag-levels: tag-levels,
     tag-prefix: tag-prefix,
     tag-suffix: tag-suffix,
