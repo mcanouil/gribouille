@@ -860,6 +860,9 @@
   if panels.len() == 0 {
     panic("compose: at least one deferred panel is required")
   }
+  // Fail fast on anything that is not a thunk; that the thunk actually yields a
+  // plot or compose spec is checked deeper, after materialisation, in
+  // `_render-compose`.
   for p in panels {
     if type(p) != function {
       panic(
