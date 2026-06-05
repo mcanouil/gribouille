@@ -3,7 +3,7 @@
 
 // Core.
 #import "src/plot.typ": plot
-#import "src/compose.typ": compose
+#import "src/compose.typ": compose, defer
 #import "src/aes.typ": aes
 #import "src/data.typ": as-factor, as-numeric
 #import "src/utils/typst-markup.typ": typst

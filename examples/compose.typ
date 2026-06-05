@@ -10,13 +10,11 @@
   (mpg: 21.4, wt: 3.215, hp: 110, cyl: "6"),
 )
 
-#let panel(mapping) = plot(
+#let panel(mapping) = defer(
+  plot,
   data: mtcars,
   mapping: mapping,
   layers: (geom-point(),),
-  width: 6cm,
-  height: 4cm,
-  defer: true,
 )
 
 // Gallery showcase: a single squared two-by-two composition with a shared

@@ -163,7 +163,21 @@
 // never `auto`. Recurses for nested compose panels. Split out from `compose` so
 // a deferred compose spec can be rendered as a panel of another composition.
 #let _render-compose(spec, container) = {
-  let panels = spec.panels
+  // Panels arrive as deferred thunks (`defer(plot, ...)` / `defer(compose,
+  // ...)`); materialise each to its spec dict here. No dimensions are injected:
+  // a plot thunk falls back to its own concrete default size for the guide
+  // probe (the real render overrides width/height to cell size later), while a
+  // compose thunk keeps `auto` so a nested composition resolves against its
+  // cell rather than the full outer canvas.
+  let panels = spec.panels.map(p => {
+    let materialised = p(as-spec: true)
+    assert(
+      _is-plot-spec(materialised) or _is-compose-spec(materialised),
+      message: "compose: a deferred panel did not produce a plot or compose "
+        + "spec; wrap panels with `defer(plot, ...)` or `defer(compose, ...)`",
+    )
+    materialised
+  })
   let layout = spec.layout
   let columns = spec.columns
   let direction = spec.direction
@@ -179,7 +193,7 @@
   let align-panels = spec.at("align-panels", default: false)
   let tag-ctx = spec.at("tag-ctx", default: none)
 
-  let first-theme = panels.first().theme
+  let first-theme = panels.first().at("theme", default: none)
   let theme = merge-theme(
     if first-theme != none { first-theme } else { _theme-state.get() },
   )
@@ -578,16 +592,19 @@
 /// reclaims the margin its legend would have occupied. Inspired by
 /// `patchwork::plot_layout(guides = "collect")`.
 ///
-/// Every positional argument must be a deferred plot (`plot(..., defer: true)`);
-/// passing rendered content panics, because compose needs the spec to re-render.
+/// Every positional argument must be a deferred panel built with\@defer
+/// (`defer(plot, ...)` or, for nesting, `defer(compose, ...)`); passing a
+/// rendered plot panics, because compose needs the spec to re-render. Panels
+/// omit their own `width`/`height`: compose sizes each cell.
 ///
 /// \@category Core
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param ..panels-positional Two or more deferred plots produced by\@plot with
-///   `defer: true`. Order is preserved by the layout (left-to-right, top-to-bottom
-///   for grids; per `dir` for stacks).
+/// \@param ..panels-positional Two or more deferred panels built with\@defer
+///   (`defer(plot, ...)`, or `defer(compose, ...)` to nest a composition). Order
+///   is preserved by the layout (left-to-right, top-to-bottom for grids; per
+///   `dir` for stacks).
 ///
 /// \@param layout `"grid"` (default) lays panels into a Typst `grid` with `columns`
 ///   columns; `"stack"` lays them into a Typst `stack` flowing in `dir`.
@@ -602,9 +619,8 @@
 ///
 /// \@param widths Relative column widths (grid) or panel widths along a
 ///   horizontal stack, as an array of weights (e.g., `(2, 1)`). They set the
-///   relative cell proportions; panels always fill their cells regardless, so
-///   the child plots' own `width`/`height` are discarded either way. Length
-///   must match the column count.
+///   relative cell proportions; panels always fill their cells. Length must
+///   match the column count.
 ///
 /// \@param heights Relative row heights (grid) or panel heights along a
 ///   vertical stack. Same rules as `widths`; length must match the row count.
@@ -612,7 +628,7 @@
 /// \@param width Total composition width. `auto` (default) fills the available
 ///   width of a bounded container (resolved through Typst `layout`); when the
 ///   container is unbounded, it falls back to `16cm`. Panels fill the cells
-///   carved from this width, so their own declared `width` is discarded.
+///   carved from this width.
 ///
 /// \@param height Total composition height. Same semantics as `width`, with a
 ///   `12cm` fallback when the container is unbounded.
@@ -679,23 +695,23 @@
 ///   wrapped in a `figure` (kind `"gribouille-plot"`) carrying this PDF
 ///   alternative text, exactly as\@plot does.
 ///
-/// \@param defer When `true`, return a compose spec dict instead of content so
-///   this composition can be passed as a panel to another `compose`. Guide
-///   collection stays per level (a nested compose draws its own collected
-///   legend); only tag numbering descends across nesting.
+/// \@param as-spec Internal switch driven by\@defer: when `true`, return a
+///   compose spec dict instead of content so this composition can be passed as a
+///   panel to another `compose`. Use `defer(compose, ...)` rather than setting
+///   this directly. Guide collection stays per level (a nested compose draws its
+///   own collected legend); only tag numbering descends across nesting.
 ///
 /// \@returns Typst content block: the panel layout with the shared legend and
 ///   any composition labels, or the bare panel layout when no aesthetic ends up
 ///   hoisted; wrapped in a `figure` when `alt` is set. Returns a spec dict when
-///   `defer: true`.
+///   `as-spec: true`.
 ///
 /// \@examples Auto-collect: identical `colour` legend hoisted to the right.
 /// ```
 /// //| alt: "Two side-by-side mpg scatter panels sharing a single colour legend by cylinder count hoisted to the right of the panel grid."
-/// #let panel(map) = plot(
+/// #let panel(map) = defer(plot,
 ///   data: mpg, mapping: map,
 ///   layers: (geom-point(size: 3pt),),
-///   width: 6cm, height: 4cm, defer: true,
 /// )
 /// #compose(
 ///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
@@ -708,10 +724,9 @@
 /// stay in each panel.
 /// ```
 /// //| alt: "Two mpg scatter panels sharing a single colour-by-cylinder legend on the right while each panel keeps its own size legend bound to a different column."
-/// #let panel(map) = plot(
+/// #let panel(map) = defer(plot,
 ///   data: mpg, mapping: map,
 ///   layers: (geom-point(),),
-///   width: 6cm, height: 4cm, defer: true,
 /// )
 /// #compose(
 ///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"), size: "cty")),
@@ -724,10 +739,9 @@
 /// \@examples Place the shared legend below the panels.
 /// ```
 /// //| alt: "Two side-by-side mpg scatter panels sharing a single colour-by-cylinder legend placed horizontally below the panel grid."
-/// #let panel(map) = plot(
+/// #let panel(map) = defer(plot,
 ///   data: mpg, mapping: map,
 ///   layers: (geom-point(size: 3pt),),
-///   width: 6cm, height: 4cm, defer: true,
 /// )
 /// #compose(
 ///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
@@ -738,13 +752,12 @@
 /// ```
 ///
 /// \@examples Size the composition to a bounded box and split the two panels
-/// 2:1 with `widths`; the child plots' own dimensions are discarded.
+/// 2:1 with `widths`.
 /// ```
 /// //| alt: "Two mpg scatter panels in a 16 by 6 centimetre canvas where the left panel is twice the width of the right, sharing a colour-by-cylinder legend on the right."
-/// #let panel(map) = plot(
+/// #let panel(map) = defer(plot,
 ///   data: mpg, mapping: map,
 ///   layers: (geom-point(size: 2pt),),
-///   width: 6cm, height: 4cm, defer: true,
 /// )
 /// #box(width: 16cm, height: 6cm, compose(
 ///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
@@ -756,10 +769,9 @@
 /// \@examples Give the composition its own title and caption with `labs`.
 /// ```
 /// //| alt: "Two mpg scatter panels under a shared title 'Fuel economy' and a source caption, with a colour-by-cylinder legend on the right."
-/// #let panel(map) = plot(
+/// #let panel(map) = defer(plot,
 ///   data: mpg, mapping: map,
 ///   layers: (geom-point(size: 2pt),),
-///   width: 6cm, height: 4cm, defer: true,
 /// )
 /// #box(width: 15cm, height: 7cm, compose(
 ///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
@@ -773,10 +785,9 @@
 /// a tag pattern.
 /// ```
 /// //| alt: "Two mpg scatter panels each tagged (A) and (B) in the top-left corner, sharing a colour-by-cylinder legend on the right."
-/// #let panel(map) = plot(
+/// #let panel(map) = defer(plot,
 ///   data: mpg, mapping: map,
 ///   layers: (geom-point(size: 2pt),),
-///   width: 6cm, height: 4cm, defer: true,
 /// )
 /// #box(width: 15cm, height: 5cm, compose(
 ///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
@@ -790,15 +801,14 @@
 /// numbers the left leaf panel `A` and the nested column `B.1`, `B.2`.
 /// ```
 /// //| alt: "A left scatter panel tagged A beside a nested column of two scatter panels tagged B.1 and B.2."
-/// #let p(map) = plot(
+/// #let p(map) = defer(plot,
 ///   data: mpg, mapping: map,
 ///   layers: (geom-point(size: 2pt),),
-///   width: 5cm, height: 3.5cm, defer: true,
 /// )
-/// #let inner = compose(
+/// #let inner = defer(compose,
 ///   p(aes(x: "displ", y: "hwy")),
 ///   p(aes(x: "displ", y: "cty")),
-///   columns: 1, defer: true,
+///   columns: 1,
 /// )
 /// #box(width: 14cm, height: 7cm, compose(
 ///   p(aes(x: "displ", y: "hwy")),
@@ -812,10 +822,9 @@
 /// the y axes line up even when the panels' label widths differ.
 /// ```
 /// //| alt: "Two stacked mpg scatter panels whose y axes are aligned to a common left margin so the plot areas start at the same horizontal position."
-/// #let p(map) = plot(
+/// #let p(map) = defer(plot,
 ///   data: mpg, mapping: map,
 ///   layers: (geom-point(size: 2pt),),
-///   width: 7cm, height: 3cm, defer: true,
 /// )
 /// #compose(
 ///   p(aes(x: "displ", y: "hwy")),
@@ -824,7 +833,7 @@
 /// )
 /// ```
 ///
-/// \@see\@plot,\@aes,\@guides,\@labs
+/// \@see\@defer,\@plot,\@aes,\@guides,\@labs
 #let compose(
   ..panels-positional,
   layout: "grid",
@@ -845,17 +854,20 @@
   tag-corner: "top-left",
   align-panels: false,
   alt: none,
-  defer: false,
+  as-spec: false,
 ) = {
   let panels = panels-positional.pos()
   if panels.len() == 0 {
-    panic("compose: at least one deferred plot is required")
+    panic("compose: at least one deferred panel is required")
   }
+  // Fail fast on anything that is not a thunk; that the thunk actually yields a
+  // plot or compose spec is checked deeper, after materialisation, in
+  // `_render-compose`.
   for p in panels {
-    if not (_is-plot-spec(p) or _is-compose-spec(p)) {
+    if type(p) != function {
       panic(
-        "compose: every positional argument must be `plot(..., defer: true)` "
-          + "or `compose(..., defer: true)`; got "
+        "compose: every positional argument must be a deferred panel created "
+          + "with `defer(plot, ...)` or `defer(compose, ...)`; got "
           + repr(p),
       )
     }
@@ -913,6 +925,44 @@
     alt: alt,
     tag-ctx: none,
   )
-  if defer { return spec }
+  if as-spec { return spec }
   _layout(container => context { _render-compose(spec, container) })
 }
+
+/// Build a deferred panel for\@compose.
+///
+/// `defer` partial-applies a renderer (\@plot or\@compose) so the result is a
+/// thunk rather than rendered content. \@compose invokes the thunk itself,
+/// supplying the cell dimensions and the internal `as-spec` switch, then probes
+/// each panel's guides and re-renders with the hoisted aesthetics suppressed.
+/// Omit `width`/`height`: the composition sizes every cell. Use
+/// `defer(compose, ...)` to nest one composition inside another.
+///
+/// \@category Core
+/// \@stability stable
+/// \@since 0.3.0
+///
+/// \@param renderer The renderer to defer: the\@plot or\@compose function.
+///
+/// \@param ..args Arguments forwarded to `renderer`, e.g. `data`, `mapping`,
+///   and `layers` for\@plot, or the panel thunks and layout options for a
+///   nested\@compose.
+///
+/// \@returns A deferred-panel thunk to pass as a positional argument to\@compose.
+///
+/// \@examples Two deferred scatter panels sharing a hoisted colour legend.
+/// ```
+/// //| alt: "Two side-by-side mpg scatter panels sharing a single colour legend by cylinder count hoisted to the right of the panel grid."
+/// #let panel(map) = defer(plot,
+///   data: mpg, mapping: map,
+///   layers: (geom-point(size: 3pt),),
+/// )
+/// #compose(
+///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
+///   panel(aes(x: "displ", y: "cty", colour: as-factor("cyl"))),
+///   columns: 2,
+/// )
+/// ```
+///
+/// \@see\@compose,\@plot
+#let defer(renderer, ..args) = renderer.with(..args)

@@ -3,7 +3,7 @@
 // 6cm panels would be at their own declared size.
 
 #import "../../src/plot.typ": plot
-#import "../../src/compose.typ": compose
+#import "../../src/compose.typ": compose, defer
 #import "../../src/aes.typ": aes
 #import "../../src/geom/point.typ": geom-point
 
@@ -14,13 +14,11 @@
   (x: 2, y: 3),
   (x: 3, y: 1),
 )
-#let panel = plot(
+#let panel = defer(
+  plot,
   data: data,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(),),
-  width: 6cm,
-  height: 4cm,
-  defer: true,
 )
 
 // Rendered under an unbounded page, the composition takes the 16cm fallback and

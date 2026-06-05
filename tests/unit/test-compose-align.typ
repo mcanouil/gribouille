@@ -15,7 +15,7 @@
   layers: (geom-point(),),
   width: 6cm,
   height: 4cm,
-  defer: true,
+  as-spec: true,
 )
 
 // Narrow y labels (0..5) vs wide ones (0..1e6): the wide axis reserves a larger

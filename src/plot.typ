@@ -42,17 +42,17 @@
 ///
 /// \@param guides Per-aesthetic guide overrides built with\@guides (e.g., `guides(colour: guide-legend(reverse: true))`).
 ///
-/// \@param width Total image width, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome; long titles wrap to fit. Chrome larger than `width` raises an error. Pass `auto` to fill the available width of the container the plot sits in (resolved through Typst `layout`); when that container is unbounded (e.g., an auto-width page) it falls back to `10cm`. Not supported with `defer: true`.
+/// \@param width Total image width, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome; long titles wrap to fit. Chrome larger than `width` raises an error. Pass `auto` to fill the available width of the container the plot sits in (resolved through Typst `layout`); when that container is unbounded (e.g., an auto-width page) it falls back to `10cm`. Inside\@compose the panel's own width is discarded; the composition sizes each cell.
 ///
-/// \@param height Total image height, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome. Chrome larger than `height` raises an error. Pass `auto` to fill the available height of the container (resolved through Typst `layout`); most predictable inside a fixed-height container such as a `box` or `block` with a set height, and falls back to `7cm` when the container is unbounded. Not supported with `defer: true`.
+/// \@param height Total image height, including axes, legends, title, subtitle, caption, and plot-background padding. The data panel shrinks to leave room for chrome. Chrome larger than `height` raises an error. Pass `auto` to fill the available height of the container (resolved through Typst `layout`); most predictable inside a fixed-height container such as a `box` or `block` with a set height, and falls back to `7cm` when the container is unbounded. Inside\@compose the panel's own height is discarded; the composition sizes each cell.
 ///
 /// \@param alt Alt text describing the figure. When set, the rendered plot is wrapped in a `figure` (kind `"gribouille-plot"`, no number, no caption) carrying this string as its PDF alternative text, so a screen reader on a tagged PDF announces the description instead of the raw axis and legend labels. When `none`, the plot renders without the figure wrapper. Quarto authors embedding plots through `typst-render` should set the block-level `alt` cell option for HTML output; this parameter only affects direct Typst compilation.
 ///
 /// \@param strict When `true`, panic on the first row whose value falls outside any user-supplied scale `limits`. Default `false` drops such rows silently. Use in docs and CI to surface mismatched limits rather than producing thinned-out plots.
 ///
-/// \@param defer When `true`, return the spec dict instead of rendering, so\@compose can probe guides and re-render with hoisted aesthetics suppressed. The dict carries the same keys the renderer would consume; do not feed it to anything other than\@compose.
+/// \@param as-spec Internal switch driven by\@defer: when `true`, return the spec dict instead of rendering, so\@compose can probe guides and re-render with hoisted aesthetics suppressed. Use\@defer rather than setting this directly; the dict carries the same keys the renderer would consume and must not be fed to anything other than\@compose.
 ///
-/// \@returns Typst content block containing the rendered figure, or the spec dict when `defer: true`.
+/// \@returns Typst content block containing the rendered figure, or the spec dict when `as-spec: true`.
 ///
 /// \@examples Single-layer scatter coloured by category, with a title.
 /// ```
@@ -114,16 +114,16 @@
   height: 7cm,
   alt: none,
   strict: false,
-  defer: false,
+  as-spec: false,
 ) = {
   let alt = _resolve-alt(alt, labs)
   // Deferred plots skip the context block because `context` returns
   // content; compose() resolves the active theme from its own context
   // before handing the spec to the renderer.
-  if defer {
+  if as-spec {
     if width == auto or height == auto {
       panic(
-        "plot: `auto` width/height not supported with `defer: true`; compose() needs concrete panel dimensions",
+        "plot: `auto` width/height cannot be deferred to compose(); a deferred panel needs concrete dimensions to probe its guides",
       )
     }
     return (
