@@ -1,8 +1,9 @@
 // compose tag-symbol generation: latin, arabic, roman, and spreadsheet wrap.
 
 #import "../../src/compose.typ": (
-  _alpha-symbol, _is-compose-spec, _roman-symbol, _tag-symbol, compose,
+  _alpha-symbol, _is-compose-spec, _roman-symbol, _tag-symbol, compose, defer,
 )
+#import "../../src/plot.typ": plot
 
 // Arabic is 1-based.
 #assert.eq(_tag-symbol("1", 0), "1")
@@ -28,8 +29,10 @@
 #assert.eq(_tag-symbol("I", 8), "IX")
 #assert.eq(_tag-symbol("i", 3), "iv")
 
-// `defer: true` returns a compose spec usable as a nested panel.
-#let fake-panel = (
+// `as-spec: true` returns a compose spec usable as a nested panel; panels are
+// deferred thunks built with `defer`.
+#let fake-panel = defer(
+  plot,
   layers: (),
   data: (),
   width: 4cm,
@@ -37,7 +40,7 @@
   guides: (:),
   theme: none,
 )
-#let spec = compose(fake-panel, fake-panel, defer: true)
+#let spec = compose(fake-panel, fake-panel, as-spec: true)
 #assert(_is-compose-spec(spec))
 #assert.eq(spec.kind, "compose")
 #assert.eq(spec.panels.len(), 2)
