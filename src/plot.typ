@@ -1,5 +1,6 @@
 #import "render.typ": render-plot
 #import "data.typ": _normalise-data
+#import "utils/errors.typ": fail
 
 // Effective alt text: an explicit `plot(alt:)` wins; otherwise a `labs(alt:)`
 // fills in (its `auto` default and `none` both count as unset), so the labs
@@ -122,8 +123,10 @@
   // before handing the spec to the renderer.
   if as-spec {
     if width == auto or height == auto {
-      panic(
-        "plot: `auto` width/height cannot be deferred to compose(); a deferred panel needs concrete dimensions to probe its guides",
+      fail(
+        "plot",
+        "`auto` width/height cannot be deferred to compose()",
+        hint: "A deferred panel needs concrete dimensions to probe its guides.",
       )
     }
     return (

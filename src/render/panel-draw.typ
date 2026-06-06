@@ -3,6 +3,7 @@
 // marks, axis titles, and any panel-local legend.
 
 #import "../deps.typ": cetz
+#import "../utils/errors.typ": fail
 #import "../scale/train.typ": (
   map-axis-data, map-position, mapping-display-name, transform-inv,
 )
@@ -713,7 +714,7 @@
   if inner-radial != none {
     for layer in prepared {
       if not _RADIAL-AWARE.at(layer.geom, default: false) {
-        panic("coord-radial does not support geom-" + layer.geom + ".")
+        fail("coord-radial", "does not support geom-" + layer.geom)
       }
     }
   }

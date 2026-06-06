@@ -7,6 +7,7 @@
 
 #import "types.typ": parse-number
 #import "normal.typ": qnorm
+#import "errors.typ": fail, fail-range, fail-type
 
 #let _to-numeric(values) = {
   values.map(v => parse-number(v)).filter(v => v != none)
@@ -197,7 +198,7 @@
 /// ```
 #let quantile(values, q: 0.5) = {
   if q < 0 or q > 1 {
-    panic("quantile: q must be in [0, 1]; got " + repr(q))
+    fail-range("quantile", "q", q, 0, 1, lo-open: false, hi-open: false)
   }
   let xs = _to-numeric(values)
   if xs.len() == 0 { return _empty-summary }
@@ -228,14 +229,19 @@
 /// ```
 #let quantiles(values, probs: (0.25, 0.5, 0.75)) = {
   if type(probs) != array or probs.len() != 3 {
-    panic(
-      "quantiles: probs must be an array of three probabilities; got "
-        + repr(probs),
-    )
+    fail-type("quantiles", "probs", probs, "an array of three probabilities")
   }
   for p in probs {
     if p < 0 or p > 1 {
-      panic("quantiles: every prob must be in [0, 1]; got " + repr(p))
+      fail-range(
+        "quantiles",
+        "every prob",
+        p,
+        0,
+        1,
+        lo-open: false,
+        hi-open: false,
+      )
     }
   }
   let xs = _to-numeric(values)
@@ -329,7 +335,7 @@
 /// ```
 #let mean-cl-normal(values, conf: 0.95, weights: none) = {
   if conf <= 0 or conf >= 1 {
-    panic("mean-cl-normal: conf must be in (0, 1); got " + repr(conf))
+    fail-range("mean-cl-normal", "conf", conf, 0, 1)
   }
   let z = qnorm((1 + conf) / 2)
   if weights != none {
@@ -421,7 +427,7 @@
 /// ```
 #let median-hilow(values, conf: 0.5) = {
   if conf <= 0 or conf >= 1 {
-    panic("median-hilow: conf must be in (0, 1); got " + repr(conf))
+    fail-range("median-hilow", "conf", conf, 0, 1)
   }
   let xs = _to-numeric(values)
   if xs.len() == 0 { return _empty-summary }
@@ -477,7 +483,7 @@
 /// ```
 #let mean-cl-boot(values, conf: 0.95, n-boot: 1000, seed: 0) = {
   if conf <= 0 or conf >= 1 {
-    panic("mean-cl-boot: conf must be in (0, 1); got " + repr(conf))
+    fail-range("mean-cl-boot", "conf", conf, 0, 1)
   }
   let xs = _to-numeric(values)
   let n = xs.len()
@@ -585,12 +591,13 @@
     let probs = fun-args.at("probs", default: (0.25, 0.5, 0.75))
     return quantiles(values, probs: probs)
   }
-  panic(
-    "summarise: unknown summary function "
+  fail(
+    "summarise",
+    "unknown summary function "
       + repr(name)
       + "; expected a callable or one of mean-se, mean-cl-normal, "
       + "mean-cl-boot, mean-sd, median-hilow, mean, median, quantile, "
-      + "quantiles.",
+      + "quantiles",
   )
 }
 
@@ -626,7 +633,7 @@
   if type(name) == function { return name(values) }
   let fn = _scalar-reducers.at(name, default: none)
   if fn == none {
-    panic("reduce-scalar: unknown reduction " + repr(name))
+    fail("reduce-scalar", "unknown reduction " + repr(name))
   }
   fn(values)
 }

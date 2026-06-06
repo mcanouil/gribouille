@@ -9,6 +9,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
 #import "train.typ": mapping-ref-col
+#import "../utils/errors.typ": fail
 
 // Returns one of:
 //   ("in",     value)   — unchanged
@@ -78,16 +79,15 @@
           continue
         }
         if strict {
-          panic(
-            "scale `"
-              + aes
-              + "`: row "
+          fail(
+            "scale `" + aes + "`",
+            "row "
               + str(row-idx)
               + " value "
               + repr(cell)
               + " outside limits "
-              + repr(t.spec.at("limits"))
-              + ". Set `oob: \"squish\"` to clamp, widen `limits`, "
+              + repr(t.spec.at("limits")),
+            hint: "Set `oob: \"squish\"` to clamp, widen `limits`, "
               + "or remove `strict: true` to drop silently.",
           )
         }

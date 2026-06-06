@@ -6,6 +6,7 @@
 ///! `none` in the output so callers can detect missing entries.
 
 #import "types.typ": parse-number
+#import "errors.typ": fail, fail-type
 
 #let _to-numeric(values) = {
   values.map(v => parse-number(v))
@@ -52,15 +53,15 @@
     return out
   }
   if type(labels) != array {
-    panic("cut: labels must be `auto` or an array; got " + repr(labels))
+    fail-type("cut", "labels", labels, "`auto` or an array")
   }
   if labels.len() != n {
-    panic(
-      "cut: labels length "
+    fail(
+      "cut",
+      "labels length "
         + str(labels.len())
         + " does not match number of bins "
-        + str(n)
-        + ".",
+        + str(n),
     )
   }
   labels
@@ -120,7 +121,7 @@
 /// )
 /// ```
 #let cut-interval(values, n: 4, labels: auto) = {
-  if n < 1 { panic("cut-interval: n must be >= 1; got " + repr(n)) }
+  if n < 1 { fail("cut-interval", "n must be >= 1; got " + repr(n)) }
   let parsed = _to-numeric(values)
   let numeric = _filter-numeric(parsed)
   if numeric.len() == 0 {
@@ -131,8 +132,9 @@
   if lo == hi {
     let single = if labels == auto { (_default-label(lo, hi),) } else { labels }
     if type(single) != array or single.len() != 1 {
-      panic(
-        "cut-interval: labels must be a single-element array when min == max.",
+      fail(
+        "cut-interval",
+        "labels must be a single-element array when min == max",
       )
     }
     return parsed.map(v => if v == none { none } else { single.at(0) })
@@ -179,7 +181,7 @@
 /// )
 /// ```
 #let cut-number(values, n: 4, labels: auto) = {
-  if n < 1 { panic("cut-number: n must be >= 1; got " + repr(n)) }
+  if n < 1 { fail("cut-number", "n must be >= 1; got " + repr(n)) }
   let parsed = _to-numeric(values)
   let numeric = _filter-numeric(parsed)
   if numeric.len() == 0 {
@@ -192,8 +194,9 @@
   if lo == hi {
     let single = if labels == auto { (_default-label(lo, hi),) } else { labels }
     if type(single) != array or single.len() != 1 {
-      panic(
-        "cut-number: labels must be a single-element array when all values are equal.",
+      fail(
+        "cut-number",
+        "labels must be a single-element array when all values are equal",
       )
     }
     return parsed.map(v => if v == none { none } else { single.at(0) })
@@ -236,7 +239,7 @@
 /// ```
 #let cut-width(values, width: 1, center: none, labels: auto) = {
   if width <= 0 {
-    panic("cut-width: width must be positive; got " + repr(width))
+    fail("cut-width", "width must be positive; got " + repr(width))
   }
   let parsed = _to-numeric(values)
   let numeric = _filter-numeric(parsed)

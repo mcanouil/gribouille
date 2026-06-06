@@ -7,6 +7,7 @@
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer
+#import "../utils/errors.typ": fail-range
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/radial.typ": project-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -118,8 +119,14 @@
   inherit-aes: true,
 ) = {
   if curvature < -1 or curvature > 1 {
-    panic(
-      "geom-curve: curvature must be in [-1, 1]; got " + repr(curvature) + ".",
+    fail-range(
+      "geom-curve",
+      "curvature",
+      curvature,
+      -1,
+      1,
+      lo-open: false,
+      hi-open: false,
     )
   }
   make-layer(

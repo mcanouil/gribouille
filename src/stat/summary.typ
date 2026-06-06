@@ -6,6 +6,7 @@
 
 #import "../utils/types.typ": parse-number
 #import "../utils/summaries.typ": summarise
+#import "../utils/errors.typ": fail-enum
 
 /// Per-axis reduction to a central value and an uncertainty band.
 ///
@@ -171,9 +172,7 @@
   let fun-args = params.at("fun-args", default: (:))
   let axis = params.at("axis", default: "both")
   if not ("both", "x", "y").contains(axis) {
-    panic(
-      "stat-summary: axis must be \"both\", \"x\", or \"y\"; got " + repr(axis),
-    )
+    fail-enum("stat-summary", "axis", axis, ("both", "x", "y"))
   }
   let weight-col = mapping.at("weight", default: none)
 

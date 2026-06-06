@@ -3,6 +3,7 @@
 
 #import "../utils/margin.typ": length-to-cm
 #import "../theme/theme.typ": _text-style
+#import "../utils/errors.typ": fail, fail-enum
 
 // Normalise a single `guide-axis*` spec to the flat shape consumers expect.
 // Always carries a `stack` flag so callers can branch on the same field
@@ -34,8 +35,9 @@
   }
   let subs = g.guides.map(s => _normalise-axis-guide(s, default-angle))
   if subs.len() == 0 {
-    panic(
-      "guide-axis-stack requires at least one sub-guide; got an empty list.",
+    fail(
+      "guide-axis-stack",
+      "requires at least one sub-guide; got an empty list",
     )
   }
   (
@@ -71,13 +73,7 @@
   if g == none { return none }
   let cap = g.at("cap", default: "none")
   if not _THETA-CAP-VALUES.contains(cap) {
-    panic(
-      "guide-axis-theta cap must be one of "
-        + _THETA-CAP-VALUES.map(v => "\"" + v + "\"").join(", ")
-        + ", got \""
-        + cap
-        + "\".",
-    )
+    fail-enum("guide-axis-theta", "cap", cap, _THETA-CAP-VALUES)
   }
   (
     angle: g.at("angle", default: 0),

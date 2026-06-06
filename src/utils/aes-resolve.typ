@@ -14,6 +14,7 @@
 
 #import "typst-markup.typ": eval-as-markup, is-typst-markup
 #import "late-binding.typ": is-late-binding
+#import "errors.typ": fail
 #import "colour-resolve.typ": (
   resolve-alpha, resolve-linewidth, resolve-size, resolve-stroke-colour,
   resolve-stroke-width,
@@ -192,7 +193,7 @@
   } else if channel == "linetype" {
     resolve-linetype(layer, mapping, ctx, row)
   } else {
-    panic("resolve-channel: unsupported channel '" + channel + "'")
+    fail("resolve-channel", "unsupported channel '" + channel + "'")
   }
 }
 

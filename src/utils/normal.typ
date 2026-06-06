@@ -5,6 +5,8 @@
 ///! Also hosts `theoretical-quantile`, the small dispatch used by the
 ///! Q-Q stats to pick a reference distribution.
 
+#import "errors.typ": fail-enum, fail-range
+
 /// Inverse of the standard-normal cumulative distribution function.
 ///
 /// Implements Acklam's rational approximation (2003), accurate to about
@@ -35,7 +37,7 @@
 /// ```
 #let qnorm(p) = {
   if p <= 0 or p >= 1 {
-    panic("qnorm: p must be in (0, 1); got " + repr(p))
+    fail-range("qnorm", "p", p, 0, 1)
   }
   let a = (
     -3.969683028665376e+01,
@@ -156,19 +158,20 @@
     qnorm(p)
   } else if distribution == "uniform" {
     if p <= 0 or p >= 1 {
-      panic("theoretical-quantile: p must be in (0, 1); got " + repr(p))
+      fail-range("theoretical-quantile", "p", p, 0, 1)
     }
     p
   } else if distribution == "exponential" {
     if p <= 0 or p >= 1 {
-      panic("theoretical-quantile: p must be in (0, 1); got " + repr(p))
+      fail-range("theoretical-quantile", "p", p, 0, 1)
     }
     -calc.ln(1 - p)
   } else {
-    panic(
-      "theoretical-quantile: unknown distribution "
-        + repr(distribution)
-        + "; expected one of \"normal\", \"uniform\", \"exponential\".",
+    fail-enum(
+      "theoretical-quantile",
+      "distribution",
+      distribution,
+      ("normal", "uniform", "exponential"),
     )
   }
 }

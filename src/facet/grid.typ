@@ -4,6 +4,7 @@
 ///! Scales may be shared (`"fixed"`) or freed per column (`x`) / row (`y`).
 
 #import "labellers.typ": label-value
+#import "../utils/errors.typ": fail, fail-enum
 
 /// Grid facets: panels on a row x column grid from two discrete variables.
 ///
@@ -76,12 +77,15 @@
   labeller: label-value(),
 ) = {
   if not ("fixed", "free", "free_x", "free_y").contains(scales) {
-    panic(
-      "facet-grid: scales must be \"fixed\", \"free\", \"free_x\", or \"free_y\"",
+    fail-enum(
+      "facet-grid",
+      "scales",
+      scales,
+      ("fixed", "free", "free_x", "free_y"),
     )
   }
   if rows == none and columns == none {
-    panic("facet-grid needs at least one of rows: or columns:")
+    fail("facet-grid", "needs at least one of rows: or columns:")
   }
   (
     kind: "facet",

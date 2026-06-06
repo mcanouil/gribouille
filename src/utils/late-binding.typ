@@ -5,6 +5,8 @@
 ///! first bound, so callers can pull values from the trained stat output,
 ///! the resolved scale output, or the active theme.
 
+#import "errors.typ": fail
+
 #let _LATE-BINDING-KINDS = (
   "from-theme",
   "after-stat",
@@ -289,11 +291,9 @@
       post-col = _AFTER-STAT-COL-PREFIX + channel
       closures.push((col: post-col, expr: after-stat-expr))
     } else if after-stat-expr != none {
-      panic(
-        "stage["
-          + channel
-          + "].after-stat: must be string or function; got "
-          + str(type(after-stat-expr)),
+      fail(
+        "stage[" + channel + "].after-stat",
+        "must be string or function; got " + str(type(after-stat-expr)),
       )
     }
     let after-scale-expr = stg.at("after-scale", default: none)
@@ -380,10 +380,9 @@
     let expr = value.expr
     if type(expr) == str {
       if outputs.len() > 0 and not outputs.contains(expr) {
-        panic(
-          "after-stat["
-            + channel
-            + "]: '"
+        fail(
+          "after-stat[" + channel + "]",
+          "'"
             + expr
             + "' is not in the outputs of stat '"
             + stat-name
@@ -397,11 +396,9 @@
       closures.push((channel: channel, col: col, expr: expr))
       new-mapping.insert(channel, col)
     } else {
-      panic(
-        "after-stat["
-          + channel
-          + "]: expr must be a string or function; got "
-          + str(type(expr)),
+      fail(
+        "after-stat[" + channel + "]",
+        "expr must be a string or function; got " + str(type(expr)),
       )
     }
   }
@@ -417,9 +414,7 @@
 #let _path-parts(path) = {
   if type(path) == str { return path.split(".") }
   if type(path) == array { return path }
-  panic(
-    "from-theme: path must be a string or array; got " + str(type(path)),
-  )
+  fail("from-theme", "path must be a string or array; got " + str(type(path)))
 }
 
 /// Resolve a `from-theme(path)` marker against a merged theme dictionary.
@@ -436,15 +431,16 @@
 #let resolve-from-theme(theme, path) = {
   let parts = _path-parts(path)
   if parts.len() == 0 {
-    panic("from-theme: empty path")
+    fail("from-theme", "empty path")
   }
   let cur = theme
   let walked = ()
   for part in parts {
     let here = (..walked, part).join(".")
     if type(cur) != dictionary {
-      panic(
-        "from-theme: cannot descend into "
+      fail(
+        "from-theme",
+        "cannot descend into "
           + str(type(cur))
           + " at '"
           + part
@@ -453,8 +449,9 @@
       )
     }
     if not (part in cur) {
-      panic(
-        "from-theme: key '" + part + "' not found in theme at path " + here,
+      fail(
+        "from-theme",
+        "key '" + part + "' not found in theme at path " + here,
       )
     }
     cur = cur.at(part)

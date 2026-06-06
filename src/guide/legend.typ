@@ -5,12 +5,14 @@
 ///! swatch grid with `nrow` / `ncolumn` / `byrow`, and placement with
 ///! `position` / `direction` / `order`.
 
+#import "../utils/errors.typ": fail, quote-each
+
 #let _VALID-SIDES = ("none", "top", "right", "bottom", "left")
 
 #let _POSITION-HELP = (
-  "guide position must be one of "
-    + _VALID-SIDES.map(s => "\"" + s + "\"").join(", ")
-    + ", a Typst alignment, or a (dx:, dy:) / (x:, y:) dict; got "
+  "position must be one of "
+    + quote-each(_VALID-SIDES)
+    + ", a Typst alignment, or a (dx:, dy:) / (x:, y:) dict"
 )
 
 // Build the canonical placement dict consumed by the legend renderer. Accepts
@@ -41,10 +43,10 @@
       dx = position.at("x", default: 0pt)
       dy = position.at("y", default: 0pt)
     } else {
-      panic(_POSITION-HELP + repr(position))
+      fail("guide", _POSITION-HELP + "; got " + repr(position))
     }
   } else {
-    panic(_POSITION-HELP + repr(position))
+    fail("guide", _POSITION-HELP + "; got " + repr(position))
   }
 
   let resolved-direction = if direction == auto {
@@ -56,8 +58,9 @@
   } else if direction == "horizontal" or direction == "vertical" {
     direction
   } else {
-    panic(
-      "guide direction must be \"horizontal\", \"vertical\", or `auto`; got "
+    fail(
+      "guide",
+      "direction must be \"horizontal\", \"vertical\", or `auto`; got "
         + repr(direction),
     )
   }
@@ -186,9 +189,9 @@
   align: none,
 ) = {
   if align != none and type(align) != alignment {
-    panic(
-      "guide-legend align must be `left`, `center`, `right`, or `none`; got "
-        + repr(align),
+    fail(
+      "guide-legend",
+      "align must be `left`, `center`, `right`, or `none`; got " + repr(align),
     )
   }
   (

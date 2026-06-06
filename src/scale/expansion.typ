@@ -11,14 +11,17 @@
 ///! sides independently. `auto` resolves to a sensible per-scale default;
 ///! `false` and `none` collapse to zero.
 
+#import "../utils/errors.typ": fail
+
 #let _resolve-piece(piece) = {
   if piece == 0 { return (0, 0) }
   let t = type(piece)
   if t == ratio { return (piece / 100%, 0) }
   if t == length { return (0, piece / 1cm) }
   if t == relative { return (piece.ratio / 100%, piece.length / 1cm) }
-  panic(
-    "expand: expected a ratio (e.g., 5%), length (e.g., 5pt), or relative; got "
+  fail(
+    "expand",
+    "expected a ratio (e.g., 5%), length (e.g., 5pt), or relative; got "
       + repr(piece),
   )
 }

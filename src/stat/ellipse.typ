@@ -12,6 +12,7 @@
 
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": group-aesthetics, group-key
+#import "../utils/errors.typ": fail-range
 
 /// Covariance-ellipse statistic: one ellipse per group from the sample
 /// covariance of `(x, y)`.
@@ -82,7 +83,7 @@
 
   let level = params.at("level", default: 0.95)
   if level <= 0 or level >= 1 {
-    panic("stat-ellipse: level must be in (0, 1); got " + repr(level))
+    fail-range("stat-ellipse", "level", level, 0, 1)
   }
   // Inverse chi-square CDF for df=2 has the closed form −2·ln(1−p).
   let chi-sq = -2 * calc.ln(1 - level)

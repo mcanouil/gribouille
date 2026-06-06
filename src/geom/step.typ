@@ -5,6 +5,7 @@
 ///! default) or vertical then horizontal (`direction: "vh"`).
 
 #import "../layer.typ": make-layer
+#import "../utils/errors.typ": fail-enum
 #import "grouped-path.typ": draw-grouped-paths, rows-to-points, sort-rows-by-x
 
 /// Step layer connecting observations as a stair-step path, one per group.
@@ -80,7 +81,7 @@
   inherit-aes: true,
 ) = {
   if direction != "hv" and direction != "vh" {
-    panic("geom-step: direction must be \"hv\" or \"vh\"")
+    fail-enum("geom-step", "direction", direction, ("hv", "vh"))
   }
   make-layer(
     "step",

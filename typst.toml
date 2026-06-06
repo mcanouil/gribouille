@@ -18,6 +18,7 @@ exclude = [
   "tests",
   "tools",
   "src/GLOSSARY.md",
+  "ARCHITECTURE.md",
   "CONTRIBUTING.md",
   "CITATION.cff",
 ]
