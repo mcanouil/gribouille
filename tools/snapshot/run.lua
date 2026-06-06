@@ -13,6 +13,7 @@ package.path = DIR .. "/?.lua;" .. ROOT .. "/tools/typstdoc/?.lua;" .. package.p
 
 local util = require("util")
 local extract = require("extract")
+local common = require("common")
 
 local USAGE = [[
 Usage: tools/snapshot/run.lua [--check | --update] [options]
@@ -31,14 +32,8 @@ Options:
   --help          Show this help and exit.
 ]]
 
-local function abs(path)
-  if path:sub(1, 1) == "/" then return path end
-  return ROOT .. "/" .. path
-end
-
-local function shell_quote(s)
-  return "'" .. s:gsub("'", [['\'']]) .. "'"
-end
+local shell_quote = common.shell_quote
+local function abs(path) return common.abs(ROOT, path) end
 
 local function parse_args(argv)
   local opts = {

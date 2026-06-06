@@ -12,6 +12,7 @@ local ROOT = DIR .. "/../.."
 package.path = DIR .. "/?.lua;" .. ROOT .. "/tools/typstdoc/?.lua;" .. package.path
 
 local util = require("util")
+local common = require("common")
 
 local GOLDEN_REL = "tests/visual/golden"
 
@@ -42,14 +43,8 @@ Options:
   --help          Show this help and exit.
 ]]
 
-local function shell_quote(s)
-  return "'" .. s:gsub("'", [['\'']]) .. "'"
-end
-
-local function abs(path)
-  if path:sub(1, 1) == "/" then return path end
-  return ROOT .. "/" .. path
-end
+local shell_quote = common.shell_quote
+local function abs(path) return common.abs(ROOT, path) end
 
 local function die(msg)
   io.stderr:write("snapshot-diff: " .. msg .. "\n")
