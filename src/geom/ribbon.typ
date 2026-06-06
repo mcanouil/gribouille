@@ -13,7 +13,7 @@
 #import "grouped-path.typ": sort-rows-by-x
 #import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../utils/radial.typ": project-point
+#import "../utils/band.typ": band-polygon
 #import "../utils/stroke.typ": resolve-stroke-spec
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -160,9 +160,7 @@
       .filter(p => p.lo != none and p.hi != none)
     if sorted.len() < 2 { continue }
 
-    let upper = sorted.map(p => project-point(ctx, p.x, p.hi))
-    let lower = sorted.rev().map(p => project-point(ctx, p.x, p.lo))
-    let pts = upper + lower
+    let pts = band-polygon(ctx, sorted, p => p.hi, p => p.lo)
     if pts.any(p => p == none) { continue }
 
     let leader = rows.first()

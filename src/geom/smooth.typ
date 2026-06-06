@@ -14,6 +14,7 @@
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/aes-pair.typ": aes-set
 #import "../utils/radial.typ": project-point
+#import "../utils/band.typ": band-polygon
 #import "../utils/late-binding.typ": after-scale-source, apply-after-scale
 #import "../scale/train.typ": mapping-ref-col
 
@@ -222,9 +223,7 @@
       layer.params.se and sorted.all(p => p.lo != none and p.hi != none)
     )
     if has-band {
-      let upper = sorted.map(p => project-point(ctx, p.x, p.hi))
-      let lower = sorted.rev().map(p => project-point(ctx, p.x, p.lo))
-      let pts = upper + lower
+      let pts = band-polygon(ctx, sorted, p => p.hi, p => p.lo)
       if pts.all(p => p != none) {
         let alpha = resolve-channel(
           "alpha",
