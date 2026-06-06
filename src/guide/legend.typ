@@ -46,7 +46,7 @@
       fail("guide", _POSITION-HELP + "; got " + repr(position))
     }
   } else {
-    panic(_POSITION-HELP + repr(position))
+    fail("guide", _POSITION-HELP + "; got " + repr(position))
   }
 
   let resolved-direction = if direction == auto {

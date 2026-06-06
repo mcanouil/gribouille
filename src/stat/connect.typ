@@ -5,6 +5,7 @@
 ///! vertices. Pair with `geom-path` (or `geom-line`) to render.
 
 #import "../utils/types.typ": parse-number
+#import "../utils/errors.typ": fail-enum
 
 #let _CONNECTION-MODES = ("hv", "vh", "mid", "linear")
 
@@ -42,12 +43,7 @@
 /// \@see \@geom-step, \@geom-path
 #let stat-connect(connection: "hv") = {
   if not _CONNECTION-MODES.contains(connection) {
-    panic(
-      "stat-connect: connection must be one of "
-        + repr(_CONNECTION-MODES)
-        + "; got "
-        + repr(connection),
-    )
+    fail-enum("stat-connect", "connection", connection, _CONNECTION-MODES)
   }
   (kind: "stat", name: "connect", params: (connection: connection))
 }

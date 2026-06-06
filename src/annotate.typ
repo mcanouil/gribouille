@@ -8,6 +8,7 @@
 
 #import "aes.typ": aes
 #import "geom/text.typ": geom-text
+#import "utils/errors.typ": fail, fail-enum
 #import "geom/typst.typ": geom-typst
 #import "geom/point.typ": geom-point
 #import "geom/label.typ": geom-label
@@ -138,18 +139,13 @@
 /// \@see \@aes, \@geom-text, \@geom-point, \@geom-label, \@geom-segment, \@geom-rect, \@geom-vline, \@geom-hline, \@geom-abline
 #let annotate(geom, ..fields) = {
   if geom not in _geom-table {
-    let names = _geom-table.keys().join(", ")
-    panic(
-      "annotate: unknown geom '"
-        + str(geom)
-        + "'. Expected one of: "
-        + names
-        + ".",
-    )
+    fail-enum("annotate", "geom", geom, _geom-table.keys())
   }
   if fields.pos().len() != 0 {
-    panic(
-      "annotate: positional arguments are not supported; use named arguments.",
+    fail(
+      "annotate",
+      "positional arguments are not supported",
+      hint: "Use named arguments.",
     )
   }
 

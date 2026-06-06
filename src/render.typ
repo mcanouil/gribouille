@@ -4,6 +4,7 @@
 
 #import "deps.typ": cetz
 #import "scale/train.typ": mapping-display-name, train
+#import "utils/errors.typ": check, fail
 #import "scale/oob.typ": filter-oob
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
@@ -52,9 +53,10 @@
   // Canvas dims known up-front from `spec.width` / `spec.height`; cetz
   // draw sites resolve their own rect `%` insets against per-rect natural
   // dims, but layout-time `outset` reservation references the canvas.
-  assert(
+  check(
     type(spec.width) == length and type(spec.height) == length,
-    message: "render-plot: width/height must be resolved to concrete lengths before rendering",
+    "render-plot",
+    "width/height must be resolved to concrete lengths before rendering",
   )
   let width-units-early = spec.width / 1cm
   let height-units-early = spec.height / 1cm
@@ -183,14 +185,16 @@
   // Floor matches the single-tick panel minimum used by `max-right-margin`.
   let _min-canvas = 0.5
   if width-units < _min-canvas or height-units < _min-canvas {
-    panic(
-      "plot: title/subtitle/caption and plot-background padding leave a "
+    fail(
+      "plot",
+      "title/subtitle/caption and plot-background padding leave a "
         + str(calc.round(width-units, digits: 2))
         + " x "
         + str(calc.round(height-units, digits: 2))
         + " cm canvas, below the "
         + str(_min-canvas)
-        + " cm minimum; increase width/height or reduce labels/padding.",
+        + " cm minimum",
+      hint: "Increase width/height or reduce labels/padding.",
     )
   }
 

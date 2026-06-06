@@ -10,6 +10,7 @@
 
 #import "elements.typ": element-geom
 #import "../utils/colour.typ": col-mix
+#import "../utils/errors.typ": fail
 #import "../utils/margin.typ": (
   resolve-margin-side-cm, resolve-margin-side-rel-cm,
 )
@@ -185,7 +186,7 @@
   if v != none { return v }
   if role == none { return none }
   if role == "ink" or role == "accent" { return defaults.at(role) }
-  panic("resolve-geom-colour: unknown role " + role)
+  fail("resolve-geom-colour", "unknown role " + repr(role))
 }
 
 /// Resolve a geom's default body fill.
@@ -210,7 +211,7 @@
     return col-mix(defaults.ink, defaults.paper, fill-tint-amount)
   }
   if role == "paper" or role == "ink" { return defaults.at(role) }
-  panic("resolve-geom-fill: unknown role " + role)
+  fail("resolve-geom-fill", "unknown role " + repr(role))
 }
 
 /// Resolve the geom `linewidth` default: `element-geom.linewidth` if set,

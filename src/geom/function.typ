@@ -6,6 +6,7 @@
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer
+#import "../utils/errors.typ": fail
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/radial.typ": project-point
 #import "../utils/colour-resolve.typ": apply-alpha
@@ -89,7 +90,7 @@
   inherit-aes: false,
 ) = {
   if n < 2 {
-    panic("geom-function: n must be at least 2; got " + repr(n) + ".")
+    fail("geom-function", "n must be at least 2; got " + repr(n))
   }
   make-layer(
     "function",

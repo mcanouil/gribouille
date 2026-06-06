@@ -2,6 +2,7 @@
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer
+#import "../utils/errors.typ": fail-enum, fail-type
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/radial.typ": project-point
 #import "../utils/types.typ": parse-number
@@ -206,19 +207,14 @@
   inherit-aes: true,
 ) = {
   if method not in _METHODS {
-    panic(
-      "geom-mark: unknown method '"
-        + str(method)
-        + "'. Expected one of: "
-        + _METHODS.join(", ")
-        + ".",
-    )
+    fail-enum("geom-mark", "method", method, _METHODS)
   }
   if type(expand) != length {
-    panic(
-      "geom-mark: expand must be a Typst length (e.g., 5pt, 0.5cm); got "
-        + repr(expand)
-        + ".",
+    fail-type(
+      "geom-mark",
+      "expand",
+      expand,
+      "a Typst length (e.g., 5pt, 0.5cm)",
     )
   }
   make-layer(
