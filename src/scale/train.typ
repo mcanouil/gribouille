@@ -9,6 +9,7 @@
 #import "../data.typ": _normalise-data, column
 #import "../utils/types.typ": infer-column-type, parse-number
 #import "../utils/typst-markup.typ": is-typst-markup
+#import "../utils/errors.typ": check
 #import "../utils/late-binding.typ": (
   after-scale-source, is-late-binding, late-binding-name,
 )
@@ -351,15 +352,16 @@
     // User-supplied limits come in data space; lift them to stat space.
     let (lo, hi) = domain
     if transform == "log10" {
-      assert(
+      check(
         lo > 0 and hi > 0,
-        message: "log10 scale limits must be positive; got " + repr((lo, hi)),
+        "scale",
+        "log10 limits must be positive; got " + repr((lo, hi)),
       )
     } else if transform == "sqrt" {
-      assert(
+      check(
         lo >= 0 and hi >= 0,
-        message: "sqrt scale limits must be non-negative; got "
-          + repr((lo, hi)),
+        "scale",
+        "sqrt limits must be non-negative; got " + repr((lo, hi)),
       )
     }
     domain = (transform-fwd(transform, lo), transform-fwd(transform, hi))

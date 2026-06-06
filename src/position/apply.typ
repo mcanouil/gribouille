@@ -6,6 +6,7 @@
 // `coord-radial`.
 
 #import "identity.typ" as identity-pos
+#import "../utils/errors.typ": fail
 #import "stack.typ" as stack-pos
 #import "dodge.typ" as dodge-pos
 #import "fill.typ" as fill-pos
@@ -27,7 +28,7 @@
   let resolved = if name == none { "identity" } else { name }
   let apply = _POSITIONS.at(resolved, default: none)
   if apply == none {
-    panic("position: unknown adjustment \"" + str(resolved) + "\"")
+    fail("position", "unknown adjustment " + repr(resolved))
   }
   apply(data, mapping, params: params, coord: coord)
 }

@@ -7,6 +7,7 @@
 ///! the data.
 
 #import "utils/types.typ": parse-number
+#import "utils/errors.typ": fail
 
 #let column(data, name) = {
   data.map(row => row.at(name, default: none))
@@ -38,8 +39,9 @@
   if type(data) == array {
     for (i, row) in data.enumerate() {
       if type(row) != dictionary {
-        panic(
-          "data: row-store array must contain dictionaries; got "
+        fail(
+          "data",
+          "row-store array must contain dictionaries; got "
             + str(type(row))
             + " at index "
             + str(i),
@@ -54,8 +56,9 @@
     let len = none
     for (k, vs) in pairs {
       if type(vs) != array {
-        panic(
-          "data: column-store value for \""
+        fail(
+          "data",
+          "column-store value for \""
             + k
             + "\" must be an array; got "
             + str(type(vs)),
@@ -65,8 +68,9 @@
         len = vs.len()
       } else if vs.len() != len {
         let first-key = pairs.first().at(0)
-        panic(
-          "data: column-store columns must share the same length; got \""
+        fail(
+          "data",
+          "column-store columns must share the same length; got \""
             + first-key
             + "\"="
             + str(len)
@@ -83,9 +87,9 @@
       row
     })
   }
-  panic(
-    "data: must be an array of dicts or a dict of arrays; got "
-      + str(type(data)),
+  fail(
+    "data",
+    "must be an array of dicts or a dict of arrays; got " + str(type(data)),
   )
 }
 

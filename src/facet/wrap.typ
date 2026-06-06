@@ -4,6 +4,7 @@
 ///! `ncolumn` columns (or `nrow` rows).
 
 #import "labellers.typ": label-value
+#import "../utils/errors.typ": fail-enum
 
 /// Wrap facets: one panel per level of a discrete variable.
 ///
@@ -110,14 +111,15 @@
   axes: "margins",
 ) = {
   if not ("fixed", "free", "free_x", "free_y").contains(scales) {
-    panic(
-      "facet-wrap: scales must be \"fixed\", \"free\", \"free_x\", or \"free_y\"",
+    fail-enum(
+      "facet-wrap",
+      "scales",
+      scales,
+      ("fixed", "free", "free_x", "free_y"),
     )
   }
   if not ("margins", "all_x", "all_y", "all").contains(axes) {
-    panic(
-      "facet-wrap: axes must be \"margins\", \"all_x\", \"all_y\", or \"all\"",
-    )
+    fail-enum("facet-wrap", "axes", axes, ("margins", "all_x", "all_y", "all"))
   }
   (
     kind: "facet",
