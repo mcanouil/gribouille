@@ -504,6 +504,11 @@
   guide.at("typst-mark", default: false),
 )
 
+// Swatch column gap: at least `MIN` cm, growing with the widest column by
+// `RATIO` so dense legends keep breathing room.
+#let _SWATCH-COL-GAP-MIN = 0.15
+#let _SWATCH-COL-GAP-RATIO = 0.1
+
 // Per-column widths, gap, cumulative left-offsets, and total grid width.
 // Each column sizes to its own widest label (measured at the supplied
 // font size) so a single oversized level doesn't pad every other column
@@ -521,7 +526,10 @@
     }
     lead + max-w
   })
-  let gap = calc.max(0.15, 0.1 * calc.max(..widths))
+  let gap = calc.max(
+    _SWATCH-COL-GAP-MIN,
+    _SWATCH-COL-GAP-RATIO * calc.max(..widths),
+  )
   let offsets = ()
   let acc = 0.0
   for w in widths {
@@ -622,6 +630,29 @@
 #let _COLOURBAR-H-LABEL-H = 0.45
 #let _GUIDE-PAD-V = 0.2
 #let _COLOURBAR-PAD-V = 0.3
+// Width-estimate gap between a vertical colourbar and its tick labels; the
+// renderer positions labels at `tick-len + tick-gap`, this approximates it.
+#let _COLOURBAR-V-LABEL-GAP = 0.3
+
+// Resolve the displayed break positions for a continuous guide: keep the
+// explicit in-domain breaks when the scale supplies them, otherwise fall back
+// to `computed` (the binned edges/midpoints or `pretty` ticks).
+#let _guide-breaks(info, lo, hi, computed) = {
+  if info.breaks == auto { return computed }
+  let kept = info.breaks.filter(b => (
+    b >= calc.min(lo, hi) and b <= calc.max(lo, hi)
+  ))
+  if kept.len() > 0 { kept } else { computed }
+}
+
+// Read back a colourbar guide's resolved breaks (stored by `guides-for`),
+// falling back to `pretty` over the domain only when none were stored.
+#let _colourbar-breaks(g) = {
+  let breaks = g.at("breaks", default: none)
+  if breaks != none { return breaks }
+  let (lo, hi) = g.domain
+  pretty(lo, hi, n: 5)
+}
 
 // Per-guide width estimate. Stored on each guide so `estimate-width` is
 // O(1). `size-pt` is the legend-text font size; label widths are
@@ -647,12 +678,7 @@
     return calc.max(_title-width(g, size-pt), lead + label-w)
   }
   if g.kind == "colourbar" {
-    let breaks = if g.at("breaks", default: none) != none {
-      g.breaks
-    } else {
-      let (lo, hi) = g.domain
-      pretty(lo, hi, n: 5)
-    }
+    let breaks = _colourbar-breaks(g)
     let label-w = _max-break-label-width(g, breaks, size-pt)
     if g.placement.direction == "horizontal" {
       return calc.max(
@@ -660,7 +686,10 @@
         _COLOURBAR-H-W + label-w,
       )
     }
-    return calc.max(_title-width(g, size-pt), _COLOURBAR-V-W + 0.3 + label-w)
+    return calc.max(
+      _title-width(g, size-pt),
+      _COLOURBAR-V-W + _COLOURBAR-V-LABEL-GAP + label-w,
+    )
   }
   if g.kind == "custom" { return g.cm-width }
   fail("legend._guide-width", "unknown guide kind " + repr(g.kind))
@@ -739,12 +768,7 @@
 #let _colourbar-height(guide, title-h, size-pt) = {
   let prefix = _title-prefix(guide, title-h)
   if guide.placement.direction == "horizontal" {
-    let breaks = if guide.at("breaks", default: none) != none {
-      guide.breaks
-    } else {
-      let (lo, hi) = guide.domain
-      pretty(lo, hi, n: 5)
-    }
+    let breaks = _colourbar-breaks(guide)
     (
       prefix
         + _COLOURBAR-H-H
@@ -840,12 +864,7 @@
       let computed = if info.binned {
         range(info.n-breaks + 1).map(i => lo + i * (hi - lo) / info.n-breaks)
       } else { pretty(lo, hi, n: 5) }
-      let breaks = if info.breaks != auto {
-        let kept = info.breaks.filter(b => (
-          b >= calc.min(lo, hi) and b <= calc.max(lo, hi)
-        ))
-        if kept.len() > 0 { kept } else { computed }
-      } else { computed }
+      let breaks = _guide-breaks(info, lo, hi, computed)
       (
         kind: "colourbar",
         aesthetics: aesthetics,
@@ -868,12 +887,7 @@
           lo + (i + 0.5) * (hi - lo) / info.n-breaks
         ))
       } else { pretty(lo, hi, n: 5) }
-      let breaks = if info.breaks != auto {
-        let kept = info.breaks.filter(b => (
-          b >= calc.min(lo, hi) and b <= calc.max(lo, hi)
-        ))
-        if kept.len() > 0 { kept } else { computed }
-      } else { computed }
+      let breaks = _guide-breaks(info, lo, hi, computed)
       (
         kind: "size-ladder",
         aesthetics: aesthetics,
@@ -1157,16 +1171,14 @@
       )
     }
   } else {
-    let overflows = guide
-      .breaks
-      .enumerate()
-      .map(((i, value)) => _label-overflow(
-        _break-label(guide, value, i),
-        line-h,
-        size-pt,
-      ))
+    let indexed = guide.breaks.enumerate()
+    let overflows = indexed.map(((i, value)) => _label-overflow(
+      _break-label(guide, value, i),
+      line-h,
+      size-pt,
+    ))
     let rows = _stack-offsets(overflows)
-    for (i, value) in guide.breaks.enumerate() {
+    for (i, value) in indexed {
       // Same row-stacking as the swatch: push down by overflow above, then
       // centre this break on its block by dropping it half its own overflow.
       let cy = top - i * line-h - rows.before.at(i)
@@ -1309,7 +1321,7 @@
     )
   }
   let tick-stroke = _line-stroke(theme, "legend-ticks", fallback-colour: ink)
-  let breaks = guide.at("breaks", default: pretty(lo, hi, n: 5))
+  let breaks = _colourbar-breaks(guide)
   let labels = guide.at("labels", default: auto)
   let typst-mark = guide.at("typst-mark", default: false)
   let align = _label-align(guide, _legend-text.align)
