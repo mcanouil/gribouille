@@ -5,7 +5,6 @@
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
 #import "theme/theme.typ": _text-style
-#import "theme/elements.typ": margin
 #import "utils/errors.typ": check, fail, fail-enum, fail-type
 
 // The public `compose` parameter `layout` shadows Typst's builtin `layout`
