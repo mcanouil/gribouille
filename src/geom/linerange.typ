@@ -5,6 +5,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point
+#import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 /// Linerange layer: one vertical line from `ymin` to `ymax` at each `x`.
@@ -117,7 +118,7 @@
     let (cx-lo, cy-lo) = p-lo
     let (cx-hi, cy-hi) = p-hi
 
-    let final-colour = resolve-channel(
+    let colour = resolve-channel(
       "colour",
       layer,
       mapping,
@@ -125,6 +126,8 @@
       row,
       theme-colour,
     )
+    let alpha = resolve-channel("alpha", layer, mapping, ctx, row, 1)
+    let final-colour = apply-alpha(colour, alpha)
 
     let thickness = resolve-channel(
       "linewidth",

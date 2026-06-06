@@ -5,6 +5,7 @@
 - feat: `compose()` accepts `theme:`; an explicit theme styles the composition chrome (title, hoisted legend, panel tags) and propagates into panels with no theme of their own, otherwise a theme shared by every panel is used. (#82)
 - feat: `compose()` panels are now built with the new `defer()` helper (`defer(plot, ...)`, or `defer(compose, ...)` to nest), replacing `plot(..., defer: true)`; panels omit their own `width`/`height` and the composition sizes each cell. (#81)
 - feat: `geom-area()` defaults to `stat: "align"` and `position: "stack"`, matching ggplot2 v3.4 behaviour; groups with mismatched x values are automatically resampled onto a shared grid and stacked without requiring explicit `stat: stat-align()`. (#77)
+- fix: `geom-linerange()` honours its `alpha` parameter; the line was previously always drawn fully opaque. (#85)
 - fix: `geom-area(position: "stack")` now stacks bands correctly; each polygon's lower edge sits at the cumulated top of the group below rather than always closing at `y = 0`. (#77)
 - fix: `stat-align()` expands its shared grid by a small offset on either side of every breakpoint, so a group that starts or ends mid-range steps cleanly down to the baseline instead of leaving a wedge below the neighbouring group, matching ggplot2's `StatAlign`. (#77)
 
