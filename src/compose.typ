@@ -237,9 +237,13 @@
 
   let candidates = if collect == auto {
     let all = ()
+    let seen = (:)
     for idx in per-panel {
       for a in idx.keys() {
-        if not all.contains(a) { all.push(a) }
+        if a not in seen {
+          seen.insert(a, true)
+          all.push(a)
+        }
       }
     }
     all
@@ -251,11 +255,14 @@
 
   let hoisted = ()
   let hoisted-guides = ()
+  let seen-aesthetics = (:)
   for a in candidates {
     if not _all-mergeable(per-panel, a) { continue }
     hoisted.push(a)
     let g = per-panel.first().at(a)
-    if not hoisted-guides.any(h => h.aesthetics == g.aesthetics) {
+    let key = repr(g.aesthetics)
+    if key not in seen-aesthetics {
+      seen-aesthetics.insert(key, true)
       hoisted-guides.push(g)
     }
   }
