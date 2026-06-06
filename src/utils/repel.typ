@@ -8,6 +8,7 @@
 // labels across runs.
 
 #import "segment-route.typ": aabb-from-centre, aabb-overlap, segment-crosses
+#import "errors.typ": fail
 
 #let _norm-2d(dx, dy) = {
   let len = calc.sqrt(dx * dx + dy * dy)
@@ -138,7 +139,7 @@
   let out = _default-params
   for (k, v) in overrides.pairs() {
     if k not in _default-params {
-      panic("repel: unknown parameter '" + k + "'")
+      fail("repel", "unknown parameter '" + k + "'")
     }
     if v != none { out.insert(k, v) }
   }

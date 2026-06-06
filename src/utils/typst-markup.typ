@@ -15,6 +15,8 @@
 // `as-factor(typst("col"))` both resolve correctly because the resolver
 // walks the chain innermost-first.
 
+#import "errors.typ": fail
+
 /// Mark a value for Typst-markup evaluation.
 ///
 /// Inside `aes()`, `typst("col")` names the column to use for the
@@ -143,12 +145,12 @@
     if type(src) == content {
       return src
     }
-    panic(
-      "typst() in static prose accepts a string or content; got a tagged "
-        + "value (kind: "
+    fail(
+      "typst",
+      "in static prose accepts a string or content; got a tagged value (kind: "
         + repr(src.at("kind", default: "?"))
-        + "). Use "
-        + "typst() on aesthetic mappings to wrap column references.",
+        + ")",
+      hint: "Use typst() on aesthetic mappings to wrap column references.",
     )
   }
   if eval-strings and type(x) == str { return eval(x, mode: "markup") }

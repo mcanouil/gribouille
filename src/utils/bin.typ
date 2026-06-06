@@ -4,6 +4,7 @@
 
 #import "types.typ": parse-number
 #import "summaries.typ": read-weight
+#import "errors.typ": check
 
 // Compute `(lo, hi)` from a non-empty numeric vector. Spreads to `(lo, lo+1)`
 // when all values are equal, so downstream computations don't divide by zero.
@@ -21,9 +22,10 @@
   let n-bins = if binwidth != none and binwidth > 0 {
     calc.max(1, int(calc.ceil((hi - lo) / binwidth)))
   } else {
-    assert(
+    check(
       bins != none and bins > 0,
-      message: "bins must be a positive integer; got " + repr(bins),
+      "bin-config",
+      "bins must be a positive integer; got " + repr(bins),
     )
     bins
   }

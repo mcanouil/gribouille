@@ -3,6 +3,7 @@
 // preference). Continuous default is viridis.
 
 #import "viridis.typ": viridis
+#import "errors.typ": fail
 
 /// Okabe-Ito colour-vision-deficiency-safe qualitative palette.
 ///
@@ -321,8 +322,10 @@
 // Index a palette with modulo wrap so out-of-range indices cycle.
 #let palette-at(palette, idx) = {
   if palette.len() == 0 {
-    panic(
-      "palette-at: palette is empty; scale-*-manual() needs at least one value",
+    fail(
+      "palette-at",
+      "palette is empty",
+      hint: "`scale-*-manual()` needs at least one value.",
     )
   }
   palette.at(calc.rem(idx, palette.len()))
@@ -405,8 +408,9 @@
   let pal = brewer-palettes.at(name, default: none)
   if pal == none {
     let known = brewer-palettes.keys().join(", ")
-    panic(
-      "Unknown ColorBrewer palette '" + name + "'. Known palettes: " + known,
+    fail(
+      "brewer-palette",
+      "unknown ColorBrewer palette '" + name + "'; known palettes: " + known,
     )
   }
   pal
