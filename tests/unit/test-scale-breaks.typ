@@ -7,7 +7,7 @@
 )
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/aes.typ": aes
-#import "../../src/render.typ": _axis-breaks
+#import "../../src/render/axis-format.typ": _axis-breaks
 
 #let df = (
   (x: "1", y: "10"),

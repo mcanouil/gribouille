@@ -3,7 +3,8 @@
 // overflowing the x (or y under coord-flip) axis.
 
 #import "../../src/scale/train.typ": train
-#import "../../src/render.typ": _post-train, _prepare-layer
+#import "../../src/render/domain.typ": _post-train
+#import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/geom/col.typ": geom-col
 #import "../../src/aes.typ": aes
 

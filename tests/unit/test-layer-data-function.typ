@@ -3,7 +3,8 @@
 // closure receives the normalised plot data and may return row- or
 // column-store; the result is normalised to canonical row-store.
 
-#import "../../src/render.typ": _prepare-layer, _resolve-data
+#import "../../src/render/layer-prep.typ": _prepare-layer
+#import "../../src/render/common.typ": _resolve-data
 #import "../../src/aes.typ": aes
 #import "../../src/geom/point.typ": geom-point
 

@@ -6,7 +6,7 @@
 
 #import "../../src/utils/group.typ": group-cols, partition-by-group
 #import "../../src/utils/late-binding.typ": after-scale, stage
-#import "../../src/render.typ": _prepare-layer
+#import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/aes.typ": aes
 #import "../../src/geom/smooth.typ": geom-smooth
 #import "../../src/geom/line.typ": geom-line

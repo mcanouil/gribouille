@@ -4,7 +4,7 @@
 // ribbon's `draw()` makes) must emit one group per level rather than pooling
 // every row into a single ribbon.
 
-#import "../../src/render.typ": _prepare-layer
+#import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/scale/train.typ": train
 #import "../../src/utils/group.typ": partition-by-group
 #import "../../src/aes.typ": aes

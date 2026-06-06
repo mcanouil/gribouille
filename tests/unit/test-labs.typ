@@ -1,7 +1,8 @@
 // labs() builds a labs record and injects axis titles into trained scale specs.
 
 #import "../../src/labs.typ": labs
-#import "../../src/render.typ": _apply-labs, _axis-title
+#import "../../src/render/domain.typ": _apply-labs
+#import "../../src/render/axis-format.typ": _axis-title
 
 #let l = labs(
   title: "T",

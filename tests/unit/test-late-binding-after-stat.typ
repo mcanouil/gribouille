@@ -8,7 +8,7 @@
 #import "../../src/utils/aes-resolve.typ": aes-col, merge-mapping
 #import "../../src/data.typ": as-factor
 #import "../../src/aes.typ": aes
-#import "../../src/render.typ": _strip-mapping-refs
+#import "../../src/render/common.typ": _strip-mapping-refs
 #import "../../src/scale/train.typ": mapping-display-name, train
 
 // --- constructor + predicates ------------------------------------------

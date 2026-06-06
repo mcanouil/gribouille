@@ -3,7 +3,7 @@
 // discrete and `partition-by-group` emits one group per level rather than
 // pooling everything into `_all`.
 
-#import "../../src/render.typ": _prepare-layer
+#import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/scale/train.typ": train
 #import "../../src/utils/group.typ": partition-by-group
 #import "../../src/data.typ": as-factor
