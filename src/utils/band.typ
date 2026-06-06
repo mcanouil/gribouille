@@ -1,7 +1,10 @@
-///! Symmetric per-axis band shared by boxplot, errorbar(h), crossbar.
+///! Band geometry: the symmetric per-axis band shared by boxplot,
+///! errorbar(h), and crossbar, plus the filled ribbon polygon shared by
+///! ribbon, area, and smooth.
 
 #import "../scale/train.typ": discrete-slot-width, map-axis, map-position
 #import "types.typ": parse-number
+#import "radial.typ": project-point
 
 /// Compute the panel coordinate range of a band centred on `raw`.
 ///
@@ -36,5 +39,27 @@
     let half = discrete-slot-width(trained, range) * half-width
     (c - half, c + half)
   }
+}
+
+/// Build a closed filled-band polygon from points already sorted by x: the
+/// upper edge forward followed by the lower edge reversed. `hi`/`lo` read the
+/// upper/lower value off each point. Unmappable points project to `none` and
+/// pass through unchanged, so callers guard with `pts.any(p => p == none)`.
+///
+/// \@internal
+///
+/// \@param ctx Per-draw context forwarded to `project-point`.
+///
+/// \@param sorted Points sorted by x, each carrying an `x` field.
+///
+/// \@param hi Accessor `p => value` for the upper edge.
+///
+/// \@param lo Accessor `p => value` for the lower edge.
+///
+/// \@returns Array of projected `(x, y)` points forming the closed polygon.
+#let band-polygon(ctx, sorted, hi, lo) = {
+  let upper = sorted.map(p => project-point(ctx, p.x, hi(p)))
+  let lower = sorted.rev().map(p => project-point(ctx, p.x, lo(p)))
+  upper + lower
 }
 
