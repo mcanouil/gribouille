@@ -64,10 +64,6 @@ function M.dir_exists(path)
   return out:match("yes") ~= nil
 end
 
-function M.remove_file(path)
-  os.execute(string.format("rm -f %q", path))
-end
-
 function M.remove_dir(path)
   os.execute(string.format("rm -rf %q", path))
 end
@@ -103,21 +99,6 @@ function M.list_dir_files(dir)
   for path in out:gmatch("[^\n]+") do
     local name = path:match("([^/]+)$")
     if name and not name:match("^%.") then names[#names + 1] = name end
-  end
-  table.sort(names)
-  return names
-end
-
-function M.git_tracked_in(root, subdir)
-  local out = popen_lines(string.format(
-    "git -C %q ls-files -z --cached --full-name -- %q 2>/dev/null", root, subdir))
-  local names = {}
-  local prefix = subdir .. "/"
-  for path in out:gmatch("[^%z]+") do
-    if path:sub(1, #prefix) == prefix then
-      local rest = path:sub(#prefix + 1)
-      if not rest:find("/", 1, true) then names[#names + 1] = rest end
-    end
   end
   table.sort(names)
   return names
