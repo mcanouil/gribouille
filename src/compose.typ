@@ -6,6 +6,7 @@
 #import "theme/defaults.typ": merge-theme
 #import "theme/theme.typ": _text-style
 #import "theme/elements.typ": margin
+#import "utils/errors.typ": check, fail, fail-enum, fail-type
 
 // The public `compose` parameter `layout` shadows Typst's builtin `layout`
 // function inside the body; capture the builtin here so the container size is
@@ -120,11 +121,7 @@
   } else if code == "i" {
     lower(_roman-symbol(index + 1))
   } else {
-    panic(
-      "compose: tag-levels code must be \"A\", \"a\", \"1\", \"I\", or "
-        + "\"i\"; got "
-        + repr(code),
-    )
+    fail-enum("compose", "tag-levels code", code, ("A", "a", "1", "I", "i"))
   }
 }
 
@@ -200,10 +197,11 @@
   // cell rather than the full outer canvas.
   let panels = spec.panels.map(p => {
     let materialised = p(as-spec: true)
-    assert(
+    check(
       _is-plot-spec(materialised) or _is-compose-spec(materialised),
-      message: "compose: a deferred panel did not produce a plot or compose "
-        + "spec; wrap panels with `defer(plot, ...)` or `defer(compose, ...)`",
+      "compose",
+      "a deferred panel did not produce a plot or compose spec",
+      hint: "Wrap panels with `defer(plot, ...)` or `defer(compose, ...)`.",
     )
     materialised
   })
@@ -271,13 +269,14 @@
     if legend-side == none {
       legend-side = s
     } else if legend-side != s {
-      panic(
-        "compose: collected guides resolve to different sides ("
+      fail(
+        "compose",
+        "collected guides resolve to different sides ("
           + repr(legend-side)
           + " vs "
           + repr(s)
-          + "); set a shared side with "
-          + "`guides(default: guide-legend(position: ...))`",
+          + ")",
+        hint: "Set a shared side with `guides(default: guide-legend(position: ...))`.",
       )
     }
   }
@@ -285,10 +284,11 @@
     legend-side != none
       and not ("right", "left", "top", "bottom").contains(legend-side)
   ) {
-    panic(
-      "compose: a collected legend must sit on \"right\", \"left\", \"top\", "
-        + "or \"bottom\"; got "
-        + repr(legend-side),
+    fail-enum(
+      "compose",
+      "a collected legend side",
+      legend-side,
+      ("right", "left", "top", "bottom"),
     )
   }
 
@@ -460,9 +460,10 @@
       row-ratios = heights
     } else if direction == ttb or direction == btt {
       if widths != none {
-        panic(
-          "compose: `widths` has no effect on a vertical stack; size it with "
-            + "`heights`",
+        fail(
+          "compose",
+          "`widths` has no effect on a vertical stack",
+          hint: "Size it with `heights`.",
         )
       }
       cols = 1
@@ -470,9 +471,10 @@
       row-ratios = heights
     } else {
       if heights != none {
-        panic(
-          "compose: `heights` has no effect on a horizontal stack; size it "
-            + "with `widths`",
+        fail(
+          "compose",
+          "`heights` has no effect on a horizontal stack",
+          hint: "Size it with `widths`.",
         )
       }
       cols = n
@@ -480,16 +482,18 @@
       col-ratios = widths
     }
     if col-ratios != none and col-ratios.len() != cols {
-      panic(
-        "compose: `widths` needs one entry per column ("
+      fail(
+        "compose",
+        "`widths` needs one entry per column ("
           + str(cols)
           + "); got "
           + str(col-ratios.len()),
       )
     }
     if row-ratios != none and row-ratios.len() != rows {
-      panic(
-        "compose: `heights` needs one entry per row ("
+      fail(
+        "compose",
+        "`heights` needs one entry per row ("
           + str(rows)
           + "); got "
           + str(row-ratios.len()),
@@ -897,27 +901,29 @@
 ) = {
   let panels = panels-positional.pos()
   if panels.len() == 0 {
-    panic("compose: at least one deferred panel is required")
+    fail("compose", "at least one deferred panel is required")
   }
   // Fail fast on anything that is not a thunk; that the thunk actually yields a
   // plot or compose spec is checked deeper, after materialisation, in
   // `_render-compose`.
   for p in panels {
     if type(p) != function {
-      panic(
-        "compose: every positional argument must be a deferred panel created "
-          + "with `defer(plot, ...)` or `defer(compose, ...)`; got "
-          + repr(p),
+      fail-type(
+        "compose",
+        "every positional argument",
+        p,
+        "a deferred panel created with `defer(plot, ...)` or `defer(compose, ...)`",
       )
     }
   }
   if collect != auto and collect != none and type(collect) != array {
-    panic(
-      "compose: `collect` must be `auto`, `none`, or an array of aesthetic names",
+    fail(
+      "compose",
+      "`collect` must be `auto`, `none`, or an array of aesthetic names",
     )
   }
   if layout != "grid" and layout != "stack" {
-    panic("compose: layout must be \"grid\" or \"stack\"; got " + repr(layout))
+    fail-enum("compose", "layout", layout, ("grid", "stack"))
   }
   if tag-levels != none {
     let codes = if type(tag-levels) == array { tag-levels } else {
@@ -925,20 +931,12 @@
     }
     for c in codes {
       if not ("A", "a", "1", "I", "i").contains(c) {
-        panic(
-          "compose: tag-levels codes must be \"A\", \"a\", \"1\", \"I\", or "
-            + "\"i\"; got "
-            + repr(c),
-        )
+        fail-enum("compose", "tag-levels code", c, ("A", "a", "1", "I", "i"))
       }
     }
   }
   if not _TAG-CORNERS.contains(tag-corner) {
-    panic(
-      "compose: tag-corner must be \"top-left\", \"top-right\", "
-        + "\"bottom-left\", or \"bottom-right\"; got "
-        + repr(tag-corner),
-    )
+    fail-enum("compose", "tag-corner", tag-corner, _TAG-CORNERS)
   }
 
   let spec = (

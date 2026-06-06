@@ -14,6 +14,7 @@
 #import "utils/colour.typ": resolve-continuous-colour
 #import "utils/palette.typ": default-discrete, spec-attr, spec-palette
 #import "utils/level-resolve.typ": resolve-level
+#import "utils/errors.typ": fail, fail-type
 #import "theme/defaults.typ": resolve-colour
 #import "theme/theme.typ": (
   _line-stroke, _rect-outset-cm, _rect-style, _text-args, _text-style,
@@ -541,9 +542,7 @@
 #let _custom-dim-cm(value, fallback) = {
   if value == auto { return fallback }
   if type(value) == length { return length-to-cm(value, 0) }
-  panic(
-    "guide-custom width/height must be a length or `auto`; got " + repr(value),
-  )
+  fail-type("guide-custom", "width/height", value, "a length or `auto`")
 }
 
 // Per-line vertical extent of swatch / ladder rows: cap-height plus a
@@ -664,7 +663,7 @@
     return calc.max(_title-width(g, size-pt), _COLOURBAR-V-W + 0.3 + label-w)
   }
   if g.kind == "custom" { return g.cm-width }
-  panic("legend._guide-width: unknown guide kind \"" + g.kind + "\"")
+  fail("legend._guide-width", "unknown guide kind " + repr(g.kind))
 }
 
 // Approximate title-h used only by `_guide-height` for margin sizing. The
@@ -769,7 +768,7 @@
   }
   if g.kind == "colourbar" { return _colourbar-height(g, title-h, size-pt) }
   if g.kind == "custom" { return _custom-height(g, title-h) }
-  panic("legend._guide-height: unknown guide kind \"" + g.kind + "\"")
+  fail("legend._guide-height", "unknown guide kind " + repr(g.kind))
 }
 
 // Recompute `width` and `height` after `placement.direction` has been mutated.
@@ -1388,7 +1387,7 @@
   } else if g.kind == "custom" {
     _draw-custom(g, ox, cursor, theme, title-h)
   } else {
-    panic("legend.draw: unknown guide kind \"" + g.kind + "\"")
+    fail("legend.draw", "unknown guide kind " + repr(g.kind))
   }
 }
 
@@ -1402,7 +1401,7 @@
   }
   if g.kind == "colourbar" { return _colourbar-height(g, title-h, size-pt) }
   if g.kind == "custom" { return _custom-height(g, title-h) }
-  panic("legend: unknown guide kind \"" + g.kind + "\"")
+  fail("legend", "unknown guide kind " + repr(g.kind))
 }
 
 // Paint the legend-background rect when the theme sets a fill or a stroke;
@@ -1533,7 +1532,7 @@
   if type(value) == ratio { panel-dim * (value / 100%) } else if (
     type(value) == length
   ) { value / 1cm } else {
-    panic("legend: offset must be a length or ratio; got " + repr(value))
+    fail-type("legend", "offset", value, "a length or ratio")
   }
 }
 
