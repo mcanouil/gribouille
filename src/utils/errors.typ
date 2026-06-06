@@ -15,7 +15,7 @@
 // Never inline a panic string elsewhere in src/; route every validation here.
 
 // Render an array of values as a quoted, comma-joined list: "a", "b", "c".
-#let _quote-each(values) = values.map(v => "\"" + str(v) + "\"").join(", ")
+#let quote-each(values) = values.map(v => "\"" + str(v) + "\"").join(", ")
 
 // Append a hint sentence when one is supplied.
 #let _with-hint(text, hint) = if hint == none { text } else {
@@ -32,7 +32,7 @@
 #let enum-text(scope, name, value, valid, hint: none) = {
   error-text(
     scope,
-    name + " must be one of " + _quote-each(valid) + "; got " + repr(value),
+    name + " must be one of " + quote-each(valid) + "; got " + repr(value),
     hint: hint,
   )
 }

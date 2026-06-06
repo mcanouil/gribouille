@@ -5,13 +5,13 @@
 ///! swatch grid with `nrow` / `ncolumn` / `byrow`, and placement with
 ///! `position` / `direction` / `order`.
 
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail, quote-each
 
 #let _VALID-SIDES = ("none", "top", "right", "bottom", "left")
 
 #let _POSITION-HELP = (
   "position must be one of "
-    + _VALID-SIDES.map(s => "\"" + s + "\"").join(", ")
+    + quote-each(_VALID-SIDES)
     + ", a Typst alignment, or a (dx:, dy:) / (x:, y:) dict"
 )
 
