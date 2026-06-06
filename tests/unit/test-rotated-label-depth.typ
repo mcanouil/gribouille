@@ -2,7 +2,7 @@
 // longest tick label with the rotation angle. Inputs are cm floats; the
 // formulas are pure trigonometry so output is deterministic.
 
-#import "../../src/render.typ": _x-label-depth, _y-label-width
+#import "../../src/render/extents.typ": _x-label-depth, _y-label-width
 
 #let approx-eq(a, b, tol: 1e-6) = {
   let diff = a - b

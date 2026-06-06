@@ -5,7 +5,8 @@
 
 #import "../../src/scale/train.typ": discrete-slot-width, train
 #import "../../src/scale/discrete.typ": scale-x-discrete, scale-y-discrete
-#import "../../src/render.typ": _post-train, _prepare-layer
+#import "../../src/render/domain.typ": _post-train
+#import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/geom/tile.typ": geom-tile
 #import "../../src/aes.typ": aes
 
@@ -35,7 +36,7 @@
 // `discrete-slot-width` honours the `view-index` produced by `_apply-expand`:
 // the panel range is divided by `(n - 1) + 2 * DISCRETE-AUTO-DATA-PAD` rather
 // than `n - 1`, since the auto pad widens the view-index window symmetrically.
-#import "../../src/render.typ": _apply-expand
+#import "../../src/render/domain.typ": _apply-expand
 #import "../../src/scale/expansion.typ": DISCRETE-AUTO-DATA-PAD
 #let dd-expanded = _apply-expand(dd-trained, none)
 #let slot = discrete-slot-width(dd-expanded.x, (0.0, 10.0))

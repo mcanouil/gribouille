@@ -1,7 +1,7 @@
 // coord-flip: spec dictionary shape and renderer detection.
 
 #import "../../src/coord/flip.typ": coord-flip
-#import "../../src/render.typ": _apply-flip, _is-flipped
+#import "../../src/render/domain.typ": _apply-flip, _is-flipped
 
 #let c1 = coord-flip()
 #assert.eq(c1.kind, "coord")

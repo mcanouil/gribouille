@@ -3,7 +3,7 @@
 // yield equal x-domain within each column and equal y-domain within each row,
 // differing across columns and rows.
 
-#import "../../src/render.typ": _train-grid-panels
+#import "../../src/render/canvas.typ": _train-grid-panels
 #import "../../src/facet/grid.typ": facet-grid
 
 // --- constructor accepts the free policies (was: panic on non-fixed) -------

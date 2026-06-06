@@ -3,7 +3,7 @@
 // stat space. Mirrors plotnine semantics.
 
 #import "../../src/aes.typ": aes
-#import "../../src/render.typ": _preprocess-data
+#import "../../src/render/prestat.typ": _preprocess-data
 #import "../../src/scale/continuous.typ": scale-x-log10, scale-y-sqrt
 #import "../../src/scale/train.typ": map-axis, map-axis-data, train
 

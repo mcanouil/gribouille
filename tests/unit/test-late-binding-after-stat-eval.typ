@@ -6,7 +6,7 @@
 
 #import "../../src/utils/late-binding.typ": after-stat, eval-after-stat
 #import "../../src/aes.typ": aes
-#import "../../src/render.typ": _prepare-layer
+#import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/scale/train.typ": train
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../src/theme/grey.typ": theme-grey

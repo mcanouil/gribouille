@@ -64,7 +64,8 @@
 // tags the y trained entry with `anchor-zero: "lo"`, and `_apply-expand`
 // collapses the lower-side multiplicative expansion. The y=0 baseline maps
 // to the panel bottom, not 4.5% above it.
-#import "../../src/render.typ": _apply-expand, _post-train, _prepare-layer
+#import "../../src/render/domain.typ": _apply-expand, _post-train
+#import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/geom/col.typ": geom-col
 #import "../../src/aes.typ": aes
 #import "../../src/scale/train.typ": _map-transform

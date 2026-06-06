@@ -3,7 +3,8 @@
 // stays anchored on the user's intended levels rather than collapsing onto
 // the jittered floats.
 
-#import "../../src/render.typ": _prepare-layer, _rewrite-factor-cols
+#import "../../src/render/layer-prep.typ": _prepare-layer
+#import "../../src/render/prestat.typ": _rewrite-factor-cols
 #import "../../src/scale/train.typ": map-discrete, train
 #import "../../src/scale/discrete.typ": scale-x-discrete
 #import "../../src/data.typ": as-factor

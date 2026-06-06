@@ -9,7 +9,7 @@
   resolve-from-theme,
 )
 #import "../../src/aes.typ": aes
-#import "../../src/render.typ": _apply-from-theme, _prepare-layer
+#import "../../src/render/layer-prep.typ": _apply-from-theme, _prepare-layer
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../src/theme/grey.typ": theme-grey
 #import "../../src/geom/point.typ": geom-point

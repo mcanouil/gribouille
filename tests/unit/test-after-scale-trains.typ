@@ -4,7 +4,7 @@
 // Regression for #50: previously `train` skipped every late-binding marker,
 // leaving the channel's domain empty and the closure receiving ink.
 
-#import "../../src/render.typ": _prepare-layer
+#import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/scale/train.typ": train
 #import "../../src/aes.typ": aes
 #import "../../src/utils/late-binding.typ": after-scale, stage
