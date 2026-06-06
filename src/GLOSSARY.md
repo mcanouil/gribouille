@@ -27,6 +27,8 @@ Run the survey command at the bottom before extending the table.
 | `compose` | multi-plot composition                 | arranges deferred panels and hoists shared legends; see `src/compose.typ`.             |
 | `hoist`   | per-aesthetic legend lift              | promote a per-panel guide into the shared legend when every panel agrees on the scale. |
 | `probe`   | first-pass deferred render             | initial `render-plot-deferred` call that reads guides before suppression.              |
+| `fail`    | panic helper                           | `src/utils/errors.typ` (`fail`, `fail-enum`, `fail-type`, `fail-range`); never inline a panic string. |
+| `check`   | assert helper                          | `src/utils/errors.typ`; wraps `assert` with the shared message grammar.                |
 
 ## Scale / training
 
