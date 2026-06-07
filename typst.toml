@@ -20,5 +20,6 @@ exclude = [
   "GLOSSARY.md",
   "ARCHITECTURE.md",
   "CONTRIBUTING.md",
+  "CHANGELOG.md",
   "CITATION.cff",
 ]

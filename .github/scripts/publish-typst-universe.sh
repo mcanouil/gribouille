@@ -86,27 +86,10 @@ STAGE="${TMP}/stage/${PKG}/${VERSION}"
 CLONE="${TMP}/typst-packages"
 
 # --- Stage payload from the tag ref ------------------------------------------
+# Reuse the canonical assembler from the tag's own tree so the Universe payload
+# stays byte-identical with the release archives and the package-check job.
 git worktree add --detach "${WORKTREE}" "${VERSION}" >/dev/null
-mkdir -p "${STAGE}"
-(
-  cd "${WORKTREE}"
-  cp -r . "${STAGE}/"
-  rm -rf "${STAGE}/.git"
-  tools/stage-readme.sh README.md "${STAGE}"
-)
-python3 - "${WORKTREE}/typst.toml" "${STAGE}" <<'PYEOF'
-import re, sys, pathlib, shutil
-toml = pathlib.Path(sys.argv[1]).read_text()
-stage = pathlib.Path(sys.argv[2])
-m = re.search(r'exclude\s*=\s*\[([^\]]*)\]', toml, re.DOTALL)
-if m:
-    for item in re.findall(r'"([^"]+)"', m.group(1)):
-        target = stage / item
-        if target.is_dir():
-            shutil.rmtree(target)
-        elif target.exists():
-            target.unlink()
-PYEOF
+"${WORKTREE}/tools/package.sh" stage "${STAGE}"
 printf 'Staged payload at %s\n' "${STAGE}"
 
 # --- Clone fork of typst/packages --------------------------------------------
