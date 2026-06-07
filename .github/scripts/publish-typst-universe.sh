@@ -90,11 +90,23 @@ git worktree add --detach "${WORKTREE}" "${VERSION}" >/dev/null
 mkdir -p "${STAGE}"
 (
   cd "${WORKTREE}"
-  cp typst.toml lib.typ LICENSE "${STAGE}/"
+  cp -r . "${STAGE}/"
+  rm -rf "${STAGE}/.git"
   tools/stage-readme.sh README.md "${STAGE}"
-  cp -r src "${STAGE}/"
 )
-rm -f "${STAGE}/src/GLOSSARY.md"
+python3 - "${WORKTREE}/typst.toml" "${STAGE}" <<'PYEOF'
+import re, sys, pathlib, shutil
+toml = pathlib.Path(sys.argv[1]).read_text()
+stage = pathlib.Path(sys.argv[2])
+m = re.search(r'exclude\s*=\s*\[([^\]]*)\]', toml, re.DOTALL)
+if m:
+    for item in re.findall(r'"([^"]+)"', m.group(1)):
+        target = stage / item
+        if target.is_dir():
+            shutil.rmtree(target)
+        elif target.exists():
+            target.unlink()
+PYEOF
 printf 'Staged payload at %s\n' "${STAGE}"
 
 # --- Clone fork of typst/packages --------------------------------------------

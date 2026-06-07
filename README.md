@@ -85,7 +85,7 @@ See [`typst.toml`](typst.toml) and [`src/deps.typ`](src/deps.typ) for the author
 
 Contributions are welcome.
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for bug reporting, development setup, and commit conventions.
-Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `cy`, `lo`, `hi`, …) are catalogued in [`src/GLOSSARY.md`](src/GLOSSARY.md).
+Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `cy`, `lo`, `hi`, …) are catalogued in [`GLOSSARY.md`](GLOSSARY.md).
 
 ## Citation
 

@@ -1,7 +1,7 @@
 # Gribouille architecture
 
 A maintainer-facing map of how the library is wired.
-For naming conventions see [`src/GLOSSARY.md`](src/GLOSSARY.md); for workflow see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+For naming conventions see [`GLOSSARY.md`](GLOSSARY.md); for workflow see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Pipeline
 
@@ -75,4 +75,4 @@ Typst cannot catch a panic, so the message *builders* (`error-text`, `enum-text`
 - [`tests/visual/`](tests/visual) holds PNG snapshot goldens checked via `tools/snapshot/run.lua`.
   Goldens are CPU-architecture sensitive; refresh them through the Linux snapshot workflow, not locally.
 - Run [`tools/check.sh`](tools/check.sh) to mirror CI (compiles every unit test and example; `--snapshot` adds the visual check).
-- Consult [`src/GLOSSARY.md`](src/GLOSSARY.md) before introducing any new short identifier.
+- Consult [`GLOSSARY.md`](GLOSSARY.md) before introducing any new short identifier.
