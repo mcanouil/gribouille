@@ -43,7 +43,7 @@ for arg in "$@"; do
 done
 
 # --- Preflight ----------------------------------------------------------------
-for tool in gh git; do
+for tool in gh git tar; do
   command -v "${tool}" >/dev/null 2>&1 || {
     echo "required tool not found: ${tool}" >&2
     exit 1
@@ -80,16 +80,18 @@ PKG_PATH="packages/preview/${PKG}"
 
 # --- Temp workspace + cleanup -------------------------------------------------
 TMP="$(mktemp -d "${REPO_ROOT}/.typst-universe.XXXXXX")"
-trap 'git worktree remove --force "${TMP}/worktree" 2>/dev/null || true; rm -rf "${TMP}"' EXIT
-WORKTREE="${TMP}/worktree"
+trap 'rm -rf "${TMP}"' EXIT
 STAGE="${TMP}/stage/${PKG}/${VERSION}"
 CLONE="${TMP}/typst-packages"
 
-# --- Stage payload from the tag ref ------------------------------------------
-# Reuse the canonical assembler from the tag's own tree so the Universe payload
-# stays byte-identical with the release archives and the package-check job.
-git worktree add --detach "${WORKTREE}" "${VERSION}" >/dev/null
-"${WORKTREE}/tools/package.sh" stage "${STAGE}"
+# --- Stage payload from the published release asset --------------------------
+# Pull the exact archive attached to the GitHub release so the Universe payload
+# is byte-identical with what users download; no re-staging from source.
+ASSET="${PKG}-${VERSION}.tar.gz"
+gh release download "${VERSION}" --pattern "${ASSET}" --dir "${TMP}"
+mkdir -p "$(dirname "${STAGE}")"
+tar -xzf "${TMP}/${ASSET}" -C "${TMP}"
+mv "${TMP}/${PKG}-${VERSION}" "${STAGE}"
 printf 'Staged payload at %s\n' "${STAGE}"
 
 # --- Clone fork of typst/packages --------------------------------------------
