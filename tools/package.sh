@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Canonical package payload assembler, reused by the GitHub Release archives,
-# the Typst Universe submission, the package-check job, the local dry-run, and
-# the development build deployed to the docs site. Producing the payload in one
-# place keeps all of them byte-identical.
+# Canonical package payload assembler, reused by the GitHub Release archives
+# (which the Typst Universe submission downloads and republishes), the
+# package-check job, the local dry-run, and the development build deployed to
+# the docs site. Producing the payload in one place keeps all of them
+# byte-identical.
 #
 # Usage:
 #   package.sh stage   <dest-dir> [version]
