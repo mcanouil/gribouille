@@ -7,8 +7,9 @@
 # Usage:
 #   .github/scripts/publish-typst-universe.sh [--dry-run] [VERSION]
 #
-#   VERSION   Release tag to submit (e.g. 0.1.0). Blank uses the newest tag.
-#   --dry-run Stage, clone, branch and copy locally, but skip push and PR.
+#   VERSION   Release tag to submit (e.g. 0.1.0). Blank uses the latest release.
+#   --dry-run Download the release asset, clone and branch locally, but skip
+#             push and PR. Still requires the release (and its asset) to exist.
 #
 # Env:
 #   TYPST_PACKAGES_FORK   Fork of typst/packages (owner/repo).
@@ -43,7 +44,7 @@ for arg in "$@"; do
 done
 
 # --- Preflight ----------------------------------------------------------------
-for tool in gh git; do
+for tool in gh git tar; do
   command -v "${tool}" >/dev/null 2>&1 || {
     echo "required tool not found: ${tool}" >&2
     exit 1
@@ -59,20 +60,19 @@ FORK="${TYPST_PACKAGES_FORK:-mcanouil/typst-universe-packages}"
 FORK_OWNER="${FORK%%/*}"
 
 # --- Resolve version ----------------------------------------------------------
+# The payload is the published release asset, so resolve and verify against
+# releases rather than local tags.
 if [[ -z "${VERSION}" ]]; then
-  VERSION="$(git tag -l --sort=-v:refname '[0-9]*' | head -n1)"
+  VERSION="$(gh release view --json tagName --jq '.tagName' 2>/dev/null || true)"
   [[ -n "${VERSION}" ]] || {
-    echo "no release tag found; pass a VERSION argument." >&2
+    echo "no published release found; pass a VERSION argument." >&2
     exit 1
   }
 fi
 
-if ! git rev-parse -q --verify "refs/tags/${VERSION}" >/dev/null; then
-  git fetch --tags --force
-  git rev-parse -q --verify "refs/tags/${VERSION}" >/dev/null || {
-    echo "tag not found: ${VERSION}" >&2
-    exit 1
-  }
+if ! gh release view "${VERSION}" >/dev/null 2>&1; then
+  echo "release not found: ${VERSION}" >&2
+  exit 1
 fi
 
 BRANCH="${PKG}-${VERSION}"
@@ -80,21 +80,24 @@ PKG_PATH="packages/preview/${PKG}"
 
 # --- Temp workspace + cleanup -------------------------------------------------
 TMP="$(mktemp -d "${REPO_ROOT}/.typst-universe.XXXXXX")"
-trap 'git worktree remove --force "${TMP}/worktree" 2>/dev/null || true; rm -rf "${TMP}"' EXIT
-WORKTREE="${TMP}/worktree"
+trap 'rm -rf "${TMP}"' EXIT
 STAGE="${TMP}/stage/${PKG}/${VERSION}"
 CLONE="${TMP}/typst-packages"
 
-# --- Stage payload from the tag ref ------------------------------------------
-git worktree add --detach "${WORKTREE}" "${VERSION}" >/dev/null
-mkdir -p "${STAGE}"
-(
-  cd "${WORKTREE}"
-  cp typst.toml lib.typ LICENSE "${STAGE}/"
-  tools/stage-readme.sh README.md "${STAGE}"
-  cp -r src "${STAGE}/"
-)
-rm -f "${STAGE}/src/GLOSSARY.md"
+# --- Stage payload from the published release asset --------------------------
+# Pull the exact archive attached to the GitHub release so the Universe payload
+# is byte-identical with what users download; no re-staging from source.
+ASSET="${PKG}-${VERSION}.tar.gz"
+gh release download "${VERSION}" --pattern "${ASSET}" --dir "${TMP}"
+mkdir -p "$(dirname "${STAGE}")"
+tar -xzf "${TMP}/${ASSET}" -C "${TMP}"
+# tools/package.sh names the archive's single root dir gribouille-<version>.
+LEAF="${TMP}/${PKG}-${VERSION}"
+[[ -d "${LEAF}" ]] || {
+  echo "unexpected archive layout: ${ASSET} has no ${PKG}-${VERSION}/ root." >&2
+  exit 1
+}
+mv "${LEAF}" "${STAGE}"
 printf 'Staged payload at %s\n' "${STAGE}"
 
 # --- Clone fork of typst/packages --------------------------------------------

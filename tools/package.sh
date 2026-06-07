@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# Canonical package payload assembler, reused by the GitHub Release archives,
-# the Typst Universe submission, the package-check job, the local dry-run, and
-# the development build deployed to the docs site. Producing the payload in one
-# place keeps all of them byte-identical.
+# Canonical package payload assembler, reused by the GitHub Release archives
+# (which the Typst Universe submission downloads and republishes), the
+# package-check job, the local dry-run, and the development build deployed to
+# the docs site. Producing the payload in one place keeps all of them
+# byte-identical.
 #
 # Usage:
 #   package.sh stage   <dest-dir> [version]
 #   package.sh archive <out-dir> [basename] [version]
 #
 # stage   fills <dest-dir> with the published payload (typst.toml, lib.typ,
-#         LICENSE, stripped README, src/ minus GLOSSARY.md). When [version] is
+#         LICENSE, stripped README, src/). When [version] is
 #         given (development build), the staged typst.toml is rewritten to that
 #         version and stamped with the source commit.
 # archive stages into a temporary dir then writes <out-dir>/<basename>.tar.gz
@@ -32,7 +33,6 @@ stage() {
   cp typst.toml lib.typ LICENSE "${dest}/"
   tools/stage-readme.sh README.md "${dest}"
   cp -r src "${dest}/"
-  rm -f "${dest}/src/GLOSSARY.md"
 
   if [[ -n "${version}" ]]; then
     local commit date_utc

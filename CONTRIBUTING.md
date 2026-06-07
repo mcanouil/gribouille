@@ -47,7 +47,7 @@ The library entry point is [`lib.typ`](lib.typ).
 Source modules live under [`src/`](src/).
 Tests live under [`tests/unit/`](tests/unit) and [`tests/visual/`](tests/visual).
 Helper scripts live under [`tools/`](tools), in particular [`tools/check.sh`](tools/check.sh) for local checks.
-Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `cy`, `lo`, `hi`, …) are catalogued in [`src/GLOSSARY.md`](src/GLOSSARY.md).
+Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `cy`, `lo`, `hi`, …) are catalogued in [`GLOSSARY.md`](GLOSSARY.md).
 Please consult that glossary before introducing new short identifiers.
 [`ARCHITECTURE.md`](ARCHITECTURE.md) maps the rendering pipeline, module boundaries, and where to add a geom, stat, scale, or position.
 
