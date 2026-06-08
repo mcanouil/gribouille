@@ -558,6 +558,30 @@
 #let _swatch-line-h-cm(size-pt) = _font-cm(size-pt) * 1.4
 #let _ladder-line-h-cm(size-pt) = _font-cm(size-pt) * 1.55
 
+// Nominal half-extent (cm) for a ladder key glyph, used to place and size the
+// fallback glyph and as the per-row centring offset. The drawn `point` key may
+// override its radius from the resolved `size` aesthetic (see `_ladder-key-diam-cm`).
+#let _LADDER-GLYPH-CM = 0.16
+
+// Largest key-glyph diameter (cm) a size ladder will draw. The `size` channel
+// resolves each break to a marker radius that can far exceed the fixed swatch
+// glyph, so the row stride and reserved height must follow it. `size-trained`
+// is the group's `size` scale (or `none` for an alpha/linewidth/stroke ladder);
+// a non-point key keeps the fixed glyph.
+#let _ladder-key-diam-cm(size-trained, breaks, key-kind) = {
+  if key-kind != "point" or size-trained == none {
+    return _GLYPH-DIAMETER-CM
+  }
+  let max-r = 0.0
+  for b in breaks {
+    let r = resolve-level("size", size-trained, b)
+    if type(r) != length { continue }
+    let r-cm = length-to-cm(r, 0)
+    if r-cm > max-r { max-r = r-cm }
+  }
+  calc.max(_GLYPH-DIAMETER-CM, 2 * max-r)
+}
+
 // Number of rendered lines in a label. Strings stay on one line; content is
 // measured against a single-line sample and rounded, so a `\`-broken two-line
 // label reports two. At least one line so every item reserves a row.
@@ -709,6 +733,31 @@
 // edge.
 #let _glyph-bottom-slack(size-pt) = _font-cm(size-pt) * 0.2
 
+// Vertical size-ladder row metrics, shared by the height estimate and the draw
+// so the reserved space matches the drawn glyphs. When the resolved key glyph
+// stays within the fixed swatch diameter the values reproduce the original
+// layout exactly; a larger `size` channel grows the stride, the centring offset
+// (half the glyph), and the last-row reservation so big glyphs never overlap.
+#let _ladder-vmetrics(guide, size-pt) = {
+  let glyph-diam = guide.at("key-diam-cm", default: _GLYPH-DIAMETER-CM)
+  let base = _ladder-line-h-cm(size-pt)
+  if glyph-diam <= _GLYPH-DIAMETER-CM {
+    return (line-h: base, off: _LADDER-GLYPH-CM, last: _GLYPH-DIAMETER-CM)
+  }
+  (
+    line-h: calc.max(base, glyph-diam + _glyph-bottom-slack(size-pt)),
+    off: glyph-diam / 2,
+    last: glyph-diam,
+  )
+}
+
+// Horizontal size-ladder glyph band height (cm), shared by the height estimate
+// and the draw so the reserved column never drifts from the drawn glyph.
+#let _ladder-h-band(guide) = calc.max(
+  _LADDER-H-COL-H,
+  guide.at("key-diam-cm", default: _GLYPH-DIAMETER-CM),
+)
+
 // Vertical height (cm) of a row-stack guide: full line-h for every row
 // except the last (which reserves only the glyph diameter), plus a
 // font-derived bottom slack so the rect doesn't graze the glyph.
@@ -739,7 +788,7 @@
   if guide.placement.direction == "horizontal" {
     (
       prefix
-        + _LADDER-H-COL-H
+        + _ladder-h-band(guide)
         + _LADDER-H-LABEL-H
         + _breaks-overflow(
           guide,
@@ -748,18 +797,20 @@
         )
     )
   } else {
-    let line-h = _ladder-line-h-cm(size-pt)
+    let m = _ladder-vmetrics(guide, size-pt)
     let overflows = guide
       .breaks
       .enumerate()
       .map(((i, b)) => _label-overflow(
         _break-label(guide, b, i),
-        line-h,
+        m.line-h,
         size-pt,
       ))
     (
       prefix
-        + _row-stack-height(guide.breaks.len(), line-h, size-pt)
+        + (guide.breaks.len() - 1) * m.line-h
+        + m.last
+        + _glyph-bottom-slack(size-pt)
         + _stack-offsets(overflows).total
     )
   }
@@ -888,6 +939,13 @@
         ))
       } else { pretty(lo, hi, n: 5) }
       let breaks = _guide-breaks(info, lo, hi, computed)
+      // Resolve the key glyph size against the group's own `size` scale (not
+      // `first`, which is whichever aesthetic sorts first), or `none` when the
+      // ladder carries no `size` channel.
+      let size-member = members.find(m => m.aes == "size")
+      let size-trained = if size-member == none { none } else {
+        size-member.t
+      }
       (
         kind: "size-ladder",
         aesthetics: aesthetics,
@@ -896,6 +954,7 @@
         breaks: breaks,
         labels: info.labels,
         key: key-kind,
+        key-diam-cm: _ladder-key-diam-cm(size-trained, breaks, key-kind),
         typst-mark: typst-mark,
         binned: info.binned,
         n-breaks: info.n-breaks,
@@ -1132,8 +1191,8 @@
   let legend-text-args = _text-args(_legend-text)
   let text-size = _legend-text.size
   let size-pt = text-size / 1pt
-  let line-h = _ladder-line-h-cm(size-pt)
-  let glyph-size = 0.16
+  let glyph-size = _LADDER-GLYPH-CM
+  let glyph-diam = guide.at("key-diam-cm", default: _GLYPH-DIAMETER-CM)
   let labels = guide.at("labels", default: auto)
   let typst-mark = guide.at("typst-mark", default: false)
   let key-kind = guide.at("key", default: "point")
@@ -1147,12 +1206,23 @@
   let label-w = _max-break-label-width(guide, guide.breaks, size-pt)
 
   if guide.placement.direction == "horizontal" {
-    let col-w = calc.max(_ladder-lead-cm(size-pt), label-w)
-    let cy = top - glyph-size
+    // A wider `size` channel grows the glyph band; centre the glyph in it and
+    // push the column and label clear so neighbouring keys never overlap. The
+    // band is shared with `_size-ladder-height` so reserve and draw stay locked.
+    let grows = glyph-diam > _GLYPH-DIAMETER-CM
+    let band = _ladder-h-band(guide)
+    let hoff = if grows { band / 2 } else { glyph-size }
+    let col-w = if grows {
+      calc.max(_ladder-lead-cm(size-pt), label-w, band + 0.1)
+    } else { calc.max(_ladder-lead-cm(size-pt), label-w) }
+    let gcy = if grows { top - band / 2 } else { top - glyph-size * 2 }
+    let label-y = if grows { top - band - 0.1 } else {
+      top - glyph-size * 3 - 0.1
+    }
     for (i, value) in guide.breaks.enumerate() {
-      let cx = ox + glyph-size + i * col-w
+      let cx = ox + hoff + i * col-w
       let bundle = _bundle-for(value, guide.aesthetics, ctx, ink)
-      draw-glyph(key-kind, cx, cy - glyph-size, glyph-size, bundle, ink: ink)
+      draw-glyph(key-kind, cx, gcy, hoff, bundle, ink: ink)
       let break-text = resolve-prose(
         resolve-label(
           labels,
@@ -1165,12 +1235,15 @@
       )
       let (lx, l-anchor) = _hjust-below(align, cx)
       cetz.draw.content(
-        (lx, cy - glyph-size * 2 - 0.1),
+        (lx, label-y),
         text(..legend-text-args)[#break-text],
         anchor: l-anchor,
       )
     }
   } else {
+    let m = _ladder-vmetrics(guide, size-pt)
+    let line-h = m.line-h
+    let off = m.off
     let indexed = guide.breaks.enumerate()
     let overflows = indexed.map(((i, value)) => _label-overflow(
       _break-label(guide, value, i),
@@ -1182,13 +1255,13 @@
       // Same row-stacking as the swatch: push down by overflow above, then
       // centre this break on its block by dropping it half its own overflow.
       let cy = top - i * line-h - rows.before.at(i)
-      let cm = cy - glyph-size - rows.extra.at(i) / 2
+      let cm = cy - off - rows.extra.at(i) / 2
       let bundle = _bundle-for(value, guide.aesthetics, ctx, ink)
       draw-glyph(
         key-kind,
-        ox + glyph-size,
+        ox + off,
         cm,
-        glyph-size,
+        off,
         bundle,
         ink: ink,
       )
@@ -1204,7 +1277,7 @@
       )
       let (lx, l-anchor) = _hjust-right-of(
         align,
-        ox + glyph-size * 2 + 0.15,
+        ox + off * 2 + 0.15,
         label-w,
       )
       cetz.draw.content(

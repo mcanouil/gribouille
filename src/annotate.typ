@@ -86,6 +86,12 @@
 /// \@param geom Geom name to dispatch to. One of `"text"`, `"point"`,
 ///   `"label"`, `"segment"`, `"rect"`, `"vline"`, `"hline"`, `"abline"`.
 ///
+/// \@param clip Whether the annotation is clipped to the plot area. `true`
+///   (default) clips like any other layer; `false` lets the annotation overflow
+///   the panel, e.g., a corner inset or a mark placed past the axis limits.
+///   Unclipped annotations are drawn above every clipped layer regardless of
+///   their position in `layers`, so they read as deliberate overlays.
+///
 /// \@param ..fields Named arguments split between aesthetics and layer
 ///   parameters. Aesthetic names are `x`, `y`, `xend`, `yend`, `xmin`,
 ///   `xmax`, `ymin`, `ymax`, `colour`, `fill`, `size`, `alpha`, `shape`,
@@ -151,15 +157,26 @@
 
   let constructor = _geom-table.at(geom)
 
+  // `clip` is a layer-level field, not a geom parameter; pull it out so it never
+  // reaches the constructor (which would reject the unexpected argument) and
+  // stamp it on the built layer instead.
+  let named = fields.named()
+  let clip = named.at("clip", default: true)
+  let _ = named.remove("clip", default: none)
+  let with-clip = layer => {
+    layer.clip = clip
+    layer
+  }
+
   if geom in _params-only {
-    return constructor(..fields.named(), inherit-aes: false)
+    return with-clip(constructor(..named, inherit-aes: false))
   }
 
   let aes-keys = _aes-keys-for(geom)
   let row = (:)
   let mapping-args = (:)
   let layer-args = (:)
-  for (k, v) in fields.named().pairs() {
+  for (k, v) in named.pairs() {
     if k in aes-keys {
       // Preserve a `typst()` tag on the column reference so the geom
       // evaluates the value as Typst markup; the row stores the unwrapped
@@ -179,10 +196,10 @@
   let mapping = if mapping-args.len() > 0 { aes(..mapping-args) } else { none }
   let data = if row.len() > 0 { (row,) } else { none }
 
-  constructor(
+  with-clip(constructor(
     ..layer-args,
     data: data,
     mapping: mapping,
     inherit-aes: false,
-  )
+  ))
 }

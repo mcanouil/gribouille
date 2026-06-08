@@ -98,4 +98,21 @@
 #assert.eq(la.data, none)
 #assert.eq(la.mapping, none)
 
+// `clip` defaults to true and is a layer-level field, never forwarded to the
+// geom constructor as a parameter.
+#assert.eq(lt.clip, true)
+#assert.eq(lp.clip, true)
+
+// `clip: false` is stamped on the layer (both data geoms and params-only
+// geoms) and stays out of the params dict.
+#let lc = annotate("point", x: 3, y: 4, clip: false)
+#assert.eq(lc.clip, false)
+#assert.eq(lc.params.at("clip", default: none), none)
+#assert.eq(lc.data, ((x: 3, y: 4),))
+
+#let lvc = annotate("vline", xintercept: 5, clip: false)
+#assert.eq(lvc.clip, false)
+#assert.eq(lvc.params.at("clip", default: none), none)
+#assert.eq(lvc.params.xintercept, 5)
+
 Annotate tests passed.
