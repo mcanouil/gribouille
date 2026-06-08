@@ -1416,6 +1416,35 @@
   fail("legend", "unknown guide kind " + repr(g.kind))
 }
 
+// Vertical gap between stacked guides on a side: the panel-to-legend gap plus
+// the legend-background outset on the panel-facing edge.
+#let _side-stack-gap(side, ctx, theme, legend-gap) = (
+  legend-gap
+    + _rect-outset-cm(
+      theme,
+      "legend-background",
+      ref-w: ctx.at("canvas-w", default: 0),
+      ref-h: ctx.at("canvas-h", default: 0),
+    ).at(opposite-side.at(side))
+)
+
+// Total stacked height (cm) of the guides on a left/right side: every guide's
+// rendered height plus an inter-guide gap. Shared by `_draw-side` (centring and
+// background) and the renderer's fit check so the two never disagree.
+#let side-stacked-height(side, side-guides, ctx, theme, legend-gap) = {
+  if side-guides.len() == 0 { return 0.0 }
+  let title-h = _legend-title-h(theme)
+  let size-pt = _text-style(theme, "legend-text").size / 1pt
+  let total = 0.0
+  for g in side-guides {
+    total += _guide-render-height(g, title-h, size-pt)
+  }
+  (
+    total
+      + _side-stack-gap(side, ctx, theme, legend-gap) * (side-guides.len() - 1)
+  )
+}
+
 // Paint the legend-background rect when the theme sets a fill or a stroke;
 // otherwise stay silent so plots without a themed legend backdrop look the
 // same as before. `inset` grows the rect outward from the guide-stack
@@ -1459,15 +1488,10 @@
   let title-h = _legend-title-h(theme)
   let _legend-text = _text-style(theme, "legend-text")
   let size-pt = _legend-text.size / 1pt
-  // `legend-background.outset` on the panel-facing side widens the gap
-  // between panel and legend so users can dial the spacing from the theme.
-  let _legend-out = _rect-outset-cm(
-    theme,
-    "legend-background",
-    ref-w: ctx.at("canvas-w", default: 0),
-    ref-h: ctx.at("canvas-h", default: 0),
-  )
-  let gap = legend-gap + _legend-out.at(opposite-side.at(side))
+  // Panel-to-legend gap plus the `legend-background.outset` on the panel-facing
+  // side, so users can dial the spacing from the theme. The same value separates
+  // the panel from the legend and stacks the guides within it.
+  let gap = _side-stack-gap(side, ctx, theme, legend-gap)
   let stack-gap = gap
   let px = panel-rect.x
   let py = panel-rect.y
@@ -1480,14 +1504,10 @@
     } else {
       px - margin.left + 0.05
     }
-    let total-h = 0.0
+    let total-h = side-stacked-height(side, side-guides, ctx, theme, legend-gap)
     let max-w = 0.0
     for g in side-guides {
-      total-h += _guide-render-height(g, title-h, size-pt)
       if g.width > max-w { max-w = g.width }
-    }
-    if side-guides.len() > 1 {
-      total-h += stack-gap * (side-guides.len() - 1)
     }
     // Centre the stack vertically over the panel + col-strip chrome.
     // `top-strip` (facet-grid only) extends the chrome upward; wrap
