@@ -527,13 +527,20 @@
   transform-fwd(trained.at("transform", default: "identity"), value)
 }
 
+// Expanded scale bounds in stat space: the `view-transform` set by
+// `_apply-expand` when present, else the raw domain warped through `_to-stat`.
+// Shared by coordinate mapping and the out-of-range pre-pass so both honour the
+// same expanded view.
+#let view-bounds-stat(trained) = {
+  let view-transform = trained.at("view-transform", default: none)
+  if view-transform != none { return view-transform }
+  let (d-lo, d-hi) = trained.domain
+  (_to-stat(trained, d-lo), _to-stat(trained, d-hi))
+}
+
 #let _map-transform(trained, value, range) = {
   let transform = trained.at("transform", default: "identity")
-  let view-transform = trained.at("view-transform", default: none)
-  let (t-lo, t-hi) = if view-transform != none { view-transform } else {
-    let (d-lo, d-hi) = trained.domain
-    (_to-stat(trained, d-lo), _to-stat(trained, d-hi))
-  }
+  let (t-lo, t-hi) = view-bounds-stat(trained)
   let (r-lo, r-hi) = range
   // `reverse` rides alongside the numeric transform rather than replacing it,
   // so a log10/sqrt axis can also be reversed (e.g. under coord-flip).
