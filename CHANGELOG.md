@@ -6,6 +6,7 @@
 - feat: `compose()` accepts `theme:`; an explicit theme styles the composition chrome (title, hoisted legend, panel tags) and propagates into panels with no theme of their own, otherwise a theme shared by every panel is used. (#82)
 - feat: `compose()` panels are now built with the new `defer()` helper (`defer(plot, ...)`, or `defer(compose, ...)` to nest), replacing `plot(..., defer: true)`; panels omit their own `width`/`height` and the composition sizes each cell. (#81)
 - feat: `geom-area()` defaults to `stat: "align"` and `position: "stack"`, matching ggplot2 v3.4 behaviour; groups with mismatched x values are automatically resampled onto a shared grid and stacked without requiring explicit `stat: stat-align()`. (#77)
+- fix: `annotate(clip: false)` placed outside the scale `limits` now draws instead of being dropped by the out-of-range pre-pass, so a corner inset or a mark parked past the axis range is kept. (#97)
 - fix: a left/right legend that would overrun the caption, or a hoisted `compose()` legend that leaves no room for the panels, now fails with a clear layout hint instead of silently overprinting. (#96)
 - fix: continuous `scale-size-*` legends reserve row height and stride for the resolved key glyph, so a wide size `range` no longer overlaps the keys and labels. (#95)
 - fix: the out-of-range filter respects scale `expand`, keeping points and annotations that sit inside the expansion headroom instead of dropping them; reversed `limits` (a flipped axis) no longer drop every row. (#92)
