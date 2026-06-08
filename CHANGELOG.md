@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: `annotate()` gains a `clip` argument (default `true`); set `clip: false` to let an annotation overflow the panel, e.g., a corner inset or a mark placed past the axis limits. (#93)
 - feat: `compose()` accepts `theme:`; an explicit theme styles the composition chrome (title, hoisted legend, panel tags) and propagates into panels with no theme of their own, otherwise a theme shared by every panel is used. (#82)
 - feat: `compose()` panels are now built with the new `defer()` helper (`defer(plot, ...)`, or `defer(compose, ...)` to nest), replacing `plot(..., defer: true)`; panels omit their own `width`/`height` and the composition sizes each cell. (#81)
 - feat: `geom-area()` defaults to `stat: "align"` and `position: "stack"`, matching ggplot2 v3.4 behaviour; groups with mismatched x values are automatically resampled onto a shared grid and stacked without requiring explicit `stat: stat-align()`. (#77)
