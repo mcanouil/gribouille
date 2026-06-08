@@ -8,14 +8,17 @@
 
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
-#import "train.typ": mapping-ref-col
+#import "train.typ": _to-stat, mapping-ref-col, view-bounds-stat
 #import "../utils/errors.typ": fail
 
 // Returns one of:
 //   ("in",     value)   — unchanged
 //   ("squish", clamped) — kept, value rewritten
 //   ("drop",   value)   — caller drops the row
-#let _check(trained, raw) = {
+//
+// `bounds` is the expanded `(t-lo, t-hi)` view in stat space, precomputed once
+// per aesthetic by `filter-oob`; `none` for discrete scales.
+#let _check(trained, raw, bounds: none) = {
   let spec = trained.at("spec", default: none)
   if spec == none { return ("in", raw) }
   if spec.at("limits", default: none) == none { return ("in", raw) }
@@ -23,10 +26,24 @@
   if trained.type == "continuous" {
     let v = parse-number(raw)
     if v == none { return ("in", raw) }
-    let (lo, hi) = trained.domain
-    if v >= lo and v <= hi { return ("in", raw) }
+    // Test against the expanded view bounds (in stat space) rather than the raw
+    // `limits`, so a value sitting in the expansion headroom -- which still maps
+    // inside the visible panel -- survives instead of being dropped.
+    let (t-lo, t-hi) = bounds
+    let sv = _to-stat(trained, v)
+    // `t-lo`/`t-hi` follow the domain order, which runs high-to-low when the
+    // user supplies reversed `limits` to flip the axis; test against the sorted
+    // span so the in-range check holds either way.
+    if sv >= calc.min(t-lo, t-hi) and sv <= calc.max(t-lo, t-hi) {
+      return ("in", raw)
+    }
     if oob == "squish" {
-      return ("squish", if v < lo { lo } else { hi })
+      // Clamp to the nearest `limits` endpoint (the visible data edge), not the
+      // expanded bound, matching the documented squish-to-limit semantics.
+      // `t-lo` pairs with `lo` and `t-hi` with `hi` whatever the order.
+      let (lo, hi) = trained.domain
+      let to-lo = calc.abs(sv - t-lo) <= calc.abs(sv - t-hi)
+      return ("squish", if to-lo { lo } else { hi })
     }
     return ("drop", raw)
   }
@@ -44,11 +61,15 @@
 // first drop into a `panic` instead.
 #let filter-oob(layers, trained, strict: false) = {
   let active = ()
+  // Expanded view bounds are constant per aesthetic; resolve them once here so
+  // the per-row `_check` only warps the cell value.
+  let bounds = (:)
   for (aes, t) in trained.pairs() {
     let spec = t.at("spec", default: none)
     if spec == none { continue }
     if spec.at("limits", default: none) == none { continue }
     active.push(aes)
+    if t.type == "continuous" { bounds.insert(aes, view-bounds-stat(t)) }
   }
   if active.len() == 0 { return (layers: layers, counts: (:)) }
 
@@ -72,7 +93,10 @@
         let col = mapping-ref-col(raw)
         let cell = row.at(col, default: none)
         let t = trained.at(aes)
-        let (action, value) = _check(t, cell)
+        let (action, value) = _check(t, cell, bounds: bounds.at(
+          aes,
+          default: none,
+        ))
         if action == "in" { continue }
         if action == "squish" {
           new-row.insert(col, value)
