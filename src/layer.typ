@@ -23,6 +23,10 @@
 ///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer.
 ///
+/// \@param clip Whether the layer's marks are clipped to the panel area.
+///   `true` (default) follows the usual panel clip; `false` lets the marks
+///   overflow the panel, set by \@annotate for deliberate out-of-panel marks.
+///
 /// \@returns Layer dictionary consumed by `plot()`.
 #let make-layer(
   geom,
@@ -33,6 +37,7 @@
   position: "identity",
   key: auto,
   inherit-aes: true,
+  clip: true,
 ) = (
   kind: "layer",
   geom: geom,
@@ -43,4 +48,5 @@
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,
+  clip: clip,
 )

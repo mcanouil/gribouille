@@ -718,21 +718,32 @@
       }
     }
   }
-  let geoms = cetz.canvas({
+  // Every geom is drawn `floating`, so it never contributes to the canvas
+  // bounds; only the `hide(rect ...)` does. Each subset canvas is therefore
+  // exactly panel-sized with its origin at the south-west corner, so the
+  // clipped and unclipped passes overlay in perfect register.
+  let _draw-subset = subset => cetz.canvas({
     import cetz.draw: floating, hide, rect
     hide(rect((0, 0), (panel-w, panel-h)), bounds: true)
-    for layer in prepared {
+    for layer in subset {
       let draw = _geom-draw.at(layer.geom, default: none)
       if draw != none {
         floating({ draw(layer, inner-ctx) })
       }
     }
   })
+  // `annotate(clip: false)` opts a layer out of the panel clip; render it in a
+  // sibling pass with no clip box so it can overflow the panel deliberately.
+  // The sibling pass paints after the clipped one, so unclipped marks always
+  // sit above clipped layers (documented on `annotate`'s `clip`).
+  let clipped = prepared.filter(l => l.at("clip", default: true))
+  let unclipped = prepared.filter(l => not l.at("clip", default: true))
   let clip-on = if inner-radial != none {
     inner-radial.clip
   } else if coord != none {
     coord.at("clip", default: "on") != "off"
   } else { true }
+  let clipped-geoms = _draw-subset(clipped)
   content(
     (px-lo, py-lo),
     if clip-on {
@@ -740,11 +751,14 @@
         clip: true,
         width: panel-w * 1cm,
         height: panel-h * 1cm,
-        geoms,
+        clipped-geoms,
       )
-    } else { geoms },
+    } else { clipped-geoms },
     anchor: "south-west",
   )
+  if unclipped.len() > 0 {
+    content((px-lo, py-lo), _draw-subset(unclipped), anchor: "south-west")
+  }
 
   // Radial-axis tick labels render after geoms so filled wedges, lines, and
   // points cannot mask them.
