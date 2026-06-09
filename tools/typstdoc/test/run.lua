@@ -924,6 +924,65 @@ describe("render: summaries resolve cross-references", function()
 end)
 
 -- -----------------------------------------------------------------------
+describe("render: variadic forwarding in Usage and Parameters", function()
+  local render = require("render")
+
+  local function parsed_functions(body)
+    local f = tmpfile("variadic_render", body)
+    return parser.parse_file(f).functions
+  end
+
+  it("expands a pure `..rest` forwarder to its documented params", function()
+    local fns = parsed_functions([[
+/// A forwarder.
+///
+/// @category Core
+/// @param name Legend title.
+/// @param palette Colour source.
+/// @returns Scale.
+#let foo(..args) = bar("colour", ..args)
+]])
+    local body = render.render_function(fns[1], {}, { strict = false })
+    assert_contains(body, "foo(\n  name,\n  palette,\n)")
+    assert_contains(body, "| `name` |  | Legend title. |")
+    assert_contains(body, "| `palette` |  | Colour source. |")
+    assert_true(not body:find("..args", 1, true), "opaque ..args should not appear")
+  end)
+
+  it("keeps `..rest` when a @param of the same name documents it", function()
+    local fns = parsed_functions([[
+/// A sink.
+///
+/// @category Core
+/// @param args Named specs keyed by aesthetic.
+/// @returns Guides.
+#let foo(..args) = none
+]])
+    local body = render.render_function(fns[1], {}, { strict = false })
+    assert_contains(body, "foo(\n  ..args,\n)")
+    assert_contains(body, "| `..args` |  | Named specs keyed by aesthetic. |")
+  end)
+
+  it("renders explicit params, then delegated, then the rest, for a mixed signature", function()
+    local fns = parsed_functions([[
+/// A dispatcher.
+///
+/// @category Core
+/// @param geom Geom name.
+/// @param clip Whether to clip.
+/// @param ..fields Forwarded named arguments.
+/// @returns Layer.
+#let foo(geom, ..fields) = none
+]])
+    local body = render.render_function(fns[1], {}, { strict = false })
+    assert_contains(body, "foo(\n  geom,\n  ..fields,\n)")
+    assert_contains(body, "| `geom` |  | Geom name. |")
+    assert_contains(body, "| `clip` |  | Whether to clip. |")
+    assert_contains(body, "| `..fields` |  | Forwarded named arguments. |")
+  end)
+end)
+
+-- -----------------------------------------------------------------------
 describe("render: @examples alt forwarding", function()
   local render = require("render")
 
