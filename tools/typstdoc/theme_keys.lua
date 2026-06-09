@@ -35,7 +35,7 @@ local SKIP_KEYS = {
 -- expand inline beneath their root.
 local GROUP_ORDER = {
   { name = "roots", keys = { "text", "line", "rect" } },
-  { name = "plot", keys = { "plot-title", "plot-subtitle", "plot-caption", "plot-tag", "plot-background", "plot-margin" } },
+  { name = "plot", keys = { "plot-title", "plot-subtitle", "plot-caption", "plot-tag", "plot-background" } },
   { name = "axis", keys = { "axis-title", "axis-text", "axis-line", "axis-ticks" } },
   { name = "ticks", keys = { "tick-labels", "tick-length" } },
   { name = "panel", keys = { "panel-grid", "panel-background" } },
@@ -166,10 +166,7 @@ local function type_for(key, parents, defaults)
     if entry.kind == "length" then return "length" end
     if entry.kind == "boolean" then return "boolean" end
     if entry.kind == "margin" then return "@margin record" end
-    -- Element records whose family root is themselves (no base-record parent):
-    -- `geom` (element-geom) and `legend-background` (an element-rect not mapped
-    -- to the `rect` parent in _surface-parent).
-    if entry.kind == "element-rect" then return "@element-rect or @element-blank" end
+    -- Root-level element records with no base-record parent, e.g. `geom`.
     if entry.kind == "element-geom" then return "@element-geom" end
   end
   -- tick-length variants inherit from tick-length scalar.
@@ -228,6 +225,22 @@ function M.build_records(defaults, parents)
   return records
 end
 
+-- default-theme keys (excluding the SKIP_KEYS book-keeping fields) that no row
+-- in `records` covers. A non-empty result means GROUP_ORDER fell behind the
+-- default theme and the table would silently omit a real element.
+function M.uncovered_keys(defaults, records)
+  local covered = {}
+  for _, r in ipairs(records) do covered[r.key] = true end
+  local missing = {}
+  for key in pairs(defaults) do
+    if not SKIP_KEYS[key] and not covered[key] then
+      table.insert(missing, key)
+    end
+  end
+  table.sort(missing)
+  return missing
+end
+
 local function fmt_parent(p)
   if p == "(root)" then return "(root)" end
   return "`" .. p .. "`"
@@ -257,7 +270,14 @@ function M.render(root)
   if cache[root] then return cache[root] end
   local _, defaults = M.read_default_theme(root .. "/src/theme/defaults.typ")
   local parents = M.read_surface_parent(root .. "/src/theme/theme.typ")
-  local rendered = M.render_table(M.build_records(defaults, parents))
+  local records = M.build_records(defaults, parents)
+  local missing = M.uncovered_keys(defaults, records)
+  if #missing > 0 then
+    util.die("theme reference table omits default-theme key(s): "
+      .. table.concat(missing, ", ")
+      .. " (add them to GROUP_ORDER in tools/typstdoc/theme_keys.lua)")
+  end
+  local rendered = M.render_table(records)
   cache[root] = rendered
   return rendered
 end

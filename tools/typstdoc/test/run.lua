@@ -1240,6 +1240,23 @@ describe("theme_keys: extractor + table render", function()
     assert_contains(out, "| `text` | @element-text | `element-text(size: 9pt)` | (root) |")
     assert_contains(out, "| `axis-text-x` | @element-text or @element-typst | inherits | `axis-text` |")
   end)
+
+  it("uncovered_keys flags a default-theme key absent from the records", function()
+    local defaults = { text = { kind = "element-text" }, mystery = { kind = "colour" }, kind = {} }
+    local records = { { key = "text" } }
+    local missing = theme_keys.uncovered_keys(defaults, records)
+    assert_eq(#missing, 1)
+    assert_eq(missing[1], "mystery")
+  end)
+
+  it("every default-theme element appears in the rendered reference table", function()
+    local repo = ROOT .. "/../.."
+    local _, defaults = theme_keys.read_default_theme(repo .. "/src/theme/defaults.typ")
+    local parents = theme_keys.read_surface_parent(repo .. "/src/theme/theme.typ")
+    local records = theme_keys.build_records(defaults, parents)
+    local missing = theme_keys.uncovered_keys(defaults, records)
+    assert_eq(#missing, 0, "uncovered theme keys: " .. table.concat(missing, ", "))
+  end)
 end)
 
 -- -----------------------------------------------------------------------
