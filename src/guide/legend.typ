@@ -5,7 +5,7 @@
 ///! swatch grid with `nrow` / `ncolumn` / `byrow`, and placement with
 ///! `position` / `direction` / `order`.
 
-#import "../utils/errors.typ": fail, quote-each
+#import "../utils/errors.typ": assert-halign, fail, quote-each
 
 #let _VALID-SIDES = ("none", "top", "right", "bottom", "left")
 
@@ -102,7 +102,7 @@
 ///
 /// \@param byrow Fill the swatch grid row-major when `true`; column-major (default) when `false`.
 ///
-/// \@param align Horizontal alignment (`left`, `center`, `right`) of the entry labels, or `none` to use the per-direction default (horizontal legends centre, vertical legends left). Overrides the `legend-text` theme alignment.
+/// \@param align Horizontal alignment of the legend as a Typst alignment (`left`, `center`, `right`), applied to both the entry labels and the legend title, or `none` to use the per-direction default (horizontal legends centre, vertical legends left). Overrides the `legend-text` theme alignment for labels and the `legend-title` theme alignment for the title. Pass the alignment value `left`, not the string `"left"`.
 ///
 /// \@returns Guide dictionary tagged `kind: "guide"`, consumed by \@guides.
 ///
@@ -188,12 +188,7 @@
   byrow: false,
   align: none,
 ) = {
-  if align != none and type(align) != alignment {
-    fail(
-      "guide-legend",
-      "align must be `left`, `center`, `right`, or `none`; got " + repr(align),
-    )
-  }
+  assert-halign("guide-legend", align)
   (
     kind: "guide",
     aesthetic: none,

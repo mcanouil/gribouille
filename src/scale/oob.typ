@@ -76,6 +76,14 @@
   let counts = (:)
   let new-layers = ()
   for layer in layers {
+    // A `clip: false` layer (e.g. `annotate(clip: false)`) is meant to draw
+    // beyond the limits, so it opts out of the drop pre-pass entirely; its rows
+    // pass through verbatim. Mirror the unclipped-set predicate in `panel-draw`
+    // (`not layer.clip`) so the two passes agree on which layers are unclipped.
+    if not layer.at("clip", default: true) {
+      new-layers.push(layer)
+      continue
+    }
     let mapping = layer.at("mapping", default: none)
     let data = layer.at("data", default: none)
     if mapping == none or type(data) != array {

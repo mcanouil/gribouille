@@ -135,5 +135,18 @@
   assert.eq(out.counts, (:))
 }
 
+// a `clip: false` layer opts out of the drop pre-pass: its out-of-limits row
+// survives verbatim, while a `clip: true` sibling with the same row is dropped.
+#{
+  let trained = (fill: _trained-continuous(limits: (2, 5)))
+  let rows = ((v: 1), (v: 3), (v: 8))
+  let clipped = _layer(rows)
+  let unclipped = (.._layer(rows), clip: false)
+  let out = filter-oob((clipped, unclipped), trained)
+  assert.eq(out.layers.at(0).data, ((v: 3),))
+  assert.eq(out.layers.at(1).data, rows)
+  assert.eq(out.counts.at("fill"), 2)
+}
+
 // strict mode panics on first OOB row. Typst has no try/catch; the panic
 // path is exercised manually via examples/oob-strict-* (see PR description).
