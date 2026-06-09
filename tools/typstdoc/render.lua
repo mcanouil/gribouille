@@ -92,21 +92,52 @@ local function emit_description(desc, from_qmd, index, strict, file, line)
   return table.concat(out, "\n")
 end
 
+-- A `..rest` binding is a pure forwarder when no `@param` shares its name: every
+-- real argument is then documented individually rather than captured by the rest
+-- binding, so the docs expand to those documented params instead of printing the
+-- opaque `..rest`. A `@param` matching the rest name (whether or not it spells the
+-- leading dots) means the rest binding is itself the documented surface, so it is
+-- kept verbatim.
+local function forwarding_variadic(fn)
+  local variadic_name
+  for _, p in ipairs(fn.signature_params) do
+    if p.variadic then variadic_name = p.name end
+  end
+  if not variadic_name then return nil end
+  for _, p in ipairs(fn.doc.params) do
+    if p.name == variadic_name then return nil end
+  end
+  return variadic_name
+end
+
 local function format_signature(fn)
   if fn.is_value then
     return fn.name
   end
   local parts = {}
-  for _, p in ipairs(fn.signature_params) do
-    local piece
-    if p.variadic then
-      piece = ".." .. p.name
-    elseif p.default then
-      piece = p.name .. ": " .. p.default
-    else
-      piece = p.name
+  if forwarding_variadic(fn) then
+    local sig_by_name = {}
+    for _, p in ipairs(fn.signature_params) do sig_by_name[p.name] = p end
+    for _, p in ipairs(fn.doc.params) do
+      local sig = sig_by_name[p.name]
+      if sig and sig.default then
+        table.insert(parts, p.name .. ": " .. sig.default)
+      else
+        table.insert(parts, p.name)
+      end
     end
-    table.insert(parts, piece)
+  else
+    for _, p in ipairs(fn.signature_params) do
+      local piece
+      if p.variadic then
+        piece = ".." .. p.name
+      elseif p.default then
+        piece = p.name .. ": " .. p.default
+      else
+        piece = p.name
+      end
+      table.insert(parts, piece)
+    end
   end
   if #parts == 0 then
     return fn.name .. "()"
@@ -135,16 +166,51 @@ end
 
 local function emit_params(fn, from_qmd, index, strict)
   if fn.is_value or #fn.doc.params == 0 then return "" end
-  local doc_by_name = {}
-  for _, p in ipairs(fn.doc.params) do doc_by_name[p.name] = p end
+
+  local sig_by_name = {}
+  local variadic_names = {}
+  local has_variadic = false
+  for _, p in ipairs(fn.signature_params) do
+    sig_by_name[p.name] = p
+    if p.variadic then has_variadic = true; variadic_names[p.name] = true end
+  end
+
+  -- A `..rest` binding in the signature forwards arbitrary kwargs, so the doc
+  -- block (not the signature) enumerates the real parameters: a delegate's named
+  -- params for a pure forwarder, or explicit params plus the rest for a mixed
+  -- signature. Drive the table from `doc.params` then, with the matching
+  -- signature param supplying the default where one exists. A doc param whose
+  -- name is the rest binding keeps the `..` prefix even when written `@param args`.
+  local rows = {}
+  if has_variadic then
+    for _, p in ipairs(fn.doc.params) do
+      local sig = sig_by_name[p.name]
+      rows[#rows + 1] = {
+        name = p.name,
+        variadic = p.variadic or variadic_names[p.name] or false,
+        default = sig and sig.default or nil,
+        description = p.description,
+      }
+    end
+  else
+    local doc_by_name = {}
+    for _, p in ipairs(fn.doc.params) do doc_by_name[p.name] = p end
+    for _, p in ipairs(fn.signature_params) do
+      local dp = doc_by_name[p.name]
+      rows[#rows + 1] = {
+        name = p.name,
+        variadic = p.variadic,
+        default = p.default,
+        description = dp and dp.description or "",
+      }
+    end
+  end
 
   local out = { "## Parameters", "", "| Parameter | Default | Description |", "| --- | --- | --- |" }
-  for _, p in ipairs(fn.signature_params) do
-    local dp = doc_by_name[p.name]
-    local name_cell = p.variadic and ("`.." .. p.name .. "`") or ("`" .. p.name .. "`")
-    local default_cell = p.default and ("`" .. p.default .. "`") or ""
-    local desc = dp and dp.description or ""
-    desc = resolve.resolve_refs_in_text(desc, from_qmd, index, strict, fn.file, fn.line)
+  for _, r in ipairs(rows) do
+    local name_cell = r.variadic and ("`.." .. r.name .. "`") or ("`" .. r.name .. "`")
+    local default_cell = r.default and ("`" .. r.default .. "`") or ""
+    local desc = resolve.resolve_refs_in_text(r.description or "", from_qmd, index, strict, fn.file, fn.line)
     desc = desc:gsub("|", "\\|")
     table.insert(out, string.format("| %s | %s | %s |", name_cell, default_cell, desc))
   end
