@@ -16,6 +16,7 @@
 - fix: `geom-linerange()` honours its `alpha` parameter; the line was previously always drawn fully opaque. (#85)
 - fix: `geom-area(position: "stack")` now stacks bands correctly; each polygon's lower edge sits at the cumulated top of the group below rather than always closing at `y = 0`. (#77)
 - fix: `stat-align()` expands its shared grid by a small offset on either side of every breakpoint, so a group that starts or ends mid-range steps cleanly down to the baseline instead of leaving a wedge below the neighbouring group, matching ggplot2's `StatAlign`. (#77)
+- docs: reference pages for forwarding functions such as the `scale-*` colour wrappers now list their real parameters instead of an opaque `..args` row, and a mixed signature like `annotate(geom, ..fields)` also lists `clip`. (#102)
 - docs: the `theme()` reference table now lists every theme key, adding `plot-tag`, `legend-ticks`, `legend-background`, `legend-bar`, and `geom`. (#100)
 
 ## 0.2.1 (2026-06-03)
