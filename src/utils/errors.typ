@@ -108,3 +108,19 @@
 #let check(cond, scope, problem, hint: none) = {
   assert(cond, message: error-text(scope, problem, hint: hint))
 }
+
+// Panic unless `align` is a Typst alignment (the house type for every text /
+// legend alignment). `none` is allowed: it means "inherit the default". Guards
+// against passing a string like "left" (which silently never matches the
+// alignment comparisons downstream).
+#let assert-halign(scope, align) = {
+  if align != none and type(align) != alignment {
+    fail-type(
+      scope,
+      "align",
+      align,
+      "a Typst alignment `left`, `center`, or `right`",
+      hint: "Use the alignment value `left`, not the string \"left\".",
+    )
+  }
+}
