@@ -125,6 +125,16 @@
   }
 }
 
+// Grid shape for a guide laying `count` keys out under its `nrow`/`ncolumn` and
+// flow direction. Shared by every swatch and size-ladder layout site so the
+// width estimate, height estimate, and draw all agree on the grid.
+#let _guide-shape(g, count) = _grid-shape(
+  count,
+  g.nrow,
+  g.ncolumn,
+  g.placement.direction,
+)
+
 // Geom-driven fallback priority: when no aesthetic-driven rule applies,
 // points dominate paths dominate lines dominate rects, so the swatch
 // reflects the most distinctive mark drawn for the merged group.
@@ -628,22 +638,32 @@
   max-e
 }
 
-// Per-row stacking offsets for a swatch grid: each row's overflow is the
-// tallest multi-line overflow across its columns.
-#let _swatch-rows(guide, shape, byrow, size-pt) = {
-  let line-h = _swatch-line-h-cm(size-pt)
+// Per-row stacking offsets for a grid: each row's overflow is the tallest
+// multi-line overflow across its columns. `label-of(i)` returns the i-th cell's
+// label; `count` bounds the populated cells. Shared by the swatch grid and the
+// grid size-ladder.
+#let _grid-row-overflows(count, label-of, shape, byrow, line-h, size-pt) = {
   let overflows = range(shape.rows).map(row => {
     let max-e = 0.0
     for col in range(shape.cols) {
       let i = _swatch-index(row, col, shape, byrow)
-      if i >= guide.levels.len() { continue }
-      let e = _label-overflow(_swatch-label(guide, i), line-h, size-pt)
+      if i >= count { continue }
+      let e = _label-overflow(label-of(i), line-h, size-pt)
       if e > max-e { max-e = e }
     }
     max-e
   })
   _stack-offsets(overflows)
 }
+
+#let _swatch-rows(guide, shape, byrow, size-pt) = _grid-row-overflows(
+  guide.levels.len(),
+  i => _swatch-label(guide, i),
+  shape,
+  byrow,
+  _swatch-line-h-cm(size-pt),
+  size-pt,
+)
 
 #let _LADDER-H-COL-H = 0.32
 #let _LADDER-H-LABEL-H = 0.4
@@ -678,28 +698,62 @@
   pretty(lo, hi, n: 5)
 }
 
+// Horizontal size-ladder glyph band height (cm), shared by the height estimate
+// and the draw so the reserved column never drifts from the drawn glyph.
+#let _ladder-h-band(guide) = calc.max(
+  _LADDER-H-COL-H,
+  guide.at("key-diam-cm", default: _GLYPH-DIAMETER-CM),
+)
+
+// Width (cm) of one horizontal size-ladder column, shared by the width estimate
+// and the draw. A wider `size` channel grows the glyph band, so the column must
+// clear the band as well as the label.
+#let _ladder-h-col-w(guide, label-w, size-pt) = {
+  let lead = _ladder-lead-cm(size-pt)
+  if guide.at("key-diam-cm", default: _GLYPH-DIAMETER-CM) > _GLYPH-DIAMETER-CM {
+    calc.max(lead, label-w, _ladder-h-band(guide) + 0.1)
+  } else { calc.max(lead, label-w) }
+}
+
+// Vertical stride (cm) between rows of a horizontal size-ladder grid: the glyph
+// band, the label row, and any multi-line label overflow. Uniform across rows
+// so a wrapped horizontal legend keeps even rows.
+#let _ladder-h-row-stride(guide, size-pt) = (
+  _ladder-h-band(guide)
+    + _LADDER-H-LABEL-H
+    + _breaks-overflow(guide, guide.breaks, size-pt)
+)
+
+// Per-row stacking offsets for a vertical size-ladder grid (the break analogue
+// of `_swatch-rows`).
+#let _ladder-rows(guide, shape, byrow, line-h, size-pt) = _grid-row-overflows(
+  guide.breaks.len(),
+  i => _break-label(guide, guide.breaks.at(i), i),
+  shape,
+  byrow,
+  line-h,
+  size-pt,
+)
+
 // Per-guide width estimate. Stored on each guide so `estimate-width` is
 // O(1). `size-pt` is the legend-text font size; label widths are
 // measured against it.
 #let _guide-width(g, size-pt) = {
   if g.kind == "swatch" {
-    let shape = _grid-shape(
-      g.levels.len(),
-      g.nrow,
-      g.ncolumn,
-      g.placement.direction,
-    )
+    let shape = _guide-shape(g, g.levels.len())
     let layout = _swatch-layout(g, shape, g.placement.byrow, size-pt)
     return calc.max(_title-width(g, size-pt), layout.total)
   }
   if g.kind == "size-ladder" {
     let label-w = _max-break-label-width(g, g.breaks, size-pt)
-    let lead = _ladder-lead-cm(size-pt)
+    let shape = _guide-shape(g, g.breaks.len())
     if g.placement.direction == "horizontal" {
-      let col-w = calc.max(lead, label-w)
-      return calc.max(_title-width(g, size-pt), col-w * g.breaks.len())
+      let col-w = _ladder-h-col-w(g, label-w, size-pt)
+      return calc.max(_title-width(g, size-pt), col-w * shape.cols)
     }
-    return calc.max(_title-width(g, size-pt), lead + label-w)
+    let col-w = _ladder-lead-cm(size-pt) + label-w
+    let grid-w = shape.cols * col-w + (shape.cols - 1) * _SWATCH-COL-GAP-MIN
+    return calc.max(_title-width(g, size-pt), grid-w)
   }
   if g.kind == "colourbar" {
     let breaks = _colourbar-breaks(g)
@@ -751,13 +805,6 @@
   )
 }
 
-// Horizontal size-ladder glyph band height (cm), shared by the height estimate
-// and the draw so the reserved column never drifts from the drawn glyph.
-#let _ladder-h-band(guide) = calc.max(
-  _LADDER-H-COL-H,
-  guide.at("key-diam-cm", default: _GLYPH-DIAMETER-CM),
-)
-
 // Vertical height (cm) of a row-stack guide: full line-h for every row
 // except the last (which reserves only the glyph diameter), plus a
 // font-derived bottom slack so the rect doesn't graze the glyph.
@@ -766,12 +813,7 @@
 )
 
 #let _swatch-height(guide, title-h, size-pt) = {
-  let shape = _grid-shape(
-    guide.levels.len(),
-    guide.nrow,
-    guide.ncolumn,
-    guide.placement.direction,
-  )
+  let shape = _guide-shape(guide, guide.levels.len())
   (
     _title-prefix(guide, title-h)
       + _row-stack-height(
@@ -785,33 +827,24 @@
 
 #let _size-ladder-height(guide, title-h, size-pt) = {
   let prefix = _title-prefix(guide, title-h)
+  let shape = _guide-shape(guide, guide.breaks.len())
   if guide.placement.direction == "horizontal" {
-    (
-      prefix
-        + _ladder-h-band(guide)
-        + _LADDER-H-LABEL-H
-        + _breaks-overflow(
-          guide,
-          guide.breaks,
-          size-pt,
-        )
-    )
+    prefix + shape.rows * _ladder-h-row-stride(guide, size-pt)
   } else {
     let m = _ladder-vmetrics(guide, size-pt)
-    let overflows = guide
-      .breaks
-      .enumerate()
-      .map(((i, b)) => _label-overflow(
-        _break-label(guide, b, i),
-        m.line-h,
-        size-pt,
-      ))
+    let rows = _ladder-rows(
+      guide,
+      shape,
+      guide.placement.byrow,
+      m.line-h,
+      size-pt,
+    )
     (
       prefix
-        + (guide.breaks.len() - 1) * m.line-h
+        + (shape.rows - 1) * m.line-h
         + m.last
         + _glyph-bottom-slack(size-pt)
-        + _stack-offsets(overflows).total
+        + rows.total
     )
   }
 }
@@ -952,6 +985,8 @@
         title: first.title,
         domain: first.domain,
         breaks: breaks,
+        nrow: first.nrow,
+        ncolumn: first.ncolumn,
         labels: info.labels,
         key: key-kind,
         key-diam-cm: _ladder-key-diam-cm(size-trained, breaks, key-kind),
@@ -1144,12 +1179,7 @@
   }
   let top = cursor - _title-prefix(guide, title-h)
   let byrow = guide.placement.byrow
-  let shape = _grid-shape(
-    guide.levels.len(),
-    guide.nrow,
-    guide.ncolumn,
-    guide.placement.direction,
-  )
+  let shape = _guide-shape(guide, guide.levels.len())
   let layout = _swatch-layout(guide, shape, byrow, size-pt)
   let rows = _swatch-rows(guide, shape, byrow, size-pt)
   let key-kind = guide.at("key", default: "rect")
@@ -1213,39 +1243,46 @@
   let top = cursor - _title-prefix(guide, title-h)
 
   let label-w = _max-break-label-width(guide, guide.breaks, size-pt)
+  let shape = _guide-shape(guide, guide.breaks.len())
+  let byrow = guide.placement.byrow
+  let break-text-of = (value, i) => resolve-prose(
+    resolve-label(
+      labels,
+      value,
+      i,
+      format-break(value),
+      typst-mark: typst-mark,
+    ),
+    eval-strings: _legend-text.typst,
+  )
 
   if guide.placement.direction == "horizontal" {
     // A wider `size` channel grows the glyph band; centre the glyph in it and
-    // push the column and label clear so neighbouring keys never overlap. The
-    // band is shared with `_size-ladder-height` so reserve and draw stay locked.
+    // push the column and label clear so neighbouring keys never overlap. Breaks
+    // wrap into rows when `nrow`/`ncolumn` is set; `_ladder-h-col-w` and
+    // `_ladder-h-row-stride` are shared with `_size-ladder-height` so reserve
+    // and draw stay locked.
     let grows = glyph-diam > _GLYPH-DIAMETER-CM
     let band = _ladder-h-band(guide)
     let hoff = if grows { band / 2 } else { glyph-size }
-    let col-w = if grows {
-      calc.max(_ladder-lead-cm(size-pt), label-w, band + 0.1)
-    } else { calc.max(_ladder-lead-cm(size-pt), label-w) }
-    let gcy = if grows { top - band / 2 } else { top - glyph-size * 2 }
-    let label-y = if grows { top - band - 0.1 } else {
-      top - glyph-size * 3 - 0.1
-    }
+    let col-w = _ladder-h-col-w(guide, label-w, size-pt)
+    let row-stride = _ladder-h-row-stride(guide, size-pt)
     for (i, value) in guide.breaks.enumerate() {
-      let cx = ox + hoff + i * col-w
+      let rc = _swatch-rc(i, shape, byrow)
+      let row-top = top - rc.row * row-stride
+      let cx = ox + hoff + rc.col * col-w
+      let gcy = if grows { row-top - band / 2 } else {
+        row-top - glyph-size * 2
+      }
+      let label-y = if grows { row-top - band - 0.1 } else {
+        row-top - glyph-size * 3 - 0.1
+      }
       let bundle = _bundle-for(value, guide.aesthetics, ctx, ink)
       draw-glyph(key-kind, cx, gcy, hoff, bundle, ink: ink)
-      let break-text = resolve-prose(
-        resolve-label(
-          labels,
-          value,
-          i,
-          format-break(value),
-          typst-mark: typst-mark,
-        ),
-        eval-strings: _legend-text.typst,
-      )
       let (lx, l-anchor) = _hjust-below(align, cx)
       cetz.draw.content(
         (lx, label-y),
-        text(..legend-text-args)[#break-text],
+        text(..legend-text-args)[#break-text-of(value, i)],
         anchor: l-anchor,
       )
     }
@@ -1253,45 +1290,21 @@
     let m = _ladder-vmetrics(guide, size-pt)
     let line-h = m.line-h
     let off = m.off
-    let indexed = guide.breaks.enumerate()
-    let overflows = indexed.map(((i, value)) => _label-overflow(
-      _break-label(guide, value, i),
-      line-h,
-      size-pt,
-    ))
-    let rows = _stack-offsets(overflows)
-    for (i, value) in indexed {
-      // Same row-stacking as the swatch: push down by overflow above, then
-      // centre this break on its block by dropping it half its own overflow.
-      let cy = top - i * line-h - rows.before.at(i)
-      let cm = cy - off - rows.extra.at(i) / 2
+    let rows = _ladder-rows(guide, shape, byrow, line-h, size-pt)
+    let col-w = _ladder-lead-cm(size-pt) + label-w + _SWATCH-COL-GAP-MIN
+    for (i, value) in guide.breaks.enumerate() {
+      // Same row-stacking as the swatch: push each row down by the overflow
+      // above, then centre the break on its block by dropping half its own.
+      let rc = _swatch-rc(i, shape, byrow)
+      let cy = top - rc.row * line-h - rows.before.at(rc.row)
+      let cm = cy - off - rows.extra.at(rc.row) / 2
+      let cx0 = ox + rc.col * col-w
       let bundle = _bundle-for(value, guide.aesthetics, ctx, ink)
-      draw-glyph(
-        key-kind,
-        ox + off,
-        cm,
-        off,
-        bundle,
-        ink: ink,
-      )
-      let break-text = resolve-prose(
-        resolve-label(
-          labels,
-          value,
-          i,
-          format-break(value),
-          typst-mark: typst-mark,
-        ),
-        eval-strings: _legend-text.typst,
-      )
-      let (lx, l-anchor) = _hjust-right-of(
-        align,
-        ox + off * 2 + 0.15,
-        label-w,
-      )
+      draw-glyph(key-kind, cx0 + off, cm, off, bundle, ink: ink)
+      let (lx, l-anchor) = _hjust-right-of(align, cx0 + off * 2 + 0.15, label-w)
       cetz.draw.content(
         (lx, cm),
-        text(..legend-text-args)[#break-text],
+        text(..legend-text-args)[#break-text-of(value, i)],
         anchor: l-anchor,
       )
     }
