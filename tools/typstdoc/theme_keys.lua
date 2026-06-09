@@ -29,19 +29,19 @@ local IDENT_SUBSTITUTIONS = {
 local SKIP_KEYS = {
   kind = true,
   name = true,
-  geom = true,
 }
 
 -- Group order for the rendered table. Each group lists root keys; variants
 -- expand inline beneath their root.
 local GROUP_ORDER = {
   { name = "roots", keys = { "text", "line", "rect" } },
-  { name = "plot", keys = { "plot-title", "plot-subtitle", "plot-caption", "plot-background", "plot-margin" } },
+  { name = "plot", keys = { "plot-title", "plot-subtitle", "plot-caption", "plot-tag", "plot-background", "plot-margin" } },
   { name = "axis", keys = { "axis-title", "axis-text", "axis-line", "axis-ticks" } },
   { name = "ticks", keys = { "tick-labels", "tick-length" } },
   { name = "panel", keys = { "panel-grid", "panel-background" } },
-  { name = "legend", keys = { "legend-title", "legend-text" } },
+  { name = "legend", keys = { "legend-title", "legend-text", "legend-ticks", "legend-background", "legend-bar" } },
   { name = "strip", keys = { "strip-text", "strip-background" } },
+  { name = "geom", keys = { "geom" } },
   { name = "colours", keys = { "ink", "paper", "accent" } },
 }
 
@@ -166,6 +166,11 @@ local function type_for(key, parents, defaults)
     if entry.kind == "length" then return "length" end
     if entry.kind == "boolean" then return "boolean" end
     if entry.kind == "margin" then return "@margin record" end
+    -- Element records whose family root is themselves (no base-record parent):
+    -- `geom` (element-geom) and `legend-background` (an element-rect not mapped
+    -- to the `rect` parent in _surface-parent).
+    if entry.kind == "element-rect" then return "@element-rect or @element-blank" end
+    if entry.kind == "element-geom" then return "@element-geom" end
   end
   -- tick-length variants inherit from tick-length scalar.
   if key:match("^tick%-length") then return "length" end
