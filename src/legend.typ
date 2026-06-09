@@ -1103,20 +1103,29 @@
   }
 }
 
-#let _draw-title(ox, cursor, theme, title, width) = {
+// Resolve the legend title alignment: a per-guide `align` (from
+// `guide-legend(align:)`) wins over the `legend-title` theme align; `none`
+// falls through to the left default in `_draw-title`.
+#let _title-align(guide-align, theme-align) = if guide-align != none {
+  guide-align
+} else { theme-align }
+
+#let _draw-title(guide, ox, cursor, theme) = {
   let s = _text-style(theme, "legend-title")
+  // A per-guide `align` (from `guide-legend(align:)`) wins over the theme.
   // Default left-aligned at the legend's left edge; `center`/`right` offset
   // within the legend block `width`.
-  let (tx, t-anchor) = if s.align == right {
-    (ox + width, "north-east")
-  } else if s.align == center {
-    (ox + width / 2, "north")
+  let a = _title-align(guide.at("align", default: none), s.align)
+  let (tx, t-anchor) = if a == right {
+    (ox + guide.width, "north-east")
+  } else if a == center {
+    (ox + guide.width / 2, "north")
   } else {
     (ox, "north-west")
   }
   cetz.draw.content(
     (tx, cursor),
-    text(.._text-args(s))[#resolve-prose(title, eval-strings: s.typst)],
+    text(.._text-args(s))[#resolve-prose(guide.title, eval-strings: s.typst)],
     anchor: t-anchor,
   )
 }
@@ -1131,7 +1140,7 @@
   let glyph-size = 0.12
 
   if guide.title != none {
-    _draw-title(ox, cursor, theme, guide.title, guide.width)
+    _draw-title(guide, ox, cursor, theme)
   }
   let top = cursor - _title-prefix(guide, title-h)
   let byrow = guide.placement.byrow
@@ -1199,7 +1208,7 @@
   let align = _label-align(guide, _legend-text.align)
 
   if guide.title != none {
-    _draw-title(ox, cursor, theme, guide.title, guide.width)
+    _draw-title(guide, ox, cursor, theme)
   }
   let top = cursor - _title-prefix(guide, title-h)
 
@@ -1326,7 +1335,7 @@
   let (lo, hi) = guide.domain
 
   if guide.title != none {
-    _draw-title(ox, cursor, theme, guide.title, guide.width)
+    _draw-title(guide, ox, cursor, theme)
   }
   let bar-top = cursor - _title-prefix(guide, title-h)
   let bar-bottom = bar-top - bar-h
@@ -1449,7 +1458,9 @@
 
 #let _draw-custom(guide, ox, cursor, theme, title-h) = {
   let has-title = guide.title != none
-  if has-title { _draw-title(ox, cursor, theme, guide.title, guide.width) }
+  if has-title {
+    _draw-title(guide, ox, cursor, theme)
+  }
   let top = cursor - if has-title { title-h } else { 0.0 }
   cetz.draw.content(
     (ox, top),

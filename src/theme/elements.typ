@@ -3,6 +3,8 @@
 ///! `element_*` constructors. \@theme translates these into the flat theme
 ///! fields consumed internally by `merge-theme`.
 
+#import "../utils/errors.typ": assert-halign
+
 /// Text element: font size, weight, colour, and angle.
 ///
 /// Pass the result to \@theme under keys like `axis-text`, `axis-title`,
@@ -31,13 +33,13 @@
 ///   with the surface font size. Sides left at `auto` fall through to the
 ///   renderer default. `none` keeps every side at the default.
 ///
-/// \@param align Horizontal alignment (`left`, `center`, `right`) of the text
-///   within its surface, or `none` to use the per-surface default (title and
-///   subtitle left, caption right, axis titles and strip text centred, legend
-///   title left, legend entry labels centred in horizontal legends and left in
-///   vertical legends). Independent of the surrounding container's alignment.
-///   Axis tick labels (`axis-text`) are positioned by anchor and ignore this
-///   field.
+/// \@param align Horizontal alignment of the text within its surface as a Typst
+///   alignment (`left`, `center`, `right`), or `none` to use the per-surface
+///   default (title and subtitle left, caption right, axis titles and strip text
+///   centred, legend title left, legend entry labels centred in horizontal
+///   legends and left in vertical legends). Independent of the surrounding
+///   container's alignment. Axis tick labels (`axis-text`) are positioned by
+///   anchor and ignore this field.
 ///
 /// \@returns Element dictionary consumed by \@theme.
 ///
@@ -103,16 +105,19 @@
   font: none,
   margin: none,
   align: none,
-) = (
-  kind: "element-text",
-  size: size,
-  weight: weight,
-  colour: colour,
-  angle: angle,
-  font: font,
-  margin: margin,
-  align: align,
-)
+) = {
+  assert-halign("element-text", align)
+  (
+    kind: "element-text",
+    size: size,
+    weight: weight,
+    colour: colour,
+    angle: angle,
+    font: font,
+    margin: margin,
+    align: align,
+  )
+}
 
 /// Typst-markup text element: same fields as \@element-text plus
 /// automatic Typst-markup evaluation for plain strings reaching this
@@ -147,13 +152,13 @@
 ///   with the surface font size. Sides left at `auto` fall through to the
 ///   renderer default. `none` keeps every side at the default.
 ///
-/// \@param align Horizontal alignment (`left`, `center`, `right`) of the text
-///   within its surface, or `none` to use the per-surface default (title and
-///   subtitle left, caption right, axis titles and strip text centred, legend
-///   title left, legend entry labels centred in horizontal legends and left in
-///   vertical legends). Independent of the surrounding container's alignment.
-///   Axis tick labels (`axis-text`) are positioned by anchor and ignore this
-///   field.
+/// \@param align Horizontal alignment of the text within its surface as a Typst
+///   alignment (`left`, `center`, `right`), or `none` to use the per-surface
+///   default (title and subtitle left, caption right, axis titles and strip text
+///   centred, legend title left, legend entry labels centred in horizontal
+///   legends and left in vertical legends). Independent of the surrounding
+///   container's alignment. Axis tick labels (`axis-text`) are positioned by
+///   anchor and ignore this field.
 ///
 /// \@returns Element dictionary consumed by \@theme.
 ///
@@ -200,16 +205,19 @@
   font: none,
   margin: none,
   align: none,
-) = (
-  kind: "element-typst",
-  size: size,
-  weight: weight,
-  colour: colour,
-  angle: angle,
-  font: font,
-  margin: margin,
-  align: align,
-)
+) = {
+  assert-halign("element-typst", align)
+  (
+    kind: "element-typst",
+    size: size,
+    weight: weight,
+    colour: colour,
+    angle: angle,
+    font: font,
+    margin: margin,
+    align: align,
+  )
+}
 
 /// Line element: colour and stroke thickness.
 ///
