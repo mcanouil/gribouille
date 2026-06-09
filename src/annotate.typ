@@ -90,7 +90,9 @@
 ///   (default) clips like any other layer; `false` lets the annotation overflow
 ///   the panel, e.g., a corner inset or a mark placed past the axis limits.
 ///   Unclipped annotations are drawn above every clipped layer regardless of
-///   their position in `layers`, so they read as deliberate overlays.
+///   their position in `layers`, so they read as deliberate overlays. A
+///   `clip: false` annotation is also exempt from the out-of-range pre-pass, so
+///   a position outside the scale `limits` is kept instead of dropped.
 ///
 /// \@param ..fields Named arguments split between aesthetics and layer
 ///   parameters. Aesthetic names are `x`, `y`, `xend`, `yend`, `xmin`,
