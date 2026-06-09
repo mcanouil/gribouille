@@ -33,6 +33,7 @@
     "panel-background": "rect",
     "plot-background": "rect",
     "strip-background": "rect",
+    "legend-background": "rect",
     "legend-bar": "rect",
   )
   // Each axis family gains per-axis (-x, -y) and per-side (-x-bottom, -x-top,
