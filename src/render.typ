@@ -319,10 +319,10 @@
   // depth for them; otherwise the chrome margin reserves space for ink that
   // never draws, inverting the panel rect on small plot sizes.
   let labels-on = theme.at("tick-labels", default: true)
-  let x-label-depth = if labels-on {
+  let x-label-depth = if labels-on and not x-guide.suppress {
     _x-label-depth-stack(x-guide, x-extents.width, x-extents.height)
   } else { 0.0 }
-  let y-label-width = if labels-on {
+  let y-label-width = if labels-on and not y-guide.suppress {
     _y-label-width-stack(y-guide, y-extents.width, y-extents.height)
   } else { 0.0 }
   // A suppressed (`labs(x: none)`) or nameless axis title reserves no extent;
@@ -356,11 +356,15 @@
   let y-title-cm = if y-title != none { _ax-text-cm(ax-title.yl.size) } else {
     0.0
   }
+  // A suppressed axis (`guides(x: none)`) draws no ticks or labels, so it
+  // reserves no tick depth either; the axis line and title still render.
+  let x-tick-cm = if x-guide.suppress { 0.0 } else { tick-len.xb }
+  let y-tick-cm = if y-guide.suppress { 0.0 } else { tick-len.yl }
   let bottom-extent = (
-    tick-len.xb + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05
+    x-tick-cm + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05
   )
   let left-extent = (
-    tick-len.yl + 0.1 + y-label-width + left-gap + y-title-cm
+    y-tick-cm + 0.1 + y-label-width + left-gap + y-title-cm
   )
 
   // Cap the right margin so the legend can never push panel width below the

@@ -28,10 +28,27 @@
 #let _read-axis-guide(spec, aes, default-angle: 0) = {
   let g = spec.at("guides", default: (:)).at(aes, default: none)
   if g == none {
-    return (angle: default-angle, n-dodge: 1, logticks: false, stack: false)
+    return (
+      angle: default-angle,
+      n-dodge: 1,
+      logticks: false,
+      stack: false,
+      suppress: false,
+    )
+  }
+  // `guides(x: none)` binds the suppress marker: hide this axis's ticks and
+  // labels while keeping the flat shape consumers expect.
+  if g.at("suppress", default: false) {
+    return (
+      angle: default-angle,
+      n-dodge: 1,
+      logticks: false,
+      stack: false,
+      suppress: true,
+    )
   }
   if not g.at("stack", default: false) {
-    return _normalise-axis-guide(g, default-angle)
+    return (.._normalise-axis-guide(g, default-angle), suppress: false)
   }
   let subs = g.guides.map(s => _normalise-axis-guide(s, default-angle))
   if subs.len() == 0 {
@@ -47,6 +64,7 @@
     stack: true,
     guides: subs,
     spacing: length-to-cm(g.at("spacing", default: 4pt), 0),
+    suppress: false,
   )
 }
 

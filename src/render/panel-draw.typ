@@ -271,7 +271,7 @@
   let _x-rows = _stack-rows(x-guide, _X-LABEL-ROW-GAP)
   let _y-rows = _stack-rows(y-guide, _Y-LABEL-COL-GAP)
   let _draw-x-label(cx, label-text, idx) = {
-    if not (show-x-labels and theme.tick-labels) { return }
+    if not (show-x-labels and theme.tick-labels) or x-guide.suppress { return }
     for r in _x-rows {
       let dodge-row = calc.rem(idx, r.sub.n-dodge)
       let cy = (
@@ -290,7 +290,7 @@
     }
   }
   let _draw-y-label(cy, label-text, idx) = {
-    if not (show-y-labels and theme.tick-labels) { return }
+    if not (show-y-labels and theme.tick-labels) or y-guide.suppress { return }
     for r in _y-rows {
       let dodge-col = calc.rem(idx, r.sub.n-dodge)
       let cx = (
@@ -330,6 +330,7 @@
     if not is-continuous and trained.type != "discrete" { return }
     let stroke = if axis == "x" { _ax-ticks.xb } else { _ax-ticks.yl }
     let tick-len = if axis == "x" { _tick-len.xb } else { _tick-len.yl }
+    let suppress = if axis == "x" { x-guide.suppress } else { y-guide.suppress }
     let range = if axis == "x" { px-range } else { py-range }
     let breaks = if is-continuous {
       if axis-breaks != none and axis-breaks.at(axis, default: none) != none {
@@ -347,7 +348,7 @@
           line((px-lo, c), (px-hi, c), stroke: grid-stroke)
         }
       }
-      if _should-draw-tick(stroke, tick-len) {
+      if _should-draw-tick(stroke, tick-len) and not suppress {
         if axis == "x" {
           line((c, py-lo), (c, py-lo - tick-len), stroke: stroke)
         } else {
@@ -390,7 +391,7 @@
   // Emits half-length, unlabelled ticks at sub-decade positions (2, 3, ..., 9
   // within each decade) covered by the visible domain.
   let _draw-log-minors(trained, guide, axis, range, stroke, tick-len) = {
-    if not guide.logticks { return }
+    if not guide.logticks or guide.suppress { return }
     if trained == none { return }
     if trained.type != "continuous" { return }
     if trained.at("transform", default: "identity") != "log10" { return }
@@ -819,14 +820,22 @@
   let y-title = _axis-title(y-trained, _mapping-y-name)
   let _x-ext = _resolve-extents(x-extents, _ax-text.xb.size)
   let _y-ext = _resolve-extents(y-extents, _ax-text.yl.size)
-  let x-label-depth = _x-label-depth-stack(x-guide, _x-ext.width, _x-ext.height)
-  let y-label-width = _y-label-width-stack(y-guide, _y-ext.width, _y-ext.height)
+  // A suppressed axis (`guides(x: none)`) reserves no tick or label depth, so
+  // the title slides up to the panel edge.
+  let x-label-depth = if x-guide.suppress { 0.0 } else {
+    _x-label-depth-stack(x-guide, _x-ext.width, _x-ext.height)
+  }
+  let y-label-width = if y-guide.suppress { 0.0 } else {
+    _y-label-width-stack(y-guide, _y-ext.width, _y-ext.height)
+  }
+  let x-tick-cm = if x-guide.suppress { 0.0 } else { _tick-len.xb }
+  let y-tick-cm = if y-guide.suppress { 0.0 } else { _tick-len.yl }
   let x-title-cm = _ax-text-cm(_ax-title.xb.size)
   let y-title-cm = _ax-text-cm(_ax-title.yl.size)
   let x-title-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   let y-title-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
-  let x-edge-offset = _tick-len.xb + 0.1 + x-label-depth + x-title-gap
-  let y-edge-offset = _tick-len.yl + 0.1 + y-label-width + y-title-gap
+  let x-edge-offset = x-tick-cm + 0.1 + x-label-depth + x-title-gap
+  let y-edge-offset = y-tick-cm + 0.1 + y-label-width + y-title-gap
   if show-x-title and x-title != none and _ax-title.xb.size > 0pt {
     let (cx, x-anchor) = _x-title-place(_ax-title.xb.align, px-lo, px-hi)
     content(
