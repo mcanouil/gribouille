@@ -73,7 +73,7 @@ local function emit_doc(fn)
     local named_keys = model.resolve_named_keys(doc)
     local vnames = variadic_names(fn)
     local key_set = {}
-    for _, k in ipairs(doc.named_keys) do key_set[k] = true end
+    for _, k in ipairs(named_keys) do key_set[k.name] = true end
     blank(out)
     for _, p in ipairs(doc.params) do
       if not key_set[p.name] then

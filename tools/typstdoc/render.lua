@@ -180,8 +180,9 @@ local function emit_params(fn, from_qmd, index, strict)
 
   -- `@named-keys` keys are documented in a sub-list under the table, not as rows;
   -- skip them (and their per-key `@param` overrides) here.
+  local named_keys = model.resolve_named_keys(fn.doc)
   local key_set = {}
-  for _, k in ipairs(fn.doc.named_keys) do key_set[k] = true end
+  for _, k in ipairs(named_keys) do key_set[k.name] = true end
 
   -- A `..rest` binding in the signature forwards arbitrary kwargs, so the doc
   -- block (not the signature) enumerates the real parameters: a pure forwarder's
@@ -227,7 +228,6 @@ local function emit_params(fn, from_qmd, index, strict)
   -- A documented `@named-keys` sink lists its accepted keys as a real markdown
   -- sub-list below the table, so `@ref` links resolve (they would not inside a
   -- raw-HTML table cell).
-  local named_keys = model.resolve_named_keys(fn.doc)
   if #named_keys > 0 and variadic_name then
     table.insert(out, string.format("Keys accepted by `..%s`:", variadic_name))
     table.insert(out, "")

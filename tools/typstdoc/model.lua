@@ -1,9 +1,9 @@
 local M = {}
 
 -- Resolve a documented `..rest` sink's accepted keys into `{name, description}`
--- rows. Each key inherits the shared `@named-keys-doc` template (`{}` expands to
--- the key name) unless an explicit `@param <key>` overrides it. Returns an empty
--- list when the function declares no `@named-keys`.
+-- rows. Each key inherits the shared template from `@named-keys <keys> : <template>`
+-- (`{}` expands to the key name) unless an explicit `@param <key>` overrides it.
+-- Returns an empty list when the function declares no `@named-keys`.
 function M.resolve_named_keys(doc)
   if not doc.named_keys or #doc.named_keys == 0 then return {} end
   local override = {}
