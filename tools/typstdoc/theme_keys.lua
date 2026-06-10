@@ -31,6 +31,13 @@ local SKIP_KEYS = {
   name = true,
 }
 
+-- Groups left out of the hover element list: scalar `tick-*` and the colour
+-- params (`ink`/`paper`/`accent`), which are documented as explicit arguments.
+local NON_ELEMENT_GROUPS = {
+  ticks = true,
+  colours = true,
+}
+
 -- Group order for the rendered table. Each group lists root keys; variants
 -- expand inline beneath their root.
 local GROUP_ORDER = {
@@ -283,13 +290,12 @@ function M.render(root)
 end
 
 -- The structured element-surface keys, in catalogue order, for listing under a
--- `..fields` sink in an LSP hover. Excludes the scalar `ticks` group and the
--- `colours` group (`ink`/`paper`/`accent` are documented as explicit params).
+-- `..fields` sink in an LSP hover (see `NON_ELEMENT_GROUPS` for the exclusions).
 -- Derived from the static GROUP_ORDER, so it needs no repo root.
 function M.structured_keys()
   local keys = {}
   for _, group in ipairs(GROUP_ORDER) do
-    if group.name ~= "ticks" and group.name ~= "colours" then
+    if not NON_ELEMENT_GROUPS[group.name] then
       for _, key in ipairs(group.keys) do keys[#keys + 1] = key end
     end
   end
