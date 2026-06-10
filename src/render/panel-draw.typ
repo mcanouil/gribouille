@@ -27,7 +27,7 @@
 #import "axis-format.typ": _axis-breaks, _axis-label, _axis-title, _sec-spec
 #import "guides.typ": (
   _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _THETA-MINOR-TICK-FRAC, _axis-text-angle,
-  _read-axis-guide, _read-theta-guide,
+  _read-axis-guide, _read-r-guide, _read-theta-guide,
 )
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP, _ax-text-cm,
@@ -566,6 +566,7 @@
 
   if is-radial {
     let theta-guide = _read-theta-guide(spec)
+    let theta-suppress = theta-guide != none and theta-guide.suppress
     let (cx, cy) = outer-radial.centre
     let r-max = outer-radial.r-max
     let theta-range = outer-radial.theta-range
@@ -623,7 +624,7 @@
 
     // Outer axis arc plus optional minor ticks (the `guide-axis-theta`
     // guide). Spoke-only plots (no theta guide) skip this whole block.
-    if theta-guide != none and _ax-line.xb != none {
+    if theta-guide != none and not theta-suppress and _ax-line.xb != none {
       let (theta-lo, theta-hi) = (theta-range.at(0), theta-range.at(1))
       let span = calc.abs(theta-hi - theta-lo)
       let trim = if theta-guide.cap == "none" { 0 } else {
@@ -656,7 +657,10 @@
     }
 
     if (
-      show-x-labels and theme.tick-labels and theta-trained != none
+      show-x-labels
+        and theme.tick-labels
+        and theta-trained != none
+        and not theta-suppress
     ) {
       let pad = 0.2
       for group in theta-groups {
@@ -782,6 +786,7 @@
         and theme.tick-labels
         and r-trained != none
         and r-trained.type == "continuous"
+        and not _read-r-guide(spec).suppress
     ) {
       let start-angle = theta-range.at(0)
       let dx = calc.cos(start-angle)
