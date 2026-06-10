@@ -34,6 +34,7 @@ function M.new_doc_block()
     params = {},
     arities = {},
     named_keys = {},
+    has_theme_keys = false,
     returns = nil,
     examples = {},
     see = {},

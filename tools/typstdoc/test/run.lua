@@ -1389,6 +1389,92 @@ describe("examples: gallery consistency", function()
 end)
 
 -- -----------------------------------------------------------------------
+describe("tidydoc: tinymist docstring emitter", function()
+  local tidydoc = require("tidydoc")
+
+  local function transformed(body)
+    local path = tmpfile("tidy", body)
+    tidydoc.transform_file(path)
+    return util.read_file(path)
+  end
+
+  it("converts @param to a `- name:` list and drops metadata tags", function()
+    local out = transformed([[
+/// Bind a thing.
+///
+/// @category Core
+/// @since 0.0.1
+/// @param name Legend title.
+/// @returns A scale.
+#let foo(name: auto) = none
+]])
+    assert_contains(out, "/// - name: Legend title.")
+    assert_contains(out, "/// Returns: A scale.")
+    assert_true(not out:find("@category", 1, true), "metadata tag dropped")
+    assert_true(not out:find("@param", 1, true), "@param tag converted")
+  end)
+
+  it("appends @named-keys to the variadic param and resolves @refs to code", function()
+    local out = transformed([[
+/// Bind guides.
+///
+/// Threads into @plot.
+///
+/// @category Guides
+/// @param args Named specs.
+/// @named-keys colour fill size
+/// @returns Dict.
+#let foo(..args) = none
+]])
+    assert_contains(out, "/// - args: Named specs. Accepted keys: colour, fill, size.")
+    assert_contains(out, "/// Threads into `plot`.")
+  end)
+
+  it("replaces a @theme-keys table with a reference pointer", function()
+    local out = transformed([[
+/// Build a theme.
+///
+/// @theme-keys
+///
+/// @category Themes
+/// @param ..fields Overrides.
+/// @returns Theme.
+#let foo(..fields) = none
+]])
+    assert_contains(out, "See the package reference for the full theme key catalogue.")
+    assert_true(not out:find("|", 1, true), "no markdown table leaks in")
+  end)
+
+  it("emits @see as a plain list and keeps code verbatim", function()
+    local out = transformed([[
+/// A widget.
+///
+/// @category Core
+/// @see @bar @baz
+/// @returns none.
+#let foo() = none
+]])
+    assert_contains(out, "/// See also: `bar`, `baz`.")
+    assert_contains(out, "#let foo() = none")
+  end)
+
+  it("preserves non-doc code lines, rewriting only the block", function()
+    local out = transformed([[
+#import "x.typ": y
+
+/// Summary only.
+///
+/// @category Core
+/// @returns none.
+#let foo() = y()
+]])
+    assert_contains(out, '#import "x.typ": y')
+    assert_contains(out, "/// Summary only.")
+    assert_contains(out, "#let foo() = y()")
+  end)
+end)
+
+-- -----------------------------------------------------------------------
 cleanup()
 
 io.write(string.format("\n%d passed, %d failed\n", T.passed, T.failed))
