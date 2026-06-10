@@ -115,6 +115,7 @@ local function format_signature(fn)
     return fn.name
   end
   local parts = {}
+  local nk = fn.doc.named_keys
   if forwarding_variadic(fn) then
     local sig_by_name = {}
     for _, p in ipairs(fn.signature_params) do sig_by_name[p.name] = p end
@@ -122,6 +123,19 @@ local function format_signature(fn)
       local sig = sig_by_name[p.name]
       if sig and sig.default then
         table.insert(parts, p.name .. ": " .. sig.default)
+      else
+        table.insert(parts, p.name)
+      end
+    end
+  elseif nk and #nk > 0 then
+    -- A documented `..rest` sink accepts a known set of named keys; list those
+    -- representative keys and a trailing `...` to show the surface is open.
+    for _, p in ipairs(fn.signature_params) do
+      if p.variadic then
+        for _, k in ipairs(nk) do table.insert(parts, k) end
+        table.insert(parts, "...")
+      elseif p.default then
+        table.insert(parts, p.name .. ": " .. p.default)
       else
         table.insert(parts, p.name)
       end
