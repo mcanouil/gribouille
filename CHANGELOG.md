@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: the published package now ships Tinymist-friendly docstrings; hovering a gribouille function in an editor shows formatted parameters, returns, and examples instead of the raw `@`-tag comments. (#108)
 - feat: under `coord-radial`, `guides(theta: none)` hides the angular axis (arc, minor ticks, and tick labels) and `guides(r: none)` hides the radial tick labels; the spokes and circles stay. Also fixes `guides(theta: none)` previously adding a theta arc instead of hiding the axis. (#106)
 - feat: `guides(x: none)` / `guides(y: none)` hide that axis's tick marks and tick labels (and any log minor ticks) and reclaim the freed space; the axis line, grid, and title stay (remove the title with `labs(x: none)`). (#105)
 - feat: `guides()` accepts `none` to hide a guide and `auto` for the default; `guides(default: none)` hides every legend without its own override, and any other non-guide value fails with a clear message. Replaces the removed `guide-none()` (pass `none` instead). (#104)
