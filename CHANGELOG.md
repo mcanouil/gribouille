@@ -2,11 +2,12 @@
 
 ## Unreleased
 
-- feat: `guides()` accepts `none` to hide a guide and `auto` for the default, mirroring `labs()` and the scales; `guides(default: none)` hides every legend without its own override, and any other non-guide value fails with a clear message. Replaces the removed `guide-none()` (pass `none` instead). (#104)
+- feat: `guides(x: none)` / `guides(y: none)` hide that axis's tick marks and tick labels (and any log minor ticks) and reclaim the freed space; the axis line, grid, and title stay (remove the title with `labs(x: none)`). (#105)
+- feat: `guides()` accepts `none` to hide a guide and `auto` for the default; `guides(default: none)` hides every legend without its own override, and any other non-guide value fails with a clear message. Replaces the removed `guide-none()` (pass `none` instead). (#104)
 - feat: `annotate()` gains a `clip` argument (default `true`); set `clip: false` to let an annotation overflow the panel, e.g., a corner inset or a mark placed past the axis limits. (#93)
 - feat: `compose()` accepts `theme:`; an explicit theme styles the composition chrome (title, hoisted legend, panel tags) and propagates into panels with no theme of their own, otherwise a theme shared by every panel is used. (#82)
 - feat: `compose()` panels are now built with the new `defer()` helper (`defer(plot, ...)`, or `defer(compose, ...)` to nest), replacing `plot(..., defer: true)`; panels omit their own `width`/`height` and the composition sizes each cell. (#81)
-- feat: `geom-area()` defaults to `stat: "align"` and `position: "stack"`, matching ggplot2 v3.4 behaviour; groups with mismatched x values are automatically resampled onto a shared grid and stacked without requiring explicit `stat: stat-align()`. (#77)
+- feat: `geom-area()` defaults to `stat: "align"` and `position: "stack"`; groups with mismatched x values are automatically resampled onto a shared grid and stacked without requiring explicit `stat: stat-align()`. (#77)
 - fix: a horizontal legend (`position: "top"` / `"bottom"`) with `guide-legend(align: center)` / `align: right` now centres or right-justifies its key graphic (colourbar bar, key row, or size band) under the title, instead of leaving the graphic pinned at the left edge while the title moved; a centred colourbar also keeps its end labels inside the legend block. (#103)
 - fix: the theme `legend-background` now inherits the base `rect` element like every other `*-background` surface, so `theme(rect: ...)` cascades to it instead of being ignored. (#101)
 - fix: `guide-legend(nrow:)` / `guide-legend(ncolumn:)` now lay a continuous size legend (`scale-size-*`) out in a grid, like the discrete swatch legend, instead of being ignored; a continuous colourbar stays a single bar and ignores them. (#99)
@@ -17,7 +18,7 @@
 - fix: the out-of-range filter respects scale `expand`, keeping points and annotations that sit inside the expansion headroom instead of dropping them; reversed `limits` (a flipped axis) no longer drop every row. (#92)
 - fix: `geom-linerange()` honours its `alpha` parameter; the line was previously always drawn fully opaque. (#85)
 - fix: `geom-area(position: "stack")` now stacks bands correctly; each polygon's lower edge sits at the cumulated top of the group below rather than always closing at `y = 0`. (#77)
-- fix: `stat-align()` expands its shared grid by a small offset on either side of every breakpoint, so a group that starts or ends mid-range steps cleanly down to the baseline instead of leaving a wedge below the neighbouring group, matching ggplot2's `StatAlign`. (#77)
+- fix: `stat-align()` expands its shared grid by a small offset on either side of every breakpoint, so a group that starts or ends mid-range steps cleanly down to the baseline instead of leaving a wedge below the neighbouring group. (#77)
 - docs: reference pages for forwarding functions such as the `scale-*` colour wrappers now list their real parameters instead of an opaque `..args` row, and a mixed signature like `annotate(geom, ..fields)` also lists `clip`. (#102)
 - docs: the `theme()` reference table now lists every theme key, adding `plot-tag`, `legend-ticks`, `legend-background`, `legend-bar`, and `geom`. (#100)
 
@@ -30,7 +31,7 @@
 ## 0.2.0 (2026-06-01)
 
 - feat: a layer's `data` accepts a function applied to the plot data, returning that layer's frame (e.g., `geom-point(data: rows => rows.filter(...))`), for subsetting or per-layer transforms without a separate dataset. (#62)
-- feat: `facet-grid(scales:)` supports free scales (`"free_x"` frees x per column, `"free_y"` frees y per row, `"free"` both), matching ggplot2 facet_grid; non-positional scales stay shared and panels keep equal size. (#60)
+- feat: `facet-grid(scales:)` supports free scales (`"free_x"` frees x per column, `"free_y"` frees y per row, `"free"` both); non-positional scales stay shared and panels keep equal size. (#60)
 - feat: legend entry labels honour the `legend-text` text `align`, and `guide-legend()` gains an `align` argument; horizontal legends default to centred labels, vertical to left. (#34)
 - feat: `compose()` accepts `defer: true` to return a spec usable as a panel of another `compose`, enabling nested compositions; `tag-levels` accepts a per-depth array (with `tag-sep`) so nested panels continue the numbering (e.g., `B.1`, `B.2`). (#24)
 - feat: `compose()` can number panels with a tag pattern (`tag-levels` `"A"`/`"a"`/`"1"`/`"I"`/`"i"`, plus `tag-prefix`/`tag-suffix`/`tag-corner`), styled by the new `plot-tag` theme element. (#23)

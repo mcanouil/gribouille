@@ -12,7 +12,7 @@
 /// Every field defaults to `auto`: the label is derived from the scale or
 /// mapping (axis and legend titles) or simply omitted (title, subtitle,
 /// caption, tag, alt). Pass `none` to suppress a label explicitly and collapse
-/// the space it would otherwise reserve, mirroring ggplot2's `labs(x = NULL)`.
+/// the space it would otherwise reserve.
 ///
 /// \@category Labs
 /// \@stability stable

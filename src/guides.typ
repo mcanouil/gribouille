@@ -10,7 +10,9 @@
 /// Accepts named arguments where each key is an aesthetic (e.g., `colour`,
 /// `fill`) and each value is a guide spec from \@guide-legend, `none` to hide
 /// that guide, or `auto` for the default. The resulting dictionary threads into
-/// the plot spec and is honoured by the legend renderer.
+/// the plot spec and is honoured by the legend renderer. For the `x` / `y`
+/// axes, `none` hides the axis ticks and tick labels (the axis line and title
+/// stay; remove the title with `labs(x: none)`).
 ///
 /// \@category Guides
 /// \@stability stable

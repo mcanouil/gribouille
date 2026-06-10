@@ -1,7 +1,7 @@
 // A layer's `data` may be a function applied to the inherited plot data,
-// returning the per-layer frame (ggplot2's function-valued layer data). The
-// closure receives the normalised plot data and may return row- or
-// column-store; the result is normalised to canonical row-store.
+// returning the per-layer frame. The closure receives the normalised plot data
+// and may return row- or column-store; the result is normalised
+// to canonical row-store.
 
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/render/common.typ": _resolve-data

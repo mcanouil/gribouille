@@ -15,7 +15,7 @@
 
 // Map a horizontal-axis title alignment to its coordinate along the panel's
 // x span (`lo`/`hi` are the left/right canvas x) and the cetz anchor that
-// pins it there. `none` keeps the ggplot2 default of centred.
+// pins it there. `none` keeps the default of centred.
 #let _x-title-place(align, lo, hi) = if align == left {
   (lo, "south-west")
 } else if align == right {
@@ -202,4 +202,3 @@
   let gap = _text-margin-cm(ax-title, gap-side, _AX-TITLE-LABEL-GAP)
   tick-len + 0.1 + label-extent + gap + title-cm + 0.05
 }
-

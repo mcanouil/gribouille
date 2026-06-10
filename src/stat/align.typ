@@ -129,8 +129,7 @@
   // (`loc - adjust`, `loc`, `loc + adjust`). A group that starts or ends
   // mid-range then gains a baseline vertex just before its first point and
   // just after its last, so a neighbouring group steps cleanly down to zero
-  // instead of rising diagonally toward that group's first vertex. Mirrors
-  // ggplot2 StatAlign's `c(loc - adjust, loc, loc + adjust)` grid.
+  // instead of rising diagonally toward that group's first vertex.
   let expanded = ()
   for loc in unique-loc {
     expanded.push(loc - adjust)
