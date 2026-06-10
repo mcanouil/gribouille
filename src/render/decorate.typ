@@ -63,7 +63,7 @@
   // the resolved base args from `_text-args`. `align(...)` inside the
   // definite-width box makes each label's horizontal alignment explicit, so it
   // no longer inherits the host document's ambient `set align(...)`.
-  // `default-align` is the per-surface ggplot2 default used when the theme
+  // `default-align` is the per-surface default used when the theme
   // element leaves `align` unset.
   let _chrome-block(value, style, default-align, ..text-args) = if (
     value != none and value != auto and style.size > 0pt

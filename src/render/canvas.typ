@@ -60,9 +60,8 @@
 // Grid analogue of `_train-panels`: free-x trains x once PER COLUMN (union over
 // the column's rows) and free-y trains y once PER ROW (union over the row's
 // columns), so every panel in a column shares one x domain and every panel in a
-// row shares one y domain (ggplot2 facet_grid semantics). Non-positional scales
-// stay shared. Returns one merged trained dict per panel, indexed
-// `r * n-cols + c`; `()` when neither axis is free.
+// row shares one y domain. Non-positional scales stay shared. Returns one merged
+// trained dict per panel, indexed `r * n-cols + c`; `()` when neither axis is free.
 #let _train-grid-panels(
   spec,
   panels,
