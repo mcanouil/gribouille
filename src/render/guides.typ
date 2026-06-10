@@ -27,25 +27,14 @@
 // callers (label-anchor, log-minors) still see a sensible single-row view.
 #let _read-axis-guide(spec, aes, default-angle: 0) = {
   let g = spec.at("guides", default: (:)).at(aes, default: none)
+  let flat = (angle: default-angle, n-dodge: 1, logticks: false, stack: false)
   if g == none {
-    return (
-      angle: default-angle,
-      n-dodge: 1,
-      logticks: false,
-      stack: false,
-      suppress: false,
-    )
+    return (..flat, suppress: false)
   }
   // `guides(x: none)` binds the suppress marker: hide this axis's ticks and
   // labels while keeping the flat shape consumers expect.
   if g.at("suppress", default: false) {
-    return (
-      angle: default-angle,
-      n-dodge: 1,
-      logticks: false,
-      stack: false,
-      suppress: true,
-    )
+    return (..flat, suppress: true)
   }
   if not g.at("stack", default: false) {
     return (.._normalise-axis-guide(g, default-angle), suppress: false)

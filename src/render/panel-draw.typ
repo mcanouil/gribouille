@@ -271,7 +271,7 @@
   let _x-rows = _stack-rows(x-guide, _X-LABEL-ROW-GAP)
   let _y-rows = _stack-rows(y-guide, _Y-LABEL-COL-GAP)
   let _draw-x-label(cx, label-text, idx) = {
-    if not (show-x-labels and theme.tick-labels) or x-guide.suppress { return }
+    if not (show-x-labels and theme.tick-labels) { return }
     for r in _x-rows {
       let dodge-row = calc.rem(idx, r.sub.n-dodge)
       let cy = (
@@ -290,7 +290,7 @@
     }
   }
   let _draw-y-label(cy, label-text, idx) = {
-    if not (show-y-labels and theme.tick-labels) or y-guide.suppress { return }
+    if not (show-y-labels and theme.tick-labels) { return }
     for r in _y-rows {
       let dodge-col = calc.rem(idx, r.sub.n-dodge)
       let cx = (
@@ -355,21 +355,23 @@
           line((px-lo - tick-len, c), (px-lo, c), stroke: stroke)
         }
       }
-      let fallback = if is-continuous { _axis-label(trained, b) } else { b }
-      draw-label(
-        c,
-        resolve-prose(
-          resolve-label(
-            disp.labels,
-            b,
-            idx,
-            fallback,
-            typst-mark: disp.typst-mark,
+      if not suppress {
+        let fallback = if is-continuous { _axis-label(trained, b) } else { b }
+        draw-label(
+          c,
+          resolve-prose(
+            resolve-label(
+              disp.labels,
+              b,
+              idx,
+              fallback,
+              typst-mark: disp.typst-mark,
+            ),
+            eval-strings: ax-text-typst,
           ),
-          eval-strings: ax-text-typst,
-        ),
-        idx,
-      )
+          idx,
+        )
+      }
     }
   }
   _draw-cartesian-axis(
