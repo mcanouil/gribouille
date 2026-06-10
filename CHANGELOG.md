@@ -21,7 +21,8 @@
 - fix: `geom-linerange()` honours its `alpha` parameter; the line was previously always drawn fully opaque. (#85)
 - fix: `geom-area(position: "stack")` now stacks bands correctly; each polygon's lower edge sits at the cumulated top of the group below rather than always closing at `y = 0`. (#77)
 - fix: `stat-align()` expands its shared grid by a small offset on either side of every breakpoint, so a group that starts or ends mid-range steps cleanly down to the baseline instead of leaving a wedge below the neighbouring group. (#77)
-- docs: the `guides()` and `theme()` reference signatures now list their accepted keys (e.g., `colour`, `fill`, `…`) followed by `...` instead of an opaque `..args` / `..fields`; the parameters table still documents the variadic sink. (#107)
+- docs: the `guides()` and `theme()` reference pages document each accepted key (e.g., `colour`, `fill`, `text`, `panel-grid`) as its own parameter row sharing one description template, instead of a single `..args` / `..fields` row. (#108)
+- docs: the `guides()` and `theme()` reference signatures now list their accepted keys (e.g., `colour`, `fill`, `…`) followed by `...` instead of an opaque `..args` / `..fields`. (#107)
 - docs: reference pages for forwarding functions such as the `scale-*` colour wrappers now list their real parameters instead of an opaque `..args` row, and a mixed signature like `annotate(geom, ..fields)` also lists `clip`. (#102)
 - docs: the `theme()` reference table now lists every theme key, adding `plot-tag`, `legend-ticks`, `legend-background`, `legend-bar`, and `geom`. (#100)
 
