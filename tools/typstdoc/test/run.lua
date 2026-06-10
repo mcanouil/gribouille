@@ -1248,6 +1248,18 @@ end)
 describe("theme_keys: extractor + table render", function()
   local theme_keys = require("theme_keys")
 
+  it("structured_keys lists element surfaces and omits scalar/colour keys", function()
+    local keys = theme_keys.structured_keys()
+    local set = {}
+    for _, k in ipairs(keys) do set[k] = true end
+    assert_eq(keys[1], "text", "starts with the roots group")
+    assert_eq(keys[#keys], "geom", "ends with the geom group")
+    assert_true(set["panel-grid"], "includes panel surfaces")
+    assert_true(set["legend-bar"], "includes legend surfaces")
+    assert_true(not set["tick-length"], "omits the scalar ticks group")
+    assert_true(not set["ink"] and not set["paper"] and not set["accent"], "omits the colours group")
+  end)
+
   local DEFAULTS_BODY = [[
 #let _tr-ink = black
 #let _tr-paper = white
@@ -1452,6 +1464,39 @@ describe("tidydoc: tinymist docstring emitter", function()
 ]])
     assert_contains(out, "See the package reference for the full theme key catalogue.")
     assert_true(not out:find("|", 1, true), "no markdown table leaks in")
+  end)
+
+  it("nests the theme element catalogue under a @theme-fields sink", function()
+    local out = transformed([[
+/// A preset.
+///
+/// @category Themes
+/// @param ..fields Extra overrides forwarded to @theme.
+/// @theme-fields
+/// @returns Theme.
+#let foo(..fields) = none
+]])
+    assert_contains(out, "/// - fields: Extra overrides forwarded to `theme`.")
+    assert_contains(out, "///   - text: Override for the `text` element.")
+    assert_contains(out, "///   - panel-grid: Override for the `panel-grid` element.")
+    assert_contains(out, "///   - geom: Override for the `geom` element.")
+    assert_contains(out, "/// See the package reference for the full theme key catalogue.")
+    assert_true(not out:find("///   - ink:", 1, true), "colour keys are not listed")
+  end)
+
+  it("lets @named-keys take precedence over @theme-fields for the nested list", function()
+    local out = transformed([[
+/// A sink.
+///
+/// @category Core
+/// @param ..fields Overrides.
+/// @named-keys colour fill : Channel `{}`.
+/// @theme-fields
+/// @returns Dict.
+#let foo(..fields) = none
+]])
+    assert_contains(out, "///   - colour: Channel `colour`.")
+    assert_true(not out:find("///   - text:", 1, true), "theme catalogue must not be used when @named-keys is present")
   end)
 
   it("emits @see as a plain list and keeps code verbatim", function()

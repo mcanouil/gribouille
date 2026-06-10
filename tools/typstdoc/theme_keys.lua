@@ -282,4 +282,18 @@ function M.render(root)
   return rendered
 end
 
+-- The structured element-surface keys, in catalogue order, for listing under a
+-- `..fields` sink in an LSP hover. Excludes the scalar `ticks` group and the
+-- `colours` group (`ink`/`paper`/`accent` are documented as explicit params).
+-- Derived from the static GROUP_ORDER, so it needs no repo root.
+function M.structured_keys()
+  local keys = {}
+  for _, group in ipairs(GROUP_ORDER) do
+    if group.name ~= "ticks" and group.name ~= "colours" then
+      for _, key in ipairs(group.keys) do keys[#keys + 1] = key end
+    end
+  end
+  return keys
+end
+
 return M

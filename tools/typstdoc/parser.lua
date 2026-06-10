@@ -23,7 +23,7 @@ local KNOWN_TAGS = {
   ["@param"] = true, ["@arity"] = true, ["@returns"] = true,
   ["@examples"] = true, ["@examples-static"] = true, ["@see"] = true,
   ["@internal"] = true, ["@advanced"] = true,
-  ["@theme-keys"] = true, ["@named-keys"] = true,
+  ["@theme-keys"] = true, ["@theme-fields"] = true, ["@named-keys"] = true,
 }
 
 local PIPELINE_HOOKS = { draw = true, apply = true }
@@ -361,6 +361,10 @@ local function parse_doc_block(doc_lines, file, start_line, opts)
           end
           table.insert(doc.description, theme_keys.render(repo_root))
         end
+      elseif tag == "@theme-fields" then
+        -- Marker: this `..fields` sink accepts the theme element keys. Drives the
+        -- LSP-hover key list (via tidydoc) without rendering the website table.
+        doc.has_theme_keys = true
       elseif tag == "@named-keys" then
         -- `keys [: shared template]`: a ` : ` splits the key list from a shared
         -- per-key description whose `{}` expands to each key name.

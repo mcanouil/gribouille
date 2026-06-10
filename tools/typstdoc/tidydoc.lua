@@ -20,6 +20,7 @@ package.path = script_dir() .. "/?.lua;" .. package.path
 local util = require("util")
 local parser = require("parser")
 local model = require("model")
+local theme_keys = require("theme_keys")
 
 local M = {}
 
@@ -71,6 +72,15 @@ local function emit_doc(fn)
     -- keys nested beneath it; the keys (and their per-key `@param` overrides) are
     -- not emitted as their own top-level bullets.
     local named_keys = model.resolve_named_keys(doc)
+    -- Keys to nest under the variadic sink: an authored `@named-keys` list, or
+    -- (for a `@theme-keys` / `@theme-fields` sink) the theme element catalogue.
+    local nested = named_keys
+    if #nested == 0 and doc.has_theme_keys then
+      nested = {}
+      for _, key in ipairs(theme_keys.structured_keys()) do
+        nested[#nested + 1] = { name = key, description = "Override for the `" .. key .. "` element." }
+      end
+    end
     local vnames = variadic_names(fn)
     local key_set = {}
     for _, k in ipairs(named_keys) do key_set[k.name] = true end
@@ -78,8 +88,8 @@ local function emit_doc(fn)
     for _, p in ipairs(doc.params) do
       if not key_set[p.name] then
         push(out, "/// - " .. p.name .. ": " .. refs_to_code(p.description or ""))
-        if (p.variadic or vnames[p.name]) and #named_keys > 0 then
-          for _, k in ipairs(named_keys) do
+        if (p.variadic or vnames[p.name]) and #nested > 0 then
+          for _, k in ipairs(nested) do
             push(out, "///   - " .. k.name .. ": " .. refs_to_code(k.description))
           end
         end
