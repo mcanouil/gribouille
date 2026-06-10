@@ -12,7 +12,9 @@
 /// that guide, or `auto` for the default. The resulting dictionary threads into
 /// the plot spec and is honoured by the legend renderer. For the `x` / `y`
 /// axes, `none` hides the axis ticks and tick labels (the axis line and title
-/// stay; remove the title with `labs(x: none)`).
+/// stay; remove the title with `labs(x: none)`); under `coord-radial`, `theta`
+/// / `r` `none` hide the angular / radial axis labels while the spokes and
+/// circles stay.
 ///
 /// \@category Guides
 /// \@stability stable

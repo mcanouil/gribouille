@@ -78,6 +78,11 @@
 #let _read-theta-guide(spec) = {
   let g = spec.at("guides", default: (:)).at("theta", default: none)
   if g == none { return none }
+  // `guides(theta: none)` binds the suppress marker: hide the theta axis (arc,
+  // minor ticks, and tick labels) while the spokes stay.
+  if g.at("suppress", default: false) {
+    return (angle: 0, minor-ticks: false, cap: "none", suppress: true)
+  }
   let cap = g.at("cap", default: "none")
   if not _THETA-CAP-VALUES.contains(cap) {
     fail-enum("guide-axis-theta", "cap", cap, _THETA-CAP-VALUES)
@@ -86,5 +91,14 @@
     angle: g.at("angle", default: 0),
     minor-ticks: g.at("minor-ticks", default: false),
     cap: cap,
+    suppress: false,
   )
+}
+
+// Whether `guides(r: none)` suppresses the radial axis. There is no
+// `guide-axis-r`, so `r` only meaningfully takes `none`; any other value reads
+// as not suppressed.
+#let _read-r-guide(spec) = {
+  let g = spec.at("guides", default: (:)).at("r", default: none)
+  (suppress: g != none and g.at("suppress", default: false))
 }
