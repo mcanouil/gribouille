@@ -4,10 +4,13 @@
 // `guide-legend` / `element-text` constructors.
 
 #import "../../src/legend.typ": (
-  _hjust-below, _hjust-right-of, _label-align, _title-align,
+  _align-offset, _hjust-below, _hjust-right-of, _label-align, _title-align,
+  _title-resolved-align,
 )
 #import "../../src/guide/legend.typ": guide-legend
 #import "../../src/theme/elements.typ": element-text, element-typst
+#import "../../src/theme/defaults.typ": merge-theme
+#import "../../lib.typ": theme
 
 // Labels drawn to the right of a mark justify within the slot `[start, start +
 // slot-w]`; `left` keeps the west anchor at `start`.
@@ -51,5 +54,21 @@
 #assert.eq(guide-legend().align, none)
 #assert.eq(element-text(align: center).align, center)
 #assert.eq(element-typst(align: left).align, left)
+
+// `_align-offset` justifies a graphic of width `graphic-w` within `total-w`:
+// `left` pins the left edge, `center` splits the slack, `right` pins the right.
+#assert.eq(_align-offset(left, 10.0, 4.0), 0.0)
+#assert.eq(_align-offset(center, 10.0, 4.0), 3.0)
+#assert.eq(_align-offset(right, 10.0, 4.0), 6.0)
+
+// `_title-resolved-align` applies the `none -> left` default so the key graphic
+// can be justified the same way the title is.
+#let plain = merge-theme(none)
+#assert.eq(_title-resolved-align((:), plain), left)
+#assert.eq(_title-resolved-align((align: center), plain), center)
+// The `legend-title` theme align applies when the guide leaves `align` unset.
+#let titled = merge-theme(theme(legend-title: element-text(align: right)))
+#assert.eq(_title-resolved-align((:), titled), right)
+#assert.eq(_title-resolved-align((align: center), titled), center)
 
 Legend-align tests passed.

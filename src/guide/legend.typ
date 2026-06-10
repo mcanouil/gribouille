@@ -176,6 +176,22 @@
 /// )
 /// ```
 ///
+/// \@examples Centre a horizontal colourbar under its title: place the legend
+/// below the panel and set `align: center` so the bar and the title share one
+/// horizontal centre.
+/// ```
+/// //| alt: "Scatter chart coloured by a continuous value with a horizontal colourbar below the panel, the bar centred under its wider title."
+/// #plot(
+///   data: mpg,
+///   mapping: aes(x: "displ", y: "hwy", fill: "cty"),
+///   layers: (geom-point(size: 3pt),),
+///   labs: labs(fill: "City fuel economy (mpg)"),
+///   guides: guides(fill: guide-legend(position: "bottom", align: center)),
+///   width: 12cm,
+///   height: 7cm,
+/// )
+/// ```
+///
 /// \@see \@guides, \@guide-none, \@plot
 #let guide-legend(
   title: none,

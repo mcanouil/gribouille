@@ -1145,12 +1145,33 @@
   guide-align
 } else { theme-align }
 
+// The title's effective alignment with the `none -> left` default applied. The
+// key graphic of a horizontal legend is justified by the same value so the two
+// always share a centre (see `_draw-title` and the `_draw-*` graphic origins).
+#let _title-resolved-align(guide, theme) = {
+  let a = _title-align(
+    guide.at("align", default: none),
+    _text-style(theme, "legend-title").align,
+  )
+  if a == none { left } else { a }
+}
+
+// Horizontal offset (cm) that justifies a graphic of width `graphic-w` within a
+// block of width `total-w`: `0` for left, half the slack for centre, all of it
+// for right. Mirrors `_draw-title`'s justification so a horizontal legend's key
+// graphic shares the title's centre / edges.
+#let _align-offset(align, total-w, graphic-w) = if align == right {
+  total-w - graphic-w
+} else if align == center {
+  (total-w - graphic-w) / 2
+} else { 0.0 }
+
 #let _draw-title(guide, ox, cursor, theme) = {
   let s = _text-style(theme, "legend-title")
   // A per-guide `align` (from `guide-legend(align:)`) wins over the theme.
   // Default left-aligned at the legend's left edge; `center`/`right` offset
-  // within the legend block `width`.
-  let a = _title-align(guide.at("align", default: none), s.align)
+  // within the legend block `width`. The key graphic uses the same alignment.
+  let a = _title-resolved-align(guide, theme)
   let (tx, t-anchor) = if a == right {
     (ox + guide.width, "north-east")
   } else if a == center {
@@ -1186,9 +1207,21 @@
   let labels = guide.at("labels", default: auto)
   let align = _label-align(guide, _legend-text.align)
   let lead = _swatch-lead-cm(size-pt)
+  // Horizontal legends centre / right-justify the key row under the title; the
+  // vertical column stays pinned at the left edge.
+  let bx = if guide.placement.direction == "horizontal" {
+    (
+      ox
+        + _align-offset(
+          _title-resolved-align(guide, theme),
+          guide.width,
+          layout.total,
+        )
+    )
+  } else { ox }
   for (i, level) in guide.levels.enumerate() {
     let rc = _swatch-rc(i, shape, byrow)
-    let cx = ox + layout.offsets.at(rc.col)
+    let cx = bx + layout.offsets.at(rc.col)
     // Push the row down by the overflow of every multi-line row above it, and
     // centre this item on its own block (`anchor: "west"`) by dropping it half
     // its overflow so the block grows downward and the glyph stays centred.
@@ -1267,10 +1300,19 @@
     let hoff = if grows { band / 2 } else { glyph-size }
     let col-w = _ladder-h-col-w(guide, label-w, size-pt)
     let row-stride = _ladder-h-row-stride(guide, size-pt)
+    // Centre / right-justify the glyph band under the title.
+    let bx = (
+      ox
+        + _align-offset(
+          _title-resolved-align(guide, theme),
+          guide.width,
+          col-w * shape.cols,
+        )
+    )
     for (i, value) in guide.breaks.enumerate() {
       let rc = _swatch-rc(i, shape, byrow)
       let row-top = top - rc.row * row-stride
-      let cx = ox + hoff + rc.col * col-w
+      let cx = bx + hoff + rc.col * col-w
       let gcy = if grows { row-top - band / 2 } else {
         row-top - glyph-size * 2
       }
@@ -1352,8 +1394,13 @@
   }
   let bar-top = cursor - _title-prefix(guide, title-h)
   let bar-bottom = bar-top - bar-h
-  let bar-left = ox
-  let bar-right = ox + bar-w
+  // Horizontal bars centre / right-justify under the title; vertical bars stay
+  // at the left edge with their labels to the right.
+  let bar-x = if horizontal {
+    ox + _align-offset(_title-resolved-align(guide, theme), guide.width, bar-w)
+  } else { ox }
+  let bar-left = bar-x
+  let bar-right = bar-x + bar-w
   let bar-frame = _rect-style(
     theme,
     "legend-bar",
