@@ -66,26 +66,24 @@ local function emit_doc(fn)
     blank(out); push(out, "/// *Experimental.*")
   end
 
-  local named_keys = model.resolve_named_keys(doc)
-  if #named_keys > 0 then
-    -- A documented sink expands to one bullet per accepted key; emit any genuine
-    -- explicit params (neither a key nor the rest binding) first, then the keys.
+  if #doc.params > 0 then
+    -- A documented `@named-keys` sink keeps its own bullet, with the accepted
+    -- keys nested beneath it; the keys (and their per-key `@param` overrides) are
+    -- not emitted as their own top-level bullets.
+    local named_keys = model.resolve_named_keys(doc)
     local vnames = variadic_names(fn)
     local key_set = {}
     for _, k in ipairs(doc.named_keys) do key_set[k] = true end
     blank(out)
     for _, p in ipairs(doc.params) do
-      if not key_set[p.name] and not (p.variadic or vnames[p.name]) then
+      if not key_set[p.name] then
         push(out, "/// - " .. p.name .. ": " .. refs_to_code(p.description or ""))
+        if (p.variadic or vnames[p.name]) and #named_keys > 0 then
+          for _, k in ipairs(named_keys) do
+            push(out, "///   - " .. k.name .. ": " .. refs_to_code(k.description))
+          end
+        end
       end
-    end
-    for _, k in ipairs(named_keys) do
-      push(out, "/// - " .. k.name .. ": " .. refs_to_code(k.description))
-    end
-  elseif #doc.params > 0 then
-    blank(out)
-    for _, p in ipairs(doc.params) do
-      push(out, "/// - " .. p.name .. ": " .. refs_to_code(p.description or ""))
     end
   end
 

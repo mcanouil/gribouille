@@ -121,20 +121,7 @@ local function format_signature(fn)
     return fn.name
   end
   local parts = {}
-  local nk = fn.doc.named_keys
-  if nk and #nk > 0 then
-    -- An author-declared `@named-keys` sink lists its accepted keys plus a
-    -- trailing `...` to show the surface is open. This wins over the forwarder
-    -- heuristic: a documented sink need not keep a `@param` for its rest binding.
-    for _, p in ipairs(fn.signature_params) do
-      if p.variadic then
-        for _, k in ipairs(nk) do table.insert(parts, k) end
-        table.insert(parts, "...")
-      else
-        table.insert(parts, named_param_piece(p))
-      end
-    end
-  elseif forwarding_variadic(fn) then
+  if forwarding_variadic(fn) then
     local sig_by_name = {}
     for _, p in ipairs(fn.signature_params) do sig_by_name[p.name] = p end
     for _, p in ipairs(fn.doc.params) do
@@ -180,36 +167,38 @@ local function emit_usage(fn)
 end
 
 local function emit_params(fn, from_qmd, index, strict)
-  local named_keys = model.resolve_named_keys(fn.doc)
-  if fn.is_value or (#fn.doc.params == 0 and #named_keys == 0) then return "" end
+  if fn.is_value or #fn.doc.params == 0 then return "" end
 
   local sig_by_name = {}
   local variadic_names = {}
   local has_variadic = false
+  local variadic_name
   for _, p in ipairs(fn.signature_params) do
     sig_by_name[p.name] = p
-    if p.variadic then has_variadic = true; variadic_names[p.name] = true end
+    if p.variadic then has_variadic = true; variadic_names[p.name] = true; variadic_name = p.name end
   end
 
+  -- `@named-keys` keys are documented in a sub-list under the table, not as rows;
+  -- skip them (and their per-key `@param` overrides) here.
+  local key_set = {}
+  for _, k in ipairs(fn.doc.named_keys) do key_set[k] = true end
+
   -- A `..rest` binding in the signature forwards arbitrary kwargs, so the doc
-  -- block (not the signature) enumerates the real parameters: an author-listed
-  -- `@named-keys` sink expands to one row per accepted key; a pure forwarder to a
-  -- delegate's named params; or explicit params plus the rest for a mixed
-  -- signature. The matching signature param supplies the default where one exists.
+  -- block (not the signature) enumerates the real parameters: a pure forwarder's
+  -- delegate params, or explicit params plus the rest for a mixed signature. The
+  -- matching signature param supplies the default where one exists.
   local rows = {}
-  if #named_keys > 0 then
-    for _, k in ipairs(named_keys) do
-      rows[#rows + 1] = { name = k.name, variadic = false, default = nil, description = k.description }
-    end
-  elseif has_variadic then
+  if has_variadic then
     for _, p in ipairs(fn.doc.params) do
-      local sig = sig_by_name[p.name]
-      rows[#rows + 1] = {
-        name = p.name,
-        variadic = p.variadic or variadic_names[p.name] or false,
-        default = sig and sig.default or nil,
-        description = p.description,
-      }
+      if not key_set[p.name] then
+        local sig = sig_by_name[p.name]
+        rows[#rows + 1] = {
+          name = p.name,
+          variadic = p.variadic or variadic_names[p.name] or false,
+          default = sig and sig.default or nil,
+          description = p.description,
+        }
+      end
     end
   else
     local doc_by_name = {}
@@ -234,6 +223,20 @@ local function emit_params(fn, from_qmd, index, strict)
     table.insert(out, string.format("| %s | %s | %s |", name_cell, default_cell, desc))
   end
   table.insert(out, "")
+
+  -- A documented `@named-keys` sink lists its accepted keys as a real markdown
+  -- sub-list below the table, so `@ref` links resolve (they would not inside a
+  -- raw-HTML table cell).
+  local named_keys = model.resolve_named_keys(fn.doc)
+  if #named_keys > 0 and variadic_name then
+    table.insert(out, string.format("Keys accepted by `..%s`:", variadic_name))
+    table.insert(out, "")
+    for _, k in ipairs(named_keys) do
+      local desc = resolve.resolve_refs_in_text(k.description or "", from_qmd, index, strict, fn.file, fn.line)
+      table.insert(out, string.format("- `%s`: %s", k.name, desc))
+    end
+    table.insert(out, "")
+  end
   return table.concat(out, "\n")
 end
 

@@ -23,7 +23,7 @@ local KNOWN_TAGS = {
   ["@param"] = true, ["@arity"] = true, ["@returns"] = true,
   ["@examples"] = true, ["@examples-static"] = true, ["@see"] = true,
   ["@internal"] = true, ["@advanced"] = true,
-  ["@theme-keys"] = true, ["@named-keys"] = true, ["@named-keys-doc"] = true,
+  ["@theme-keys"] = true, ["@named-keys"] = true,
 }
 
 local PIPELINE_HOOKS = { draw = true, apply = true }
@@ -362,11 +362,14 @@ local function parse_doc_block(doc_lines, file, start_line, opts)
           table.insert(doc.description, theme_keys.render(repo_root))
         end
       elseif tag == "@named-keys" then
-        for key in rest:gmatch("[%w_%-]+") do
+        -- `keys [: shared template]`: a ` : ` splits the key list from a shared
+        -- per-key description whose `{}` expands to each key name.
+        local keys_part, template = rest:match("^(.-)%s+:%s+(.*)$")
+        keys_part = keys_part or rest
+        for key in keys_part:gmatch("[%w_%-]+") do
           table.insert(doc.named_keys, key)
         end
-      elseif tag == "@named-keys-doc" then
-        doc.named_keys_doc = util.trim(rest)
+        if template then doc.named_keys_doc = util.trim(template) end
       elseif tag == "@param" then
         local variadic = false
         local body = rest
