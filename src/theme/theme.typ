@@ -530,9 +530,9 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param ..fields Named per-element overrides; see the description above for the full catalogue of structured and flat keys.
-///
 /// \@named-keys text line rect axis-title axis-text axis-line axis-ticks panel-grid panel-background
+/// \@named-keys-doc Override for the `{}` element: an element record from \@element-text,
+///   \@element-line, or \@element-rect, or \@element-blank() to hide it.
 ///
 /// \@returns Theme dictionary consumed by \@plot.
 ///

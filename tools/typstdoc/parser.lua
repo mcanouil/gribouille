@@ -23,7 +23,7 @@ local KNOWN_TAGS = {
   ["@param"] = true, ["@arity"] = true, ["@returns"] = true,
   ["@examples"] = true, ["@examples-static"] = true, ["@see"] = true,
   ["@internal"] = true, ["@advanced"] = true,
-  ["@theme-keys"] = true, ["@named-keys"] = true,
+  ["@theme-keys"] = true, ["@named-keys"] = true, ["@named-keys-doc"] = true,
 }
 
 local PIPELINE_HOOKS = { draw = true, apply = true }
@@ -365,6 +365,8 @@ local function parse_doc_block(doc_lines, file, start_line, opts)
         for key in rest:gmatch("[%w_%-]+") do
           table.insert(doc.named_keys, key)
         end
+      elseif tag == "@named-keys-doc" then
+        doc.named_keys_doc = util.trim(rest)
       elseif tag == "@param" then
         local variadic = false
         local body = rest

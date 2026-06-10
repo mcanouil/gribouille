@@ -986,30 +986,46 @@ describe("render: variadic forwarding in Usage and Parameters", function()
 /// A sink with known keys.
 ///
 /// @category Core
-/// @param args Named specs keyed by aesthetic.
 /// @named-keys colour fill size
+/// @named-keys-doc Channel `{}`.
 /// @returns Guides.
 #let foo(..args) = none
 ]])
     local body = render.render_function(fns[1], {}, { strict = false })
     assert_contains(body, "foo(\n  colour,\n  fill,\n  size,\n  ...,\n)")
-    assert_contains(body, "| `..args` |  | Named specs keyed by aesthetic. |")
-    assert_true(not body:find("..args,\n)", 1, true), "opaque ..args should not appear in Usage")
+    assert_contains(body, "| `colour` |  | Channel `colour`. |")
+    assert_contains(body, "| `fill` |  | Channel `fill`. |")
+    assert_true(not body:find("`..args`", 1, true), "opaque ..args row should not appear in Parameters")
   end)
 
-  it("ignores @named-keys on a pure forwarder (forwarding expansion wins)", function()
+  it("lets an explicit @param override the @named-keys-doc template per key", function()
     local fns = parsed_functions([[
-/// A forwarder with stray keys.
+/// A sink with one special key.
 ///
 /// @category Core
-/// @param name Legend title.
+/// @named-keys colour fill default
+/// @named-keys-doc Channel `{}`.
+/// @param default Fallback guide for unset channels.
+/// @returns Guides.
+#let foo(..args) = none
+]])
+    local body = render.render_function(fns[1], {}, { strict = false })
+    assert_contains(body, "| `colour` |  | Channel `colour`. |")
+    assert_contains(body, "| `default` |  | Fallback guide for unset channels. |")
+  end)
+
+  it("lets @named-keys win over the forwarder heuristic", function()
+    local fns = parsed_functions([[
+/// A documented sink that also looks like a forwarder.
+///
+/// @category Core
 /// @named-keys colour fill
+/// @named-keys-doc Channel `{}`.
 /// @returns Scale.
 #let foo(..args) = bar("colour", ..args)
 ]])
     local body = render.render_function(fns[1], {}, { strict = false })
-    assert_contains(body, "foo(\n  name,\n)")
-    assert_true(not body:find("colour,\n  fill", 1, true), "named-keys must not leak into a forwarder signature")
+    assert_contains(body, "foo(\n  colour,\n  fill,\n  ...,\n)")
   end)
 end)
 
@@ -1414,20 +1430,24 @@ describe("tidydoc: tinymist docstring emitter", function()
     assert_true(not out:find("@param", 1, true), "@param tag converted")
   end)
 
-  it("appends @named-keys to the variadic param and resolves @refs to code", function()
+  it("expands @named-keys to one bullet per key via the template, resolving @refs", function()
     local out = transformed([[
 /// Bind guides.
 ///
 /// Threads into @plot.
 ///
 /// @category Guides
-/// @param args Named specs.
-/// @named-keys colour fill size
+/// @named-keys colour fill default
+/// @named-keys-doc Guide for the `{}` aesthetic via @guide-legend.
+/// @param default Fallback guide for unset channels.
 /// @returns Dict.
 #let foo(..args) = none
 ]])
-    assert_contains(out, "/// - args: Named specs. Accepted keys: colour, fill, size.")
+    assert_contains(out, "/// - colour: Guide for the `colour` aesthetic via `guide-legend`.")
+    assert_contains(out, "/// - fill: Guide for the `fill` aesthetic via `guide-legend`.")
+    assert_contains(out, "/// - default: Fallback guide for unset channels.")
     assert_contains(out, "/// Threads into `plot`.")
+    assert_true(not out:find("- args:", 1, true), "opaque sink bullet should not appear")
   end)
 
   it("replaces a @theme-keys table with a reference pointer", function()

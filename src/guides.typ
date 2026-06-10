@@ -20,15 +20,14 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param args Named guide specs keyed by aesthetic name. Each value is a guide
-///   spec, `none` to hide that aesthetic's guide, or `auto` for the default.
-///   The reserved key `default` sets a fallback guide whose unset fields (e.g.
-///   an `auto` `position`) are inherited by every aesthetic without its own
-///   override, so `guides(default: guide-legend(position: "bottom"))` moves all
-///   legends to the bottom in one call. `guides(default: none)` hides every
-///   legend that has no override of its own.
-///
 /// \@named-keys colour fill size alpha linewidth shape linetype stroke x y theta r default
+/// \@named-keys-doc Guide for the `{}` aesthetic; a guide spec from \@guide-legend,
+///   `none` to hide it, or `auto` for the default.
+/// \@param default Fallback guide whose unset fields (e.g. an `auto` `position`) are
+///   inherited by every aesthetic without its own override, so
+///   `guides(default: guide-legend(position: "bottom"))` moves all legends to the
+///   bottom in one call; `guides(default: none)` hides every legend that has no
+///   override of its own.
 ///
 /// \@returns Dictionary mapping aesthetic name to guide spec.
 ///

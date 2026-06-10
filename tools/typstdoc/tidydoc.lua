@@ -19,6 +19,7 @@ package.path = script_dir() .. "/?.lua;" .. package.path
 
 local util = require("util")
 local parser = require("parser")
+local model = require("model")
 
 local M = {}
 
@@ -65,16 +66,26 @@ local function emit_doc(fn)
     blank(out); push(out, "/// *Experimental.*")
   end
 
-  if #doc.params > 0 then
+  local named_keys = model.resolve_named_keys(doc)
+  if #named_keys > 0 then
+    -- A documented sink expands to one bullet per accepted key; emit any genuine
+    -- explicit params (neither a key nor the rest binding) first, then the keys.
     local vnames = variadic_names(fn)
+    local key_set = {}
+    for _, k in ipairs(doc.named_keys) do key_set[k] = true end
     blank(out)
     for _, p in ipairs(doc.params) do
-      local desc = refs_to_code(p.description or "")
-      if (p.variadic or vnames[p.name]) and #doc.named_keys > 0 then
-        if desc ~= "" then desc = desc .. " " end
-        desc = desc .. "Accepted keys: " .. table.concat(doc.named_keys, ", ") .. "."
+      if not key_set[p.name] and not (p.variadic or vnames[p.name]) then
+        push(out, "/// - " .. p.name .. ": " .. refs_to_code(p.description or ""))
       end
-      push(out, "/// - " .. p.name .. ": " .. desc)
+    end
+    for _, k in ipairs(named_keys) do
+      push(out, "/// - " .. k.name .. ": " .. refs_to_code(k.description))
+    end
+  elseif #doc.params > 0 then
+    blank(out)
+    for _, p in ipairs(doc.params) do
+      push(out, "/// - " .. p.name .. ": " .. refs_to_code(p.description or ""))
     end
   end
 
