@@ -22,6 +22,7 @@
 /// \@param accent Accent colour driving layer defaults like \@geom-smooth's stroke. Default: `rgb("#3366FF")`.
 ///
 /// \@param ..fields Extra overrides forwarded to \@theme; see its docs for the full catalogue of structured and flat keys.
+/// \@theme-fields
 ///
 /// \@returns Theme dictionary consumed by \@plot.
 ///

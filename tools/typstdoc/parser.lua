@@ -23,7 +23,7 @@ local KNOWN_TAGS = {
   ["@param"] = true, ["@arity"] = true, ["@returns"] = true,
   ["@examples"] = true, ["@examples-static"] = true, ["@see"] = true,
   ["@internal"] = true, ["@advanced"] = true,
-  ["@theme-keys"] = true, ["@named-keys"] = true,
+  ["@theme-keys"] = true, ["@theme-fields"] = true, ["@named-keys"] = true,
 }
 
 local PIPELINE_HOOKS = { draw = true, apply = true }
@@ -254,7 +254,8 @@ local function merge_continuations(doc_lines)
   return merged
 end
 
-local function parse_doc_block(doc_lines, file, start_line)
+local function parse_doc_block(doc_lines, file, start_line, opts)
+  opts = opts or {}
   doc_lines = merge_continuations(doc_lines)
   local doc = model.new_doc_block()
   local mode = "summary"
@@ -351,15 +352,28 @@ local function parse_doc_block(doc_lines, file, start_line)
           table.insert(doc.see, ref)
         end
       elseif tag == "@theme-keys" then
-        if not repo_root then
-          error_at(file, start_line + i - 1,
-            "@theme-keys requires parser.set_root() before parse_file()")
+        if opts.skip_theme_keys then
+          doc.has_theme_keys = true
+        else
+          if not repo_root then
+            error_at(file, start_line + i - 1,
+              "@theme-keys requires parser.set_root() before parse_file()")
+          end
+          table.insert(doc.description, theme_keys.render(repo_root))
         end
-        table.insert(doc.description, theme_keys.render(repo_root))
+      elseif tag == "@theme-fields" then
+        -- Marker: this `..fields` sink accepts the theme element keys. Drives the
+        -- LSP-hover key list (via tidydoc) without rendering the website table.
+        doc.has_theme_keys = true
       elseif tag == "@named-keys" then
-        for key in rest:gmatch("[%w_%-]+") do
+        -- `keys [: shared template]`: a ` : ` splits the key list from a shared
+        -- per-key description whose `{}` expands to each key name.
+        local keys_part, template = rest:match("^(.-)%s+:%s+(.*)$")
+        keys_part = keys_part or rest
+        for key in keys_part:gmatch("[%w_%-]+") do
           table.insert(doc.named_keys, key)
         end
+        if template then doc.named_keys_doc = util.trim(template) end
       elseif tag == "@param" then
         local variadic = false
         local body = rest
@@ -492,7 +506,8 @@ local function parse_doc_block(doc_lines, file, start_line)
   return doc
 end
 
-function M.parse_file(file)
+function M.parse_file(file, opts)
+  opts = opts or {}
   local content, err = util.read_file(file)
   if not content then error("typstdoc: cannot read " .. file .. ": " .. tostring(err)) end
   local lines = util.split_lines(content)
@@ -535,7 +550,7 @@ function M.parse_file(file)
       end
       if trimmed:sub(1, 4) == "#let" then
         local sig = collect_signature(lines, i, file)
-        local doc = parse_doc_block(pending_doc_lines, file, pending_doc_start)
+        local doc = parse_doc_block(pending_doc_lines, file, pending_doc_start, opts)
         table.insert(functions, model.new_function({
           name = sig.name,
           file = file,

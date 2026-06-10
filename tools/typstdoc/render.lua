@@ -1,5 +1,6 @@
 local util = require("util")
 local resolve = require("resolve")
+local model = require("model")
 
 local M = {}
 
@@ -120,7 +121,6 @@ local function format_signature(fn)
     return fn.name
   end
   local parts = {}
-  local nk = fn.doc.named_keys
   if forwarding_variadic(fn) then
     local sig_by_name = {}
     for _, p in ipairs(fn.signature_params) do sig_by_name[p.name] = p end
@@ -130,17 +130,6 @@ local function format_signature(fn)
         table.insert(parts, p.name .. ": " .. sig.default)
       else
         table.insert(parts, p.name)
-      end
-    end
-  elseif nk and #nk > 0 then
-    -- A documented `..rest` sink accepts a known set of named keys; list those
-    -- representative keys and a trailing `...` to show the surface is open.
-    for _, p in ipairs(fn.signature_params) do
-      if p.variadic then
-        for _, k in ipairs(nk) do table.insert(parts, k) end
-        table.insert(parts, "...")
-      else
-        table.insert(parts, named_param_piece(p))
       end
     end
   else
@@ -183,27 +172,34 @@ local function emit_params(fn, from_qmd, index, strict)
   local sig_by_name = {}
   local variadic_names = {}
   local has_variadic = false
+  local variadic_name
   for _, p in ipairs(fn.signature_params) do
     sig_by_name[p.name] = p
-    if p.variadic then has_variadic = true; variadic_names[p.name] = true end
+    if p.variadic then has_variadic = true; variadic_names[p.name] = true; variadic_name = p.name end
   end
 
+  -- `@named-keys` keys are documented in a sub-list under the table, not as rows;
+  -- skip them (and their per-key `@param` overrides) here.
+  local named_keys = model.resolve_named_keys(fn.doc)
+  local key_set = {}
+  for _, k in ipairs(named_keys) do key_set[k.name] = true end
+
   -- A `..rest` binding in the signature forwards arbitrary kwargs, so the doc
-  -- block (not the signature) enumerates the real parameters: a delegate's named
-  -- params for a pure forwarder, or explicit params plus the rest for a mixed
-  -- signature. Drive the table from `doc.params` then, with the matching
-  -- signature param supplying the default where one exists. A doc param whose
-  -- name is the rest binding keeps the `..` prefix even when written `@param args`.
+  -- block (not the signature) enumerates the real parameters: a pure forwarder's
+  -- delegate params, or explicit params plus the rest for a mixed signature. The
+  -- matching signature param supplies the default where one exists.
   local rows = {}
   if has_variadic then
     for _, p in ipairs(fn.doc.params) do
-      local sig = sig_by_name[p.name]
-      rows[#rows + 1] = {
-        name = p.name,
-        variadic = p.variadic or variadic_names[p.name] or false,
-        default = sig and sig.default or nil,
-        description = p.description,
-      }
+      if not key_set[p.name] then
+        local sig = sig_by_name[p.name]
+        rows[#rows + 1] = {
+          name = p.name,
+          variadic = p.variadic or variadic_names[p.name] or false,
+          default = sig and sig.default or nil,
+          description = p.description,
+        }
+      end
     end
   else
     local doc_by_name = {}
@@ -228,6 +224,19 @@ local function emit_params(fn, from_qmd, index, strict)
     table.insert(out, string.format("| %s | %s | %s |", name_cell, default_cell, desc))
   end
   table.insert(out, "")
+
+  -- A documented `@named-keys` sink lists its accepted keys as a real markdown
+  -- sub-list below the table, so `@ref` links resolve (they would not inside a
+  -- raw-HTML table cell).
+  if #named_keys > 0 and variadic_name then
+    table.insert(out, string.format("Keys accepted by `..%s`:", variadic_name))
+    table.insert(out, "")
+    for _, k in ipairs(named_keys) do
+      local desc = resolve.resolve_refs_in_text(k.description or "", from_qmd, index, strict, fn.file, fn.line)
+      table.insert(out, string.format("- `%s`: %s", k.name, desc))
+    end
+    table.insert(out, "")
+  end
   return table.concat(out, "\n")
 end
 

@@ -141,6 +141,12 @@ jobs:
         shell: bash
         run: quarto render docs --profile "${{ matrix.profile }}"
 
+      - name: Set up Lua
+        if: ${{ matrix.assets_dir != '' }}
+        uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.4"
+
       - name: Package development version
         if: ${{ matrix.assets_dir != '' }}
         shell: bash

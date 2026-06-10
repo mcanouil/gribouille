@@ -981,35 +981,40 @@ describe("render: variadic forwarding in Usage and Parameters", function()
     assert_contains(body, "| `..fields` |  | Forwarded named arguments. |")
   end)
 
-  it("expands @named-keys to representative keys plus `...` while keeping the sink row", function()
+  it("keeps the `..args` signature and lists keys in a sub-list under the table", function()
     local fns = parsed_functions([[
 /// A sink with known keys.
 ///
 /// @category Core
 /// @param args Named specs keyed by aesthetic.
-/// @named-keys colour fill size
+/// @named-keys colour fill size : Channel `{}`.
 /// @returns Guides.
 #let foo(..args) = none
 ]])
     local body = render.render_function(fns[1], {}, { strict = false })
-    assert_contains(body, "foo(\n  colour,\n  fill,\n  size,\n  ...,\n)")
+    assert_contains(body, "foo(\n  ..args,\n)")
     assert_contains(body, "| `..args` |  | Named specs keyed by aesthetic. |")
-    assert_true(not body:find("..args,\n)", 1, true), "opaque ..args should not appear in Usage")
+    assert_contains(body, "Keys accepted by `..args`:")
+    assert_contains(body, "- `colour`: Channel `colour`.")
+    assert_contains(body, "- `fill`: Channel `fill`.")
+    assert_true(not body:find("| `colour` |", 1, true), "keys should not be table rows")
   end)
 
-  it("ignores @named-keys on a pure forwarder (forwarding expansion wins)", function()
+  it("lets an explicit @param override the shared template for a single key", function()
     local fns = parsed_functions([[
-/// A forwarder with stray keys.
+/// A sink with one special key.
 ///
 /// @category Core
-/// @param name Legend title.
-/// @named-keys colour fill
-/// @returns Scale.
-#let foo(..args) = bar("colour", ..args)
+/// @param args Named specs.
+/// @named-keys colour fill default : Channel `{}`.
+/// @param default Fallback guide for unset channels.
+/// @returns Guides.
+#let foo(..args) = none
 ]])
     local body = render.render_function(fns[1], {}, { strict = false })
-    assert_contains(body, "foo(\n  name,\n)")
-    assert_true(not body:find("colour,\n  fill", 1, true), "named-keys must not leak into a forwarder signature")
+    assert_contains(body, "- `colour`: Channel `colour`.")
+    assert_contains(body, "- `default`: Fallback guide for unset channels.")
+    assert_true(not body:find("| `default` |", 1, true), "override key should not be its own row")
   end)
 end)
 
@@ -1243,6 +1248,18 @@ end)
 describe("theme_keys: extractor + table render", function()
   local theme_keys = require("theme_keys")
 
+  it("structured_keys lists element surfaces and omits scalar/colour keys", function()
+    local keys = theme_keys.structured_keys()
+    local set = {}
+    for _, k in ipairs(keys) do set[k] = true end
+    assert_eq(keys[1], "text", "starts with the roots group")
+    assert_eq(keys[#keys], "geom", "ends with the geom group")
+    assert_true(set["panel-grid"], "includes panel surfaces")
+    assert_true(set["legend-bar"], "includes legend surfaces")
+    assert_true(not set["tick-length"], "omits the scalar ticks group")
+    assert_true(not set["ink"] and not set["paper"] and not set["accent"], "omits the colours group")
+  end)
+
   local DEFAULTS_BODY = [[
 #let _tr-ink = black
 #let _tr-paper = white
@@ -1385,6 +1402,129 @@ describe("examples: gallery consistency", function()
     assert_eq(#orphans, 2)
     assert_eq(orphans[1], "alpha")
     assert_eq(orphans[2], "zeta")
+  end)
+end)
+
+-- -----------------------------------------------------------------------
+describe("tidydoc: tinymist docstring emitter", function()
+  local tidydoc = require("tidydoc")
+
+  local function transformed(body)
+    local path = tmpfile("tidy", body)
+    tidydoc.transform_file(path)
+    return util.read_file(path)
+  end
+
+  it("converts @param to a `- name:` list and drops metadata tags", function()
+    local out = transformed([[
+/// Bind a thing.
+///
+/// @category Core
+/// @since 0.0.1
+/// @param name Legend title.
+/// @returns A scale.
+#let foo(name: auto) = none
+]])
+    assert_contains(out, "/// - name: Legend title.")
+    assert_contains(out, "/// Returns: A scale.")
+    assert_true(not out:find("@category", 1, true), "metadata tag dropped")
+    assert_true(not out:find("@param", 1, true), "@param tag converted")
+  end)
+
+  it("nests @named-keys under the sink bullet via the template, resolving @refs", function()
+    local out = transformed([[
+/// Bind guides.
+///
+/// Threads into @plot.
+///
+/// @category Guides
+/// @param args Named guide specs keyed by aesthetic.
+/// @named-keys colour fill default : Guide for the `{}` aesthetic via @guide-legend.
+/// @param default Fallback guide for unset channels.
+/// @returns Dict.
+#let foo(..args) = none
+]])
+    assert_contains(out, "/// - args: Named guide specs keyed by aesthetic.")
+    assert_contains(out, "///   - colour: Guide for the `colour` aesthetic via `guide-legend`.")
+    assert_contains(out, "///   - fill: Guide for the `fill` aesthetic via `guide-legend`.")
+    assert_contains(out, "///   - default: Fallback guide for unset channels.")
+    assert_contains(out, "/// Threads into `plot`.")
+  end)
+
+  it("replaces a @theme-keys table with a reference pointer", function()
+    local out = transformed([[
+/// Build a theme.
+///
+/// @theme-keys
+///
+/// @category Themes
+/// @param ..fields Overrides.
+/// @returns Theme.
+#let foo(..fields) = none
+]])
+    assert_contains(out, "See the package reference for the full theme key catalogue.")
+    assert_true(not out:find("|", 1, true), "no markdown table leaks in")
+  end)
+
+  it("nests the theme element catalogue under a @theme-fields sink", function()
+    local out = transformed([[
+/// A preset.
+///
+/// @category Themes
+/// @param ..fields Extra overrides forwarded to @theme.
+/// @theme-fields
+/// @returns Theme.
+#let foo(..fields) = none
+]])
+    assert_contains(out, "/// - fields: Extra overrides forwarded to `theme`.")
+    assert_contains(out, "///   - text: Override for the `text` element.")
+    assert_contains(out, "///   - panel-grid: Override for the `panel-grid` element.")
+    assert_contains(out, "///   - geom: Override for the `geom` element.")
+    assert_contains(out, "/// See the package reference for the full theme key catalogue.")
+    assert_true(not out:find("///   - ink:", 1, true), "colour keys are not listed")
+  end)
+
+  it("lets @named-keys take precedence over @theme-fields for the nested list", function()
+    local out = transformed([[
+/// A sink.
+///
+/// @category Core
+/// @param ..fields Overrides.
+/// @named-keys colour fill : Channel `{}`.
+/// @theme-fields
+/// @returns Dict.
+#let foo(..fields) = none
+]])
+    assert_contains(out, "///   - colour: Channel `colour`.")
+    assert_true(not out:find("///   - text:", 1, true), "theme catalogue must not be used when @named-keys is present")
+  end)
+
+  it("emits @see as a plain list and keeps code verbatim", function()
+    local out = transformed([[
+/// A widget.
+///
+/// @category Core
+/// @see @bar @baz
+/// @returns none.
+#let foo() = none
+]])
+    assert_contains(out, "/// See also: `bar`, `baz`.")
+    assert_contains(out, "#let foo() = none")
+  end)
+
+  it("preserves non-doc code lines, rewriting only the block", function()
+    local out = transformed([[
+#import "x.typ": y
+
+/// Summary only.
+///
+/// @category Core
+/// @returns none.
+#let foo() = y()
+]])
+    assert_contains(out, '#import "x.typ": y')
+    assert_contains(out, "/// Summary only.")
+    assert_contains(out, "#let foo() = y()")
   end)
 end)
 

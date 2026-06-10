@@ -305,6 +305,11 @@ jobs:
           fi
           echo "CHANGELOG_FILE=CHANGELOG-${VERSION}.md" >> "${GITHUB_ENV}"
 
+      - name: Set up Lua
+        uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.4"
+
       - name: Stage release archives
         shell: bash
         run: tools/package.sh archive release_assets

@@ -33,6 +33,9 @@ stage() {
   cp typst.toml lib.typ LICENSE "${dest}/"
   tools/stage-readme.sh README.md "${dest}"
   cp -r src "${dest}/"
+  # Rewrite the staged docstrings into the tidy form Tinymist renders on hover.
+  # Repo sources keep the `@`-tag format the .qmd generator needs.
+  lua tools/typstdoc/tidydoc.lua "${dest}/src"
 
   if [[ -n "${version}" ]]; then
     local commit date_utc

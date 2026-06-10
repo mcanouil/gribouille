@@ -279,6 +279,11 @@ jobs:
           } > /tmp/seed.typ
           typst compile /tmp/seed.typ /tmp/seed.pdf
 
+      - name: Set up Lua
+        uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.4"
+
       - name: Stage published payload
         env:
           VERSION: ${{ steps.versions.outputs.version }}
