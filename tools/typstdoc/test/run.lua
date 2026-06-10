@@ -980,6 +980,37 @@ describe("render: variadic forwarding in Usage and Parameters", function()
     assert_contains(body, "| `clip` |  | Whether to clip. |")
     assert_contains(body, "| `..fields` |  | Forwarded named arguments. |")
   end)
+
+  it("expands @named-keys to representative keys plus `...` while keeping the sink row", function()
+    local fns = parsed_functions([[
+/// A sink with known keys.
+///
+/// @category Core
+/// @param args Named specs keyed by aesthetic.
+/// @named-keys colour fill size
+/// @returns Guides.
+#let foo(..args) = none
+]])
+    local body = render.render_function(fns[1], {}, { strict = false })
+    assert_contains(body, "foo(\n  colour,\n  fill,\n  size,\n  ...,\n)")
+    assert_contains(body, "| `..args` |  | Named specs keyed by aesthetic. |")
+    assert_true(not body:find("..args,\n)", 1, true), "opaque ..args should not appear in Usage")
+  end)
+
+  it("ignores @named-keys on a pure forwarder (forwarding expansion wins)", function()
+    local fns = parsed_functions([[
+/// A forwarder with stray keys.
+///
+/// @category Core
+/// @param name Legend title.
+/// @named-keys colour fill
+/// @returns Scale.
+#let foo(..args) = bar("colour", ..args)
+]])
+    local body = render.render_function(fns[1], {}, { strict = false })
+    assert_contains(body, "foo(\n  name,\n)")
+    assert_true(not body:find("colour,\n  fill", 1, true), "named-keys must not leak into a forwarder signature")
+  end)
 end)
 
 -- -----------------------------------------------------------------------

@@ -33,6 +33,7 @@ function M.new_doc_block()
     since = nil,
     params = {},
     arities = {},
+    named_keys = {},
     returns = nil,
     examples = {},
     see = {},

@@ -532,6 +532,8 @@
 ///
 /// \@param ..fields Named per-element overrides; see the description above for the full catalogue of structured and flat keys.
 ///
+/// \@named-keys text line rect axis-title axis-text axis-line axis-ticks panel-grid panel-background
+///
 /// \@returns Theme dictionary consumed by \@plot.
 ///
 /// \@examples Custom panel and grid colours via structured element records.

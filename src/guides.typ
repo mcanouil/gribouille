@@ -28,6 +28,8 @@
 ///   legends to the bottom in one call. `guides(default: none)` hides every
 ///   legend that has no override of its own.
 ///
+/// \@named-keys colour fill size alpha linewidth shape linetype stroke x y theta r default
+///
 /// \@returns Dictionary mapping aesthetic name to guide spec.
 ///
 /// \@examples Lay the colour legend out across two columns.
