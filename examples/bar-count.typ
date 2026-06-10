@@ -26,7 +26,7 @@
   mapping: aes(x: "cat", fill: "cat"),
   layers: (geom-bar(),),
   scales: (scale-y-continuous(expand: (0%, 20%)),),
-  guides: guides(fill: guide-none()),
+  guides: guides(fill: none),
   labs: labs(
     title: "Category Counts via Stat-Count",
     x: "Category",

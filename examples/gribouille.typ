@@ -142,9 +142,9 @@
     tick-length: 0.05cm,
   ),
   guides: guides(
-    colour: guide-none(),
-    fill: guide-none(),
-    shape: guide-none(),
+    colour: none,
+    fill: none,
+    shape: none,
   ),
   width: 12cm,
   height: 9cm,

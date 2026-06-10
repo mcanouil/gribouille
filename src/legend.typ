@@ -319,7 +319,7 @@
   if override != none and override.at("suppress", default: false) {
     return none
   }
-  // `guides(default: guide-none())` hides every legend that has no override of
+  // `guides(default: none)` hides every legend that has no override of
   // its own.
   if (
     override == none

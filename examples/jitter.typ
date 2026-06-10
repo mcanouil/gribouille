@@ -17,7 +17,7 @@
   scales: (
     scale-y-continuous(breaks: (15, 20, 25, 30, 35, 40)),
   ),
-  guides: guides(colour: guide-none()),
+  guides: guides(colour: none),
   labs: labs(
     title: "Highway mpg per Vehicle Class",
     subtitle: "Jitter spreads coincident points so cluster density reads",

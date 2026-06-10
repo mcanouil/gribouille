@@ -1,7 +1,6 @@
-// guide-legend(), guide-none(), and guides() build the expected dictionaries.
+// guide-legend() and guides() build the expected dictionaries.
 
 #import "../../src/guide/legend.typ": guide-legend
-#import "../../src/guide/none.typ": guide-none
 #import "../../src/guides.typ": guides
 #import "../../src/legend.typ": _default-placement, _merge-placement
 
@@ -68,14 +67,19 @@
 #assert.eq(g-order.placement.order, 2)
 #assert.eq(g-order.placement.byrow, true)
 
-#let n = guide-none()
-#assert.eq(n.kind, "guide")
-#assert.eq(n.suppress, true)
-
-#let bound = guides(colour: guide-legend(reverse: true), fill: guide-none())
+// `none` normalises to a suppress marker; `auto` is dropped so the aesthetic
+// keeps its derived default. (Passing a non-guide value panics; Typst has no
+// try/catch, so that path is verified manually.)
+#let bound = guides(colour: guide-legend(reverse: true), fill: none)
 #assert.eq(type(bound), dictionary)
 #assert.eq(bound.colour.reverse, true)
-#assert.eq(bound.fill.suppress, true)
+#assert.eq(bound.fill, (kind: "guide", suppress: true))
+
+#assert.eq(guides(fill: auto), (:))
+#assert.eq(guides(size: none).size.suppress, true)
+
+// `default: none` hides every legend without its own override.
+#assert.eq(guides(default: none).default, (kind: "guide", suppress: true))
 
 // `guides()` stores a `default` fallback under its own key.
 #let with-default = guides(default: guide-legend(position: "bottom"))

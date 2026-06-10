@@ -1,25 +1,28 @@
 ///! Plot-level guide bindings.
 ///!
-///! Map aesthetic names to guide specs built with \@guide-legend or
-///! \@guide-none, and pass the result to \@plot via the `guides:` parameter.
+///! Map aesthetic names to guide specs built with \@guide-legend, pass `none`
+///! to hide a guide, and feed the result to \@plot via the `guides:` parameter.
+
+#import "utils/errors.typ": fail
 
 /// Bind guide specifications to aesthetics.
 ///
 /// Accepts named arguments where each key is an aesthetic (e.g., `colour`,
-/// `fill`) and each value is a guide spec from \@guide-legend or \@guide-none.
-/// The resulting dictionary threads into the plot spec and is honoured by
-/// the legend renderer.
+/// `fill`) and each value is a guide spec from \@guide-legend, `none` to hide
+/// that guide, or `auto` for the default. The resulting dictionary threads into
+/// the plot spec and is honoured by the legend renderer.
 ///
 /// \@category Guides
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param args Named guide specs keyed by aesthetic name. The reserved key
-///   `default` sets a fallback guide whose unset fields (e.g. an `auto`
-///   `position`) are inherited by every aesthetic without its own override, so
-///   `guides(default: guide-legend(position: "bottom"))` moves all legends to
-///   the bottom in one call. `guides(default: guide-none())` hides every legend
-///   that has no override of its own.
+/// \@param args Named guide specs keyed by aesthetic name. Each value is a guide
+///   spec, `none` to hide that aesthetic's guide, or `auto` for the default.
+///   The reserved key `default` sets a fallback guide whose unset fields (e.g.
+///   an `auto` `position`) are inherited by every aesthetic without its own
+///   override, so `guides(default: guide-legend(position: "bottom"))` moves all
+///   legends to the bottom in one call. `guides(default: none)` hides every
+///   legend that has no override of its own.
 ///
 /// \@returns Dictionary mapping aesthetic name to guide spec.
 ///
@@ -41,10 +44,10 @@
 /// )
 /// ```
 ///
-/// \@examples Combine `guide-axis` and `guide-none` to rotate x ticks and
+/// \@examples Combine `guide-axis` and `none` to rotate x ticks and
 /// hide the redundant fill legend in one call.
 /// ```
-/// //| alt: "Bar chart of y per month with x tick labels rotated thirty degrees via guide-axis and the fill legend suppressed via guide-none."
+/// //| alt: "Bar chart of y per month with x tick labels rotated thirty degrees via guide-axis and the fill legend suppressed by passing none."
 /// #let d = (
 ///   (x: "January", y: 1, g: "a"),
 ///   (x: "February", y: 2, g: "a"),
@@ -57,7 +60,7 @@
 ///   layers: (geom-col(),),
 ///   guides: guides(
 ///     x: guide-axis(angle: 30),
-///     fill: guide-none(),
+///     fill: none,
 ///   ),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -87,11 +90,26 @@
 /// )
 /// ```
 ///
-/// \@see \@guide-legend, \@guide-none, \@plot
+/// \@see \@guide-legend, \@plot
 #let guides(..args) = {
   let out = (:)
   for (k, v) in args.named() {
-    out.insert(k, v)
+    if v == auto {
+      continue
+    } else if v == none {
+      out.insert(k, (kind: "guide", suppress: true))
+    } else if type(v) == dictionary {
+      out.insert(k, v)
+    } else {
+      fail(
+        "guides",
+        "value for '"
+          + k
+          + "' must be a guide spec (e.g. guide-legend, guide-axis), `none` to"
+          + " hide the guide, or `auto` for the default; got "
+          + repr(v),
+      )
+    }
   }
   out
 }
