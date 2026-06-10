@@ -9,7 +9,7 @@
   mapping: aes(x: "displ", y: "hwy", colour: "class"),
   layers: (geom-point(size: 2.5pt, alpha: 0.85),),
   facet: facet-wrap("cyl", ncolumn: 3),
-  guides: guides(colour: guide-none()),
+  guides: guides(colour: none),
   labs: labs(
     title: "Highway Fuel Economy by Cylinder Count",
     x: "Displacement (L)",

@@ -19,7 +19,6 @@
 
 // Guides.
 #import "src/guide/legend.typ": guide-legend
-#import "src/guide/none.typ": guide-none
 #import "src/guide/axis.typ": guide-axis, guide-axis-logticks
 #import "src/guide/axis-stack.typ": guide-axis-stack
 #import "src/guide/axis-theta.typ": guide-axis-theta

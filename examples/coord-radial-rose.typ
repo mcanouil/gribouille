@@ -21,7 +21,7 @@
   layers: (geom-col(width: 1),),
   coord: coord-radial(theta: "x"),
   scales: (scale-x-discrete(expand: false),),
-  guides: guides(fill: guide-none()),
+  guides: guides(fill: none),
   labs: labs(title: "Wind Directions"),
   theme: theme-minimal(),
   width: 12cm,

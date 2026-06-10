@@ -1,4 +1,4 @@
-// guide-legend() and guide-none(): customise or suppress per-aesthetic legends.
+// guide-legend(): customise per-aesthetic legends; pass `none` to suppress one.
 
 #import "../lib.typ": *
 

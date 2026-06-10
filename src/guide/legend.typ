@@ -192,7 +192,7 @@
 /// )
 /// ```
 ///
-/// \@see \@guides, \@guide-none, \@plot
+/// \@see \@guides, \@plot
 #let guide-legend(
   title: none,
   nrow: none,

@@ -15,7 +15,7 @@
   data: fruits,
   mapping: aes(x: "fruit", y: "count", fill: "fruit"),
   layers: (geom-col(),),
-  guides: guides(fill: guide-none()),
+  guides: guides(fill: none),
   labs: labs(title: "Counts per Fruit", x: "Fruit", y: "Count"),
   theme: theme-grey(),
   width: 12cm,

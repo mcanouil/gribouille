@@ -10,7 +10,7 @@
   layers: (geom-point(size: 2pt, alpha: 0.85),),
   facet: facet-grid(rows: "sex", columns: "species", labeller: label-both()),
   scales: (scale-y-continuous(labels: format-comma()),),
-  guides: guides(colour: guide-none()),
+  guides: guides(colour: none),
   labs: labs(
     title: "Penguin Morphology by Sex and Species",
     x: "Flipper Length (mm)",

@@ -27,7 +27,7 @@
     fill: "grp",
   ),
   layers: (geom-bar(),),
-  guides: guides(fill: guide-none()),
+  guides: guides(fill: none),
   labs: labs(
     title: "Explicit After-Stat Binding",
     x: "Group",
