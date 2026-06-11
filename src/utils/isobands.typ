@@ -13,13 +13,13 @@
     let prev = polygon.at(if i == 0 { n - 1 } else { i - 1 })
     let curr-in = keep(curr.z, level)
     let prev-in = keep(prev.z, level)
-    // The two interpolation branches below divide by `(curr.z - prev.z)`.
-    // `keep` is `>=` or `<=` against `level`, so a zero denominator means
-    // both endpoints sit exactly on the level — and `keep` then resolves
-    // both flags equal, sending us into the no-interp arms.
+    // `keep` is `>=` or `<=` against `level`, so equal endpoint z values
+    // resolve both flags equal and the interpolation branches are skipped;
+    // the explicit `dz` guard makes that invariant local to the division.
+    let dz = curr.z - prev.z
     if curr-in {
-      if not prev-in {
-        let t = (level - prev.z) / (curr.z - prev.z)
+      if not prev-in and dz != 0 {
+        let t = (level - prev.z) / dz
         out.push((
           x: prev.x + t * (curr.x - prev.x),
           y: prev.y + t * (curr.y - prev.y),
@@ -27,8 +27,8 @@
         ))
       }
       out.push(curr)
-    } else if prev-in {
-      let t = (level - prev.z) / (curr.z - prev.z)
+    } else if prev-in and dz != 0 {
+      let t = (level - prev.z) / dz
       out.push((
         x: prev.x + t * (curr.x - prev.x),
         y: prev.y + t * (curr.y - prev.y),
