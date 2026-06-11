@@ -118,7 +118,7 @@ end
 -- (the margin-reclaim refresh changes canvas height). NorthWest gravity keeps
 -- the plot pinned top-left so the growth shows as extra blank space.
 local function pad_to(src, dst, w, h)
-  os.execute(string.format(
+  util.run(string.format(
     "convert %s -background white -gravity NorthWest -extent %dx%d %s 2>/dev/null",
     shell_quote(src), w, h, shell_quote(dst)))
 end
@@ -135,13 +135,17 @@ local function overlay(base_png, head_png, diff_png, fuzz)
 end
 
 local function side_by_side(base_png, head_png, out_png)
-  os.execute(string.format("convert %s %s +append %s 2>/dev/null",
+  util.run(string.format("convert %s %s +append %s 2>/dev/null",
     shell_quote(base_png), shell_quote(head_png), shell_quote(out_png)))
 end
 
 local function git_show_to(rev, path, dst)
-  return os.execute(string.format("git -C %s show %s > %s 2>/dev/null",
+  local ok = util.try_run(string.format("git -C %s show %s > %s 2>/dev/null",
     shell_quote(ROOT), shell_quote(rev .. ":" .. path), shell_quote(dst)))
+  -- The shell redirect creates `dst` even when `git show` fails, so drop the
+  -- empty file on failure.
+  if not ok then os.remove(dst) end
+  return ok
 end
 
 -- Returns an array of { status = "A"|"M"|"D", path = <repo-relative> }.
@@ -606,6 +610,8 @@ local function main()
   util.write_file(serve_py, SERVER_PY)
 
   io.write(summary .. "\n")
+  -- Best-effort: the report is already on disk, so a failed server launch
+  -- (missing python3, port in use) should not crash the run.
   os.execute(string.format("python3 %s %s %s %d %d",
     shell_quote(serve_py), shell_quote(ROOT), shell_quote(out_dir),
     opts.port, opts.no_open and 0 or 1))

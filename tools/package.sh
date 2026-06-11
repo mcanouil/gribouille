@@ -32,7 +32,10 @@ stage() {
   mkdir -p "${dest}"
   cp typst.toml lib.typ LICENSE "${dest}/"
   tools/stage-readme.sh README.md "${dest}"
-  cp -r src "${dest}/"
+  # Copy tracked files only (at their working-tree state): a plain `cp -r`
+  # would sweep git-ignored strays into the payload and break the
+  # byte-identical promise between local and CI builds.
+  git ls-files -z -- src | tar -cf - --null -T - | tar -xf - -C "${dest}"
   # Rewrite the staged docstrings into the tidy form Tinymist renders on hover.
   # Repo sources keep the `@`-tag format the .qmd generator needs.
   lua tools/typstdoc/tidydoc.lua "${dest}/src"

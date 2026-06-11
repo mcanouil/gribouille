@@ -57,6 +57,9 @@
 #assert.eq(r.data.len(), 2)
 #let total = r.data.fold(0, (acc, row) => acc + row._count)
 #assert.eq(total, 3)
+// _density is each cell's fraction of the total count and sums to 1.
+#let density-sum = r.data.fold(0.0, (acc, row) => acc + row._density)
+#assert(calc.abs(density-sum - 1.0) < 1e-9)
 // Hex-specific draw hints come along for the ride.
 #assert("_hex-dx" in r.data.first())
 

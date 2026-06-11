@@ -60,17 +60,19 @@
   )
   if result == none { return (data: (), mapping: new-mapping) }
   let grid = result.grid
-  let cell-area = grid.dx * grid.dy * 2
-  let rows = result
-    .cells
-    .values()
-    .map(c => (
-      x: c.cx,
-      y: c.cy,
-      _count: c.count,
-      _density: c.count / cell-area,
-      _hex-dx: grid.dx,
-      _hex-dy: grid.dy,
-    ))
+  // `_density` is the cell's fraction of the total count, `count / sum(count)`
+  // (the ggplot2 convention). The guard keeps the division safe when every
+  // occupied cell carries zero weight.
+  let cells = result.cells.values()
+  let total = cells.map(c => c.count).sum(default: 0)
+  let denom = if total == 0 { 1 } else { total }
+  let rows = cells.map(c => (
+    x: c.cx,
+    y: c.cy,
+    _count: c.count,
+    _density: c.count / denom,
+    _hex-dx: grid.dx,
+    _hex-dy: grid.dy,
+  ))
   (data: rows, mapping: new-mapping)
 }

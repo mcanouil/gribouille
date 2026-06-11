@@ -7,6 +7,7 @@
 
 #import "types.typ": parse-number
 #import "errors.typ": fail, fail-type
+#import "summaries.typ": quantile-type-7
 
 #let _to-numeric(values) = {
   values.map(v => parse-number(v))
@@ -24,21 +25,6 @@
 
 #let _default-label(lo, hi) = {
   "(" + _format-number(lo) + "," + _format-number(hi) + "]"
-}
-
-// Linear-interpolation quantile (R type 7) on a sorted array. Mirrors the
-// helper in `src/utils/summaries.typ` so cut-number lines up with the
-// boxplot statistic.
-#let _quantile(sorted, q) = {
-  let n = sorted.len()
-  if n == 0 { return none }
-  if n == 1 { return sorted.at(0) }
-  let pos = q * (n - 1)
-  let lo = int(calc.floor(pos))
-  let hi = int(calc.ceil(pos))
-  if lo == hi { return sorted.at(lo) }
-  let frac = pos - lo
-  sorted.at(lo) * (1 - frac) + sorted.at(hi) * frac
 }
 
 #let _resolve-labels(breaks, labels) = {
@@ -188,7 +174,7 @@
     return parsed.map(_ => none)
   }
   let sorted = numeric.sorted()
-  let breaks = range(0, n + 1).map(i => _quantile(sorted, i / n))
+  let breaks = range(0, n + 1).map(i => quantile-type-7(sorted, i / n))
   let lo = breaks.at(0)
   let hi = breaks.at(n)
   if lo == hi {

@@ -69,7 +69,10 @@
   if cells == none { return (data: (), mapping: new-mapping) }
   let grid = cells.grid
   let ny = grid.y-n-bins
-  let cell-area = grid.x-width * grid.y-width
+  // `_density` is the cell's fraction of the total count, `count / sum(count)`
+  // (the ggplot2 convention). Only non-empty cells emit rows, so the total is
+  // never zero where it is used as a denominator.
+  let total = cells.total
   let rows = ()
   for k in range(cells.counts.len()) {
     let n = cells.counts.at(k)
@@ -83,7 +86,7 @@
       ymin: ym - grid.y-width / 2,
       ymax: ym + grid.y-width / 2,
       _count: n,
-      _density: n / cell-area,
+      _density: n / total,
     ))
   }
   (data: rows, mapping: new-mapping)

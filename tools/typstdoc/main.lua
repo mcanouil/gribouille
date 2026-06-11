@@ -146,7 +146,7 @@ local function copy_examples(opts)
   if not util.dir_exists(opts.examples) then return 0 end
 
   util.make_dir(opts.examples_out)
-  os.execute(string.format(
+  util.run(string.format(
     "find %q -maxdepth 1 -type f ! -name '*.svg' -delete 2>/dev/null",
     opts.examples_out))
 
@@ -163,7 +163,7 @@ local function copy_examples(opts)
         content = content:gsub('"%.%./docs/', '"/docs/')
         util.write_file(dst, content)
       else
-        os.execute(string.format("cp %q %q", src, dst))
+        util.run(string.format("cp %q %q", src, dst))
       end
       copied = copied + 1
     end

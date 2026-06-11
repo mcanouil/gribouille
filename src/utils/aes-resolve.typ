@@ -12,7 +12,7 @@
 // `typst-markup` whose `source` is a `mapping-ref`, and the helpers
 // below walk such chains innermost-first.
 
-#import "typst-markup.typ": eval-as-markup, is-typst-markup
+#import "typst-markup.typ": eval-as-markup
 #import "late-binding.typ": is-late-binding
 #import "errors.typ": fail
 #import "colour-resolve.typ": (
@@ -77,55 +77,6 @@
   }
   if type(unwrapped) == str { return unwrapped }
   none
-}
-
-/// Read an aesthetic value from a row, optionally evaluating as Typst
-/// markup.
-///
-/// In `mode: "raw"` (the default) the underlying column value is
-/// returned, regardless of whether the spec carries a `typst-markup`
-/// tag. Used by scale training and the data-to-aesthetic mapping path.
-///
-/// In `mode: "display"` the resolver eval's the read value as Typst
-/// markup when (and only when) the spec carries a `typst-markup` tag at
-/// any nesting depth. Used by display surfaces (geom-text labels,
-/// legend swatches, axis ticks, facet strip text).
-///
-/// \@internal
-/// \@param spec Aesthetic mapping value (string, `mapping-ref`, or
-///   `typst-markup`).
-///
-/// \@param row The row dictionary to read from.
-///
-/// \@param mode `"raw"` or `"display"`.
-/// \@returns The resolved value, evaluated when in display mode and the
-///   spec is typst-tagged.
-#let resolve-aes-value(spec, row, mode: "raw") = {
-  let col = aes-col(spec)
-  if col == none { return none }
-  let raw = row.at(col, default: none)
-  if mode == "display" and is-typst-markup(spec) {
-    return eval-as-markup(raw)
-  }
-  raw
-}
-
-/// Apply display-mode resolution to a pre-read break value.
-///
-/// Used by display surfaces that hold scale breaks rather than rows
-/// (legend swatches, axis tick labels, facet strip text). Evaluates
-/// `value` as Typst markup when `spec` is typst-tagged; returns the
-/// value unchanged otherwise.
-///
-/// \@internal
-/// \@param spec The originating aesthetic mapping value.
-///
-/// \@param value The break value to display.
-/// \@returns The value, evaluated as markup when the spec is typst-tagged.
-#let resolve-break-display(spec, value) = {
-  if value == none { return none }
-  if is-typst-markup(spec) { return eval-as-markup(value) }
-  value
 }
 
 /// Build a stat output mapping by preserving the input's grouping aesthetics

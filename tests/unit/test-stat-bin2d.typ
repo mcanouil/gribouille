@@ -66,6 +66,11 @@
 #assert.eq(top-right.at(0).y, 1.25)
 #assert.eq(top-right.at(0).xmax, 1.5)
 
+// _density is each cell's fraction of the total count and sums to 1.
+#let density-sum = r.data.fold(0.0, (acc, row) => acc + row._density)
+#assert(calc.abs(density-sum - 1.0) < 1e-9)
+#assert.eq(top-right.at(0)._density, 2 / 5)
+
 // --- panel grid is reused via params.grid ---
 
 #let panel-params = panel-bin-grid-2d(

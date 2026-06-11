@@ -6,6 +6,7 @@
 ///! type-7 / numpy default linear interpolation rule.
 
 #import "../utils/types.typ": parse-number
+#import "../utils/summaries.typ": quantile-type-7
 
 /// Boxplot statistic: per-x five-number summary with outlier list.
 ///
@@ -72,28 +73,15 @@
   params: (coefficient: coefficient),
 )
 
-// Linear-interpolation quantile (R type 7, numpy default) on a sorted array.
-#let _quantile(sorted, q) = {
-  let n = sorted.len()
-  if n == 0 { return none }
-  if n == 1 { return sorted.at(0) }
-  let pos = q * (n - 1)
-  let lo = int(calc.floor(pos))
-  let hi = int(calc.ceil(pos))
-  if lo == hi { return sorted.at(lo) }
-  let frac = pos - lo
-  sorted.at(lo) * (1 - frac) + sorted.at(hi) * frac
-}
-
 #let _summarise(rows, x-col, y-col, coefficient) = {
   let ys = rows
     .map(r => parse-number(r.at(y-col, default: none)))
     .filter(v => v != none)
   if ys.len() == 0 { return none }
   let sorted = ys.sorted()
-  let lower = _quantile(sorted, 0.25)
-  let middle = _quantile(sorted, 0.5)
-  let upper = _quantile(sorted, 0.75)
+  let lower = quantile-type-7(sorted, 0.25)
+  let middle = quantile-type-7(sorted, 0.5)
+  let upper = quantile-type-7(sorted, 0.75)
   let iqr = upper - lower
   let fence-lo = lower - coefficient * iqr
   let fence-hi = upper + coefficient * iqr
