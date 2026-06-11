@@ -97,10 +97,10 @@
   calc.sqrt(ss / (n - 1))
 }
 
-// Linear-interpolation quantile (R type 7) on a sorted array. Mirrors the
-// helper used in `src/stat/boxplot.typ` so summaries here stay consistent
-// with the boxplot statistic.
-#let _quantile(sorted, q) = {
+// Linear-interpolation quantile (R type 7, numpy default) on a sorted
+// array. Single shared implementation; also imported by the boxplot and
+// Q-Q line statistics.
+#let quantile-type-7(sorted, q) = {
   let n = sorted.len()
   if n == 0 { return none }
   if n == 1 { return sorted.at(0) }
@@ -150,8 +150,8 @@
 
 /// Median as a degenerate summary `(y, ymin: y, ymax: y)`.
 ///
-/// Uses the same type-7 linear-interpolation rule as `_quantile`, kept
-/// consistent with `src/stat/boxplot.typ` and `median-hilow`.
+/// Uses the same type-7 linear-interpolation rule as `quantile-type-7`,
+/// kept consistent with `src/stat/boxplot.typ` and `median-hilow`.
 ///
 /// \@category Helpers
 /// \@subcategory Summary functions
@@ -171,7 +171,7 @@
 #let median(values) = {
   let xs = _to-numeric(values)
   if xs.len() == 0 { return _empty-summary }
-  let m = _quantile(xs.sorted(), 0.5)
+  let m = quantile-type-7(xs.sorted(), 0.5)
   (y: m, ymin: m, ymax: m)
 }
 
@@ -202,7 +202,7 @@
   }
   let xs = _to-numeric(values)
   if xs.len() == 0 { return _empty-summary }
-  let v = _quantile(xs.sorted(), q)
+  let v = quantile-type-7(xs.sorted(), q)
   (y: v, ymin: v, ymax: v)
 }
 
@@ -248,9 +248,9 @@
   if xs.len() == 0 { return _empty-summary }
   let sorted = xs.sorted()
   (
-    y: _quantile(sorted, probs.at(1)),
-    ymin: _quantile(sorted, probs.at(0)),
-    ymax: _quantile(sorted, probs.at(2)),
+    y: quantile-type-7(sorted, probs.at(1)),
+    ymin: quantile-type-7(sorted, probs.at(0)),
+    ymax: quantile-type-7(sorted, probs.at(2)),
   )
 }
 
@@ -434,9 +434,9 @@
   let sorted = xs.sorted()
   let tail = (1 - conf) / 2
   (
-    y: _quantile(sorted, 0.5),
-    ymin: _quantile(sorted, tail),
-    ymax: _quantile(sorted, 1 - tail),
+    y: quantile-type-7(sorted, 0.5),
+    ymin: quantile-type-7(sorted, tail),
+    ymax: quantile-type-7(sorted, 1 - tail),
   )
 }
 
@@ -506,8 +506,8 @@
   let tail = (1 - conf) / 2
   (
     y: m,
-    ymin: _quantile(sorted, tail),
-    ymax: _quantile(sorted, 1 - tail),
+    ymin: quantile-type-7(sorted, tail),
+    ymax: quantile-type-7(sorted, 1 - tail),
   )
 }
 

@@ -9,18 +9,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/normal.typ": theoretical-quantile
 #import "../utils/aes-resolve.typ": stat-output-mapping
-
-#let _quantile-type-7(sorted, q) = {
-  let n = sorted.len()
-  if n == 0 { return none }
-  if n == 1 { return sorted.at(0) }
-  let pos = q * (n - 1)
-  let lo = int(calc.floor(pos))
-  let hi = int(calc.ceil(pos))
-  if lo == hi { return sorted.at(lo) }
-  let frac = pos - lo
-  sorted.at(lo) * (1 - frac) + sorted.at(hi) * frac
-}
+#import "../utils/summaries.typ": quantile-type-7
 
 /// Q-Q reference-line statistic: two endpoints of the IQR-fitted line.
 ///
@@ -93,8 +82,8 @@
   let n = xs.len()
   if n < 2 { return (data: (), mapping: new-mapping) }
   let sorted = xs.sorted()
-  let q1 = _quantile-type-7(sorted, 0.25)
-  let q3 = _quantile-type-7(sorted, 0.75)
+  let q1 = quantile-type-7(sorted, 0.25)
+  let q3 = quantile-type-7(sorted, 0.75)
   let z1 = theoretical-quantile(0.25, distribution)
   let z3 = theoretical-quantile(0.75, distribution)
   let slope = (q3 - q1) / (z3 - z1)
