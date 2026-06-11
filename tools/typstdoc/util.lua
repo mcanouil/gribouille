@@ -12,10 +12,19 @@ function M.die(msg)
   error("typstdoc: " .. msg, 0)
 end
 
+-- Run a shell command and die on failure. `os.execute` returns true/nil on
+-- Lua 5.2+ and an exit-status number on 5.1; accept both conventions.
+function M.run(cmd)
+  local ok = os.execute(cmd)
+  if ok ~= true and ok ~= 0 then
+    M.die("command failed: " .. cmd)
+  end
+end
+
 function M.ensure_parent(path)
   local dir = path:match("^(.*)/[^/]+$")
   if dir and dir ~= "" then
-    os.execute(string.format("mkdir -p %q", dir))
+    M.run(string.format("mkdir -p %q", dir))
   end
 end
 
@@ -65,16 +74,18 @@ function M.dir_exists(path)
 end
 
 function M.remove_dir(path)
-  os.execute(string.format("rm -rf %q", path))
+  M.run(string.format("rm -rf %q", path))
 end
 
+-- Best-effort cleanup: the target tree may not exist yet, so `find` failures
+-- are deliberately ignored.
 function M.remove_generated_files(path, pattern)
   os.execute(string.format("find %q -type f -name %q -delete 2>/dev/null", path, pattern))
   os.execute(string.format("find %q -mindepth 1 -type d -empty -delete 2>/dev/null", path))
 end
 
 function M.make_dir(path)
-  os.execute(string.format("mkdir -p %q", path))
+  M.run(string.format("mkdir -p %q", path))
 end
 
 local function popen_lines(cmd)
