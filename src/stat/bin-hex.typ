@@ -63,18 +63,16 @@
   // `_density` is the cell's fraction of the total count, `count / sum(count)`
   // (the ggplot2 convention). The guard keeps the division safe when every
   // occupied cell carries zero weight.
-  let total = result.cells.values().map(c => c.count).sum(default: 0)
+  let cells = result.cells.values()
+  let total = cells.map(c => c.count).sum(default: 0)
   let denom = if total == 0 { 1 } else { total }
-  let rows = result
-    .cells
-    .values()
-    .map(c => (
-      x: c.cx,
-      y: c.cy,
-      _count: c.count,
-      _density: c.count / denom,
-      _hex-dx: grid.dx,
-      _hex-dy: grid.dy,
-    ))
+  let rows = cells.map(c => (
+    x: c.cx,
+    y: c.cy,
+    _count: c.count,
+    _density: c.count / denom,
+    _hex-dx: grid.dx,
+    _hex-dy: grid.dy,
+  ))
   (data: rows, mapping: new-mapping)
 }

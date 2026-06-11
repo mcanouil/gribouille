@@ -9,7 +9,7 @@
 #import "../data.typ": _normalise-data, column
 #import "../utils/types.typ": infer-column-type, parse-number
 #import "../utils/typst-markup.typ": is-typst-markup
-#import "../utils/errors.typ": check
+#import "../utils/errors.typ": check, fail
 #import "../utils/late-binding.typ": (
   after-scale-source, is-late-binding, late-binding-name,
 )
@@ -238,20 +238,21 @@
 // steps. `reverse` is handled separately by swapping the range endpoints.
 #let transform-fwd(name, x) = {
   if name == none or name == "identity" or name == "reverse" { return x }
+  // Runs once per row on transformed scales; build the failure message only
+  // on the error path rather than eagerly via `check`.
   if name == "log10" {
-    check(
-      x > 0,
-      "scale",
-      "log10 transform requires positive values; got " + repr(x),
-    )
+    if x <= 0 {
+      fail("scale", "log10 transform requires positive values; got " + repr(x))
+    }
     return calc.log(x, base: 10)
   }
   if name == "sqrt" {
-    check(
-      x >= 0,
-      "scale",
-      "sqrt transform requires non-negative values; got " + repr(x),
-    )
+    if x < 0 {
+      fail(
+        "scale",
+        "sqrt transform requires non-negative values; got " + repr(x),
+      )
+    }
     return calc.sqrt(x)
   }
   x

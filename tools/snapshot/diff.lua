@@ -140,12 +140,10 @@ local function side_by_side(base_png, head_png, out_png)
 end
 
 local function git_show_to(rev, path, dst)
-  local ok = os.execute(string.format("git -C %s show %s > %s 2>/dev/null",
+  local ok = util.try_run(string.format("git -C %s show %s > %s 2>/dev/null",
     shell_quote(ROOT), shell_quote(rev .. ":" .. path), shell_quote(dst)))
-  -- `os.execute` returns true/nil on Lua 5.2+ and an exit-status number on
-  -- 5.1; normalise so callers get a real boolean. The shell redirect creates
-  -- `dst` even when `git show` fails, so drop the empty file on failure.
-  ok = ok == true or ok == 0
+  -- The shell redirect creates `dst` even when `git show` fails, so drop the
+  -- empty file on failure.
   if not ok then os.remove(dst) end
   return ok
 end

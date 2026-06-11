@@ -14,20 +14,10 @@
     let curr-in = keep(curr.z, level)
     let prev-in = keep(prev.z, level)
     // `keep` is `>=` or `<=` against `level`, so equal endpoint z values
-    // resolve both flags equal and the interpolation branches are skipped;
-    // the explicit `dz` guard makes that invariant local to the division.
+    // resolve both flags equal and crossings never interpolate; the explicit
+    // `dz` guard makes that invariant local to the division.
     let dz = curr.z - prev.z
-    if curr-in {
-      if not prev-in and dz != 0 {
-        let t = (level - prev.z) / dz
-        out.push((
-          x: prev.x + t * (curr.x - prev.x),
-          y: prev.y + t * (curr.y - prev.y),
-          z: level,
-        ))
-      }
-      out.push(curr)
-    } else if prev-in and dz != 0 {
+    if curr-in != prev-in and dz != 0 {
       let t = (level - prev.z) / dz
       out.push((
         x: prev.x + t * (curr.x - prev.x),
@@ -35,6 +25,7 @@
         z: level,
       ))
     }
+    if curr-in { out.push(curr) }
   }
   out
 }

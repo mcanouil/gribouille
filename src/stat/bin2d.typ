@@ -72,7 +72,7 @@
   // `_density` is the cell's fraction of the total count, `count / sum(count)`
   // (the ggplot2 convention). Only non-empty cells emit rows, so the total is
   // never zero where it is used as a denominator.
-  let total = cells.counts.sum()
+  let total = cells.total
   let rows = ()
   for k in range(cells.counts.len()) {
     let n = cells.counts.at(k)

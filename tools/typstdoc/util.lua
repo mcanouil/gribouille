@@ -12,11 +12,17 @@ function M.die(msg)
   error("typstdoc: " .. msg, 0)
 end
 
--- Run a shell command and die on failure. `os.execute` returns true/nil on
--- Lua 5.2+ and an exit-status number on 5.1; accept both conventions.
-function M.run(cmd)
+-- Run a shell command and report success as a boolean. `os.execute` returns
+-- true/nil on Lua 5.2+ and an exit-status number on 5.1; accept both
+-- conventions.
+function M.try_run(cmd)
   local ok = os.execute(cmd)
-  if ok ~= true and ok ~= 0 then
+  return ok == true or ok == 0
+end
+
+-- Run a shell command and die on failure.
+function M.run(cmd)
+  if not M.try_run(cmd) then
     M.die("command failed: " .. cmd)
   end
 end
