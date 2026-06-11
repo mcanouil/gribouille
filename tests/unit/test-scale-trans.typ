@@ -9,7 +9,9 @@
   scale-x-log10, scale-x-reverse, scale-x-sqrt, scale-y-log10, scale-y-reverse,
   scale-y-sqrt,
 )
-#import "../../src/scale/train.typ": map-axis, map-position
+#import "../../src/scale/train.typ": (
+  map-axis, map-position, transform-fwd, transform-inv,
+)
 
 // --- spec dicts carry the right aesthetic and trans ---
 
@@ -85,5 +87,13 @@
   map-axis(rev-trained, 3, (0.0, 10.0)),
   map-position(rev-trained, 3, (0.0, 10.0)),
 )
+
+// --- sqrt inverse round-trips and clamps below-zero padded bounds ---
+
+#assert.eq(transform-fwd("sqrt", 9.0), 3.0)
+#assert.eq(transform-inv("sqrt", 3.0), 9.0)
+#assert.eq(transform-inv("sqrt", 0.0), 0.0)
+// A padded view bound below zero floors at 0 instead of reflecting positive.
+#assert.eq(transform-inv("sqrt", -0.5), 0.0)
 
 Scale trans tests passed.
