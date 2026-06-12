@@ -4,6 +4,10 @@
 # needs a real user identity, so it authenticates with the user's own `gh`
 # session (a GitHub App token cannot open that PR). Run it after each release.
 #
+# @license MIT
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+#
 # Usage:
 #   .github/scripts/publish-typst-universe.sh [--dry-run] [VERSION]
 #

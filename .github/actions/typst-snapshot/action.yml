@@ -1,3 +1,7 @@
+# @license MIT
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+
 name: Compile + diff visual snapshots
 description: Run the snapshot harness in --check or --update mode and surface diff artefacts.
 

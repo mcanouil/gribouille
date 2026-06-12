@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 #
+# @license MIT
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+#
 # Regenerate the Gribouille documentation social card (docs/assets/images/social-card.png).
 #
 # Steps:

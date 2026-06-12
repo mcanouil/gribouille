@@ -1,7 +1,11 @@
---- Reads `gallery.yml` adjacent to `examples/index.qmd`, prepends one hidden
---- `{typst}` chunk per item so `typst-render` writes the SVGs to disk, and
---- appends a `#modal-<slug>` div per item carrying the rewritten `.typ` source
---- for the `modal` extension to wrap as a Bootstrap modal.
+--- @license MIT
+--- @copyright 2026 Mickaël Canouil
+--- @author Mickaël Canouil
+--
+-- Reads `gallery.yml` adjacent to `examples/index.qmd`, prepends one hidden
+-- `{typst}` chunk per item so `typst-render` writes the SVGs to disk, and
+-- appends a `#modal-<slug>` div per item carrying the rewritten `.typ` source
+-- for the `modal` extension to wrap as a Bootstrap modal.
 
 local function read_file(path)
   local f = io.open(path, 'rb')

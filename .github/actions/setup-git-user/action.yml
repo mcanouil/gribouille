@@ -1,3 +1,7 @@
+# @license MIT
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+
 name: Setup Git User
 description: Configure the git user identity from a GitHub App (minted inline or supplied by the caller).
 

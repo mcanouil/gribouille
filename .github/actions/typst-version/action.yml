@@ -1,3 +1,7 @@
+# @license MIT
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+
 name: Read pinned Typst version
 description: Extract the compiler version from typst.toml.
 

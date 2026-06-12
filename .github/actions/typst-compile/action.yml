@@ -1,3 +1,7 @@
+# @license MIT
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+
 name: Compile Typst sources
 description: Compile every Typst file in a directory and report pass/fail counts.
 

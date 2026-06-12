@@ -1,4 +1,8 @@
 <%
+// @license MIT
+// @copyright 2026 Mickaël Canouil
+// @author Mickaël Canouil
+
 const sectionOrder = [
   { key: "basics",       heading: "Basics" },
   { key: "bars",         heading: "Bars and counts" },
