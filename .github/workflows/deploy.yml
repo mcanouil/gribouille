@@ -19,6 +19,12 @@ on:
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
   workflow_call:
+    inputs:
+      ref:
+        description: "Commit or ref to build (defaults to the triggering ref)."
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -49,6 +55,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
 
       - name: Read Typst version from typst.toml
@@ -113,6 +120,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
 
       # Website framework, tooling, and content always come from main; only the
