@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 (2026-06-14)
 
 - feat: the published package now ships Tinymist-friendly docstrings; hovering a gribouille function in an editor shows formatted parameters, returns, and examples instead of the raw `@`-tag comments. Variadic sinks list their accepted keys: `guides()` its aesthetics, and `theme()` and the theme presets their element surfaces. (#108)
 - feat: under `coord-radial`, `guides(theta: none)` hides the angular axis (arc, minor ticks, and tick labels) and `guides(r: none)` hides the radial tick labels; the spokes and circles stay. Also fixes `guides(theta: none)` previously adding a theta arc instead of hiding the axis. (#106)
