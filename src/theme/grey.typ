@@ -1,11 +1,11 @@
 ///! Grey theme preset.
 ///!
-///! Light grey panel background with white gridlines and thin black axes.
+///! Light grey panel background with white gridlines and no axis lines.
 ///! Derives element colours from `ink` and `paper` via `col-mix`.
 
 #import "../utils/colour.typ": col-mix
 #import "defaults.typ": _tr-ink, _tr-paper
-#import "elements.typ": element-line, element-rect, element-text
+#import "elements.typ": element-blank, element-line, element-rect, element-text
 #import "theme.typ": _preset
 
 /// Grey theme: light grey panel with white gridlines.
@@ -28,7 +28,7 @@
 ///
 /// \@examples Light grey panel with white gridlines.
 /// ```
-/// //| alt: "Scatter plot of y against x on the grey theme with a light grey panel, white gridlines and thin black axes."
+/// //| alt: "Scatter plot of y against x on the grey theme with a light grey panel, white gridlines and no axis lines."
 /// #let d = range(0, 10).map(i => (x: i, y: i * 0.5))
 /// #plot(
 ///   data: d,
@@ -82,11 +82,8 @@
   accent,
   (
     panel-background: element-rect(fill: col-mix(ink, paper, 0.92)),
-    panel-grid: element-line(
-      colour: col-mix(ink, paper, 0.7),
-      stroke: 0.5pt,
-    ),
-    axis-line: element-line(colour: ink, stroke: 0.5pt),
+    panel-grid: element-line(colour: paper, stroke: 0.5pt),
+    axis-line: element-blank(),
     axis-text: element-text(colour: col-mix(ink, paper, 0.302)),
     strip-background: element-rect(fill: col-mix(ink, paper, 0.85)),
   ),

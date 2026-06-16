@@ -37,12 +37,12 @@
 #assert.eq(resolve-from-theme(theme, "ink"), theme.ink)
 #assert.eq(resolve-from-theme(theme, ("ink",)), theme.ink)
 #assert.eq(
-  resolve-from-theme(theme, "axis-line.colour"),
-  theme.axis-line.colour,
+  resolve-from-theme(theme, "panel-grid.colour"),
+  theme.panel-grid.colour,
 )
 #assert.eq(
-  resolve-from-theme(theme, ("axis-line", "colour")),
-  theme.axis-line.colour,
+  resolve-from-theme(theme, ("panel-grid", "colour")),
+  theme.panel-grid.colour,
 )
 
 // --- _apply-from-theme: marker collapses to layer.params override ------
