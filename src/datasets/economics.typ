@@ -8,6 +8,8 @@
 ///! `psavert` climbs as households rebuild savings, and `unemploy`
 ///! and `uempmed` peak through 2009.
 
+#import "../data.typ": _normalise-data
+
 /// US monthly economic time series (subset).
 ///
 /// Each row is a month from 2008-01-01 to 2009-12-01.
@@ -39,15 +41,15 @@
 /// \@examples Preview all 24 entries.
 /// ```
 /// //| alt: "Table of 24 monthly rows (2008-01 to 2009-12) with six columns: date, pce, pop, psavert, uempmed, unemploy."
-/// #let cols = economics.pairs()
+/// #let keys = economics.first().keys()
 /// #let cell(v) = if v == none { text(fill: gray, [_none_]) } else { [#v] }
 /// #table(
-///   columns: cols.len(),
+///   columns: keys.len(),
 ///   align: center + horizon,
 ///   inset: 5pt,
 ///   stroke: 0.5pt,
-///   ..cols.map(p => strong(raw(p.at(0)))),
-///   ..range(cols.first().at(1).len()).map(i => cols.map(p => cell(p.at(1).at(i)))).flatten(),
+///   ..keys.map(k => strong(raw(k))),
+///   ..economics.map(r => keys.map(k => cell(r.at(k)))).flatten(),
 /// )
 /// ```
 ///
@@ -81,7 +83,7 @@
 ///   height: 6cm,
 /// )
 /// ```
-#let economics = (
+#let economics = _normalise-data((
   date: (
     "2008-01-01",
     "2008-02-01",
@@ -238,4 +240,4 @@
     15219,
     15098,
   ),
-)
+))

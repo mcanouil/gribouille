@@ -5,6 +5,8 @@
 ///! (Torgersen, Biscoe, Dream) across years 2007-2009.
 ///! Missing values are represented as `none`.
 
+#import "../data.typ": _normalise-data
+
 /// Morphological measurements for 344 penguins (Palmer Archipelago).
 ///
 /// Each row is one penguin observation.
@@ -43,15 +45,16 @@
 /// \@examples Preview the first five entries (out of 344).
 /// ```
 /// //| alt: "Table of the first five rows of the penguins dataset with columns species, island, bill measurements, flipper length, body mass, and sex."
-/// #let cols = penguins.pairs()
+/// #let rows = penguins.slice(0, 5)
+/// #let keys = rows.first().keys()
 /// #let cell(v) = if v == none { text(fill: gray, [_none_]) } else { [#v] }
 /// #table(
-///   columns: cols.len(),
+///   columns: keys.len(),
 ///   align: center + horizon,
 ///   inset: 5pt,
 ///   stroke: 0.5pt,
-///   ..cols.map(p => strong(raw(p.at(0)))),
-///   ..range(5).map(i => cols.map(p => cell(p.at(1).at(i)))).flatten(),
+///   ..keys.map(k => strong(raw(k))),
+///   ..rows.map(r => keys.map(k => cell(r.at(k)))).flatten(),
 /// )
 /// ```
 ///
@@ -96,7 +99,7 @@
 ///   height: 7cm,
 /// )
 /// ```
-#let penguins = (
+#let penguins = _normalise-data((
   species: (
     "Adelie",
     "Adelie",
@@ -2865,4 +2868,4 @@
     2009,
     2009,
   ),
-)
+))

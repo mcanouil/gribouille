@@ -84,7 +84,9 @@
 /// \@stability stable
 /// \@since 0.3.0
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges for the legend, or `auto` to derive equal-width bins from `n-breaks`. Affects the legend only; the per-row mapping stays continuous.
 ///
 /// \@param range Pair of Typst lengths `(min, max)` bounding the output size.
 ///
@@ -130,6 +132,7 @@
 /// \@see \@scale-size-continuous, \@scale-size-binned-area
 #let scale-size-binned(
   n-breaks: 4,
+  breaks: auto,
   range: (1pt, 6pt),
   name: none,
   limits: none,
@@ -143,7 +146,7 @@
   range: range,
   limits: limits,
   oob: oob,
-  breaks: auto,
+  breaks: breaks,
   labels: labels,
   binned: true,
   n-breaks: n-breaks,
@@ -241,7 +244,9 @@
 /// \@stability stable
 /// \@since 0.3.0
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges for the legend, or `auto` to derive equal-width bins from `n-breaks`. Affects the legend only; the per-row mapping stays continuous.
 ///
 /// \@param range Pair of Typst lengths `(min, max)` bounding the output size.
 ///
@@ -288,6 +293,7 @@
 /// \@see \@scale-size-binned, \@scale-size-area
 #let scale-size-binned-area(
   n-breaks: 4,
+  breaks: auto,
   range: (1pt, 6pt),
   name: none,
   limits: none,
@@ -301,7 +307,7 @@
   range: range,
   limits: limits,
   oob: oob,
-  breaks: auto,
+  breaks: breaks,
   labels: labels,
   binned: true,
   n-breaks: n-breaks,

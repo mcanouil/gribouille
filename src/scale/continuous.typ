@@ -55,6 +55,7 @@
   limits: none,
   oob: "drop",
   n-breaks: 10,
+  breaks: auto,
   labels: auto,
 ) = (
   kind: "scale",
@@ -63,7 +64,7 @@
   name: name,
   limits: limits,
   oob: oob,
-  breaks: auto,
+  breaks: breaks,
   labels: labels,
   transform: "identity",
   expand: auto,
@@ -82,7 +83,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
@@ -180,7 +181,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
@@ -262,7 +263,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
@@ -335,7 +336,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
@@ -409,7 +410,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
@@ -483,7 +484,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
@@ -553,7 +554,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
@@ -624,11 +625,13 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; ticks sit at each interval midpoint and the domain widens to cover them.
 ///
 /// \@param labels Array of tick labels aligned with the bin midpoints, or `auto`.
 ///
@@ -669,6 +672,7 @@
   limits: none,
   oob: "drop",
   n-breaks: 10,
+  breaks: auto,
   labels: auto,
 ) = _binned-scale(
   "x",
@@ -676,6 +680,7 @@
   limits: limits,
   oob: oob,
   n-breaks: n-breaks,
+  breaks: breaks,
   labels: labels,
 )
 
@@ -690,11 +695,13 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; ticks sit at each interval midpoint and the domain widens to cover them.
 ///
 /// \@param labels Array of tick labels aligned with the bin midpoints, or `auto`.
 ///
@@ -735,6 +742,7 @@
   limits: none,
   oob: "drop",
   n-breaks: 10,
+  breaks: auto,
   labels: auto,
 ) = _binned-scale(
   "y",
@@ -742,6 +750,7 @@
   limits: limits,
   oob: oob,
   n-breaks: n-breaks,
+  breaks: breaks,
   labels: labels,
 )
 
@@ -757,7 +766,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///

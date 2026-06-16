@@ -69,3 +69,53 @@
   data: df,
 )
 #assert.eq(_axis-breaks(trained-scalar.x), (5.0,))
+
+// Without limits, explicit breaks widen the domain so out-of-range breaks
+// (0 below the data minimum, 5 above the maximum) become visible.
+#let trained-expand = train(
+  scales: (scale-x-continuous(breaks: (0, 5)),),
+  layers: layers,
+  mapping: aes(x: "x", y: "y"),
+  data: df,
+)
+#assert.eq(trained-expand.x.domain, (0.0, 5.0))
+#assert.eq(_axis-breaks(trained-expand.x), (0.0, 5.0))
+
+// A side pinned by an explicit limit is not widened: the low bound stays at 5
+// so the break at 0 is dropped, while the unpinned high side expands to 20.
+#let trained-pin = train(
+  scales: (scale-x-continuous(limits: (5, auto), breaks: (0, 20)),),
+  layers: layers,
+  mapping: aes(x: "x", y: "y"),
+  data: df,
+)
+#assert.eq(trained-pin.x.domain, (5.0, 20.0))
+#assert.eq(_axis-breaks(trained-pin.x), (20.0,))
+
+// `auto` on one side of `limits` keeps the trained bound for that side.
+#let trained-auto-hi = train(
+  scales: (scale-x-continuous(limits: (auto, 10)),),
+  layers: layers,
+  mapping: aes(x: "x", y: "y"),
+  data: df,
+)
+#assert.eq(trained-auto-hi.x.domain, (1.0, 10.0))
+#let trained-auto-lo = train(
+  scales: (scale-x-continuous(limits: (0, auto)),),
+  layers: layers,
+  mapping: aes(x: "x", y: "y"),
+  data: df,
+)
+#assert.eq(trained-auto-lo.x.domain, (0.0, 3.0))
+
+// On a log10 scale, user breaks are in data units: decade breaks 1/10/100 sit
+// inside the data-space view range (1 to 100) and survive the domain filter.
+#let trained-log = (
+  type: "continuous",
+  domain: (0.0, 2.0),
+  transform: "log10",
+  pre-transformed: true,
+  view-transform: (0.0, 2.0),
+  spec: (breaks: (1, 10, 100)),
+)
+#assert.eq(_axis-breaks(trained-log), (1, 10, 100))

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- feat: scale `limits` accept `auto` on one side, e.g., `limits: (auto, 60)`, keeping the trained bound for the other side. (#116)
+- feat: binned position scales (`scale-x-binned` / `scale-y-binned`) accept `breaks` as bin edges; ticks sit at interval midpoints and `n-breaks` is ignored when `breaks` is set. (#116)
+- feat: binned colour, fill, shape, linetype, size, linewidth, stroke, and alpha scales accept `breaks` as bin edges; colour, fill, shape, and linetype bin per row by the edges, the others bin their legend. (#116)
+- feat: bundled datasets (`penguins`, `economics`, `mpg`) ship as row-store arrays, so `penguins.filter(...)` and `.map(...)` work directly; `plot()` still accepts them. (#116)
+- fix: `theme-grey()` matches ggplot2 `theme_grey()` with white grid lines and no axis lines. (#116)
+- fix: explicit continuous `breaks` expand the axis range so requested ticks stay visible, unless a side is pinned by an explicit `limit`. (#116)
+
 ## 0.3.0 (2026-06-14)
 
 - feat: the published package now ships Tinymist-friendly docstrings; hovering a gribouille function in an editor shows formatted parameters, returns, and examples instead of the raw `@`-tag comments. Variadic sinks list their accepted keys: `guides()` its aesthetics, and `theme()` and the theme presets their element surfaces. (#108)

@@ -5,6 +5,8 @@
 ///! `model`, `displ`, `cyl`, `class`, `cty`, `hwy`.
 ///! Rows span several vehicle classes.
 
+#import "../data.typ": _normalise-data
+
 /// Fuel economy of 30 cars (small fuel-economy reference dataset).
 ///
 /// Each row is one vehicle.
@@ -31,15 +33,16 @@
 /// \@examples Preview the first ten entries (out of 30).
 /// ```
 /// //| alt: "Table of the first ten rows of the mpg dataset with seven columns: manufacturer, model, displ, cyl, class, cty, hwy."
-/// #let cols = mpg.pairs()
+/// #let rows = mpg.slice(0, 10)
+/// #let keys = rows.first().keys()
 /// #let cell(v) = if v == none { text(fill: gray, [_none_]) } else { [#v] }
 /// #table(
-///   columns: cols.len(),
+///   columns: keys.len(),
 ///   align: center + horizon,
 ///   inset: 5pt,
 ///   stroke: 0.5pt,
-///   ..cols.map(p => strong(raw(p.at(0)))),
-///   ..range(10).map(i => cols.map(p => cell(p.at(1).at(i)))).flatten(),
+///   ..keys.map(k => strong(raw(k))),
+///   ..rows.map(r => keys.map(k => cell(r.at(k)))).flatten(),
 /// )
 /// ```
 ///
@@ -71,7 +74,7 @@
 ///   height: 7cm,
 /// )
 /// ```
-#let mpg = (
+#let mpg = _normalise-data((
   manufacturer: (
     "audi",
     "audi",
@@ -296,4 +299,4 @@
     30,
     26,
   ),
-)
+))
