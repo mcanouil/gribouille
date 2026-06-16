@@ -11,7 +11,7 @@
 // linetype is meaningless): the caller treats `none` as "drop this aesthetic
 // from the composed glyph".
 
-#import "./colour.typ": resolve-continuous-colour
+#import "./colour.typ": bin-edges, bin-index-edges, resolve-continuous-colour
 #import "./palette.typ": (
   default-linetypes, default-shapes, palette-at, spec-palette,
 )
@@ -68,8 +68,13 @@
   let pal = spec-palette(trained, fallback-palette)
   if pal == none or pal.len() == 0 { return none }
   let (lo, hi) = trained.domain
-  let n = spec.at("n-breaks", default: 4)
-  palette-at(pal, bin-index(value, lo, hi, n))
+  let breaks = spec.at("breaks", default: auto)
+  let idx = if type(breaks) == array {
+    bin-index-edges(value, bin-edges(spec, lo, hi))
+  } else {
+    bin-index(value, lo, hi, spec.at("n-breaks", default: 4))
+  }
+  palette-at(pal, idx)
 }
 
 // Colour/fill: palette-driven on discrete; continuous mapper on numeric.

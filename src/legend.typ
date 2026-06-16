@@ -11,7 +11,7 @@
 #import "utils/pretty.typ": pretty
 #import "utils/format.typ": format-break
 #import "utils/measure.typ": measure-text-cm
-#import "utils/colour.typ": resolve-continuous-colour
+#import "utils/colour.typ": bin-edges, edge-midpoints, resolve-continuous-colour
 #import "utils/palette.typ": default-discrete, spec-attr, spec-palette
 #import "utils/level-resolve.typ": resolve-level
 #import "utils/errors.typ": fail, fail-type
@@ -966,12 +966,20 @@
       let info = _bin-info(first.t)
       let lo = first.domain.first()
       let hi = first.domain.last()
-      let computed = if info.binned {
-        range(info.n-breaks).map(i => (
-          lo + (i + 0.5) * (hi - lo) / info.n-breaks
-        ))
-      } else { pretty(lo, hi, n: 5) }
-      let breaks = _guide-breaks(info, lo, hi, computed)
+      // A binned ladder shows one glyph per bin at its midpoint. Explicit
+      // `breaks` (bin edges) become interval midpoints; otherwise the bins are
+      // `n-breaks` equal-width slices. (The colourbar instead keeps the edges
+      // as boundary ticks.)
+      let breaks = if info.binned and type(info.breaks) == array {
+        edge-midpoints(bin-edges(first.t.spec, lo, hi))
+      } else {
+        let computed = if info.binned {
+          range(info.n-breaks).map(i => (
+            lo + (i + 0.5) * (hi - lo) / info.n-breaks
+          ))
+        } else { pretty(lo, hi, n: 5) }
+        _guide-breaks(info, lo, hi, computed)
+      }
       // Resolve the key glyph size against the group's own `size` scale (not
       // `first`, which is whichever aesthetic sorts first), or `none` when the
       // ladder carries no `size` channel.
@@ -1422,7 +1430,33 @@
     )
   }
   let pal = spec-palette(trained, ctx.palette)
-  if guide.at("binned", default: false) {
+  let spec = trained.at("spec", default: none)
+  let user-breaks = if spec == none { auto } else {
+    spec.at("breaks", default: auto)
+  }
+  if guide.at("binned", default: false) and type(user-breaks) == array {
+    // Explicit `breaks` give (possibly non-uniform) bin edges: one patch per
+    // bin, its width tracking the edge spacing and its fill the colour the
+    // interval midpoint resolves to, so the bar matches the per-row colour.
+    let edges = bin-edges(spec, lo, hi)
+    let span = hi - lo
+    for i in range(edges.len() - 1) {
+      let e0 = edges.at(i)
+      let e1 = edges.at(i + 1)
+      let colour = resolve-continuous-colour(trained, (e0 + e1) / 2, pal, ink)
+      let t0 = if span == 0 { 0 } else { (e0 - lo) / span }
+      let t1 = if span == 0 { 1 } else { (e1 - lo) / span }
+      let (rect-lo, rect-hi) = if horizontal {
+        ((bar-left + t0 * bar-w, bar-bottom), (bar-left + t1 * bar-w, bar-top))
+      } else {
+        (
+          (bar-left, bar-bottom + t0 * bar-h),
+          (bar-right, bar-bottom + t1 * bar-h),
+        )
+      }
+      cetz.draw.rect(rect-lo, rect-hi, fill: colour, stroke: colour)
+    }
+  } else if guide.at("binned", default: false) {
     let steps = guide.at("n-breaks", default: 5)
     let step-w = bar-w / steps
     let step-h = bar-h / steps

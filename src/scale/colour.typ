@@ -118,6 +118,7 @@
   aesthetic,
   option: "viridis",
   n-breaks: 5,
+  breaks: auto,
   name: none,
   limits: none,
   oob: "drop",
@@ -133,6 +134,7 @@
   labels: labels,
   binned: true,
   n-breaks: n-breaks,
+  breaks: breaks,
 )
 
 #let _scale-brewer(
@@ -302,6 +304,7 @@
   low: rgb("#132B43"),
   high: rgb("#56B1F7"),
   n-breaks: 5,
+  breaks: auto,
   name: none,
   limits: none,
   oob: "drop",
@@ -317,6 +320,7 @@
   labels: labels,
   binned: true,
   n-breaks: n-breaks,
+  breaks: breaks,
 )
 
 #let _scale-steps2(
@@ -326,6 +330,7 @@
   high: rgb("#A50026"),
   midpoint: 0,
   n-breaks: 5,
+  breaks: auto,
   name: none,
   limits: none,
   oob: "drop",
@@ -342,12 +347,14 @@
   labels: labels,
   binned: true,
   n-breaks: n-breaks,
+  breaks: breaks,
 )
 
 #let _scale-stepsn(
   aesthetic,
   colours: (),
   n-breaks: 5,
+  breaks: auto,
   name: none,
   limits: none,
   oob: "drop",
@@ -363,12 +370,14 @@
   labels: labels,
   binned: true,
   n-breaks: n-breaks,
+  breaks: breaks,
 )
 
 #let _scale-fermenter(
   aesthetic,
   palette: "Spectral",
   n-breaks: 5,
+  breaks: auto,
   direction: 1,
   name: none,
   limits: none,
@@ -388,6 +397,7 @@
     labels: labels,
     binned: true,
     n-breaks: n-breaks,
+    breaks: breaks,
   )
 }
 
@@ -909,7 +919,9 @@
 ///
 /// \@param option Palette name: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`, or `"cividis"`.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
@@ -1161,7 +1173,9 @@
 ///
 /// \@param option Palette name: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`, or `"cividis"`.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
@@ -2184,7 +2198,9 @@
 /// \@stability stable
 /// \@since 0.4.0
 ///
-/// \@param n-breaks Number of legend bins.
+/// \@param n-breaks Number of legend bins. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges for the legend, or `auto` to derive equal-width bins from `n-breaks`. Affects the legend only; the per-row mapping stays continuous.
 ///
 /// \@param range Pair `(min, max)` bounding the output opacity in `[0, 1]`.
 ///
@@ -2215,6 +2231,7 @@
 /// \@see \@scale-alpha-continuous, \@scale-linewidth-binned
 #let scale-alpha-binned(
   n-breaks: 4,
+  breaks: auto,
   range: (0.1, 1),
   name: none,
   limits: none,
@@ -2228,7 +2245,7 @@
   range: range,
   limits: limits,
   oob: oob,
-  breaks: auto,
+  breaks: breaks,
   labels: labels,
   binned: true,
   n-breaks: n-breaks,
@@ -2337,7 +2354,9 @@
 ///
 /// \@param high Colour for the high end of the domain.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
@@ -2402,7 +2421,9 @@
 ///
 /// \@param midpoint Value at which the palette transitions through `mid`.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
@@ -2464,7 +2485,9 @@
 ///
 /// \@param colours Array of two or more colours.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
@@ -2526,7 +2549,9 @@
 ///
 /// \@param palette ColorBrewer palette name (sequential or diverging works best).
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param direction `1` for canonical order, `-1` for reversed.
 ///
@@ -2589,7 +2614,9 @@
 ///
 /// \@param high Colour for the high end of the domain.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
@@ -2639,7 +2666,9 @@
 ///
 /// \@param midpoint Value at which the palette transitions through `mid`.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
@@ -2683,7 +2712,9 @@
 ///
 /// \@param colours Array of two or more colours.
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
@@ -2730,7 +2761,9 @@
 ///
 /// \@param palette ColorBrewer palette name (sequential or diverging works best).
 ///
-/// \@param n-breaks Number of bins to partition the domain into.
+/// \@param n-breaks Number of bins to partition the domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param direction `1` for canonical order, `-1` for reversed.
 ///

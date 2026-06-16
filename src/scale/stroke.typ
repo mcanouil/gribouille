@@ -132,7 +132,9 @@
 /// \@stability stable
 /// \@since 0.4.0
 ///
-/// \@param n-breaks Number of legend bins.
+/// \@param n-breaks Number of legend bins. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges for the legend, or `auto` to derive equal-width bins from `n-breaks`. Affects the legend only; the per-row mapping stays continuous.
 ///
 /// \@param range Pair of Typst lengths `(min, max)` bounding the output thickness.
 ///
@@ -164,6 +166,7 @@
 /// \@see \@scale-stroke-continuous, \@scale-linewidth-binned
 #let scale-stroke-binned(
   n-breaks: 4,
+  breaks: auto,
   range: (0.2pt, 1.4pt),
   name: none,
   limits: none,
@@ -177,7 +180,7 @@
   range: range,
   limits: limits,
   oob: oob,
-  breaks: auto,
+  breaks: breaks,
   labels: labels,
   binned: true,
   n-breaks: n-breaks,

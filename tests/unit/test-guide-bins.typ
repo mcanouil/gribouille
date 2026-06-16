@@ -51,4 +51,20 @@
 #assert.eq(g2.at(0).binned, false)
 #assert.eq(g2.at(0).n-breaks, 5)
 
+// Explicit `breaks` (bin edges) on a binned ladder place one glyph per bin at
+// the interval midpoint, not at the raw edges.
+#let trained-edge-alpha = (
+  alpha: (
+    type: "continuous",
+    domain: (0, 10),
+    spec: (binned: true, n-breaks: 4, breaks: (0, 2, 6, 10)),
+  ),
+)
+#let g3 = guides-for(
+  (mapping: (alpha: "w"), layers: (layer-point(),), guides: (:)),
+  trained-edge-alpha,
+)
+#assert.eq(g3.at(0).kind, "size-ladder")
+#assert.eq(g3.at(0).breaks, (1, 4, 8))
+
 Guide-bins tests passed.

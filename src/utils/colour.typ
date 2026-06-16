@@ -101,12 +101,44 @@
   (idx + 0.5) / count
 }
 
+// Resolve the canonical bin edges of a binned scale spec over `[lo, hi]`.
+// User `breaks` (an array of >= 2 edges) are taken as-is, sorted; the trained
+// domain has already been widened to cover them by the break fold in
+// `_train-entry`. Otherwise the domain is cut into `n-breaks` equal-width bins.
+// Always returns at least two edges.
+#let bin-edges(spec, lo, hi) = {
+  let breaks = if spec == none { auto } else {
+    spec.at("breaks", default: auto)
+  }
+  if type(breaks) == array and breaks.len() >= 2 { return breaks.sorted() }
+  let n = if spec == none { 5 } else { spec.at("n-breaks", default: 5) }
+  let count = calc.max(1, int(n))
+  if hi == lo { return (lo, hi) }
+  range(count + 1).map(i => lo + i * (hi - lo) / count)
+}
+
+// Index of the bin (the `[edge_i, edge_{i+1})` interval) holding `value`, in
+// `[0, edges.len() - 2]`. Values at or above the top edge fall in the last bin.
+#let bin-index-edges(value, edges) = {
+  let last = edges.len() - 2
+  if last <= 0 { return 0 }
+  let idx = 0
+  while idx < last and value >= edges.at(idx + 1) { idx += 1 }
+  idx
+}
+
+// Midpoints of consecutive edges, e.g. for placing one legend glyph per bin.
+#let edge-midpoints(edges) = range(edges.len() - 1).map(i => (
+  (edges.at(i) + edges.at(i + 1)) / 2
+))
+
 // Resolve a continuous numeric value to a colour, given a trained scale dict
 // (with `domain`) and a palette of one or more stops. If the trained spec
 // carries a `midpoint`, treat the palette as `(low, mid, high)` and split
 // the interpolation at the midpoint. If the spec carries `binned: true`, the
-// domain is partitioned into `n-breaks` equal-width bins and the lookup
-// snaps to each bin's midpoint, producing a stepped palette.
+// domain is partitioned into bins (explicit `breaks` edges, else `n-breaks`
+// equal-width bins) and the lookup snaps to each bin's midpoint, producing a
+// stepped palette. A diverging `midpoint` always uses equal-width bins.
 #let resolve-continuous-colour(trained, value, palette, fallback) = {
   if palette == none or palette.len() == 0 { return fallback }
   let (lo, hi) = trained.domain
@@ -141,6 +173,19 @@
     if t <= 0.0 { return mid }
     if t >= 1.0 { return high }
     return mid.mix((high, t * 100%))
+  }
+  let breaks = if spec == none { auto } else {
+    spec.at("breaks", default: auto)
+  }
+  if binned and type(breaks) == array {
+    let edges = bin-edges(spec, lo, hi)
+    // Palette position is the bin's midpoint in palette space, so colours are
+    // spaced evenly regardless of (possibly non-uniform) bin widths.
+    let idx = bin-index-edges(value, edges)
+    return interpolate-stops(
+      palette,
+      (idx + 0.5) / calc.max(1, edges.len() - 1),
+    )
   }
   let t = (value - lo) / (hi - lo)
   if binned { t = _snap-bin(t, n-breaks) }

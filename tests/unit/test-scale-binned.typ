@@ -5,20 +5,26 @@
 // continuous lookups.
 
 #import "../../src/scale/colour.typ": (
-  scale-colour-fermenter, scale-colour-steps, scale-colour-steps2,
-  scale-colour-stepsn, scale-fill-fermenter, scale-fill-steps,
-  scale-fill-steps2, scale-fill-stepsn,
+  scale-alpha-binned, scale-colour-fermenter, scale-colour-steps,
+  scale-colour-steps2, scale-colour-stepsn, scale-colour-viridis-b,
+  scale-fill-fermenter, scale-fill-steps, scale-fill-steps2, scale-fill-stepsn,
+  scale-fill-viridis-b,
 )
 #import "../../src/scale/continuous.typ": scale-x-binned, scale-y-binned
 #import "../../src/scale/size.typ": (
   scale-size-area, scale-size-binned, scale-size-binned-area,
 )
+#import "../../src/scale/linewidth.typ": scale-linewidth-binned
+#import "../../src/scale/stroke.typ": scale-stroke-binned
+#import "../../src/scale/shape.typ": scale-shape-binned
+#import "../../src/scale/linetype.typ": scale-linetype-binned
 #import "../../src/scale/train.typ": train
 #import "../../src/render/axis-format.typ": _axis-breaks
 #import "../../src/aes.typ": aes
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/utils/colour.typ": resolve-continuous-colour
-#import "../../src/utils/palette.typ": brewer-palette
+#import "../../src/utils/level-resolve.typ": resolve-binned
+#import "../../src/utils/palette.typ": brewer-palette, default-shapes
 
 // scale-colour-steps: two-stop binned gradient.
 #let s1 = scale-colour-steps(n-breaks: 5)
@@ -150,5 +156,90 @@
 )
 #assert.eq(trained-bin.x.domain, (1.0, 6.0))
 #assert.eq(_axis-breaks(trained-bin.x), (3.0, 5.0))
+
+// Every binned scale wrapper exposes and stores `breaks` (bin edges).
+#assert.eq(scale-colour-steps(breaks: (0, 2, 5, 10)).breaks, (0, 2, 5, 10))
+#assert.eq(scale-fill-steps(breaks: (0, 5)).breaks, (0, 5))
+#assert.eq(scale-colour-steps2(breaks: (-1, 0, 1)).breaks, (-1, 0, 1))
+#assert.eq(
+  scale-colour-stepsn(colours: (black, white), breaks: (0, 1)).breaks,
+  (
+    0,
+    1,
+  ),
+)
+#assert.eq(scale-colour-fermenter(breaks: (0, 3, 6)).breaks, (0, 3, 6))
+#assert.eq(scale-fill-fermenter(breaks: (0, 3, 6)).breaks, (0, 3, 6))
+#assert.eq(scale-colour-viridis-b(breaks: (1, 2, 3)).breaks, (1, 2, 3))
+#assert.eq(scale-fill-viridis-b(breaks: (1, 2, 3)).breaks, (1, 2, 3))
+#assert.eq(scale-size-binned(breaks: (1, 4, 9)).breaks, (1, 4, 9))
+#assert.eq(scale-size-binned-area(breaks: (1, 4, 9)).breaks, (1, 4, 9))
+#assert.eq(scale-linewidth-binned(breaks: (0, 1)).breaks, (0, 1))
+#assert.eq(scale-stroke-binned(breaks: (0, 1)).breaks, (0, 1))
+#assert.eq(scale-alpha-binned(breaks: (0, 1)).breaks, (0, 1))
+#assert.eq(scale-shape-binned(breaks: (0, 1, 2)).breaks, (0, 1, 2))
+#assert.eq(scale-linetype-binned(breaks: (0, 1, 2)).breaks, (0, 1, 2))
+
+// Edge-aware colour binning: non-uniform `breaks` define the bins, so values
+// in the narrow first bin [0, 1) and the wide middle bin [1, 9) differ, while
+// two values inside the same wide bin resolve to the same colour.
+#let pal-edges = (rgb("#000000"), rgb("#ffffff"))
+#let trained-cedges = (
+  type: "continuous",
+  domain: (0.0, 10.0),
+  spec: (
+    aesthetic: "colour",
+    type: "continuous",
+    palette: pal-edges,
+    binned: true,
+    breaks: (0, 1, 9, 10),
+  ),
+)
+#let e-narrow = resolve-continuous-colour(trained-cedges, 0.5, pal-edges, black)
+#let e-wide-a = resolve-continuous-colour(trained-cedges, 2, pal-edges, black)
+#let e-wide-b = resolve-continuous-colour(trained-cedges, 8, pal-edges, black)
+#assert(e-narrow != e-wide-a)
+#assert.eq(e-wide-a, e-wide-b)
+
+// Diverging (`midpoint`) per-row colour ignores `breaks` and stays equal-width.
+#let trained-mid = (
+  type: "continuous",
+  domain: (-10.0, 10.0),
+  spec: (
+    aesthetic: "colour",
+    type: "continuous",
+    palette: (rgb("#005A32"), white, rgb("#A50026")),
+    midpoint: 0,
+    binned: true,
+    n-breaks: 4,
+    breaks: (-10, -1, 1, 10),
+  ),
+)
+// Two values in the same equal-width bin resolve alike despite the edges.
+#assert.eq(
+  resolve-continuous-colour(trained-mid, -9, none, black),
+  resolve-continuous-colour(trained-mid, -6, none, black),
+)
+
+// Edge-aware shape binning mirrors the colour path: non-uniform `breaks`.
+#let trained-shape = (
+  type: "continuous",
+  domain: (0.0, 10.0),
+  spec: (
+    aesthetic: "shape",
+    type: "continuous",
+    palette: default-shapes,
+    binned: true,
+    breaks: (0, 1, 9, 10),
+  ),
+)
+#assert(
+  resolve-binned(trained-shape, 0.5, default-shapes)
+    != resolve-binned(trained-shape, 5, default-shapes),
+)
+#assert.eq(
+  resolve-binned(trained-shape, 2, default-shapes),
+  resolve-binned(trained-shape, 8, default-shapes),
+)
 
 Binned scale family tests passed.

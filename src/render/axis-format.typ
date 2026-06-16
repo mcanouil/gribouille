@@ -2,6 +2,7 @@
 // the panel-draw, extents, and canvas render submodules.
 
 #import "../scale/train.typ": transform-inv
+#import "../utils/colour.typ": edge-midpoints
 #import "../utils/pretty.typ": pretty, pretty-log10, pretty-sqrt
 #import "../utils/format.typ": format-break
 
@@ -49,9 +50,7 @@
     if user-break-array != auto {
       let sorted = user-break-array.sorted()
       if sorted.len() < 2 { return sorted }
-      return range(sorted.len() - 1).map(i => (
-        (sorted.at(i) + sorted.at(i + 1)) / 2
-      ))
+      return edge-midpoints(sorted)
     }
     let (lo, hi) = trained.domain
     let n = if spec == none { 10 } else { spec.at("n-breaks", default: 10) }

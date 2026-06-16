@@ -214,7 +214,9 @@
 /// \@stability stable
 /// \@since 0.4.0
 ///
-/// \@param n-breaks Number of bins to partition the continuous domain into.
+/// \@param n-breaks Number of bins to partition the continuous domain into. Ignored when `breaks` is set.
+///
+/// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
 /// \@param palette Array of dash keywords, one per bin, or `auto` for the library default.
 ///
@@ -254,6 +256,7 @@
 /// \@see \@scale-linetype, \@scale-linetype-manual, \@geom-line
 #let scale-linetype-binned(
   n-breaks: 4,
+  breaks: auto,
   palette: auto,
   name: none,
   limits: none,
@@ -270,6 +273,7 @@
   labels: labels,
   binned: true,
   n-breaks: n-breaks,
+  breaks: breaks,
 )
 
 /// Continuous linetype scale: alias of \@scale-linetype-binned with the
