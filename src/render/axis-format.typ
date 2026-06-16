@@ -34,7 +34,25 @@
   let binned = if spec == none { false } else {
     spec.at("binned", default: false)
   }
+  // User `breaks` (continuous tick positions, or bin edges when `binned`),
+  // coerced to an array; `auto` when unset.
+  let user-breaks = if spec == none { auto } else {
+    spec.at("breaks", default: auto)
+  }
+  let user-break-array = if user-breaks == auto { auto } else if (
+    type(user-breaks) == array
+  ) { user-breaks } else { (user-breaks,) }
   if binned {
+    // Explicit `breaks` are bin edges: tick each interval at its midpoint and
+    // ignore `n-breaks`. The trained domain already covers the edges via the
+    // break-driven fold in `_train-entry`.
+    if user-break-array != auto {
+      let sorted = user-break-array.sorted()
+      if sorted.len() < 2 { return sorted }
+      return range(sorted.len() - 1).map(i => (
+        (sorted.at(i) + sorted.at(i + 1)) / 2
+      ))
+    }
     let (lo, hi) = trained.domain
     let n = if spec == none { 10 } else { spec.at("n-breaks", default: 10) }
     let count = calc.max(1, int(n))
@@ -59,16 +77,10 @@
   } else {
     trained.domain
   }
-  let user-breaks = if spec == none { auto } else {
-    spec.at("breaks", default: auto)
-  }
-  if user-breaks != auto {
-    let bs = if type(user-breaks) == array { user-breaks } else {
-      (user-breaks,)
-    }
+  if user-break-array != auto {
     let blo = calc.min(lo, hi)
     let bhi = calc.max(lo, hi)
-    return bs.filter(b => b >= blo and b <= bhi)
+    return user-break-array.filter(b => b >= blo and b <= bhi)
   }
   if transform == "log10" { return pretty-log10(lo, hi) }
   if transform == "sqrt" { return pretty-sqrt(lo, hi) }

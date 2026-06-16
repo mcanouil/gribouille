@@ -331,12 +331,31 @@
   } else {
     _discrete-domain-from-cache(cols)
   }
+  // Track which sides the user pinned with an explicit (non-`auto`) limit.
+  // Feature 5 (break-driven expansion) only widens sides left unpinned, and
+  // the transform lift below only transforms the pinned sides.
+  let explicit-lo = false
+  let explicit-hi = false
   if (
     scale-type != "identity"
       and user-scale != none
       and user-scale.at("limits", default: none) != none
   ) {
-    domain = user-scale.limits
+    if scale-type == "continuous" {
+      let (ulo, uhi) = user-scale.limits
+      let (dlo, dhi) = domain
+      explicit-lo = ulo != auto
+      explicit-hi = uhi != auto
+      domain = (
+        if explicit-lo { ulo } else { dlo },
+        if explicit-hi { uhi } else { dhi },
+      )
+    } else {
+      // Discrete limits are a level array, not a `(lo, hi)` pair, so there is
+      // no per-side `auto`; the continuous-only lift/fold below never reads the
+      // `explicit-*` flags for this branch.
+      domain = user-scale.limits
+    }
   }
   if (
     scale-type == "continuous"
@@ -365,27 +384,60 @@
   let pre-transformed = (
     scale-type == "continuous" and (transform == "log10" or transform == "sqrt")
   )
+  // A value lies in the active transform's domain when it is positive (log10),
+  // non-negative (sqrt), or unconstrained (any other transform).
+  let in-transform-domain = v => {
+    if transform == "log10" { v > 0 } else if transform == "sqrt" {
+      v >= 0
+    } else {
+      true
+    }
+  }
   if (
     pre-transformed
       and user-scale != none
       and user-scale.at("limits", default: none) != none
   ) {
-    // User-supplied limits come in data space; lift them to stat space.
-    let (lo, hi) = domain
-    if transform == "log10" {
-      check(
-        lo > 0 and hi > 0,
-        "scale",
-        "log10 limits must be positive; got " + repr((lo, hi)),
-      )
-    } else if transform == "sqrt" {
-      check(
-        lo >= 0 and hi >= 0,
-        "scale",
-        "sqrt limits must be non-negative; got " + repr((lo, hi)),
-      )
+    // User-supplied limits come in data space; lift the pinned side(s) to stat
+    // space. An `auto` side keeps the trained bound, which is already in stat
+    // space, so it must not be transformed again.
+    let lift = v => {
+      if transform == "log10" {
+        check(v > 0, "scale", "log10 limits must be positive; got " + repr(v))
+      } else if transform == "sqrt" {
+        check(
+          v >= 0,
+          "scale",
+          "sqrt limits must be non-negative; got " + repr(v),
+        )
+      }
+      transform-fwd(transform, v)
     }
-    domain = (transform-fwd(transform, lo), transform-fwd(transform, hi))
+    let (lo, hi) = domain
+    if explicit-lo { lo = lift(lo) }
+    if explicit-hi { hi = lift(hi) }
+    domain = (lo, hi)
+  }
+  // Feature 5: explicit `breaks` widen the trained domain so requested ticks
+  // are visible, except on a side pinned by an explicit limit. Breaks are in
+  // data units; lift them into stat space for pre-transformed scales (dropping
+  // values outside the transform's domain) so the comparison stays in the
+  // domain's native unit.
+  if scale-type == "continuous" and user-scale != none {
+    let user-breaks = user-scale.at("breaks", default: auto)
+    if type(user-breaks) == array and user-breaks.len() > 0 {
+      let folded = if pre-transformed {
+        user-breaks
+          .filter(in-transform-domain)
+          .map(b => transform-fwd(transform, b))
+      } else { user-breaks }
+      if folded.len() > 0 {
+        let (lo, hi) = domain
+        if not explicit-lo { lo = calc.min(lo, ..folded) }
+        if not explicit-hi { hi = calc.max(hi, ..folded) }
+        domain = (lo, hi)
+      }
+    }
   }
   let level-index = if scale-type == "discrete" {
     _level-index(domain)

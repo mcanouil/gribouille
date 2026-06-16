@@ -13,6 +13,10 @@
 #import "../../src/scale/size.typ": (
   scale-size-area, scale-size-binned, scale-size-binned-area,
 )
+#import "../../src/scale/train.typ": train
+#import "../../src/render/axis-format.typ": _axis-breaks
+#import "../../src/aes.typ": aes
+#import "../../src/geom/point.typ": geom-point
 #import "../../src/utils/colour.typ": resolve-continuous-colour
 #import "../../src/utils/palette.typ": brewer-palette
 
@@ -122,5 +126,29 @@
 #let c-high = resolve-continuous-colour(trained-binned, 3.9, pal-bin, black)
 // The top bin must differ from the bottom bin.
 #assert(c-low != c-high)
+
+// Explicit `breaks` on a binned position scale are bin edges: the wrapper
+// stores them and ticks land at the midpoint of each interval.
+#let xbe = scale-x-binned(breaks: (2, 4, 6))
+#assert.eq(xbe.breaks, (2, 4, 6))
+
+#let trained-edges = (
+  type: "continuous",
+  domain: (2.0, 6.0),
+  spec: (binned: true, breaks: (2, 4, 6), n-breaks: 10),
+)
+#assert.eq(_axis-breaks(trained-edges), (3.0, 5.0))
+
+// End-to-end: the edge array folds into the domain (Feature 5) so the full
+// partition is visible, and ticks sit at the interval midpoints.
+#let df-bin = ((x: 1, y: 1), (x: 2, y: 2), (x: 3, y: 3))
+#let trained-bin = train(
+  scales: (scale-x-binned(breaks: (2, 4, 6)),),
+  layers: (geom-point(),),
+  mapping: aes(x: "x", y: "y"),
+  data: df-bin,
+)
+#assert.eq(trained-bin.x.domain, (1.0, 6.0))
+#assert.eq(_axis-breaks(trained-bin.x), (3.0, 5.0))
 
 Binned scale family tests passed.
