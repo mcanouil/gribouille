@@ -43,7 +43,10 @@
 /// #plot(
 ///   data: d,
 ///   mapping: aes(x: "q", y: "y", fill: "grp", label: "y"),
-///   layers: (geom-col(position: "dodge"), geom-label(position: "dodge")),
+///   layers: (
+///     geom-col(position: "dodge"),
+///     geom-label(position: "dodge", size: 14pt),
+///   ),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
