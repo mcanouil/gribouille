@@ -95,6 +95,9 @@
   (cx, cy)
 }
 
+// Add a canvas-cm `(dx, dy)` offset to a projected `(cx, cy)` point.
+#let shift-point(p, delta) = (p.at(0) + delta.at(0), p.at(1) + delta.at(1))
+
 // Group break values by canvas angle modulo a full turn. `project` maps a
 // break to canvas radians (or `none` to skip). Returns an array of groups,
 // where each group is an array of `(idx, b, theta)` records sharing an

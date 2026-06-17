@@ -94,7 +94,7 @@
 )
 
 #let _build-pts(rows, layer, mapping, x-trained, ctx) = (
-  rows-to-points(rows, mapping, ctx)
+  rows-to-points(rows, layer, mapping, ctx)
 )
 
 #let draw(layer, ctx) = draw-grouped-paths(layer, ctx, _build-pts)

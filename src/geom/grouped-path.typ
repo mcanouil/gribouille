@@ -6,7 +6,8 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
-#import "../utils/radial.typ": project-point
+#import "../utils/radial.typ": project-point, shift-point
+#import "../position/dodge.typ": dodge-delta
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 // Sort rows by their x value: numeric for continuous scales, domain index
@@ -30,7 +31,7 @@
 // Map rows to (cx, cy) screen positions via `project-point`, which routes
 // through `ctx.radial` when active. Skips rows whose mapped position fails
 // to resolve.
-#let rows-to-points(rows, mapping, ctx) = {
+#let rows-to-points(rows, layer, mapping, ctx) = {
   let pts = ()
   for row in rows {
     let p = project-point(
@@ -39,7 +40,7 @@
       row.at(mapping.y, default: none),
     )
     if p == none { continue }
-    pts.push(p)
+    pts.push(shift-point(p, dodge-delta(ctx, layer, row)))
   }
   pts
 }

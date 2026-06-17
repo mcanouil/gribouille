@@ -4,7 +4,8 @@
 #import "../layer.typ": make-layer
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
-#import "../utils/radial.typ": project-point
+#import "../utils/radial.typ": project-point, shift-point
+#import "../position/dodge.typ": dodge-delta
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
@@ -115,8 +116,9 @@
     let p-lo = project-point(ctx, xv, lo)
     let p-hi = project-point(ctx, xv, hi)
     if p-lo == none or p-hi == none { continue }
-    let (cx-lo, cy-lo) = p-lo
-    let (cx-hi, cy-hi) = p-hi
+    let dd = dodge-delta(ctx, layer, row)
+    let (cx-lo, cy-lo) = shift-point(p-lo, dd)
+    let (cx-hi, cy-hi) = shift-point(p-hi, dd)
 
     let colour = resolve-channel(
       "colour",

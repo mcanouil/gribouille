@@ -6,6 +6,7 @@
 - feat: binned position scales (`scale-x-binned` / `scale-y-binned`) accept `breaks` as bin edges; ticks sit at interval midpoints and `n-breaks` is ignored when `breaks` is set. (#116)
 - feat: binned colour, fill, shape, linetype, size, linewidth, stroke, and alpha scales accept `breaks` as bin edges; colour, fill, shape, and linetype bin per row by the edges, the others bin their legend. (#116)
 - feat: bundled datasets (`penguins`, `economics`, `mpg`) ship as row-store arrays, so `penguins.filter(...)` and `.map(...)` work directly; `plot()` still accepts them. (#116)
+- fix: `position: "dodge"` now shifts `geom-text`/`geom-label`/`geom-typst`, `geom-point`, `geom-line`/`geom-path`/`geom-step`, `geom-pointrange`, and `geom-linerange` marks side by side, matching the dodged bars instead of staying on the category centre. (#119)
 - fix: `theme-grey()` matches ggplot2 `theme_grey()` with white grid lines and no axis lines. (#116)
 - fix: explicit continuous `breaks` expand the axis range so requested ticks stay visible, unless a side is pinned by an explicit `limit`. (#116)
 

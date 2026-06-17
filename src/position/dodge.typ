@@ -10,6 +10,7 @@
 
 #import "../utils/group.typ": group-key
 #import "../utils/types.typ": parse-number
+#import "../scale/train.typ": discrete-slot-width
 
 /// Dodge position adjustment: place grouped marks side by side.
 ///
@@ -41,8 +42,11 @@
 /// )
 /// #plot(
 ///   data: d,
-///   mapping: aes(x: "q", y: "y", fill: "grp"),
-///   layers: (geom-col(position: "dodge"),),
+///   mapping: aes(x: "q", y: "y", fill: "grp", label: "y"),
+///   layers: (
+///     geom-col(position: "dodge"),
+///     geom-label(position: "dodge", size: 14pt),
+///   ),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -94,6 +98,49 @@
 ///
 /// \@param half Undodged half-width on the canvas.
 #let dodge-half(row, half) = half / row.at("_dodge-n", default: 1)
+
+/// Canvas-cm shift to apply to a projected point so it rides its dodge slot.
+///
+/// For geoms that place marks via `project-point` (point, line, path, text,
+/// label, typst, pointrange, linerange) rather than the band math used by the
+/// bar geoms. Returns `(dx, dy)` to add to the projected `(cx, cy)`: the shift
+/// lands on the category axis (`x`, or `y` under flip) and is zero unless the
+/// layer dodges over a discrete category axis in Cartesian coordinates.
+///
+/// \@internal
+/// \@param ctx Draw context carrying `trained`, `px-range`/`py-range`, `flipped`, and optional `radial`.
+///
+/// \@param layer Layer dictionary; its `position` field selects dodge and its width.
+///
+/// \@param row Data row carrying `_dodge-offset` written by `apply`.
+///
+/// \@returns `(dx, dy)` canvas-cm offset, `(0, 0)` when dodge does not apply.
+#let dodge-delta(ctx, layer, row) = {
+  let pos = layer.at("position", default: "identity")
+  let name = if type(pos) == str { pos } else if pos == none {
+    "identity"
+  } else { pos.at("name", default: "identity") }
+  if name != "dodge" { return (0.0, 0.0) }
+  if ctx.at("radial", default: none) != none { return (0.0, 0.0) }
+
+  let width = if type(pos) == dictionary {
+    pos.at("params", default: (:)).at("width", default: 0.9)
+  } else { 0.9 }
+
+  let flipped = ctx.at("flipped", default: false)
+  let cat-trained = ctx.trained.at(
+    if flipped { "y" } else { "x" },
+    default: none,
+  )
+  let cat-range = if flipped { ctx.py-range } else { ctx.px-range }
+  if cat-trained == none or cat-trained.type != "discrete" {
+    return (0.0, 0.0)
+  }
+
+  let span = discrete-slot-width(cat-trained, cat-range) * width
+  let shift = row.at("_dodge-offset", default: 0) * span
+  if flipped { (0.0, shift) } else { (shift, 0.0) }
+}
 
 #let _row-width(row, default-width) = {
   let w = parse-number(row.at("width", default: none))
