@@ -5,6 +5,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point
+#import "../position/dodge.typ": dodge-delta
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 /// Pointrange layer: a marker at `(x, y)` plus a linerange from `ymin` to `ymax`.
@@ -134,9 +135,10 @@
     let p-lo = project-point(ctx, xv, lo)
     let p-hi = project-point(ctx, xv, hi)
     if p-mid == none or p-lo == none or p-hi == none { continue }
-    let (cx-mid, cy-mid) = p-mid
-    let (cx-lo, cy-lo) = p-lo
-    let (cx-hi, cy-hi) = p-hi
+    let (ddx, ddy) = dodge-delta(ctx, layer, row)
+    let (cx-mid, cy-mid) = (p-mid.at(0) + ddx, p-mid.at(1) + ddy)
+    let (cx-lo, cy-lo) = (p-lo.at(0) + ddx, p-lo.at(1) + ddy)
+    let (cx-hi, cy-hi) = (p-hi.at(0) + ddx, p-hi.at(1) + ddy)
 
     let final-colour = resolve-channel(
       "colour",

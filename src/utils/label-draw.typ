@@ -3,6 +3,7 @@
 // rendering. Kept here so the three geoms do not redeclare the same bits.
 
 #import "../deps.typ": cetz
+#import "../position/dodge.typ": dodge-delta
 #import "aes-resolve.typ": aes-col
 #import "radial.typ": project-point
 #import "repel.typ": repel
@@ -45,7 +46,7 @@
 // Compute per-row anchor + label-centre pairs (canvas-cm) for one layer.
 // `placements.at(idx)` is `none` when the row fails to project so callers
 // can skip without re-checking inputs.
-#let compute-placements(ctx, mapping, data, dx-base, dy-base) = {
+#let compute-placements(ctx, layer, mapping, data, dx-base, dy-base) = {
   let nudge-x-col = aes-col(mapping.at("nudge-x", default: none))
   let nudge-y-col = aes-col(mapping.at("nudge-y", default: none))
   let needs-nudge = nudge-x-col != none or nudge-y-col != none
@@ -56,7 +57,9 @@
       let yv = row.at(mapping.y, default: none)
       let projected = project-point(ctx, xv, yv)
       if projected == none { return none }
-      let (cx, cy) = projected
+      let (ddx, ddy) = dodge-delta(ctx, layer, row)
+      let cx = projected.at(0) + ddx
+      let cy = projected.at(1) + ddy
       let (nudge-dx, nudge-dy) = if not needs-nudge {
         (0.0, 0.0)
       } else {
@@ -83,7 +86,14 @@
 // Compute placements via the repulsion algorithm. `sizes` is the per-row
 // label-size array stashed by the renderer; `repel-params` is the geom's
 // repel-related layer params already extracted as a record.
-#let compute-repel-placements(ctx, mapping, data, sizes, repel-params) = {
+#let compute-repel-placements(
+  ctx,
+  layer,
+  mapping,
+  data,
+  sizes,
+  repel-params,
+) = {
   let live-idx = ()
   let anchors = ()
   let live-sizes = ()
@@ -92,8 +102,9 @@
     let yv = row.at(mapping.y, default: none)
     let projected = project-point(ctx, xv, yv)
     if projected == none { continue }
+    let (ddx, ddy) = dodge-delta(ctx, layer, row)
     live-idx.push(idx)
-    anchors.push(projected)
+    anchors.push((projected.at(0) + ddx, projected.at(1) + ddy))
     live-sizes.push(sizes.at(idx, default: (w: 0.0, h: 0.0)))
   }
   let offsets = repel(anchors, live-sizes, params: repel-params)
@@ -175,13 +186,14 @@
   let placements = if repel-on {
     compute-repel-placements(
       ctx,
+      layer,
       mapping,
       data,
       sizes,
       repel-params-of(layer.params),
     )
   } else if needs-placement {
-    compute-placements(ctx, mapping, data, dx-base, dy-base)
+    compute-placements(ctx, layer, mapping, data, dx-base, dy-base)
   } else { () }
   let aabbs = if segment-on {
     compute-aabbs(placements, sizes, layer.params.box-padding)
@@ -198,6 +210,7 @@
     seg-cfg: seg-cfg,
     dx-base: dx-base,
     dy-base: dy-base,
+    layer: layer,
   )
 }
 
@@ -216,7 +229,11 @@
     row.at(mapping.y, default: none),
   )
   if projected == none { return none }
-  (projected.at(0) + state.dx-base, projected.at(1) + state.dy-base)
+  let (ddx, ddy) = dodge-delta(ctx, state.layer, row)
+  (
+    projected.at(0) + ddx + state.dx-base,
+    projected.at(1) + ddy + state.dy-base,
+  )
 }
 
 // Open V-mark at the anchor end of a connector. The two short strokes meet
