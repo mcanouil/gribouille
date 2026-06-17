@@ -63,7 +63,7 @@
 /// ))
 /// #plot(
 ///   data: d,
-///   mapping: aes(x: "x", y: "y", ymin: "lo", ymax: "hi"),
+///   mapping: aes(x: as-factor("x"), y: "y", ymin: "lo", ymax: "hi"),
 ///   layers: (geom-crossbar(),),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -79,7 +79,7 @@
 /// ))
 /// #plot(
 ///   data: d,
-///   mapping: aes(x: "x", y: "y", ymin: "lo", ymax: "hi", fill: "k"),
+///   mapping: aes(x: as-factor("x"), y: "y", ymin: "lo", ymax: "hi", fill: "k"),
 ///   layers: (geom-crossbar(alpha: 0.6),),
 ///   width: 10cm,
 ///   height: 6cm,
