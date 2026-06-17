@@ -42,8 +42,8 @@
 /// )
 /// #plot(
 ///   data: d,
-///   mapping: aes(x: "q", y: "y", fill: "grp"),
-///   layers: (geom-col(position: "dodge"),),
+///   mapping: aes(x: "q", y: "y", fill: "grp", label: "y"),
+///   layers: (geom-col(position: "dodge"), geom-label(position: "dodge")),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
