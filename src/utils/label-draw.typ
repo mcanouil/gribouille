@@ -5,7 +5,7 @@
 #import "../deps.typ": cetz
 #import "../position/dodge.typ": dodge-delta
 #import "aes-resolve.typ": aes-col
-#import "radial.typ": project-point
+#import "radial.typ": project-point, shift-point
 #import "repel.typ": repel
 #import "segment-route.typ": aabb-from-centre, route-segment
 #import "types.typ": parse-number
@@ -57,9 +57,7 @@
       let yv = row.at(mapping.y, default: none)
       let projected = project-point(ctx, xv, yv)
       if projected == none { return none }
-      let (ddx, ddy) = dodge-delta(ctx, layer, row)
-      let cx = projected.at(0) + ddx
-      let cy = projected.at(1) + ddy
+      let (cx, cy) = shift-point(projected, dodge-delta(ctx, layer, row))
       let (nudge-dx, nudge-dy) = if not needs-nudge {
         (0.0, 0.0)
       } else {
@@ -102,9 +100,8 @@
     let yv = row.at(mapping.y, default: none)
     let projected = project-point(ctx, xv, yv)
     if projected == none { continue }
-    let (ddx, ddy) = dodge-delta(ctx, layer, row)
     live-idx.push(idx)
-    anchors.push((projected.at(0) + ddx, projected.at(1) + ddy))
+    anchors.push(shift-point(projected, dodge-delta(ctx, layer, row)))
     live-sizes.push(sizes.at(idx, default: (w: 0.0, h: 0.0)))
   }
   let offsets = repel(anchors, live-sizes, params: repel-params)
@@ -229,11 +226,8 @@
     row.at(mapping.y, default: none),
   )
   if projected == none { return none }
-  let (ddx, ddy) = dodge-delta(ctx, state.layer, row)
-  (
-    projected.at(0) + ddx + state.dx-base,
-    projected.at(1) + ddy + state.dy-base,
-  )
+  let (sx, sy) = shift-point(projected, dodge-delta(ctx, state.layer, row))
+  (sx + state.dx-base, sy + state.dy-base)
 }
 
 // Open V-mark at the anchor end of a connector. The two short strokes meet

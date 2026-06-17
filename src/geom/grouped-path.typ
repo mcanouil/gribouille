@@ -6,7 +6,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
-#import "../utils/radial.typ": project-point
+#import "../utils/radial.typ": project-point, shift-point
 #import "../position/dodge.typ": dodge-delta
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
@@ -40,8 +40,7 @@
       row.at(mapping.y, default: none),
     )
     if p == none { continue }
-    let (ddx, ddy) = dodge-delta(ctx, layer, row)
-    pts.push((p.at(0) + ddx, p.at(1) + ddy))
+    pts.push(shift-point(p, dodge-delta(ctx, layer, row)))
   }
   pts
 }

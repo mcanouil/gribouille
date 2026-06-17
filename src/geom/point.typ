@@ -11,7 +11,7 @@
 #import "../utils/level-resolve.typ": bin-index
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../utils/radial.typ": project-point
+#import "../utils/radial.typ": project-point, shift-point
 #import "../position/dodge.typ": dodge-delta
 #import "../utils/stroke.typ": resolve-stroke-spec
 #import "../guide/draw-marker.typ": draw-marker
@@ -223,9 +223,7 @@
       row.at(mapping.y, default: none),
     )
     if projected == none { continue }
-    let (ddx, ddy) = dodge-delta(ctx, layer, row)
-    let cx = projected.at(0) + ddx
-    let cy = projected.at(1) + ddy
+    let (cx, cy) = shift-point(projected, dodge-delta(ctx, layer, row))
     let size = resolve-channel("size", layer, mapping, ctx, row, 1.5pt)
     let body-fill = resolve-channel(
       "fill",
