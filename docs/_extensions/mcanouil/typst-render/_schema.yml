@@ -8,11 +8,11 @@ options:
   format:
     type: string
     enum: [png, svg, pdf, html]
-    description: "Output format. Auto-detected from output format if not set. Use 'html' for native HTML (semantic markup with MathML maths) in HTML-based output; it requires Typst >= 0.15 (set QUARTO_TYPST to a Typst >= 0.15 binary) and falls back to SVG otherwise."
+    description: "Output format. Auto-detected from output format if not set. Use 'html' for native HTML (semantic markup with MathML maths) in HTML-based output; it requires Typst >= 0.15 and falls back to SVG otherwise."
   math:
     type: string
     enum: [typst]
-    description: "Global only. Set to 'typst' to render every document equation ($...$ and $$...$$) as Typst math syntax (not LaTeX). For HTML output the maths become native MathML (requires Typst >= 0.15 via QUARTO_TYPST, else Quarto's renderer is kept); for Typst output the maths pass through unchanged. Quarto equation numbering and cross-references keep working."
+    description: "Global only. Set to 'typst' to render every document equation ($...$ and $$...$$) as Typst math syntax (not LaTeX). For HTML output the maths become native MathML (requires Typst >= 0.15); for Typst output the maths pass through unchanged. Quarto equation numbering and cross-references keep working."
   dpi:
     type: integer
     default: 144
@@ -104,6 +104,10 @@ options:
     type: string
     default: "Code"
     description: "Summary text for the code-fold <details> block, rendered as Markdown (HTML output only)."
+  code-line-numbers:
+    type: [boolean, string]
+    default: false
+    description: "Highlight lines of the echoed source. Use a string like '1|3-4' for progressive line highlighting in Reveal.js (steps separated by '|', ranges with '-', sets with ','). Requires echo: true."
   eval:
     type: boolean
     default: true
@@ -152,7 +156,7 @@ attributes:
     format:
       type: string
       enum: [png, svg, pdf, html]
-      description: "Output format for this block. Use 'html' for native HTML (semantic markup with MathML maths) in HTML-based output; requires Typst >= 0.15 (set QUARTO_TYPST), falls back to SVG otherwise."
+      description: "Output format for this block. Use 'html' for native HTML (semantic markup with MathML maths) in HTML-based output; requires Typst >= 0.15."
     dpi:
       type: integer
       exclusiveMinimum: 0
@@ -215,6 +219,9 @@ attributes:
     code-summary:
       type: string
       description: "Summary text for the code-fold <details> block, rendered as Markdown (HTML output only)."
+    code-line-numbers:
+      type: [boolean, string]
+      description: "Highlight lines of the echoed source. Use a string like '1|3-4' for progressive line highlighting in Reveal.js (steps separated by '|', ranges with '-', sets with ','). Requires echo: true."
     eval:
       type: boolean
       description: "Compile this block to image."

@@ -178,8 +178,10 @@ function M.new(config)
   --- @param fold table|nil `{ open = boolean, summary = string|nil }` for code-fold
   --- @param result pandoc.Block|nil Rendered output to place after/within the source
   --- @param annotate boolean|nil Keep annotation markers for Quarto to process
+  --- @param line_numbers string|nil `code-line-numbers` value for Quarto to process
+  ---   (e.g. `"true"` or `"1|3-4"`); attached to the language CodeBlock unless fenced
   --- @return pandoc.Blocks The source listing, optionally wrapped in a `cell` Div
-  function cell.create_echo_block(code, fenced, option_lines, fold, result, annotate)
+  function cell.create_echo_block(code, fenced, option_lines, fold, result, annotate, line_numbers)
     if not annotate then
       code = cell.strip_annotations(code)
     end
@@ -217,11 +219,17 @@ function M.new(config)
       classes = { class_name }
     end
 
+    -- Line numbers attach only to the Typst source CodeBlock, never to the
+    -- fenced `markdown` display (whose lines are the fence, not the source).
+    local attrs = {}
+    if line_numbers and not fenced then
+      attrs['code-line-numbers'] = line_numbers
+    end
+
     -- The native cell shape is required for code-fold (attribute-driven, gated
     -- to HTML by Quarto) and for code-annotations (markers linked downstream).
     if fold or annotate then
       classes[#classes + 1] = 'cell-code'
-      local attrs = {}
       if fold then
         attrs['code-fold'] = fold.open and 'show' or 'true'
         local summary = fold.summary
@@ -237,7 +245,7 @@ function M.new(config)
       return pandoc.Blocks({ pandoc.Div(children, pandoc.Attr('', { 'cell' }, {})) })
     end
 
-    local blocks = pandoc.Blocks({ pandoc.CodeBlock(text, pandoc.Attr('', classes, {})) })
+    local blocks = pandoc.Blocks({ pandoc.CodeBlock(text, pandoc.Attr('', classes, attrs)) })
     if result then
       blocks:insert(result)
     end

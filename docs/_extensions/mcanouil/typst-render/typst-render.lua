@@ -51,6 +51,7 @@ local DEFAULTS = {
   echo = false,
   ['code-fold'] = false,
   ['code-summary'] = nil,
+  ['code-line-numbers'] = false,
   eval = true,
   include = true,
   output = true,
@@ -69,6 +70,7 @@ local KNOWN_KEYS = {
   cap = true,
   alt = true,
   ['code-summary'] = true,
+  ['code-line-numbers'] = true,
   _block_input = true,
   _inline = true,
   _alt = true,
@@ -527,11 +529,7 @@ local function resolve_html_format(img_format)
     return get_image_format_for_output()
   end
   if not typst_supports_html() then
-    log.log_warning(
-      EXTENSION_NAME,
-      'Native HTML output requires Typst >= 0.15. Set QUARTO_TYPST to a Typst >= 0.15 '
-      .. 'binary to enable it; falling back to SVG.'
-    )
+    log.log_warning(EXTENSION_NAME, 'Native HTML output requires Typst >= 0.15.')
     return 'svg'
   end
   return 'html'
@@ -670,8 +668,8 @@ local function parse_pages(pages_str, total_pages)
 
   local seen = {}
   local result = {}
-  for part in pages_str:gmatch('[^,]+') do
-    part = part:match('^%s*(.-)%s*$')
+  for raw_part in pages_str:gmatch('[^,]+') do
+    local part = raw_part:match('^%s*(.-)%s*$')
     local lo, hi = part:match('^(%d+)%-(%d+)$')
     if not lo then
       local open_lo = part:match('^(%d+)%-$')
@@ -1566,7 +1564,7 @@ local function get_configuration(meta)
     -- so we use a separate key list to ensure 'format' etc. are not missed.
     local config_keys = {
       'format', 'dpi', 'width', 'height', 'margin',
-      'cache', 'cache-refresh', 'echo', 'code-fold', 'code-summary',
+      'cache', 'cache-refresh', 'echo', 'code-fold', 'code-summary', 'code-line-numbers',
       'eval', 'include', 'output', 'output-location', 'classes',
       'root', 'package-path', 'pages', 'layout-ncol', 'align',
       'output-directory', 'output-source',
@@ -1603,6 +1601,21 @@ local function get_configuration(meta)
                 'Invalid code-fold value "' .. str .. '"; expected true, false, or show. Disabling code-fold.'
               )
               global_config[k] = false
+            end
+          end
+        elseif k == 'code-line-numbers' then
+          -- Boolean stays as-is; "true"/"false" map to booleans; any other
+          -- string (e.g. "1|3-4") is kept verbatim for Quarto's line-numbers pass.
+          if type(val) == 'boolean' then
+            global_config[k] = val
+          else
+            local str = pandoc.utils.stringify(val)
+            if str == 'true' then
+              global_config[k] = true
+            elseif str == 'false' then
+              global_config[k] = false
+            else
+              global_config[k] = str
             end
           end
         elseif k == 'output' then
@@ -1793,6 +1806,14 @@ local function process_codeblock(el)
     fold = { open = cf == 'show', summary = opts['code-summary'] }
   end
 
+  -- Code line numbers: attach the value to the echoed source so Quarto's
+  -- line-numbers pre-filter adds `number-lines` and reveal.js animation steps.
+  local cln = opts['code-line-numbers']
+  local line_numbers = nil
+  if cln ~= nil and cln ~= false then
+    line_numbers = tostring(cln)
+  end
+
   -- Handle eval/echo matrix: both false means hidden block
   if not do_eval and not do_echo then
     return pandoc.Null()
@@ -1821,13 +1842,13 @@ local function process_codeblock(el)
     if not do_include then
       return pandoc.Null()
     end
-    return cell.create_echo_block(code, is_fenced, option_lines, fold, nil, annotate)
+    return cell.create_echo_block(code, is_fenced, option_lines, fold, nil, annotate, line_numbers)
   end
 
   -- Output suppressed: skip compilation, show echo block only
   if output_mode == 'false' then
     if do_echo and do_include then
-      return cell.create_echo_block(code, is_fenced, option_lines, fold, nil, annotate)
+      return cell.create_echo_block(code, is_fenced, option_lines, fold, nil, annotate, line_numbers)
     end
     return pandoc.Null()
   end
@@ -1874,7 +1895,7 @@ local function process_codeblock(el)
     local result = cell.wrap_crossref(pandoc.RawBlock('typst', scoped_code), opts, REF_TYPE_NAMES)
     if do_echo then
       -- Native Typst pass-through does not support annotations; strip markers.
-      return cell.create_echo_block(code, is_fenced, option_lines, fold, result, false)
+      return cell.create_echo_block(code, is_fenced, option_lines, fold, result, false, line_numbers)
     end
     return result
   end
@@ -1931,7 +1952,7 @@ local function process_codeblock(el)
       end
       local error_block = create_error_block(block_id)
       if do_echo then
-        return cell.create_echo_block(code, is_fenced, option_lines, fold, error_block, annotate)
+        return cell.create_echo_block(code, is_fenced, option_lines, fold, error_block, annotate, line_numbers)
       end
       return error_block
     end
@@ -1994,7 +2015,7 @@ local function process_codeblock(el)
         end
         local error_block = create_error_block(block_id)
         if do_echo then
-          return cell.create_echo_block(code, is_fenced, option_lines, fold, error_block, annotate)
+          return cell.create_echo_block(code, is_fenced, option_lines, fold, error_block, annotate, line_numbers)
         end
         return error_block
       end
@@ -2031,13 +2052,13 @@ local function process_codeblock(el)
   if output_location then
     -- Reveal.js output-location layout does not support annotations; strip markers.
     local echo_block = do_echo
-      and cell.create_echo_block(code, is_fenced, option_lines, fold, nil, false)
+      and cell.create_echo_block(code, is_fenced, option_lines, fold, nil, false, line_numbers)
       or nil
     return cell.apply_output_location(echo_block, result, output_location)
   end
 
   if do_echo then
-    return cell.create_echo_block(code, is_fenced, option_lines, fold, result, annotate)
+    return cell.create_echo_block(code, is_fenced, option_lines, fold, result, annotate, line_numbers)
   end
 
   return result

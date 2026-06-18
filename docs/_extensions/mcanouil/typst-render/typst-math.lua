@@ -230,11 +230,7 @@ local function configure(meta)
     if typst_cli.supports_html(typst_cli.resolve_bin()) then
       html_mode = true
     else
-      log.log_warning(
-        EXTENSION_NAME,
-        'math: typst requires Typst >= 0.15 for HTML output. Set QUARTO_TYPST to a Typst >= 0.15 '
-        .. 'binary to enable native MathML; leaving Quarto math rendering in place.'
-      )
+      log.log_warning(EXTENSION_NAME, '\'math: typst\' requires Typst >= 0.15 for HTML output.')
     end
   end
 
