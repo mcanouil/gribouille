@@ -375,6 +375,7 @@
   let ncolumn = _pick("ncolumn", none)
   let reverse = _pick("reverse", false)
   let align = _pick("align", none)
+  let key-size = _pick("key-size", none)
 
   let cand = (
     aes: aes-name,
@@ -384,6 +385,7 @@
     ncolumn: ncolumn,
     reverse: reverse,
     align: align,
+    key-size: key-size,
     placement: placement,
     contributors: contributors,
     column: _column-for(spec, aes-name),
@@ -432,7 +434,7 @@
 #let _GLYPH-DIAMETER-CM = 0.24
 
 // Lead before the first label character: glyph diameter + half-em gap.
-#let _swatch-lead-cm(size-pt) = _GLYPH-DIAMETER-CM + _font-cm(size-pt) * 0.5
+#let _swatch-lead-cm(diam, size-pt) = diam + _font-cm(size-pt) * 0.5
 #let _ladder-lead-cm(size-pt) = _GLYPH-DIAMETER-CM + _font-cm(size-pt) * 0.8
 
 // Label width in cm at the given font size. Strings use a font-size-aware
@@ -525,7 +527,7 @@
 // unnecessarily. Widths come from the resolved display labels, so a custom
 // `labels:` wider than its level still gets the column space it draws into.
 #let _swatch-layout(guide, shape, byrow, size-pt) = {
-  let lead = _swatch-lead-cm(size-pt)
+  let lead = _swatch-lead-cm(guide.key-diam-cm, size-pt)
   let widths = range(shape.cols).map(col => {
     let max-w = 0.0
     for row in range(shape.rows) {
@@ -568,6 +570,16 @@
 #let _swatch-line-h-cm(size-pt) = _font-cm(size-pt) * 1.4
 #let _ladder-line-h-cm(size-pt) = _font-cm(size-pt) * 1.55
 
+// Tight slack below the last row so the glyph isn't flush with the rect edge.
+#let _glyph-bottom-slack(size-pt) = _font-cm(size-pt) * 0.2
+
+// Swatch row stride: the font line height, grown so a glyph wider than the
+// line never overlaps the row below (matches the size-ladder stride).
+#let _swatch-stride-cm(diam, size-pt) = calc.max(
+  _swatch-line-h-cm(size-pt),
+  diam + _glyph-bottom-slack(size-pt),
+)
+
 // Nominal half-extent (cm) for a ladder key glyph, used to place and size the
 // fallback glyph and as the per-row centring offset. The drawn `point` key may
 // override its radius from the resolved `size` aesthetic (see `_ladder-key-diam-cm`).
@@ -577,7 +589,9 @@
 // resolves each break to a marker radius that can far exceed the fixed swatch
 // glyph, so the row stride and reserved height must follow it. `size-trained`
 // is the group's `size` scale (or `none` for an alpha/linewidth/stroke ladder);
-// a non-point key keeps the fixed glyph.
+// a non-point key keeps the fixed glyph. The ladder glyph encodes the `size`
+// scale, so it floors at the fixed swatch diameter and ignores the themed key
+// size / `key-size` override.
 #let _ladder-key-diam-cm(size-trained, breaks, key-kind) = {
   if key-kind != "point" or size-trained == none {
     return _GLYPH-DIAMETER-CM
@@ -590,6 +604,12 @@
     if r-cm > max-r { max-r = r-cm }
   }
   calc.max(_GLYPH-DIAMETER-CM, 2 * max-r)
+}
+
+// Resolve a swatch key glyph diameter (cm). A per-legend `key-size` length
+// wins; otherwise the themed `base-cm`.
+#let _swatch-key-diam-cm(key-size, base-cm) = {
+  if type(key-size) == length { length-to-cm(key-size, 0) } else { base-cm }
 }
 
 // Number of rendered lines in a label. Strings stay on one line; content is
@@ -661,7 +681,7 @@
   i => _swatch-label(guide, i),
   shape,
   byrow,
-  _swatch-line-h-cm(size-pt),
+  _swatch-stride-cm(guide.key-diam-cm, size-pt),
   size-pt,
 )
 
@@ -783,10 +803,6 @@
 // the resolved `title-h` applies.
 #let _title-prefix(g, title-h) = if g.title == none { 0.0 } else { title-h }
 
-// Tight slack below the last row so the glyph isn't flush with the rect
-// edge.
-#let _glyph-bottom-slack(size-pt) = _font-cm(size-pt) * 0.2
-
 // Vertical size-ladder row metrics, shared by the height estimate and the draw
 // so the reserved space matches the drawn glyphs. When the resolved key glyph
 // stays within the fixed swatch diameter the values reproduce the original
@@ -808,8 +824,8 @@
 // Vertical height (cm) of a row-stack guide: full line-h for every row
 // except the last (which reserves only the glyph diameter), plus a
 // font-derived bottom slack so the rect doesn't graze the glyph.
-#let _row-stack-height(n-rows, line-h, size-pt) = (
-  (n-rows - 1) * line-h + _GLYPH-DIAMETER-CM + _glyph-bottom-slack(size-pt)
+#let _row-stack-height(n-rows, line-h, size-pt, diam) = (
+  (n-rows - 1) * line-h + diam + _glyph-bottom-slack(size-pt)
 )
 
 #let _swatch-height(guide, title-h, size-pt) = {
@@ -818,8 +834,9 @@
     _title-prefix(guide, title-h)
       + _row-stack-height(
         shape.rows,
-        _swatch-line-h-cm(size-pt),
+        _swatch-stride-cm(guide.key-diam-cm, size-pt),
         size-pt,
+        guide.key-diam-cm,
       )
       + _swatch-rows(guide, shape, guide.placement.byrow, size-pt).total
   )
@@ -889,7 +906,7 @@
   out
 }
 
-#let guides-for(spec, trained, size-pt: 9) = {
+#let guides-for(spec, trained, size-pt: 9, key-diam-cm: _GLYPH-DIAMETER-CM) = {
   let overrides = spec.at("guides", default: (:))
 
   let candidates = ()
@@ -934,6 +951,7 @@
         nrow: first.nrow,
         ncolumn: first.ncolumn,
         key: key-kind,
+        key-diam-cm: _swatch-key-diam-cm(first.key-size, key-diam-cm),
         typst-mark: typst-mark,
       )
     } else if aesthetics.contains("colour") or aesthetics.contains("fill") {
@@ -1200,8 +1218,8 @@
   let legend-text-args = _text-args(_legend-text)
   let text-size = _legend-text.size
   let size-pt = text-size / 1pt
-  let line-h = _swatch-line-h-cm(size-pt)
-  let glyph-size = 0.12
+  let line-h = _swatch-stride-cm(guide.key-diam-cm, size-pt)
+  let glyph-size = guide.key-diam-cm / 2
 
   if guide.title != none {
     _draw-title(guide, ox, cursor, theme)
@@ -1214,7 +1232,7 @@
   let key-kind = guide.at("key", default: "rect")
   let labels = guide.at("labels", default: auto)
   let align = _label-align(guide, _legend-text.align)
-  let lead = _swatch-lead-cm(size-pt)
+  let lead = _swatch-lead-cm(guide.key-diam-cm, size-pt)
   // Horizontal legends centre / right-justify the key row under the title; the
   // vertical column stays pinned at the left edge.
   let bx = if guide.placement.direction == "horizontal" {

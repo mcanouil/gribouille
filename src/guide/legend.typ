@@ -5,7 +5,7 @@
 ///! swatch grid with `nrow` / `ncolumn` / `byrow`, and placement with
 ///! `position` / `direction` / `order`.
 
-#import "../utils/errors.typ": assert-halign, fail, quote-each
+#import "../utils/errors.typ": assert-halign, assert-length, fail, quote-each
 
 #let _VALID-SIDES = ("none", "top", "right", "bottom", "left")
 
@@ -104,6 +104,8 @@
 ///
 /// \@param align Horizontal alignment of the legend as a Typst alignment (`left`, `center`, `right`), applied to both the entry labels and the legend title, or `none` to use the per-direction default (horizontal legends centre, vertical legends left). Overrides the `legend-text` theme alignment for labels and the `legend-title` theme alignment for the title. Pass the alignment value `left`, not the string `"left"`.
 ///
+/// \@param key-size Diameter of the swatch key glyph as a Typst length (e.g. `0.3cm`); `none` keeps the theme `legend-key` value. Applies to discrete (swatch) legends; a continuous colourbar or size-ladder legend ignores it because its glyph encodes the scale.
+///
 /// \@returns Guide dictionary tagged `kind: "guide"`, consumed by \@guides.
 ///
 /// \@examples Reverse the level order shown in the legend.
@@ -192,6 +194,25 @@
 /// )
 /// ```
 ///
+/// \@examples Enlarge the swatch key glyphs with `key-size`; the row spacing and
+/// label offset grow with the glyph so nothing overlaps.
+/// ```
+/// //| alt: "Scatter chart of three coloured points whose fill legend draws oversized key glyphs, the entries spaced wider apart so the larger swatches do not overlap."
+/// #let d = (
+///   (x: 1, y: 1, g: "a"),
+///   (x: 2, y: 2, g: "b"),
+///   (x: 3, y: 3, g: "c"),
+/// )
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y", fill: "g"),
+///   layers: (geom-point(size: 3pt),),
+///   guides: guides(fill: guide-legend(key-size: 0.45cm)),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@guides, \@plot
 #let guide-legend(
   title: none,
@@ -203,8 +224,10 @@
   order: none,
   byrow: false,
   align: none,
+  key-size: none,
 ) = {
   assert-halign("guide-legend", align)
+  assert-length("guide-legend", "key-size", key-size)
   (
     kind: "guide",
     aesthetic: none,
@@ -213,6 +236,7 @@
     ncolumn: ncolumn,
     reverse: reverse,
     align: align,
+    key-size: key-size,
     placement: _normalise-position(position, direction, order, byrow),
   )
 }

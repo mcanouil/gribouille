@@ -125,6 +125,21 @@
   }
 }
 
+// Panic unless `value` is a Typst length or `none` (inherit the theme
+// default). Guards against passing a raw number or string where a glyph
+// diameter is expected.
+#let assert-length(scope, name, value) = {
+  if value != none and type(value) != length {
+    fail-type(
+      scope,
+      name,
+      value,
+      "a length such as `0.3cm`, or `none`",
+      hint: "Use `0.3cm` for an absolute size; `none` keeps the theme default.",
+    )
+  }
+}
+
 // Panic unless `size` is an absolute length, a ratio (a `%` value relative to
 // the parent surface size), or `none` (inherit). Guards against passing a raw
 // number or string where a typed size is expected.

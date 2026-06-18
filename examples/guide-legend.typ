@@ -4,7 +4,7 @@
 
 #set page(width: auto, height: auto, margin: 0cm)
 
-#let make-panel(title, gs) = plot(
+#let make-panel(title, gs, th: theme-minimal()) = plot(
   data: mpg,
   mapping: aes(x: "displ", y: "hwy", colour: "class"),
   layers: (geom-point(size: 2.5pt),),
@@ -15,7 +15,7 @@
     y: "Highway mpg",
     colour: "Class",
   ),
-  theme: theme-minimal(),
+  theme: th,
   width: 12cm,
   height: 9cm,
 )
@@ -33,5 +33,14 @@
   make-panel(
     "guide-legend(position: \"bottom\")",
     guides(colour: guide-legend(position: "bottom")),
+  ),
+  make-panel(
+    "guide-legend(key-size: 0.4cm)",
+    guides(colour: guide-legend(key-size: 0.4cm)),
+  ),
+  make-panel(
+    "theme-minimal(legend-key: 0.4cm)",
+    (:),
+    th: theme-minimal(legend-key: 0.4cm),
   ),
 )
