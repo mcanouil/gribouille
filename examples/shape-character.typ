@@ -1,5 +1,6 @@
-// Character symbols: shape values that are not built-in keywords render as
-// literal glyphs, here a letter per species drawn at each point.
+// Character symbols: shape values outside the built-in keywords render as
+// literal glyphs. Values may be a plain character, a Typst `sym.` symbol, or
+// an emoji, mixed freely across levels.
 
 #import "../lib.typ": *
 
@@ -14,15 +15,15 @@
     colour: "species",
   ),
   layers: (
-    geom-point(size: 4pt),
+    geom-point(size: 5pt),
   ),
   scales: (
-    scale-shape-manual(values: ("A", "C", "G")),
+    scale-shape-manual(values: ("A", sym.star.filled, "🐧")),
     scale-colour-brewer(palette: "Dark2"),
   ),
   labs: labs(
     title: "Character Symbols as Markers",
-    subtitle: "shape values outside the built-in keywords render as literal glyphs",
+    subtitle: "A plain character, a Typst sym., and an emoji as shape values",
     x: "Flipper length",
     y: "Body mass",
     shape: "Species",

@@ -410,8 +410,8 @@
 - slug: shape-character
   section: scales
   title: "Character symbols as markers"
-  description: 'Map [`scale-shape-manual`](../reference/scales/scale-shape-manual.qmd) to characters; any value outside the built-in keywords renders as a literal glyph.'
-  alt: "Scatter plot of penguin flipper length against body mass where each species is drawn with a letter glyph (A, C, G) instead of a built-in marker shape."
+  description: 'Map [`scale-shape-manual`](../reference/scales/scale-shape-manual.qmd) to a plain character, a Typst `sym.` symbol, or an emoji; any value outside the built-in keywords renders as a literal glyph.'
+  alt: "Scatter plot of penguin flipper length against body mass where each species is drawn with a different glyph: the letter A, a filled star symbol, and a penguin emoji, instead of built-in marker shapes."
 
 - slug: scale-binned
   section: scales
