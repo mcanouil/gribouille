@@ -78,6 +78,20 @@
     cetz.draw.line((cx - r, cy - r), (cx + r, cy + r), stroke: s)
     cetz.draw.line((cx - r, cy + r), (cx + r, cy - r), stroke: s)
   } else {
-    cetz.draw.circle((cx, cy), radius: r, fill: paint, stroke: stroke-spec)
+    // Any other value renders as a literal glyph (character or emoji). The
+    // glyph takes its colour from the outline (stroke) paint, falling back to
+    // the body fill, so a default marker adopts the geom colour like the
+    // stroke-driven cross/x/star shapes; it has no separate outline. `size` is
+    // a radius, so the diameter is used as the font size to match a marker's
+    // footprint.
+    let stroke-paint = if type(stroke-spec) == dictionary {
+      stroke-spec.at("paint", default: none)
+    } else { none }
+    let glyph-paint = if stroke-paint != none { stroke-paint } else { paint }
+    cetz.draw.content(
+      (cx, cy),
+      text(size: r * 2 * 1cm, fill: glyph-paint)[#kind],
+      anchor: "center",
+    )
   }
 }

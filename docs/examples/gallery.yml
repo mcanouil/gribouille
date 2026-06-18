@@ -407,6 +407,12 @@
   description: 'Cut a continuous variable into bins with [`scale-shape-binned`](../reference/scales/scale-shape-binned.qmd) or [`scale-linetype-binned`](../reference/scales/scale-linetype-binned.qmd).'
   alt: "Three stacked panels: scatters where marker shape is binned by a continuous variable, and a line chart where dash patterns are binned across six groups."
 
+- slug: shape-character
+  section: scales
+  title: "Character symbols as markers"
+  description: 'Map [`scale-shape-manual`](../reference/scales/scale-shape-manual.qmd) to a plain character, a Typst `sym.` symbol, or an emoji; any value outside the built-in keywords renders as a literal glyph.'
+  alt: "Scatter plot of penguin flipper length against body mass where each species is drawn with a different glyph: the letter A, a filled star symbol, and a penguin emoji, instead of built-in marker shapes."
+
 - slug: scale-binned
   section: scales
   title: "Binned colour and size"

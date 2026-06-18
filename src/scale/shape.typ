@@ -2,7 +2,10 @@
 ///!
 ///! Maps discrete levels onto marker-shape keywords consumed by \@geom-point
 ///! (`"circle"`, `"square"`, `"triangle"`, `"diamond"`, `"cross"`, `"x"`,
-///! `"star"`, `"triangle-down"`).
+///! `"star"`, `"triangle-down"`). Any value outside this keyword set renders
+///! as a literal glyph, so single characters or emoji can serve as markers.
+///! The eight keywords are reserved: `"x"` always draws the cross shape, never
+///! the letter.
 
 #import "../utils/palette.typ": default-shapes
 
@@ -18,7 +21,7 @@
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
-/// \@param palette Array of shape keywords, or `auto` for the library default.
+/// \@param palette Array of shape keywords or literal-glyph characters, or `auto` for the library default.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -93,7 +96,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param values Array of shape keywords, one per level.
+/// \@param values Array of shape keywords or literal-glyph characters, one per level.
 ///
 /// \@param name Legend title. Overrides any name set via \@labs when both are present.
 ///
@@ -147,6 +150,27 @@
 /// )
 /// ```
 ///
+/// \@examples Map levels to letters so each marker is drawn as a literal
+/// glyph rather than a built-in shape.
+/// ```
+/// //| alt: "Scatter chart of three points where the manual values render the letters A, B, C as the marker glyphs."
+/// #let d = (
+///   (x: 1, y: 2, sp: "a"),
+///   (x: 2, y: 4, sp: "b"),
+///   (x: 3, y: 3, sp: "c"),
+/// )
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y", shape: "sp"),
+///   layers: (geom-point(size: 5pt),),
+///   scales: (scale-shape-manual(
+///     values: ("A", "B", "C"),
+///   ),),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@scale-shape, \@geom-point
 #let scale-shape-manual(
   values: (),
@@ -167,9 +191,9 @@
 
 /// Shape scale that uses each row's value as the marker keyword directly.
 ///
-/// The mapped column must contain shape keywords accepted by \@geom-point
+/// The mapped column holds shape keywords accepted by \@geom-point
 /// (`"circle"`, `"square"`, `"triangle"`, `"diamond"`, `"cross"`, `"x"`,
-/// `"star"`, `"triangle-down"`).
+/// `"star"`, `"triangle-down"`); any other value renders as a literal glyph.
 ///
 /// \@category Scales
 /// \@subcategory Shape scales
