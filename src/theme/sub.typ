@@ -341,6 +341,10 @@
 ///
 /// \@param title Same for `legend-title`.
 ///
+/// \@param position Global legend placement for `legend-position`; accepts the
+///   same values as \@guide-legend's `position` and is overridden by any
+///   explicit \@guides placement.
+///
 /// \@returns Theme dictionary with the named legend overrides applied.
 ///
 /// \@examples Bold legend titles via the shortcut group.
@@ -358,9 +362,10 @@
 /// ```
 ///
 /// \@see \@theme
-#let theme-sub-legend(text: none, title: none) = theme(
+#let theme-sub-legend(text: none, title: none, position: none) = theme(
   legend-text: text,
   legend-title: title,
+  legend-position: position,
 )
 
 /// Shortcut for panel grid and background.

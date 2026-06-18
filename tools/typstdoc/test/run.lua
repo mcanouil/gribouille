@@ -1256,6 +1256,8 @@ describe("theme_keys: extractor + table render", function()
     assert_eq(keys[#keys], "geom", "ends with the geom group")
     assert_true(set["panel-grid"], "includes panel surfaces")
     assert_true(set["legend-bar"], "includes legend surfaces")
+    assert_true(not set["legend-key"] and not set["legend-position"],
+      "omits the scalar legend keys that live inside the legend group")
     assert_true(not set["tick-length"], "omits the scalar ticks group")
     assert_true(not set["ink"] and not set["paper"] and not set["accent"], "omits the colours group")
   end)

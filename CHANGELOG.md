@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: the `legend-position` theme entry sets a global side for every legend (`theme(legend-position: "bottom")`, also via `theme-sub-legend(position:)`), accepting the same values as `guide-legend(position:)`; any explicit `guides()` placement still wins. (#123)
 - feat: discrete (swatch) legend key glyphs are resizable via `guide-legend(key-size: <length>)` per legend or the `legend-key` theme entry for every swatch legend; the row spacing and label offset grow with the glyph so enlarged keys do not overlap. (#122)
 - feat: the `shape` aesthetic accepts any character as the marker symbol; a value outside the eight built-in keywords renders as a literal glyph, so letters or emoji work as markers across `scale-shape`, `scale-shape-manual`, `scale-shape-identity`, `scale-shape-binned`, the `geom-point(shape: ...)` pin, and legend keys. (#120)
 - feat: scale `limits` accept `auto` on one side, e.g., `limits: (auto, 60)`, keeping the trained bound for the other side. (#116)

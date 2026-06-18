@@ -72,6 +72,11 @@
   tick-length: 0.1cm,
   tick-labels: true,
 
+  // Global legend placement; `auto` defers to the natural default (`"right"`).
+  // Accepts the same values as `guide-legend(position:)` and is overridden by
+  // any explicit `guides()` placement.
+  legend-position: auto,
+
   // Base diameter of a swatch legend key glyph. Overridden per legend via
   // `guide-legend(key-size:)`; ignored by colourbar / size-ladder legends.
   legend-key: 0.24cm,

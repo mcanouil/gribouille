@@ -615,6 +615,22 @@
 /// )
 /// ```
 ///
+/// \@examples Move every legend at once with the `legend-position` scalar; it
+/// accepts the same values as `guide-legend(position:)` and any explicit
+/// \@guides placement overrides it per aesthetic.
+/// ```
+/// //| alt: "Scatter plot of y against x coloured by group with the colour legend placed below the panel via the theme legend-position field."
+/// #let d = range(0, 10).map(i => (x: i, y: i * 0.5, g: if calc.even(i) { "a" } else { "b" }))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y", colour: "g"),
+///   layers: (geom-point(size: 2pt),),
+///   theme: theme(legend-position: "bottom"),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@examples Set fonts per surface: a base `text` font every text surface
 /// inherits, a distinct font for the plot title, and an `element-geom` `font`
 /// role for the text-drawing geoms.
