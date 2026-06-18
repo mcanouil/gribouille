@@ -36,7 +36,13 @@ local SKIP_KEYS = {
 local NON_ELEMENT_GROUPS = {
   ticks = true,
   colours = true,
+}
+
+-- Individual scalar keys that live inside an element group (e.g. `legend`) but
+-- are not element records, so they are kept out of the hover element list.
+local NON_ELEMENT_KEYS = {
   ["legend-key"] = true,
+  ["legend-position"] = true,
 }
 
 -- Group order for the rendered table. Each group lists root keys; variants
@@ -47,8 +53,7 @@ local GROUP_ORDER = {
   { name = "axis", keys = { "axis-title", "axis-text", "axis-line", "axis-ticks" } },
   { name = "ticks", keys = { "tick-labels", "tick-length" } },
   { name = "panel", keys = { "panel-grid", "panel-background" } },
-  { name = "legend", keys = { "legend-title", "legend-text", "legend-ticks", "legend-background", "legend-bar" } },
-  { name = "legend-key", keys = { "legend-key" } },
+  { name = "legend", keys = { "legend-title", "legend-text", "legend-ticks", "legend-background", "legend-bar", "legend-key", "legend-position" } },
   { name = "strip", keys = { "strip-text", "strip-background" } },
   { name = "geom", keys = { "geom" } },
   { name = "colours", keys = { "ink", "paper", "accent" } },
@@ -180,6 +185,8 @@ local function type_for(key, parents, defaults)
   end
   -- tick-length variants inherit from tick-length scalar.
   if key:match("^tick%-length") then return "length" end
+  -- Global legend placement: same value set as @guide-legend's `position`.
+  if key == "legend-position" then return "side, alignment, or dict" end
   return "—"
 end
 
@@ -298,7 +305,9 @@ function M.structured_keys()
   local keys = {}
   for _, group in ipairs(GROUP_ORDER) do
     if not NON_ELEMENT_GROUPS[group.name] then
-      for _, key in ipairs(group.keys) do keys[#keys + 1] = key end
+      for _, key in ipairs(group.keys) do
+        if not NON_ELEMENT_KEYS[key] then keys[#keys + 1] = key end
+      end
     end
   end
   return keys

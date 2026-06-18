@@ -210,6 +210,7 @@
       trained,
       size-pt: _legend-size-pt,
       key-diam-cm: _legend-key-cm,
+      theme: theme,
     )
     .filter(g => {
       let aes = g.at("aesthetics", default: ())

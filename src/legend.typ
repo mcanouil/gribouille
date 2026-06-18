@@ -20,6 +20,7 @@
   _line-stroke, _rect-outset-cm, _rect-style, _text-args, _text-style,
 )
 #import "guide/draw-key.typ": default-key-for, draw-glyph
+#import "guide/legend.typ": _normalise-position
 #import "scale/train.typ": mapping-display-name
 #import "utils/typst-markup.typ": resolve-prose
 #import "utils/margin.typ": length-to-cm, opposite-side
@@ -310,7 +311,7 @@
   best
 }
 
-#let _candidate(spec, trained, overrides, aes-name) = {
+#let _candidate(spec, trained, overrides, aes-name, theme: none) = {
   let t = trained.at(aes-name, default: none)
   if t == none { return none }
   if t.type == "identity" { return none }
@@ -330,9 +331,19 @@
   }
 
   // Resolve placement: per-aesthetic override over `guides(default: ...)` over
-  // the natural default. `auto` side / direction inherit from the layer below,
-  // so `guide-legend(ncolumn: 2)` still picks up a `default:` side.
+  // `theme(legend-position:)` over the natural default. `auto` side / direction
+  // inherit from the layer below, so `guide-legend(ncolumn: 2)` still picks up a
+  // `default:` (or theme) side.
   let placement = _default-placement
+  let theme-position = if theme != none {
+    theme.at("legend-position", default: auto)
+  } else { auto }
+  if theme-position != auto {
+    placement = _merge-placement(
+      placement,
+      _normalise-position(theme-position, auto, none, false),
+    )
+  }
   let default-placement = if default-guide != none {
     default-guide.at("placement", default: none)
   } else { none }
@@ -906,12 +917,18 @@
   out
 }
 
-#let guides-for(spec, trained, size-pt: 9, key-diam-cm: _GLYPH-DIAMETER-CM) = {
+#let guides-for(
+  spec,
+  trained,
+  size-pt: 9,
+  key-diam-cm: _GLYPH-DIAMETER-CM,
+  theme: none,
+) = {
   let overrides = spec.at("guides", default: (:))
 
   let candidates = ()
   for aes-name in _aesthetic-order {
-    let cand = _candidate(spec, trained, overrides, aes-name)
+    let cand = _candidate(spec, trained, overrides, aes-name, theme: theme)
     if cand != none { candidates.push(cand) }
   }
 
