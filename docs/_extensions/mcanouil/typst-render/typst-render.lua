@@ -16,6 +16,7 @@ local str = require(quarto.utils.resolve_path('_modules/string.lua'):gsub('%.lua
 local log = require(quarto.utils.resolve_path('_modules/logging.lua'):gsub('%.lua$', ''))
 local paths = require(quarto.utils.resolve_path('_modules/paths.lua'):gsub('%.lua$', ''))
 local meta_mod = require(quarto.utils.resolve_path('_modules/metadata.lua'):gsub('%.lua$', ''))
+local typst_cli = require(quarto.utils.resolve_path('_modules/typst-cli.lua'):gsub('%.lua$', ''))
 local code_cell = require(quarto.utils.resolve_path('_modules/code-cell.lua'):gsub('%.lua$', ''))
 local cell = code_cell.new({ language = '{typst}', comment_prefix = '//|', comment_chars = '//' })
 
@@ -23,8 +24,9 @@ local cell = code_cell.new({ language = '{typst}', comment_prefix = '//|', comme
 -- CONSTANTS
 -- ============================================================================
 
---- Valid image format set for O(1) lookup
-local VALID_FORMAT_SET = { png = true, svg = true, pdf = true }
+--- Valid output format set for O(1) lookup. `html` is a native (non-image)
+--- target available with Typst >= 0.15; the others compile to image files.
+local VALID_FORMAT_SET = { png = true, svg = true, pdf = true, html = true }
 
 --- Valid alignment values
 local VALID_ALIGN_SET = { left = true, center = true, right = true, default = true }
@@ -74,6 +76,7 @@ local KNOWN_KEYS = {
   root = true,
   ['font-path'] = true,
   ['package-path'] = true,
+  math = true,
   format = true,
   foreground = true,
   file = true,
@@ -101,9 +104,6 @@ local function is_known_key(key)
   end
   return key:match('^%a+%-cap$') ~= nil or key:match('^%a+%-alt$') ~= nil
 end
-
---- Cache base directory within the .quarto scratch directory
-local CACHE_BASE = '.quarto/typst-render'
 
 --- Per-document cache subdirectory (set during Meta pass)
 local cache_subdir = nil
@@ -393,17 +393,10 @@ end
 -- ============================================================================
 
 --- Read the entire contents of a file.
+--- Read a file's full contents (shared with the math filter).
 --- @param path string The file path to read
 --- @return string|nil File contents, or nil if the file cannot be opened
-local function read_file(path)
-  local f = io.open(path, 'r')
-  if not f then
-    return nil
-  end
-  local content = f:read('*a')
-  f:close()
-  return content
-end
+local read_file = typst_cli.read_file
 
 --- Serialise all merged options as a sorted, deterministic string for cache hashing.
 --- Handles string, number, boolean, and nested table values.
@@ -498,19 +491,55 @@ local function resolve_typst_bin()
   end
   typst_checked = true
 
-  local path = quarto.paths.typst()
-  if path and path ~= '' then
-    typst_bin = path
-    return typst_bin
+  typst_bin = typst_cli.resolve_bin()
+  if not typst_bin then
+    log.log_error(EXTENSION_NAME, 'Typst binary not found. Ensure Quarto >= 1.6 is installed.')
   end
+  return typst_bin
+end
 
-  log.log_error(EXTENSION_NAME, 'Typst binary not found. Ensure Quarto >= 1.6 is installed.')
-  return nil
+--- Whether the resolved Typst binary supports HTML export (Typst >= 0.15).
+--- @return boolean
+local function typst_supports_html()
+  local bin = resolve_typst_bin()
+  if not bin then
+    return false
+  end
+  return typst_cli.supports_html(bin)
+end
+
+-- Forward declaration; defined after get_image_format_for_output.
+local get_image_format_for_output
+
+--- Resolve the requested format, downgrading `html` to an image format when it
+--- cannot be honoured (non-HTML output, or Typst < 0.15), with a warning.
+--- @param img_format string Requested format
+--- @return string Effective format
+local function resolve_html_format(img_format)
+  if img_format ~= 'html' then
+    return img_format
+  end
+  if not quarto.format.is_html_output() then
+    log.log_warning(
+      EXTENSION_NAME,
+      'format "html" is only available for HTML-based output; falling back to an image.'
+    )
+    return get_image_format_for_output()
+  end
+  if not typst_supports_html() then
+    log.log_warning(
+      EXTENSION_NAME,
+      'Native HTML output requires Typst >= 0.15. Set QUARTO_TYPST to a Typst >= 0.15 '
+      .. 'binary to enable it; falling back to SVG.'
+    )
+    return 'svg'
+  end
+  return 'html'
 end
 
 --- Determine the best image format for the current output.
 --- @return string Image format: "svg", "pdf", or "png"
-local function get_image_format_for_output()
+function get_image_format_for_output()
   if quarto.format.is_html_output() then
     return 'svg'
   elseif quarto.format.is_latex_output() then
@@ -749,18 +778,22 @@ local function has_custom_block_options(opts)
       or opts.margin ~= DEFAULTS.margin
 end
 
---- Build the full Typst source with page template.
+--- Build the full Typst source.
 --- @param code string User Typst code
 --- @param opts table Merged options
+--- @param include_page boolean|nil Emit `#set page(...)` (default true). HTML
+---   export ignores page geometry, so callers targeting HTML pass false.
 --- @return string Complete Typst source
-local function build_typst_source(code, opts)
+local function build_typst_source(code, opts, include_page)
   local parts = {}
   inject_colour_vars(parts, opts)
   local define_preamble = build_define_preamble()
   if define_preamble then
     parts[#parts + 1] = define_preamble
   end
-  parts[#parts + 1] = build_page_directive(opts)
+  if include_page ~= false then
+    parts[#parts + 1] = build_page_directive(opts)
+  end
   if opts.foreground then
     parts[#parts + 1] = '#set text(fill: ' .. opts.foreground .. ')'
   end
@@ -782,7 +815,11 @@ end
 local function compute_cache_stem(source, fmt, dpi, label, inline)
   local hash = pandoc.utils.sha1(source .. '|' .. fmt .. '|' .. dpi):sub(1, 8)
   if type(label) == 'string' and label ~= '' then
-    return 'typst-' .. label .. '-' .. hash
+    -- Sanitise the label before using it as a filename component so an unusual
+    -- label cannot escape the cache directory; valid cross-ref labels are
+    -- unaffected (only [%w-_] survive).
+    local safe_label = label:gsub('[^%w%-_]', '_')
+    return 'typst-' .. safe_label .. '-' .. hash
   end
   if inline then
     return 'typst-inline-' .. inline_counter .. '-' .. hash
@@ -1047,6 +1084,53 @@ local function save_source_file(source, output_path, mode_suffix)
   return true
 end
 
+--- Build the cache-key material shared by every compile path.
+--- @param source string Full Typst source
+--- @param opts table Merged options
+--- @param resolved_root string Resolved compilation root
+--- @param merged_input table Merged input variables
+--- @return string Hash material (source + inputs + options + imported file contents)
+local function build_hash_source(source, opts, resolved_root, merged_input)
+  local input_serial = serialise_inputs(merged_input)
+  local hash_source = source
+  if input_serial ~= '' then
+    hash_source = hash_source .. '|input:' .. input_serial
+  end
+  hash_source = hash_source .. '|opts:' .. serialise_opts(opts)
+  local import_content = collect_import_content(source, resolved_root, {})
+  if import_content ~= '' then
+    hash_source = hash_source .. '|imports:' .. import_content
+  end
+  return hash_source
+end
+
+--- Append the CLI flags common to every compile path: --font-path, --package-path,
+--- and a deterministically-ordered --input for each merged input variable.
+--- @param args table Argument list to append to (modified in place)
+--- @param merged_input table Merged input variables
+local function append_cli_common_args(args, merged_input)
+  local font_paths = global_config['font-path']
+  if font_paths then
+    for _, p in ipairs(font_paths) do
+      args[#args + 1] = '--font-path'
+      args[#args + 1] = paths.resolve_project_path(p)
+    end
+  end
+  if global_config['package-path'] then
+    args[#args + 1] = '--package-path'
+    args[#args + 1] = paths.resolve_project_path(global_config['package-path'])
+  end
+  local sorted_keys = {}
+  for k in pairs(merged_input) do
+    sorted_keys[#sorted_keys + 1] = k
+  end
+  table.sort(sorted_keys)
+  for _, k in ipairs(sorted_keys) do
+    args[#args + 1] = '--input'
+    args[#args + 1] = k .. '=' .. merged_input[k]
+  end
+end
+
 --- Compile Typst source to an image file (or multiple files for multi-page output).
 --- Uses stdin to pass source code, avoiding temporary .typ files.
 --- @param source string Full Typst source code
@@ -1077,18 +1161,7 @@ local function compile_typst(source, opts, img_format)
 
   -- Merge global and per-block input variables
   local merged_input = merge_inputs(opts.input, opts._block_input)
-  local input_serial = serialise_inputs(merged_input)
-
-  -- Build cache hash material: source + inputs + all merged options + imported file contents
-  local hash_source = source
-  if input_serial ~= '' then
-    hash_source = hash_source .. '|input:' .. input_serial
-  end
-  hash_source = hash_source .. '|opts:' .. serialise_opts(opts)
-  local import_content = collect_import_content(source, resolved_root, {})
-  if import_content ~= '' then
-    hash_source = hash_source .. '|imports:' .. import_content
-  end
+  local hash_source = build_hash_source(source, opts, resolved_root, merged_input)
 
   local use_cache = opts.cache ~= false
   local stem = compute_cache_stem(hash_source, img_format, dpi, opts.label, opts._inline)
@@ -1132,32 +1205,7 @@ local function compile_typst(source, opts, img_format)
   end
 
   local args = { 'compile', '--format', img_format, '--ppi', dpi, '--root', resolved_root }
-
-  -- Add --font-path flags (global-only; always a list after get_configuration)
-  local font_paths = global_config['font-path']
-  if font_paths then
-    for _, p in ipairs(font_paths) do
-      args[#args + 1] = '--font-path'
-      args[#args + 1] = paths.resolve_project_path(p)
-    end
-  end
-
-  -- Add --package-path if specified (global-only)
-  if global_config['package-path'] then
-    args[#args + 1] = '--package-path'
-    args[#args + 1] = paths.resolve_project_path(global_config['package-path'])
-  end
-
-  -- Add --input flags for each input variable
-  local sorted_keys = {}
-  for k in pairs(merged_input) do
-    sorted_keys[#sorted_keys + 1] = k
-  end
-  table.sort(sorted_keys)
-  for _, k in ipairs(sorted_keys) do
-    args[#args + 1] = '--input'
-    args[#args + 1] = k .. '=' .. merged_input[k]
-  end
+  append_cli_common_args(args, merged_input)
 
   -- Expose document colours to library theme functions via sys.inputs.
   -- Only hex colours (rgb("#RRGGBB")) can be round-tripped through a CLI flag;
@@ -1202,6 +1250,61 @@ local function compile_typst(source, opts, img_format)
     log.log_error(EXTENSION_NAME, 'Compiled file not found: ' .. abs_output)
     return nil
   end
+end
+
+--- Compile Typst source to native HTML (Typst >= 0.15, experimental).
+--- Caches the compiled `.html` alongside the image cache and injects the
+--- Typst head CSS once. Returns the inner `<body>` content.
+--- @param source string Full Typst source (from build_typst_source(code, opts, false))
+--- @param opts table Merged options
+--- @return string|nil Body inner HTML, or nil on failure
+--- @return boolean|nil true when compilation failed
+local function compile_typst_html(source, opts)
+  local bin = resolve_typst_bin()
+  if not bin then
+    return nil
+  end
+
+  local resolved_root = pandoc.path.normalize(resolve_to_absolute(global_config.root or '.'))
+  local merged_input = merge_inputs(opts.input, opts._block_input)
+  local hash_source = build_hash_source(source, opts, resolved_root, merged_input)
+
+  local use_cache = opts.cache ~= false
+  local stem = compute_cache_stem(hash_source, 'html', '0', opts.label, opts._inline)
+  local abs_cache = ensure_cache_dir()
+  if not abs_cache then
+    return nil
+  end
+  used_cache_formats['html'] = true
+  local abs_output = pandoc.path.join({ abs_cache, stem .. '.html' })
+
+  if use_cache then
+    local cached = typst_cli.read_file(abs_output)
+    if cached then
+      used_cache_files[stem .. '.html'] = true
+      typst_cli.inject_head_style_once(cached)
+      return typst_cli.extract_body(cached)
+    end
+  end
+
+  local args = { 'compile', '--format', 'html', '--features', 'html', '--root', resolved_root }
+  append_cli_common_args(args, merged_input)
+  args[#args + 1] = '-'
+  args[#args + 1] = abs_output
+
+  local ok = pcall(pandoc.pipe, bin, args, source)
+  if not ok then
+    return nil, true
+  end
+
+  local html = typst_cli.read_file(abs_output)
+  if not html then
+    log.log_error(EXTENSION_NAME, 'Compiled HTML not found: ' .. abs_output)
+    return nil
+  end
+  used_cache_files[stem .. '.html'] = true
+  typst_cli.inject_head_style_once(html)
+  return typst_cli.extract_body(html)
 end
 
 --- Map from cross-reference prefix to Quarto FloatRefTarget type name.
@@ -1341,6 +1444,25 @@ end
 --- @return boolean|nil true when compilation failed
 --- @return string|nil Full Typst source actually compiled (preamble + colour vars + code)
 local function compile_to_result(code, opts, img_format)
+  if img_format == 'html' then
+    local html_source = build_typst_source(code, opts, false)
+    local body, compile_err = compile_typst_html(html_source, opts)
+    if not body then
+      return nil, nil, compile_err, html_source
+    end
+    local classes = { 'typst-html' }
+    if type(opts.classes) == 'string' and opts.classes ~= '' then
+      for cls in opts.classes:gmatch('%S+') do
+        classes[#classes + 1] = cls
+      end
+    end
+    local block = pandoc.Div(
+      pandoc.Blocks({ pandoc.RawBlock('html', body) }),
+      pandoc.Attr('', classes, {})
+    )
+    return wrap_alignment(block, opts), nil, nil, html_source
+  end
+
   local full_source = build_typst_source(code, opts)
   local all_pages, compile_err = compile_typst(full_source, opts, img_format)
 
@@ -1418,15 +1540,12 @@ end
 local function get_configuration(meta)
   register_custom_crossref_types(meta)
   read_file_cache = {}
+  -- Quarto may reuse the Lua state across documents; re-inject the Typst head
+  -- CSS for each document that produces native HTML output.
+  typst_cli.reset_head_injection()
 
   -- Build per-document cache subdirectory from the input file stem
-  local doc_stem = 'default'
-  local input_file = quarto.doc.input_file
-  if input_file and input_file ~= '' then
-    local input_name = pandoc.path.filename(input_file)
-    doc_stem = input_name:match('^(.+)%.[^.]+$') or input_name
-  end
-  cache_subdir = pandoc.path.join({ CACHE_BASE, doc_stem })
+  cache_subdir = typst_cli.doc_cache_subdir()
 
   -- Detect brand mode from document metadata (used for colour resolution)
   global_brand_mode = (meta['brand-mode'] and pandoc.utils.stringify(meta['brand-mode']) == 'dark')
@@ -1773,6 +1892,10 @@ local function process_codeblock(el)
     img_format = get_image_format_for_output()
   end
 
+  -- Native HTML output requires HTML-based output and Typst >= 0.15; otherwise
+  -- fall back to an image format with a warning.
+  img_format = resolve_html_format(img_format)
+
   -- Warn about PDF in HTML
   if img_format == 'pdf' and quarto.format.is_html_output() then
     log.log_warning(
@@ -1782,8 +1905,17 @@ local function process_codeblock(el)
     img_format = 'png'
   end
 
-  -- Dual-mode rendering for HTML/Reveal.js when both light and dark colours are present
-  local dual_mode = quarto.format.is_html_output() and has_dual_mode_colours(opts)
+  -- Dual-mode rendering for HTML/Reveal.js when both light and dark colours are present.
+  -- Native HTML output renders once (colours apply via the Typst source, not CSS classes).
+  local dual_mode = img_format ~= 'html'
+    and quarto.format.is_html_output()
+    and has_dual_mode_colours(opts)
+  if img_format == 'html' and has_dual_mode_colours(opts) then
+    log.log_warning(
+      EXTENSION_NAME,
+      'Dual light/dark colours are not supported with format "html"; using the document brand mode.'
+    )
+  end
 
   local result
   if dual_mode then
@@ -1911,6 +2043,21 @@ local function process_codeblock(el)
   return result
 end
 
+--- Wrap inline native-HTML output in a typst-inline span.
+--- @param inner string Inline HTML (paragraph wrapper already stripped)
+--- @param opts table Merged options
+--- @return pandoc.Inline Inline raw HTML element
+local function create_inline_html_element(inner, opts)
+  local extra_classes = ''
+  if type(opts.classes) == 'string' and opts.classes ~= '' then
+    extra_classes = ' ' .. opts.classes
+  end
+  return pandoc.RawInline(
+    'html',
+    '<span class="typst-inline' .. extra_classes .. '">' .. inner .. '</span>'
+  )
+end
+
 --- Create a bare inline Image element from a compiled image.
 --- Emits format-specific raw markup to size the image to match
 --- surrounding text (height: 1em, auto width, vertical centring).
@@ -2035,6 +2182,16 @@ local function process_inline_code(el)
   if not img_format then
     img_format = get_image_format_for_output()
   end
+  img_format = resolve_html_format(img_format)
+  if img_format == 'html' then
+    local html_source = build_typst_source(code, opts, false)
+    local body = compile_typst_html(html_source, opts)
+    if not body then
+      log.log_warning(EXTENSION_NAME, compilation_failed_message(inline_id))
+      return el
+    end
+    return create_inline_html_element(typst_cli.strip_paragraph(body), opts)
+  end
   if img_format == 'pdf' and quarto.format.is_html_output() then
     img_format = 'png'
   end
@@ -2068,7 +2225,11 @@ local function cleanup_cache(doc) -- luacheck: ignore 212
 
   local removed = 0
   for _, filename in ipairs(entries) do
-    if filename:match('^typst%-') and not used_cache_files[filename] then
+    -- Skip `typst-math-*` files: they are owned by the typst-math filter and not
+    -- tracked here, so this cleanup must not treat them as stale.
+    if filename:match('^typst%-')
+        and not filename:match('^typst%-math%-')
+        and not used_cache_files[filename] then
       local ext = filename:match('%.(%w+)$')
       if ext and used_cache_formats[ext] then
         local filepath = pandoc.path.join({ abs_cache, filename })
