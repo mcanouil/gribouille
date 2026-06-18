@@ -49,11 +49,25 @@
   out
 }
 
+// Resolve a child `size` against the nearest resolved ancestor `base-size`.
+// An absolute length wins outright; a ratio scales the ancestor (length ->
+// absolute, ratio -> compounded ratio); with no ancestor size the ratio is
+// kept and deferred to `_text-style`.
+#let _merge-size(base-size, top-size) = {
+  if type(top-size) != ratio { return top-size }
+  if base-size == none { return top-size }
+  base-size * (top-size / 100%)
+}
+
 #let _merge-element(base, top) = {
   let out = base
   for (k, v) in top.pairs() {
     if k == "kind" { continue }
     if v == none { continue }
+    if k == "size" {
+      out.insert("size", _merge-size(base.at("size", default: none), v))
+      continue
+    }
     out.insert(k, v)
   }
   if top.at("kind", default: none) != none {
@@ -252,12 +266,15 @@
 )
 
 // Look up the theme's base text size in pt; falls back to 9 when the
-// `text` surface is absent (partial user theme).
+// `text` surface is absent (partial user theme) or carries a ratio size
+// (the base text is expected absolute; a ratio there has no anchor here).
 #let _theme-size-pt(theme) = {
   let text-el = theme.at("text", default: none)
-  if (
-    type(text-el) == dictionary and text-el.at("size", default: none) != none
-  ) { text-el.size / 1pt } else { 9 }
+  if type(text-el) == dictionary {
+    let size = text-el.at("size", default: none)
+    if type(size) == length { return size / 1pt }
+  }
+  9
 }
 
 // Normalise a `margin` field to the four-side dict shape the renderer
@@ -295,7 +312,12 @@
   (
     // `element-blank()` collapses the surface: a `0pt` size makes every
     // consumer that gates on `size > 0pt` skip both ink and reserved space.
-    size: if blank { 0pt } else { el.at("size", default: 9pt) },
+    // A ratio that survived the cascade (no absolute ancestor) resolves
+    // against the 9pt fallback so every consumer reads a concrete length.
+    size: if blank { 0pt } else {
+      let raw = el.at("size", default: 9pt)
+      if type(raw) == ratio { 9pt * (raw / 100%) } else { raw }
+    },
     fill: if colour != none { colour } else { theme.ink },
     weight: if weight != none { weight } else { "regular" },
     // `none` when unset; consumers omit the `text(font: ...)` argument so the

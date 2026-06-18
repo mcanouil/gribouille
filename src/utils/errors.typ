@@ -124,3 +124,18 @@
     )
   }
 }
+
+// Panic unless `size` is an absolute length, a ratio (a `%` value relative to
+// the parent surface size), or `none` (inherit). Guards against passing a raw
+// number or string where a typed size is expected.
+#let assert-text-size(scope, size) = {
+  if size != none and type(size) != length and type(size) != ratio {
+    fail-type(
+      scope,
+      "size",
+      size,
+      "a length (e.g., `12pt`), a ratio (e.g., `80%`), or `none`",
+      hint: "Use `12pt` for an absolute size or `80%` to scale the parent size.",
+    )
+  }
+}

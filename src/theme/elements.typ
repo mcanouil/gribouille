@@ -3,7 +3,7 @@
 ///! `element_*` constructors. \@theme translates these into the flat theme
 ///! fields consumed internally by `merge-theme`.
 
-#import "../utils/errors.typ": assert-halign
+#import "../utils/errors.typ": assert-halign, assert-text-size
 
 /// Text element: font size, weight, colour, and angle.
 ///
@@ -15,7 +15,11 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param size Text size (a Typst length), or `none` to inherit.
+/// \@param size Text size. Either an absolute Typst length (e.g., `12pt`), a
+///   ratio (e.g., `80%`) scaling the parent surface size, or `none` to inherit
+///   the parent size unchanged. Absolute lengths win outright; ratios cascade
+///   proportionally, so setting the base `text` size resizes every surface that
+///   inherits via a ratio.
 ///
 /// \@param weight Font weight (e.g., `"regular"`, `"bold"`), or `none` to inherit.
 ///
@@ -96,6 +100,27 @@
 /// )
 /// ```
 ///
+/// \@examples Relative versus absolute sizes: a `12pt` base `text` rescales
+/// every inheriting surface, a `120%` ratio on the axis titles scales them
+/// relative to that base, and an absolute `18pt` pins the plot title outright.
+/// ```
+/// //| alt: "Scatter plot of y against x with a 12pt base text size, axis titles scaled to 120 percent of it, and the plot title pinned to an absolute 18pt."
+/// #let d = range(0, 10).map(i => (x: i, y: i * 0.5))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (geom-point(size: 2pt),),
+///   labs: labs(title: "Relative and absolute", x: "X", y: "Y"),
+///   theme: theme(
+///     text: element-text(size: 12pt),
+///     axis-title: element-text(size: 120%),
+///     plot-title: element-text(size: 18pt, weight: "bold"),
+///   ),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@theme, \@element-line, \@element-rect, \@element-blank, \@element-typst, \@margin
 #let element-text(
   size: none,
@@ -107,6 +132,7 @@
   align: none,
 ) = {
   assert-halign("element-text", align)
+  assert-text-size("element-text", size)
   (
     kind: "element-text",
     size: size,
@@ -134,7 +160,9 @@
 /// \@stability stable
 /// \@since 0.1.0
 ///
-/// \@param size Text size (a Typst length), or `none` to inherit.
+/// \@param size Text size. Either an absolute Typst length (e.g., `12pt`), a
+///   ratio (e.g., `80%`) scaling the parent surface size, or `none` to inherit
+///   the parent size unchanged.
 ///
 /// \@param weight Font weight (e.g., `"regular"`, `"bold"`), or `none`.
 ///
@@ -207,6 +235,7 @@
   align: none,
 ) = {
   assert-halign("element-typst", align)
+  assert-text-size("element-typst", size)
   (
     kind: "element-typst",
     size: size,

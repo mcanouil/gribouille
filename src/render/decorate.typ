@@ -42,7 +42,7 @@
   // wrapping it in an outer `pad(...)` (outer margin).
   let _size-pt = if (
     type(theme.at("text", default: none)) == dictionary
-      and theme.text.at("size", default: none) != none
+      and type(theme.text.at("size", default: none)) == length
   ) { theme.text.size / 1pt } else { 9 }
   let outer-pad = _margin-lengths(plot-bg.outset, ref-w, ref-h, _size-pt)
   let inner-inset = _margin-lengths(plot-bg.inset, ref-w, ref-h, _size-pt)
