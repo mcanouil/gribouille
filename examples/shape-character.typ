@@ -1,6 +1,6 @@
 // Character symbols: shape values outside the built-in keywords render as
-// literal glyphs. Values may be a plain character, a Typst `sym.` symbol, or
-// an emoji, mixed freely across levels.
+// literal glyphs. Values may be a plain character or a Typst `sym.` symbol,
+// mixed freely across levels.
 
 #import "../lib.typ": *
 
@@ -18,12 +18,12 @@
     geom-point(size: 5pt),
   ),
   scales: (
-    scale-shape-manual(values: ("A", sym.star.filled, "🐧")),
+    scale-shape-manual(values: ("A", sym.star.filled, "λ")),
     scale-colour-brewer(palette: "Dark2"),
   ),
   labs: labs(
     title: "Character Symbols as Markers",
-    subtitle: "A plain character, a Typst sym., and an emoji as shape values",
+    subtitle: "A Latin letter, a Typst sym., and a Greek letter as shape values",
     x: "Flipper length",
     y: "Body mass",
     shape: "Species",
