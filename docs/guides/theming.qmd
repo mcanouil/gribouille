@@ -61,6 +61,10 @@ Every styled surface walks a parent chain root-to-leaf at render time.
 The most specific record wins; unset fields inherit from the parent.
 Two patterns repeat: base records (`text`, `line`, `rect`) feed every descendant surface, and each axis family fans out by axis then by side.
 
+Text sizes accept either an absolute length or a ratio.
+A ratio such as `80%` scales the parent surface size, so setting the base `text` size rescales every surface that inherits via a ratio (axis titles, tick labels, legend text, and so on).
+An absolute length such as `12pt` pins that surface outright and ignores the cascade.
+
 ```{typst}
 //| echo: false
 //| label: fig-theme-cascade-base

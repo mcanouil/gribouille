@@ -20,3 +20,6 @@
 /docs/_variables.yml
 **/*.quarto_ipynb
 /.luarc.json
+
+# Code for Issues
+/issues/*

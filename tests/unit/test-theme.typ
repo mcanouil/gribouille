@@ -6,6 +6,7 @@
   element-blank, element-line, element-rect, element-text,
 )
 #import "../../src/theme/defaults.typ": merge-theme
+#import "../../src/theme/void.typ": theme-void
 
 // Element records pass through verbatim.
 #let t = theme(
@@ -120,6 +121,29 @@
 #assert.eq(_text-style(blank-plot-title, "plot-title").size, 0pt)
 // A normal text element keeps its declared size.
 #assert.eq(_text-style(merge-theme(theme()), "axis-title").size, 9pt)
+
+// Relative `%` sizes cascade from the base `text`. At the default 9pt base the
+// per-surface ratios resolve to the historical absolute sizes.
+#let d0 = merge-theme(theme())
+#assert.eq(_text-style(d0, "axis-title").size, 9pt)
+#assert.eq(_text-style(d0, "axis-text").size, 8pt)
+#assert.eq(_text-style(d0, "plot-title").size, 12pt)
+// Setting the base `text` size rescales every ratio surface proportionally.
+#let big = merge-theme(theme(text: element-text(size: 12pt)))
+#assert.eq(_text-style(big, "axis-title").size, 12pt)
+#assert.eq(_text-style(big, "axis-text").size, (8 / 9) * 12pt)
+#assert.eq(_text-style(big, "plot-title").size, 16pt)
+// An absolute surface size wins outright and ignores the base size.
+#let abs-title = merge-theme(theme(
+  text: element-text(size: 12pt),
+  axis-title: element-text(size: 14pt),
+))
+#assert.eq(_text-style(abs-title, "axis-title").size, 14pt)
+// A per-axis ratio resolves against its parent surface (nearest ancestor).
+#let rel-side = merge-theme(theme(axis-text-x: element-text(size: 50%)))
+#assert.eq(_text-style(rel-side, "axis-text-x-bottom").size, 4pt)
+// theme-void keeps its absolute 0pt axis-title (collapsed surface).
+#assert.eq(_text-style(merge-theme(theme-void()), "axis-title").size, 0pt)
 
 // `angle` surfaces through `_text-style` and cascades to per-side surfaces,
 // so axis-text rotation reaches the tick-label angle default.

@@ -35,16 +35,19 @@
   line: element-line(stroke: default-stroke-thickness),
   rect: element-rect(),
 
-  // Per-surface text records
-  axis-text: element-text(size: 8pt),
-  axis-title: element-text(size: 9pt),
-  legend-text: element-text(size: 8pt),
-  legend-title: element-text(size: 8pt),
-  strip-text: element-text(size: 8pt),
-  plot-title: element-text(size: 12pt, weight: "bold"),
-  plot-subtitle: element-text(size: 9pt),
-  plot-caption: element-text(size: 8pt),
-  plot-tag: element-text(size: 11pt, weight: "bold"),
+  // Per-surface text records. Sizes are ratios of the parent surface (base
+  // `text`), so setting `theme(text: element-text(size: ...))` rescales every
+  // surface proportionally. At the default 9pt base these resolve to the
+  // historical absolute sizes (axis-text 8pt, plot-title 12pt, ...).
+  axis-text: element-text(size: (8 / 9) * 100%),
+  axis-title: element-text(size: 100%),
+  legend-text: element-text(size: (8 / 9) * 100%),
+  legend-title: element-text(size: (8 / 9) * 100%),
+  strip-text: element-text(size: (8 / 9) * 100%),
+  plot-title: element-text(size: (12 / 9) * 100%, weight: "bold"),
+  plot-subtitle: element-text(size: 100%),
+  plot-caption: element-text(size: (8 / 9) * 100%),
+  plot-tag: element-text(size: (11 / 9) * 100%, weight: "bold"),
 
   // Per-surface line records
   panel-grid: element-line(stroke: default-stroke-thickness),

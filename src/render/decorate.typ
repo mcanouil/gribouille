@@ -2,7 +2,9 @@
 // padding, chrome extent reservation, and final stack composition.
 
 #import "../utils/margin.typ": resolve-margin-side-rel-cm
-#import "../theme/theme.typ": _rect-style, _text-args, _text-style
+#import "../theme/theme.typ": (
+  _rect-style, _text-args, _text-style, _theme-size-pt,
+)
 #import "../utils/typst-markup.typ": resolve-prose
 #import "extents.typ": _text-margin-cm
 
@@ -40,10 +42,7 @@
   // `inset` grows the fill past the content via Typst `block(inset: ...)`
   // (inner padding); `outset` reserves whitespace around the block by
   // wrapping it in an outer `pad(...)` (outer margin).
-  let _size-pt = if (
-    type(theme.at("text", default: none)) == dictionary
-      and theme.text.at("size", default: none) != none
-  ) { theme.text.size / 1pt } else { 9 }
+  let _size-pt = _theme-size-pt(theme)
   let outer-pad = _margin-lengths(plot-bg.outset, ref-w, ref-h, _size-pt)
   let inner-inset = _margin-lengths(plot-bg.inset, ref-w, ref-h, _size-pt)
   // Inner content width the chrome (and canvas) occupy after padding both sides.
