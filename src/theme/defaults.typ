@@ -71,6 +71,10 @@
 
   tick-length: 0.1cm,
   tick-labels: true,
+
+  // Base diameter of a swatch legend key glyph. Overridden per legend via
+  // `guide-legend(key-size:)`; ignored by colourbar / size-ladder legends.
+  legend-key: 0.24cm,
 )
 
 // Surface overrides for theme-minimal, the library default.

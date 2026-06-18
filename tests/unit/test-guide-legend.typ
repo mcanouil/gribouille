@@ -36,6 +36,12 @@
 #assert.eq(guide-legend(align: right).align, right)
 #assert.eq(guide-legend(align: center).align, center)
 
+// `key-size` defaults to `none` (defer to theme `legend-key`) and round-trips
+// a supplied length, including through a `guides()` binding.
+#assert.eq(g.key-size, none)
+#assert.eq(guide-legend(key-size: 0.4cm).key-size, 0.4cm)
+#assert.eq(guides(colour: guide-legend(key-size: 0.4cm)).colour.key-size, 0.4cm)
+
 #let g-top = guide-legend(position: "top")
 #assert.eq(g-top.placement.side, "top")
 #assert.eq(g-top.placement.direction, "horizontal")

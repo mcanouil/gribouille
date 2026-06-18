@@ -36,6 +36,7 @@ local SKIP_KEYS = {
 local NON_ELEMENT_GROUPS = {
   ticks = true,
   colours = true,
+  ["legend-key"] = true,
 }
 
 -- Group order for the rendered table. Each group lists root keys; variants
@@ -47,6 +48,7 @@ local GROUP_ORDER = {
   { name = "ticks", keys = { "tick-labels", "tick-length" } },
   { name = "panel", keys = { "panel-grid", "panel-background" } },
   { name = "legend", keys = { "legend-title", "legend-text", "legend-ticks", "legend-background", "legend-bar" } },
+  { name = "legend-key", keys = { "legend-key" } },
   { name = "strip", keys = { "strip-text", "strip-background" } },
   { name = "geom", keys = { "geom" } },
   { name = "colours", keys = { "ink", "paper", "accent" } },
