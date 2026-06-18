@@ -14,9 +14,36 @@
   if type(size) == length { size / 1cm } else { float(size) }
 }
 
+// Geometric keywords draw-marker renders as vector shapes. Any other value
+// is treated as a literal glyph and placed as text content.
+#let shape-keywords = (
+  "circle",
+  "square",
+  "triangle",
+  "triangle-down",
+  "diamond",
+  "cross",
+  "x",
+  "star",
+)
+
 #let draw-marker(pos, kind, size, paint, stroke-spec) = {
   if kind == none { return }
   let (cx, cy) = pos
+  if kind not in shape-keywords {
+    let glyph-paint = if paint != none {
+      paint
+    } else if type(stroke-spec) == dictionary {
+      stroke-spec.at("paint", default: none)
+    } else { none }
+    let glyph-size = size-to-units(size) * 2 * 1cm
+    cetz.draw.content(
+      (cx, cy),
+      text(size: glyph-size, fill: glyph-paint)[#kind],
+      anchor: "center",
+    )
+    return
+  }
   if kind == "circle" {
     cetz.draw.circle((cx, cy), radius: size, fill: paint, stroke: stroke-spec)
     return
@@ -77,7 +104,5 @@
     cetz.draw.line((cx, cy - r), (cx, cy + r), stroke: s)
     cetz.draw.line((cx - r, cy - r), (cx + r, cy + r), stroke: s)
     cetz.draw.line((cx - r, cy + r), (cx + r, cy - r), stroke: s)
-  } else {
-    cetz.draw.circle((cx, cy), radius: r, fill: paint, stroke: stroke-spec)
   }
 }

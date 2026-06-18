@@ -53,8 +53,9 @@
 
 #let default-continuous = viridis
 
-// Shape palette: keywords resolved by geom-point's `_draw-shape`.
-// Covers the most common shape indices without overlap.
+// Shape palette: keywords resolved by draw-marker into vector shapes.
+// Covers the most common shape indices without overlap. Values outside this
+// keyword set render as literal glyphs instead.
 #let default-shapes = (
   "circle",
   "square",
