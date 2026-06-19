@@ -26,11 +26,7 @@
     colour: "Species",
     fill: "Species",
   ),
-  theme: theme-minimal(),
-  guides: guides(
-    colour: guide-legend(position: bottom + right),
-    fill: guide-legend(position: bottom + right),
-  ),
+  theme: theme-minimal(legend-position: bottom + right,),
   width: 12cm,
   height: 9cm,
 )
