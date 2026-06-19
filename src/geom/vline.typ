@@ -5,7 +5,7 @@
 ///! Under \@coord-flip the line is drawn as a horizontal reference at the
 ///! same data value because the x axis becomes the rendered vertical axis.
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/ref-line.typ": _draw-axis-lines
 
 /// Vertical reference line at one or more x intercepts.
@@ -102,6 +102,7 @@
   alpha: auto,
   linetype: auto,
   inherit-aes: false,
+  ..args,
 ) = make-layer(
   "vline",
   mapping: mapping,
@@ -112,7 +113,8 @@
     stroke: stroke,
     alpha: alpha,
     linetype: linetype,
-  ),
+  )
+    + split-aes-params("geom-vline", args),
   inherit-aes: inherit-aes,
 )
 

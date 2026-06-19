@@ -7,7 +7,7 @@
 ///! sideways ribbon and should be inspected per use.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "grouped-path.typ": sort-rows-by-x
@@ -118,11 +118,13 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "ribbon",
   mapping: mapping,
   data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha),
+  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
+    + split-aes-params("geom-ribbon", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

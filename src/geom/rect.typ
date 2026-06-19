@@ -1,7 +1,7 @@
 ///! Axis-aligned rectangles from `xmin`, `ymin`, `xmax`, `ymax`.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../scale/train.typ": map-axis, map-position
 #import "../utils/types.typ": parse-number
@@ -91,11 +91,13 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "rect",
   mapping: mapping,
   data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha),
+  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
+    + split-aes-params("geom-rect", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

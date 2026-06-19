@@ -2,7 +2,7 @@
 ///!
 ///! Thin wrapper around \@geom-line that computes its data via \@stat-qq-line.
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 
 /// Q-Q reference line layer fitted through the IQR of the sample.
 ///
@@ -77,6 +77,7 @@
   distribution: "normal",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "line",
   mapping: mapping,
@@ -87,7 +88,8 @@
     alpha: alpha,
     linetype: linetype,
     distribution: distribution,
-  ),
+  )
+    + split-aes-params("geom-qq-line", args),
   stat: "qq-line",
   position: position,
   inherit-aes: inherit-aes,

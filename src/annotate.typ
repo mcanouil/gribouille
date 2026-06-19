@@ -7,6 +7,7 @@
 ///! should not be driven by the plot-level data or mapping.
 
 #import "aes.typ": aes
+#import "aes-keys.typ": AES-KEYS
 #import "geom/text.typ": geom-text
 #import "utils/errors.typ": fail, fail-enum
 #import "geom/typst.typ": geom-typst
@@ -19,31 +20,28 @@
 #import "geom/abline.typ": geom-abline
 #import "utils/typst-markup.typ": is-typst-markup, typst
 
+// Aesthetic keys that annotate does NOT route to its single-row inline
+// dataset: reference-line scalars and ellipse/spoke shape parameters, which
+// it forwards to the geom constructor as layer params instead.
+#let _annotate-excluded = (
+  "z",
+  "linewidth",
+  "xintercept",
+  "yintercept",
+  "weight",
+  "stroke",
+  "x0",
+  "y0",
+  "a",
+  "b",
+  "angle",
+  "radius",
+)
+
 // Default kwarg names treated as aesthetic mappings (everything else is
 // forwarded to the geom constructor as a layer parameter, e.g., `stroke`,
-// `fontsize`).
-#let _default-aes-keys = (
-  "x",
-  "y",
-  "xend",
-  "yend",
-  "xmin",
-  "xmax",
-  "ymin",
-  "ymax",
-  "colour",
-  "fill",
-  "size",
-  "alpha",
-  "shape",
-  "linetype",
-  "label",
-  "group",
-  "slope",
-  "intercept",
-  "nudge-x",
-  "nudge-y",
-)
+// `fontsize`). Derived from the canonical key list so the two stay in step.
+#let _default-aes-keys = AES-KEYS.filter(k => k not in _annotate-excluded)
 
 // `text` and `label` geoms take `size` as a Typst length layer parameter
 // (the text size), not an aesthetic mapping; route it accordingly.

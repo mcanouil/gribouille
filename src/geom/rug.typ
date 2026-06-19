@@ -4,7 +4,7 @@
 ///! distribution of one or both positional aesthetics.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../scale/train.typ": map-position
 #import "../utils/types.typ": parse-number
@@ -89,6 +89,7 @@
   colour: auto,
   alpha: auto,
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "rug",
   mapping: mapping,
@@ -99,7 +100,8 @@
     stroke: stroke,
     colour: colour,
     alpha: alpha,
-  ),
+  )
+    + split-aes-params("geom-rug", args),
   inherit-aes: inherit-aes,
 )
 

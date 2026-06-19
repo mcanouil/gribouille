@@ -1,6 +1,6 @@
 ///! Horizontal line from `xmin` to `xmax` with vertical caps at each `y`.
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/errorbar-draw.typ": _draw-errorbar-axis
 
 /// Horizontal errorbar layer: range with a vertical cap at each end.
@@ -84,6 +84,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "errorbarh",
   mapping: mapping,
@@ -94,7 +95,8 @@
     colour: colour,
     alpha: alpha,
     linetype: linetype,
-  ),
+  )
+    + split-aes-params("geom-errorbarh", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

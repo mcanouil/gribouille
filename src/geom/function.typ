@@ -5,7 +5,7 @@
 ///! generates its own samples from `fun`.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/errors.typ": fail
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/radial.typ": project-point
@@ -88,6 +88,7 @@
   alpha: auto,
   linetype: "solid",
   inherit-aes: false,
+  ..args,
 ) = {
   if n < 2 {
     fail("geom-function", "n must be at least 2; got " + repr(n))
@@ -103,7 +104,8 @@
       colour: colour,
       alpha: alpha,
       linetype: linetype,
-    ),
+    )
+      + split-aes-params("geom-function", args),
     inherit-aes: inherit-aes,
   )
 }

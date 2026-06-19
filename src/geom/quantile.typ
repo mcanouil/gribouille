@@ -4,7 +4,7 @@
 ///! quantile τ. Use the `colour` aesthetic on the layer to differentiate
 ///! lines; otherwise all lines share the layer's `colour` parameter.
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../stat/quantile.typ": stat-quantile
 
 /// Quantile-regression layer: a fitted line per requested τ.
@@ -75,6 +75,7 @@
   linewidth: auto,
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "line",
   mapping: mapping,
@@ -86,7 +87,8 @@
     alpha: alpha,
     linetype: linetype,
     linewidth: linewidth,
-  ),
+  )
+    + split-aes-params("geom-quantile", args),
   stat: stat-quantile(quantiles: quantiles, n-samples: n-samples),
   position: position,
   inherit-aes: inherit-aes,

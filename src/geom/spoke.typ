@@ -5,7 +5,7 @@
 ///! and `yend = y + radius * sin(angle)`.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point
@@ -75,6 +75,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "spoke",
   mapping: mapping,
@@ -86,7 +87,8 @@
     colour: colour,
     alpha: alpha,
     linetype: linetype,
-  ),
+  )
+    + split-aes-params("geom-spoke", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

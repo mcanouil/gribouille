@@ -4,7 +4,7 @@
 ///! rather than sorted by x. Useful for trajectories, time-series with
 ///! out-of-order timestamps, and any path where order is meaningful.
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "grouped-path.typ": draw-grouped-paths, rows-to-points
 
 /// Path layer connecting observations in row order, one path per group.
@@ -82,11 +82,13 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "path",
   mapping: mapping,
   data: data,
-  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype),
+  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
+    + split-aes-params("geom-path", args),
   key: key,
   stat: stat,
   position: position,

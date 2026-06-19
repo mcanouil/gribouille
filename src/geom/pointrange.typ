@@ -1,7 +1,7 @@
 ///! Point at `(x, y)` plus a vertical range from `ymin` to `ymax`.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point, shift-point
@@ -91,6 +91,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "pointrange",
   mapping: mapping,
@@ -102,7 +103,8 @@
     fill: fill,
     alpha: alpha,
     linetype: linetype,
-  ),
+  )
+    + split-aes-params("geom-pointrange", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

@@ -4,7 +4,7 @@
 ///! stair-step: a horizontal then vertical move (`direction: "hv"`,
 ///! default) or vertical then horizontal (`direction: "vh"`).
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/errors.typ": fail-enum
 #import "grouped-path.typ": draw-grouped-paths, rows-to-points, sort-rows-by-x
 
@@ -79,6 +79,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = {
   if direction != "hv" and direction != "vh" {
     fail-enum("geom-step", "direction", direction, ("hv", "vh"))
@@ -93,7 +94,8 @@
       colour: colour,
       alpha: alpha,
       linetype: linetype,
-    ),
+    )
+      + split-aes-params("geom-step", args),
     stat: stat,
     position: position,
     inherit-aes: inherit-aes,

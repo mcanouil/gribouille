@@ -3,7 +3,7 @@
 ///! Mapping provides `x` and `y`; `width` and `height` may be mapped or fixed.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
@@ -100,6 +100,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "tile",
   mapping: mapping,
@@ -111,7 +112,8 @@
     fill: fill,
     stroke: stroke,
     alpha: alpha,
-  ),
+  )
+    + split-aes-params("geom-tile", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

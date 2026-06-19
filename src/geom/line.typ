@@ -4,7 +4,7 @@
 ///! Groups default to the combination of discrete aesthetics (colour, fill,
 ///! linetype) when `group` is not set explicitly.
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "grouped-path.typ": draw-grouped-paths, rows-to-points, sort-rows-by-x
 
 /// Line layer connecting observations in x order, one path per group.
@@ -93,11 +93,13 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "line",
   mapping: mapping,
   data: data,
-  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype),
+  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
+    + split-aes-params("geom-line", args),
   key: key,
   stat: stat,
   position: position,

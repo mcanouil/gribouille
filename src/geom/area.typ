@@ -6,7 +6,7 @@
 ///! line; check the rendered output if both axes are continuous.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "grouped-path.typ": sort-rows-by-x
@@ -94,11 +94,13 @@
   stat: "align",
   position: "stack",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "area",
   mapping: mapping,
   data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha),
+  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
+    + split-aes-params("geom-area", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

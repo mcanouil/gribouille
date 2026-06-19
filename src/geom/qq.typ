@@ -2,7 +2,7 @@
 ///!
 ///! Thin wrapper around \@geom-point that computes its data via \@stat-qq.
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 
 /// Q-Q point layer: sorted sample versus theoretical quantile.
 ///
@@ -81,6 +81,7 @@
   distribution: "normal",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "point",
   mapping: mapping,
@@ -93,7 +94,8 @@
     alpha: alpha,
     shape: shape,
     distribution: distribution,
-  ),
+  )
+    + split-aes-params("geom-qq", args),
   stat: "qq",
   position: position,
   inherit-aes: inherit-aes,

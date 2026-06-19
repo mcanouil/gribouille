@@ -1,7 +1,7 @@
 ///! Straight line segments from `(x, y)` to `(xend, yend)`.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/radial.typ": project-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -101,11 +101,13 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "segment",
   mapping: mapping,
   data: data,
-  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype),
+  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
+    + split-aes-params("geom-segment", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,
