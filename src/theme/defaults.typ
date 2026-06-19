@@ -4,7 +4,7 @@
 // `resolve-element` in `theme.typ`; user themes override individual records or
 // pass spot-overrides via the master `text` / `line` / `rect` keys.
 
-#import "../utils/colour.typ": col-mix
+#import "../utils/colour.typ": colour-mix
 #import "elements.typ": (
   element-blank, element-geom, element-line, element-rect, element-text,
 )
@@ -98,7 +98,7 @@
   panel-background: element-blank(),
   plot-background: element-rect(),
   panel-grid: element-line(
-    colour: col-mix(ink, paper, 0.7),
+    colour: colour-mix(ink, paper, 0.7),
     stroke: (0.4 / 0.5) * 100%,
   ),
   axis-line: element-blank(),

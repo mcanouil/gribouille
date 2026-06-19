@@ -580,7 +580,7 @@
 /// when the global override is unset, with each geom declaring which role
 /// drives its default (`ink` for line/text geoms, `accent` for \@geom-smooth,
 /// `paper` for \@geom-boxplot/\@geom-crossbar/\@geom-point/\@geom-label, a
-/// `col-mix(ink, paper, …)` tint for the bar/area/rect/tile family).
+/// `colour-mix(ink, paper, …)` tint for the bar/area/rect/tile family).
 ///
 /// \@category Themes
 /// \@subcategory Theme elements

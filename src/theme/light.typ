@@ -2,7 +2,7 @@
 ///!
 ///! Light grey panel with white grid lines and a subtle grey border.
 
-#import "../utils/colour.typ": col-mix
+#import "../utils/colour.typ": colour-mix
 #import "defaults.typ": _tr-ink, _tr-paper
 #import "elements.typ": element-line, element-rect, element-text
 #import "theme.typ": _preset
@@ -80,13 +80,13 @@
   paper,
   accent,
   (
-    panel-background: element-rect(fill: col-mix(ink, paper, 0.9216)),
+    panel-background: element-rect(fill: colour-mix(ink, paper, 0.9216)),
     panel-grid: element-line(
-      colour: col-mix(ink, paper, 0.7),
+      colour: colour-mix(ink, paper, 0.7),
       stroke: 100%,
     ),
-    axis-line: element-line(colour: col-mix(ink, paper, 0.8), stroke: 100%),
-    axis-text: element-text(colour: col-mix(ink, paper, 0.302)),
+    axis-line: element-line(colour: colour-mix(ink, paper, 0.8), stroke: 100%),
+    axis-text: element-text(colour: colour-mix(ink, paper, 0.302)),
   ),
   fields,
 )

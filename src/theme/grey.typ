@@ -1,9 +1,9 @@
 ///! Grey theme preset.
 ///!
 ///! Light grey panel background with white gridlines and no axis lines.
-///! Derives element colours from `ink` and `paper` via `col-mix`.
+///! Derives element colours from `ink` and `paper` via `colour-mix`.
 
-#import "../utils/colour.typ": col-mix
+#import "../utils/colour.typ": colour-mix
 #import "defaults.typ": _tr-ink, _tr-paper
 #import "elements.typ": element-blank, element-line, element-rect, element-text
 #import "theme.typ": _preset
@@ -81,11 +81,11 @@
   paper,
   accent,
   (
-    panel-background: element-rect(fill: col-mix(ink, paper, 0.92)),
+    panel-background: element-rect(fill: colour-mix(ink, paper, 0.92)),
     panel-grid: element-line(colour: paper, stroke: 100%),
     axis-line: element-blank(),
-    axis-text: element-text(colour: col-mix(ink, paper, 0.302)),
-    strip-background: element-rect(fill: col-mix(ink, paper, 0.85)),
+    axis-text: element-text(colour: colour-mix(ink, paper, 0.302)),
+    strip-background: element-rect(fill: colour-mix(ink, paper, 0.85)),
   ),
   fields,
 )

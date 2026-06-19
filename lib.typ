@@ -179,7 +179,7 @@
   scale-linetype, scale-linetype-binned, scale-linetype-continuous,
   scale-linetype-discrete, scale-linetype-identity, scale-linetype-manual,
 )
-#import "src/utils/colour.typ": col-mix
+#import "src/utils/colour.typ": colour-mix
 #import "src/limits.typ": expand-limits
 
 // Coord.

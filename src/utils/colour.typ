@@ -1,29 +1,29 @@
 /// Blend two colours.
 ///
-/// `amount` is the fraction of `col2` (0 = pure `col1`, 1 = pure `col2`).
-/// Mixing happens in sRGB so `col-mix(black, white, 0.92)` returns `grey92`.
+/// `amount` is the fraction of `colour2` (0 = pure `colour1`, 1 = pure `colour2`).
+/// Mixing happens in sRGB so `colour-mix(black, white, 0.92)` returns `grey92`.
 ///
 /// \@category Scales
 /// \@stability stable
 /// \@since 0.1.0
 ///
-/// \@param col1 Base colour.
+/// \@param colour1 Base colour.
 ///
-/// \@param col2 Colour to blend in.
+/// \@param colour2 Colour to blend in.
 ///
-/// \@param amount Fraction of `col2` in the result (0 to 1).
+/// \@param amount Fraction of `colour2` in the result (0 to 1).
 /// \@returns Blended colour.
 ///
 /// \@examples-static Inline blending: half-mix two brand colours.
 /// ```
-/// #let purple = col-mix(rgb("#1f77b4"), rgb("#d62728"), 0.5)
+/// #let purple = colour-mix(rgb("#1f77b4"), rgb("#d62728"), 0.5)
 /// ```
 ///
 /// \@examples Sweeping `amount` from 0 to 1 produces a custom two-stop ramp,
 /// rendered as a swatch via \@geom-rect.
 /// ```
-/// //| alt: "Swatch row of nine rectangles sweeping from blue to red, illustrating an sRGB two-stop ramp built with col-mix."
-/// #let stops = range(0, 9).map(i => col-mix(
+/// //| alt: "Swatch row of nine rectangles sweeping from blue to red, illustrating an sRGB two-stop ramp built with colour-mix."
+/// #let stops = range(0, 9).map(i => colour-mix(
 ///   rgb("#1f77b4"), rgb("#d62728"), i / 8,
 /// ))
 /// #let d = stops.enumerate().map(((i, _)) => (
@@ -40,9 +40,9 @@
 ///   height: 1cm,
 /// )
 /// ```
-#let col-mix(col1, col2, amount) = color.mix(
-  (col1, 1 - amount),
-  (col2, amount),
+#let colour-mix(colour1, colour2, amount) = color.mix(
+  (colour1, 1 - amount),
+  (colour2, amount),
   space: rgb,
 )
 
