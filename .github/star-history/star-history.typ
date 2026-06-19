@@ -65,7 +65,8 @@
   mapping: aes(x: "date", y: "stars"),
   layers: (
     geom-vline(
-      xintercept: releases.map(row => row.x),
+      data: releases,
+      mapping: aes(xintercept: "x"),
       colour: release-colour,
       stroke: 0.6pt,
       linetype: "dashed",
@@ -81,25 +82,34 @@
       anchor: "south",
     ),
     geom-step(stroke: 1.2pt, colour: rgb("#1f77b4")),
-    geom-point(size: 2pt, fill: rgb("#1f77b4"), shape: sym.star),
+    geom-point(
+      data: d => d.filter(row => row.stars != 0),
+      size: 12pt,
+      fill: rgb("#1f77b4"),
+      shape: sym.star
+    ),
   ),
   scales: (
     scale-x-date(
       breaks: month-firsts,
       date-format: "[month repr:short] [year]",
+      expand: (0%, 5%)
     ),
-    scale-y-continuous(breaks: y-breaks, expand: (0%, 5%)),
+    scale-y-continuous(breaks: y-breaks, expand: (0%, 2%)),
   ),
+  coord: coord-cartesian(clip: "off"),
   labels: labels(
     title: "Gribouille GitHub Stars",
     subtitle: "Cumulative stargazers over time",
-    x: "Date",
+    x: none,
     y: "Stars",
     caption: [Author: #link("https://mickael.canouil.fr")[mickael.canouil.fr] | Data source: GitHub API],
   ),
   theme: theme-minimal(
-    axis-ticks-y: element-blank(),
     tick-length: 0.15cm,
+    panel-grid-major-x: element-blank(),
+    panel-grid-minor-x: element-blank(),
+    panel-grid-minor-y: element-blank(),
   ),
   width: auto,
   height: auto,
