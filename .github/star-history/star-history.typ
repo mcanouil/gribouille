@@ -134,6 +134,7 @@
     // Faint luminous glow beneath the trail.
     geom-area(
       stat: "identity",
+      direction: "hv",
       fill: palette.trail,
       alpha: 0.1,
       stroke: none,
