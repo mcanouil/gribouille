@@ -114,8 +114,10 @@
 
 // Positional aesthetics drive panel layout and are retrained per panel under
 // `facet-wrap` free scales. The order here matters: `train()` folds the
-// synthetic feeders (xmin/xmax/ymin/ymax/xend/yend) into x and y after the
-// per-aesthetic loop, so x/y appear first.
+// synthetic feeders (xmin/xmax/ymin/ymax/xend/yend, xintercept/yintercept)
+// into x and y after the per-aesthetic loop, so x/y appear first. The
+// intercept feeders let a mapped `geom-vline`/`geom-hline` extend the panel to
+// keep its data-driven reference lines in view.
 #let positional-aesthetics = (
   "x",
   "y",
@@ -125,6 +127,8 @@
   "ymax",
   "xend",
   "yend",
+  "xintercept",
+  "yintercept",
 )
 
 // Synthetic feeder axes feed their min/max into the main x or y axis; they
@@ -151,6 +155,8 @@
   "ymax",
   "xend",
   "yend",
+  "xintercept",
+  "yintercept",
 )
 
 #let _continuous-domain-from-cache(cols, aesthetic) = {

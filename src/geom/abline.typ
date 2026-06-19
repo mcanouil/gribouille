@@ -9,23 +9,31 @@
 #import "../layer.typ": make-layer
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../scale/train.typ": map-axis-data, transform-inv
-#import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/radial.typ": radial-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 /// Straight reference line described by slope and intercept.
 ///
 /// The line runs across the full trained x domain. Requires continuous x
-/// and y scales; discrete scales are skipped silently.
+/// and y scales; discrete scales are skipped silently. To drive several lines
+/// from data, bind `slope` and/or `intercept` (and optionally `colour`,
+/// `alpha`, `linewidth`, `linetype`) through \@aes and pass `data`; one line is
+/// then drawn per row, with aesthetics resolved per row. Unlike \@geom-vline
+/// and \@geom-hline, mapped slope/intercept do not extend the trained scales,
+/// matching ggplot2's `geom_abline`.
 ///
 /// \@category Geoms
 /// \@subcategory Reference lines
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param slope Line slope.
+/// \@param mapping Aesthetic mapping built with \@aes. Bind `slope` and/or `intercept` to columns to draw a data-driven line per row.
 ///
-/// \@param intercept Line y intercept.
+/// \@param data Layer-specific dataset for the mapped `slope`/`intercept` columns, or `none`.
+///
+/// \@param slope Line slope, used when `slope` is not mapped.
+///
+/// \@param intercept Line y intercept, used when `intercept` is not mapped.
 ///
 /// \@param colour Line colour. `auto` inherits the theme `ink`.
 ///
@@ -72,17 +80,42 @@
 /// )
 /// ```
 ///
+/// \@examples Drive several lines from data: bind `slope`, `intercept` and
+/// `colour` through \@aes so each fit row draws its own coloured line.
+/// ```
+/// //| alt: "Scatter of x against noisy y overlaid with two reference lines from data: slope 0.5 intercept 1 and slope 1 intercept 0, coloured by fit."
+/// #let d = range(0, 10).map(i => (x: i, y: 0.7 * i + calc.sin(i)))
+/// #let fits = (
+///   (m: 0.5, b: 1, fit: "lo"),
+///   (m: 1, b: 0, fit: "hi"),
+/// )
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (
+///     geom-point(size: 2pt),
+///     geom-abline(mapping: aes(slope: "m", intercept: "b", colour: "fit"), data: fits),
+///   ),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@geom-hline, \@geom-vline, \@geom-smooth
 #let geom-abline(
+  mapping: none,
+  data: none,
   slope: 1,
   intercept: 0,
   colour: auto,
   stroke: auto,
   alpha: auto,
-  linetype: "solid",
+  linetype: auto,
   inherit-aes: false,
 ) = make-layer(
   "abline",
+  mapping: mapping,
+  data: data,
   params: (
     slope: slope,
     intercept: intercept,
@@ -121,27 +154,52 @@
     (transform-inv(n, t.domain.at(0)), transform-inv(n, t.domain.at(1)))
   } else { t.domain }
   let (x-lo, x-hi) = _data-domain(user-x-trained)
-  let slope = float(layer.params.slope)
-  let intercept = float(layer.params.intercept)
-  let colour = if layer.params.colour == auto {
-    resolve-geom-colour(resolve-geom-defaults(ctx.theme))
-  } else { layer.params.colour }
-  let mapping = (ctx.resolve-mapping)(layer)
-  let alpha = resolve-channel("alpha", layer, mapping, ctx, (:), 1)
-  let fill = apply-alpha(colour, alpha)
-  let thickness = resolve-channel(
-    "linewidth",
-    layer,
-    mapping,
-    ctx,
-    (:),
-    0.6pt,
+  let raw-mapping = (ctx.resolve-mapping)(layer)
+  let mapping = if raw-mapping == none { (:) } else { raw-mapping }
+  let slope-col = mapping.at("slope", default: none)
+  let intercept-col = mapping.at("intercept", default: none)
+  let theme-ink = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
+  let _stroke-for(row) = (
+    paint: resolve-channel("colour", layer, mapping, ctx, row, theme-ink),
+    thickness: resolve-channel("linewidth", layer, mapping, ctx, row, 0.6pt),
+    dash: resolve-channel("linetype", layer, mapping, ctx, row, "solid"),
   )
-  let stroke-spec = (
-    paint: fill,
-    thickness: thickness,
-    dash: layer.params.linetype,
-  )
+
+  // Each entry pairs a (slope, intercept) with its stroke spec. Mapped: one
+  // entry per data row, defaulting any unmapped term to its parameter, with
+  // per-row stroke. Unmapped: a single entry from the parameters.
+  let lines = if slope-col != none or intercept-col != none {
+    let data = (ctx.resolve-data)(layer)
+    data
+      .map(row => {
+        let slope = if slope-col == none { layer.params.slope } else {
+          row.at(slope-col, default: none)
+        }
+        let intercept = if intercept-col == none {
+          layer.params.intercept
+        } else {
+          row.at(intercept-col, default: none)
+        }
+        if slope == none or intercept == none { none } else {
+          (
+            slope: float(slope),
+            intercept: float(intercept),
+            stroke: _stroke-for(row),
+          )
+        }
+      })
+      .filter(entry => entry != none)
+  } else {
+    (
+      (
+        slope: float(layer.params.slope),
+        intercept: float(layer.params.intercept),
+        stroke: _stroke-for((:)),
+      ),
+    )
+  }
+  if lines.len() == 0 { return }
+
   // user_x maps to the horizontal axis when not flipped, and to the vertical
   // axis when flipped; `_pos` returns the cetz `(cx, cy)` for a user-space
   // point and routes each coordinate to the right pixel range.
@@ -157,38 +215,44 @@
     )
   }
   let radial = ctx.at("radial", default: none)
-  if radial != none {
-    let n = 128
-    let pts = range(0, n)
-      .map(i => {
+  let x-transform = user-x-trained.at("transform", default: "identity")
+  let y-transform = user-y-trained.at("transform", default: "identity")
+  let warped = x-transform != "identity" or y-transform != "identity"
+
+  for line in lines {
+    let slope = line.slope
+    let intercept = line.intercept
+    let stroke-spec = line.stroke
+    if radial != none {
+      let n = 128
+      let pts = range(0, n)
+        .map(i => {
+          let t = i / (n - 1)
+          let x = x-lo + t * (x-hi - x-lo)
+          let y = slope * x + intercept
+          radial-point(x, y, radial)
+        })
+        .filter(p => p != none)
+      if pts.len() >= 2 {
+        cetz.draw.line(..pts, stroke: stroke-spec)
+      }
+    } else if warped {
+      let n = 64
+      let pts = range(0, n).map(i => {
         let t = i / (n - 1)
         let x = x-lo + t * (x-hi - x-lo)
         let y = slope * x + intercept
-        radial-point(x, y, radial)
+        _pos(x, y)
       })
-      .filter(p => p != none)
-    if pts.len() < 2 { return }
-    cetz.draw.line(..pts, stroke: stroke-spec)
-    return
-  }
-  let x-transform = user-x-trained.at("transform", default: "identity")
-  let y-transform = user-y-trained.at("transform", default: "identity")
-  if x-transform != "identity" or y-transform != "identity" {
-    let n = 64
-    let pts = range(0, n).map(i => {
-      let t = i / (n - 1)
-      let x = x-lo + t * (x-hi - x-lo)
-      let y = slope * x + intercept
-      _pos(x, y)
-    })
-    cetz.draw.line(..pts, stroke: stroke-spec)
-  } else {
-    let y-at-lo = slope * x-lo + intercept
-    let y-at-hi = slope * x-hi + intercept
-    cetz.draw.line(
-      _pos(x-lo, y-at-lo),
-      _pos(x-hi, y-at-hi),
-      stroke: stroke-spec,
-    )
+      cetz.draw.line(..pts, stroke: stroke-spec)
+    } else {
+      let y-at-lo = slope * x-lo + intercept
+      let y-at-hi = slope * x-hi + intercept
+      cetz.draw.line(
+        _pos(x-lo, y-at-lo),
+        _pos(x-hi, y-at-hi),
+        stroke: stroke-spec,
+      )
+    }
   }
 }
