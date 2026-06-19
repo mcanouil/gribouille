@@ -76,7 +76,7 @@
 #let fan-arc = 1.7 // >1 keeps the edges flat at the head, steep toward the tip
 #let head-top = head-y + 2.5 // top edge meets the star's top point
 #let head-bot = head-y - 3.5 // lower edge meets the star's lower-left peak
-#let tip-y = head-y - 115 // y of the tail tip at the first date
+#let tip-y = 0 // y of the tail tip at the first date
 // An arc through (tail-x, tip-y) at the tip and (head-x, hy) at the head.
 #let arc-y(x, hy) = {
   let t = (x - tail-x) / (head-x - tail-x)
@@ -233,8 +233,8 @@
     // Narrative beats: the private build over the flat run, and the public day.
     annotate(
       "label",
-      x: to-days("2026-04-20"),
-      y: 12.5,
+      x: to-days("2026-04-23"),
+      y: 11.5,
       label: "Quietly built in private",
       colour: palette.ink,
       fill: palette.cloud.transparentize(20%),
