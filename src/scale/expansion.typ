@@ -8,8 +8,9 @@
 ///! Each side accepts a `ratio` (multiplicative breathing room, proportional
 ///! to the data span), a `length` (absolute canvas-cm padding), or a
 ///! `relative` value combining both. Pass a 2-tuple `(lo, hi)` to set the
-///! sides independently. `auto` resolves to a sensible per-scale default;
-///! `false` and `none` collapse to zero.
+///! sides independently, where either element may be `auto` to keep the
+///! per-scale default on that side. `auto` resolves to a sensible per-scale
+///! default; `false` and `none` collapse to zero.
 
 #import "../utils/errors.typ": fail
 
@@ -51,7 +52,12 @@
   } else {
     (value, value)
   }
-  let (mult-lo, add-lo) = _resolve-piece(lo)
-  let (mult-hi, add-hi) = _resolve-piece(hi)
+  let defaults = _default-for(scale-type)
+  let (mult-lo, add-lo) = if lo == auto {
+    (defaults.at(0), defaults.at(1))
+  } else { _resolve-piece(lo) }
+  let (mult-hi, add-hi) = if hi == auto {
+    (defaults.at(2), defaults.at(3))
+  } else { _resolve-piece(hi) }
   (mult-lo, add-lo, mult-hi, add-hi)
 }
