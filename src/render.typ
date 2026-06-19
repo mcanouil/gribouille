@@ -20,9 +20,9 @@
   _apply-labels, _is-flipped, _post-train,
 )
 #import "render/extents.typ": (
-  _AX-TITLE-LABEL-GAP, _ax-text-cm, _axis-label-extents, _sec-extent,
-  _secondary-label-extents, _text-margin-cm, _x-label-depth-stack,
-  _y-label-width-stack,
+  _AX-TITLE-LABEL-GAP, _axis-label-extents, _axis-title-extents, _sec-extent,
+  _secondary-label-extents, _text-margin-cm, _title-extent-cm,
+  _x-label-depth-stack, _y-label-width-stack,
 )
 #import "render/facet.typ": _measure-label-sizes, _render-prepare, _render-style
 #import "render/canvas.typ": (
@@ -348,6 +348,18 @@
   }
   let x-title = _axis-title(trained.at("x", default: none), _x-title-name)
   let y-title = _axis-title(trained.at("y", default: none), _y-title-name)
+  // Measure the title ink so its rotated bounding box reserves the right
+  // perpendicular extent at any angle, mirroring the tick-label measurement.
+  let x-title-extents = _axis-title-extents(
+    x-title,
+    ax-title.xb.size,
+    typst-eval: ax-title.xb.typst,
+  )
+  let y-title-extents = _axis-title-extents(
+    y-title,
+    ax-title.yl.size,
+    typst-eval: ax-title.yl.typst,
+  )
   // Only reserve the title-to-label gap when a title actually renders;
   // a `0pt` axis title (e.g., `theme-void`) needs no gap, and the absolute
   // `_AX-TITLE-LABEL-GAP` would otherwise tip `bottom-extent` over the floor
@@ -358,12 +370,12 @@
   let left-gap = if y-title != none and ax-title.yl.size > 0pt {
     _text-margin-cm(ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   } else { 0.0 }
-  let x-title-cm = if x-title != none { _ax-text-cm(ax-title.xb.size) } else {
-    0.0
-  }
-  let y-title-cm = if y-title != none { _ax-text-cm(ax-title.yl.size) } else {
-    0.0
-  }
+  let x-title-cm = if x-title != none {
+    _title-extent-cm(ax-title.xb, x-title-extents, "x")
+  } else { 0.0 }
+  let y-title-cm = if y-title != none {
+    _title-extent-cm(ax-title.yl, y-title-extents, "y")
+  } else { 0.0 }
   // A suppressed axis (`guides(x: none)`) draws no ticks or labels, so it
   // reserves no tick depth either; the axis line and title still render.
   let x-tick-cm = if x-guide.suppress { 0.0 } else { tick-len.xb }
@@ -533,6 +545,8 @@
       style: style,
       x-extents: x-extents,
       y-extents: y-extents,
+      x-title-extents: x-title-extents,
+      y-title-extents: y-title-extents,
       x-sec-extents: x-sec-extents,
       y-sec-extents: y-sec-extents,
       ax-text: ax-text,
@@ -559,6 +573,8 @@
       style: style,
       x-extents: x-extents,
       y-extents: y-extents,
+      x-title-extents: x-title-extents,
+      y-title-extents: y-title-extents,
       x-sec-extents: x-sec-extents,
       y-sec-extents: y-sec-extents,
     ))
@@ -578,6 +594,8 @@
       height-units,
       x-extents,
       y-extents,
+      x-title-extents,
+      y-title-extents,
       x-sec-extents,
       y-sec-extents,
     )
