@@ -1,21 +1,21 @@
 ///! Cartesian coordinate system.
 ///!
 ///! The default coordinate system used when no `coord` is passed to \@plot.
-///! `xlim` and `ylim` clip the rendered panel without dropping rows, unlike
+///! `x-limits` and `y-limits` clip the rendered panel without dropping rows, unlike
 ///! scale limits which remove rows outside the domain.
 
 /// Cartesian coordinate system with optional panel clipping.
 ///
-/// Clipping via `xlim`/`ylim` preserves the trained scales; rows outside
+/// Clipping via `x-limits`/`y-limits` preserves the trained scales; rows outside
 /// are still used for training but drawn off-panel.
 ///
 /// \@category Coord
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param xlim Pair `(lo, hi)` clipping the drawn x range, or `none`.
+/// \@param x-limits Pair `(lo, hi)` clipping the drawn x range, or `none`.
 ///
-/// \@param ylim Pair `(lo, hi)` clipping the drawn y range, or `none`.
+/// \@param y-limits Pair `(lo, hi)` clipping the drawn y range, or `none`.
 ///
 /// \@param expand Whether to add a small margin around the data range.
 ///
@@ -31,7 +31,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   coord: coord-cartesian(xlim: (2, 15), ylim: (0, 8)),
+///   coord: coord-cartesian(x-limits: (2, 15), y-limits: (0, 8)),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -71,11 +71,11 @@
 /// ```
 ///
 /// \@see \@plot, \@scale-x-continuous
-#let coord-cartesian(xlim: none, ylim: none, expand: true, clip: "on") = (
+#let coord-cartesian(x-limits: none, y-limits: none, expand: true, clip: "on") = (
   kind: "coord",
   coord: "cartesian",
-  xlim: xlim,
-  ylim: ylim,
+  x-limits: x-limits,
+  y-limits: y-limits,
   expand: expand,
   clip: clip,
 )

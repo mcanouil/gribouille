@@ -654,7 +654,7 @@
 }
 
 // `value` is in original data space (axis ticks, secondary-axis ticks,
-// vline/hline/abline reference geoms, cartesian xlim/ylim).
+// vline/hline/abline reference geoms, cartesian x-limits/y-limits).
 #let map-axis-data(trained, value, range) = {
   if trained.type != "continuous" { return none }
   let pre = trained.at("pre-transformed", default: false)

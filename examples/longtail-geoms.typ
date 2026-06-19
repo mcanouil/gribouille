@@ -31,7 +31,7 @@
     geom-blank(),
     geom-function(
       fun: x => calc.sin(x),
-      xlim: (-calc.pi, calc.pi),
+      x-limits: (-calc.pi, calc.pi),
       colour: rgb("#d62728"),
       stroke: 1.2pt,
     ),

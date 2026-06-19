@@ -1,4 +1,4 @@
-// coord-cartesian: zoom in via xlim/ylim without dropping rows.
+// coord-cartesian: zoom in via x-limits/y-limits without dropping rows.
 
 #import "../lib.typ": *
 
@@ -14,10 +14,10 @@
     geom-line(stroke: 1pt, colour: accent),
     geom-point(size: 2pt, fill: accent),
   ),
-  coord: coord-cartesian(xlim: (5, 15), ylim: (0, 250)),
+  coord: coord-cartesian(x-limits: (5, 15), y-limits: (0, 250)),
   labels: labels(
     title: "Coord-Cartesian Zoom",
-    subtitle: "xlim and ylim clip the view; rows outside the window stay in the data",
+    subtitle: "x-limits and y-limits clip the view; rows outside the window stay in the data",
     x: "X",
     y: "Y",
   ),

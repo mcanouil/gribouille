@@ -35,7 +35,7 @@
 #assert.eq(fn.stat, "identity")
 #assert.eq(fn.position, "identity")
 #assert.eq(fn.params.n, 101)
-#assert.eq(fn.params.xlim, none)
+#assert.eq(fn.params.x-limits, none)
 #assert.eq(fn.params.linetype, "solid")
 #assert.eq(fn.inherit-aes, false)
 #assert.eq(fn.data, ())
@@ -43,9 +43,9 @@
 #let fn2 = geom-function(
   fun: x => calc.sin(x),
   n: 50,
-  xlim: (-1, 1),
+  x-limits: (-1, 1),
 )
 #assert.eq(fn2.params.n, 50)
-#assert.eq(fn2.params.xlim, (-1, 1))
+#assert.eq(fn2.params.x-limits, (-1, 1))
 
 Long-tail geom smoke tests passed.

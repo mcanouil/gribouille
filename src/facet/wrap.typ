@@ -26,7 +26,7 @@
 ///   subset), `"free_x"` (only x is per-panel), or `"free_y"` (only y is
 ///   per-panel). Non-positional scales (colour, fill, size, shape,
 ///   linetype) are always shared so legends stay consistent. An explicit
-///   `coord-cartesian(xlim:, ylim:)` overrides the per-panel domain on
+///   `coord-cartesian(x-limits:, y-limits:)` overrides the per-panel domain on
 ///   the corresponding axis, pinning every panel to the same range.
 ///
 /// \@param labeller Labeller controlling strip text. Defaults to
