@@ -18,7 +18,7 @@
   star: rgb("#ffe7a3"), // daily-count points: bright warm star
   peak: rgb("#ff8c42"), // the spike: hotter amber, separates from the gold
   ink: rgb("#e8ecf5"), // foreground text: soft starlight white
-  muted: rgb("#9aa6c4"), // secondary text and ticks
+  muted: rgb("#b3bdd6"), // secondary text and ticks
   cloud: rgb("#28406f"), // annotation boxes: moonlit cloud, lighter than the sky
   cloud-edge: rgb("#6b7cb0"), // faint rim catching the moonlight
 )
@@ -155,7 +155,7 @@
       colour: palette.muted,
       fill: palette.cloud.transparentize(35%),
       stroke: 0.25pt,
-      size: 7pt,
+      size: 8pt,
       inset: 3pt,
       radius: 5pt,
       anchor: "west",
@@ -265,8 +265,10 @@
     ),
     scale-y-continuous(
       breaks: y-breaks,
-      labels: y => [#box(baseline: -0.4em)[#str(int(y))]#text(size: 2em)[#sym.star]],
-      expand: (0%, 6%)
+      labels: y => [#box(baseline: -0.4em)[#str(int(y))]#text(
+          size: 2em,
+        )[#sym.star]],
+      expand: (0%, 6%),
     ),
   ),
   labels: labels(
@@ -336,4 +338,13 @@
   ),
   width: auto,
   height: auto,
+  alt: "Midnight-sky line chart of Gribouille's cumulative GitHub stars per day from April to June 2026, titled \"Gribouille's First "
+    + str(int(peak.stars))
+    + " GitHub Stars\". A luminous gold step trail rises from zero across a long flat run labelled \"Quietly built in private\", lifts at a gold dashed marker labelled \"Made public 17th of May\", then climbs through dashed release markers (v0.1.0 onward) to a final amber spike of "
+    + str(int(peak.stars))
+    + " stars, annotated \"+"
+    + str(peak-jump)
+    + " in a day\". The y axis counts stars in steps of "
+    + str(y-step)
+    + "; the x axis spans months.",
 )
