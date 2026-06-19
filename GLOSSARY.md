@@ -12,6 +12,7 @@ Run the survey command at the bottom before extending the table.
 | `aes`     | aesthetic mapping                      | `aes()` constructor; `(channel: column-name-or-marker, ...)`.                                                                           |
 | `stat`    | statistical transform                  | `stat_*` namespace; dispatched via `src/stat/apply.typ`.                                                                                |
 | `pos`     | position adjustment                    | `position_*` namespace (stack, dodge, fill, jitter, …).                                                                                 |
+| `coord`   | coordinate system                      | `coord-*` namespace; `(coord: "cartesian"\|"fixed"\|"radial"\|"transform", ...)`.                                                       |
 | `spec`    | plot specification dict                | the user-built dict consumed by `render-plot`.                                                                                          |
 | `ctx`     | per-draw context                       | dict passed to every geom's `draw(layer, ctx)`.                                                                                         |
 | `mapping` | column-name dict                       | flattened `aes` (`(x: "col", y: "col", colour: "col", ...)`).                                                                           |
