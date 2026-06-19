@@ -247,10 +247,6 @@
       expand: (0%, auto),
     ),
     scale-y-continuous(breaks: y-breaks, expand: (0%, 10%)),
-    // Annotations carry literal colours through the colour/fill aesthetics, so
-    // keep those scales identity rather than remapping to a palette.
-    scale-colour-identity(),
-    scale-fill-identity(),
   ),
   coord: coord-cartesian(clip: "off"),
   labels: labels(
