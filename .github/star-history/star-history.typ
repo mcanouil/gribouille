@@ -9,30 +9,18 @@
 
 #set page(width: 18cm, height: 18cm, margin: 0cm)
 
-// Body and axes in Libertinus Serif (the static scientific-publishing serif; the
-// installed STIX Two Text is variable-only and warns); the title overrides to
-// Didot in the theme. The mono fallback covers the star glyph, which renders in
-// the ambient document font the theme cannot reach.
-#set text(font: ("Libertinus Serif", "DejaVu Sans Mono"))
-
-// Named palette: one source of truth for the night-sky look.
+// Named palette: colours reused across several layers. One-off shades (the panel
+// gradient, point rim, release tint, transparent bloom ink) stay inline at use.
 #let palette = (
-  sky: rgb("#0d1b3e"), // panel: deep indigo night
   sky-deep: rgb("#0a132e"), // plot margin: a shade darker, to gather the figure
   trail: rgb("#f4d58d"), // cumulative curve: luminous starlight gold
   star: rgb("#ffe7a3"), // daily-count points: bright warm star
-  star-edge: rgb("#fff3cf"), // point outline: lighter rim for a glow
   peak: rgb("#ff8c42"), // the spike: hotter amber, separates from the gold
-  release: rgb("#6677aa"), // releases: cool muted blue-grey, recedes
   ink: rgb("#e8ecf5"), // foreground text: soft starlight white
   muted: rgb("#9aa6c4"), // secondary text and ticks
   cloud: rgb("#28406f"), // annotation boxes: moonlit cloud, lighter than the sky
   cloud-edge: rgb("#6b7cb0"), // faint rim catching the moonlight
 )
-
-// Invisible ink: lets a backing label size and fill a soft cloud bloom behind a
-// crisp label without printing the text twice.
-#let no-ink = rgb("#00000000")
 
 #let raw-stars = csv("star-history.csv", row-type: dictionary).map(row => (
   date: row.date,
@@ -101,7 +89,7 @@
     geom-vline(
       data: releases,
       mapping: aes(xintercept: "x"),
-      colour: palette.release,
+      colour: rgb("#6677aa"),
       stroke: 0.4pt,
       linetype: "dashed",
       alpha: 0.45,
@@ -158,7 +146,7 @@
       size: 7pt,
       fill: palette.peak,
       stroke: 0.5pt,
-      colour: palette.star-edge,
+      colour: rgb("#fff3cf"),
     ),
     // Direct labels where the eye already rests, top-right. Each rides in a
     // moonlit cloud: a soft transparent-text bloom behind a crisp pill.
@@ -168,7 +156,7 @@
       x: to-days(peak.date) - 2,
       y: peak.stars,
       label: str(int(peak.stars)) + " ★",
-      colour: no-ink,
+      colour: rgb("#00000000"),
       fill: palette.cloud.transparentize(55%),
       stroke: none,
       size: 13pt,
@@ -182,7 +170,7 @@
       x: to-days(peak.date) - 2,
       y: peak.stars,
       label: str(int(peak.stars)) + " ★",
-      colour: palette.star-edge,
+      colour: rgb("#fff3cf"),
       fill: palette.cloud.transparentize(15%),
       stroke: 0.6pt + palette.cloud-edge.transparentize(30%),
       size: 13pt,
@@ -196,7 +184,7 @@
       x: to-days(peak.date) - 2,
       y: peak.stars - 16,
       label: "+" + str(peak-jump) + " in a day",
-      colour: no-ink,
+      colour: rgb("#00000000"),
       fill: palette.cloud.transparentize(55%),
       stroke: none,
       size: 10pt,
@@ -276,8 +264,13 @@
   theme: theme-minimal(
     ink: palette.ink,
     paper: palette.sky-deep,
+    text: element-text(font: ("Libertinus Serif", "DejaVu Sans Mono")),
     tick-length: 0.12cm,
-    panel-background: element-rect(fill: palette.sky),
+    panel-background: element-rect(fill: gradient.linear(
+      rgb("#0a1330"),
+      rgb("#1c2f5e"),
+      dir: ttb,
+    )),
     panel-grid-major-x: element-blank(),
     panel-grid-minor: element-blank(),
     panel-grid-major-y: element-line(colour: palette.ink.transparentize(88%)),
