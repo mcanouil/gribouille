@@ -36,19 +36,17 @@
     - epoch
 ).days()
 
-#let releases = csv("release-history.csv", row-type: dictionary)
-#let release-days = releases.map(row => to-days(row.date))
 #let star-max = stars.map(row => row.stars).fold(0, calc.max)
 #let release-colour = rgb("#d62728")
 
-// Release tags as a dataset for geom-text: x in epoch days, label staggered
-// between two heights so adjacent releases do not overprint.
-#let release-labels = (
-  releases
-    .enumerate()
-    .map(((i, row)) => (
+// One releases dataset (minor/major only, patch dropped): x in epoch days, y at
+// the label height, tag text. Drives both the dashed lines and the labels.
+#let releases = (
+  csv("release-history.csv", row-type: dictionary)
+    .filter(row => row.tag.split(".").last() == "0")
+    .map(row => (
       x: to-days(row.date),
-      y: star-max, // * (0.78 + 0.16 * calc.rem(i, 2)),
+      y: star-max,
       tag: row.tag,
     ))
 )
@@ -67,16 +65,14 @@
   mapping: aes(x: "date", y: "stars"),
   layers: (
     geom-vline(
-      xintercept: release-days,
+      xintercept: releases.map(row => row.x),
       colour: release-colour,
       stroke: 0.6pt,
       linetype: "dashed",
       alpha: 0.6,
     ),
-    geom-step(stroke: 1.2pt, colour: rgb("#1f77b4")),
-    geom-point(size: 2pt, fill: rgb("#1f77b4"), shape: sym.star),
     geom-label(
-      data: release-labels, //.filter(row => row.tag ),
+      data: releases,
       mapping: aes(x: "x", y: "y", label: "tag"),
       inherit-aes: false,
       colour: release-colour,
@@ -84,6 +80,8 @@
       size: 8pt,
       anchor: "south",
     ),
+    geom-step(stroke: 1.2pt, colour: rgb("#1f77b4")),
+    geom-point(size: 2pt, fill: rgb("#1f77b4"), shape: sym.star),
   ),
   scales: (
     scale-x-date(
