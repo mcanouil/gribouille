@@ -22,7 +22,7 @@
       y: 6.4,
       label: "peak",
       anchor: "south",
-      dy: 0.3,
+      nudge-y: 0.3cm,
       size: 10pt,
       colour: alert,
     ),

@@ -31,9 +31,8 @@
     geom-line(stroke: 0.6pt, colour: rgb("#888")),
     geom-point(size: 4pt, colour: rgb("#cc3333")),
     geom-text(
-      mapping: aes(label: "label"),
+      mapping: aes(label: "label", nudge-y: 0.4cm),
       stat: stat-manual(fun: with-index),
-      dy: 0.4,
       size: 9pt,
     ),
   ),

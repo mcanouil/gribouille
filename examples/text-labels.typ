@@ -21,7 +21,7 @@
     mapping: aes(x: "x", y: "y", label: "name"),
     layers: (
       geom-point(size: 4pt, fill: accent),
-      geom-text(size: 9pt, dy: 0.3, anchor: "south"),
+      geom-text(mapping: aes(nudge-y: 0.3cm), size: 9pt, anchor: "south"),
     ),
     scales: (scale-y-continuous(expand: (5%, 15%)),),
     labels: labels(title: "Geom-Text (plain)", x: "X", y: "Y"),
@@ -34,7 +34,7 @@
     mapping: aes(x: "x", y: "y", label: "name"),
     layers: (
       geom-point(size: 4pt, fill: accent),
-      geom-label(size: 9pt, dy: 0.35, anchor: "south"),
+      geom-label(mapping: aes(nudge-y: 0.35cm), size: 9pt, anchor: "south"),
     ),
     scales: (scale-y-continuous(expand: (5%, 15%)),),
     labels: labels(title: "Geom-Label (boxed)", x: "X", y: "Y"),

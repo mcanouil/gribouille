@@ -24,7 +24,7 @@
       y: 6.5,
       label: "*peak* at $x = 5$",
       anchor: "south",
-      dy: 0.3,
+      nudge-y: 0.3cm,
       size: 10pt,
     ),
     annotate(
