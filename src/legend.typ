@@ -1227,6 +1227,7 @@
     (tx, cursor),
     text(.._text-args(s))[#resolve-prose(guide.title, eval-strings: s.typst)],
     anchor: t-anchor,
+    angle: if s.angle != none { s.angle } else { 0deg },
   )
 }
 
@@ -1235,6 +1236,9 @@
   let glyph-font = resolve-geom-defaults(theme).font
   let _legend-text = _text-style(theme, "legend-text")
   let legend-text-args = _text-args(_legend-text)
+  let label-angle = if _legend-text.angle != none { _legend-text.angle } else {
+    0deg
+  }
   let text-size = _legend-text.size
   let size-pt = text-size / 1pt
   let line-h = _swatch-stride-cm(guide.key-diam-cm, size-pt)
@@ -1299,6 +1303,7 @@
       (lx, cm),
       text(..legend-text-args)[#label-text],
       anchor: l-anchor,
+      angle: label-angle,
     )
   }
 }
@@ -1308,6 +1313,9 @@
   let glyph-font = resolve-geom-defaults(theme).font
   let _legend-text = _text-style(theme, "legend-text")
   let legend-text-args = _text-args(_legend-text)
+  let label-angle = if _legend-text.angle != none { _legend-text.angle } else {
+    0deg
+  }
   let text-size = _legend-text.size
   let size-pt = text-size / 1pt
   let glyph-size = _LADDER-GLYPH-CM
@@ -1373,6 +1381,7 @@
         (lx, label-y),
         text(..legend-text-args)[#break-text-of(value, i)],
         anchor: l-anchor,
+        angle: label-angle,
       )
     }
   } else {
@@ -1403,6 +1412,7 @@
         (lx, cm),
         text(..legend-text-args)[#break-text-of(value, i)],
         anchor: l-anchor,
+        angle: label-angle,
       )
     }
   }
@@ -1440,6 +1450,9 @@
   let ink = resolve-colour(theme, "ink")
   let _legend-text = _text-style(theme, "legend-text")
   let legend-text-args = _text-args(_legend-text)
+  let label-angle = if _legend-text.angle != none { _legend-text.angle } else {
+    0deg
+  }
   let text-size = _legend-text.size
   let size-pt = text-size / 1pt
   let (lo, hi) = guide.domain
@@ -1593,6 +1606,7 @@
       label-pos,
       text(..legend-text-args)[#tick-text],
       anchor: label-anchor,
+      angle: label-angle,
     )
   }
 }
