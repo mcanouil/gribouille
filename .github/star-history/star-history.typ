@@ -272,7 +272,7 @@
   labels: labels(
     title: [
       #set par(justify: true)
-      #text(fill: palette.trail, weight: "bold")[Gribouille]'s first #text(fill: palette.peak, weight: "bold")[#str(int(peak.stars))] GitHub stars#linebreak(justify: true)
+      #text(fill: palette.trail, weight: "bold")[Gribouille]'s First #text(fill: palette.peak, weight: "bold")[#str(int(peak.stars))] GitHub Stars#linebreak(justify: true)
     ],
     subtitle: [
       #set par(justify: true)
@@ -314,7 +314,7 @@
     plot-title: element-text(
       font: "Didot",
       colour: palette.ink,
-      size: 26pt,
+      size: 25.5pt,
       weight: "regular",
       margin: margin(top: 6pt, bottom: 20pt),
     ),
