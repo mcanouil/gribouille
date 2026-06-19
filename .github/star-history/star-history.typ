@@ -253,7 +253,7 @@
   labels: labels(
     title: [
       #set par(justify: true)
-      #text(fill: palette.trail)[Gribouille]'s first #text(fill: palette.peak)[#str(int(peak.stars))] GitHub stars#linebreak(justify: true)
+      #text(fill: palette.trail, weight: "bold")[Gribouille]'s first #text(fill: palette.peak, weight: "bold")[#str(int(peak.stars))] GitHub stars#linebreak(justify: true)
     ],
     subtitle: [
       #set par(justify: true)
