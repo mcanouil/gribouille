@@ -5,6 +5,8 @@
 ### Breaking changes
 
 - feat!: `labs()` is renamed to `labels()`, and the `plot()` / `compose()` `labs:` argument to `labels:`; there is no `labs` alias. (#131)
+- feat!: `coord-cartesian()`, `stat-function()`, and `geom-function()` rename the `xlim`/`ylim` arguments to `x-limits`/`y-limits`. (#131)
+- feat!: the `col-mix()` colour helper is renamed to `colour-mix()`, with arguments `colour1`/`colour2`. (#131)
 
 - feat: `geom-vline`, `geom-hline`, and `geom-abline` read their intercept channels from `aes()`; binding `xintercept`/`yintercept`/`slope`/`intercept` together with `data` draws one line per row with per-row `colour`/`alpha`/`linewidth`/`linetype`, and a mapped `xintercept`/`yintercept` extends the panel to keep the lines in view; the scalar/array parameter still draws shared lines when nothing is mapped. (#129)
 - feat: a font set in `theme(text: ...)` now reaches literal-glyph point markers (e.g., `shape: sym.star`) for both plot markers and legend keys, instead of falling back to the document font. (#126)
