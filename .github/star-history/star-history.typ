@@ -23,6 +23,55 @@
   cloud-edge: rgb("#6b7cb0"), // faint rim catching the moonlight
 )
 
+// A literal cloud for the two peak labels: an inline SVG stretched behind the
+// text, with a blurred halo baked in beneath the crisp body so the glow rides
+// along without a second annotation.
+#let cloud-path = "M28,65 C15,65 5,56 5,45 C5,35 12,27 22,26 C22,14 31,5 43,5 C52,5 59,10 63,18 C66,15 71,13 76,13 C86,13 94,21 94,31 C97,33 97,40 97,47 C97,57 89,65 79,65 Z"
+
+#let cloud-svg(glow, fill, stroke) = bytes(
+  "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-16 -16 134 102\" "
+    + "preserveAspectRatio=\"none\">"
+    + "<defs><filter id=\"g\" x=\"-30%\" y=\"-30%\" width=\"160%\" height=\"160%\">"
+    + "<feGaussianBlur stdDeviation=\"4\"/></filter></defs>"
+    + "<path d=\""
+    + cloud-path
+    + "\" fill=\""
+    + glow.to-hex()
+    + "\" filter=\"url(#g)\"/>"
+    + "<path d=\""
+    + cloud-path
+    + "\" fill=\""
+    + fill.to-hex()
+    + "\" stroke=\""
+    + stroke.to-hex()
+    + "\" stroke-width=\"1\"/></svg>",
+)
+
+#let cloud-label(
+  body,
+  glow: palette.cloud.darken(45%).transparentize(45%),
+  fill: palette.cloud.darken(45%).transparentize(8%),
+  stroke: palette.cloud-edge.transparentize(30%),
+  pad: (x: 22pt, y: 17pt),
+) = (
+  context {
+    let m = measure(body)
+    let w = m.width + 2 * pad.x
+    // Cap the width-to-height ratio: wide labels stretch the cloud flat under
+    // preserveAspectRatio="none", so grow the box height to keep its curves.
+    let h = calc.max(m.height + 2 * pad.y, w / 2.1)
+    box(width: w, height: h)[
+      #place(top + left, image(
+        cloud-svg(glow, fill, stroke),
+        format: "svg",
+        width: 100%,
+        height: 100%,
+      ))
+      #place(center + horizon, dy: 2pt, body)
+    ]
+  }
+)
+
 #let raw-stars = csv("star-history.csv", row-type: dictionary).map(row => (
   date: row.date,
   stars: float(row.stars),
@@ -155,63 +204,22 @@
       fill: palette.peak,
     ),
     // Direct labels where the eye already rests, top-right. Each rides in a
-    // moonlit cloud: a soft transparent-text bloom behind a crisp pill.
+    // moonlit cloud: a stretched SVG with its glow halo baked in.
     annotate(
-      "label",
+      "typst",
       clip: false,
       x: to-days(peak.date) - 3,
       y: peak.stars,
-      label: str(int(peak.stars)) + " ★",
-      colour: rgb("#00000000"),
-      fill: palette.cloud.transparentize(55%),
-      stroke: none,
-      size: 13pt,
-      inset: 9pt,
-      radius: 12pt,
-      anchor: "east",
-    ),
-    annotate(
-      "label",
-      clip: false,
-      x: to-days(peak.date) - 3,
-      y: peak.stars,
-      label: str(int(peak.stars)) + " ★",
+      label: cloud-label([
+        #str(int(peak.stars)) ★ \
+        #v(-10pt)
+        #text(size: 0.8em, fill: palette.peak)[#str(peak-jump) in a day]
+      ]),
       colour: rgb("#fff3cf"),
-      fill: palette.cloud.transparentize(15%),
-      stroke: 0.6pt + palette.cloud-edge.transparentize(30%),
       size: 13pt,
-      inset: 5pt,
-      radius: 10pt,
       anchor: "east",
     ),
-    annotate(
-      "label",
-      clip: false,
-      x: to-days(peak.date) - 3,
-      y: peak.stars - 16,
-      label: "+" + str(peak-jump) + " in a day",
-      colour: rgb("#00000000"),
-      fill: palette.cloud.transparentize(55%),
-      stroke: none,
-      size: 10pt,
-      inset: 9pt,
-      radius: 12pt,
-      anchor: "east",
-    ),
-    annotate(
-      "label",
-      clip: false,
-      x: to-days(peak.date) - 3,
-      y: peak.stars - 16,
-      label: "+" + str(peak-jump) + " in a day",
-      colour: palette.peak,
-      fill: palette.cloud.transparentize(15%),
-      stroke: 0.6pt + palette.cloud-edge.transparentize(30%),
-      size: 10pt,
-      inset: 5pt,
-      radius: 10pt,
-      anchor: "east",
-    ),
+
     // Narrative beats: the private build over the flat run, and the public day.
     annotate(
       "label",
@@ -288,7 +296,7 @@
     axis-ticks: element-line(colour: palette.muted),
     axis-text: element-text(colour: palette.muted, size: 10pt),
     axis-title: element-text(colour: palette.ink, size: 12pt),
-    axis-title-y: element-text(margin: margin(right: 14pt)),
+    axis-title-y: element-text(margin: margin(right: 14pt), angle: -90deg),
     plot-title: element-text(
       font: "Didot",
       colour: palette.ink,
