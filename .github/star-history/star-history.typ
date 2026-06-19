@@ -7,7 +7,8 @@
 
 #import "../../lib.typ": *
 
-#set page(width: 18cm, height: 18cm, margin: 0cm)
+#set page(width: 16cm, height: 18cm, margin: 0cm)
+// #set page("a4", margin: 2.5cm)
 
 // Named palette: colours reused across several layers. One-off shades (the panel
 // gradient, point rim, release tint, transparent bloom ink) stay inline at use.
@@ -250,7 +251,10 @@
   ),
   coord: coord-cartesian(clip: "off"),
   labels: labels(
-    title: [#text(fill: palette.trail)[Gribouille]'s first #text(fill: palette.peak)[#str(int(peak.stars))] GitHub stars],
+    title: [
+      #set par(justify: true)
+      #text(fill: palette.trail)[Gribouille]'s first #text(fill: palette.peak)[#str(int(peak.stars))] GitHub stars#linebreak(justify: true)
+    ],
     subtitle: [
       #set par(justify: true)
       Gribouille brings the #text(fill: palette.ink)[grammar of graphics], the idea behind `ggplot2` and `plotnine`, to Typst: layered geoms, scales, and themes for publication-quality charts written in pure markup. Built quietly in private through April, it went #text(fill: palette.star)[public on 17#super[th] May 2026] and shipped #box(
@@ -288,13 +292,13 @@
     plot-title: element-text(
       font: "Didot",
       colour: palette.ink,
-      size: 30pt,
+      size: 26pt,
       weight: "regular",
-      margin: margin(top: 6pt, bottom: 14pt),
+      margin: margin(top: 6pt, bottom: 20pt),
     ),
     plot-subtitle: element-text(
       colour: palette.muted,
-      size: 14pt,
+      size: 16pt,
       margin: margin(bottom: 24pt),
     ),
     plot-caption: element-text(
