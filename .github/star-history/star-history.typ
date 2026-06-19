@@ -110,7 +110,7 @@
       data: releases,
       mapping: aes(x: "x", y: "y", label: "tag"),
       inherit-aes: false,
-      colour: palette.release,
+      colour: palette.muted,
       fill: palette.cloud.transparentize(35%),
       stroke: 0.25pt,
       size: 7pt,
