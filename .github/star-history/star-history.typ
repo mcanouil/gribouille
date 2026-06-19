@@ -279,7 +279,7 @@
     ],
     subtitle: [
       #set par(justify: true)
-      Gribouille brings the #text(fill: palette.ink)[grammar of graphics], the idea behind `ggplot2` and `plotnine`, to Typst: layered geoms, scales, and themes for publication-quality charts written in pure markup. Built quietly in private through April, it went #text(fill: palette.star)[public on 17#super[th] May 2026] and shipped #box(
+      Gribouille brings the #text(fill: palette.ink)[grammar of graphics], the idea behind `ggplot2` and `plotnine`, to Typst: layered geoms, scales, and themes for publication-quality charts written in pure markup. Built quietly in private through April, it went #text(fill: palette.star)[public on the 17#super[th] of May 2026] and shipped #box(
         fill: palette.cloud.transparentize(35%),
         stroke: 0.25pt + palette.cloud-edge.transparentize(30%),
         inset: (x: 3pt, y: 1pt),
@@ -323,7 +323,7 @@
     ),
     plot-subtitle: element-text(
       colour: palette.muted,
-      size: 13.3pt,
+      size: 13.1pt,
       margin: margin(bottom: 24pt),
     ),
     plot-caption: element-text(
