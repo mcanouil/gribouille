@@ -32,7 +32,7 @@
 
 ### Breaking changes
 
-- feat: `compose()` panels are now built with the new `defer()` helper (`defer(plot, ...)`, or `defer(compose, ...)` to nest), replacing `plot(..., defer: true)`; panels omit their own `width`/`height` and the composition sizes each cell. (#81)
+- feat!: `compose()` panels are now built with the new `defer()` helper (`defer(plot, ...)`, or `defer(compose, ...)` to nest), replacing `plot(..., defer: true)`; panels omit their own `width`/`height` and the composition sizes each cell. (#81)
 
 ### Changes
 
