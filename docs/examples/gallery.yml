@@ -107,6 +107,12 @@
   description: '[`geom-abline`](../reference/geoms/geom-abline.qmd), [`geom-hline`](../reference/geoms/geom-hline.qmd), and [`geom-vline`](../reference/geoms/geom-vline.qmd) overlaid on a trend.'
   alt: "Scatter plot of a noisy upward trend over 20 steps crossed by a red diagonal, a green horizontal, and a blue vertical reference line."
 
+- slug: reference-lines-aes
+  section: annotations
+  title: "Data-driven reference lines"
+  description: '[`geom-vline`](../reference/geoms/geom-vline.qmd) and [`geom-hline`](../reference/geoms/geom-hline.qmd) read their intercepts and colour from mapped columns via [`aes`](../reference/core/aes.qmd).'
+  alt: "Scatter plot of a noisy upward trend over 20 steps crossed by three coloured vertical reference lines and two dashed horizontal reference lines, each coloured by an annotation group."
+
 - slug: text-labels
   section: annotations
   title: "Text and label annotations"
