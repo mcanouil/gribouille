@@ -1,7 +1,7 @@
 ///! Annotation geom that encloses each group with a chosen shape.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/errors.typ": fail-enum, fail-type
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/radial.typ": project-point
@@ -205,6 +205,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = {
   if method not in _METHODS {
     fail-enum("geom-mark", "method", method, _METHODS)
@@ -229,7 +230,8 @@
       fill: fill,
       stroke: stroke,
       alpha: alpha,
-    ),
+    )
+      + split-aes-params("geom-mark", args),
     stat: stat,
     position: position,
     inherit-aes: inherit-aes,

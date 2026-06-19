@@ -6,7 +6,7 @@
 ///! `ymin`, `ymax`, optional `outliers`).
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../position/apply.typ": layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -116,6 +116,7 @@
   stat: "boxplot",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "boxplot",
   mapping: mapping,
@@ -129,7 +130,8 @@
     outlier-size: outlier-size,
     outlier-colour: outlier-colour,
     whisker-cap: whisker-cap,
-  ),
+  )
+    + split-aes-params("geom-boxplot", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

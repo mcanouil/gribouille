@@ -1,7 +1,7 @@
 ///! Hollow box from `ymin` to `ymax` with a thicker bar at `y` (the median).
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../position/apply.typ": layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -99,6 +99,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "crossbar",
   mapping: mapping,
@@ -110,7 +111,8 @@
     stroke: stroke,
     middle-stroke: middle-stroke,
     alpha: alpha,
-  ),
+  )
+    + split-aes-params("geom-crossbar", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

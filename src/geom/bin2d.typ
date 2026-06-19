@@ -1,6 +1,6 @@
 ///! Rectangular two-dimensional binning. Wraps \@stat-bin-2d over rect output.
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../stat/bin2d.typ": stat-bin-2d
 
 /// Two-dimensional bin layer: counts (x, y) into a rectangular grid and
@@ -63,6 +63,7 @@
   stroke: none,
   alpha: auto,
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "rect",
   mapping: mapping,
@@ -72,7 +73,8 @@
     fill: fill,
     stroke: stroke,
     alpha: alpha,
-  ),
+  )
+    + split-aes-params("geom-bin-2d", args),
   stat: stat-bin-2d(bins: bins, binwidth: binwidth),
   inherit-aes: inherit-aes,
 )

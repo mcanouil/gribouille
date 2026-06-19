@@ -82,6 +82,7 @@
   stat: "identity",
   position: "jitter",
   inherit-aes: true,
+  ..args,
 ) = geom-point(
   mapping: mapping,
   data: data,
@@ -94,4 +95,5 @@
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,
+  ..args,
 )

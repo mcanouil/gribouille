@@ -5,7 +5,7 @@
 ///! data units on the x-axis and one stack-row in y units.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../scale/train.typ": map-position
 #import "../stat/bindot.typ": stat-bindot
@@ -84,6 +84,7 @@
   alpha: auto,
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "dotplot",
   mapping: mapping,
@@ -94,7 +95,8 @@
     stroke: stroke,
     alpha: alpha,
     dotsize: dotsize,
-  ),
+  )
+    + split-aes-params("geom-dotplot", args),
   stat: stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio),
   position: position,
   inherit-aes: inherit-aes,

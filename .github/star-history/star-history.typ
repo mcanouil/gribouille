@@ -9,30 +9,18 @@
 
 #set page(width: 18cm, height: 18cm, margin: 0cm)
 
-// Body and axes in Libertinus Serif (the static scientific-publishing serif; the
-// installed STIX Two Text is variable-only and warns); the title overrides to
-// Didot in the theme. The mono fallback covers the star glyph, which renders in
-// the ambient document font the theme cannot reach.
-#set text(font: ("Libertinus Serif", "DejaVu Sans Mono"))
-
-// Named palette: one source of truth for the night-sky look.
+// Named palette: colours reused across several layers. One-off shades (the panel
+// gradient, point rim, release tint, transparent bloom ink) stay inline at use.
 #let palette = (
-  sky: rgb("#0d1b3e"), // panel: deep indigo night
   sky-deep: rgb("#0a132e"), // plot margin: a shade darker, to gather the figure
   trail: rgb("#f4d58d"), // cumulative curve: luminous starlight gold
   star: rgb("#ffe7a3"), // daily-count points: bright warm star
-  star-edge: rgb("#fff3cf"), // point outline: lighter rim for a glow
   peak: rgb("#ff8c42"), // the spike: hotter amber, separates from the gold
-  release: rgb("#6677aa"), // releases: cool muted blue-grey, recedes
   ink: rgb("#e8ecf5"), // foreground text: soft starlight white
   muted: rgb("#9aa6c4"), // secondary text and ticks
   cloud: rgb("#28406f"), // annotation boxes: moonlit cloud, lighter than the sky
   cloud-edge: rgb("#6b7cb0"), // faint rim catching the moonlight
 )
-
-// Invisible ink: lets a backing label size and fill a soft cloud bloom behind a
-// crisp label without printing the text twice.
-#let no-ink = rgb("#00000000")
 
 #let raw-stars = csv("star-history.csv", row-type: dictionary).map(row => (
   date: row.date,
@@ -101,7 +89,7 @@
     geom-vline(
       data: releases,
       mapping: aes(xintercept: "x"),
-      colour: palette.release,
+      colour: rgb("#6677aa"),
       stroke: 0.4pt,
       linetype: "dashed",
       alpha: 0.45,
@@ -110,7 +98,7 @@
       data: releases,
       mapping: aes(x: "x", y: "y", label: "tag"),
       inherit-aes: false,
-      colour: palette.release,
+      colour: palette.muted,
       fill: palette.cloud.transparentize(35%),
       stroke: 0.25pt,
       size: 7pt,
@@ -130,45 +118,50 @@
     ),
     // The cumulative trail.
     geom-step(stroke: 1.4pt, colour: palette.trail),
-    // Each daily count is a star: a soft halo under a bright point.
+    // Each daily count is a star glyph: a soft halo under a bright sparkle. The
+    // glyph's optical centre sits low, so the larger glow is lifted to stay
+    // concentric with the bright star (geom-point has no nudge).
     geom-point(
-      data: d => d.filter(row => row.stars != 0),
-      size: 8pt,
+      data: d => d
+        .filter(row => row.stars != 0)
+        .map(row => (
+          ..row,
+          stars: row.stars + 0.25,
+        )),
+      shape: sym.star,
+      size: 24pt,
       fill: palette.star,
-      stroke: none,
       alpha: 0.16,
     ),
     geom-point(
       data: d => d.filter(row => row.stars != 0),
-      size: 4pt,
+      shape: sym.star,
+      size: 14pt,
       fill: palette.star,
-      stroke: 0.4pt,
-      colour: palette.sky-deep,
     ),
-    // The spike glows brightest: its own halo, then a hot amber star.
+    // The spike glows brightest: its own (lifted) halo, then a hot amber star.
     geom-point(
-      data: (peak,),
-      size: 15pt,
+      data: ((..peak, stars: peak.stars + 1.25),),
+      shape: sym.star,
+      size: 46pt,
       fill: palette.peak,
-      stroke: none,
       alpha: 0.22,
     ),
     geom-point(
-      data: (peak,),
-      size: 7pt,
+      data: ((..peak, stars: peak.stars + 0.25),),
+      shape: sym.star,
+      size: 26pt,
       fill: palette.peak,
-      stroke: 0.5pt,
-      colour: palette.star-edge,
     ),
     // Direct labels where the eye already rests, top-right. Each rides in a
     // moonlit cloud: a soft transparent-text bloom behind a crisp pill.
     annotate(
       "label",
       clip: false,
-      x: to-days(peak.date) - 2,
+      x: to-days(peak.date) - 3,
       y: peak.stars,
       label: str(int(peak.stars)) + " ★",
-      colour: no-ink,
+      colour: rgb("#00000000"),
       fill: palette.cloud.transparentize(55%),
       stroke: none,
       size: 13pt,
@@ -179,10 +172,10 @@
     annotate(
       "label",
       clip: false,
-      x: to-days(peak.date) - 2,
+      x: to-days(peak.date) - 3,
       y: peak.stars,
       label: str(int(peak.stars)) + " ★",
-      colour: palette.star-edge,
+      colour: rgb("#fff3cf"),
       fill: palette.cloud.transparentize(15%),
       stroke: 0.6pt + palette.cloud-edge.transparentize(30%),
       size: 13pt,
@@ -193,10 +186,10 @@
     annotate(
       "label",
       clip: false,
-      x: to-days(peak.date) - 2,
+      x: to-days(peak.date) - 3,
       y: peak.stars - 16,
       label: "+" + str(peak-jump) + " in a day",
-      colour: no-ink,
+      colour: rgb("#00000000"),
       fill: palette.cloud.transparentize(55%),
       stroke: none,
       size: 10pt,
@@ -207,7 +200,7 @@
     annotate(
       "label",
       clip: false,
-      x: to-days(peak.date) - 2,
+      x: to-days(peak.date) - 3,
       y: peak.stars - 16,
       label: "+" + str(peak-jump) + " in a day",
       colour: palette.peak,
@@ -237,7 +230,7 @@
       clip: false,
       x: to-days("2026-05-17"),
       y: 37.5,
-      label: [Made public \ 17th of May],
+      label: [Made public \ 17#super[th] of May],
       colour: palette.star,
       fill: palette.cloud.transparentize(20%),
       stroke: 0.6pt + palette.cloud-edge.transparentize(30%),
@@ -254,29 +247,37 @@
       expand: (0%, auto),
     ),
     scale-y-continuous(breaks: y-breaks, expand: (0%, 10%)),
-    // Annotations carry literal colours through the colour/fill aesthetics, so
-    // keep those scales identity rather than remapping to a palette.
-    scale-colour-identity(),
-    scale-fill-identity(),
   ),
   coord: coord-cartesian(clip: "off"),
   labels: labels(
-    title: "Gribouille's first " + str(int(peak.stars)) + " GitHub stars",
-    subtitle: "Gribouille brings the grammar of graphics, the idea behind ggplot2 and plotnine, to Typst: layered geoms, scales, and themes for publication-quality charts written in pure markup. Built quietly in private through April, it went public on 17 May 2026 and shipped v0.1.0 three days later. Each release drew a bigger crowd, and a single day in June carried it past "
-      + str(int(peak.stars))
-      + " stars.",
+    title: [#text(fill: palette.trail)[Gribouille]'s first #text(fill: palette.peak)[#str(int(peak.stars))] GitHub stars],
+    subtitle: [
+      #set par(justify: true)
+      Gribouille brings the #text(fill: palette.ink)[grammar of graphics], the idea behind `ggplot2` and `plotnine`, to Typst: layered geoms, scales, and themes for publication-quality charts written in pure markup. Built quietly in private through April, it went #text(fill: palette.star)[public on 17#super[th] May 2026] and shipped #box(
+        fill: palette.cloud.transparentize(35%),
+        stroke: 0.25pt + palette.cloud-edge.transparentize(30%),
+        inset: (x: 3pt, y: 1pt),
+        outset: (y: 1pt),
+        radius: 4pt,
+      )[#text(size: 0.82em, fill: palette.muted)[v0.1.0]] three days later. Each release drew a bigger crowd, and a single day in June carried it past #text(fill: palette.peak)[#str(int(peak.stars)) stars].
+    ],
     x: none,
     y: "Stars",
     caption: [
-      This very chart was drawn with Gribouille. \
+      This very chart was drawn with Gribouille (#link("https://m.canouil.dev/gribouille")[m.canouil.dev/gribouille]). \
       Author: #link("https://mickael.canouil.fr")[mickael.canouil.fr] | Data source: GitHub API
     ],
   ),
   theme: theme-minimal(
     ink: palette.ink,
     paper: palette.sky-deep,
+    text: element-text(font: ("Libertinus Serif", "DejaVu Sans Mono")),
     tick-length: 0.12cm,
-    panel-background: element-rect(fill: palette.sky),
+    panel-background: element-rect(fill: gradient.linear(
+      rgb("#0a1330"),
+      rgb("#1c2f5e"),
+      dir: ttb,
+    )),
     panel-grid-major-x: element-blank(),
     panel-grid-minor: element-blank(),
     panel-grid-major-y: element-line(colour: palette.ink.transparentize(88%)),

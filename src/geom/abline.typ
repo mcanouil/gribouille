@@ -6,7 +6,7 @@
 ///! follows the warped axis correctly.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../scale/train.typ": map-axis-data, transform-inv
 #import "../utils/radial.typ": radial-point
@@ -112,6 +112,7 @@
   alpha: auto,
   linetype: auto,
   inherit-aes: false,
+  ..args,
 ) = make-layer(
   "abline",
   mapping: mapping,
@@ -123,7 +124,8 @@
     stroke: stroke,
     alpha: alpha,
     linetype: linetype,
-  ),
+  )
+    + split-aes-params("geom-abline", args),
   inherit-aes: inherit-aes,
 )
 

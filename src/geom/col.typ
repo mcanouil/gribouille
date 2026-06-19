@@ -5,7 +5,7 @@
 ///! `"dodge"`, and `"fill"` via the matching position adjustments.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../position/apply.typ": layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -107,6 +107,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "col",
   mapping: mapping,
@@ -117,7 +118,8 @@
     fill: fill,
     stroke: stroke,
     alpha: alpha,
-  ),
+  )
+    + split-aes-params("geom-col", args),
   key: key,
   stat: stat,
   position: position,

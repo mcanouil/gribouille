@@ -5,7 +5,7 @@
 ///! Under \@coord-flip the line is drawn as a vertical reference at the same
 ///! data value because the y axis becomes the rendered horizontal axis.
 
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/ref-line.typ": _draw-axis-lines
 
 /// Horizontal reference line at one or more y intercepts.
@@ -99,6 +99,7 @@
   alpha: auto,
   linetype: auto,
   inherit-aes: false,
+  ..args,
 ) = make-layer(
   "hline",
   mapping: mapping,
@@ -109,7 +110,8 @@
     stroke: stroke,
     alpha: alpha,
     linetype: linetype,
-  ),
+  )
+    + split-aes-params("geom-hline", args),
   inherit-aes: inherit-aes,
 )
 

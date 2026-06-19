@@ -1,4 +1,4 @@
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../stat/bin.typ": stat-bin
 
 ///! Histogram of a continuous variable.
@@ -98,6 +98,7 @@
   alpha: auto,
   position: "stack",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "col",
   mapping: mapping,
@@ -108,7 +109,8 @@
     stroke: stroke,
     alpha: alpha,
     width: width,
-  ),
+  )
+    + split-aes-params("geom-histogram", args),
   stat: stat-bin(bins: bins, binwidth: binwidth),
   position: position,
   inherit-aes: inherit-aes,

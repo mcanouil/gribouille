@@ -1,4 +1,4 @@
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../stat/bin.typ": stat-bin
 
 ///! Line connecting binned counts along x.
@@ -82,6 +82,7 @@
   linetype: auto,
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "line",
   mapping: mapping,
@@ -91,7 +92,8 @@
     colour: colour,
     alpha: alpha,
     linetype: linetype,
-  ),
+  )
+    + split-aes-params("geom-freqpoly", args),
   stat: stat-bin(bins: bins, binwidth: binwidth),
   position: position,
   inherit-aes: inherit-aes,

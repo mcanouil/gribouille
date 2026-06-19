@@ -6,7 +6,7 @@
 ///! same draw chain.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/errors.typ": fail-range
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/radial.typ": project-point
@@ -117,6 +117,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = {
   if curvature < -1 or curvature > 1 {
     fail-range(
@@ -141,7 +142,8 @@
       colour: colour,
       alpha: alpha,
       linetype: linetype,
-    ),
+    )
+      + split-aes-params("geom-curve", args),
     stat: stat,
     position: position,
     inherit-aes: inherit-aes,

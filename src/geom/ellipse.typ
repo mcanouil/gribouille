@@ -1,7 +1,7 @@
 ///! Parametric ellipse geom: one ellipse per data row.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
@@ -83,6 +83,7 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "ellipse",
   mapping: mapping,
@@ -96,7 +97,8 @@
     fill: fill,
     stroke: stroke,
     alpha: alpha,
-  ),
+  )
+    + split-aes-params("geom-ellipse", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

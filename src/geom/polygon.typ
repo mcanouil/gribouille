@@ -1,7 +1,7 @@
 ///! Closed polygons from `(x, y)` rows, one polygon per group.
 
 #import "../deps.typ": cetz
-#import "../layer.typ": make-layer
+#import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
@@ -98,11 +98,13 @@
   stat: "identity",
   position: "identity",
   inherit-aes: true,
+  ..args,
 ) = make-layer(
   "polygon",
   mapping: mapping,
   data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha),
+  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
+    + split-aes-params("geom-polygon", args),
   stat: stat,
   position: position,
   inherit-aes: inherit-aes,

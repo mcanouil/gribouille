@@ -27,6 +27,12 @@
 #assert.eq(g.params.segment, true)
 #assert.eq(g.params.arrow-length, 6pt)
 
+// Nudge may be pinned as a constant param, not only mapped via `aes()`. A
+// number is a data-unit offset, a length a canvas-unit offset.
+#let lc = geom-label(nudge-x: 0.5, nudge-y: 0.3cm)
+#assert.eq(lc.params.nudge-x, 0.5)
+#assert.eq(lc.params.nudge-y, 0.3cm)
+
 // Per-row nudge offsets in data units plus a connector that should route
 // around its sibling.
 #let d = (
@@ -67,6 +73,16 @@
   data: ((x: 1, y: 1), (x: 2, y: 2), (x: 3, y: 3)),
   mapping: aes(x: "x", y: "y"),
   layers: (geom-typst(label: [#math.alpha], segment: true),),
+  width: 10cm,
+  height: 6cm,
+)
+
+// Constant nudge param drives the offset with no nudge in the mapping,
+// exercising the param-first branch in `compute-placements`.
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y", label: "lab"),
+  layers: (geom-label(nudge-x: 0.5, nudge-y: 0.4),),
   width: 10cm,
   height: 6cm,
 )

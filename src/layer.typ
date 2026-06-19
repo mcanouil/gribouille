@@ -4,6 +4,48 @@
 ///! Centralising it here keeps the record's keys discoverable in one place
 ///! and stops drift between geoms when fields are added or renamed.
 
+#import "aes-keys.typ": AES-KEYS
+#import "utils/errors.typ": fail, fail-enum
+
+/// Collect a geom's trailing `..args` into a constant-aesthetic param dict.
+///
+/// \@internal
+/// Geoms forward their `..args` here so any aesthetic key can be pinned as a
+/// constant directly on the geom (e.g. `geom-label(nudge-x: 0.5)`), matching
+/// the param-first precedence the scale channels already enjoy. A declared
+/// parameter binds before `..args`, so this only ever captures keys the geom
+/// does not name. A positional or unknown-named arg is a user error.
+///
+/// \@param scope Geom name used in error messages (e.g. `"geom-label"`).
+///
+/// \@param args The geom's captured `arguments` value.
+///
+/// \@returns Dict of aesthetic key to constant value, to merge into `params`.
+#let split-aes-params(scope, args) = {
+  if args.pos().len() != 0 {
+    fail(
+      scope,
+      "positional arguments are not supported",
+      hint: "Pass aesthetic constants as named arguments.",
+    )
+  }
+  let aes-params = (:)
+  for (key, value) in args.named().pairs() {
+    if key in AES-KEYS {
+      aes-params.insert(key, value)
+    } else {
+      fail-enum(
+        scope,
+        "argument",
+        key,
+        AES-KEYS,
+        hint: "Pass geom knobs as declared parameters; only aesthetic keys may be set as ad-hoc constants.",
+      )
+    }
+  }
+  aes-params
+}
+
 /// Build a layer record consumed by `plot()`.
 ///
 /// \@internal

@@ -63,12 +63,21 @@
   if v == none { 0 } else { v }
 }
 
+// Resolve a nudge spec for one axis, pinned constant param before mapping,
+// mirroring the param-first precedence of the scale-channel resolvers. A
+// `none` result means the axis carries no nudge.
+#let _nudge-spec(layer, mapping, axis) = {
+  let pinned = layer.params.at(axis, default: none)
+  if pinned != none { return pinned }
+  mapping.at(axis, default: none)
+}
+
 // Compute per-row anchor + label-centre pairs (canvas-cm) for one layer.
 // `placements.at(idx)` is `none` when the row fails to project so callers
 // can skip without re-checking inputs.
 #let compute-placements(ctx, layer, mapping, data) = {
-  let nudge-x-spec = mapping.at("nudge-x", default: none)
-  let nudge-y-spec = mapping.at("nudge-y", default: none)
+  let nudge-x-spec = _nudge-spec(layer, mapping, "nudge-x")
+  let nudge-y-spec = _nudge-spec(layer, mapping, "nudge-y")
   let needs-nudge = nudge-x-spec != none or nudge-y-spec != none
   data
     .enumerate()
@@ -181,8 +190,8 @@
     segment-on
       or repel-on
       or (
-        mapping.at("nudge-x", default: none) != none
-          or mapping.at("nudge-y", default: none) != none
+        _nudge-spec(layer, mapping, "nudge-x") != none
+          or _nudge-spec(layer, mapping, "nudge-y") != none
       )
   )
   let sizes = label-sizes-of(layer)

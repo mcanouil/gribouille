@@ -103,6 +103,7 @@
   alpha: auto,
   position: "stack",
   inherit-aes: true,
+  ..args,
 ) = geom-col(
   mapping: mapping,
   data: data,
@@ -114,4 +115,5 @@
   stat: "count",
   position: position,
   inherit-aes: inherit-aes,
+  ..args,
 )
