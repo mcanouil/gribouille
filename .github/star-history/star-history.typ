@@ -118,42 +118,47 @@
     ),
     // The cumulative trail.
     geom-step(stroke: 1.4pt, colour: palette.trail),
-    // Each daily count is a star: a soft halo under a bright point.
+    // Each daily count is a star glyph: a soft halo under a bright sparkle. The
+    // glyph's optical centre sits low, so the larger glow is lifted to stay
+    // concentric with the bright star (geom-point has no nudge).
     geom-point(
-      data: d => d.filter(row => row.stars != 0),
-      size: 8pt,
+      data: d => d
+        .filter(row => row.stars != 0)
+        .map(row => (
+          ..row,
+          stars: row.stars + 0.25,
+        )),
+      shape: sym.star,
+      size: 24pt,
       fill: palette.star,
-      stroke: none,
       alpha: 0.16,
     ),
     geom-point(
       data: d => d.filter(row => row.stars != 0),
-      size: 4pt,
+      shape: sym.star,
+      size: 14pt,
       fill: palette.star,
-      stroke: 0.4pt,
-      colour: palette.sky-deep,
     ),
-    // The spike glows brightest: its own halo, then a hot amber star.
+    // The spike glows brightest: its own (lifted) halo, then a hot amber star.
     geom-point(
-      data: (peak,),
-      size: 15pt,
+      data: ((..peak, stars: peak.stars + 1.25),),
+      shape: sym.star,
+      size: 46pt,
       fill: palette.peak,
-      stroke: none,
       alpha: 0.22,
     ),
     geom-point(
-      data: (peak,),
-      size: 7pt,
+      data: ((..peak, stars: peak.stars + 0.25),),
+      shape: sym.star,
+      size: 26pt,
       fill: palette.peak,
-      stroke: 0.5pt,
-      colour: rgb("#fff3cf"),
     ),
     // Direct labels where the eye already rests, top-right. Each rides in a
     // moonlit cloud: a soft transparent-text bloom behind a crisp pill.
     annotate(
       "label",
       clip: false,
-      x: to-days(peak.date) - 2,
+      x: to-days(peak.date) - 3,
       y: peak.stars,
       label: str(int(peak.stars)) + " ★",
       colour: rgb("#00000000"),
@@ -167,7 +172,7 @@
     annotate(
       "label",
       clip: false,
-      x: to-days(peak.date) - 2,
+      x: to-days(peak.date) - 3,
       y: peak.stars,
       label: str(int(peak.stars)) + " ★",
       colour: rgb("#fff3cf"),
@@ -181,7 +186,7 @@
     annotate(
       "label",
       clip: false,
-      x: to-days(peak.date) - 2,
+      x: to-days(peak.date) - 3,
       y: peak.stars - 16,
       label: "+" + str(peak-jump) + " in a day",
       colour: rgb("#00000000"),
@@ -195,7 +200,7 @@
     annotate(
       "label",
       clip: false,
-      x: to-days(peak.date) - 2,
+      x: to-days(peak.date) - 3,
       y: peak.stars - 16,
       label: "+" + str(peak-jump) + " in a day",
       colour: palette.peak,
