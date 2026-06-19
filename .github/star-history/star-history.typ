@@ -230,7 +230,7 @@
       clip: false,
       x: to-days("2026-05-17"),
       y: 37.5,
-      label: [Made public \ 17th of May],
+      label: [Made public \ 17#super[th] of May],
       colour: palette.star,
       fill: palette.cloud.transparentize(20%),
       stroke: 0.6pt + palette.cloud-edge.transparentize(30%),
@@ -257,12 +257,12 @@
     title: [#text(fill: palette.trail)[Gribouille]'s first #text(fill: palette.peak)[#str(int(peak.stars))] GitHub stars],
     subtitle: [
       #set par(justify: true)
-      Gribouille brings the #text(fill: palette.ink)[grammar of graphics], the idea behind ggplot2 and plotnine, to Typst: layered geoms, scales, and themes for publication-quality charts written in pure markup. Built quietly in private through April, it went #text(fill: palette.star)[public on 17 May 2026] and shipped v0.1.0 three days later. Each release drew a bigger crowd, and a single day in June carried it past #text(fill: palette.peak)[#str(int(peak.stars)) stars].
+      Gribouille brings the #text(fill: palette.ink)[grammar of graphics], the idea behind `ggplot2` and `plotnine`, to Typst: layered geoms, scales, and themes for publication-quality charts written in pure markup. Built quietly in private through April, it went #text(fill: palette.star)[public on 17#super[th] May 2026] and shipped v0.1.0 three days later. Each release drew a bigger crowd, and a single day in June carried it past #text(fill: palette.peak)[#str(int(peak.stars)) stars].
     ],
     x: none,
     y: "Stars",
     caption: [
-      This very chart was drawn with Gribouille. \
+      This very chart was drawn with Gribouille (#link("https://m.canouil.dev/gribouille")[m.canouil.dev/gribouille]). \
       Author: #link("https://mickael.canouil.fr")[mickael.canouil.fr] | Data source: GitHub API
     ],
   ),
