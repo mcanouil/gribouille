@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat: a font set in `theme(text: ...)` now reaches literal-glyph point markers (e.g., `shape: sym.star`) for both plot markers and legend keys, instead of falling back to the document font. (#126)
+- feat: `geom-text`, `geom-label`, and `geom-typst` accept a `font:` parameter; `auto` uses the theme `text` font, then the document font. (#126)
 - feat: panel gridlines split into a ggplot2-style cascade, `panel-grid` -> `panel-grid-major` / `panel-grid-minor` -> `-x` / `-y`, so X/Y and major/minor lines are styled independently; minor defaults to half the major weight in the same colour and a blank `panel-grid` blanks both weights. (#125)
 - feat: continuous axes draw minor gridlines (visible by default): midpoints between majors for linear/sqrt/reverse and sub-decade lines for log10; `scale-*-continuous` (and log10/sqrt/reverse) accept `minor-breaks` and `n-minor` to position them. (#125)
 - feat: the `legend-position` theme entry sets a global side for every legend (`theme(legend-position: "bottom")`, also via `theme-sub-legend(position:)`), accepting the same values as `guide-legend(position:)`; any explicit `guides()` placement still wins. (#123)

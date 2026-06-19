@@ -265,6 +265,13 @@
       }
     }
     let final-shape = apply-after-scale(shape-kind, shape-spec, ctx, row)
-    draw-marker((cx, cy), final-shape, size, body-fill, stroke-spec)
+    draw-marker(
+      (cx, cy),
+      final-shape,
+      size,
+      body-fill,
+      stroke-spec,
+      font: g-defaults.font,
+    )
   }
 }

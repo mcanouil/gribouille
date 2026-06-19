@@ -18,6 +18,7 @@
 #import "theme/defaults.typ": resolve-colour
 #import "theme/theme.typ": (
   _line-stroke, _rect-outset-cm, _rect-style, _text-args, _text-style,
+  resolve-geom-defaults,
 )
 #import "guide/draw-key.typ": default-key-for, draw-glyph
 #import "guide/legend.typ": _normalise-position
@@ -1231,6 +1232,7 @@
 
 #let _draw-swatch(guide, ctx, ox, cursor, theme, title-h) = {
   let ink = resolve-colour(theme, "ink")
+  let glyph-font = resolve-geom-defaults(theme).font
   let _legend-text = _text-style(theme, "legend-text")
   let legend-text-args = _text-args(_legend-text)
   let text-size = _legend-text.size
@@ -1278,6 +1280,7 @@
       glyph-size,
       bundle,
       ink: ink,
+      font: glyph-font,
     )
     let label-text = resolve-prose(
       resolve-label(
@@ -1302,6 +1305,7 @@
 
 #let _draw-size-ladder(guide, ctx, ox, cursor, theme, title-h) = {
   let ink = resolve-colour(theme, "ink")
+  let glyph-font = resolve-geom-defaults(theme).font
   let _legend-text = _text-style(theme, "legend-text")
   let legend-text-args = _text-args(_legend-text)
   let text-size = _legend-text.size
@@ -1363,7 +1367,7 @@
         row-top - glyph-size * 3 - 0.1
       }
       let bundle = _bundle-for(value, guide.aesthetics, ctx, ink)
-      draw-glyph(key-kind, cx, gcy, hoff, bundle, ink: ink)
+      draw-glyph(key-kind, cx, gcy, hoff, bundle, ink: ink, font: glyph-font)
       let (lx, l-anchor) = _hjust-below(align, cx)
       cetz.draw.content(
         (lx, label-y),
@@ -1385,7 +1389,15 @@
       let cm = cy - off - rows.extra.at(rc.row) / 2
       let cx0 = ox + rc.col * col-w
       let bundle = _bundle-for(value, guide.aesthetics, ctx, ink)
-      draw-glyph(key-kind, cx0 + off, cm, off, bundle, ink: ink)
+      draw-glyph(
+        key-kind,
+        cx0 + off,
+        cm,
+        off,
+        bundle,
+        ink: ink,
+        font: glyph-font,
+      )
       let (lx, l-anchor) = _hjust-right-of(align, cx0 + off * 2 + 0.15, label-w)
       cetz.draw.content(
         (lx, cm),

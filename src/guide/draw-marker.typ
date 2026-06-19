@@ -14,7 +14,7 @@
   if type(size) == length { size / 1cm } else { float(size) }
 }
 
-#let draw-marker(pos, kind, size, paint, stroke-spec) = {
+#let draw-marker(pos, kind, size, paint, stroke-spec, font: none) = {
   if kind == none { return }
   let (cx, cy) = pos
   if kind == "circle" {
@@ -88,9 +88,11 @@
       stroke-spec.at("paint", default: none)
     } else { none }
     let glyph-paint = if stroke-paint != none { stroke-paint } else { paint }
+    // `none` font keeps the document font; only pass `text(font: ...)` when set.
+    let font-args = if font != none { (font: font) } else { (:) }
     cetz.draw.content(
       (cx, cy),
-      text(size: r * 2 * 1cm, fill: glyph-paint)[#kind],
+      text(size: r * 2 * 1cm, fill: glyph-paint, ..font-args)[#kind],
       anchor: "center",
     )
   }

@@ -4,9 +4,13 @@
 // lives on `element-geom` as `font` and inherits the base `text` font when
 // unset.
 
-#import "../../lib.typ": element-geom, element-text, theme
+#import "../../lib.typ": (
+  element-geom, element-text, geom-label, geom-text, geom-typst, theme,
+)
 #import "../../src/theme/defaults.typ": default-theme, merge-theme
-#import "../../src/theme/theme.typ": _text-style, resolve-geom-defaults
+#import "../../src/theme/theme.typ": (
+  _text-style, resolve-geom-defaults, resolve-geom-font,
+)
 
 // No override: font is none, so consumers omit `text(font: ...)` entirely.
 #let plain = merge-theme(none)
@@ -59,5 +63,22 @@
   geom: element-geom(font: "Geom Font"),
 ))
 #assert.eq(resolve-geom-defaults(both-themed).font, "Geom Font")
+
+// resolve-geom-font: per-layer font wins over the theme default.
+#assert.eq(resolve-geom-font("Layer Font", "Theme Font"), "Layer Font")
+
+// `auto` defers to the theme default; a `none` default keeps the document font.
+#assert.eq(resolve-geom-font(auto, "Theme Font"), "Theme Font")
+#assert.eq(resolve-geom-font(auto, none), none)
+
+// An explicit `none` per-layer value also defers to the theme default.
+#assert.eq(resolve-geom-font(none, "Theme Font"), "Theme Font")
+
+// The text-drawing geoms expose `font`, defaulting to `auto` and threading the
+// pinned value into the layer params consumed at draw time.
+#assert.eq(geom-text().params.font, auto)
+#assert.eq(geom-text(font: "Layer Font").params.font, "Layer Font")
+#assert.eq(geom-label(font: "Layer Font").params.font, "Layer Font")
+#assert.eq(geom-typst(font: "Layer Font").params.font, "Layer Font")
 
 text-style font cascade test passed.
