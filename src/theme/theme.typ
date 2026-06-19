@@ -49,23 +49,28 @@
   out
 }
 
-// Resolve a child `size` against the nearest resolved ancestor `base-size`.
-// An absolute length wins outright; a ratio scales the ancestor (length ->
-// absolute, ratio -> compounded ratio); with no ancestor size the ratio is
-// kept and deferred to `_text-style`.
-#let _merge-size(base-size, top-size) = {
-  if type(top-size) != ratio { return top-size }
-  if base-size == none { return top-size }
-  base-size * (top-size / 100%)
+// Resolve a child relative field (`size`, `stroke`) against the nearest
+// resolved ancestor `base`. An absolute length wins outright; a ratio scales
+// the ancestor (length -> absolute, ratio -> compounded ratio); with no
+// ancestor value the ratio is kept and deferred to the surface resolver
+// (`_text-style`, `_line-stroke`, `_rect-style`).
+#let _merge-size(base, top) = {
+  if type(top) != ratio { return top }
+  if base == none { return top }
+  base * (top / 100%)
 }
+
+// Fields whose ratios scale the inherited ancestor value instead of replacing
+// it. Every other field replaces outright when the child sets it.
+#let _relative-fields = ("size", "stroke")
 
 #let _merge-element(base, top) = {
   let out = base
   for (k, v) in top.pairs() {
     if k == "kind" { continue }
     if v == none { continue }
-    if k == "size" {
-      out.insert("size", _merge-size(base.at("size", default: none), v))
+    if _relative-fields.contains(k) {
+      out.insert(k, _merge-size(base.at(k, default: none), v))
       continue
     }
     out.insert(k, v)
@@ -360,6 +365,11 @@
   if el.at("kind", default: none) == "element-blank" { return none }
   let colour = el.at("colour", default: none)
   let thickness = el.at("stroke", default: none)
+  // A ratio that survived the cascade (no absolute ancestor stroke) resolves
+  // against the default thickness so the consumer reads a concrete length.
+  if type(thickness) == ratio {
+    thickness = default-stroke-thickness * (thickness / 100%)
+  }
   if thickness == 0pt { return none }
   let paint = if colour != none {
     colour
@@ -442,6 +452,11 @@
   let fill = el.at("fill", default: none)
   let colour = el.at("colour", default: none)
   let thickness = el.at("stroke", default: none)
+  // A ratio that survived the cascade (no absolute ancestor stroke) resolves
+  // against the default thickness so the consumer reads a concrete length.
+  if type(thickness) == ratio {
+    thickness = default-stroke-thickness * (thickness / 100%)
+  }
   let stroke = if thickness == 0pt or (colour == none and thickness == none) {
     none
   } else {

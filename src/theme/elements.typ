@@ -3,7 +3,7 @@
 ///! `element_*` constructors. \@theme translates these into the flat theme
 ///! fields consumed internally by `merge-theme`.
 
-#import "../utils/errors.typ": assert-halign, assert-text-size
+#import "../utils/errors.typ": assert-halign, assert-stroke, assert-text-size
 
 /// Text element: font size, weight, colour, and angle.
 ///
@@ -259,7 +259,11 @@
 ///
 /// \@param colour Line colour, or `none` to inherit.
 ///
-/// \@param stroke Line thickness (a Typst length), or `none`.
+/// \@param stroke Line thickness. Either an absolute Typst length (e.g., `1pt`),
+///   a ratio (e.g., `80%`) scaling the parent surface stroke, or `none` to
+///   inherit the parent thickness unchanged. Absolute lengths win outright;
+///   ratios cascade proportionally, so setting the base `line` stroke rescales
+///   every surface that inherits via a ratio.
 ///
 /// \@returns Element dictionary consumed by \@theme.
 ///
@@ -296,11 +300,14 @@
 /// ```
 ///
 /// \@see \@theme, \@element-text, \@element-rect, \@element-blank
-#let element-line(colour: none, stroke: none) = (
-  kind: "element-line",
-  colour: colour,
-  stroke: stroke,
-)
+#let element-line(colour: none, stroke: none) = {
+  assert-stroke("element-line", stroke)
+  (
+    kind: "element-line",
+    colour: colour,
+    stroke: stroke,
+  )
+}
 
 /// Rectangle element: fill, outline colour, stroke thickness, and per-side
 /// margins. `inset` is honoured on `plot-background` (Typst `block(inset:)`
@@ -329,7 +336,10 @@
 ///
 /// \@param colour Outline colour, or `none` to inherit.
 ///
-/// \@param stroke Outline thickness (a Typst length), or `none` for no outline.
+/// \@param stroke Outline thickness. Either an absolute Typst length (e.g.,
+///   `1pt`), a ratio (e.g., `80%`) scaling the parent surface stroke, or `none`
+///   for no outline. Ratios with no absolute ancestor resolve against the
+///   default thickness.
 ///
 /// \@param inset Inner padding \@margin honoured by `plot-background` and `legend-background` (grows the painted rect outward), or `none`. Ignored on `panel-background`, `strip-background`, and `legend-bar`.
 ///
@@ -394,14 +404,17 @@
   stroke: none,
   inset: (kind: "margin", top: 5pt, right: 5pt, bottom: 5pt, left: 5pt),
   outset: none,
-) = (
-  kind: "element-rect",
-  fill: fill,
-  colour: colour,
-  stroke: stroke,
-  inset: inset,
-  outset: outset,
-)
+) = {
+  assert-stroke("element-rect", stroke)
+  (
+    kind: "element-rect",
+    fill: fill,
+    colour: colour,
+    stroke: stroke,
+    inset: inset,
+    outset: outset,
+  )
+}
 
 /// Blank element: hides the corresponding theme element.
 ///

@@ -1,7 +1,9 @@
 // theme() stores element records verbatim; merge-theme overlays them on the
 // defaults.
 
-#import "../../src/theme/theme.typ": _text-style, resolve-element, theme
+#import "../../src/theme/theme.typ": (
+  _line-stroke, _rect-style, _text-style, resolve-element, theme,
+)
 #import "../../src/theme/elements.typ": (
   element-blank, element-line, element-rect, element-text,
 )
@@ -152,5 +154,29 @@
 #assert.eq(_text-style(angled, "axis-text-x-bottom").angle, 30deg)
 // Unset stays `none` so existing themes keep upright text.
 #assert.eq(_text-style(merge-theme(theme()), "axis-text").angle, none)
+
+// Relative `%` strokes cascade from the base `line`. At the default 0.5pt base
+// the per-surface ratios resolve to the historical absolute thicknesses.
+#assert.eq(_line-stroke(d0, "axis-line").thickness, 0.5pt)
+#assert.eq(_line-stroke(d0, "legend-ticks").thickness, 0.3pt)
+// Setting the base `line` stroke rescales every ratio surface proportionally.
+#let thick = merge-theme(theme(line: element-line(stroke: 1pt)))
+#assert.eq(_line-stroke(thick, "axis-line").thickness, 1pt)
+#assert.eq(_line-stroke(thick, "legend-ticks").thickness, (0.3 / 0.5) * 1pt)
+// An absolute surface stroke wins outright and ignores the base stroke.
+#let abs-line = merge-theme(theme(
+  line: element-line(stroke: 1pt),
+  axis-line: element-line(stroke: 0.4pt),
+))
+#assert.eq(_line-stroke(abs-line, "axis-line").thickness, 0.4pt)
+// A rect ratio stroke with no absolute ancestor resolves against the default
+// thickness, so the historical legend-bar hairline survives.
+#assert.eq(_rect-style(d0, "legend-bar").stroke.thickness, 0.2pt)
+// Setting the base `rect` stroke anchors the ratio and rescales it.
+#let thick-rect = merge-theme(theme(rect: element-rect(stroke: 1pt)))
+#assert.eq(
+  _rect-style(thick-rect, "legend-bar").stroke.thickness,
+  (0.2 / 0.5) * 1pt,
+)
 
 Theme tests passed.

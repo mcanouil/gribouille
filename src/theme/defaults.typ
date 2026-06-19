@@ -49,20 +49,24 @@
   plot-caption: element-text(size: (8 / 9) * 100%),
   plot-tag: element-text(size: (11 / 9) * 100%, weight: "bold"),
 
-  // Per-surface line records
-  panel-grid: element-line(stroke: default-stroke-thickness),
-  axis-line: element-line(stroke: default-stroke-thickness),
-  axis-ticks: element-line(stroke: default-stroke-thickness),
-  // Thinner than `default-stroke-thickness` to keep colour-bar ticks subtle.
-  legend-ticks: element-line(stroke: 0.3pt),
+  // Per-surface line records. Strokes are ratios of the parent surface (base
+  // `line`), so setting `theme(line: element-line(stroke: ...))` rescales every
+  // surface proportionally. At the default 0.5pt base these resolve to the
+  // historical absolute thicknesses (legend-ticks 0.3pt, ...).
+  panel-grid: element-line(stroke: 100%),
+  axis-line: element-line(stroke: 100%),
+  axis-ticks: element-line(stroke: 100%),
+  // Thinner than the base to keep colour-bar ticks subtle.
+  legend-ticks: element-line(stroke: (0.3 / 0.5) * 100%),
 
   // Per-surface rect records
   panel-background: element-rect(),
   plot-background: element-rect(),
   strip-background: element-rect(),
   legend-background: element-rect(),
-  // Hairline frame around the colour-bar gradient.
-  legend-bar: element-rect(stroke: 0.2pt),
+  // Hairline frame around the colour-bar gradient. Ratio of the default
+  // thickness so a base `rect` stroke override rescales it too.
+  legend-bar: element-rect(stroke: (0.2 / 0.5) * 100%),
 
   // Layer-default aesthetics shared across supporting geoms. All-`none`
   // entries leave the per-geom hardcoded fallback in place; users override
@@ -86,7 +90,10 @@
 #let minimal-surfaces(ink, paper) = (
   panel-background: element-blank(),
   plot-background: element-rect(),
-  panel-grid: element-line(colour: col-mix(ink, paper, 0.7), stroke: 0.4pt),
+  panel-grid: element-line(
+    colour: col-mix(ink, paper, 0.7),
+    stroke: (0.4 / 0.5) * 100%,
+  ),
   axis-line: element-blank(),
   tick-length: 0cm,
 )
