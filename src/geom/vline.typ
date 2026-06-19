@@ -10,15 +10,21 @@
 
 /// Vertical reference line at one or more x intercepts.
 ///
-/// `xintercept` can be a scalar or an array. The layer does not inherit the
-/// plot mapping by default; it draws purely from the `xintercept` parameter.
+/// `xintercept` can be a scalar or an array drawing one line per value. To
+/// drive the lines from data instead, bind `xintercept` (and optionally
+/// `colour`, `alpha`, `linewidth`, `linetype`) through \@aes and pass `data`;
+/// one line is then drawn per row, with aesthetics resolved per row.
 ///
 /// \@category Geoms
 /// \@subcategory Reference lines
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param xintercept Scalar or array of x values at which to draw vertical lines.
+/// \@param mapping Aesthetic mapping built with \@aes. Bind `xintercept` to a column to draw a data-driven line per row.
+///
+/// \@param data Layer-specific dataset for the mapped `xintercept` column, or `none`.
+///
+/// \@param xintercept Scalar or array of x values at which to draw vertical lines, used when `xintercept` is not mapped.
 ///
 /// \@param colour Line colour. `auto` inherits the theme `ink`.
 ///
@@ -64,16 +70,42 @@
 /// )
 /// ```
 ///
+/// \@examples Drive reference lines from data: bind `xintercept` and `colour`
+/// through \@aes so each event row draws its own coloured line.
+/// ```
+/// //| alt: "Scatter of x against y = 0.5 x overlaid with three vertical reference lines at x = 2, 5 and 8 coloured by event group."
+/// #let d = range(0, 10).map(i => (x: i, y: i * 0.5))
+/// #let events = (
+///   (at: 2, grp: "a"),
+///   (at: 5, grp: "b"),
+///   (at: 8, grp: "a"),
+/// )
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (
+///     geom-point(size: 2pt),
+///     geom-vline(mapping: aes(xintercept: "at", colour: "grp"), data: events),
+///   ),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@geom-hline, \@geom-abline
 #let geom-vline(
+  mapping: none,
+  data: none,
   xintercept: none,
   colour: auto,
   stroke: auto,
   alpha: auto,
-  linetype: "solid",
+  linetype: auto,
   inherit-aes: false,
 ) = make-layer(
   "vline",
+  mapping: mapping,
+  data: data,
   params: (
     xintercept: xintercept,
     colour: colour,

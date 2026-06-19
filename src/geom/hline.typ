@@ -10,15 +10,21 @@
 
 /// Horizontal reference line at one or more y intercepts.
 ///
-/// `yintercept` can be a scalar or an array. The layer does not inherit the
-/// plot mapping by default; it draws purely from the `yintercept` parameter.
+/// `yintercept` can be a scalar or an array drawing one line per value. To
+/// drive the lines from data instead, bind `yintercept` (and optionally
+/// `colour`, `alpha`, `linewidth`, `linetype`) through \@aes and pass `data`;
+/// one line is then drawn per row, with aesthetics resolved per row.
 ///
 /// \@category Geoms
 /// \@subcategory Reference lines
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param yintercept Scalar or array of y values at which to draw horizontal lines.
+/// \@param mapping Aesthetic mapping built with \@aes. Bind `yintercept` to a column to draw a data-driven line per row.
+///
+/// \@param data Layer-specific dataset for the mapped `yintercept` column, or `none`.
+///
+/// \@param yintercept Scalar or array of y values at which to draw horizontal lines, used when `yintercept` is not mapped.
 ///
 /// \@param colour Line colour. `auto` inherits the theme `ink`.
 ///
@@ -65,16 +71,38 @@
 /// )
 /// ```
 ///
+/// \@examples Drive reference lines from data: bind `yintercept` and `colour`
+/// through \@aes so each threshold row draws its own coloured line.
+/// ```
+/// //| alt: "Scatter of x against y = x + 2 overlaid with two horizontal reference lines at y = 4 and 8 coloured by threshold level."
+/// #let d = range(0, 10).map(i => (x: i, y: i + 2))
+/// #let thresholds = ((at: 4, lvl: "low"), (at: 8, lvl: "high"))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (
+///     geom-point(size: 2pt),
+///     geom-hline(mapping: aes(yintercept: "at", colour: "lvl"), data: thresholds),
+///   ),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@geom-vline, \@geom-abline
 #let geom-hline(
+  mapping: none,
+  data: none,
   yintercept: none,
   colour: auto,
   stroke: auto,
   alpha: auto,
-  linetype: "solid",
+  linetype: auto,
   inherit-aes: false,
 ) = make-layer(
   "hline",
+  mapping: mapping,
+  data: data,
   params: (
     yintercept: yintercept,
     colour: colour,
