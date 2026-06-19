@@ -154,3 +154,18 @@
     )
   }
 }
+
+// Panic unless `stroke` is an absolute length, a ratio (a `%` value relative to
+// the parent surface stroke), or `none` (inherit). Guards against passing a raw
+// number or string where a typed stroke thickness is expected.
+#let assert-stroke(scope, stroke) = {
+  if stroke != none and type(stroke) != length and type(stroke) != ratio {
+    fail-type(
+      scope,
+      "stroke",
+      stroke,
+      "a length (e.g., `1pt`), a ratio (e.g., `80%`), or `none`",
+      hint: "Use `1pt` for an absolute thickness or `80%` to scale the parent stroke.",
+    )
+  }
+}

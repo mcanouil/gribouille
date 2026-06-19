@@ -82,7 +82,7 @@
   accent,
   (
     panel-background: element-rect(fill: col-mix(ink, paper, 0.92)),
-    panel-grid: element-line(colour: paper, stroke: 0.5pt),
+    panel-grid: element-line(colour: paper, stroke: 100%),
     axis-line: element-blank(),
     axis-text: element-text(colour: col-mix(ink, paper, 0.302)),
     strip-background: element-rect(fill: col-mix(ink, paper, 0.85)),

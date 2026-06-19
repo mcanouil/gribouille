@@ -83,9 +83,9 @@
     panel-background: element-rect(fill: paper),
     panel-grid: element-line(
       colour: col-mix(ink, paper, 0.7),
-      stroke: 0.4pt,
+      stroke: (0.4 / 0.5) * 100%,
     ),
-    axis-line: element-line(colour: ink, stroke: 0.5pt),
+    axis-line: element-line(colour: ink, stroke: 100%),
   ),
   fields,
 )
