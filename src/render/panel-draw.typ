@@ -772,7 +772,7 @@
   let clip-on = if inner-radial != none {
     inner-radial.clip
   } else if coord != none {
-    coord.at("clip", default: "on") != "off"
+    coord.at("clip", default: true)
   } else { true }
   let clipped-geoms = _draw-subset(clipped)
   content(

@@ -24,7 +24,7 @@
 ///
 /// \@param direction `1` (default) advances clockwise; `-1` counter-clockwise.
 ///
-/// \@param clip `"off"` (default) lets marks render past the panel rectangle; `"on"` clips.
+/// \@param clip `false` (default) lets marks render past the panel rectangle; `true` clips.
 ///
 /// \@returns Coordinate dictionary consumed by \@plot.
 ///
@@ -52,7 +52,7 @@
   start: 0,
   end: none,
   direction: 1,
-  clip: "off",
+  clip: false,
 ) = (
   kind: "coord",
   coord: "radial",

@@ -19,7 +19,7 @@
 ///
 /// \@param expand Whether to add a small margin around the data range.
 ///
-/// \@param clip Set to `"off"` to let geoms (typically annotations) draw past the panel rectangle. Defaults to `"on"`.
+/// \@param clip Set to `false` to let geoms (typically annotations) draw past the panel rectangle. Defaults to `true`.
 ///
 /// \@returns Coordinate dictionary consumed by \@plot.
 ///
@@ -52,7 +52,7 @@
 /// )
 /// ```
 ///
-/// \@examples Set `clip: "off"` so an annotation placed at the data edge can
+/// \@examples Set `clip: false` so an annotation placed at the data edge can
 /// extend past the panel rectangle.
 /// ```
 /// //| alt: "Scatter chart of y = x/2 from x = 0 to 9 with a text annotation 'Long label' at (9, 4.5) that extends past the right panel edge because clipping is disabled."
@@ -64,14 +64,19 @@
 ///     geom-point(size: 2pt),
 ///     annotate("typst", x: 9, y: 4.5, label: [Long label]),
 ///   ),
-///   coord: coord-cartesian(clip: "off"),
+///   coord: coord-cartesian(clip: false),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
 /// ```
 ///
 /// \@see \@plot, \@scale-x-continuous
-#let coord-cartesian(x-limits: none, y-limits: none, expand: true, clip: "on") = (
+#let coord-cartesian(
+  x-limits: none,
+  y-limits: none,
+  expand: true,
+  clip: true,
+) = (
   kind: "coord",
   coord: "cartesian",
   x-limits: x-limits,
