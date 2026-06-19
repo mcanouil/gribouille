@@ -6,6 +6,7 @@
 
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/errors.typ": fail-enum
+#import "../utils/stair.typ": stair
 #import "grouped-path.typ": draw-grouped-paths, rows-to-points, sort-rows-by-x
 
 /// Step layer connecting observations as a stair-step path, one per group.
@@ -102,22 +103,6 @@
   )
 }
 
-#let _stair(pts, direction) = {
-  if pts.len() < 2 { return pts }
-  let out = (pts.first(),)
-  for i in range(1, pts.len()) {
-    let (x0, y0) = pts.at(i - 1)
-    let (x1, y1) = pts.at(i)
-    if direction == "hv" {
-      out.push((x1, y0))
-    } else {
-      out.push((x0, y1))
-    }
-    out.push((x1, y1))
-  }
-  out
-}
-
 #let _build-pts(rows, layer, mapping, x-trained, ctx) = {
   let pts = rows-to-points(
     sort-rows-by-x(rows, mapping, x-trained),
@@ -125,7 +110,7 @@
     mapping,
     ctx,
   )
-  _stair(pts, layer.params.direction)
+  stair(pts, layer.params.direction)
 }
 
 #let draw(layer, ctx) = draw-grouped-paths(layer, ctx, _build-pts)

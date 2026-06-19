@@ -7,6 +7,7 @@
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/errors.typ": fail-enum
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "grouped-path.typ": sort-rows-by-x
@@ -40,6 +41,10 @@
 /// \@param stroke Outline thickness (a Typst length) or stroke dictionary; `none` disables the outline.
 ///
 /// \@param alpha Fill opacity in `[0, 1]`.
+///
+/// \@param direction Step interpolation for the filled top edge. `none`
+/// (default) draws a smooth polygon; `"hv"` (horizontal then vertical) or
+/// `"vh"` (vertical then horizontal) step the top edge like \@geom-step.
 ///
 /// \@param stat Statistical transform name. Defaults to `"align"`, which
 /// resamples all groups onto a shared x-grid before stacking so bands join
@@ -83,6 +88,20 @@
 /// )
 /// ```
 ///
+/// \@examples Step the top edge with `direction: "hv"` for a histogram-like
+/// filled area.
+/// ```
+/// //| alt: "Stepped filled area chart over x = 0 to 6 whose top edge holds each level flat then jumps to the next, filled down to y = 0."
+/// #let d = range(0, 7).map(i => (x: i, y: calc.rem(i * 3, 5) + 1))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (geom-area(direction: "hv", alpha: 0.4),),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@geom-ribbon, \@geom-line
 #let geom-area(
   mapping: none,
@@ -91,20 +110,32 @@
   fill: auto,
   stroke: none,
   alpha: auto,
+  direction: none,
   stat: "align",
   position: "stack",
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "area",
-  mapping: mapping,
-  data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-area", args),
-  stat: stat,
-  position: position,
-  inherit-aes: inherit-aes,
-)
+) = {
+  if direction != none and direction != "hv" and direction != "vh" {
+    fail-enum("geom-area", "direction", direction, ("hv", "vh"))
+  }
+  make-layer(
+    "area",
+    mapping: mapping,
+    data: data,
+    params: (
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+      direction: direction,
+    )
+      + split-aes-params("geom-area", args),
+    stat: stat,
+    position: position,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -125,6 +156,7 @@
   )
 
   let ymin-col = mapping.at("ymin", default: none)
+  let direction = layer.params.direction
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     let rows = g.data
@@ -139,7 +171,13 @@
       .filter(p => p.y != none)
     if sorted.len() < 2 { continue }
 
-    let pts = band-polygon(ctx, sorted, p => p.y, p => p.ymin)
+    let pts = band-polygon(
+      ctx,
+      sorted,
+      p => p.y,
+      p => p.ymin,
+      direction: direction,
+    )
     if pts.any(p => p == none) { continue }
 
     let leader = rows.first()

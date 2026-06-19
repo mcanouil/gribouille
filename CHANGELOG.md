@@ -12,6 +12,7 @@
 
 ### Changes
 
+- feat: `geom-area()` accepts a `direction` parameter (`"hv"` or `"vh"`) that steps the filled top edge like `geom-step()`; `none` (default) keeps the smooth area. (#135)
 - feat: `element-text()` / `element-typst()` `angle` is now honoured on axis titles, strip text, and legend title and entry labels (previously only tick labels and the plot title, subtitle, and caption); axis titles default to 0deg (x) / 90deg (y) and reserve the correct space at any angle. (#134)
 - feat: `geom-text()`, `geom-label()`, and `geom-typst()` accept an `angle` parameter (a Typst angle, default `0deg`) rotating each label. (#134)
 - feat: every aesthetic key can be pinned as a constant directly on any geom, e.g., `geom-label(nudge-x: 0.5)`, not only through `aes()`; declared parameters still bind first and unknown or positional arguments are rejected. (#133)

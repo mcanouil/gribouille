@@ -5,6 +5,7 @@
 #import "../scale/train.typ": discrete-slot-width, map-axis, map-position
 #import "types.typ": parse-number
 #import "radial.typ": project-point
+#import "stair.typ": stair
 
 /// Compute the panel coordinate range of a band centred on `raw`.
 ///
@@ -45,6 +46,9 @@
 /// upper edge forward followed by the lower edge reversed. `hi`/`lo` read the
 /// upper/lower value off each point. Unmappable points project to `none` and
 /// pass through unchanged, so callers guard with `pts.any(p => p == none)`.
+/// A non-`none` `direction` (`"hv"` or `"vh"`) steps both edges into a
+/// staircase, leaving the closed shape intact; the step is skipped when an
+/// edge holds an unmappable point so the guard still fires.
 ///
 /// \@internal
 ///
@@ -56,10 +60,20 @@
 ///
 /// \@param lo Accessor `p => value` for the lower edge.
 ///
+/// \@param direction Stair direction `"hv"`/`"vh"`, or `none` for a smooth band.
+///
 /// \@returns Array of projected `(x, y)` points forming the closed polygon.
-#let band-polygon(ctx, sorted, hi, lo) = {
+#let band-polygon(ctx, sorted, hi, lo, direction: none) = {
   let upper = sorted.map(p => project-point(ctx, p.x, hi(p)))
   let lower = sorted.rev().map(p => project-point(ctx, p.x, lo(p)))
+  if (
+    direction != none
+      and not upper.any(p => p == none)
+      and not lower.any(p => p == none)
+  ) {
+    upper = stair(upper, direction)
+    lower = stair(lower, direction)
+  }
   upper + lower
 }
 
