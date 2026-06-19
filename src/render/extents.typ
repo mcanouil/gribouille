@@ -35,6 +35,13 @@
   ((lo + hi) / 2, "center")
 }
 
+// Resolve a text style's rotation: the explicit `angle` field when the theme
+// sets one, otherwise the surface's natural default in degrees (x titles read
+// horizontally at 0deg, y titles read bottom-to-top at 90deg).
+#let _title-angle(style, default-deg) = if style.angle != none {
+  style.angle
+} else { default-deg * 1deg }
+
 // Resolve a margin side on a text-style record to a cm float, falling back to
 // the supplied default length when the user has not overridden the side. The
 // surface's font size is forwarded so em values scale with it.

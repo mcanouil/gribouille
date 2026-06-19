@@ -16,7 +16,8 @@
 )
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _ax-text-cm, _axis-label-extents,
-  _secondary-label-extents, _text-margin-cm, _x-label-depth, _y-label-width,
+  _secondary-label-extents, _text-margin-cm, _title-angle, _x-label-depth,
+  _y-label-width,
 )
 #import "facet.typ": _draw-strip, _strip-band, _strip-texts
 #import "panel-draw.typ": _draw-axis-and-layers
@@ -328,6 +329,7 @@
           eval-strings: _ax-title.xb.typst,
         )],
         anchor: "south",
+        angle: _title-angle(_ax-title.xb, 0),
       )
     }
     if y-title != none and _ax-title.yl.size > 0pt {
@@ -340,7 +342,7 @@
           y-title,
           eval-strings: _ax-title.yl.typst,
         )],
-        angle: 90deg,
+        angle: _title-angle(_ax-title.yl, 90),
       )
     }
 
@@ -550,6 +552,7 @@
           eval-strings: _ax-title.xb.typst,
         )],
         anchor: "south",
+        angle: _title-angle(_ax-title.xb, 0),
       )
     }
     if y-title != none and _ax-title.yl.size > 0pt {
@@ -562,7 +565,7 @@
           y-title,
           eval-strings: _ax-title.yl.typst,
         )],
-        angle: 90deg,
+        angle: _title-angle(_ax-title.yl, 90),
       )
     }
 

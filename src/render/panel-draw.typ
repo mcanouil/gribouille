@@ -34,9 +34,9 @@
 )
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP, _ax-text-cm,
-  _axis-guide-rows, _resolve-extents, _text-margin-cm, _x-label-depth,
-  _x-label-depth-stack, _x-title-place, _y-label-width, _y-label-width-stack,
-  _y-title-place,
+  _axis-guide-rows, _resolve-extents, _text-margin-cm, _title-angle,
+  _x-label-depth, _x-label-depth-stack, _x-title-place, _y-label-width,
+  _y-label-width-stack, _y-title-place,
 )
 
 #import "../geom/point.typ" as point-geom
@@ -516,6 +516,7 @@
           eval-strings: _ax-title.xt.typst,
         )],
         anchor: x-anchor,
+        angle: _title-angle(_ax-title.xt, 0),
       )
     }
   }
@@ -572,7 +573,7 @@
           _y-sec.name,
           eval-strings: _ax-title.yr.typst,
         )],
-        angle: 90deg,
+        angle: _title-angle(_ax-title.yr, 90),
         anchor: y-anchor,
       )
     }
@@ -873,6 +874,7 @@
         eval-strings: _ax-title.xb.typst,
       )],
       anchor: x-anchor,
+      angle: _title-angle(_ax-title.xb, 0),
     )
   }
   if show-y-title and y-title != none and _ax-title.yl.size > 0pt {
@@ -883,7 +885,7 @@
         y-title,
         eval-strings: _ax-title.yl.typst,
       )],
-      angle: 90deg,
+      angle: _title-angle(_ax-title.yl, 90),
       anchor: y-anchor,
     )
   }
