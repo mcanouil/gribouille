@@ -17,6 +17,12 @@ local AXIS_VARIANT_SUFFIXES = { "-x", "-x-bottom", "-x-top", "-y", "-y-left", "-
 -- _surface-parent. Their parent map is reconstructed here.
 local SCALAR_VARIANTS = { "tick-length" }
 
+-- panel-grid splits into major/minor weights, each with a per-axis (`-x`, `-y`)
+-- variant and no per-side variants. Mirrors the panel-grid block in
+-- src/theme/theme.typ::_surface-parent.
+local PANEL_GRID_WEIGHTS = { "panel-grid-major", "panel-grid-minor" }
+local PANEL_GRID_AXIS_SUFFIXES = { "-x", "-y" }
+
 -- Identifier substitutions: source uses sys.inputs-driven placeholders that
 -- collapse to these literals in standalone renders.
 local IDENT_SUBSTITUTIONS = {
@@ -151,6 +157,13 @@ function M.read_surface_parent(path)
   end
   for _, fam in ipairs(AXIS_FAMILIES) do expand_variants(fam) end
   for _, base in ipairs(SCALAR_VARIANTS) do expand_variants(base) end
+  parents["panel-grid-major"] = "panel-grid"
+  parents["panel-grid-minor"] = "panel-grid"
+  for _, weight in ipairs(PANEL_GRID_WEIGHTS) do
+    for _, suf in ipairs(PANEL_GRID_AXIS_SUFFIXES) do
+      parents[weight .. suf] = weight
+    end
+  end
   return parents
 end
 
@@ -207,6 +220,16 @@ local function has_variants(root)
 end
 
 local function variant_keys_for(root)
+  if root == "panel-grid" then
+    local out = {}
+    for _, weight in ipairs(PANEL_GRID_WEIGHTS) do
+      table.insert(out, weight)
+      for _, suf in ipairs(PANEL_GRID_AXIS_SUFFIXES) do
+        table.insert(out, weight .. suf)
+      end
+    end
+    return out
+  end
   if not has_variants(root) then return {} end
   local out = {}
   for _, suf in ipairs(AXIS_VARIANT_SUFFIXES) do

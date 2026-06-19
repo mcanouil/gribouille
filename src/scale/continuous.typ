@@ -10,6 +10,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
   transform: "identity",
   expand: auto,
@@ -22,6 +24,8 @@
   limits: limits,
   oob: oob,
   breaks: breaks,
+  minor-breaks: minor-breaks,
+  n-minor: n-minor,
   labels: labels,
   transform: transform,
   expand: expand,
@@ -35,6 +39,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
 ) = (
   kind: "scale",
@@ -44,6 +50,8 @@
   limits: limits,
   oob: oob,
   breaks: breaks,
+  minor-breaks: minor-breaks,
+  n-minor: n-minor,
   labels: labels,
   transform: transform,
   expand: auto,
@@ -88,6 +96,10 @@
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
 /// \@param breaks Array of break values, or `auto` for automatic tick selection.
+///
+/// \@param minor-breaks Array of minor gridline positions, or `auto` to derive them automatically (midpoints between major breaks, extended one step beyond each end).
+///
+/// \@param n-minor Number of minor gridlines between adjacent major breaks when `minor-breaks` is `auto`; `auto` resolves to `1`.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -154,6 +166,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
   transform: "identity",
   expand: auto,
@@ -164,6 +178,8 @@
   limits: limits,
   oob: oob,
   breaks: breaks,
+  minor-breaks: minor-breaks,
+  n-minor: n-minor,
   labels: labels,
   transform: transform,
   expand: expand,
@@ -186,6 +202,10 @@
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
 /// \@param breaks Array of break values, or `auto` for automatic tick selection.
+///
+/// \@param minor-breaks Array of minor gridline positions, or `auto` to derive them automatically (midpoints between major breaks, extended one step beyond each end).
+///
+/// \@param n-minor Number of minor gridlines between adjacent major breaks when `minor-breaks` is `auto`; `auto` resolves to `1`.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -235,6 +255,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
   transform: "identity",
   expand: auto,
@@ -245,6 +267,8 @@
   limits: limits,
   oob: oob,
   breaks: breaks,
+  minor-breaks: minor-breaks,
+  n-minor: n-minor,
   labels: labels,
   transform: transform,
   expand: expand,
@@ -268,6 +292,10 @@
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
 /// \@param breaks Array of break values, or `auto` for automatic tick selection.
+///
+/// \@param minor-breaks Array of minor gridline positions, or `auto` to derive them automatically (midpoints between major breaks, extended one step beyond each end).
+///
+/// \@param n-minor Number of minor gridlines between adjacent major breaks when `minor-breaks` is `auto`; `auto` resolves to `1`.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -311,6 +339,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
 ) = (
   _transform-scale(
@@ -320,6 +350,8 @@
     limits: limits,
     oob: oob,
     breaks: breaks,
+    minor-breaks: minor-breaks,
+    n-minor: n-minor,
     labels: labels,
   )
 )
@@ -341,6 +373,10 @@
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
 /// \@param breaks Array of break values, or `auto` for automatic tick selection.
+///
+/// \@param minor-breaks Array of minor gridline positions, or `auto` to derive them automatically (midpoints between major breaks, extended one step beyond each end).
+///
+/// \@param n-minor Number of minor gridlines between adjacent major breaks when `minor-breaks` is `auto`; `auto` resolves to `1`.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -385,6 +421,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
 ) = (
   _transform-scale(
@@ -394,6 +432,8 @@
     limits: limits,
     oob: oob,
     breaks: breaks,
+    minor-breaks: minor-breaks,
+    n-minor: n-minor,
     labels: labels,
   )
 )
@@ -415,6 +455,10 @@
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
 /// \@param breaks Array of break values, or `auto` for automatic tick selection.
+///
+/// \@param minor-breaks Array of minor gridline positions, or `auto` to derive them automatically (midpoints between major breaks, extended one step beyond each end).
+///
+/// \@param n-minor Number of minor gridlines between adjacent major breaks when `minor-breaks` is `auto`; `auto` resolves to `1`.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -459,6 +503,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
 ) = (
   _transform-scale(
@@ -468,6 +514,8 @@
     limits: limits,
     oob: oob,
     breaks: breaks,
+    minor-breaks: minor-breaks,
+    n-minor: n-minor,
     labels: labels,
   )
 )
@@ -489,6 +537,10 @@
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
 /// \@param breaks Array of break values, or `auto` for automatic tick selection.
+///
+/// \@param minor-breaks Array of minor gridline positions, or `auto` to derive them automatically (midpoints between major breaks, extended one step beyond each end).
+///
+/// \@param n-minor Number of minor gridlines between adjacent major breaks when `minor-breaks` is `auto`; `auto` resolves to `1`.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -529,6 +581,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
 ) = (
   _transform-scale(
@@ -538,6 +592,8 @@
     limits: limits,
     oob: oob,
     breaks: breaks,
+    minor-breaks: minor-breaks,
+    n-minor: n-minor,
     labels: labels,
   )
 )
@@ -559,6 +615,10 @@
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps them to the nearest endpoint.
 ///
 /// \@param breaks Array of break values, or `auto` for automatic tick selection.
+///
+/// \@param minor-breaks Array of minor gridline positions, or `auto` to derive them automatically (midpoints between major breaks, extended one step beyond each end).
+///
+/// \@param n-minor Number of minor gridlines between adjacent major breaks when `minor-breaks` is `auto`; `auto` resolves to `1`.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -599,6 +659,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
 ) = (
   _transform-scale(
@@ -608,6 +670,8 @@
     limits: limits,
     oob: oob,
     breaks: breaks,
+    minor-breaks: minor-breaks,
+    n-minor: n-minor,
     labels: labels,
   )
 )
@@ -772,6 +836,10 @@
 ///
 /// \@param breaks Array of break values, or `auto` for automatic tick selection.
 ///
+/// \@param minor-breaks Array of minor gridline positions, or `auto` to derive them automatically (midpoints between major breaks, extended one step beyond each end).
+///
+/// \@param n-minor Number of minor gridlines between adjacent major breaks when `minor-breaks` is `auto`; `auto` resolves to `1`.
+///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
 /// \@returns Scale object consumed by \@plot.
@@ -815,6 +883,8 @@
   limits: none,
   oob: "drop",
   breaks: auto,
+  minor-breaks: auto,
+  n-minor: auto,
   labels: auto,
 ) = (
   _transform-scale(
@@ -824,6 +894,8 @@
     limits: limits,
     oob: oob,
     breaks: breaks,
+    minor-breaks: minor-breaks,
+    n-minor: n-minor,
     labels: labels,
   )
 )

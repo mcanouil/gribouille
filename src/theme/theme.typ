@@ -46,6 +46,14 @@
     out.insert(fam + "-y-left", fam + "-y")
     out.insert(fam + "-y-right", fam + "-y")
   }
+  // Panel grid splits into major/minor weights, each with a per-axis (-x, -y)
+  // variant. Gridlines span the panel, so there are no per-side variants.
+  out.insert("panel-grid-major", "panel-grid")
+  out.insert("panel-grid-minor", "panel-grid")
+  for weight in ("panel-grid-major", "panel-grid-minor") {
+    out.insert(weight + "-x", weight)
+    out.insert(weight + "-y", weight)
+  }
   out
 }
 
