@@ -299,8 +299,8 @@
     panel-background: element-rect(fill: gradient.linear(
       // Hold the dark top longer so it blends into the sky-deep frame, then
       // lighten only toward the lower half of the panel.
-      (rgb("#0a1330"), 0%),
-      (rgb("#0a1330"), 45%),
+      (palette.sky-deep, 0%),
+      (rgb("#0a1330"), 35%),
       (rgb("#1c2f5e"), 100%),
       dir: ttb,
     )),
