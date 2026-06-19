@@ -7,6 +7,7 @@
 - feat!: `labs()` is renamed to `labels()`, and the `plot()` / `compose()` `labs:` argument to `labels:`; there is no `labs` alias. (#131)
 - feat!: `coord-cartesian()`, `stat-function()`, and `geom-function()` rename the `xlim`/`ylim` arguments to `x-limits`/`y-limits`. (#131)
 - feat!: the `col-mix()` colour helper is renamed to `colour-mix()`, with arguments `colour1`/`colour2`. (#131)
+- feat!: `geom-text`, `geom-label`, and `geom-typst` drop the `dx`/`dy` parameters; offsets now use the `nudge-x`/`nudge-y` aesthetics, where a number shifts in data units and a Typst length shifts in canvas units. (#131)
 
 ### Changes
 
@@ -22,6 +23,7 @@
 - feat: binned position scales (`scale-x-binned` / `scale-y-binned`) accept `breaks` as bin edges; ticks sit at interval midpoints and `n-breaks` is ignored when `breaks` is set. (#116)
 - feat: binned colour, fill, shape, linetype, size, linewidth, stroke, and alpha scales accept `breaks` as bin edges; colour, fill, shape, and linetype bin per row by the edges, the others bin their legend. (#116)
 - feat: bundled datasets (`penguins`, `economics`, `mpg`) ship as row-store arrays, so `penguins.filter(...)` and `.map(...)` work directly; `plot()` still accepts them. (#116)
+- fix: scalar and Typst-length `nudge-x`/`nudge-y` values now apply to `geom-text`/`geom-label`/`geom-typst` (previously a silent no-op). (#131)
 - fix: setting the base `line`/`rect` stroke in `theme()` now cascades to every line and rect surface (panel grid, axis line, ticks, legend ticks, legend bar); `element-line`/`element-rect` `stroke` accepts a ratio (e.g., `80%`) to scale the parent surface thickness, while an absolute length still pins a surface outright. (#124)
 - fix: setting the base `text` size in `theme()` now cascades to every text surface (axis titles, tick labels, legend, strip, plot title); `element-text`/`element-typst` `size` accepts a ratio (e.g., `80%`) to scale the parent surface size, while an absolute length still pins a surface outright. (#121)
 - fix: `position: "dodge"` now shifts `geom-text`/`geom-label`/`geom-typst`, `geom-point`, `geom-line`/`geom-path`/`geom-step`, `geom-pointrange`, and `geom-linerange` marks side by side, matching the dodged bars instead of staying on the category centre. (#119)
