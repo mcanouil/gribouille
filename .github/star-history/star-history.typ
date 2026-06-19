@@ -323,7 +323,7 @@
     ),
     plot-subtitle: element-text(
       colour: palette.muted,
-      size: 13.1pt,
+      size: 13.3pt,
       margin: margin(bottom: 24pt),
     ),
     plot-caption: element-text(
@@ -334,7 +334,7 @@
     // Outer frame: pad the whole figure so it breathes inside the page.
     plot-background: element-rect(
       fill: palette.sky-deep,
-      inset: margin(top: 22pt, right: 26pt, bottom: 18pt, left: 22pt),
+      inset: margin(top: 22pt, right: 22pt, bottom: 22pt, left: 22pt),
     ),
   ),
   width: auto,
