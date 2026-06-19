@@ -51,6 +51,8 @@
 ///
 /// \@param anchor CeTZ anchor (e.g., `"center"`, `"west"`) controlling placement.
 ///
+/// \@param angle Rotation applied to each label box (a Typst angle, e.g., `45deg`). Positive angles rotate anticlockwise about the anchor.
+///
 /// \@param segment Draw a connector from each box back to its anchor point. When `true`, the connector is routed to avoid the AABBs of other boxes of the same layer; dropped when no L-bend clears the obstacles.
 ///
 /// \@param segment-colour Connector paint. `auto` inherits the theme `ink`.
@@ -149,6 +151,7 @@
   inset: 2pt,
   radius: 1pt,
   anchor: "center",
+  angle: 0deg,
   segment: false,
   segment-colour: auto,
   segment-stroke: 0.4pt,
@@ -181,6 +184,7 @@
     inset: inset,
     radius: radius,
     anchor: anchor,
+    angle: angle,
     segment: segment,
     segment-colour: segment-colour,
     segment-stroke: segment-stroke,
@@ -283,6 +287,7 @@
       centre,
       body,
       anchor: layer.params.anchor,
+      angle: layer.params.angle,
     )
   }
 }

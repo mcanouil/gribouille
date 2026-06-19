@@ -28,6 +28,8 @@
 ///
 /// \@param anchor CeTZ anchor (e.g., `"center"`, `"west"`) controlling placement.
 ///
+/// \@param angle Rotation applied to each label (a Typst angle, e.g., `45deg`). Positive angles rotate anticlockwise about the anchor.
+///
 /// \@param label Constant label drawn at every row's `(x, y)`. Accepts a Typst content block (`[#math.alpha]`, `[*bold*]`) or a markup string (`"$alpha$"`) eval'd as Typst at render time. When `none`, the label is read from the `label` aesthetic mapping.
 ///
 /// \@param segment Draw a connector from each label back to its anchor point. When `true`, the connector is routed to avoid the AABBs of other labels of the same layer; dropped when no L-bend clears the obstacles.
@@ -110,6 +112,7 @@
   font: auto,
   alpha: auto,
   anchor: "center",
+  angle: 0deg,
   label: none,
   segment: false,
   segment-colour: auto,
@@ -139,6 +142,7 @@
     font: font,
     alpha: alpha,
     anchor: anchor,
+    angle: angle,
     label: label,
     segment: segment,
     segment-colour: segment-colour,
