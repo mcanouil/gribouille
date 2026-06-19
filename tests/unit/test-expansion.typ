@@ -4,7 +4,7 @@
   DISCRETE-AUTO-DATA-PAD, normalise-expansion,
 )
 #import "../../src/scale/train.typ": map-discrete, map-position, train
-#import "../../src/scale/continuous.typ": scale-x-continuous
+#import "../../src/scale/continuous.typ": scale-x-continuous, scale-y-continuous
 #import "../../src/scale/discrete.typ": scale-x-discrete
 #import "../../src/coord/cartesian.typ": coord-cartesian
 
@@ -17,6 +17,14 @@
 // Ratios resolve to mult-only.
 #assert.eq(normalise-expansion(5%, "continuous"), (0.05, 0, 0.05, 0))
 #assert.eq(normalise-expansion((0%, 10%), "continuous"), (0, 0, 0.1, 0))
+
+// A per-side `auto` keeps the matching half of the per-scale default; the
+// explicit side resolves normally.
+#assert.eq(normalise-expansion((0%, auto), "continuous"), (0, 0, 0.05, 0))
+#assert.eq(normalise-expansion((auto, 10%), "continuous"), (0.05, 0, 0.1, 0))
+// Discrete defaults have no mult; the slot pad is added later in
+// `_apply-expand`, so a per-side `auto` resolves to zero mult here.
+#assert.eq(normalise-expansion((auto, 0%), "discrete"), (0, 0, 0, 0))
 
 // Lengths resolve to canvas-cm-only.
 #assert.eq(normalise-expansion(1cm, "continuous"), (0, 1, 0, 1))
@@ -96,6 +104,19 @@
 #assert(vt-hi > 5)
 // view-pad-cm is zero for an auto continuous scale.
 #assert.eq(bar-trained.y.at("view-pad-cm"), (0, 0))
+
+// Per-side `auto`: `expand: (auto, 10%)` on the anchored bar axis collapses
+// the lo-side mult (auto + anchor) to 0, while the hi side honours the
+// explicit 10%. Domain is (0, 5), so the upper bound lifts by 0.1 * 5 = 0.5.
+#let bar-side-trained = train(
+  scales: (scale-y-continuous(expand: (auto, 10%)),),
+  layers: bar-prepared,
+  mapping: aes(x: "cat", y: "y"),
+  data: bar-data,
+)
+#let bar-side-trained = _post-train(bar-side-trained, bar-prepared)
+#let bar-side-trained = _apply-expand(bar-side-trained, none)
+#assert.eq(bar-side-trained.y.view-transform, (0, 5.5))
 
 // `_map-transform` places y=0 exactly at the start of the panel range.
 #assert.eq(_map-transform(bar-trained.y, 0, (0.0, 100.0)), 0.0)

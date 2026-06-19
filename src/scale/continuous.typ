@@ -106,7 +106,7 @@
 /// \@param transform Transformation keyword: `"identity"`, `"log10"`, `"sqrt"`, or `"reverse"`.
 ///
 /// \@param expand Padding around the domain.
-///   Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding.
+///   Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding, where either element may be `auto` to keep the per-scale default on that side.
 ///   `auto` keeps the per-scale default; `false` collapses to zero.
 ///
 /// \@param secondary Secondary axis spec from \@dup-axis or \@sec-axis, or `none`.
@@ -212,7 +212,7 @@
 /// \@param transform Transformation keyword: `"identity"`, `"log10"`, `"sqrt"`, or `"reverse"`.
 ///
 /// \@param expand Padding around the domain.
-///   Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding.
+///   Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding, where either element may be `auto` to keep the per-scale default on that side.
 ///   `auto` keeps the per-scale default; `false` collapses to zero.
 ///
 /// \@param secondary Secondary axis spec from \@dup-axis or \@sec-axis, or `none`.

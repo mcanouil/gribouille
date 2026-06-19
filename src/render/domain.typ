@@ -358,16 +358,30 @@
       expand,
       entry.type,
     )
+    // A side left at `auto` (whole value or one tuple element) gets the
+    // auto-only treatments below; an explicit value on that side opts out.
+    let lo-auto = (
+      raw == auto
+        or (
+          type(raw) == array and raw.len() == 2 and raw.at(0) == auto
+        )
+    )
+    let hi-auto = (
+      raw == auto
+        or (
+          type(raw) == array and raw.len() == 2 and raw.at(1) == auto
+        )
+    )
     // Bars / areas anchor at y=0: when the user did not pin `expand`
     // explicitly, drop the multiplicative expansion on the anchored side so
     // the baseline sits flush against the axis line. Length-add is always
     // honoured.
     let anchor = entry.at("anchor-zero", default: none)
-    if anchor != none and raw == auto {
-      if anchor == "lo" or anchor == "both" { mult-lo = 0 }
-      if anchor == "hi" or anchor == "both" { mult-hi = 0 }
+    if anchor != none {
+      if (anchor == "lo" or anchor == "both") and lo-auto { mult-lo = 0 }
+      if (anchor == "hi" or anchor == "both") and hi-auto { mult-hi = 0 }
     }
-    let radial-zero-lo = axis == radial-axis and raw == auto
+    let radial-zero-lo = axis == radial-axis and lo-auto
     if radial-zero-lo {
       mult-lo = 0
       add-cm-lo = 0
@@ -389,14 +403,15 @@
     } else if entry.type == "discrete" {
       let n = entry.domain.len()
       let span = if n > 1 { n - 1 } else { 0 }
-      // Discrete `auto` gets a default 0.6-slot data-unit pad on each side;
-      // any explicit `expand:` value supersedes it. Radial axes skip
+      // A discrete side left at `auto` gets a default 0.6-slot data-unit pad;
+      // an explicit value on that side supersedes it. Radial axes skip
       // the lo-side data pad so the inner edge sits at radius 0.
-      let auto-data-pad = if raw == auto { DISCRETE-AUTO-DATA-PAD } else { 0 }
+      let auto-data-pad-lo = if lo-auto { DISCRETE-AUTO-DATA-PAD } else { 0 }
+      let auto-data-pad-hi = if hi-auto { DISCRETE-AUTO-DATA-PAD } else { 0 }
       let geom-min = entry.at("geom-min-pad", default: 0)
-      let lo-pad-base = if radial-zero-lo { 0 } else { auto-data-pad }
+      let lo-pad-base = if radial-zero-lo { 0 } else { auto-data-pad-lo }
       let pad-lo = calc.max(mult-lo * span + lo-pad-base, geom-min)
-      let pad-hi = calc.max(mult-hi * span + auto-data-pad, geom-min)
+      let pad-hi = calc.max(mult-hi * span + auto-data-pad-hi, geom-min)
       new-entry.insert("view-index", (0 - pad-lo, (n - 1) + pad-hi))
     }
     new-entry.insert("view-pad-cm", (add-cm-lo, add-cm-hi))

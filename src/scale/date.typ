@@ -57,7 +57,7 @@
 ///
 /// \@param date-format Typst `datetime.display` pattern used for break labels.
 ///
-/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding. `auto` keeps the per-scale default; `false` collapses to zero.
+/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding, where either element may be `auto` to keep the per-scale default on that side. `auto` keeps the per-scale default; `false` collapses to zero.
 ///
 /// \@returns Scale object consumed by \@plot.
 ///
@@ -138,7 +138,7 @@
 ///
 /// \@param date-format Typst `datetime.display` pattern used for break labels.
 ///
-/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding. `auto` keeps the per-scale default; `false` collapses to zero.
+/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding, where either element may be `auto` to keep the per-scale default on that side. `auto` keeps the per-scale default; `false` collapses to zero.
 ///
 /// \@returns Scale object consumed by \@plot.
 ///
@@ -207,7 +207,7 @@
 ///
 /// \@param date-format Typst `datetime.display` pattern used for break labels.
 ///
-/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding. `auto` keeps the per-scale default; `false` collapses to zero.
+/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding, where either element may be `auto` to keep the per-scale default on that side. `auto` keeps the per-scale default; `false` collapses to zero.
 ///
 /// \@returns Scale object consumed by \@plot.
 ///
@@ -272,7 +272,7 @@
 ///
 /// \@param date-format Typst `datetime.display` pattern used for break labels.
 ///
-/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding. `auto` keeps the per-scale default; `false` collapses to zero.
+/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding, where either element may be `auto` to keep the per-scale default on that side. `auto` keeps the per-scale default; `false` collapses to zero.
 ///
 /// \@returns Scale object consumed by \@plot.
 ///
@@ -341,7 +341,7 @@
 ///
 /// \@param date-format Typst `datetime.display` pattern used for break labels.
 ///
-/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding. `auto` keeps the per-scale default; `false` collapses to zero.
+/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding, where either element may be `auto` to keep the per-scale default on that side. `auto` keeps the per-scale default; `false` collapses to zero.
 ///
 /// \@returns Scale object consumed by \@plot.
 ///
@@ -408,7 +408,7 @@
 ///
 /// \@param date-format Typst `datetime.display` pattern used for break labels.
 ///
-/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding. `auto` keeps the per-scale default; `false` collapses to zero.
+/// \@param expand Padding around the domain. Accepts a `ratio` (`5%`) for proportional breathing room, a `length` (`5pt`) for canvas-space padding, a `relative` (`5pt + 5%`) for both, or a `(lo, hi)` 2-tuple for asymmetric padding, where either element may be `auto` to keep the per-scale default on that side. `auto` keeps the per-scale default; `false` collapses to zero.
 ///
 /// \@returns Scale object consumed by \@plot.
 ///
