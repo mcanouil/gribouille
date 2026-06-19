@@ -261,10 +261,11 @@
   ),
   coord: coord-cartesian(clip: "off"),
   labels: labels(
-    title: "Gribouille's first " + str(int(peak.stars)) + " GitHub stars",
-    subtitle: "Gribouille brings the grammar of graphics, the idea behind ggplot2 and plotnine, to Typst: layered geoms, scales, and themes for publication-quality charts written in pure markup. Built quietly in private through April, it went public on 17 May 2026 and shipped v0.1.0 three days later. Each release drew a bigger crowd, and a single day in June carried it past "
-      + str(int(peak.stars))
-      + " stars.",
+    title: [#text(fill: palette.trail)[Gribouille]'s first #text(fill: palette.peak)[#str(int(peak.stars))] GitHub stars],
+    subtitle: [
+      #set par(justify: true)
+      Gribouille brings the #text(fill: palette.ink)[grammar of graphics], the idea behind ggplot2 and plotnine, to Typst: layered geoms, scales, and themes for publication-quality charts written in pure markup. Built quietly in private through April, it went #text(fill: palette.star)[public on 17 May 2026] and shipped v0.1.0 three days later. Each release drew a bigger crowd, and a single day in June carried it past #text(fill: palette.peak)[#str(int(peak.stars)) stars].
+    ],
     x: none,
     y: "Stars",
     caption: [
