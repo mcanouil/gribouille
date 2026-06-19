@@ -298,7 +298,7 @@
     ),
     plot-subtitle: element-text(
       colour: palette.muted,
-      size: 16pt,
+      size: 13.3pt,
       margin: margin(bottom: 24pt),
     ),
     plot-caption: element-text(
