@@ -23,55 +23,6 @@
   cloud-edge: rgb("#6b7cb0"), // faint rim catching the moonlight
 )
 
-// A literal cloud for the two peak labels: an inline SVG stretched behind the
-// text, with a blurred halo baked in beneath the crisp body so the glow rides
-// along without a second annotation.
-#let cloud-path = "M28,65 C15,65 5,56 5,45 C5,35 12,27 22,26 C22,14 31,5 43,5 C52,5 59,10 63,18 C66,15 71,13 76,13 C86,13 94,21 94,31 C97,33 97,40 97,47 C97,57 89,65 79,65 Z"
-
-#let cloud-svg(glow, fill, stroke) = bytes(
-  "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-16 -16 134 102\" "
-    + "preserveAspectRatio=\"none\">"
-    + "<defs><filter id=\"g\" x=\"-30%\" y=\"-30%\" width=\"160%\" height=\"160%\">"
-    + "<feGaussianBlur stdDeviation=\"4\"/></filter></defs>"
-    + "<path d=\""
-    + cloud-path
-    + "\" fill=\""
-    + glow.to-hex()
-    + "\" filter=\"url(#g)\"/>"
-    + "<path d=\""
-    + cloud-path
-    + "\" fill=\""
-    + fill.to-hex()
-    + "\" stroke=\""
-    + stroke.to-hex()
-    + "\" stroke-width=\"1\"/></svg>",
-)
-
-#let cloud-label(
-  body,
-  glow: palette.cloud.darken(45%).transparentize(45%),
-  fill: palette.cloud.darken(45%).transparentize(8%),
-  stroke: palette.cloud-edge.transparentize(30%),
-  pad: (x: 22pt, y: 17pt),
-) = (
-  context {
-    let m = measure(body)
-    let w = m.width + 2 * pad.x
-    // Cap the width-to-height ratio: wide labels stretch the cloud flat under
-    // preserveAspectRatio="none", so grow the box height to keep its curves.
-    let h = calc.max(m.height + 2 * pad.y, w / 2.1)
-    box(width: w, height: h)[
-      #place(top + left, image(
-        cloud-svg(glow, fill, stroke),
-        format: "svg",
-        width: 100%,
-        height: 100%,
-      ))
-      #place(center + horizon, dy: 2pt, body)
-    ]
-  }
-)
-
 #let raw-stars = csv("star-history.csv", row-type: dictionary).map(row => (
   date: row.date,
   stars: float(row.stars),
@@ -113,6 +64,59 @@
 // The final row carries the spike; it drives the peak marker and its labels.
 #let peak = stars.last()
 #let peak-jump = int(peak.stars - stars.at(-2).stars)
+
+// Shooting-star fan: one solid gold band tapering from a point at the first date
+// (the tail tip) up to the star at the head, where it spans the star's height.
+// Both edges are arcs sharing the tip; the top edge meets the star's top point and
+// the lower edge its lower-left peak.
+#let head-x = to-days(peak.date)
+#let head-y = peak.stars
+#let tail-x = to-days(stars.first().date) // first date: where the tail tip lands
+#let fan-sag = 30 // stars the edges drop from the head down to the tip
+#let fan-arc = 1.7 // >1 keeps the edges flat at the head, steep toward the tip
+#let head-top = head-y + 2.5 // top edge meets the star's top point
+#let head-bot = head-y - 3.5 // lower edge meets the star's lower-left peak
+#let tip-y = head-y - 115 // y of the tail tip at the first date
+// An arc through (tail-x, tip-y) at the tip and (head-x, hy) at the head.
+#let arc-y(x, hy) = {
+  let t = (x - tail-x) / (head-x - tail-x)
+  hy - fan-sag * calc.pow(1 - t, fan-arc) + (tip-y - hy + fan-sag) * (1 - t)
+}
+#let fan-band(n) = range(n + 1).map(i => {
+  let x = tail-x + (head-x - tail-x) * i / n
+  (x: x, ymax: arc-y(x, head-top), ymin: arc-y(x, head-bot))
+})
+
+// A cross-thickness gradient cannot ride a single ribbon (a Typst gradient maps to
+// the whole bounding box, not the band's local thickness), so the fan is sliced
+// into thin sub-bands stacked from the lower to the upper edge, each filled by
+// sampling a light -> peak -> light gradient: the amber peak colour runs as a
+// bright line down the middle and lightens toward both edges.
+#let fan-slices = 32
+#let fan-grad = gradient.linear(
+  palette.star.transparentize(50%),
+  palette.peak.transparentize(50%),
+  palette.star.transparentize(50%),
+)
+#let fan-layers = {
+  let rows = fan-band(40)
+  range(fan-slices).map(k => {
+    let flo = k / fan-slices
+    let fhi = (k + 1) / fan-slices
+    geom-ribbon(
+      data: rows.map(r => (
+        x: r.x,
+        ymin: r.ymin + (r.ymax - r.ymin) * flo,
+        ymax: r.ymin + (r.ymax - r.ymin) * fhi,
+      )),
+      mapping: aes(x: "x", ymin: "ymin", ymax: "ymax"),
+      inherit-aes: false,
+      fill: fan-grad.sample((flo + fhi) / 2 * 100%),
+      stroke: none,
+      alpha: 0.95,
+    )
+  })
+}
 
 #let y-step = 25
 #let y-breaks = range(0, calc.floor(star-max / y-step) + 1).map(i => i * y-step)
@@ -189,6 +193,10 @@
       size: 14pt,
       fill: palette.star,
     ),
+    // Shooting-star fan sweeping down-left from behind the head: sliced sub-bands
+    // give it an amber centre-line lightening to the edges; drawn before the peak
+    // star so the amber head sits over its apex.
+    ..fan-layers,
     // The spike glows brightest: its own (lifted) halo, then a hot amber star.
     geom-point(
       data: ((..peak, stars: peak.stars + 1.25),),
@@ -203,27 +211,28 @@
       size: 26pt,
       fill: palette.peak,
     ),
-    // Direct labels where the eye already rests, top-right. Each rides in a
-    // moonlit cloud: a stretched SVG with its glow halo baked in.
+    // The count floats in clear sky just above the head, clear of the gold fan.
     annotate(
       "typst",
-      clip: false,
-      x: to-days(peak.date) - 3,
-      y: peak.stars,
-      label: cloud-label([
-        #str(int(peak.stars)) ★ \
-        #v(-10pt)
-        #text(size: 0.8em, fill: palette.peak)[#str(peak-jump) in a day]
-      ]),
+      x: head-x,
+      y: head-y + 10,
+      label: [#str(int(peak.stars))],
       colour: rgb("#fff3cf"),
+      size: 13pt,
+      anchor: "south",
+    ),
+    annotate(
+      "typst",
+      x: head-x - 3.5,
+      y: 125,
+      label: [+#str(peak-jump) in a day],
+      colour: palette.peak,
       size: 13pt,
       anchor: "east",
     ),
-
     // Narrative beats: the private build over the flat run, and the public day.
     annotate(
       "label",
-      clip: false,
       x: to-days("2026-04-20"),
       y: 12.5,
       label: "Quietly built in private",
@@ -236,10 +245,9 @@
     ),
     annotate(
       "label",
-      clip: false,
       x: to-days("2026-05-17"),
       y: 37.5,
-      label: [Made public \ 17#super[th] of May],
+      label: [#align(center)[Made public \ 17#super[th] of May]],
       colour: palette.star,
       fill: palette.cloud.transparentize(20%),
       stroke: 0.6pt + palette.cloud-edge.transparentize(30%),
@@ -257,7 +265,6 @@
     ),
     scale-y-continuous(breaks: y-breaks, expand: (0%, 10%)),
   ),
-  coord: coord-cartesian(clip: "off"),
   labels: labels(
     title: [
       #set par(justify: true)
@@ -286,8 +293,11 @@
     text: element-text(font: ("Libertinus Serif", "DejaVu Sans Mono")),
     tick-length: 0.12cm,
     panel-background: element-rect(fill: gradient.linear(
-      rgb("#0a1330"),
-      rgb("#1c2f5e"),
+      // Hold the dark top longer so it blends into the sky-deep frame, then
+      // lighten only toward the lower half of the panel.
+      (rgb("#0a1330"), 0%),
+      (rgb("#0a1330"), 45%),
+      (rgb("#1c2f5e"), 100%),
       dir: ttb,
     )),
     panel-grid-major-x: element-blank(),
