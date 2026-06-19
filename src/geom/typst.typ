@@ -22,6 +22,8 @@
 ///
 /// \@param colour Fixed text colour. `auto` inherits the theme `ink`. Used when no colour mapping is active.
 ///
+/// \@param font Label font family. `auto` uses the theme `text` font, then the document font.
+///
 /// \@param alpha Text opacity in `[0, 1]`. `auto` honours any mapped alpha aesthetic.
 ///
 /// \@param anchor CeTZ anchor (e.g., `"center"`, `"west"`) controlling placement.
@@ -109,6 +111,7 @@
   data: none,
   size: 10pt,
   colour: auto,
+  font: auto,
   alpha: auto,
   anchor: "center",
   dx: 0,
@@ -138,6 +141,7 @@
   params: (
     size: size,
     colour: colour,
+    font: font,
     alpha: alpha,
     anchor: anchor,
     dx: dx,

@@ -196,6 +196,20 @@
   g
 }
 
+/// Resolve a text geom's font from its per-layer value and the theme default.
+///
+/// The per-layer `font` wins unless it is `auto` or `none`, in which case the
+/// theme default applies (itself possibly `none`). A `none` result tells the
+/// consumer to omit the `text(font: ...)` argument so the document font is kept.
+///
+/// \@internal
+/// \@param layer-font Per-layer `font` parameter (`auto` when unset).
+/// \@param default-font Theme default font from \@resolve-geom-defaults (`none` when unset).
+/// \@returns A font family string, or `none` to keep the document font.
+#let resolve-geom-font(layer-font, default-font) = {
+  if layer-font not in (auto, none) { layer-font } else { default-font }
+}
+
 /// Resolve a geom's default stroke/text colour.
 ///
 /// `element-geom.colour` always wins (the global colour override). Otherwise

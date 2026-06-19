@@ -323,12 +323,14 @@
 //   alpha     : opacity in [0, 1] applied to whichever paints the glyph carries.
 //
 // `ink` is the fallback colour when neither `colour` nor `fill` is supplied.
+// `font` is the family for literal-glyph point markers; `none` keeps the
+// document font.
 //
 // When `key == "point"` and only `colour` is supplied (no `fill`), the marker
 // renders as a stroked ring so colour-only and fill-only swatches stay
 // visually distinct, matching the convention from the previous single-paint
 // API.
-#let draw-glyph(key, cx, cy, r, bundle, ink: black) = {
+#let draw-glyph(key, cx, cy, r, bundle, ink: black, font: none) = {
   if key == "blank" { return }
   let alpha = bundle.at("alpha", default: 1)
   let colour = bundle.at("colour", default: none)
@@ -352,7 +354,7 @@
       let stroke = if stroke-paint != none {
         (paint: stroke-paint, thickness: outline-w)
       } else { none }
-      draw-marker((cx, cy), kind, size, fill-paint, stroke)
+      draw-marker((cx, cy), kind, size, fill-paint, stroke, font: font)
     } else if stroke-paint != none {
       draw-marker(
         (cx, cy),
@@ -360,9 +362,10 @@
         size,
         none,
         (paint: stroke-paint, thickness: outline-w),
+        font: font,
       )
     } else {
-      draw-marker((cx, cy), kind, size, ink-paint, none)
+      draw-marker((cx, cy), kind, size, ink-paint, none, font: font)
     }
     return
   }

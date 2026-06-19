@@ -8,7 +8,9 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/label-draw.typ": draw-segment, prepare-draw, row-centre
 #import "../utils/typst-markup.typ": eval-as-markup
-#import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
+#import "../theme/theme.typ": (
+  resolve-geom-colour, resolve-geom-defaults, resolve-geom-font,
+)
 
 /// Text label layer reading strings from the `label` aesthetic.
 ///
@@ -30,6 +32,8 @@
 /// \@param size Text size (a Typst length).
 ///
 /// \@param colour Fixed text colour. `auto` inherits the theme `ink`. Used when no colour mapping is active.
+///
+/// \@param font Label font family. `auto` uses the theme `text` font, then the document font.
 ///
 /// \@param alpha Text opacity in `[0, 1]`. `auto` honours any mapped alpha aesthetic.
 ///
@@ -124,6 +128,7 @@
   data: none,
   size: 8pt,
   colour: auto,
+  font: auto,
   alpha: auto,
   anchor: "center",
   dx: 0,
@@ -152,6 +157,7 @@
   params: (
     size: size,
     colour: colour,
+    font: font,
     alpha: alpha,
     anchor: anchor,
     dx: dx,
@@ -191,10 +197,10 @@
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   let theme-colour = resolve-geom-colour(g-defaults)
-  // `none` font keeps the document font; only pass `text(font: ...)` when set.
-  let font-args = if g-defaults.font != none { (font: g-defaults.font) } else {
-    (:)
-  }
+  // Per-call `font` wins; `auto`/`none` falls back to the theme default. A
+  // `none` outcome keeps the document font by omitting the `text(font: ...)` arg.
+  let font-pick = resolve-geom-font(layer.params.font, g-defaults.font)
+  let font-args = if font-pick != none { (font: font-pick) } else { (:) }
   let label-typst = layer
     .at("typst-marks", default: (:))
     .at("label", default: false)

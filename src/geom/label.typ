@@ -12,6 +12,7 @@
 #import "../utils/typst-markup.typ": eval-as-markup
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
+  resolve-geom-font,
 )
 
 /// Boxed text label layer reading strings from the `label` aesthetic.
@@ -34,6 +35,8 @@
 /// \@param size Text size (a Typst length).
 ///
 /// \@param colour Paint applied to both the box outline and the label text. `auto` resolves via the colour scale, falling back to the theme `ink` only when neither `colour` nor `fill` is set.
+///
+/// \@param font Label font family. `auto` uses the theme `text` font, then the document font.
 ///
 /// \@param fill Box fill colour. `auto` resolves via the fill scale, falling back to the theme `paper` only when neither `colour` nor `fill` is set.
 ///
@@ -142,6 +145,7 @@
   data: none,
   size: 8pt,
   colour: auto,
+  font: auto,
   fill: auto,
   stroke: 0.4pt,
   alpha: auto,
@@ -174,6 +178,7 @@
   params: (
     size: size,
     colour: colour,
+    font: font,
     fill: fill,
     stroke: stroke,
     alpha: alpha,
@@ -215,10 +220,10 @@
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   let theme-colour = resolve-geom-colour(g-defaults)
-  // `none` font keeps the document font; only pass `text(font: ...)` when set.
-  let font-args = if g-defaults.font != none { (font: g-defaults.font) } else {
-    (:)
-  }
+  // Per-call `font` wins; `auto`/`none` falls back to the theme default. A
+  // `none` outcome keeps the document font by omitting the `text(font: ...)` arg.
+  let font-pick = resolve-geom-font(layer.params.font, g-defaults.font)
+  let font-args = if font-pick != none { (font: font-pick) } else { (:) }
   let (default-colour, default-fill) = resolve-pair-defaults(
     layer,
     mapping,
