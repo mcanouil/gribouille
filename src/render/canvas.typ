@@ -15,8 +15,9 @@
   _apply-labels, _fixed-inner-size, _is-flipped, _post-train,
 )
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _ax-text-cm, _axis-label-extents,
-  _secondary-label-extents, _text-margin-cm, _x-label-depth, _y-label-width,
+  _AX-TITLE-LABEL-GAP, _axis-label-extents, _secondary-label-extents,
+  _text-margin-cm, _title-angle, _title-extent-cm, _x-label-depth,
+  _y-label-width,
 )
 #import "facet.typ": _draw-strip, _strip-band, _strip-texts
 #import "panel-draw.typ": _draw-axis-and-layers
@@ -315,8 +316,8 @@
     let _ylbl-width = _y-label-width(0, 1, y-extents.width, y-extents.height)
     let _xt-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
     let _yt-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
-    let _xt-cm = _ax-text-cm(_ax-title.xb.size)
-    let _yt-cm = _ax-text-cm(_ax-title.yl.size)
+    let _xt-cm = _title-extent-cm(_ax-title.xb, ctx.x-title-extents, "x")
+    let _yt-cm = _title-extent-cm(_ax-title.yl, ctx.y-title-extents, "y")
     if x-title != none and _ax-title.xb.size > 0pt {
       content(
         (
@@ -328,6 +329,7 @@
           eval-strings: _ax-title.xb.typst,
         )],
         anchor: "south",
+        angle: _title-angle(_ax-title.xb, 0),
       )
     }
     if y-title != none and _ax-title.yl.size > 0pt {
@@ -340,7 +342,7 @@
           y-title,
           eval-strings: _ax-title.yl.typst,
         )],
-        angle: 90deg,
+        angle: _title-angle(_ax-title.yl, 90),
       )
     }
 
@@ -537,8 +539,8 @@
     let _ylbl-width = _y-label-width(0, 1, y-extents.width, y-extents.height)
     let _xt-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
     let _yt-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
-    let _xt-cm = _ax-text-cm(_ax-title.xb.size)
-    let _yt-cm = _ax-text-cm(_ax-title.yl.size)
+    let _xt-cm = _title-extent-cm(_ax-title.xb, ctx.x-title-extents, "x")
+    let _yt-cm = _title-extent-cm(_ax-title.yl, ctx.y-title-extents, "y")
     if x-title != none and _ax-title.xb.size > 0pt {
       content(
         (
@@ -550,6 +552,7 @@
           eval-strings: _ax-title.xb.typst,
         )],
         anchor: "south",
+        angle: _title-angle(_ax-title.xb, 0),
       )
     }
     if y-title != none and _ax-title.yl.size > 0pt {
@@ -562,7 +565,7 @@
           y-title,
           eval-strings: _ax-title.yl.typst,
         )],
-        angle: 90deg,
+        angle: _title-angle(_ax-title.yl, 90),
       )
     }
 
@@ -610,6 +613,8 @@
   height-units,
   x-extents,
   y-extents,
+  x-title-extents,
+  y-title-extents,
   x-sec-extents,
   y-sec-extents,
 ) = {
@@ -644,6 +649,8 @@
       flipped: _is-flipped(coord),
       x-extents: x-extents,
       y-extents: y-extents,
+      x-title-extents: x-title-extents,
+      y-title-extents: y-title-extents,
       x-sec-extents: x-sec-extents,
       y-sec-extents: y-sec-extents,
       canvas-w: width-units,

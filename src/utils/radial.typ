@@ -43,7 +43,7 @@
     cat-is-theta: theta-axis == "x",
     theta-range: (theta-lo, theta-hi),
     r-range: (0, r-max),
-    clip: coord.at("clip", default: "off") != "off",
+    clip: coord.at("clip", default: false),
     x-trained: x-trained,
     y-trained: y-trained,
   )

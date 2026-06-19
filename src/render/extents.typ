@@ -35,6 +35,21 @@
   ((lo + hi) / 2, "center")
 }
 
+// Resolve a text style's rotation: the explicit `angle` field when the theme
+// sets one, otherwise the surface's natural default in degrees (x titles read
+// horizontally at 0deg, y titles read bottom-to-top at 90deg).
+#let _title-angle(style, default-deg) = if style.angle != none {
+  style.angle
+} else { default-deg * 1deg }
+
+// Measure an axis title string at its font size, returning `(width, height)`
+// in cm. Zero extents when no title renders. Caller must already be inside a
+// `context { ... }` block, since `measure` requires it.
+#let _axis-title-extents(title, size, typst-eval: false) = {
+  if title == none { return (width: 0.0, height: 0.0) }
+  measure-labels-cm((resolve-prose(title, eval-strings: typst-eval),), size)
+}
+
 // Resolve a margin side on a text-style record to a cm float, falling back to
 // the supplied default length when the user has not overridden the side. The
 // surface's font size is forwarded so em values scale with it.
@@ -149,6 +164,24 @@
 #let _y-label-width(angle, n-dodge, label-w-cm, label-h-cm) = {
   let a = calc.abs(angle) * 1deg
   label-w-cm * calc.cos(a) + label-h-cm * calc.sin(a) + (n-dodge - 1) * 0.5
+}
+
+// Perpendicular extent (cm) reserved for an axis title rotated by its resolved
+// angle. `axis` picks both the rotated-bbox formula and the natural default
+// angle: `"x"` titles read horizontally (0deg) and occupy a depth below the
+// panel, `"y"` titles read bottom-to-top (90deg) and a width beside it. The
+// along-reading dimension is the measured title width (`ext.width`, `0` when
+// unmeasured); the perpendicular thickness stays one line height, so a title
+// at its natural angle reserves exactly `_ax-text-cm(size)` as before.
+#let _title-extent-cm(style, ext, axis) = {
+  let title-w = if ext != none { ext.width } else { 0.0 }
+  let line-h = _ax-text-cm(style.size)
+  let a = _title-angle(style, if axis == "x" { 0 } else { 90 }).deg()
+  if axis == "x" {
+    _x-label-depth(a, 1, title-w, line-h)
+  } else {
+    _y-label-width(a, 1, title-w, line-h)
+  }
 }
 
 // Inter-row gap between dodged labels on the x and y axes (cm). The depth

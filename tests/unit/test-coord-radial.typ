@@ -160,11 +160,11 @@
 #assert.eq(half-groups.len(), 3)
 #assert(half-groups.all(g => g.len() == 1))
 
-// clip defaults to "off" (falsy on the bundle); "on" surfaces as `true`.
+// clip defaults to false (no clipping); true surfaces on the bundle as `true`.
 #let clip-default = coord-radial()
-#assert.eq(clip-default.clip, "off")
-#let clip-on = coord-radial(clip: "on")
-#assert.eq(clip-on.clip, "on")
+#assert.eq(clip-default.clip, false)
+#let clip-on = coord-radial(clip: true)
+#assert.eq(clip-on.clip, true)
 #let clip-default-bundle = radial-ctx(clip-default, xt, yt, (0, 10), (0, 10))
 #assert.eq(clip-default-bundle.clip, false)
 #let clip-on-bundle = radial-ctx(clip-on, xt, yt, (0, 10), (0, 10))

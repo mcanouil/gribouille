@@ -34,9 +34,9 @@
 )
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP, _ax-text-cm,
-  _axis-guide-rows, _resolve-extents, _text-margin-cm, _x-label-depth,
-  _x-label-depth-stack, _x-title-place, _y-label-width, _y-label-width-stack,
-  _y-title-place,
+  _axis-guide-rows, _resolve-extents, _text-margin-cm, _title-angle,
+  _title-extent-cm, _x-label-depth, _x-label-depth-stack, _x-title-place,
+  _y-label-width, _y-label-width-stack, _y-title-place,
 )
 
 #import "../geom/point.typ" as point-geom
@@ -142,6 +142,8 @@
   axis-breaks: none,
   x-extents: none,
   y-extents: none,
+  x-title-extents: none,
+  y-title-extents: none,
   x-sec-extents: none,
   y-sec-extents: none,
   canvas-w: 0,
@@ -516,6 +518,7 @@
           eval-strings: _ax-title.xt.typst,
         )],
         anchor: x-anchor,
+        angle: _title-angle(_ax-title.xt, 0),
       )
     }
   }
@@ -572,7 +575,7 @@
           _y-sec.name,
           eval-strings: _ax-title.yr.typst,
         )],
-        angle: 90deg,
+        angle: _title-angle(_ax-title.yr, 90),
         anchor: y-anchor,
       )
     }
@@ -769,7 +772,7 @@
   let clip-on = if inner-radial != none {
     inner-radial.clip
   } else if coord != none {
-    coord.at("clip", default: "on") != "off"
+    coord.at("clip", default: true)
   } else { true }
   let clipped-geoms = _draw-subset(clipped)
   content(
@@ -858,8 +861,8 @@
   }
   let x-tick-cm = if x-guide.suppress { 0.0 } else { _tick-len.xb }
   let y-tick-cm = if y-guide.suppress { 0.0 } else { _tick-len.yl }
-  let x-title-cm = _ax-text-cm(_ax-title.xb.size)
-  let y-title-cm = _ax-text-cm(_ax-title.yl.size)
+  let x-title-cm = _title-extent-cm(_ax-title.xb, x-title-extents, "x")
+  let y-title-cm = _title-extent-cm(_ax-title.yl, y-title-extents, "y")
   let x-title-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   let y-title-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   let x-edge-offset = x-tick-cm + 0.1 + x-label-depth + x-title-gap
@@ -873,6 +876,7 @@
         eval-strings: _ax-title.xb.typst,
       )],
       anchor: x-anchor,
+      angle: _title-angle(_ax-title.xb, 0),
     )
   }
   if show-y-title and y-title != none and _ax-title.yl.size > 0pt {
@@ -883,7 +887,7 @@
         y-title,
         eval-strings: _ax-title.yl.typst,
       )],
-      angle: 90deg,
+      angle: _title-angle(_ax-title.yl, 90),
       anchor: y-anchor,
     )
   }

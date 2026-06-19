@@ -4,6 +4,7 @@
 
 ### Breaking changes
 
+- feat!: `coord-cartesian()` and `coord-radial()` take `clip` as a boolean (`true`/`false`) instead of the strings `"on"`/`"off"`. (#134)
 - feat!: `labs()` is renamed to `labels()`, and the `plot()` / `compose()` `labs:` argument to `labels:`; there is no `labs` alias. (#131)
 - feat!: `coord-cartesian()`, `stat-function()`, and `geom-function()` rename the `xlim`/`ylim` arguments to `x-limits`/`y-limits`. (#131)
 - feat!: the `col-mix()` colour helper is renamed to `colour-mix()`, with arguments `colour1`/`colour2`. (#131)
@@ -11,6 +12,8 @@
 
 ### Changes
 
+- feat: `element-text()` / `element-typst()` `angle` is now honoured on axis titles, strip text, and legend title and entry labels (previously only tick labels and the plot title, subtitle, and caption); axis titles default to 0deg (x) / 90deg (y) and reserve the correct space at any angle. (#134)
+- feat: `geom-text()`, `geom-label()`, and `geom-typst()` accept an `angle` parameter (a Typst angle, default `0deg`) rotating each label. (#134)
 - feat: every aesthetic key can be pinned as a constant directly on any geom, e.g., `geom-label(nudge-x: 0.5)`, not only through `aes()`; declared parameters still bind first and unknown or positional arguments are rejected. (#133)
 - feat: scale `expand` accepts `auto` on one side, e.g., `expand: (0%, auto)`, keeping the per-scale default for that side. (#132)
 - feat: `geom-vline`, `geom-hline`, and `geom-abline` read their intercept channels from `aes()`; binding `xintercept`/`yintercept`/`slope`/`intercept` together with `data` draws one line per row with per-row `colour`/`alpha`/`linewidth`/`linetype`, and a mapped `xintercept`/`yintercept` extends the panel to keep the lines in view; the scalar/array parameter still draws shared lines when nothing is mapped. (#129)

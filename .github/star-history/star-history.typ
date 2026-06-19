@@ -260,10 +260,14 @@
   scales: (
     scale-x-date(
       breaks: month-firsts,
-      date-format: "[month repr:short] [year]",
+      date-format: "[month repr:long] [year]",
       expand: (0%, auto),
     ),
-    scale-y-continuous(breaks: y-breaks, expand: (0%, 10%)),
+    scale-y-continuous(
+      breaks: y-breaks,
+      labels: y => [#box(baseline: -0.4em)[#str(int(y))]#text(size: 2em)[#sym.star]],
+      expand: (0%, 6%)
+    ),
   ),
   labels: labels(
     title: [
@@ -281,7 +285,7 @@
       )[#text(size: 0.82em, fill: palette.muted)[v0.1.0]] three days later. Each release drew a bigger crowd, and a single day in June carried it past #text(fill: palette.peak)[#str(int(peak.stars)) stars].
     ],
     x: none,
-    y: "Stars",
+    y: none,
     caption: [
       This very chart was drawn with Gribouille (#link("https://m.canouil.dev/gribouille")[m.canouil.dev/gribouille]). \
       Author: #link("https://mickael.canouil.fr")[mickael.canouil.fr] | Data source: GitHub API
@@ -306,7 +310,7 @@
     axis-ticks: element-line(colour: palette.muted),
     axis-text: element-text(colour: palette.muted, size: 10pt),
     axis-title: element-text(colour: palette.ink, size: 12pt),
-    axis-title-y: element-text(margin: margin(right: 14pt), angle: -90deg),
+    axis-title-y: element-text(margin: margin(right: 14pt)),
     plot-title: element-text(
       font: "Didot",
       colour: palette.ink,

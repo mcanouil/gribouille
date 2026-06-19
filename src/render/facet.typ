@@ -67,13 +67,16 @@
       (cx, corner-lo.at(1), "south")
     } else { (cx, cy, "center") }
   }
+  // The orientation angle fixes the band's reading direction; a theme
+  // `strip-text` angle spins the glyphs further within the chosen anchor.
+  let user-angle = style.strip-text.angle
   cetz.draw.content(
     (sx, sy),
     text(.._text-args(style.strip-text))[#resolve-prose(
       label-text,
       eval-strings: style.strip-text.typst,
     )],
-    angle: angle,
+    angle: angle + (if user-angle != none { user-angle } else { 0deg }),
     anchor: s-anchor,
   )
 }
