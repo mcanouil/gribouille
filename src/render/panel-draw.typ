@@ -24,7 +24,10 @@
   _per-side, _resolve-data, _resolve-mapping, _should-draw-tick,
 )
 #import "colour.typ": _make-resolve-colour
-#import "axis-format.typ": _axis-breaks, _axis-label, _axis-title, _sec-spec
+#import "axis-format.typ": (
+  _axis-breaks, _axis-label, _axis-minor-breaks, _axis-title,
+  _log10-minor-positions, _sec-spec,
+)
 #import "guides.typ": (
   _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _THETA-MINOR-TICK-FRAC, _axis-text-angle,
   _read-axis-guide, _read-r-guide, _read-theta-guide,
@@ -229,7 +232,22 @@
     }
   }
 
-  let grid-stroke = _line-stroke(theme, "panel-grid", fallback-colour: _ink)
+  let _grid-stroke = surface => _line-stroke(
+    theme,
+    surface,
+    fallback-colour: _ink,
+  )
+  let _grid-major = (
+    x: _grid-stroke("panel-grid-major-x"),
+    y: _grid-stroke("panel-grid-major-y"),
+  )
+  let _grid-minor = (
+    x: _grid-stroke("panel-grid-minor-x"),
+    y: _grid-stroke("panel-grid-minor-y"),
+  )
+  // Radial panels draw one grid weight for both circles and spokes; the
+  // per-axis split and minor lines apply to cartesian panels only.
+  let _grid-radial = _grid-stroke("panel-grid-major")
   let _stroke-side = (p, s, _) => _line-stroke(
     theme,
     p + "-" + s,
@@ -332,20 +350,33 @@
     let tick-len = if axis == "x" { _tick-len.xb } else { _tick-len.yl }
     let suppress = if axis == "x" { x-guide.suppress } else { y-guide.suppress }
     let range = if axis == "x" { px-range } else { py-range }
+    let major-stroke = if axis == "x" { _grid-major.x } else { _grid-major.y }
+    let minor-stroke = if axis == "x" { _grid-minor.x } else { _grid-minor.y }
     let breaks = if is-continuous {
       if axis-breaks != none and axis-breaks.at(axis, default: none) != none {
         axis-breaks.at(axis)
       } else { _axis-breaks(trained) }
     } else { trained.domain }
+    // Minor gridlines sit under the majors, so draw them first.
+    if is-continuous and minor-stroke != none {
+      for mb in _axis-minor-breaks(trained, breaks) {
+        let mc = map-axis-data(trained, mb, range)
+        if axis == "x" {
+          line((mc, py-lo), (mc, py-hi), stroke: minor-stroke)
+        } else {
+          line((px-lo, mc), (px-hi, mc), stroke: minor-stroke)
+        }
+      }
+    }
     for (idx, b) in breaks.enumerate() {
       let c = if is-continuous {
         map-axis-data(trained, b, range)
       } else { map-position(trained, b, range) }
-      if is-continuous and grid-stroke != none {
+      if is-continuous and major-stroke != none {
         if axis == "x" {
-          line((c, py-lo), (c, py-hi), stroke: grid-stroke)
+          line((c, py-lo), (c, py-hi), stroke: major-stroke)
         } else {
-          line((px-lo, c), (px-hi, c), stroke: grid-stroke)
+          line((px-lo, c), (px-hi, c), stroke: major-stroke)
         }
       }
       if _should-draw-tick(stroke, tick-len) and not suppress {
@@ -407,24 +438,14 @@
     } else { trained.domain }
     if lo <= 0 or hi <= 0 { return }
     let minor-len = tick-len * 0.5
-    let k-lo = int(calc.floor(calc.log(lo, base: 10)))
-    let k-hi = int(calc.ceil(calc.log(hi, base: 10)))
-    let k = k-lo
-    while k <= k-hi {
-      let scale = calc.pow(10.0, k)
-      for c in (2, 3, 4, 5, 6, 7, 8, 9) {
-        let v = c * scale
-        if v >= lo and v <= hi {
-          if axis == "x" {
-            let cx = map-axis-data(trained, v, range)
-            line((cx, py-lo), (cx, py-lo - minor-len), stroke: stroke)
-          } else {
-            let cy = map-axis-data(trained, v, range)
-            line((px-lo - minor-len, cy), (px-lo, cy), stroke: stroke)
-          }
-        }
+    for v in _log10-minor-positions(lo, hi) {
+      if axis == "x" {
+        let cx = map-axis-data(trained, v, range)
+        line((cx, py-lo), (cx, py-lo - minor-len), stroke: stroke)
+      } else {
+        let cy = map-axis-data(trained, v, range)
+        line((px-lo - minor-len, cy), (px-lo, cy), stroke: stroke)
       }
-      k = k + 1
     }
   }
   if not is-radial {
@@ -586,12 +607,12 @@
       map-position(trained, value, theta-range)
     }
 
-    if grid-stroke != none and r-trained != none {
+    if _grid-radial != none and r-trained != none {
       if r-trained.type == "continuous" {
         for b in _axis-breaks(r-trained) {
           let r = map-axis-data(r-trained, b, r-range)
           if r > 0 and r <= r-max {
-            circle((cx, cy), radius: r, fill: none, stroke: grid-stroke)
+            circle((cx, cy), radius: r, fill: none, stroke: _grid-radial)
           }
         }
       }
@@ -611,13 +632,13 @@
       b => _radial-theta-of(theta-trained, b),
     )
 
-    if grid-stroke != none and theta-trained != none {
+    if _grid-radial != none and theta-trained != none {
       for group in theta-groups {
         let theta = group.first().theta
         line(
           (cx, cy),
           (cx + r-max * calc.cos(theta), cy + r-max * calc.sin(theta)),
-          stroke: grid-stroke,
+          stroke: _grid-radial,
         )
       }
     }

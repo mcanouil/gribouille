@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat: panel gridlines split into a ggplot2-style cascade, `panel-grid` -> `panel-grid-major` / `panel-grid-minor` -> `-x` / `-y`, so X/Y and major/minor lines are styled independently; minor defaults to half the major weight in the same colour and a blank `panel-grid` blanks both weights. (#125)
+- feat: continuous axes draw minor gridlines (visible by default): midpoints between majors for linear/sqrt/reverse and sub-decade lines for log10; `scale-*-continuous` (and log10/sqrt/reverse) accept `minor-breaks` and `n-minor` to position them. (#125)
 - feat: the `legend-position` theme entry sets a global side for every legend (`theme(legend-position: "bottom")`, also via `theme-sub-legend(position:)`), accepting the same values as `guide-legend(position:)`; any explicit `guides()` placement still wins. (#123)
 - feat: discrete (swatch) legend key glyphs are resizable via `guide-legend(key-size: <length>)` per legend or the `legend-key` theme entry for every swatch legend; the row spacing and label offset grow with the glyph so enlarged keys do not overlap. (#122)
 - feat: the `shape` aesthetic accepts any character as the marker symbol; a value outside the eight built-in keywords renders as a literal glyph, so letters or emoji work as markers across `scale-shape`, `scale-shape-manual`, `scale-shape-identity`, `scale-shape-binned`, the `geom-point(shape: ...)` pin, and legend keys. (#120)

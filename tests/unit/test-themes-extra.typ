@@ -12,7 +12,7 @@
   element-blank, element-geom, element-line, element-rect, element-text,
 )
 #import "../../src/theme/defaults.typ": default-theme, merge-theme
-#import "../../src/theme/theme.typ": resolve-geom-defaults
+#import "../../src/theme/theme.typ": _line-stroke, resolve-geom-defaults
 
 // Keys that merge-theme consumes: every default-theme key must survive a merge.
 #let _expected-keys = default-theme.keys()
@@ -177,5 +177,34 @@
 // Theme without geom slot still surfaces theme.accent.
 #let g-empty = resolve-geom-defaults((kind: "theme", accent: rgb("#abcdef")))
 #assert.eq(g-empty.accent, rgb("#abcdef"))
+
+// ── Minor gridline cascade (panel-grid major / minor / -x / -y) ────────────
+
+// Default minor halves the resolved panel-grid weight in the same colour.
+#let g-merged = merge-theme(theme-grey())
+#let g-major = _line-stroke(g-merged, "panel-grid-major-y")
+#let g-minor = _line-stroke(g-merged, "panel-grid-minor-y")
+#assert.eq(g-minor.paint, g-major.paint)
+#assert.eq(g-minor.thickness, g-major.thickness * 0.5)
+
+// A blank panel-grid keeps minors and majors blank too (classic / void).
+#assert.eq(
+  _line-stroke(merge-theme(theme-classic()), "panel-grid-minor-x"),
+  none,
+)
+#assert.eq(
+  _line-stroke(merge-theme(theme-void()), "panel-grid-major-x"),
+  none,
+)
+
+// Per-axis override: hiding both x weights leaves the y grid drawing.
+#let only-y = merge-theme(theme-grey(
+  panel-grid-major-x: element-blank(),
+  panel-grid-minor-x: element-blank(),
+))
+#assert.eq(_line-stroke(only-y, "panel-grid-major-x"), none)
+#assert.eq(_line-stroke(only-y, "panel-grid-minor-x"), none)
+#assert(_line-stroke(only-y, "panel-grid-major-y") != none)
+#assert(_line-stroke(only-y, "panel-grid-minor-y") != none)
 
 Extra theme tests passed.
