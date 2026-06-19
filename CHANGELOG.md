@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: `geom-vline`, `geom-hline`, and `geom-abline` read their intercept channels from `aes()`; binding `xintercept`/`yintercept`/`slope`/`intercept` together with `data` draws one line per row with per-row `colour`/`alpha`/`linewidth`/`linetype`, and a mapped `xintercept`/`yintercept` extends the panel to keep the lines in view; the scalar/array parameter still draws shared lines when nothing is mapped. (#129)
 - feat: a font set in `theme(text: ...)` now reaches literal-glyph point markers (e.g., `shape: sym.star`) for both plot markers and legend keys, instead of falling back to the document font. (#126)
 - feat: `geom-text`, `geom-label`, and `geom-typst` accept a `font:` parameter; `auto` uses the theme `text` font, then the document font. (#126)
 - feat: panel gridlines split into a ggplot2-style cascade, `panel-grid` -> `panel-grid-major` / `panel-grid-minor` -> `-x` / `-y`, so X/Y and major/minor lines are styled independently; minor defaults to half the major weight in the same colour and a blank `panel-grid` blanks both weights. (#125)
