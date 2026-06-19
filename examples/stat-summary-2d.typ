@@ -20,7 +20,7 @@
   mapping: aes(x: "x", y: "y", z: "z"),
   layers: (geom-rect(stat: stat-summary-2d(fun: "mean", bins: 25)),),
   scales: (scale-fill-viridis-c(),),
-  labs: labs(
+  labels: labels(
     title: "Mean Radius Reduced over a 25-by-25 Grid",
     fill: "mean(r)",
   ),

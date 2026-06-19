@@ -28,7 +28,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none` for first-seen order.
 ///
@@ -104,7 +104,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none` for first-seen order.
 ///

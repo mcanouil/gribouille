@@ -23,7 +23,7 @@
   data: d,
   mapping: aes(x: "x", y: "y", fill: "g"),
   layers: (geom-area(alpha: 0.6),),
-  labs: labs(title: "geom-area stacked over mismatched x"),
+  labels: labels(title: "geom-area stacked over mismatched x"),
   theme: theme-minimal(),
   width: 10cm,
   height: 6cm,

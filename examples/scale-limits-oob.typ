@@ -12,7 +12,7 @@
   mapping: aes(x: "displ", y: "hwy", fill: "cty"),
   layers: (geom-point(size: 4pt, alpha: 0.85),),
   scales: extra-scales,
-  labs: labs(
+  labels: labels(
     x: "Displacement (L)",
     y: "Highway mpg",
     fill: "City mpg",

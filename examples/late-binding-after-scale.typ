@@ -29,7 +29,7 @@
     }),
   ),
   layers: (geom-point(size: 5pt, stroke: 0.8pt),),
-  labs: labs(
+  labels: labels(
     title: "Outline Darkened from the Fill Palette via After-Scale",
     fill: "Group",
   ),

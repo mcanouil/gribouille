@@ -30,7 +30,7 @@
 // Chrome text is boxed to the inner content width (requested width minus left
 // and right padding) so long titles wrap rather than widening the image past
 // the requested `width`.
-#let _decorate-parts(labs, theme, ref-w, ref-h) = {
+#let _decorate-parts(labels, theme, ref-w, ref-h) = {
   let plot-bg = _rect-style(
     theme,
     "plot-background",
@@ -74,17 +74,17 @@
     if style.angle != none { body = rotate(style.angle, reflow: true, body) }
     box(width: inner-w, align(a, body))
   } else { none }
-  let tag-block = if labs != none {
-    _chrome-block(labs.tag, tag, left, weight: tag.weight)
+  let tag-block = if labels != none {
+    _chrome-block(labels.tag, tag, left, weight: tag.weight)
   } else { none }
-  let title-block = if labs != none {
-    _chrome-block(labs.title, title, left, weight: title.weight)
+  let title-block = if labels != none {
+    _chrome-block(labels.title, title, left, weight: title.weight)
   } else { none }
-  let subtitle-block = if labs != none {
-    _chrome-block(labs.subtitle, subtitle, left)
+  let subtitle-block = if labels != none {
+    _chrome-block(labels.subtitle, subtitle, left)
   } else { none }
-  let caption-block = if labs != none {
-    _chrome-block(labs.caption, caption, right, style: "italic")
+  let caption-block = if labels != none {
+    _chrome-block(labels.caption, caption, right, style: "italic")
   } else { none }
 
   // Multiplied by 1cm so the resolved em is baked in against the upstream

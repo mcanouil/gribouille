@@ -20,7 +20,7 @@
   data: iris,
   mapping: aes(x: "sepal-length", y: "sepal-width", fill: "species"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(
+  labels: labels(
     title: "Iris Sepal Dimensions",
     x: "Sepal Length (cm)",
     y: "Sepal Width (cm)",

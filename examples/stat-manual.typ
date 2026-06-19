@@ -37,7 +37,7 @@
       size: 9pt,
     ),
   ),
-  labs: labs(title: "Stat-Manual: per-Row Index Labels", x: "X", y: "Y"),
+  labels: labels(title: "Stat-Manual: per-Row Index Labels", x: "X", y: "Y"),
   theme: theme-minimal(),
   width: 12cm,
   height: 8cm,

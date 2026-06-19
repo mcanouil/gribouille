@@ -30,7 +30,7 @@
       linetype: "dashed",
     ),
   ),
-  labs: labs(
+  labels: labels(
     title: "Data-Driven Reference Lines",
     subtitle: "vline and hline read intercepts and colour from mapped columns",
     x: "X",

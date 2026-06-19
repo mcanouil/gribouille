@@ -89,7 +89,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
@@ -195,7 +195,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
@@ -285,7 +285,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
@@ -366,7 +366,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
@@ -448,7 +448,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
@@ -530,7 +530,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
@@ -608,7 +608,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///
@@ -687,7 +687,7 @@
 /// \@stability stable
 /// \@since 0.3.0
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`. Either element may be `auto` to keep the trained bound on that side.
 ///
@@ -757,7 +757,7 @@
 /// \@stability stable
 /// \@since 0.3.0
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`. Either element may be `auto` to keep the trained bound on that side.
 ///
@@ -828,7 +828,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Axis title. Overrides any name set via \@labs when both are present.
+/// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none` for automatic limits. Either element may be `auto` to keep the trained bound on that side.
 ///

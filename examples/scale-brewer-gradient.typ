@@ -25,7 +25,7 @@
     mapping: aes(x: "x", y: "y", fill: "g"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-fill-brewer(palette: "Set1"),),
-    labs: labs(
+    labels: labels(
       title: "Scale-Fill-Brewer (Set1)",
       x: "X",
       y: "Y",
@@ -40,7 +40,7 @@
     mapping: aes(x: "x", y: "y", fill: "g"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-fill-brewer(palette: "Spectral"),),
-    labs: labs(
+    labels: labels(
       title: "Scale-Fill-Brewer (Spectral)",
       x: "X",
       y: "Y",
@@ -55,7 +55,7 @@
     mapping: aes(x: "x", y: "y", fill: "z"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-fill-gradient(),),
-    labs: labs(
+    labels: labels(
       title: "Scale-Fill-Gradient (two-stop)",
       x: "X",
       y: "Y",
@@ -70,7 +70,7 @@
     mapping: aes(x: "x", y: "y", fill: "z"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-fill-gradient2(midpoint: 0),),
-    labs: labs(
+    labels: labels(
       title: "scale-fill-gradient2 (Around 0)",
       x: "X",
       y: "Y",

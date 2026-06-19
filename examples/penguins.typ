@@ -44,7 +44,7 @@
       palette: species-colours.values(),
     ),
   ),
-  labs: labs(
+  labels: labels(
     title: typst("Penguins *Dataset*"),
     subtitle: typst({
       [Flipper length vs body mass by species: ]

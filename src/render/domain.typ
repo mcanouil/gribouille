@@ -178,13 +178,13 @@
   max-half
 }
 
-// Inject labs `x`/`y`/... names into trained scale specs so axis and legend
-// titles follow labs() overrides. `auto` (the labs default) keeps the
+// Inject labels `x`/`y`/... names into trained scale specs so axis and legend
+// titles follow labels() overrides. `auto` (the labels default) keeps the
 // scale-derived name; `none` sets `spec.blank` to suppress the title and
 // collapse its reserved space; a string overrides the name.
-#let _apply-labs(trained, labs) = {
-  if labs == none { return trained }
-  for (aes-name, label) in labs.axes.pairs() {
+#let _apply-labels(trained, labels) = {
+  if labels == none { return trained }
+  for (aes-name, label) in labels.axes.pairs() {
     if label == auto { continue }
     let t = trained.at(aes-name, default: none)
     if t == none { continue }

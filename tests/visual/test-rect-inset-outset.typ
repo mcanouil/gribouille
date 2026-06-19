@@ -28,7 +28,7 @@
   data: d,
   mapping: aes(x: "x", y: "y", colour: "g"),
   layers: (geom-point(size: 4pt),),
-  labs: labs(title: label),
+  labels: labels(title: label),
   theme: t,
   width: 7cm,
   height: 4cm,
@@ -106,7 +106,7 @@
     mapping: aes(x: "x", y: "y"),
     layers: (geom-point(size: 4pt),),
     facet: facet-wrap("f"),
-    labs: labs(title: "strip-background fill (inset / outset ignored)"),
+    labels: labels(title: "strip-background fill (inset / outset ignored)"),
     theme: theme(strip-background: element-rect(
       fill: rgb("#fce4ec"),
       colour: rgb("#ad1457"),

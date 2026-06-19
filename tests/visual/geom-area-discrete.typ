@@ -21,7 +21,7 @@
   mapping: aes(x: "quarter", y: "value"),
   layers: (geom-area(alpha: 0.5),),
   scales: (scale-x-discrete(),),
-  labs: labs(title: "geom-area over a discrete x axis"),
+  labels: labels(title: "geom-area over a discrete x axis"),
   theme: theme-minimal(),
   width: 10cm,
   height: 6cm,

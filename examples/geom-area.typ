@@ -15,7 +15,7 @@
     scale-x-date(),
     scale-y-continuous(labels: format-comma()),
   ),
-  labs: labs(
+  labels: labels(
     title: "Monthly US Unemployment, 2008-2009",
     subtitle: "Area under the curve highlights the climb during the recession",
     x: "Month",

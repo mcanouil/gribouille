@@ -21,7 +21,7 @@
     scale-x-continuous(breaks: (1, 2, 3, 4)),
     scale-y-continuous(labels: format-currency(symbol: "$", digits: 1)),
   ),
-  labs: labs(title: title, x: "Quarter", y: "Revenue"),
+  labels: labels(title: title, x: "Quarter", y: "Revenue"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

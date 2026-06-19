@@ -36,7 +36,7 @@
     mapping: aes(x: "x", y: "y", linewidth: "w", group: "g"),
     layers: (geom-line(),),
     scales: (scale-linewidth-continuous(range: (0.4pt, 2.4pt)),),
-    labs: labs(
+    labels: labels(
       title: "Scale-Linewidth-Continuous",
       x: "X",
       y: "Y",
@@ -56,7 +56,7 @@
         limits: ("thin", "medium", "thick"),
       ),
     ),
-    labs: labs(
+    labels: labels(
       title: "Scale-Linewidth-Manual",
       x: "X",
       y: "Y",
@@ -71,7 +71,12 @@
     mapping: aes(x: "x", y: "y", linewidth: "w", group: "g"),
     layers: (geom-line(),),
     scales: (scale-linewidth-binned(n-breaks: 4, range: (0.4pt, 2.4pt)),),
-    labs: labs(title: "Scale-Linewidth-Binned", x: "X", y: "Y", linewidth: "w"),
+    labels: labels(
+      title: "Scale-Linewidth-Binned",
+      x: "X",
+      y: "Y",
+      linewidth: "w",
+    ),
     theme: theme-minimal(),
     width: 12cm,
     height: 9cm,

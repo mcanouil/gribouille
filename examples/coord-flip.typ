@@ -22,7 +22,7 @@
     scales: (
       scale-y-continuous(labels: format-currency(symbol: "$", digits: 0)),
     ),
-    labs: labs(
+    labels: labels(
       title: "Default Cartesian",
       x: "Quarter",
       y: "Revenue (M)",
@@ -40,7 +40,7 @@
     scales: (
       scale-y-continuous(labels: format-currency(symbol: "$", digits: 0)),
     ),
-    labs: labs(title: "coord-flip()", x: "Quarter", y: "Revenue (M)"),
+    labels: labels(title: "coord-flip()", x: "Quarter", y: "Revenue (M)"),
     theme: theme-minimal(),
     width: 12cm,
     height: 9cm,

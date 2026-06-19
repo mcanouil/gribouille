@@ -18,7 +18,7 @@
     plot-title: element-text(weight: "bold", align: center),
     axis-title-x: element-text(align: right),
   ),
-  labs: labs(
+  labels: labels(
     title: "Centred Title",
     subtitle: "Subtitle stays left",
     caption: "Caption sits right by default",

@@ -106,7 +106,7 @@
 ///     geom-point(size: 2pt, alpha: 0.6),
 ///     geom-smooth(method: "lm", alpha: 0.2),
 ///   ),
-///   labs: labs(
+///   labels: labels(
 ///     x: "Flipper Length (mm)",
 ///     y: "Body Mass (g)",
 ///     colour: "Species",

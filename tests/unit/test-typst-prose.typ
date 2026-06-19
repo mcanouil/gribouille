@@ -3,7 +3,7 @@
 // titles). The compile is the assertion: a malformed flow path would
 // raise at render time.
 
-#import "../../lib.typ": aes, geom-point, labs, plot, typst
+#import "../../lib.typ": aes, geom-point, labels, plot, typst
 
 #let d = (
   (x: 1, y: 1, sp: "a"),
@@ -15,7 +15,7 @@
   data: d,
   mapping: aes(x: "x", y: "y", colour: "sp"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(
+  labels: labels(
     title: typst("Mean $bar(x)$ over time"),
     subtitle: typst("$p < 0.001$"),
     caption: typst("Source: $italic(\"made up\")$"),

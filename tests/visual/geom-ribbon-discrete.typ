@@ -21,7 +21,7 @@
   mapping: aes(x: "quarter", ymin: "lo", ymax: "hi"),
   layers: (geom-ribbon(alpha: 0.4),),
   scales: (scale-x-discrete(),),
-  labs: labs(title: "geom-ribbon over a discrete x axis"),
+  labels: labels(title: "geom-ribbon over a discrete x axis"),
   theme: theme-minimal(),
   width: 10cm,
   height: 6cm,

@@ -17,16 +17,16 @@
   description: 'Lines and points share a discrete colour mapping. [`geom-line`](../reference/geoms/geom-line.qmd) + [`geom-point`](../reference/geoms/geom-point.qmd).'
   alt: "Line and point chart of monthly sales from month 1 to 6 for three regions (north, south, and east), all trending upwards."
 
-- slug: labs-title
+- slug: labels-title
   section: basics
   title: "Titles and labels"
-  description: 'Title, subtitle, caption, and axis labels set in a single [`labs`](../reference/labs/labs.qmd) call.'
+  description: 'Title, subtitle, caption, and axis labels set in a single [`labels`](../reference/labels/labels.qmd) call.'
   alt: "Scatter and line chart of count against month showing a rising trend, framed by a title, subtitle, caption, and axis labels."
 
-- slug: labs-tag
+- slug: labels-tag
   section: basics
   title: "Figure tag"
-  description: 'A figure tag drawn above the title via [`labs`](../reference/labs/labs.qmd) `tag`, styled by the `plot-tag` theme element.'
+  description: 'A figure tag drawn above the title via [`labels`](../reference/labels/labels.qmd) `tag`, styled by the `plot-tag` theme element.'
   alt: "Scatter plot of highway fuel economy against engine displacement, marked with a bold 'A' tag above the title and subtitle."
 
 - slug: factor-inline

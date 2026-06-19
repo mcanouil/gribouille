@@ -8,7 +8,7 @@
   data: mpg,
   mapping: aes(x: "displ", y: "hwy", fill: "class"),
   layers: (geom-point(size: 3pt, alpha: 0.85),),
-  labs: labs(
+  labels: labels(
     title: "Fuel Economy by Vehicle Class",
     subtitle: "Highway mpg falls as engine displacement rises",
     x: "Engine Displacement (L)",

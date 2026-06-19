@@ -25,7 +25,7 @@
     scale-x-continuous(breaks: (2018, 2020, 2022, 2024)),
     scale-y-continuous(labels: format-comma()),
   ),
-  labs: labs(
+  labels: labels(
     title: "Active Users at Each Release",
     subtitle: "Step interpolation reflects discrete release events",
     x: "Year",

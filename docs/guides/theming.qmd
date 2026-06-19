@@ -110,7 +110,7 @@ Every other surface keeps its default.
     panel-background: element-rect(fill: rgb("#f7f0e7")),
     panel-grid: element-line(colour: rgb("#d9cfbf")),
   ),
-  labs: labs(
+  labels: labels(
     title: "theme() overrides",
     subtitle: "Larger axis titles, a cream panel fill, and a soft grid",
     x: "Step",
@@ -142,7 +142,7 @@ Each takes a [`margin`](../reference/themes/margin.qmd) with any subset of `top`
     geom-line(stroke: 1pt, colour: accent),
     geom-point(size: 2pt, fill: accent),
   ),
-  labs: labs(title: title, x: "X", y: "Y"),
+  labels: labels(title: title, x: "X", y: "Y"),
   theme: theme-arg,
   width: 12cm,
   height: 6cm,

@@ -95,7 +95,7 @@
 ///   ),
 ///   layers: (geom-point(size: 2pt, alpha: 0.85),),
 ///   facet: facet-wrap("island", ncolumn: 3),
-///   labs: labs(x: "Flipper Length (mm)", y: "Body Mass (g)", fill: "Species"),
+///   labels: labels(x: "Flipper Length (mm)", y: "Body Mass (g)", fill: "Species"),
 ///   width: 14cm,
 ///   height: 5cm,
 /// )

@@ -10,7 +10,7 @@
   layers: (geom-point(size: 2.5pt, alpha: 0.7),),
   scales: extra-scales,
   guides: extra-guides,
-  labs: labs(title: title, x: "Displacement (L)", y: "Highway mpg"),
+  labels: labels(title: title, x: "Displacement (L)", y: "Highway mpg"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

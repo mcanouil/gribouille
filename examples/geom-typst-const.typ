@@ -31,7 +31,7 @@
     ),
   ),
   scales: (scale-y-continuous(expand: (5%, 20%)),),
-  labs: labs(
+  labels: labels(
     title: "Constant Content Labels via Geom-Typst and Annotate",
     x: "Index",
     y: "Value",

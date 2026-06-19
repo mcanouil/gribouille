@@ -28,7 +28,7 @@
     scale-x-discrete(limits: hours),
     scale-y-discrete(limits: weeks.rev()),
   ),
-  labs: labs(
+  labels: labels(
     title: "Hourly Request Volume by Day",
     subtitle: "Peak load lands midday on weekdays",
     x: "Hour of Day",

@@ -22,7 +22,7 @@
   scales: (
     scale-fill-discrete(limits: species, palette: palette),
   ),
-  labs: labs(title: label, x: "Flipper length (mm)"),
+  labels: labels(title: label, x: "Flipper length (mm)"),
   theme: theme-minimal(),
   width: 8cm,
   height: 5cm,

@@ -12,7 +12,7 @@
     geom-point(size: 2pt, fill: rgb("#1f77b4")),
   ),
   scales: (scale-x-date(date-format: "[year]-[month repr:numerical]"),),
-  labs: labs(
+  labels: labels(
     title: "US Personal Savings Rate During the Recession",
     subtitle: "Monthly observations, 2008-2009",
     x: "Month",

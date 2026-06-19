@@ -11,7 +11,7 @@
   facet: facet-grid(rows: "sex", columns: "species", labeller: label-both()),
   scales: (scale-y-continuous(labels: format-comma()),),
   guides: guides(colour: none),
-  labs: labs(
+  labels: labels(
     title: "Penguin Morphology by Sex and Species",
     x: "Flipper Length (mm)",
     y: "Body Mass (g)",

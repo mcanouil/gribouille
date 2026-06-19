@@ -10,7 +10,7 @@
   layers: (geom-bar(),),
   guides: gs,
   scales: (scale-y-continuous(name: "Vehicles in sample"),),
-  labs: labs(title: title, x: "Manufacturer"),
+  labels: labels(title: title, x: "Manufacturer"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

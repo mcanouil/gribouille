@@ -638,7 +638,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labs: labs(y: "Cumulative Response (Per Protocol)"),
+///   labels: labels(y: "Cumulative Response (Per Protocol)"),
 ///   theme: theme(
 ///     tick-length: 0.25cm,
 ///     tick-labels: false,
@@ -678,7 +678,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt), geom-text(mapping: aes(label: "x"))),
-///   labs: labs(title: "Fonts", x: "X", y: "Y"),
+///   labels: labels(title: "Fonts", x: "X", y: "Y"),
 ///   theme: theme(
 ///     text: element-text(font: "New Computer Modern"),
 ///     plot-title: element-text(font: "DejaVu Sans Mono"),

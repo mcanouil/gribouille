@@ -22,7 +22,7 @@
   ),
   facet: facet-wrap("line", ncolumn: 3),
   coord: coord-fixed(ratio: 1),
-  labs: labs(
+  labels: labels(
     title: "Coord-Fixed Inside Facet-Wrap",
     subtitle: "Every panel locks the same 1:1 ratio",
     x: "X",

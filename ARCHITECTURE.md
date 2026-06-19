@@ -14,12 +14,12 @@ data ──▶ stat ──▶ position ──▶ scale ──▶ coord ──▶
 Entry points trace the same path:
 
 - [`lib.typ`](lib.typ) is the public facade.
-  It re-exports every user-facing function (`plot`, `aes`, `geom-*`, `stat-*`, `scale-*`, `theme-*`, `labs`, `guides`, `compose`, …).
+  It re-exports every user-facing function (`plot`, `aes`, `geom-*`, `stat-*`, `scale-*`, `theme-*`, `labels`, `guides`, `compose`, …).
   Internal helpers stay unexported and are `_`-prefixed.
 - [`src/plot.typ`](src/plot.typ) is the grammar entry point.
   It normalises data, flattens the aesthetic mapping, merges per-layer mappings, and builds the spec dict.
 - [`src/render.typ`](src/render.typ) orchestrates rendering.
-  It trains scales, applies stats/positions/coord/facet/theme/labs, then dispatches to the canvas builders under [`src/render/`](src/render).
+  It trains scales, applies stats/positions/coord/facet/theme/labels, then dispatches to the canvas builders under [`src/render/`](src/render).
 
 ## Module map
 

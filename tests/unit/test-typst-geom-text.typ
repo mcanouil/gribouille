@@ -4,7 +4,7 @@
 // raise at render time.
 
 #import "../../lib.typ": (
-  aes, geom-label, geom-point, geom-text, labs, plot, typst,
+  aes, geom-label, geom-point, geom-text, labels, plot, typst,
 )
 
 #let d = (

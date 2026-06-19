@@ -18,7 +18,7 @@
   mapping: aes(x: "region", weight: "visitors"),
   layers: (geom-bar(fill: accent),),
   scales: (scale-y-continuous(labels: format-comma()),),
-  labs: labs(
+  labels: labels(
     title: "Pre-Aggregated Counts via Weight",
     subtitle: "geom-bar sums the weight column instead of counting rows",
     x: "Region",
@@ -44,7 +44,7 @@
     geom-point(size: 2.5pt, alpha: 0.8, colour: accent),
     geom-smooth(method: "lm", colour: accent, fill: accent, alpha: 0.2),
   ),
-  labs: labs(
+  labels: labels(
     title: "Weighted Least Squares Ignores Down-Weighted Outliers",
     x: "X",
     y: "Y",

@@ -22,7 +22,7 @@
   coord: coord-radial(theta: "x"),
   scales: (scale-x-discrete(expand: false),),
   guides: guides(fill: none),
-  labs: labs(title: "Wind Directions"),
+  labels: labels(title: "Wind Directions"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

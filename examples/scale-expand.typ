@@ -13,7 +13,7 @@
   layers: (geom-point(size: 2.5pt, fill: rgb("#1f77b4")),),
   scales: scales,
   coord: coord-arg,
-  labs: labs(title: title, x: "X", y: "Y"),
+  labels: labels(title: title, x: "X", y: "Y"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

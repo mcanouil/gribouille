@@ -27,7 +27,7 @@
     geom-point(size: 2.5pt),
   ),
   facet: facet-wrap("scale", ncolumn: 3, scales: "free"),
-  labs: labs(
+  labels: labels(
     title: "scales = free trains both x and y per panel",
     subtitle: "Useful when groups span very different domains in both directions",
     x: "Time",

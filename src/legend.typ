@@ -92,7 +92,7 @@
 )
 
 #let _guide-title(t, spec, aes-name) = {
-  // `labs(colour: none)` sets `spec.blank` to suppress the legend title and
+  // `labels(colour: none)` sets `spec.blank` to suppress the legend title and
   // collapse the space it would reserve.
   if (
     t.at("spec", default: none) != none and t.spec.at("blank", default: false)
@@ -369,7 +369,7 @@
   if contributors.len() == 0 { return none }
 
   // Per-aesthetic override wins, then `guides(default: ...)`, then the value
-  // trained from the scale / labs.
+  // trained from the scale / labels.
   let _pick(name, fallback) = if (
     override != none and override.at(name, default: none) != none
   ) {
@@ -811,7 +811,7 @@
   0.0
 } else { _font-cm(size-pt) * 1.8 }
 
-// A titleless guide (`labs(... : none)`) reserves no title height; otherwise
+// A titleless guide (`labels(... : none)`) reserves no title height; otherwise
 // the resolved `title-h` applies.
 #let _title-prefix(g, title-h) = if g.title == none { 0.0 } else { title-h }
 

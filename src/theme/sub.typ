@@ -429,7 +429,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labs: labs(title: "Series A", subtitle: "y as a linear function of x"),
+///   labels: labels(title: "Series A", subtitle: "y as a linear function of x"),
 ///   theme: theme-sub-plot(
 ///     title: element-text(weight: "bold"),
 ///     subtitle: element-text(size: 9pt),

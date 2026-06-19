@@ -22,7 +22,7 @@
   mapping: aes(x: "x", y: "y", colour: "g"),
   layers: (geom-point(size: 3pt),),
   guides: guides(colour: guide-legend(direction: "horizontal")),
-  labs: labs(title: "swatch horizontal"),
+  labels: labels(title: "swatch horizontal"),
   width: 9cm,
   height: 5cm,
 )
@@ -32,7 +32,7 @@
   mapping: aes(x: "flipper-len", y: "body-mass", colour: "body-mass"),
   layers: (geom-point(size: 1.5pt),),
   guides: guides(colour: guide-legend(direction: "horizontal")),
-  labs: labs(
+  labels: labels(
     title: "colourbar horizontal",
     x: "Flipper length",
     y: "Body mass",
@@ -46,7 +46,7 @@
   mapping: aes(x: "flipper-len", y: "body-mass", size: "body-mass"),
   layers: (geom-point(),),
   guides: guides(size: guide-legend(direction: "horizontal")),
-  labs: labs(
+  labels: labels(
     title: "size ladder horizontal",
     x: "Flipper length",
     y: "Body mass",

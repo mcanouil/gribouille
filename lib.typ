@@ -14,8 +14,8 @@
 #import "src/datasets/mpg.typ": mpg
 #import "src/datasets/penguins.typ": penguins
 
-// Labs.
-#import "src/labs.typ": labs
+// Labels.
+#import "src/labels.typ": labels
 
 // Guides.
 #import "src/guide/legend.typ": guide-legend

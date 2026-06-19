@@ -15,7 +15,7 @@
     geom-hline(yintercept: 20, colour: rgb("#2ca02c")),
     geom-vline(xintercept: 10, colour: rgb("#1f77b4")),
   ),
-  labs: labs(
+  labels: labels(
     title: "Trend with Reference Lines",
     subtitle: "abline, hline, and vline highlight expected values without joining the data",
     x: "X",

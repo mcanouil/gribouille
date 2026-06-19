@@ -21,7 +21,7 @@
     scale-shape-manual(values: ("A", sym.star.filled, "λ")),
     scale-colour-brewer(palette: "Dark2"),
   ),
-  labs: labs(
+  labels: labels(
     title: "Character Symbols as Markers",
     subtitle: "A Latin letter, a Typst sym., and a Greek letter as shape values",
     x: "Flipper length",

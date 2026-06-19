@@ -18,7 +18,7 @@
   layers: (geom-col(width: 1, position: "stack"),),
   coord: coord-radial(theta: "y"),
   scales: (scale-y-continuous(expand: false),),
-  labs: labs(title: "Revenue Share", fill: "Region"),
+  labels: labels(title: "Revenue Share", fill: "Region"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

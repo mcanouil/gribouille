@@ -11,7 +11,7 @@
     geom-point(size: 2.5pt, alpha: 0.85),
     geom-rug(sides: "bl"),
   ),
-  labs: labs(
+  labels: labels(
     title: "Geom-Rug for Marginal Observations",
     x: "Displacement (L)",
     y: "Highway mpg",
@@ -37,7 +37,7 @@
     ),
   ),
   scales: (scale-x-continuous(breaks: (-3, -1.5, 0, 1.5, 3)),),
-  labs: labs(
+  labels: labels(
     title: "Geom-Blank as a Frame for Geom-Function",
     x: "X",
     y: "sin(x)",
@@ -59,7 +59,7 @@
     geom-rug(sides: "b", colour: rgb("#2ca02c"), length: 0.4cm),
   ),
   scales: (scale-x-continuous(name: "Highway mpg"),),
-  labs: labs(title: "Forced X-Range to Highlight Rug Density", y: ""),
+  labels: labels(title: "Forced X-Range to Highlight Rug Density", y: ""),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

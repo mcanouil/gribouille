@@ -24,7 +24,7 @@
   layers: (geom-ellipse(alpha: 0.5, stroke: 0.6pt),),
   scales: (scale-fill-brewer(palette: "Set2"),),
   coord: coord-fixed(),
-  labs: labs(
+  labels: labels(
     title: "Catchment Regions Sketched as Ellipses",
     subtitle: "Each ellipse is parameterised by centre, semi-axes, and rotation",
     x: "Easting (km)",

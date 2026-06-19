@@ -28,7 +28,7 @@
       title: "Notes",
     ),
   ),
-  labs: labs(title: "Guide-Custom: Free-Form Legend Slot"),
+  labels: labels(title: "Guide-Custom: Free-Form Legend Slot"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

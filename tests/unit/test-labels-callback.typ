@@ -3,7 +3,7 @@
 
 #import "../../lib.typ": (
   aes, format-comma, format-number, format-percent, format-scientific,
-  format-title, geom-col, geom-point, labs, plot, scale-x-continuous,
+  format-title, geom-col, geom-point, labels, plot, scale-x-continuous,
   scale-x-discrete, scale-y-continuous, typst,
 )
 

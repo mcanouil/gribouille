@@ -36,7 +36,7 @@
       size: 12pt,
     ),
   ),
-  labs: labs(
+  labels: labels(
     title: "Annotations Rendered as Typst Markup",
     x: "Index",
     y: "Value",

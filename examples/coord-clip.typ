@@ -15,7 +15,7 @@
     geom-point(size: 2pt, fill: accent),
   ),
   coord: coord-cartesian(xlim: (5, 15), ylim: (0, 250)),
-  labs: labs(
+  labels: labels(
     title: "Coord-Cartesian Zoom",
     subtitle: "xlim and ylim clip the view; rows outside the window stay in the data",
     x: "X",

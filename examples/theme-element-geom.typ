@@ -30,7 +30,7 @@
     theme: custom-theme,
     width: 12cm,
     height: 9cm,
-    labs: labs(title: title + " (col)"),
+    labels: labels(title: title + " (col)"),
   ),
   plot(
     data: pts,
@@ -39,7 +39,7 @@
     theme: custom-theme,
     width: 12cm,
     height: 9cm,
-    labs: labs(title: title + " (line)"),
+    labels: labels(title: title + " (line)"),
   ),
 )
 

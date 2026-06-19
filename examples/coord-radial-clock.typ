@@ -18,7 +18,7 @@
   ),
   coord: coord-radial(theta: "x"),
   scales: (scale-x-continuous(limits: (0, 24), expand: false),),
-  labs: labs(title: "Daily Load"),
+  labels: labels(title: "Daily Load"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

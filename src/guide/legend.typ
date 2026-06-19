@@ -86,7 +86,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param title Override the legend title; `none` keeps the default from labs or scale.
+/// \@param title Override the legend title; `none` keeps the default from labels or scale.
 ///
 /// \@param nrow Number of rows when laying out levels in a grid; `none` for default. Applies to discrete (swatch) and continuous size (`scale-size-*`) legends; a continuous colourbar is a single bar and ignores it.
 ///
@@ -153,7 +153,7 @@
 ///   mapping: aes(x: "flipper-len", y: "body-mass", fill: "species"),
 ///   layers: (geom-point(size: 2pt),),
 ///   guides: guides(fill: guide-legend(title: "Species", ncolumn: 3)),
-///   labs: labs(x: "Flipper Length (mm)", y: "Body Mass (g)"),
+///   labels: labels(x: "Flipper Length (mm)", y: "Body Mass (g)"),
 ///   width: 14cm,
 ///   height: 6cm,
 /// )
@@ -187,7 +187,7 @@
 ///   data: mpg,
 ///   mapping: aes(x: "displ", y: "hwy", fill: "cty"),
 ///   layers: (geom-point(size: 3pt),),
-///   labs: labs(fill: "City fuel economy (mpg)"),
+///   labels: labels(fill: "City fuel economy (mpg)"),
 ///   guides: guides(fill: guide-legend(position: "bottom", align: center)),
 ///   width: 12cm,
 ///   height: 7cm,

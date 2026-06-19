@@ -20,7 +20,7 @@
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 2pt),),
   facet: facet-grid(rows: "sex", columns: "sp", scales: "free"),
-  labs: labs(x: "x", y: "y"),
+  labels: labels(x: "x", y: "y"),
   width: 12cm,
   height: 8cm,
 )

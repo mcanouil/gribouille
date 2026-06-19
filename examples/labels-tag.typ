@@ -8,7 +8,7 @@
   data: mpg,
   mapping: aes(x: "displ", y: "hwy"),
   layers: (geom-point(size: 2.5pt, alpha: 0.75),),
-  labs: labs(
+  labels: labels(
     tag: "A",
     title: "Engine Displacement Versus Highway Fuel Economy",
     subtitle: "One panel of a larger figure",

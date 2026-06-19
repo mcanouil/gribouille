@@ -47,7 +47,7 @@
   assert.eq(_swatch-index(rc-row.row, rc-row.col, s23, true), i)
 }
 
-// `labs(colour: none)` sets `spec.blank`, suppressing the legend title; a named
+// `labels(colour: none)` sets `spec.blank`, suppressing the legend title; a named
 // scale keeps it, and a titleless guide reserves no title height.
 #let _pspec = (mapping: (colour: "sp"))
 #assert.eq(

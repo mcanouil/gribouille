@@ -24,7 +24,7 @@
     }),
   ),
   layers: (geom-point(size: 4pt),),
-  labs: labs(title: "Per-Row Shape via After-Scale"),
+  labels: labels(title: "Per-Row Shape via After-Scale"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

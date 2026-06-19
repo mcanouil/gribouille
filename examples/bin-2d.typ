@@ -21,7 +21,7 @@
   mapping: aes(x: "x", y: "y"),
   layers: (geom-bin-2d(bins: 25),),
   scales: (scale-fill-viridis-c(option: "magma"),),
-  labs: labs(
+  labels: labels(
     title: "Spiral Cloud Binned into a 25-by-25 Grid",
     subtitle: "Cells coloured by count, empty bins suppressed",
     fill: "count",

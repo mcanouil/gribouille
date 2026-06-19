@@ -58,7 +58,7 @@
     geom-qq-line(stroke: 0.8pt, distribution: dist),
     geom-qq(size: 2pt, alpha: 0.85, distribution: dist),
   ),
-  labs: labs(title: title, x: x-name, y: "Sample Quantile"),
+  labels: labels(title: title, x: x-name, y: "Sample Quantile"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

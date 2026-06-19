@@ -8,7 +8,7 @@
   data: mpg,
   mapping: aes(x: "displ", y: "hwy", colour: "class"),
   layers: (geom-point(size: 2.5pt),),
-  labs: labs(
+  labels: labels(
     title: title,
     x: "Displacement (L)",
     y: "Highway mpg",

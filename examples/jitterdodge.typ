@@ -35,7 +35,7 @@
     scale-x-continuous(breaks: (1, 2, 3, 4)),
     scale-colour-brewer(palette: "Dark2"),
   ),
-  labs: labs(
+  labels: labels(
     title: "Dose-Response Trial Across Four Weeks",
     subtitle: "Each dose arm is dodged off the week, then jittered within its column",
     x: "Week",

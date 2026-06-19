@@ -90,7 +90,7 @@
     ),
     scale-y-continuous(breaks: y-breaks, expand: (0%, 5%)),
   ),
-  labs: labs(
+  labels: labels(
     title: "Gribouille GitHub Stars",
     subtitle: "Cumulative stargazers over time",
     x: "Date",

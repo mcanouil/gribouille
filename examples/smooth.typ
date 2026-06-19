@@ -13,7 +13,7 @@
     geom-point(size: 2.5pt, alpha: 0.75, colour: accent),
     geom-smooth(method: "lm", colour: accent, fill: accent, alpha: 0.2),
   ),
-  labs: labs(
+  labels: labels(
     title: "Engine Displacement Versus Highway Fuel Economy",
     subtitle: "Linear fit with 95% confidence band",
     x: "Displacement (L)",

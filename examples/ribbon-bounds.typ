@@ -24,7 +24,7 @@
     scale-x-continuous(name: "Time step"),
     scale-y-continuous(name: "Value"),
   ),
-  labs: labs(
+  labels: labels(
     title: "Trend with an Explicit Ribbon Band",
     subtitle: "ymin and ymax aesthetics drive geom-ribbon directly",
   ),

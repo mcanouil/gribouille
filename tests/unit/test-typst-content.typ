@@ -4,7 +4,7 @@
 //   3. typst("string")         -- string + eval.
 // All three render identically.
 
-#import "../../lib.typ": aes, geom-point, labs, plot, typst
+#import "../../lib.typ": aes, geom-point, labels, plot, typst
 
 #let d = ((x: 1, y: 1), (x: 2, y: 4), (x: 3, y: 9))
 
@@ -13,7 +13,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(
+  labels: labels(
     title: typst[Penguins *Dataset*],
     subtitle: typst[#text(fill: rgb("#b22222"))[Flipper] _length_ vs _body_ mass],
     caption: typst[Source: $E = m c^2$],
@@ -28,7 +28,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(
+  labels: labels(
     title: [Penguins *Dataset*],
     subtitle: [#text(fill: rgb("#b22222"))[Flipper] _length_ vs _body_ mass],
     caption: [Source: $E = m c^2$],
@@ -43,7 +43,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(
+  labels: labels(
     title: typst("Penguins *Dataset*"),
     caption: typst("Source: $E = m c^2$"),
   ),

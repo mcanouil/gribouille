@@ -10,7 +10,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param range Pair of Typst lengths `(min, max)` bounding the output size.
 ///
@@ -90,7 +90,7 @@
 ///
 /// \@param range Pair of Typst lengths `(min, max)` bounding the output size.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -164,7 +164,7 @@
 /// \@stability stable
 /// \@since 0.3.0
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param range Pair of Typst lengths `(min, max)` bounding the output size.
 ///
@@ -250,7 +250,7 @@
 ///
 /// \@param range Pair of Typst lengths `(min, max)` bounding the output size.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -368,7 +368,7 @@
 ///
 /// \@param values Array of Typst lengths, one per level (in `limits` order when set, otherwise in first-seen order).
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -425,7 +425,7 @@
 /// \@stability stable
 /// \@since 0.4.0
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param range Pair of Typst lengths `(min, max)` bounding the output radius.
 ///

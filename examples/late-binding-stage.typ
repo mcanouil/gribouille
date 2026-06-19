@@ -29,7 +29,7 @@
     ),
   ),
   layers: (geom-point(size: 5pt, stroke: 0.8pt),),
-  labs: labs(
+  labels: labels(
     title: "Outline Trained on `Sp`, Darkened via Stage",
     fill: "Group",
   ),

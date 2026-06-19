@@ -30,7 +30,7 @@
   ),
   scales: (scale-colour-viridis-c(),),
   coord: coord-fixed(),
-  labs: labs(
+  labels: labels(
     title: "Radial Vector Field",
     subtitle: "Spoke direction = atan2(Δy, Δx); colour = distance from origin",
     x: "X",
