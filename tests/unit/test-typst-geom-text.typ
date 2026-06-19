@@ -18,7 +18,7 @@
   mapping: aes(x: "x", y: "y"),
   layers: (
     geom-point(size: 3pt),
-    geom-text(mapping: aes(label: typst("lab")), dy: 0.2),
+    geom-text(mapping: aes(label: typst("lab"), nudge-y: 0.2cm)),
   ),
   width: 10cm,
   height: 6cm,
@@ -29,19 +29,20 @@
   mapping: aes(x: "x", y: "y"),
   layers: (
     geom-point(size: 3pt),
-    geom-label(mapping: aes(label: typst("lab")), dy: 0.3),
+    geom-label(mapping: aes(label: typst("lab"), nudge-y: 0.3cm)),
   ),
   width: 10cm,
   height: 6cm,
 )
 
-// Plain string labels still render verbatim (regression check).
+// Plain string labels still render verbatim (regression check). A bare-number
+// `nudge-y` exercises the data-unit projection branch of `nudge-cm`.
 #plot(
   data: d,
   mapping: aes(x: "x", y: "y", label: "lab"),
   layers: (
     geom-point(size: 3pt),
-    geom-text(dy: 0.2),
+    geom-text(mapping: aes(nudge-y: 0.2)),
   ),
   width: 10cm,
   height: 6cm,

@@ -78,9 +78,9 @@
 ///
 /// \@param z Column name for the value summarised over a 2D grid (\@stat-summary-2d, \@stat-summary-hex).
 ///
-/// \@param nudge-x Column name or scalar for per-row x offsets applied to text/label/typst geoms, in data units. Combines with layer-level `dx`.
+/// \@param nudge-x Column name or scalar x offset for text/label/typst geoms. A number shifts in data units; a Typst length (e.g., `4pt`, `0.2cm`) shifts in canvas units.
 ///
-/// \@param nudge-y Column name or scalar for per-row y offsets applied to text/label/typst geoms, in data units. Combines with layer-level `dy`.
+/// \@param nudge-y Column name or scalar y offset for text/label/typst geoms. A number shifts in data units; a Typst length (e.g., `4pt`, `0.2cm`) shifts in canvas units.
 ///
 /// \@returns Dictionary tagged `kind: "aes"`, consumed by \@plot and geom layers.
 ///

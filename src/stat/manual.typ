@@ -34,7 +34,7 @@
 ///   mapping: aes(x: "x", y: "y", label: "label"),
 ///   layers: (
 ///     geom-point(size: 3pt),
-///     geom-text(stat: stat-manual(fun: with-index), dy: 0.3),
+///     geom-text(stat: stat-manual(fun: with-index), mapping: aes(nudge-y: 0.3cm)),
 ///   ),
 ///   width: 10cm,
 ///   height: 6cm,

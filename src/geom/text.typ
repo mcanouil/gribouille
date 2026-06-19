@@ -14,9 +14,9 @@
 
 /// Text label layer reading strings from the `label` aesthetic.
 ///
-/// One text block is drawn per row at the mapped `(x, y)` with an optional
-/// offset via `dx` and `dy`. Per-row offsets in data units may be mapped via
-/// the `nudge-x` and `nudge-y` aesthetics. Setting `segment: true` draws a
+/// One text block is drawn per row at the mapped `(x, y)`. Offsets are mapped
+/// via the `nudge-x` and `nudge-y` aesthetics: a number shifts in data units,
+/// a Typst length shifts in canvas units. Setting `segment: true` draws a
 /// connector back to the anchor point, routed to avoid the other labels of
 /// the same layer.
 ///
@@ -38,10 +38,6 @@
 /// \@param alpha Text opacity in `[0, 1]`. `auto` honours any mapped alpha aesthetic.
 ///
 /// \@param anchor CeTZ anchor (e.g., `"center"`, `"west"`) controlling placement.
-///
-/// \@param dx Horizontal offset, as a number (canvas units, 1 = 1cm) or a Typst length (e.g., `4pt`, `2mm`).
-///
-/// \@param dy Vertical offset, as a number (canvas units, 1 = 1cm) or a Typst length (e.g., `4pt`, `2mm`).
 ///
 /// \@param segment Draw a connector from each label back to its anchor point. When `true`, the connector is routed to avoid the AABBs of other labels of the same layer; the connector is dropped when no L-bend clears the obstacles.
 ///
@@ -79,7 +75,7 @@
 ///
 /// \@returns Layer dictionary consumed by \@plot.
 ///
-/// \@examples Labels nudged above their points via `dy`.
+/// \@examples Labels nudged above their points via `nudge-y`.
 /// ```
 /// //| alt: "Three point markers at (x, y) with plain text labels (a, b, c) nudged above each point via a vertical offset."
 /// #let d = (
@@ -92,7 +88,7 @@
 ///   mapping: aes(x: "x", y: "y", label: "name"),
 ///   layers: (
 ///     geom-point(size: 2pt),
-///     geom-text(dy: 0.2),
+///     geom-text(mapping: aes(nudge-y: 0.2cm)),
 ///   ),
 ///   scales: (scale-y-continuous(expand: 15%),),
 ///   width: 10cm,
@@ -131,8 +127,6 @@
   font: auto,
   alpha: auto,
   anchor: "center",
-  dx: 0,
-  dy: 0,
   segment: false,
   segment-colour: auto,
   segment-stroke: 0.4pt,
@@ -160,8 +154,6 @@
     font: font,
     alpha: alpha,
     anchor: anchor,
-    dx: dx,
-    dy: dy,
     segment: segment,
     segment-colour: segment-colour,
     segment-stroke: segment-stroke,
