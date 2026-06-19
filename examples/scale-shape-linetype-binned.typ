@@ -22,7 +22,7 @@
     mapping: aes(x: "x", y: "y", shape: "w"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-shape-binned(n-breaks: 4),),
-    labs: labs(
+    labels: labels(
       title: "scale-shape-binned(n-breaks: 4)",
       x: "X",
       y: "Y",
@@ -42,7 +42,7 @@
         palette: ("circle", "square", "triangle", "diamond", "cross", "x"),
       ),
     ),
-    labs: labs(
+    labels: labels(
       title: "Scale-Shape-Binned with Custom Palette",
       x: "X",
       y: "Y",
@@ -57,7 +57,7 @@
     mapping: aes(x: "x", y: "y", linetype: "q", group: "q"),
     layers: (geom-line(stroke: 1pt),),
     scales: (scale-linetype-binned(n-breaks: 3),),
-    labs: labs(
+    labels: labels(
       title: "scale-linetype-binned(n-breaks: 3)",
       x: "X",
       y: "Y",

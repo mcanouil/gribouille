@@ -12,8 +12,8 @@
 #assert.eq(g.position, "identity")
 #assert.eq(g.params.size, 10pt)
 #assert.eq(g.params.anchor, "center")
-#assert.eq(g.params.dx, 0)
-#assert.eq(g.params.dy, 0)
+#assert(not "dx" in g.params)
+#assert(not "dy" in g.params)
 #assert.eq(g.params.label, none)
 
 // Constant `label:` accepts content blocks for direct Typst rendering.

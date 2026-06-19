@@ -9,7 +9,7 @@
 ///! specific child keys (e.g., `axis-text`) take priority at render time.
 
 #import "elements.typ": element-geom
-#import "../utils/colour.typ": col-mix
+#import "../utils/colour.typ": colour-mix
 #import "../utils/errors.typ": fail
 #import "../utils/margin.typ": (
   resolve-margin-side-cm, resolve-margin-side-rel-cm,
@@ -235,7 +235,7 @@
 ///
 /// `element-geom.fill` always wins (the global fill override). Otherwise the
 /// geom's fill role selects from the resolved record:
-/// - `"tint"`: `col-mix(ink, paper, fill-tint-amount)` for the bar / area /
+/// - `"tint"`: `colour-mix(ink, paper, fill-tint-amount)` for the bar / area /
 ///   rect / tile family;
 /// - `"paper"`: the paper role (\@geom-boxplot, \@geom-crossbar, \@geom-point,
 ///   \@geom-label);
@@ -250,7 +250,7 @@
   let v = defaults.at("fill", default: none)
   if v != none { return v }
   if role == "tint" {
-    return col-mix(defaults.ink, defaults.paper, fill-tint-amount)
+    return colour-mix(defaults.ink, defaults.paper, fill-tint-amount)
   }
   if role == "paper" or role == "ink" { return defaults.at(role) }
   fail("resolve-geom-fill", "unknown role " + repr(role))
@@ -638,7 +638,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labs: labs(y: "Cumulative Response (Per Protocol)"),
+///   labels: labels(y: "Cumulative Response (Per Protocol)"),
 ///   theme: theme(
 ///     tick-length: 0.25cm,
 ///     tick-labels: false,
@@ -678,7 +678,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt), geom-text(mapping: aes(label: "x"))),
-///   labs: labs(title: "Fonts", x: "X", y: "Y"),
+///   labels: labels(title: "Fonts", x: "X", y: "Y"),
 ///   theme: theme(
 ///     text: element-text(font: "New Computer Modern"),
 ///     plot-title: element-text(font: "DejaVu Sans Mono"),

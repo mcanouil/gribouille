@@ -41,6 +41,8 @@
   "group",
   "slope",
   "intercept",
+  "nudge-x",
+  "nudge-y",
 )
 
 // `text` and `label` geoms take `size` as a Typst length layer parameter
@@ -97,7 +99,8 @@
 /// \@param ..fields Named arguments split between aesthetics and layer
 ///   parameters. Aesthetic names are `x`, `y`, `xend`, `yend`, `xmin`,
 ///   `xmax`, `ymin`, `ymax`, `colour`, `fill`, `size`, `alpha`, `shape`,
-///   `linetype`, `label`, `group`, `slope`, `intercept`. For `geom = "text"`
+///   `linetype`, `label`, `group`, `slope`, `intercept`, `nudge-x`,
+///   `nudge-y`. For `geom = "text"`
 ///   and `geom = "label"`, `size` is treated as a layer parameter (the text
 ///   size, a Typst length) rather than an aesthetic. Anything else (e.g.,
 ///   `stroke`, `fontsize`, `xintercept`, `yintercept`) is forwarded to the

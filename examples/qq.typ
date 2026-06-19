@@ -31,7 +31,7 @@
     geom-qq-line(stroke: 0.8pt),
     geom-qq(size: 2.5pt, alpha: 0.85),
   ),
-  labs: labs(
+  labels: labels(
     title: "Normal Q-Q Plot of 80 Simulated Samples",
     subtitle: "Points hug the IQR-fitted line, indicating the sample is approximately normal",
     x: "Theoretical Quantile",

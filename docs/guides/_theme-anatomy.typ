@@ -47,7 +47,7 @@
   mapping: aes(x: "x", y: "y", colour: "g"),
   layers: (geom-point(size: 3pt),),
   facet: facet-wrap("g"),
-  labs: labs(
+  labels: labels(
     title: "Anatomy of a plot",
     subtitle: "Each region is one theme() key",
     caption: "Caption text lives in plot-caption",

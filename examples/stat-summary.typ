@@ -28,7 +28,7 @@
       fill: accent,
     ),
   ),
-  labs: labs(
+  labels: labels(
     title: "Highway Fuel Economy by Cylinder Count",
     subtitle: "Mean ± 1 SE on top of the raw jittered observations",
     x: "Cylinders",

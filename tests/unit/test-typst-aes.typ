@@ -2,7 +2,7 @@
 // aesthetics renders the legend swatches and axis ticks as Typst markup
 // while keeping the raw column values for scale training and mapping.
 
-#import "../../lib.typ": aes, geom-col, geom-point, labs, plot, typst
+#import "../../lib.typ": aes, geom-col, geom-point, labels, plot, typst
 
 // Grouping aesthetic: typst() on the colour aes evaluates the level
 // strings as markup in the legend swatches, but the colour scale still
@@ -42,7 +42,7 @@
   data: counts,
   mapping: aes(x: "g", y: "n", fill: typst("g")),
   layers: (geom-col(),),
-  labs: labs(fill: typst("Group $k$")),
+  labels: labels(fill: typst("Group $k$")),
   width: 10cm,
   height: 6cm,
 )

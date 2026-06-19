@@ -31,7 +31,7 @@
       spacing: 6pt,
     ),
   ),
-  labs: labs(title: "Guide-Axis-Stack: Rotated Labels + Log Minor Ticks"),
+  labels: labels(title: "Guide-Axis-Stack: Rotated Labels + Log Minor Ticks"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

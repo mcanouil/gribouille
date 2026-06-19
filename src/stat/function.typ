@@ -1,18 +1,18 @@
 ///! Sample a callable across a range to produce `(x, fun(x))` rows.
 ///!
 ///! Stat-flavoured counterpart to \@geom-function. The framework runs stats
-///! before training, so the sampling range comes from `xlim` rather than the
+///! before training, so the sampling range comes from `x-limits` rather than the
 ///! trained x-domain. The output rows can feed any geom that consumes `x`
 ///! and `y` (point, line, path, step).
 
 #import "../utils/types.typ": parse-number
 #import "../utils/errors.typ": fail
 
-/// Sample `fun` at `n` points across `xlim` and emit `(x, y)` rows.
+/// Sample `fun` at `n` points across `x-limits` and emit `(x, y)` rows.
 ///
-/// `xlim` defaults to `(0, 1)`. Pass `xlim: none` to fall back to the layer's
+/// `x-limits` defaults to `(0, 1)`. Pass `x-limits: none` to fall back to the layer's
 /// own `data`: the min and max of the values referenced by `mapping.x` are
-/// used as sampling bounds. If neither `xlim` nor numeric data is available
+/// used as sampling bounds. If neither `x-limits` nor numeric data is available
 /// the stat panics with a helpful message.
 ///
 /// \@category Stats
@@ -24,13 +24,13 @@
 ///
 /// \@param n Number of samples taken uniformly across the range.
 ///
-/// \@param xlim Pair `(lo, hi)` bounding the sampling range, or `none` to derive from data.
+/// \@param x-limits Pair `(lo, hi)` bounding the sampling range, or `none` to derive from data.
 ///
 /// \@returns Statistic object with `name: "function"`, consumed by geom layers.
 ///
-/// \@examples Sine sampled across `xlim` and rendered as a line.
+/// \@examples Sine sampled across `x-limits` and rendered as a line.
 /// ```
-/// //| alt: "Line chart with x on the horizontal axis from minus pi to pi and y on the vertical axis, tracing the sine function sampled across the xlim range."
+/// //| alt: "Line chart with x on the horizontal axis from minus pi to pi and y on the vertical axis, tracing the sine function sampled across the x-limits range."
 /// #let frame = ((x: -calc.pi, y: -1), (x: calc.pi, y: 1))
 /// #plot(
 ///   data: frame,
@@ -39,7 +39,7 @@
 ///     geom-blank(),
 ///     geom-line(stat: stat-function(
 ///       fun: x => calc.sin(x),
-///       xlim: (-calc.pi, calc.pi),
+///       x-limits: (-calc.pi, calc.pi),
 ///     )),
 ///   ),
 ///   width: 10cm,
@@ -48,7 +48,7 @@
 /// ```
 ///
 /// \@examples The string form `stat: "function"` resolves to the constructor
-/// defaults (`fun: x => x`, `n: 101`, `xlim: (0, 1)`). In practice the
+/// defaults (`fun: x => x`, `n: 101`, `x-limits: (0, 1)`). In practice the
 /// constructor form is always required because `fun` must be supplied.
 /// ```
 /// //| alt: "Line chart with x on the horizontal axis from zero to two pi and y on the vertical axis, plotting the cosine function as a dense line overlaid with 13 sampled points."
@@ -60,9 +60,9 @@
 ///     geom-blank(),
 ///     geom-point(
 ///       size: 2pt,
-///       stat: stat-function(fun: x => calc.cos(x), n: 13, xlim: (0, 6.28)),
+///       stat: stat-function(fun: x => calc.cos(x), n: 13, x-limits: (0, 6.28)),
 ///     ),
-///     geom-line(stat: stat-function(fun: x => calc.cos(x), n: 201, xlim: (0, 6.28))),
+///     geom-line(stat: stat-function(fun: x => calc.cos(x), n: 201, x-limits: (0, 6.28))),
 ///   ),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -70,19 +70,19 @@
 /// ```
 ///
 /// \@see \@geom-function, \@stat-smooth
-#let stat-function(fun: x => x, n: 101, xlim: (0, 1)) = (
+#let stat-function(fun: x => x, n: 101, x-limits: (0, 1)) = (
   kind: "stat",
   name: "function",
-  params: (fun: fun, n: n, xlim: xlim),
+  params: (fun: fun, n: n, x-limits: x-limits),
 )
 
-#let _resolve-xlim(xlim, data, mapping) = {
-  if xlim != none { return xlim }
+#let _resolve-x-limits(x-limits, data, mapping) = {
+  if x-limits != none { return x-limits }
   if data == none or data.len() == 0 {
     fail(
       "stat-function",
-      "xlim is none and no data available",
-      hint: "Pass xlim: (lo, hi) or supply numeric data for the x mapping.",
+      "x-limits is none and no data available",
+      hint: "Pass x-limits: (lo, hi) or supply numeric data for the x mapping.",
     )
   }
   let x-col = if mapping == none { none } else {
@@ -91,8 +91,8 @@
   if x-col == none {
     fail(
       "stat-function",
-      "xlim is none and mapping has no x column",
-      hint: "Pass xlim: (lo, hi) or set an x mapping.",
+      "x-limits is none and mapping has no x column",
+      hint: "Pass x-limits: (lo, hi) or set an x mapping.",
     )
   }
   let nums = data
@@ -101,8 +101,8 @@
   if nums.len() == 0 {
     fail(
       "stat-function",
-      "xlim is none and data has no numeric x values",
-      hint: "Pass xlim: (lo, hi) explicitly.",
+      "x-limits is none and data has no numeric x values",
+      hint: "Pass x-limits: (lo, hi) explicitly.",
     )
   }
   (calc.min(..nums), calc.max(..nums))
@@ -114,15 +114,15 @@
   if fun == none {
     fail("stat-function", "fun must be a callable; got none")
   }
-  let xlim = _resolve-xlim(
-    params.at("xlim", default: (0, 1)),
+  let x-limits = _resolve-x-limits(
+    params.at("x-limits", default: (0, 1)),
     data,
     mapping,
   )
   let n = calc.max(2, int(params.at("n", default: 101)))
-  let (lo, hi) = (float(xlim.at(0)), float(xlim.at(1)))
+  let (lo, hi) = (float(x-limits.at(0)), float(x-limits.at(1)))
   if hi <= lo {
-    fail("stat-function", "xlim must satisfy hi > lo; got " + repr((lo, hi)))
+    fail("stat-function", "x-limits must satisfy hi > lo; got " + repr((lo, hi)))
   }
   let step = (hi - lo) / (n - 1)
   let rows = ()

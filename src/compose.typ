@@ -214,7 +214,7 @@
   let height = spec.height
   let collect = spec.collect
   let guides = spec.guides
-  let labs = spec.labs
+  let labels = spec.labels
   let alt = spec.alt
   let align-panels = spec.at("align-panels", default: false)
   let tag-ctx = spec.at("tag-ctx", default: none)
@@ -429,8 +429,8 @@
   } else if container.height.pt() < float.inf {
     container.height
   } else { _DEFAULT-HEIGHT }
-  let deco-parts = if labs != none {
-    _decorate-parts(labs, theme, resolved-width / 1cm, resolved-height / 1cm)
+  let deco-parts = if labels != none {
+    _decorate-parts(labels, theme, resolved-width / 1cm, resolved-height / 1cm)
   } else { none }
   let deco = if deco-parts != none {
     _decorate-extents(deco-parts)
@@ -631,7 +631,7 @@
     }
   }
 
-  let decorated = if labs == none {
+  let decorated = if labels == none {
     composed
   } else {
     _render-decorate(composed, deco-parts)
@@ -722,7 +722,7 @@
 ///   ...))`. All collected guides must resolve to one side, otherwise compose
 ///   panics. Defaults to the guides' natural side (`"right"`).
 ///
-/// \@param labs Composition-level labels built with\@labs; only `title`,
+/// \@param labels Composition-level labels built with\@labels; only `title`,
 ///   `subtitle`, and `caption` apply (panel-level labels stay on each\@plot).
 ///   They reuse the same chrome as a single plot, so a composition reads like
 ///   one figure.
@@ -842,7 +842,7 @@
 /// ))
 /// ```
 ///
-/// \@examples Give the composition its own title and caption with `labs`.
+/// \@examples Give the composition its own title and caption with `labels`.
 /// ```
 /// //| alt: "Two mpg scatter panels under a shared title 'Fuel economy' and a source caption, with a colour-by-cylinder legend on the right."
 /// #let panel(map) = defer(plot,
@@ -853,7 +853,7 @@
 ///   panel(aes(x: "displ", y: "hwy", colour: as-factor("cyl"))),
 ///   panel(aes(x: "displ", y: "cty", colour: as-factor("cyl"))),
 ///   columns: 2,
-///   labs: labs(title: "Fuel economy", caption: "Source: mpg"),
+///   labels: labels(title: "Fuel economy", caption: "Source: mpg"),
 /// ))
 /// ```
 ///
@@ -909,7 +909,7 @@
 /// )
 /// ```
 ///
-/// \@see\@defer,\@plot,\@aes,\@guides,\@labs
+/// \@see\@defer,\@plot,\@aes,\@guides,\@labels
 #let compose(
   ..panels-positional,
   layout: "grid",
@@ -922,7 +922,7 @@
   height: auto,
   collect: auto,
   guides: (:),
-  labs: none,
+  labels: none,
   theme: none,
   tag-levels: none,
   tag-prefix: "",
@@ -986,7 +986,7 @@
     height: height,
     collect: collect,
     guides: guides,
-    labs: labs,
+    labels: labels,
     theme: theme,
     tag-levels: tag-levels,
     tag-prefix: tag-prefix,

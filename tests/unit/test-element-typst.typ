@@ -6,7 +6,7 @@
 // values still pass through unchanged.
 
 #import "../../lib.typ": (
-  aes, element-text, element-typst, geom-col, geom-point, labs, plot, theme,
+  aes, element-text, element-typst, geom-col, geom-point, labels, plot, theme,
   typst,
 )
 #import "../../src/theme/defaults.typ": merge-theme
@@ -40,7 +40,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(title: "Mean $bar(x)$ over time"),
+  labels: labels(title: "Mean $bar(x)$ over time"),
   theme: theme(plot-title: element-typst(size: 14pt)),
   width: 10cm,
   height: 6cm,
@@ -51,7 +51,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(title: "Mean $bar(x)$ over time"),
+  labels: labels(title: "Mean $bar(x)$ over time"),
   theme: theme(plot-title: element-text(size: 14pt)),
   width: 10cm,
   height: 6cm,
@@ -62,7 +62,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(title: typst("$alpha + beta$")),
+  labels: labels(title: typst("$alpha + beta$")),
   theme: theme(plot-title: element-text()),
   width: 10cm,
   height: 6cm,
@@ -74,7 +74,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(title: [Bold *literal*]),
+  labels: labels(title: [Bold *literal*]),
   theme: theme(plot-title: element-typst()),
   width: 10cm,
   height: 6cm,
@@ -85,7 +85,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  labs: labs(
+  labels: labels(
     title: "Result: $p < 0.001$",
     x: "Time (s)",
     y: "Distance (m)",

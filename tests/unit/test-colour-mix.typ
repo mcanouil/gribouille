@@ -1,6 +1,6 @@
-// Unit tests for col-mix.
+// Unit tests for colour-mix.
 
-#import "../../src/utils/colour.typ": col-mix
+#import "../../src/utils/colour.typ": colour-mix
 
 // Tolerance is in 0..255 sRGB units; ±5 accommodates Typst's mix rounding.
 #let near(a, b, tol: 5) = {
@@ -16,12 +16,12 @@
 #let blk = rgb("#000000")
 #let wht = rgb("#ffffff")
 
-#assert(near(col-mix(blk, wht, 0), blk))
-#assert(near(col-mix(blk, wht, 1), wht))
-#assert(near(col-mix(blk, wht, 0.5), rgb("#808080")))
+#assert(near(colour-mix(blk, wht, 0), blk))
+#assert(near(colour-mix(blk, wht, 1), wht))
+#assert(near(colour-mix(blk, wht, 0.5), rgb("#808080")))
 
-#let m92 = col-mix(blk, wht, 0.92)
+#let m92 = colour-mix(blk, wht, 0.92)
 #assert(near(m92, rgb("#ebebeb")))
 #assert(not near(m92, blk, tol: 100))
 
-col-mix tests passed.
+colour-mix tests passed.

@@ -19,7 +19,7 @@
     geom-point(size: 2pt),
   ),
   facet: facet-wrap("scale", ncolumn: 3, scales: "free_y"),
-  labs: labs(
+  labels: labels(
     title: "Per-panel y axis with scales = free_y",
     subtitle: "Each panel trains its own y range so disparate magnitudes read clearly",
     x: "Step",

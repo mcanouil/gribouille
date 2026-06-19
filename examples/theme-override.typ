@@ -19,7 +19,7 @@
     panel-background: element-rect(fill: rgb("#f7f0e7")),
     panel-grid: element-line(colour: rgb("#d9cfbf")),
   ),
-  labs: labs(
+  labels: labels(
     title: "theme() Overrides",
     subtitle: "Larger axis titles, a cream panel fill, and a soft grid",
     x: "Step",

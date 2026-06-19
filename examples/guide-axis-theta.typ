@@ -26,7 +26,7 @@
     scale-y-continuous(limits: (0, 10)),
   ),
   guides: gs,
-  labs: labs(title: title),
+  labels: labels(title: title),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

@@ -408,7 +408,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param palette Colour source: a gradient, an array of colours, or `auto`.
 ///
@@ -462,7 +462,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param palette Colour source: an array of colours, or `auto`.
 ///
@@ -526,7 +526,7 @@
 ///     palette: (rgb("#0072B2"), rgb("#D55E00"), rgb("#009E73")),
 ///     limits: ("Adelie", "Chinstrap", "Gentoo"),
 ///   ),),
-///   labs: labs(x: "Flipper Length (mm)", y: "Body Mass (g)", colour: "Species"),
+///   labels: labels(x: "Flipper Length (mm)", y: "Body Mass (g)", colour: "Species"),
 ///   width: 11cm,
 ///   height: 6cm,
 /// )
@@ -542,7 +542,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param palette Colour source: a gradient, an array of colours, or `auto`.
 ///
@@ -603,7 +603,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param palette Colour source: an array of colours, or `auto`.
 ///
@@ -669,7 +669,7 @@
 ///
 /// \@param values Array of colours, one per level.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -736,7 +736,7 @@
 ///
 /// \@param values Array of colours, one per level.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -800,7 +800,7 @@
 ///
 /// \@param option Palette name: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`, or `"cividis"`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -864,7 +864,7 @@
 ///
 /// \@param option Palette name: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`, or `"cividis"`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -923,7 +923,7 @@
 ///
 /// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -977,7 +977,7 @@
 ///
 /// \@param option Palette name: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`, or `"cividis"`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -1040,7 +1040,7 @@
 ///
 /// \@param option Palette name: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`, or `"cividis"`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -1177,7 +1177,7 @@
 ///
 /// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -1235,7 +1235,7 @@
 ///
 /// \@param palette ColorBrewer palette name (qualitative, sequential, or diverging).
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -1300,7 +1300,7 @@
 ///
 /// \@param palette ColorBrewer palette name (qualitative, sequential, or diverging).
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -1363,7 +1363,7 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -1404,7 +1404,7 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -1449,7 +1449,7 @@
 ///
 /// \@param high Colour for the high end of the domain.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -1513,7 +1513,7 @@
 ///
 /// \@param midpoint Value at which the palette transitions through `mid`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -1575,7 +1575,7 @@
 ///
 /// \@param colours Array of two or more colours.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -1636,7 +1636,7 @@
 ///
 /// \@param high Colour for the high end of the domain.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -1689,7 +1689,7 @@
 ///
 /// \@param midpoint Value at which the palette transitions through `mid`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -1734,7 +1734,7 @@
 ///
 /// \@param colours Array of two or more colours.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -1783,7 +1783,7 @@
 ///
 /// \@param end Luminance for the last level, in `[0, 1]`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -1846,7 +1846,7 @@
 ///
 /// \@param end Luminance for the last level, in `[0, 1]`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -1901,7 +1901,7 @@
 ///
 /// \@param luminance Luminance in `[0, 100]`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -1967,7 +1967,7 @@
 ///
 /// \@param luminance Luminance in `[0, 100]`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -2014,7 +2014,7 @@
 ///
 /// \@param direction `1` for canonical order, `-1` for reversed.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2065,7 +2065,7 @@
 /// \@stability stable
 /// \@since 0.2.0
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param range Pair `(lo, hi)` bounding the output opacity, each in `[0, 1]`.
 ///
@@ -2141,7 +2141,7 @@
 ///
 /// \@param values Array of opacities in `[0, 1]`, one per level (in `limits` order when set, otherwise in first-seen order).
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -2204,7 +2204,7 @@
 ///
 /// \@param range Pair `(min, max)` bounding the output opacity in `[0, 1]`.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2305,7 +2305,7 @@
 ///
 /// \@param direction `1` for canonical order, `-1` for reversed.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2358,7 +2358,7 @@
 ///
 /// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2425,7 +2425,7 @@
 ///
 /// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2489,7 +2489,7 @@
 ///
 /// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2555,7 +2555,7 @@
 ///
 /// \@param direction `1` for canonical order, `-1` for reversed.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2618,7 +2618,7 @@
 ///
 /// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2670,7 +2670,7 @@
 ///
 /// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2716,7 +2716,7 @@
 ///
 /// \@param breaks Array of bin edges, or `auto` to derive equal-width bins from `n-breaks`. Edges define the bin boundaries; `n-breaks` is ignored when set.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///
@@ -2767,7 +2767,7 @@
 ///
 /// \@param direction `1` for canonical order, `-1` for reversed.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Pair `(lo, hi)` clipping the trained domain, or `none`.
 ///

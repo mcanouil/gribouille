@@ -10,7 +10,7 @@
   layers: (geom-point(size: 2.5pt, alpha: 0.85),),
   facet: facet-wrap("cyl", ncolumn: 3),
   guides: guides(colour: none),
-  labs: labs(
+  labels: labels(
     title: "Highway Fuel Economy by Cylinder Count",
     x: "Displacement (L)",
     y: "Highway mpg",

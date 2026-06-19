@@ -15,7 +15,7 @@
     geom-point(size: 2pt, fill: accent),
   ),
   scales: scales,
-  labs: labs(title: title, x: "X", y: "2^x"),
+  labels: labels(title: title, x: "X", y: "2^x"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

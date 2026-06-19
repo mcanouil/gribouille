@@ -17,7 +17,7 @@
   mapping: aes(x: "x", y: "y"),
   layers: (
     geom-point(size: 3pt),
-    geom-typst(label: [#math.alpha], dy: 0.2),
+    geom-typst(label: [#math.alpha], mapping: aes(nudge-y: 0.2cm)),
   ),
   width: 10cm,
   height: 6cm,
@@ -29,7 +29,7 @@
   mapping: aes(x: "x", y: "y"),
   layers: (
     geom-point(size: 3pt),
-    geom-typst(label: "$beta$", dy: 0.2),
+    geom-typst(label: "$beta$", mapping: aes(nudge-y: 0.2cm)),
   ),
   width: 10cm,
   height: 6cm,

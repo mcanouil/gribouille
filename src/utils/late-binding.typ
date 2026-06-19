@@ -55,7 +55,7 @@
 /// output column, surfaced via `_stat-label`; `stage` with no post-stat lane
 /// falls back to its `start` column. A closure lane, an `after-scale`, or a
 /// `from-theme` marker carries no name, so this returns `none` and the caller
-/// should leave the title empty (or take a `labs()` override).
+/// should leave the title empty (or take a `labels()` override).
 ///
 /// \@internal
 /// \@param v Any value pulled from an aesthetic mapping.

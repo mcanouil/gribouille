@@ -14,7 +14,7 @@
   data: obs,
   mapping: aes(x: "x", y: "y", fill: as-factor("cluster")),
   layers: (geom-point(size: 4pt),),
-  labs: labs(
+  labels: labels(
     title: "Numeric Column Coerced to Factor",
     subtitle: "as-factor() forces fill onto a discrete scale without changing the data",
     x: "X",

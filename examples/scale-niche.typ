@@ -24,7 +24,7 @@
     mapping: aes(x: "x", y: "y", fill: "g"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-fill-grey(),),
-    labs: labs(title: "Scale-Fill-Grey", x: "X", y: "Y", fill: "Group"),
+    labels: labels(title: "Scale-Fill-Grey", x: "X", y: "Y", fill: "Group"),
     theme: theme0,
     width: 12cm,
     height: 9cm,
@@ -34,7 +34,7 @@
     mapping: aes(x: "x", y: "y", fill: "g"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-fill-hue(),),
-    labs: labs(title: "Scale-Fill-Hue", x: "X", y: "Y", fill: "Group"),
+    labels: labels(title: "Scale-Fill-Hue", x: "X", y: "Y", fill: "Group"),
     theme: theme0,
     width: 12cm,
     height: 9cm,
@@ -44,7 +44,7 @@
     mapping: aes(x: "x", y: "y", fill: "z"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-fill-distiller(palette: "Spectral"),),
-    labs: labs(
+    labels: labels(
       title: "Scale-Fill-Distiller (Spectral)",
       x: "X",
       y: "Y",

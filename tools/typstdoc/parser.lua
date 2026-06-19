@@ -11,7 +11,7 @@ function M.set_root(path)
 end
 
 local VALID_CATEGORIES = {
-  Core = true, Labs = true, Geoms = true, Stats = true, Scales = true,
+  Core = true, Labels = true, Geoms = true, Stats = true, Scales = true,
   Coord = true, Positions = true, Facets = true, Themes = true,
   Datasets = true, Guides = true, Utilities = true, Helpers = true,
 }

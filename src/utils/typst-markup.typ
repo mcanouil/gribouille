@@ -52,7 +52,7 @@
 ///   ),
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(),),
-///   labs: labs(title: typst("Mean $bar(x)$ over time")),
+///   labels: labels(title: typst("Mean $bar(x)$ over time")),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

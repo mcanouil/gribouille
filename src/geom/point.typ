@@ -110,7 +110,7 @@
 ///     shape: "species",
 ///   ),
 ///   layers: (geom-point(size: 2pt, alpha: 0.85),),
-///   labs: labs(
+///   labels: labels(
 ///     x: "Flipper Length (mm)",
 ///     y: "Body Mass (g)",
 ///     fill: "Species",
@@ -139,7 +139,7 @@
 ///       colour: orange,
 ///     ),
 ///   ),
-///   labs: labs(x: "Flipper Length (mm)", y: "Body Mass (g)"),
+///   labels: labels(x: "Flipper Length (mm)", y: "Body Mass (g)"),
 ///   width: 11cm,
 ///   height: 6cm,
 /// )

@@ -836,7 +836,7 @@
 
   // When flipped, the bottom axis shows the user's original y mapping and
   // the left axis shows the user's original x mapping; trained.x and
-  // trained.y already carry the swapped scale specs (and labs labels), so
+  // trained.y already carry the swapped scale specs (and labels labels), so
   // only the mapping-name fallback needs an explicit swap here.
   let _mapping-x-name = if spec.mapping == none { none } else if flipped {
     mapping-display-name(spec.mapping.at("y", default: none))

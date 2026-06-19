@@ -21,7 +21,7 @@
   data: d,
   mapping: aes(x: "x", y: "y", fill: "k"),
   layers: (geom-area(stat: stat, alpha: 0.7),),
-  labs: labs(subtitle: subtitle),
+  labels: labels(subtitle: subtitle),
   theme: theme-minimal(),
   width: 12cm,
   height: 8cm,

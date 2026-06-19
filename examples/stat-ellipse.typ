@@ -17,7 +17,7 @@
     geom-point(size: 2pt, alpha: 0.85),
   ),
   scales: (scale-y-continuous(labels: format-comma()),),
-  labs: labs(
+  labels: labels(
     title: "Penguin Species Clusters",
     subtitle: "stat-ellipse draws the 95% covariance ellipse around each group",
     x: "Flipper Length (mm)",

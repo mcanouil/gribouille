@@ -11,8 +11,8 @@
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec, _shared-axis-breaks
 #import "domain.typ": (
-  _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip, _apply-labs,
-  _fixed-inner-size, _is-flipped, _post-train,
+  _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
+  _apply-labels, _fixed-inner-size, _is-flipped, _post-train,
 )
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _ax-text-cm, _axis-label-extents,
@@ -27,10 +27,10 @@
   n
 }
 
-#let _train-panels(spec, panels, trained, coord, labs, free-x, free-y) = {
+#let _train-panels(spec, panels, trained, coord, labels, free-x, free-y) = {
   if not (free-x or free-y) { return () }
   // Only positional aesthetics are retrained per panel; non-positionals stay
-  // shared so legends do not fragment. Labs labels must be re-applied because
+  // shared so legends do not fragment. Label names must be re-applied because
   // pt.x / pt.y overwrite the globally-labelled merged.x / merged.y below.
   panels.map(p => {
     let pt = train(
@@ -40,7 +40,7 @@
       data: spec.data,
       aesthetics: positional-aesthetics,
     )
-    pt = _apply-labs(pt, labs)
+    pt = _apply-labels(pt, labels)
     pt = _post-train(pt, p.layers)
     pt = _apply-coord-transform(pt, coord)
     pt = _apply-coord(pt, coord)
@@ -67,7 +67,7 @@
   panels,
   trained,
   coord,
-  labs,
+  labels,
   n-rows,
   n-cols,
   free-x,
@@ -95,7 +95,7 @@
       data: spec.data,
       aesthetics: positional-aesthetics,
     )
-    pt = _apply-labs(pt, labs)
+    pt = _apply-labels(pt, labels)
     pt = _post-train(pt, group-layers)
     pt = _apply-coord-transform(pt, coord)
     pt = _apply-coord(pt, coord)

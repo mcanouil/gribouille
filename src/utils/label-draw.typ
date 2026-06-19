@@ -17,39 +17,59 @@
 // Renderer-owned key; geoms never reach into the layer dict directly.
 #let label-sizes-of(layer) = layer.at("_label-sizes", default: ())
 
-// Convert per-row offsets expressed in data units (`nx`, `ny`) to canvas-cm
-// deltas using the trained scales currently in `ctx`. Returns `(0, 0)` when
-// the row's anchor or shifted point fail to project.
+// Convert a row's `(nx, ny)` nudge to canvas-cm deltas. A `length` value is
+// already canvas units; a number is data units, projected through the trained
+// scales in `ctx`. Each axis falls back to `0` when its point fails to project.
 #let nudge-cm(ctx, x-val, y-val, nx, ny) = {
-  if nx == 0 and ny == 0 { return (0.0, 0.0) }
-  let base = project-point(ctx, x-val, y-val)
-  if base == none { return (0.0, 0.0) }
-  let (bx, by) = base
   let dx = 0.0
   let dy = 0.0
-  if nx != 0 {
-    let shifted = project-point(ctx, x-val + nx, y-val)
-    if shifted != none { dx = shifted.at(0) - bx }
+  // A `length` nudge is in canvas units: convert directly and skip
+  // projection, so it also applies on categorical or unparseable axes.
+  if type(nx) == length {
+    dx = nx / 1cm
+    nx = 0
   }
-  if ny != 0 {
+  if type(ny) == length {
+    dy = ny / 1cm
+    ny = 0
+  }
+  if nx == 0 and ny == 0 { return (dx, dy) }
+  // A numeric nudge is in data units: project the shifted point through the
+  // trained scales and take the canvas delta. A non-numeric anchor cannot
+  // shift in data units, so that contribution stays zero.
+  let base = project-point(ctx, x-val, y-val)
+  if base == none { return (dx, dy) }
+  let (bx, by) = base
+  if nx != 0 and x-val != none {
+    let shifted = project-point(ctx, x-val + nx, y-val)
+    if shifted != none { dx += shifted.at(0) - bx }
+  }
+  if ny != 0 and y-val != none {
     let shifted = project-point(ctx, x-val, y-val + ny)
-    if shifted != none { dy = shifted.at(1) - by }
+    if shifted != none { dy += shifted.at(1) - by }
   }
   (dx, dy)
 }
 
-#let _read-num(col, row) = if col == none { 0 } else {
-  let v = parse-number(row.at(col, default: none))
+// Resolve a row's raw nudge value for one axis. A column-name spec reads the
+// cell (a `length` cell stays canvas units, else parse a data number); a
+// scalar spec is used as-is (`length` = canvas units, number = data units).
+#let _nudge-raw(spec, row) = {
+  if spec == none { return 0 }
+  let col = aes-col(spec)
+  let raw = if col != none { row.at(col, default: none) } else { spec }
+  if type(raw) == length { return raw }
+  let v = parse-number(raw)
   if v == none { 0 } else { v }
 }
 
 // Compute per-row anchor + label-centre pairs (canvas-cm) for one layer.
 // `placements.at(idx)` is `none` when the row fails to project so callers
 // can skip without re-checking inputs.
-#let compute-placements(ctx, layer, mapping, data, dx-base, dy-base) = {
-  let nudge-x-col = aes-col(mapping.at("nudge-x", default: none))
-  let nudge-y-col = aes-col(mapping.at("nudge-y", default: none))
-  let needs-nudge = nudge-x-col != none or nudge-y-col != none
+#let compute-placements(ctx, layer, mapping, data) = {
+  let nudge-x-spec = mapping.at("nudge-x", default: none)
+  let nudge-y-spec = mapping.at("nudge-y", default: none)
+  let needs-nudge = nudge-x-spec != none or nudge-y-spec != none
   data
     .enumerate()
     .map(((idx, row)) => {
@@ -61,21 +81,17 @@
       let (nudge-dx, nudge-dy) = if not needs-nudge {
         (0.0, 0.0)
       } else {
-        let xn = parse-number(xv)
-        let yn = parse-number(yv)
-        if xn == none or yn == none { (0.0, 0.0) } else {
-          nudge-cm(
-            ctx,
-            xn,
-            yn,
-            _read-num(nudge-x-col, row),
-            _read-num(nudge-y-col, row),
-          )
-        }
+        nudge-cm(
+          ctx,
+          parse-number(xv),
+          parse-number(yv),
+          _nudge-raw(nudge-x-spec, row),
+          _nudge-raw(nudge-y-spec, row),
+        )
       }
       (
         anchor: (cx, cy),
-        centre: (cx + nudge-dx + dx-base, cy + nudge-dy + dy-base),
+        centre: (cx + nudge-dx, cy + nudge-dy),
         idx: idx,
       )
     })
@@ -159,16 +175,6 @@
 // Resolve every layer param that drives text/label/typst draw geometry
 // into a single record so the geoms do not each repeat the same setup.
 #let prepare-draw(layer, ctx, mapping, data, theme-colour) = {
-  let dx-base = if type(layer.params.dx) == length {
-    layer.params.dx / 1cm
-  } else {
-    layer.params.dx
-  }
-  let dy-base = if type(layer.params.dy) == length {
-    layer.params.dy / 1cm
-  } else {
-    layer.params.dy
-  }
   let segment-on = layer.params.segment
   let repel-on = layer.params.repel
   let needs-placement = (
@@ -190,7 +196,7 @@
       repel-params-of(layer.params),
     )
   } else if needs-placement {
-    compute-placements(ctx, layer, mapping, data, dx-base, dy-base)
+    compute-placements(ctx, layer, mapping, data)
   } else { () }
   let aabbs = if segment-on {
     compute-aabbs(placements, sizes, layer.params.box-padding)
@@ -205,8 +211,6 @@
     placements: placements,
     aabbs: aabbs,
     seg-cfg: seg-cfg,
-    dx-base: dx-base,
-    dy-base: dy-base,
     layer: layer,
   )
 }
@@ -226,8 +230,7 @@
     row.at(mapping.y, default: none),
   )
   if projected == none { return none }
-  let (sx, sy) = shift-point(projected, dodge-delta(ctx, state.layer, row))
-  (sx + state.dx-base, sy + state.dy-base)
+  shift-point(projected, dodge-delta(ctx, state.layer, row))
 }
 
 // Open V-mark at the anchor end of a connector. The two short strokes meet

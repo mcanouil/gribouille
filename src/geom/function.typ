@@ -14,7 +14,7 @@
 
 /// Polyline of `fun(x)` sampled uniformly across the x-range.
 ///
-/// The trained x-domain is used by default; pass `xlim` to override it.
+/// The trained x-domain is used by default; pass `x-limits` to override it.
 /// `n` samples are taken across that range. Sampled points where `fun`
 /// returns `none` are dropped silently.
 ///
@@ -27,7 +27,7 @@
 ///
 /// \@param n Number of samples taken uniformly across the x-range.
 ///
-/// \@param xlim Optional `(lo, hi)` overriding the trained x-domain.
+/// \@param x-limits Optional `(lo, hi)` overriding the trained x-domain.
 ///
 /// \@param stroke Line thickness (a Typst length).
 ///
@@ -57,10 +57,10 @@
 /// )
 /// ```
 ///
-/// \@examples Pass `xlim` to override the domain when the training data does
+/// \@examples Pass `x-limits` to override the domain when the training data does
 /// not match the function's natural range.
 /// ```
-/// //| alt: "Shifted sine curve oscillating between 0 and 1 sampled across x from 0 to 4 pi using an explicit xlim override."
+/// //| alt: "Shifted sine curve oscillating between 0 and 1 sampled across x from 0 to 4 pi using an explicit x-limits override."
 /// #let frame = ((x: 0, y: 0), (x: 1, y: 1))
 /// #plot(
 ///   data: frame,
@@ -69,7 +69,7 @@
 ///     geom-blank(),
 ///     geom-function(
 ///       fun: x => calc.sin(x) * 0.5 + 0.5,
-///       xlim: (0, 4 * calc.pi),
+///       x-limits: (0, 4 * calc.pi),
 ///       n: 201,
 ///     ),
 ///   ),
@@ -82,7 +82,7 @@
 #let geom-function(
   fun: none,
   n: 101,
-  xlim: none,
+  x-limits: none,
   stroke: auto,
   colour: auto,
   alpha: auto,
@@ -98,7 +98,7 @@
     params: (
       fun: fun,
       n: n,
-      xlim: xlim,
+      x-limits: x-limits,
       stroke: stroke,
       colour: colour,
       alpha: alpha,
@@ -116,8 +116,8 @@
   if x-trained == none or y-trained == none { return }
   if x-trained.type != "continuous" or y-trained.type != "continuous" { return }
 
-  let domain = if layer.params.xlim != none {
-    layer.params.xlim
+  let domain = if layer.params.x-limits != none {
+    layer.params.x-limits
   } else { x-trained.domain }
   let (lo, hi) = (float(domain.at(0)), float(domain.at(1)))
   if hi <= lo { return }

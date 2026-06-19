@@ -19,7 +19,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param palette Array of shape keywords or literal-glyph characters, or `auto` for the library default.
 ///
@@ -98,7 +98,7 @@
 ///
 /// \@param values Array of shape keywords or literal-glyph characters, one per level.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Array of level names controlling order and inclusion, or `none`.
 ///
@@ -248,7 +248,7 @@
 ///
 /// \@param palette Array of shape keywords, one per bin, or `auto` for the library default.
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param limits Continuous `(lo, hi)` pair pinning the domain, or `none`.
 ///

@@ -7,7 +7,7 @@
   fill-tint-amount, resolve-geom-colour, resolve-geom-defaults,
   resolve-geom-fill, theme,
 )
-#import "../../src/utils/colour.typ": col-mix
+#import "../../src/utils/colour.typ": colour-mix
 
 #let g = element-geom()
 #assert.eq(g.kind, "element-geom")
@@ -52,7 +52,7 @@
 #assert.eq(resolve-geom-colour(d0, role: "accent"), default-theme.accent)
 #assert.eq(
   resolve-geom-fill(d0, role: "tint"),
-  col-mix(default-theme.ink, default-theme.paper, fill-tint-amount),
+  colour-mix(default-theme.ink, default-theme.paper, fill-tint-amount),
 )
 #assert.eq(resolve-geom-fill(d0, role: "paper"), default-theme.paper)
 #assert.eq(resolve-geom-fill(d0, role: "ink"), default-theme.ink)
@@ -65,7 +65,7 @@
 #assert.eq(resolve-geom-colour(de), black)
 #assert.eq(
   resolve-geom-fill(de, role: "tint"),
-  col-mix(black, white, fill-tint-amount),
+  colour-mix(black, white, fill-tint-amount),
 )
 
 // element-geom(ink: X): colour-default == X; the tint uses X as its dark stop.
@@ -75,7 +75,7 @@
 #assert.eq(resolve-geom-colour(di), rgb("#112233"))
 #assert.eq(
   resolve-geom-fill(di, role: "tint"),
-  col-mix(rgb("#112233"), default-theme.paper, fill-tint-amount),
+  colour-mix(rgb("#112233"), default-theme.paper, fill-tint-amount),
 )
 
 // element-geom(paper: X): paper-role fill == X; tint uses X as its light stop.
@@ -85,7 +85,7 @@
 #assert.eq(resolve-geom-fill(dp, role: "paper"), rgb("#445566"))
 #assert.eq(
   resolve-geom-fill(dp, role: "tint"),
-  col-mix(default-theme.ink, rgb("#445566"), fill-tint-amount),
+  colour-mix(default-theme.ink, rgb("#445566"), fill-tint-amount),
 )
 
 // element-geom(colour: X): global override; wins over every colour role.

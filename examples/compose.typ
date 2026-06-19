@@ -19,7 +19,7 @@
 
 // Gallery showcase: a single squared two-by-two composition with a shared
 // colour legend, panel tags, and a composition title. The full set of
-// `collect` / legend-placement / `labs` / stack variations lives in the
+// `collect` / legend-placement / `labels` / stack variations lives in the
 // typstdoc `@examples` on the reference page.
 #compose(
   panel(aes(x: "wt", y: "mpg", colour: as-factor("cyl"))),
@@ -30,7 +30,7 @@
   tag-levels: "A",
   tag-prefix: "(",
   tag-suffix: ")",
-  labs: labs(title: "Motor Trend road tests", caption: "Source: mtcars"),
+  labels: labels(title: "Motor Trend road tests", caption: "Source: mtcars"),
   width: 13cm,
   height: 10cm,
 )

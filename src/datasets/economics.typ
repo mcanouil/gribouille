@@ -78,7 +78,7 @@
 ///     geom-line(mapping: aes(y: "uempmed"), colour: rgb("#d95f02"), stroke: 1pt),
 ///   ),
 ///   scales: (scale-x-date(),),
-///   labs: labs(y: "Percent / Weeks"),
+///   labels: labels(y: "Percent / Weeks"),
 ///   width: 11cm,
 ///   height: 6cm,
 /// )

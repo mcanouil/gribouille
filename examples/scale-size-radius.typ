@@ -25,7 +25,7 @@
     mapping: aes(x: "x", y: "y", size: "w"),
     layers: (geom-point(fill: accent),),
     scales: (scale-radius(range: (1pt, 8pt)),),
-    labs: labs(title: "Scale-Radius (linear)", x: "X", y: "Y", size: "w"),
+    labels: labels(title: "Scale-Radius (linear)", x: "X", y: "Y", size: "w"),
     theme: theme-minimal(),
     width: 12cm,
     height: 9cm,
@@ -35,7 +35,7 @@
     mapping: aes(x: "x", y: "y", size: "w"),
     layers: (geom-point(fill: accent),),
     scales: (scale-size-area(range: (1pt, 8pt)),),
-    labs: labs(title: "Scale-Size-Area (sqrt)", x: "X", y: "Y", size: "w"),
+    labels: labels(title: "Scale-Size-Area (sqrt)", x: "X", y: "Y", size: "w"),
     theme: theme-minimal(),
     width: 12cm,
     height: 9cm,
@@ -50,7 +50,7 @@
         limits: ("small", "medium", "large"),
       ),
     ),
-    labs: labs(
+    labels: labels(
       title: "Scale-Size-Manual",
       x: "X",
       y: "Y",

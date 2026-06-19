@@ -21,7 +21,7 @@
     geom-errorbarh(height: 0.35, stroke: 1.2pt, colour: rgb("#1f77b4")),
     geom-point(size: 3.5pt, fill: rgb("#1f77b4")),
   ),
-  labs: labs(
+  labels: labels(
     title: "Highway Fuel Economy by Vehicle Class",
     subtitle: "Horizontal error bars span the 95% confidence interval around each mean",
     x: "Highway mpg",

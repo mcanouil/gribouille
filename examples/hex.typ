@@ -21,7 +21,7 @@
   mapping: aes(x: "x", y: "y"),
   layers: (geom-hex(bins: 22),),
   scales: (scale-fill-viridis-c(option: "viridis"),),
-  labs: labs(
+  labels: labels(
     title: "Spiral Cloud Binned into Pointy-Top Hexagons",
     subtitle: "Cells coloured by count, empty bins suppressed",
     fill: "count",

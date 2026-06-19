@@ -2,14 +2,14 @@
 #import "data.typ": _normalise-data
 #import "utils/errors.typ": fail
 
-// Effective alt text: an explicit `plot(alt:)` wins; otherwise a `labs(alt:)`
-// fills in (its `auto` default and `none` both count as unset), so the labs
+// Effective alt text: an explicit `plot(alt:)` wins; otherwise a `labels(alt:)`
+// fills in (its `auto` default and `none` both count as unset), so the labels
 // field reaches `get-alt-text` instead of being dropped.
-#let _resolve-alt(alt, labs) = {
+#let _resolve-alt(alt, labels) = {
   if alt != none { return alt }
-  if labs != none {
-    let labs-alt = labs.at("alt", default: auto)
-    if labs-alt != auto and labs-alt != none { return labs-alt }
+  if labels != none {
+    let labels-alt = labels.at("alt", default: auto)
+    if labels-alt != auto and labels-alt != none { return labels-alt }
   }
   none
 }
@@ -39,7 +39,7 @@
 ///
 /// \@param theme Theme object (e.g., \@theme-grey,\@theme-minimal,\@theme-classic). Controls non-data ink.
 ///
-/// \@param labs Labels dictionary built with\@labs (title, subtitle, caption, axis titles).
+/// \@param labels Labels dictionary built with\@labels (title, subtitle, caption, axis titles).
 ///
 /// \@param guides Per-aesthetic guide overrides built with\@guides (e.g., `guides(colour: guide-legend(reverse: true))`).
 ///
@@ -69,7 +69,7 @@
 ///   data: mtcars,
 ///   mapping: aes(x: "wt", y: "mpg", colour: "cyl"),
 ///   layers: (geom-point(size: 3pt),),
-///   labs: labs(title: "Fuel Economy vs. Weight"),
+///   labels: labels(title: "Fuel Economy vs. Weight"),
 ///   width: 12cm,
 ///   height: 7cm,
 /// )
@@ -94,13 +94,13 @@
 ///   ),
 ///   facet: facet-wrap("grp"),
 ///   theme: theme-minimal(),
-///   labs: labs(title: "Per-Group Trend"),
+///   labels: labels(title: "Per-Group Trend"),
 ///   width: 12cm,
 ///   height: 6cm,
 /// )
 /// ```
 ///
-/// \@see\@aes,\@geom-point,\@coord-cartesian,\@facet-wrap,\@theme-grey,\@labs
+/// \@see\@aes,\@geom-point,\@coord-cartesian,\@facet-wrap,\@theme-grey,\@labels
 #let plot(
   data: none,
   mapping: none,
@@ -109,7 +109,7 @@
   coord: none,
   facet: none,
   theme: none,
-  labs: none,
+  labels: none,
   guides: (:),
   width: 10cm,
   height: 7cm,
@@ -117,7 +117,7 @@
   strict: false,
   as-spec: false,
 ) = {
-  let alt = _resolve-alt(alt, labs)
+  let alt = _resolve-alt(alt, labels)
   // Deferred plots skip the context block because `context` returns
   // content; compose() resolves the active theme from its own context
   // before handing the spec to the renderer.
@@ -137,7 +137,7 @@
       coord: coord,
       facet: facet,
       theme: theme,
-      labs: labs,
+      labels: labels,
       guides: guides,
       width: width,
       height: height,
@@ -167,7 +167,7 @@
       coord: coord,
       facet: facet,
       theme: theme,
-      labs: labs,
+      labels: labels,
       guides: guides,
       width: resolved-width,
       height: resolved-height,

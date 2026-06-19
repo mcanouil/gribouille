@@ -16,9 +16,21 @@
 #assert.eq(lt.mapping.colour, none)
 
 // Layer parameters (non-aesthetic kwargs) are forwarded to the geom.
-#let lt2 = annotate("text", x: 0, y: 0, label: "x", anchor: "west", dy: 0.3)
+#let lt2 = annotate(
+  "text",
+  x: 0,
+  y: 0,
+  label: "x",
+  anchor: "west",
+  segment: true,
+)
 #assert.eq(lt2.params.anchor, "west")
-#assert.eq(lt2.params.dy, 0.3)
+#assert.eq(lt2.params.segment, true)
+
+// `nudge-x`/`nudge-y` are aesthetics: they land in the mapping/data, not params.
+#let lt-nudge = annotate("text", x: 0, y: 0, label: "x", nudge-y: 0.3cm)
+#assert.eq(lt-nudge.mapping.nudge-y, "nudge-y")
+#assert.eq(lt-nudge.data.at(0).nudge-y, 0.3cm)
 
 // Aesthetic kwargs that the geom also accepts as a fixed param (e.g., colour
 // on geom-text) still go into the mapping/data, not the params dict.

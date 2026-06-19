@@ -110,7 +110,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labs: labs(title: "Relative and absolute", x: "X", y: "Y"),
+///   labels: labels(title: "Relative and absolute", x: "X", y: "Y"),
 ///   theme: theme(
 ///     text: element-text(size: 12pt),
 ///     axis-title: element-text(size: 120%),
@@ -150,7 +150,7 @@
 /// surface.
 ///
 /// Drop-in replacement for \@element-text on any text key. Strings
-/// supplied via \@labs, scale names, or scale `labels:` callbacks are
+/// supplied via \@labels, scale names, or scale `labels:` callbacks are
 /// evaluated as Typst markup before rendering, so users do not need to
 /// wrap each value with \@typst. Per-call \@typst() and content (`[…]`)
 /// values still pass through unchanged.
@@ -199,7 +199,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labs: labs(title: "Mean $bar(x)$ over Time"),
+///   labels: labels(title: "Mean $bar(x)$ over Time"),
 ///   theme: theme(plot-title: element-typst(size: 14pt, weight: "bold")),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -214,7 +214,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labs: labs(title: "Mean $bar(x)$", x: "Time (s)"),
+///   labels: labels(title: "Mean $bar(x)$", x: "Time (s)"),
 ///   theme: theme(
 ///     plot-title: element-typst(),
 ///     axis-title: element-text(),
@@ -471,7 +471,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labs: labs(x: "Index", y: "Value"),
+///   labels: labels(x: "Index", y: "Value"),
 ///   theme: theme(axis-title: element-blank()),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -518,7 +518,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labs: labs(y: "Cumulative Response"),
+///   labels: labels(y: "Cumulative Response"),
 ///   theme: theme(axis-title-y-left: element-text(margin: margin(right: 0.6em))),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -580,7 +580,7 @@
 /// when the global override is unset, with each geom declaring which role
 /// drives its default (`ink` for line/text geoms, `accent` for \@geom-smooth,
 /// `paper` for \@geom-boxplot/\@geom-crossbar/\@geom-point/\@geom-label, a
-/// `col-mix(ink, paper, …)` tint for the bar/area/rect/tile family).
+/// `colour-mix(ink, paper, …)` tint for the bar/area/rect/tile family).
 ///
 /// \@category Themes
 /// \@subcategory Theme elements

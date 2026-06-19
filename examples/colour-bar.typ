@@ -8,7 +8,7 @@
   data: mpg,
   mapping: aes(x: "displ", y: "hwy", fill: "cty"),
   layers: (geom-point(size: 4pt, alpha: 0.85),),
-  labs: labs(
+  labels: labels(
     title: "Highway Versus Engine Displacement, Coloured by City mpg",
     x: "Displacement (L)",
     y: "Highway mpg",

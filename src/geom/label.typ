@@ -18,10 +18,11 @@
 /// Boxed text label layer reading strings from the `label` aesthetic.
 ///
 /// One boxed text block is drawn per row at the mapped `(x, y)`. The box
-/// takes its own fill, stroke, inset, and corner radius. Per-row data-unit
-/// offsets are read from the `nudge-x` and `nudge-y` aesthetics; setting
-/// `segment: true` draws a connector back to the anchor that avoids the
-/// other label boxes of the same layer.
+/// takes its own fill, stroke, inset, and corner radius. Offsets are read
+/// from the `nudge-x` and `nudge-y` aesthetics: a number shifts in data
+/// units, a Typst length shifts in canvas units. Setting `segment: true`
+/// draws a connector back to the anchor that avoids the other label boxes of
+/// the same layer.
 ///
 /// \@category Geoms
 /// \@subcategory Text and annotations
@@ -49,10 +50,6 @@
 /// \@param radius Corner radius of the box (a Typst length).
 ///
 /// \@param anchor CeTZ anchor (e.g., `"center"`, `"west"`) controlling placement.
-///
-/// \@param dx Horizontal offset, as a number (canvas units, 1 = 1cm) or a Typst length (e.g., `4pt`, `2mm`).
-///
-/// \@param dy Vertical offset, as a number (canvas units, 1 = 1cm) or a Typst length (e.g., `4pt`, `2mm`).
 ///
 /// \@param segment Draw a connector from each box back to its anchor point. When `true`, the connector is routed to avoid the AABBs of other boxes of the same layer; dropped when no L-bend clears the obstacles.
 ///
@@ -103,7 +100,7 @@
 ///   mapping: aes(x: "x", y: "y", label: "name"),
 ///   layers: (
 ///     geom-point(size: 2pt),
-///     geom-label(dy: 0.25),
+///     geom-label(mapping: aes(nudge-y: 0.25cm)),
 ///   ),
 ///   scales: (scale-y-continuous(expand: 15%),),
 ///   width: 10cm,
@@ -125,12 +122,12 @@
 ///   mapping: aes(x: "x", y: "y", label: "name"),
 ///   layers: (
 ///     geom-label(
+///       mapping: aes(nudge-y: 0.3cm),
 ///       fill: rgb("#fff7e6"),
 ///       colour: rgb("#cc7a00"),
 ///       stroke: 0.6pt,
 ///       radius: 3pt,
 ///       inset: 4pt,
-///       dy: 0.3,
 ///     ),
 ///   ),
 ///   scales: (scale-y-continuous(expand: 15%),),
@@ -152,8 +149,6 @@
   inset: 2pt,
   radius: 1pt,
   anchor: "center",
-  dx: 0,
-  dy: 0,
   segment: false,
   segment-colour: auto,
   segment-stroke: 0.4pt,
@@ -185,8 +180,6 @@
     inset: inset,
     radius: radius,
     anchor: anchor,
-    dx: dx,
-    dy: dy,
     segment: segment,
     segment-colour: segment-colour,
     segment-stroke: segment-stroke,

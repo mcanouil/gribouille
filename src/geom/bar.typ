@@ -86,7 +86,7 @@
 ///   data: penguins,
 ///   mapping: aes(x: "island", fill: "species"),
 ///   layers: (geom-bar(position: "dodge"),),
-///   labs: labs(x: "Island", y: "Count", fill: "Species"),
+///   labels: labels(x: "Island", y: "Count", fill: "Species"),
 ///   width: 11cm,
 ///   height: 6cm,
 /// )

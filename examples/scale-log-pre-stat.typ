@@ -17,7 +17,7 @@
     geom-smooth(method: "lm", colour: red, fill: red, alpha: 0.15),
   ),
   scales: scales,
-  labs: labs(title: title, x: "X", y: "Y"),
+  labels: labels(title: title, x: "X", y: "Y"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

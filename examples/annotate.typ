@@ -22,7 +22,7 @@
       y: 6.4,
       label: "peak",
       anchor: "south",
-      dy: 0.3,
+      nudge-y: 0.3cm,
       size: 10pt,
       colour: alert,
     ),
@@ -35,7 +35,7 @@
       size: 12pt,
     ),
   ),
-  labs: labs(
+  labels: labels(
     title: "Annotated Series",
     subtitle: "annotate() places ad-hoc layers without joining the data table",
     x: "Index",

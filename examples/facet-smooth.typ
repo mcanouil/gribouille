@@ -14,7 +14,7 @@
     geom-smooth(method: "lm", colour: accent, fill: accent, alpha: 0.2),
   ),
   facet: facet-wrap("cyl", ncolumn: 3, labeller: label-both()),
-  labs: labs(
+  labels: labels(
     title: "Per-Panel Linear Smoother",
     subtitle: "Each fit follows only the rows in its own panel",
     x: "Displacement (L)",

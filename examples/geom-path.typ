@@ -21,7 +21,7 @@
     scale-y-continuous(breaks: (-6, -3, 0, 3, 6)),
   ),
   coord: coord-fixed(),
-  labs: labs(
+  labels: labels(
     title: "Geom-Path Follows Row Order",
     subtitle: "Colour encodes traversal time along the spiral",
     x: "X",

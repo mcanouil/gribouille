@@ -6,7 +6,7 @@
 #import "../utils/pretty.typ": pretty, pretty-log10, pretty-sqrt
 #import "../utils/format.typ": format-break
 
-// Axis title fallback: a `labs(x: none)` suppression (`spec.blank`) wins and
+// Axis title fallback: a `labels(x: none)` suppression (`spec.blank`) wins and
 // yields no title; otherwise the trained scale's `spec.name`, else the bare
 // mapping column name (which may be `none` when neither is set). Used by the
 // cartesian title path and the faceted (wrap/grid) finishers.

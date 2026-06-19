@@ -178,13 +178,13 @@
   max-half
 }
 
-// Inject labs `x`/`y`/... names into trained scale specs so axis and legend
-// titles follow labs() overrides. `auto` (the labs default) keeps the
+// Inject labels `x`/`y`/... names into trained scale specs so axis and legend
+// titles follow labels() overrides. `auto` (the labels default) keeps the
 // scale-derived name; `none` sets `spec.blank` to suppress the title and
 // collapse its reserved space; a string overrides the name.
-#let _apply-labs(trained, labs) = {
-  if labs == none { return trained }
-  for (aes-name, label) in labs.axes.pairs() {
+#let _apply-labels(trained, labels) = {
+  if labels == none { return trained }
+  for (aes-name, label) in labels.axes.pairs() {
     if label == auto { continue }
     let t = trained.at(aes-name, default: none)
     if t == none { continue }
@@ -221,7 +221,7 @@
   trained
 }
 
-// xlim/ylim arrive in data space; pre-transformed domains live in stat space.
+// x-limits/y-limits arrive in data space; pre-transformed domains live in stat space.
 #let _coord-limits-to-domain(entry, lim) = {
   if not entry.at("pre-transformed", default: false) { return lim }
   let t = entry.at("transform", default: "identity")
@@ -229,29 +229,29 @@
   (transform-fwd(t, lo), transform-fwd(t, hi))
 }
 
-// coord-cartesian xlim/ylim overrides take precedence over scale training,
+// coord-cartesian x-limits/y-limits overrides take precedence over scale training,
 // so re-apply them after any per-panel retraining.
 #let _apply-coord(trained, coord) = {
   if coord == none { return trained }
   if coord.coord != "cartesian" { return trained }
-  let xlim = coord.at("xlim", default: none)
+  let x-limits = coord.at("x-limits", default: none)
   if (
-    xlim != none
+    x-limits != none
       and trained.at("x", default: none) != none
       and trained.x.type == "continuous"
   ) {
     let new-x = trained.x
-    new-x.insert("domain", _coord-limits-to-domain(trained.x, xlim))
+    new-x.insert("domain", _coord-limits-to-domain(trained.x, x-limits))
     trained.insert("x", new-x)
   }
-  let ylim = coord.at("ylim", default: none)
+  let y-limits = coord.at("y-limits", default: none)
   if (
-    ylim != none
+    y-limits != none
       and trained.at("y", default: none) != none
       and trained.y.type == "continuous"
   ) {
     let new-y = trained.y
-    new-y.insert("domain", _coord-limits-to-domain(trained.y, ylim))
+    new-y.insert("domain", _coord-limits-to-domain(trained.y, y-limits))
     trained.insert("y", new-y)
   }
   trained
@@ -264,7 +264,7 @@
 
 // Swap the trained x and y scales so the renderer's bottom axis shows the
 // user's original y scale and the left axis shows the user's original x
-// scale. Called after `_apply-coord` so any cartesian xlim/ylim overrides
+// scale. Called after `_apply-coord` so any cartesian x-limits/y-limits overrides
 // apply to the pre-flip axes as the user wrote them.
 #let _apply-flip(trained, coord) = {
   if not _is-flipped(coord) { return trained }

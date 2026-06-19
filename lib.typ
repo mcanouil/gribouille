@@ -14,8 +14,8 @@
 #import "src/datasets/mpg.typ": mpg
 #import "src/datasets/penguins.typ": penguins
 
-// Labs.
-#import "src/labs.typ": labs
+// Labels.
+#import "src/labels.typ": labels
 
 // Guides.
 #import "src/guide/legend.typ": guide-legend
@@ -179,7 +179,7 @@
   scale-linetype, scale-linetype-binned, scale-linetype-continuous,
   scale-linetype-discrete, scale-linetype-identity, scale-linetype-manual,
 )
-#import "src/utils/colour.typ": col-mix
+#import "src/utils/colour.typ": colour-mix
 #import "src/limits.typ": expand-limits
 
 // Coord.

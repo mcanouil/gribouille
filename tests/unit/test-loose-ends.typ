@@ -51,9 +51,9 @@
 #assert.eq(l-eb.params.height, 0.4)
 #assert.eq(l-eb.stat, "identity")
 
-// --- stat-function: samples fun across xlim --------------------------------
+// --- stat-function: samples fun across x-limits --------------------------------
 
-#let r-fn-meta = stat-function(fun: x => x * x, n: 5, xlim: (0, 4))
+#let r-fn-meta = stat-function(fun: x => x * x, n: 5, x-limits: (0, 4))
 #assert.eq(r-fn-meta.kind, "stat")
 #assert.eq(r-fn-meta.name, "function")
 
@@ -61,7 +61,7 @@
   "function",
   (),
   none,
-  (fun: x => x * x, n: 5, xlim: (0, 4), args: (:)),
+  (fun: x => x * x, n: 5, x-limits: (0, 4), args: (:)),
 )
 #assert.eq(r-fn.data.len(), 5)
 #assert.eq(r-fn.data.at(0).x, 0.0)
@@ -71,12 +71,12 @@
 #assert.eq(r-fn.mapping.x, "x")
 #assert.eq(r-fn.mapping.y, "y")
 
-// xlim: none falls back to data x range.
+// x-limits: none falls back to data x range.
 #let r-fn-data = apply-stat(
   "function",
   ((x: 0, y: 0), (x: 2, y: 0)),
   (x: "x", y: "y"),
-  (fun: x => x + 1, n: 3, xlim: none, args: (:)),
+  (fun: x => x + 1, n: 3, x-limits: none, args: (:)),
 )
 #assert.eq(r-fn-data.data.len(), 3)
 #assert.eq(r-fn-data.data.at(0).x, 0.0)

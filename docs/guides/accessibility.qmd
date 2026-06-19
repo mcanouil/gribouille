@@ -15,14 +15,14 @@ Both apply whether you embed plots in a Quarto document or compile Typst yoursel
 
 Every [`plot`](../reference/core/plot.qmd) call accepts an `alt:` parameter: the text alternative a screen reader announces in place of the figure.
 Keep it to one or two short sentences, describe the takeaway rather than just naming the axes, and do not repeat the visible title word for word.
-The visible labels (title, subtitle, caption, axis and legend titles) belong on [`labs`](../reference/labs/labs.qmd); `alt:` is the non-visible description, not a substitute for a caption.
+The visible labels (title, subtitle, caption, axis and legend titles) belong on [`labels`](../reference/labels/labels.qmd); `alt:` is the non-visible description, not a substitute for a caption.
 
 ```typst
 #plot(
   data: penguins,
   mapping: aes(x: "flipper-len", y: "body-mass", colour: "species"),
   layers: (geom-point(size: 2pt),),
-  labs: labs(
+  labels: labels(
     title: "Penguin body mass vs. flipper length",
     x: "Flipper length (mm)",
     y: "Body mass (g)",
@@ -76,7 +76,7 @@ For example, this page renders a penguins plot through [`typst-render`](https://
   data: penguins,
   mapping: aes(x: "flipper-len", y: "body-mass", colour: "species"),
   layers: (geom-point(size: 2pt),),
-  labs: labs(
+  labels: labels(
     title: "Penguin body mass vs. flipper length",
     x: "Flipper length (mm)",
     y: "Body mass (g)",
@@ -136,7 +136,7 @@ In the example below the colours are still the default Okabe-Ito, but `species` 
     shape: "species",
   ),
   layers: (geom-point(size: 2.5pt),),
-  labs: labs(
+  labels: labels(
     title: "Penguin body mass vs. flipper length",
     x: "Flipper length (mm)",
     y: "Body mass (g)",

@@ -25,7 +25,12 @@
     mapping: aes(x: "x", y: "y", stroke: "w"),
     layers: (geom-point(size: 6pt, fill: accent),),
     scales: (scale-stroke-continuous(range: (0.2pt, 2pt)),),
-    labs: labs(title: "Scale-Stroke-Continuous", x: "X", y: "Y", stroke: "w"),
+    labels: labels(
+      title: "Scale-Stroke-Continuous",
+      x: "X",
+      y: "Y",
+      stroke: "w",
+    ),
     theme: theme-minimal(),
     width: 12cm,
     height: 9cm,
@@ -40,7 +45,7 @@
         limits: ("thin", "medium", "thick"),
       ),
     ),
-    labs: labs(
+    labels: labels(
       title: "Scale-Stroke-Manual",
       x: "X",
       y: "Y",

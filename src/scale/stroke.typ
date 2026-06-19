@@ -10,7 +10,7 @@
 /// \@stability stable
 /// \@since 0.4.0
 ///
-/// \@param name Legend title. Overrides any name set via \@labs when both are present.
+/// \@param name Legend title. Overrides any name set via \@labels when both are present.
 ///
 /// \@param range Pair of Typst lengths `(min, max)` bounding the output thickness.
 ///

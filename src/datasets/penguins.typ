@@ -84,7 +84,7 @@
 ///       palette: (rgb("#ff8c00"), rgb("#800080"), rgb("#008B8B")),
 ///     ),
 ///   ),
-///   labs: labs(
+///   labels: labels(
 ///     title: "Penguins Dataset",
 ///     subtitle: "Flipper length vs body mass by species",
 ///     caption: "Palmer Archipelago (Antarctica) penguin dataset",

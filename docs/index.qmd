@@ -152,7 +152,7 @@ The same grammar as [`ggplot2`](https://ggplot2.tidyverse.org) and [`plotnine`](
       palette: species-colours.values(),
     ),
   ),
-  labs: labs(
+  labels: labels(
     title: typst("Penguins *Dataset*"),
     subtitle: typst({
       [Flipper length vs body mass by species: ]
@@ -232,7 +232,7 @@ Stack geoms, scales, facets, and a theme until the plot is right.
   ),
   facet: facet-wrap("island", labeller: label-both()),
   scales: (scale-y-continuous(labels: format-comma()),),
-  labs: labs(
+  labels: labels(
     title: "Penguin Morphology by Island",
     subtitle: "Flipper length versus body mass with a per-species linear fit",
     x: "Flipper Length (mm)",

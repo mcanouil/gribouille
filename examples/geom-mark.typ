@@ -17,7 +17,7 @@
   guides: guides(
     x: guide-axis(n-dodge: 2),
   ),
-  labs: labs(
+  labels: labels(
     title: title,
     x: "Flipper Length (mm)",
     y: "Body Mass (g)",

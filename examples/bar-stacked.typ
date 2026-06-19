@@ -23,7 +23,7 @@
   scales: (
     scale-y-continuous(labels: format-currency(symbol: "$", digits: 0)),
   ),
-  labs: labs(
+  labels: labels(
     title: "Revenue by Quarter",
     subtitle: "Stacked bars highlight per-quarter totals",
     x: "Quarter",

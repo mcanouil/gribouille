@@ -30,7 +30,7 @@
     mapping: aes(x: "x", y: "y", alpha: "score"),
     layers: (geom-point(size: 5pt, fill: rgb("#1f77b4")),),
     scales: (scale-alpha-continuous(range: (0.1, 1)),),
-    labs: labs(
+    labels: labels(
       title: "Mapped Alpha (Translucent to Opaque)",
       x: "X",
       y: "Y",
@@ -45,7 +45,7 @@
     mapping: aes(x: "x", y: "y", group: "grp", linewidth: "w"),
     layers: (geom-line(),),
     scales: (scale-linewidth-continuous(range: (0.4pt, 2.4pt)),),
-    labs: labs(
+    labels: labels(
       title: "Mapped Linewidth (Thin to Thick)",
       x: "X",
       y: "Y",

@@ -24,7 +24,7 @@
     ),
     geom-point(size: 3pt),
   ),
-  labs: labs(title: "Stat-Connect: Hv (blue) vs Mid (orange)"),
+  labels: labels(title: "Stat-Connect: Hv (blue) vs Mid (orange)"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

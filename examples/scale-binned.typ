@@ -17,7 +17,12 @@
     mapping: aes(x: "x", y: "y", fill: "z"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-fill-steps(n-breaks: 5),),
-    labs: labs(title: "Scale-Fill-Steps (5 Bins)", x: "X", y: "Y", fill: "z"),
+    labels: labels(
+      title: "Scale-Fill-Steps (5 Bins)",
+      x: "X",
+      y: "Y",
+      fill: "z",
+    ),
     theme: common-theme,
     width: 12cm,
     height: 9cm,
@@ -27,7 +32,7 @@
     mapping: aes(x: "x", y: "y", fill: "z"),
     layers: (geom-point(size: 4pt),),
     scales: (scale-fill-fermenter(palette: "Spectral", n-breaks: 7),),
-    labs: labs(
+    labels: labels(
       title: "Scale-Fill-Fermenter (Spectral, 7)",
       x: "X",
       y: "Y",
@@ -42,7 +47,7 @@
     mapping: aes(x: "x", y: "y", size: "w"),
     layers: (geom-point(fill: rgb("#1f77b4")),),
     scales: (scale-size-area(range: (1pt, 12pt)),),
-    labs: labs(
+    labels: labels(
       title: "Scale-Size-Area (sub-linear)",
       x: "X",
       y: "Y",

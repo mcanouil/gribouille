@@ -267,10 +267,10 @@ The same scales apply to every panel, so the species clusters can be compared ac
 
 :::
 
-### 6. Polish with `theme()` and `labs()`
+### 6. Polish with `theme()` and `labels()`
 
 [`theme-minimal`](../reference/themes/theme-minimal.qmd) drops most of the chrome.
-[`labs`](../reference/labs/labs.qmd) sets the title block and renames every axis and legend.
+[`labels`](../reference/labels/labels.qmd) sets the title block and renames every axis and legend.
 The single [`theme`](../reference/themes/theme.qmd) call further tweaks the title surface.
 
 ::: {layout-ncol="2" layout-valign="center"}
@@ -302,7 +302,7 @@ The single [`theme`](../reference/themes/theme.qmd) call further tweaks the titl
     scale-fill-discrete(palette: cb),
   ),
   facet: facet-wrap("island"),
-  labs: labs(
+  labels: labels(
     title: "Penguin Body Mass Scales with Flipper Length",
     subtitle: "Same trend on every island, even though sample sizes differ",
     x: "Flipper Length (mm)",
@@ -356,7 +356,7 @@ Sibling formatters [`format-percent`](../reference/helpers/format-percent.qmd), 
     scale-y-continuous(labels: format-comma()),
   ),
   facet: facet-wrap("island"),
-  labs: labs(
+  labels: labels(
     title: "Penguin Body Mass Scales with Flipper Length",
     subtitle: "Same trend on every island, even though sample sizes differ",
     x: "Flipper Length (mm)",
@@ -410,7 +410,7 @@ Wiring it to the `plot-subtitle` theme surface lets the subtitle mix prose with 
     scale-y-continuous(labels: format-comma()),
   ),
   facet: facet-wrap("island"),
-  labs: labs(
+  labels: labels(
     title: "Penguin Body Mass Scales with Flipper Length",
     subtitle: "Linear fit: $hat(y) = beta_0 + beta_1 dot.c x$ for $n = " + str(n) + "$ birds",
     x: "Flipper Length (mm)",
@@ -486,7 +486,7 @@ Every row also carries an `island` value so [`facet-wrap`](../reference/facets/f
     scale-y-continuous(labels: format-comma()),
   ),
   facet: facet-wrap("island"),
-  labs: labs(
+  labels: labels(
     title: "Penguin Body Mass Scales with Flipper Length",
     subtitle: "Linear fit: $hat(y) = beta_0 + beta_1 dot.c x$ for $n = " + str(n) + "$ birds",
     x: "Flipper Length (mm)",
@@ -514,7 +514,7 @@ Every plot you build composes the same pieces.
 //| echo: false
 //| output-filename: "grammar.svg"
 //| style: "display: block; margin-inline: auto;"
-//| alt: "A plot() container surrounding six stacked parallax sheets representing the grammar layers, from bottom to top: data plus aes(), layer (geom plus stat plus position), scale-*, coord-*, facet-*, and theme plus labs."
+//| alt: "A plot() container surrounding six stacked parallax sheets representing the grammar layers, from bottom to top: data plus aes(), layer (geom plus stat plus position), scale-*, coord-*, facet-*, and theme plus labels."
 #import "@preview/cetz:0.5.0": canvas, draw
 
 #let ink = if _typst_render_foreground != none {
@@ -588,7 +588,7 @@ Every plot you build composes the same pieces.
   sheet(2, [`scale-*`])
   sheet(3, [`coord-*`])
   sheet(4, [`facet-*`])
-  sheet(5, [theme + labs])
+  sheet(5, [theme + labels])
 })
 ```
 

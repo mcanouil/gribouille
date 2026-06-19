@@ -21,7 +21,7 @@
     scale-fill-okabe-ito(),
     scale-y-continuous(labels: format-comma()),
   ),
-  labs: labs(
+  labels: labels(
     title: "Penguin Species with the Okabe-Ito Palette",
     x: "Flipper Length (mm)",
     y: "Body Mass (g)",

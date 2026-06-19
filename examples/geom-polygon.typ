@@ -32,7 +32,7 @@
     )),
   ),
   coord: coord-fixed(),
-  labs: labs(
+  labels: labels(
     title: "Stylised Altitude Zones",
     subtitle: "One filled polygon per zone, drawn from row order",
     x: "X",

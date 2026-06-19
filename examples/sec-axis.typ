@@ -21,7 +21,7 @@
       ),
     ),
   ),
-  labs: labs(
+  labels: labels(
     title: "Fuel Economy with a Derived Secondary Axis",
     subtitle: "Right axis converts mpg to km/L (× 0.4251)",
     colour: "Class",

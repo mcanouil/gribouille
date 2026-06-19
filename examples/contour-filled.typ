@@ -18,7 +18,7 @@
   mapping: aes(x: "x", y: "y", z: "z"),
   layers: (geom-contour-filled(bins: 10),),
   scales: (scale-fill-viridis-c(option: "magma"),),
-  labs: labs(
+  labels: labels(
     title: "Radial Wave: 10 Filled Bands",
     subtitle: "z = sin(2.5 r) · exp(-r / 3) over a 50-by-50 grid",
     fill: "level",

@@ -23,7 +23,7 @@
     ),
     scale-y-continuous(limits: (0, 10)),
   ),
-  labs: labs(title: "Vehicle Profile"),
+  labels: labels(title: "Vehicle Profile"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

@@ -16,8 +16,8 @@
 #import "render/guides.typ": _axis-text-angle, _read-axis-guide
 #import "render/prestat.typ": _preprocess-data
 #import "render/domain.typ": (
-  _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip, _apply-labs,
-  _is-flipped, _post-train,
+  _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
+  _apply-labels, _is-flipped, _post-train,
 )
 #import "render/extents.typ": (
   _AX-TITLE-LABEL-GAP, _ax-text-cm, _axis-label-extents, _sec-extent,
@@ -48,7 +48,7 @@
     _theme-state.get()
   }
   let theme = merge-theme(user-theme)
-  let labs = spec.at("labs", default: none)
+  let labels = spec.at("labels", default: none)
 
   // Canvas dims known up-front from `spec.width` / `spec.height`; cetz
   // draw sites resolve their own rect `%` insets against per-rect natural
@@ -64,7 +64,7 @@
   // chrome up front and reserve its extent so the canvas shrinks to leave room,
   // making the composed stack total back to the requested dims.
   let deco-parts = _decorate-parts(
-    labs,
+    labels,
     theme,
     width-units-early,
     height-units-early,
@@ -91,7 +91,7 @@
     mapping: spec.mapping,
     data: spec.data,
   )
-  trained = _apply-labs(trained, labs)
+  trained = _apply-labels(trained, labels)
 
   // Once training is done, mapping-ref annotations have served their purpose;
   // flatten them so geoms receive plain column names.
@@ -170,14 +170,14 @@
       panels,
       trained,
       coord,
-      labs,
+      labels,
       grid-n-rows,
       grid-n-cols,
       free-x,
       free-y,
     )
   } else {
-    _train-panels(spec, panels, trained, coord, labs, free-x, free-y)
+    _train-panels(spec, panels, trained, coord, labels, free-x, free-y)
   }
 
   let width-units = width-units-early - deco.left - deco.right
@@ -333,7 +333,7 @@
   let y-label-width = if labels-on and not y-guide.suppress {
     _y-label-width-stack(y-guide, y-extents.width, y-extents.height)
   } else { 0.0 }
-  // A suppressed (`labs(x: none)`) or nameless axis title reserves no extent;
+  // A suppressed (`labels(x: none)`) or nameless axis title reserves no extent;
   // mirror the draw-side gate so the panel reclaims the freed depth.
   let _flipped = _is-flipped(coord)
   let _x-title-name = if spec.mapping == none { none } else {

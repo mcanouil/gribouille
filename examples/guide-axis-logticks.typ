@@ -26,7 +26,7 @@
     scale-y-continuous(transform: "log10", labels: format-comma()),
   ),
   guides: gs,
-  labs: labs(title: title, x: "Inputs (log10)", y: "Outputs (log10)"),
+  labels: labels(title: title, x: "Inputs (log10)", y: "Outputs (log10)"),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

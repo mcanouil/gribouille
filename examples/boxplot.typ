@@ -9,7 +9,7 @@
   mapping: aes(x: "class", y: "hwy", fill: "class"),
   layers: (geom-boxplot(),),
   guides: guides(fill: none),
-  labs: labs(
+  labels: labels(
     title: "Highway Fuel Economy by Vehicle Class",
     subtitle: "Boxes show the inter-quartile range; whiskers and dots flag outliers",
     x: "Class",

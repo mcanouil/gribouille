@@ -5,7 +5,7 @@
 
 /// Build a label dictionary for the plot title, subtitle, caption, and axes.
 ///
-/// Pass the result to \@plot as the `labs` argument.
+/// Pass the result to \@plot as the `labels` argument.
 /// Axis names (x, y, colour, fill, ...) override the corresponding scale
 /// `name` at render time, so legends and axis titles pick them up.
 ///
@@ -14,7 +14,7 @@
 /// caption, tag, alt). Pass `none` to suppress a label explicitly and collapse
 /// the space it would otherwise reserve.
 ///
-/// \@category Labs
+/// \@category Labels
 /// \@stability stable
 /// \@since 0.0.1
 ///
@@ -48,11 +48,11 @@
 ///
 /// \@param stroke Legend title for the stroke aesthetic.
 ///
-/// \@returns Dictionary tagged `kind: "labs"`, consumed by \@plot.
+/// \@returns Dictionary tagged `kind: "labels"`, consumed by \@plot.
 ///
-/// \@examples Title block plus axis titles passed via `labs`.
+/// \@examples Title block plus axis titles passed via `labels`.
 /// ```
-/// //| alt: "Scatter chart with a 'Demo' title, 'A tiny dataset' subtitle, 'Source: made up' caption, and 'Index' / 'Value' axis titles set via labs."
+/// //| alt: "Scatter chart with a 'Demo' title, 'A tiny dataset' subtitle, 'Source: made up' caption, and 'Index' / 'Value' axis titles set via labels."
 /// #let d = (
 ///   (x: 1, y: 2),
 ///   (x: 2, y: 4),
@@ -62,7 +62,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 3pt),),
-///   labs: labs(
+///   labels: labels(
 ///     title: "Demo",
 ///     subtitle: "A tiny dataset",
 ///     caption: "Source: made up",
@@ -77,7 +77,7 @@
 /// \@examples Setting an aesthetic name (`colour`) overrides the legend
 /// title; alt text is stored on the spec for accessibility tooling.
 /// ```
-/// //| alt: "Scatter chart titled 'Coloured Groups' with three points coloured by species and the colour legend retitled 'Species' via labs."
+/// //| alt: "Scatter chart titled 'Coloured Groups' with three points coloured by species and the colour legend retitled 'Species' via labels."
 /// #let d = (
 ///   (x: 1, y: 2, sp: "a"),
 ///   (x: 2, y: 4, sp: "b"),
@@ -87,7 +87,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y", colour: "sp"),
 ///   layers: (geom-point(size: 3pt),),
-///   labs: labs(
+///   labels: labels(
 ///     title: "Coloured Groups",
 ///     colour: "Species",
 ///     alt: "Three points coloured by species",
@@ -100,12 +100,12 @@
 /// \@examples Full label block on the penguins scatter: title, subtitle,
 /// caption, axis titles, and a legend title for the `fill` aesthetic.
 /// ```
-/// //| alt: "Scatter of penguin body mass against flipper length coloured by species, with full title, subtitle, caption, axis titles, and a 'Species' fill legend title via labs."
+/// //| alt: "Scatter of penguin body mass against flipper length coloured by species, with full title, subtitle, caption, axis titles, and a 'Species' fill legend title via labels."
 /// #plot(
 ///   data: penguins,
 ///   mapping: aes(x: "flipper-len", y: "body-mass", fill: "species"),
 ///   layers: (geom-point(size: 2pt, alpha: 0.85),),
-///   labs: labs(
+///   labels: labels(
 ///     title: "Penguin Body Mass Scales with Flipper Length",
 ///     subtitle: "Three species across the Palmer Archipelago",
 ///     caption: "Data: palmerpenguins (Horst, Hill & Gorman, 2020)",
@@ -123,20 +123,20 @@
 /// x-axis title is dropped and the panel grows into the freed area while the
 /// y-axis title stays.
 /// ```
-/// //| alt: "Scatter of y against x with the x-axis title suppressed via labs(x: none); the panel extends down into the freed space while the 'Value' y-axis title remains."
+/// //| alt: "Scatter of y against x with the x-axis title suppressed via labels(x: none); the panel extends down into the freed space while the 'Value' y-axis title remains."
 /// #let d = range(0, 10).map(i => (x: i, y: i * 0.5))
 /// #plot(
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labs: labs(x: none, y: "Value"),
+///   labels: labels(x: none, y: "Value"),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
 /// ```
 ///
 /// \@see \@plot
-#let labs(
+#let labels(
   title: auto,
   subtitle: auto,
   caption: auto,
@@ -153,7 +153,7 @@
   linetype: auto,
   stroke: auto,
 ) = (
-  kind: "labs",
+  kind: "labels",
   title: title,
   subtitle: subtitle,
   caption: caption,

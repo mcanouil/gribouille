@@ -19,7 +19,7 @@
   mapping: aes(x: "x", y: "y", colour: "g"),
   layers: (geom-point(size: 4pt),),
   guides: guides(colour: guide-legend(position: pos)),
-  labs: labs(title: title),
+  labels: labels(title: title),
   width: 8cm,
   height: 5cm,
 )

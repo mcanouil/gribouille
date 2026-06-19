@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- feat!: `labs()` is renamed to `labels()`, and the `plot()` / `compose()` `labs:` argument to `labels:`; there is no `labs` alias. (#131)
+- feat!: `coord-cartesian()`, `stat-function()`, and `geom-function()` rename the `xlim`/`ylim` arguments to `x-limits`/`y-limits`. (#131)
+- feat!: the `col-mix()` colour helper is renamed to `colour-mix()`, with arguments `colour1`/`colour2`. (#131)
+- feat!: `geom-text`, `geom-label`, and `geom-typst` drop the `dx`/`dy` parameters; offsets now use the `nudge-x`/`nudge-y` aesthetics, where a number shifts in data units and a Typst length shifts in canvas units. (#131)
+
+### Changes
+
 - feat: `geom-vline`, `geom-hline`, and `geom-abline` read their intercept channels from `aes()`; binding `xintercept`/`yintercept`/`slope`/`intercept` together with `data` draws one line per row with per-row `colour`/`alpha`/`linewidth`/`linetype`, and a mapped `xintercept`/`yintercept` extends the panel to keep the lines in view; the scalar/array parameter still draws shared lines when nothing is mapped. (#129)
 - feat: a font set in `theme(text: ...)` now reaches literal-glyph point markers (e.g., `shape: sym.star`) for both plot markers and legend keys, instead of falling back to the document font. (#126)
 - feat: `geom-text`, `geom-label`, and `geom-typst` accept a `font:` parameter; `auto` uses the theme `text` font, then the document font. (#126)
@@ -14,6 +23,7 @@
 - feat: binned position scales (`scale-x-binned` / `scale-y-binned`) accept `breaks` as bin edges; ticks sit at interval midpoints and `n-breaks` is ignored when `breaks` is set. (#116)
 - feat: binned colour, fill, shape, linetype, size, linewidth, stroke, and alpha scales accept `breaks` as bin edges; colour, fill, shape, and linetype bin per row by the edges, the others bin their legend. (#116)
 - feat: bundled datasets (`penguins`, `economics`, `mpg`) ship as row-store arrays, so `penguins.filter(...)` and `.map(...)` work directly; `plot()` still accepts them. (#116)
+- fix: scalar and Typst-length `nudge-x`/`nudge-y` values now apply to `geom-text`/`geom-label`/`geom-typst` (previously a silent no-op). (#131)
 - fix: setting the base `line`/`rect` stroke in `theme()` now cascades to every line and rect surface (panel grid, axis line, ticks, legend ticks, legend bar); `element-line`/`element-rect` `stroke` accepts a ratio (e.g., `80%`) to scale the parent surface thickness, while an absolute length still pins a surface outright. (#124)
 - fix: setting the base `text` size in `theme()` now cascades to every text surface (axis titles, tick labels, legend, strip, plot title); `element-text`/`element-typst` `size` accepts a ratio (e.g., `80%`) to scale the parent surface size, while an absolute length still pins a surface outright. (#121)
 - fix: `position: "dodge"` now shifts `geom-text`/`geom-label`/`geom-typst`, `geom-point`, `geom-line`/`geom-path`/`geom-step`, `geom-pointrange`, and `geom-linerange` marks side by side, matching the dodged bars instead of staying on the category centre. (#119)
@@ -22,13 +32,18 @@
 
 ## 0.3.0 (2026-06-14)
 
+### Breaking changes
+
+- feat!: `compose()` panels are now built with the new `defer()` helper (`defer(plot, ...)`, or `defer(compose, ...)` to nest), replacing `plot(..., defer: true)`; panels omit their own `width`/`height` and the composition sizes each cell. (#81)
+
+### Changes
+
 - feat: the published package now ships Tinymist-friendly docstrings; hovering a gribouille function in an editor shows formatted parameters, returns, and examples instead of the raw `@`-tag comments. Variadic sinks list their accepted keys: `guides()` its aesthetics, and `theme()` and the theme presets their element surfaces. (#108)
 - feat: under `coord-radial`, `guides(theta: none)` hides the angular axis (arc, minor ticks, and tick labels) and `guides(r: none)` hides the radial tick labels; the spokes and circles stay. Also fixes `guides(theta: none)` previously adding a theta arc instead of hiding the axis. (#106)
 - feat: `guides(x: none)` / `guides(y: none)` hide that axis's tick marks and tick labels (and any log minor ticks) and reclaim the freed space; the axis line, grid, and title stay (remove the title with `labs(x: none)`). (#105)
 - feat: `guides()` accepts `none` to hide a guide and `auto` for the default; `guides(default: none)` hides every legend without its own override, and any other non-guide value fails with a clear message. Replaces the removed `guide-none()` (pass `none` instead). (#104)
 - feat: `annotate()` gains a `clip` argument (default `true`); set `clip: false` to let an annotation overflow the panel, e.g., a corner inset or a mark placed past the axis limits. (#93)
 - feat: `compose()` accepts `theme:`; an explicit theme styles the composition chrome (title, hoisted legend, panel tags) and propagates into panels with no theme of their own, otherwise a theme shared by every panel is used. (#82)
-- feat: `compose()` panels are now built with the new `defer()` helper (`defer(plot, ...)`, or `defer(compose, ...)` to nest), replacing `plot(..., defer: true)`; panels omit their own `width`/`height` and the composition sizes each cell. (#81)
 - feat: `geom-area()` defaults to `stat: "align"` and `position: "stack"`; groups with mismatched x values are automatically resampled onto a shared grid and stacked without requiring explicit `stat: stat-align()`. (#77)
 - fix: `stat-bin-2d` and `stat-bin-hex` `_density` is now the cell's fraction of the total count (`count / sum(count)`), matching ggplot2, instead of an undocumented count-per-cell-area value. (#109)
 - fix: data outside a `sqrt` or `log10` transform's domain (negative, or zero/negative for `log10`) now panics with a clear scale message instead of a raw Typst error, and the sqrt inverse clamps padded view bounds at zero so sqrt axes stay monotone and show the `0` break. (#109)

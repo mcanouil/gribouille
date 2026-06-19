@@ -27,7 +27,7 @@
   layers: (geom-bar(),),
   scales: (scale-y-continuous(expand: (0%, 20%)),),
   guides: guides(fill: none),
-  labs: labs(
+  labels: labels(
     title: "Category Counts via Stat-Count",
     x: "Category",
     y: "Count",
