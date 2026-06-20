@@ -47,7 +47,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain (in days), or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain (numeric days since 2000-01-01 or ISO-8601 `YYYY-MM-DD` strings; either side may be `auto`), or `none` for automatic limits.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
@@ -128,7 +128,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain (in days), or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain (numeric days since 2000-01-01 or ISO-8601 `YYYY-MM-DD` strings; either side may be `auto`), or `none` for automatic limits.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
@@ -197,7 +197,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain (in seconds), or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain (numeric seconds since the epoch or ISO-8601 strings; either side may be `auto`), or `none` for automatic limits.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
@@ -262,7 +262,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain (in seconds), or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain (numeric seconds since the epoch or ISO-8601 strings; either side may be `auto`), or `none` for automatic limits.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
@@ -331,7 +331,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain (in seconds), or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain (numeric seconds since the epoch or ISO-8601 strings; either side may be `auto`), or `none` for automatic limits.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
@@ -398,7 +398,7 @@
 ///
 /// \@param name Axis title. Overrides any name set via \@labels when both are present.
 ///
-/// \@param limits Pair `(lo, hi)` clipping the trained domain (in seconds), or `none` for automatic limits.
+/// \@param limits Pair `(lo, hi)` clipping the trained domain (numeric seconds since the epoch or ISO-8601 strings; either side may be `auto`), or `none` for automatic limits.
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///

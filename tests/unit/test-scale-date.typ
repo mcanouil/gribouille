@@ -92,4 +92,51 @@
 #assert.eq(trained-dt.y.temporal, "datetime")
 #assert.eq(trained-dt.y.at("date-format"), "[hour]:[minute]")
 
+// --- ISO-8601 date-string limits clip to the same numeric days the column
+// trains against; an `auto` side keeps the trained bound ---
+
+#import "../../src/utils/types.typ": parse-temporal
+
+#let date-rows = (
+  (x: "2024-03-01", y: 1),
+  (x: "2024-09-01", y: 2),
+)
+#let lim-layers = (
+  (
+    geom: "point",
+    mapping: (x: "x", y: "y"),
+    data: none,
+    inherit-aes: true,
+    stat: "identity",
+    position: "identity",
+    params: (:),
+  ),
+)
+#let trained-iso-lim = train(
+  scales: (scale-x-date(limits: ("2024-01-01", "2024-12-31")),),
+  layers: lim-layers,
+  mapping: (x: "x", y: "y"),
+  data: date-rows,
+)
+#assert.eq(
+  trained-iso-lim.x.domain,
+  (parse-temporal("2024-01-01", "date"), parse-temporal("2024-12-31", "date")),
+)
+
+// `auto` on the high side keeps the trained max (parsed from the data).
+#let trained-iso-auto = train(
+  scales: (scale-x-date(limits: ("2024-01-01", auto)),),
+  layers: lim-layers,
+  mapping: (x: "x", y: "y"),
+  data: date-rows,
+)
+#assert.eq(
+  trained-iso-auto.x.domain.at(0),
+  parse-temporal("2024-01-01", "date"),
+)
+#assert.eq(
+  trained-iso-auto.x.domain.at(1),
+  parse-temporal("2024-09-01", "date"),
+)
+
 Scale date tests passed.
