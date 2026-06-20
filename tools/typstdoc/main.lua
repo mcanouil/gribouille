@@ -33,6 +33,7 @@ Options:
   --toml <file>       Package manifest to read (default: <root>/typst.toml)
   --deps <file>       Typst dependency entry file (default: <root>/src/deps.typ)
   --variables <file>  YAML output with compiler + dependency versions (default: <root>/docs/_variables.yml)
+  --news <file>       Release announcement data feeding changelog links (default: <root>/docs/_news.yml)
   --strict            Treat unresolved @refs as errors
   --check             Parse and validate without writing
   --help              Show this help and exit
@@ -50,6 +51,7 @@ local VALUE_FLAGS = {
   ["--toml"] = "toml",
   ["--deps"] = "deps_file",
   ["--variables"] = "variables",
+  ["--news"] = "news",
 }
 
 local BOOL_FLAGS = {
@@ -84,6 +86,7 @@ local function parse_args(argv)
   opts.toml = opts.toml or (opts.root .. "/typst.toml")
   opts.deps_file = opts.deps_file or (opts.root .. "/src/deps.typ")
   opts.variables = opts.variables or (opts.root .. "/docs/_variables.yml")
+  opts.news = opts.news or (opts.docs .. "/_news.yml")
   return opts
 end
 
@@ -213,7 +216,9 @@ local function main(argv)
   local changelog_result = changelog.run({
     input = opts.root .. "/CHANGELOG.md",
     output = opts.docs .. "/changelog.qmd",
+    news = opts.news,
     check = opts.check,
+    strict = opts.strict,
   })
 
   parser.set_root(opts.root)

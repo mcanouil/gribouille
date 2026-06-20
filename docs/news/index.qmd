@@ -1,0 +1,20 @@
+---
+title: "News"
+subtitle: "Release announcements."
+listing:
+  - id: news
+    contents: ../_news.yml
+    type: default
+    sort: "date desc"
+    fields: [date, title, description]
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    categories: false
+---
+
+Each release ships with an announcement post.
+Select any entry below to read the full write-up.
+
+::: {#news}
+:::

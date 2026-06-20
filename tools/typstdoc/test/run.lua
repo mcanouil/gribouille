@@ -1408,6 +1408,73 @@ describe("examples: gallery consistency", function()
 end)
 
 -- -----------------------------------------------------------------------
+describe("changelog: news announcement links", function()
+  local changelog = require("changelog")
+
+  local news_yml = [[
+- version: "0.2"
+  title: "Gribouille 0.2"
+  date: "2026-06-03"
+  path: "https://example.com/0-2/"
+  description: "What is new."
+- version: "0.1"
+  title: "Launch"
+  date: "2026-05-20"
+  path: "https://example.com/0-1/"
+]]
+
+  local changelog_md = [[
+# Changelog
+
+## 0.2.0 (2026-06-03)
+
+- A change.
+
+## 0.1.0 (2026-05-20)
+
+- First release.
+]]
+
+  it("parses each post into a minor-version map", function()
+    local news = changelog.parse_news(news_yml)
+    assert_eq(news["0.2"].title, "Gribouille 0.2")
+    assert_eq(news["0.2"].path, "https://example.com/0-2/")
+    assert_eq(news["0.1"].title, "Launch")
+  end)
+
+  it("injects an announcement link under the matching minor heading", function()
+    local out = changelog.transform(changelog_md, changelog.parse_news(news_yml))
+    assert_contains(out, "### 0.2 {#version-0-2}")
+    assert_contains(out, "Read the Gribouille 0.2 announcement](https://example.com/0-2/)")
+    assert_contains(out, "Read the Launch announcement](https://example.com/0-1/)")
+  end)
+
+  it("emits no link for a version without a post", function()
+    local out = changelog.transform(changelog_md, { ["9.9"] = { title = "X", path = "u" } })
+    assert_eq(out:find("announcement", 1, true), nil, "no announcement injected")
+  end)
+
+  it("renders unchanged when there is no news", function()
+    local out = changelog.transform(changelog_md, {})
+    assert_contains(out, "### 0.2 {#version-0-2}")
+    assert_eq(out:find("announcement", 1, true), nil)
+  end)
+
+  it("fails in strict mode when a post references an absent version", function()
+    local orphan = '- version: "9.9"\n  title: "Ghost"\n  path: "https://example.com/ghost/"\n'
+    assert_throws(function()
+      changelog.run({
+        input = tmpfile("cl_md", changelog_md),
+        output = tmpfile("cl_out", ""),
+        news = tmpfile("cl_news", orphan),
+        check = true,
+        strict = true,
+      })
+    end, "absent from the changelog")
+  end)
+end)
+
+-- -----------------------------------------------------------------------
 describe("tidydoc: tinymist docstring emitter", function()
   local tidydoc = require("tidydoc")
 
