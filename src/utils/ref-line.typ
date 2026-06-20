@@ -57,9 +57,11 @@
     } else if type(intercepts) == array { intercepts } else { (intercepts,) }
     let stroke = _stroke-for((:))
     values
-      .map(v => parse-number(v))
-      .filter(v => v != none)
-      .map(v => (value: v, stroke: stroke))
+      .map(v => {
+        let n = parse-number(v)
+        if n == none { none } else { (value: n, stroke: stroke) }
+      })
+      .filter(entry => entry != none)
   }
   if lines.len() == 0 { return }
 

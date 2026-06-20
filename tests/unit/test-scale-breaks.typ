@@ -9,6 +9,7 @@
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/aes.typ": aes
 #import "../../src/render/axis-format.typ": _axis-breaks
+#import "../../src/utils/types.typ": parse-temporal
 
 #let df = (
   (x: "1", y: "10"),
@@ -123,15 +124,6 @@
 
 // ISO-8601 date-string breaks on a temporal scale resolve to the same numeric
 // days-since-2000 the column data trains against, identical to numeric breaks.
-#let days(iso) = {
-  let p = iso.split("-").map(int)
-  float(
-    (
-      datetime(year: p.at(0), month: p.at(1), day: p.at(2))
-        - datetime(year: 2000, month: 1, day: 1)
-    ).days(),
-  )
-}
 #let date-df = (
   (x: "2024-01-01", y: "1"),
   (x: "2024-06-01", y: "2"),
@@ -145,5 +137,9 @@
 )
 #assert.eq(
   _axis-breaks(trained-iso.x),
-  (days("2024-01-01"), days("2024-06-01"), days("2024-12-01")),
+  (
+    parse-temporal("2024-01-01", "date"),
+    parse-temporal("2024-06-01", "date"),
+    parse-temporal("2024-12-01", "date"),
+  ),
 )
