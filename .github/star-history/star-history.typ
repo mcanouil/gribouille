@@ -61,9 +61,10 @@
     ))
 )
 
-// The final row carries the spike; it drives the peak marker and its labels.
-#let peak = stars.last()
-#let peak-jump = int(peak.stars - stars.at(-2).stars)
+// The 2026-06-19 row carries the spike; it drives the peak marker and its labels.
+#let peak-idx = stars.position(row => row.date == "2026-06-19")
+#let peak = stars.at(peak-idx)
+#let peak-jump = int(peak.stars - stars.at(peak-idx - 1).stars)
 
 // Shooting-star fan: one solid gold band tapering from a point at the first date
 // (the tail tip) up to the star at the head, where it spans the star's height.
