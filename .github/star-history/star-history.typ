@@ -264,7 +264,7 @@
     scale-x-date(
       breaks: month-firsts,
       date-format: "[month repr:long] [year]",
-      expand: (0%, auto),
+      expand: (0%, 0%),
     ),
     scale-y-continuous(
       breaks: y-breaks,
@@ -274,6 +274,7 @@
       expand: (0%, 6%),
     ),
   ),
+  coord: coord-cartesian(clip: false),
   labels: labels(
     title: [
       #set par(justify: true)
