@@ -37,6 +37,7 @@
 - fix: `position: "dodge"` now shifts `geom-text`/`geom-label`/`geom-typst`, `geom-point`, `geom-line`/`geom-path`/`geom-step`, `geom-pointrange`, and `geom-linerange` marks side by side, matching the dodged bars instead of staying on the category centre. (#119)
 - fix: `theme-grey()` matches ggplot2 `theme_grey()` with white grid lines and no axis lines. (#116)
 - fix: explicit continuous `breaks` expand the axis range so requested ticks stay visible, unless a side is pinned by an explicit `limit`. (#116)
+- docs: a News page lists the release announcement posts, and each changelog version links to its announcement. (#139)
 
 ## 0.3.0 (2026-06-14)
 
