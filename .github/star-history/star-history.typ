@@ -35,9 +35,11 @@
   ..raw-stars.slice(1),
 )
 
-// The fan geometry does arithmetic on x positions, so the head and tail dates are
-// converted to numeric days since the 2000-01-01 epoch scale-x-date trains against.
-// Vline intercepts, scale breaks, and annotation x values take ISO strings directly.
+// The fan geometry interpolates between numeric x positions, so the head and tail
+// dates are converted to days since the 2000-01-01 epoch scale-x-date trains against;
+// the count annotations pinned to the fan apex reuse that numeric head-x as well.
+// Vline intercepts, scale breaks, and narrative annotation x values take ISO strings
+// directly.
 #let epoch = datetime(year: 2000, month: 1, day: 1)
 #let to-days(iso) = (
   datetime(
@@ -125,9 +127,7 @@
 
 // One x break per month (first of the month) so the short-month label never
 // repeats, unlike the auto breaks that fall mid-month within a single month.
-#let month-firsts = (
-  stars.map(row => row.date.slice(0, 7) + "-01").dedup()
-)
+#let month-firsts = stars.map(row => row.date.slice(0, 7) + "-01").dedup()
 
 #plot(
   data: stars,
