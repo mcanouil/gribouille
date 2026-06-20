@@ -8,6 +8,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/types.typ": parse-number
 #import "../scale/train.typ": map-axis-data, transform-inv
 #import "../utils/radial.typ": radial-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -33,7 +34,7 @@
 ///
 /// \@param slope Line slope, used when `slope` is not mapped.
 ///
-/// \@param intercept Line y intercept, used when `intercept` is not mapped.
+/// \@param intercept Line y intercept, used when `intercept` is not mapped. May be numeric or an ISO-8601 date/datetime/time string when a temporal y scale is active.
 ///
 /// \@param colour Line colour. `auto` inherits the theme `ink`.
 ///
@@ -169,33 +170,29 @@
 
   // Each entry pairs a (slope, intercept) with its stroke spec. Mapped: one
   // entry per data row, defaulting any unmapped term to its parameter, with
-  // per-row stroke. Unmapped: a single entry from the parameters.
+  // per-row stroke. Unmapped: a single entry from the parameters. `parse-number`
+  // resolves ISO date/datetime/time intercepts to the numeric value the active
+  // scale trains against; unparseable terms drop the line.
   let lines = if slope-col != none or intercept-col != none {
     let data = (ctx.resolve-data)(layer)
     data
       .map(row => {
-        let slope = if slope-col == none { layer.params.slope } else {
-          row.at(slope-col, default: none)
-        }
-        let intercept = if intercept-col == none {
+        let slope = parse-number(if slope-col == none {
+          layer.params.slope
+        } else { row.at(slope-col, default: none) })
+        let intercept = parse-number(if intercept-col == none {
           layer.params.intercept
-        } else {
-          row.at(intercept-col, default: none)
-        }
+        } else { row.at(intercept-col, default: none) })
         if slope == none or intercept == none { none } else {
-          (
-            slope: float(slope),
-            intercept: float(intercept),
-            stroke: _stroke-for(row),
-          )
+          (slope: slope, intercept: intercept, stroke: _stroke-for(row))
         }
       })
       .filter(entry => entry != none)
   } else {
     (
       (
-        slope: float(layer.params.slope),
-        intercept: float(layer.params.intercept),
+        slope: parse-number(layer.params.slope),
+        intercept: parse-number(layer.params.intercept),
         stroke: _stroke-for((:)),
       ),
     )

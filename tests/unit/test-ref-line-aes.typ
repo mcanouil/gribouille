@@ -81,4 +81,20 @@
   height: 5cm,
 )
 
+// --- geom-abline with an ISO date-string intercept under a temporal y scale
+// renders without panicking (slope 0 draws a horizontal line at the date) ---
+#import "../../lib.typ": geom-abline, scale-y-date
+
+#plot(
+  data: (("v": 1, "t": "2024-01-01"), ("v": 2, "t": "2024-02-01")),
+  mapping: aes(x: "v", y: "t"),
+  layers: (
+    geom-point(),
+    geom-abline(slope: 0, intercept: "2024-01-15"),
+  ),
+  scales: (scale-y-date(),),
+  width: 8cm,
+  height: 5cm,
+)
+
 Reference-line aes tests passed.

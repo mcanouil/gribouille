@@ -352,6 +352,18 @@
       let (dlo, dhi) = domain
       explicit-lo = ulo != auto
       explicit-hi = uhi != auto
+      // ISO date/datetime/time string limits resolve to the same numeric epoch
+      // the column data trains against; numeric limits pass through unchanged.
+      if explicit-lo {
+        let n = parse-number(ulo)
+        check(n != none, "scale", "could not parse lower limit: " + repr(ulo))
+        ulo = n
+      }
+      if explicit-hi {
+        let n = parse-number(uhi)
+        check(n != none, "scale", "could not parse upper limit: " + repr(uhi))
+        uhi = n
+      }
       domain = (
         if explicit-lo { ulo } else { dlo },
         if explicit-hi { uhi } else { dhi },
