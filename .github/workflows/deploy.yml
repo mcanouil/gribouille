@@ -123,14 +123,19 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
 
-      # Website framework, tooling, and content always come from main; only the
-      # Typst code is pinned to the release tag so stable and dev stay near-identical.
+      # Website framework and content always come from main; the Typst code and the
+      # docstring generator that parses it are pinned together to the release tag, so
+      # the generator never reads source written for a newer docstring format. Wipe
+      # the paths before restoring them: a plain overlay would leave files renamed or
+      # removed since the tag (e.g. a src module split in two), and the pinned
+      # generator would choke on that stale source.
       - name: Pin Typst code to release ref
         if: ${{ matrix.ref != '' }}
         shell: bash
         run: |
           set -euo pipefail
-          git checkout "${{ matrix.ref }}" -- examples src lib.typ
+          rm -rf examples src lib.typ tools/typstdoc
+          git checkout "${{ matrix.ref }}" -- examples src lib.typ tools/typstdoc
 
       - name: Set up Typst
         uses: typst-community/setup-typst@v5
