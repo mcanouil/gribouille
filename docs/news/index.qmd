@@ -13,8 +13,7 @@ listing:
     categories: false
 ---
 
-Each release ships with an announcement post.
-Select any entry below to read the full write-up.
+Discover what each release brings through its announcement post.
 
 ::: {#news}
 :::
