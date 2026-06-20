@@ -432,11 +432,15 @@
   if scale-type == "continuous" and user-scale != none {
     let user-breaks = user-scale.at("breaks", default: auto)
     if type(user-breaks) == array and user-breaks.len() > 0 {
+      // ISO date/datetime/time string breaks resolve to the same numeric epoch
+      // the column data trains against; numeric breaks pass through unchanged.
+      let numeric-breaks = user-breaks.map(parse-number).filter(b => b != none)
+      user-scale = (..user-scale, breaks: numeric-breaks)
       let folded = if pre-transformed {
-        user-breaks
+        numeric-breaks
           .filter(in-transform-domain)
           .map(b => transform-fwd(transform, b))
-      } else { user-breaks }
+      } else { numeric-breaks }
       if folded.len() > 0 {
         let (lo, hi) = domain
         if not explicit-lo { lo = calc.min(lo, ..folded) }

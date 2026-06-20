@@ -5,9 +5,11 @@
 #import "../../src/scale/continuous.typ": (
   scale-x-continuous, scale-x-reverse, scale-y-continuous,
 )
+#import "../../src/scale/date.typ": scale-x-date
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/aes.typ": aes
 #import "../../src/render/axis-format.typ": _axis-breaks
+#import "../../src/utils/types.typ": parse-temporal
 
 #let df = (
   (x: "1", y: "10"),
@@ -119,3 +121,25 @@
   spec: (breaks: (1, 10, 100)),
 )
 #assert.eq(_axis-breaks(trained-log), (1, 10, 100))
+
+// ISO-8601 date-string breaks on a temporal scale resolve to the same numeric
+// days-since-2000 the column data trains against, identical to numeric breaks.
+#let date-df = (
+  (x: "2024-01-01", y: "1"),
+  (x: "2024-06-01", y: "2"),
+  (x: "2024-12-01", y: "3"),
+)
+#let trained-iso = train(
+  scales: (scale-x-date(breaks: ("2024-01-01", "2024-06-01", "2024-12-01")),),
+  layers: layers,
+  mapping: aes(x: "x", y: "y"),
+  data: date-df,
+)
+#assert.eq(
+  _axis-breaks(trained-iso.x),
+  (
+    parse-temporal("2024-01-01", "date"),
+    parse-temporal("2024-06-01", "date"),
+    parse-temporal("2024-12-01", "date"),
+  ),
+)

@@ -51,7 +51,7 @@
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
-/// \@param breaks Array of break values (in days), or `auto` for automatic tick selection.
+/// \@param breaks Array of break values (numeric days since 2000-01-01 or ISO-8601 `YYYY-MM-DD` strings), or `auto` for automatic tick selection.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -132,7 +132,7 @@
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
-/// \@param breaks Array of break values (in days), or `auto` for automatic tick selection.
+/// \@param breaks Array of break values (numeric days since 2000-01-01 or ISO-8601 `YYYY-MM-DD` strings), or `auto` for automatic tick selection.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -201,7 +201,7 @@
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
-/// \@param breaks Array of break values (in seconds), or `auto` for automatic tick selection.
+/// \@param breaks Array of break values (numeric seconds since the epoch or ISO-8601 strings), or `auto` for automatic tick selection.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -266,7 +266,7 @@
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
-/// \@param breaks Array of break values (in seconds), or `auto` for automatic tick selection.
+/// \@param breaks Array of break values (numeric seconds since the epoch or ISO-8601 strings), or `auto` for automatic tick selection.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -335,7 +335,7 @@
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
-/// \@param breaks Array of break values (in seconds), or `auto` for automatic tick selection.
+/// \@param breaks Array of break values (numeric seconds since the epoch or ISO-8601 strings), or `auto` for automatic tick selection.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///
@@ -402,7 +402,7 @@
 ///
 /// \@param oob Out-of-range policy: `"drop"` (default) removes rows whose value falls outside `limits`; `"squish"` clamps continuous values to the nearest endpoint.
 ///
-/// \@param breaks Array of break values (in seconds), or `auto` for automatic tick selection.
+/// \@param breaks Array of break values (numeric seconds since the epoch or ISO-8601 strings), or `auto` for automatic tick selection.
 ///
 /// \@param labels Array of tick labels aligned with `breaks`, or `auto`.
 ///

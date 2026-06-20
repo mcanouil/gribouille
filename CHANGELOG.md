@@ -12,6 +12,7 @@
 
 ### Changes
 
+- feat: `geom-vline`/`geom-hline` intercepts and continuous scale `breaks` accept ISO-8601 date/datetime/time strings under a temporal scale, matching how geom data is already parsed. (#136)
 - feat: `geom-area()` accepts a `direction` parameter (`"hv"` or `"vh"`) that steps the filled top edge like `geom-step()`; `none` (default) keeps the smooth area. (#135)
 - feat: `element-text()` / `element-typst()` `angle` is now honoured on axis titles, strip text, and legend title and entry labels (previously only tick labels and the plot title, subtitle, and caption); axis titles default to 0deg (x) / 90deg (y) and reserve the correct space at any angle. (#134)
 - feat: `geom-text()`, `geom-label()`, and `geom-typst()` accept an `angle` parameter (a Typst angle, default `0deg`) rotating each label. (#134)

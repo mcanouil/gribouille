@@ -24,7 +24,7 @@
 ///
 /// \@param data Layer-specific dataset for the mapped `xintercept` column, or `none`.
 ///
-/// \@param xintercept Scalar or array of x values at which to draw vertical lines, used when `xintercept` is not mapped.
+/// \@param xintercept Scalar or array of x values at which to draw vertical lines, used when `xintercept` is not mapped. Values may be numeric or ISO-8601 date/datetime/time strings when a temporal x scale is active.
 ///
 /// \@param colour Line colour. `auto` inherits the theme `ink`.
 ///
