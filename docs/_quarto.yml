@@ -63,6 +63,8 @@ website:
         href: reference/index.qmd
       - text: "Examples"
         href: examples/index.qmd
+      - text: "News"
+        href: news/index.qmd
     right:
       - text: "{{< iconify octicon:tag-16 title=\"Current version\" label=\"Current version\" >}} {{< env VERSION >}}"
         menu:

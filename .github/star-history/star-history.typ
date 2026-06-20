@@ -277,8 +277,7 @@
   coord: coord-cartesian(clip: false),
   labels: labels(
     title: [
-      #set par(justify: true)
-      #text(fill: palette.trail, weight: "bold")[Gribouille]'s First #text(fill: palette.peak, weight: "bold")[#str(int(peak.stars))] GitHub Stars#linebreak(justify: true)
+      #text(fill: palette.trail, weight: "bold")[Gribouille], a #text(fill: palette.peak, weight: "bold")[Rising Star]
     ],
     subtitle: [
       #set par(justify: true)
@@ -342,9 +341,7 @@
   ),
   width: auto,
   height: auto,
-  alt: "Midnight-sky line chart of Gribouille's cumulative GitHub stars per day from April to June 2026, titled \"Gribouille's First "
-    + str(int(peak.stars))
-    + " GitHub Stars\". A luminous gold step trail rises from zero across a long flat run labelled \"Quietly built in private\", lifts at a gold dashed marker labelled \"Made public 17th of May\", then climbs through dashed release markers (v0.1.0 onward) to a final amber spike of "
+  alt: "Midnight-sky line chart of Gribouille's cumulative GitHub stars per day from April to June 2026, titled \"Gribouille, a Rising Star\". A luminous gold step trail rises from zero across a long flat run labelled \"Quietly built in private\", lifts at a gold dashed marker labelled \"Made public 17th of May\", then climbs through dashed release markers (v0.1.0 onward) to a final amber spike of "
     + str(int(peak.stars))
     + " stars, annotated \"+"
     + str(peak-jump)

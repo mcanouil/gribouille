@@ -26,6 +26,45 @@ Browse the [full commit history](https://github.com/mcanouil/gribouille/commits/
 local UNRELEASED_OPEN = '::: {.content-visible when-profile="dev"}'
 local UNRELEASED_CLOSE = ":::"
 
+-- Parse the simple `docs/_news.yml` list into a `minor version -> {title, path}`
+-- map. Deliberately line-based (like examples.parse_slugs) rather than a full
+-- YAML parser: the file is constrained to a flat `- key: value` list.
+local function parse_news(source)
+  local by_version = {}
+  local current
+  local function strip(value)
+    value = util.trim(value)
+    return (value:gsub('^"(.*)"$', "%1"):gsub("^'(.*)'$", "%1"))
+  end
+  for _, line in ipairs(util.split_lines(source)) do
+    local first_key, first_value = line:match("^%-%s*([%w_]+):%s*(.*)$")
+    if first_key then
+      current = {}
+      current[first_key] = strip(first_value)
+    elseif current then
+      local key, value = line:match("^%s+([%w_]+):%s*(.*)$")
+      if key then current[key] = strip(value) end
+    end
+    if current and current.version and current.title and current.path then
+      by_version[current.version] = { title = current.title, path = current.path }
+    end
+  end
+  return by_version
+end
+
+local function load_news(path)
+  if not path or not util.file_exists(path) then return {} end
+  local source = util.read_file(path)
+  if not source then return {} end
+  return parse_news(source)
+end
+
+local function announcement_line(post)
+  return string.format(
+    '*[{{< iconify octicon:megaphone-16 title="Announcement" label="Announcement" >}} Read the %s announcement](%s)*',
+    post.title, post.path)
+end
+
 local function match_version(line)
   local major, minor, patch, date = line:match("^## (%d+)%.(%d+)%.(%d+)%s*(%(.-%))%s*$")
   if major then return major, minor, patch, date end
@@ -33,7 +72,8 @@ local function match_version(line)
   return major, minor, patch, nil
 end
 
-local function transform(source)
+local function transform(source, news)
+  news = news or {}
   local out = {}
   local current_major, current_minor
   local in_version = false
@@ -77,6 +117,11 @@ local function transform(source)
         if current_minor ~= minor_key then
           push("### " .. minor_key .. " {#version-" .. major .. "-" .. minor .. "}")
           push("")
+          local post = news[minor_key]
+          if post then
+            push(announcement_line(post))
+            push("")
+          end
           current_minor = minor_key
         end
         local heading = "#### " .. major .. "." .. minor .. "." .. patch
@@ -108,13 +153,35 @@ local function transform(source)
   return table.concat(normalised, "\n") .. "\n"
 end
 
+-- Every `_news.yml` post must point at a minor version that exists in the
+-- changelog, otherwise its announcement link would never be emitted.
+local function validate_news(source, news, opts)
+  local known = {}
+  for _, line in ipairs(util.split_lines(source)) do
+    local major, minor = match_version(line)
+    if major then known[major .. "." .. minor] = true end
+  end
+  local orphans = {}
+  for version in pairs(news) do
+    if not known[version] then orphans[#orphans + 1] = version end
+  end
+  if #orphans == 0 then return end
+  table.sort(orphans)
+  local msg = string.format(
+    "%d news post(s) reference a version absent from the changelog: %s",
+    #orphans, table.concat(orphans, ", "))
+  if opts.strict then util.die(msg) else util.log_warn(msg) end
+end
+
 function M.run(opts)
   if not util.file_exists(opts.input) then
     util.log_info(string.format("%s not present, skipping changelog", opts.input))
     return { skipped_entirely = true }
   end
   local source = util.read_file(opts.input) or util.die("cannot read " .. opts.input)
-  local body = transform(source)
+  local news = load_news(opts.news)
+  validate_news(source, news, opts)
+  local body = transform(source, news)
   if opts.check then return { checked = true } end
   local content = (body == "")
     and (FRONT_MATTER .. "\n" .. FOOTER)
@@ -122,5 +189,9 @@ function M.run(opts)
   util.write_file(opts.output, content)
   return { written = opts.output }
 end
+
+-- Exposed for the test runner.
+M.parse_news = parse_news
+M.transform = transform
 
 return M
