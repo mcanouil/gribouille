@@ -56,4 +56,29 @@
 )
 #assert(trained-p.x.domain.at(1) <= 5.0 + 1e-9)
 
+// --- Draw path: ISO date-string intercepts under a temporal scale render
+// without panicking. Covers the mapped channel, the scalar parameter, an
+// annotate("vline") param, and an unparseable value (silently dropped). ---
+#import "../../lib.typ": annotate, plot, scale-x-date
+
+#let date-data = (
+  (d: "2024-01-01", v: 1),
+  (d: "2024-02-01", v: 3),
+  (d: "2024-03-01", v: 2),
+)
+#plot(
+  data: date-data,
+  mapping: aes(x: "d", y: "v"),
+  layers: (
+    geom-point(),
+    geom-vline(data: (("at": "2024-02-15"),), mapping: aes(xintercept: "at")),
+    geom-vline(xintercept: "2024-01-20"),
+    geom-vline(xintercept: "not-a-date"),
+    annotate("vline", xintercept: "2024-03-01"),
+  ),
+  scales: (scale-x-date(),),
+  width: 8cm,
+  height: 5cm,
+)
+
 Reference-line aes tests passed.

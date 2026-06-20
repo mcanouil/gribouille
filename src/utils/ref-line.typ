@@ -12,6 +12,7 @@
 
 #import "../deps.typ": cetz
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/types.typ": parse-number
 #import "../scale/train.typ": map-axis-data
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
@@ -38,13 +39,15 @@
   // Each entry pairs an intercept value with the stroke spec to draw it with.
   // Mapped: one entry per data row, per-row stroke. Unmapped: the scalar or
   // array parameter, all sharing a single stroke resolved from an empty row.
+  // `parse-number` resolves ISO date/datetime/time strings to the numeric
+  // value the active scale trains against; unparseable values are dropped.
   let lines = if mapped-col != none {
     let data = (ctx.resolve-data)(layer)
     data
       .map(row => {
-        let v = row.at(mapped-col, default: none)
+        let v = parse-number(row.at(mapped-col, default: none))
         if v == none { none } else {
-          (value: float(v), stroke: _stroke-for(row))
+          (value: v, stroke: _stroke-for(row))
         }
       })
       .filter(entry => entry != none)
@@ -53,7 +56,10 @@
       ()
     } else if type(intercepts) == array { intercepts } else { (intercepts,) }
     let stroke = _stroke-for((:))
-    values.map(v => (value: float(v), stroke: stroke))
+    values
+      .map(v => parse-number(v))
+      .filter(v => v != none)
+      .map(v => (value: v, stroke: stroke))
   }
   if lines.len() == 0 { return }
 

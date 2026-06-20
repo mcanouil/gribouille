@@ -35,8 +35,9 @@
   ..raw-stars.slice(1),
 )
 
-// geom-vline draws from raw `xintercept` values, so release dates are converted
-// to numeric days since the 2000-01-01 epoch that scale-x-date trains against.
+// The fan geometry does arithmetic on x positions, so the head and tail dates are
+// converted to numeric days since the 2000-01-01 epoch scale-x-date trains against.
+// Vline intercepts, scale breaks, and annotation x values take ISO strings directly.
 #let epoch = datetime(year: 2000, month: 1, day: 1)
 #let to-days(iso) = (
   datetime(
@@ -55,7 +56,7 @@
   csv("release-history.csv", row-type: dictionary)
     .filter(row => row.tag.split(".").last() == "0")
     .map(row => (
-      x: to-days(row.date),
+      x: row.date,
       y: 6,
       tag: "v" + row.tag,
     ))
@@ -125,7 +126,7 @@
 // One x break per month (first of the month) so the short-month label never
 // repeats, unlike the auto breaks that fall mid-month within a single month.
 #let month-firsts = (
-  stars.map(row => row.date.slice(0, 7) + "-01").dedup().map(to-days)
+  stars.map(row => row.date.slice(0, 7) + "-01").dedup()
 )
 
 #plot(
@@ -166,7 +167,7 @@
     // cool release lines.
     annotate(
       "vline",
-      xintercept: to-days("2026-05-17"),
+      xintercept: "2026-05-17",
       colour: palette.star,
       stroke: 0.5pt,
       linetype: "dashed",
@@ -235,7 +236,7 @@
     // Narrative beats: the private build over the flat run, and the public day.
     annotate(
       "label",
-      x: to-days("2026-04-23"),
+      x: "2026-04-23",
       y: 11.5,
       label: "Quietly built in private",
       colour: palette.ink,
@@ -247,7 +248,7 @@
     ),
     annotate(
       "label",
-      x: to-days("2026-05-17"),
+      x: "2026-05-17",
       y: 37.5,
       label: [#align(center)[Made public \ 17#super[th] of May]],
       colour: palette.star,

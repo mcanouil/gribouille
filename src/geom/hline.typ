@@ -24,7 +24,7 @@
 ///
 /// \@param data Layer-specific dataset for the mapped `yintercept` column, or `none`.
 ///
-/// \@param yintercept Scalar or array of y values at which to draw horizontal lines, used when `yintercept` is not mapped.
+/// \@param yintercept Scalar or array of y values at which to draw horizontal lines, used when `yintercept` is not mapped. Values may be numeric or ISO-8601 date/datetime/time strings when a temporal y scale is active.
 ///
 /// \@param colour Line colour. `auto` inherits the theme `ink`.
 ///
