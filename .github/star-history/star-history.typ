@@ -217,10 +217,10 @@
     // The count floats in clear sky just above the head, clear of the gold fan.
     annotate(
       "typst",
-      x: head-x,
-      y: head-y + 10,
+      x: head-x - 4,
+      y: head-y + 8,
       label: [#str(int(peak.stars))],
-      colour: rgb("#fff3cf"),
+      colour: palette.peak,
       size: 13pt,
       anchor: "south",
     ),
