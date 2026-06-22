@@ -12,7 +12,7 @@ local FRONT_MATTER = [[
 title: "Changelog"
 subtitle: "Version history."
 toc: true
-toc-depth: 2
+toc-depth: 3
 ---
 ]]
 
