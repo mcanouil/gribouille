@@ -83,6 +83,15 @@ See [`typst.toml`](typst.toml) and [`src/deps.typ`](src/deps.typ) for the author
 
 ## Contributing
 
+> [!NOTE]
+> Gribouille is an unfunded spare-time project, and the API is still settling.
+> Bug reports and ideas are very welcome on the issue tracker.
+>
+> Pull requests are not being accepted for now: the internals shift between releases, every review costs time I have to take from the work that moves the library forward, and I am being especially careful in the current climate of unreviewed LLM-authored patches.
+> Once the surface is stable I will revisit and open the door.
+>
+> Thanks in advance for your patience and your understanding.
+
 Contributions are welcome.
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for bug reporting, development setup, and commit conventions.
 Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `cy`, `lo`, `hi`, …) are catalogued in [`GLOSSARY.md`](GLOSSARY.md).
