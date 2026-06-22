@@ -6,7 +6,7 @@ listing:
     contents: ../_news.yml
     type: default
     sort: "date desc"
-    fields: [date, title, description]
+    fields: [image, date, title, description]
     sort-ui: false
     filter-ui: false
     feed: false

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- docs: the News page links the Gribouille 0.4 release announcement and shows a featured image for each release. (#141)
+
 ## 0.4.0 (2026-06-22)
 
 ### Breaking changes
