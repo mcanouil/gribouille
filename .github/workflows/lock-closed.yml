@@ -69,8 +69,11 @@ jobs:
               echo "${kind} #${number}" >> "${LOCKED_FILE}"
               echo "Locked ${kind} #${number}."
             done < <(gh search "${subcommand}" \
-              "is:closed is:unlocked closed:<${THRESHOLD}" \
-              --repo "${REPO}" --limit 1000 --json number --jq '.[].number')
+              --repo "${REPO}" \
+              --closed "<${THRESHOLD}" \
+              --locked=false \
+              --limit 1000 \
+              --json number --jq '.[].number')
           }
 
           lock_kind "issue" "issues"
