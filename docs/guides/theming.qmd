@@ -1,8 +1,6 @@
 ---
 title: "Theming"
 subtitle: "Map every visible region of a plot to the `theme()` key that styles it."
-toc: true
-toc-depth: 2
 engine: markdown
 ---
 

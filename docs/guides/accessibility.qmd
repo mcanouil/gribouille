@@ -1,8 +1,6 @@
 ---
 title: "Accessibility"
 subtitle: "Alt text, tagged PDF, and colour choices for Gribouille plots."
-toc: true
-toc-depth: 2
 engine: markdown
 ---
 
