@@ -10,6 +10,7 @@ local EXTENSION_NAME = "iconify"
 local str = require(quarto.utils.resolve_path('_modules/string.lua'):gsub('%.lua$', ''))
 local log = require(quarto.utils.resolve_path('_modules/logging.lua'):gsub('%.lua$', ''))
 local meta_mod = require(quarto.utils.resolve_path('_modules/metadata.lua'):gsub('%.lua$', ''))
+local typst = require(quarto.utils.resolve_path('_modules/typst.lua'):gsub('%.lua$', ''))
 
 --- Per-key deprecation warning tracker. Each deprecated metadata key warns
 --- at least once per render rather than once total. The companion filter
@@ -18,6 +19,12 @@ local meta_mod = require(quarto.utils.resolve_path('_modules/metadata.lua'):gsub
 --- module instance.
 --- @type table<string, boolean>
 local deprecation_warned_keys = {}
+
+--- Ensures the Typst SVG cache is pruned at most once per render. The cleanup
+--- runs from the shortcode (not the filter) because contributed filters run
+--- before shortcodes expand, so the cache does not yet exist at filter time.
+--- @type boolean
+local typst_cleanup_done = false
 
 --- Ensure Iconify HTML dependencies are included.
 --- @return nil
@@ -113,23 +120,23 @@ local function is_css_length(value)
   return CSS_LENGTH_UNITS[unit] == true
 end
 
---- Validate and convert a size value to a CSS font-size declaration.
+--- Resolve a size value to a raw CSS length, mapping known keywords.
 --- Returns an empty string when the value is empty or invalid, after emitting
 --- a warning for the invalid case. This honours the README contract that
 --- "When the size is invalid, no size changes are made."
 --- @param size string|nil
 --- @return string
-local function resolve_size(size)
+local function resolve_size_value(size)
   if str.is_empty(size) then
     return ''
   end
   --- @type string|nil
   local mapped = SIZE_KEYWORDS[size]
   if mapped ~= nil then
-    return 'font-size: ' .. mapped .. ';'
+    return mapped
   end
   if is_css_length(size) then
-    return 'font-size: ' .. size .. ';'
+    return size
   end
   log.log_warning(
     EXTENSION_NAME,
@@ -138,6 +145,18 @@ local function resolve_size(size)
     'or a LaTeX-style keyword like "Huge". Size left unchanged.'
   )
   return ''
+end
+
+--- Validate and convert a size value to a CSS font-size declaration.
+--- @param size string|nil
+--- @return string
+local function resolve_size(size)
+  --- @type string
+  local value = resolve_size_value(size)
+  if value == '' then
+    return ''
+  end
+  return 'font-size: ' .. value .. ';'
 end
 
 --- Validate an Iconify icon or set name.
@@ -182,18 +201,96 @@ local function get_iconify_options(x, arg, meta)
   return arg_value
 end
 
+--- Render an Iconify icon as a Typst `#image`, delegating retrieval and
+--- caching to the typst module. Geometric and colour transforms are baked
+--- into the fetched SVG via the Iconify API; size is applied as the Typst
+--- image height so it scales with the surrounding text.
+--- @param icon string Resolved icon name
+--- @param set string Resolved icon set
+--- @param default_label string Fallback accessibility label
+--- @param kwargs table<string, any> Key-value options for the icon
+--- @param meta table<string, any> Document metadata
+--- @return any Pandoc RawInline (Typst), Str (fallback) or Null
+local function render_typst(icon, set, default_label, kwargs, meta)
+  --- @type string
+  local size_raw = resolve_size_value(get_iconify_options('size', kwargs, meta))
+  --- @type string|nil
+  local size_value = typst.typst_length(size_raw)
+  if size_raw ~= '' and size_value == nil then
+    log.log_warning(
+      EXTENSION_NAME,
+      'Size "' .. size_raw .. '" uses a unit Typst does not support; ' ..
+      'falling back to 1em for Typst output. ' ..
+      'Use em, pt, cm, mm, in or % for Typst sizing.'
+    )
+  end
+
+  --- Colour: explicit `color` option, otherwise parsed from a `style` value.
+  --- @type string
+  local colour = get_iconify_options('color', kwargs, meta)
+  if str.is_empty(colour) then
+    --- @type string
+    local style = get_iconify_options('style', kwargs, meta)
+    if not str.is_empty(style) then
+      colour = str.trim(style:match('color%s*:%s*([^;]+)') or '')
+    end
+  end
+
+  --- @type table<string, string>
+  local params = {}
+  if not str.is_empty(colour) then params.color = colour end
+  --- @type string
+  local flip = get_iconify_options('flip', kwargs, meta)
+  if not str.is_empty(flip) then params.flip = flip end
+  --- @type string
+  local rotate = get_iconify_options('rotate', kwargs, meta)
+  if not str.is_empty(rotate) then params.rotate = rotate end
+
+  --- @type string
+  local alt = str.stringify(kwargs['label'])
+  if str.is_empty(alt) then alt = str.stringify(kwargs['title']) end
+  if str.is_empty(alt) then alt = default_label end
+
+  --- @type string
+  local inline = get_iconify_options('inline', kwargs, meta)
+
+  --- @type any
+  local result = typst.render({
+    set = set,
+    icon = icon,
+    query = typst.build_query(params),
+    size_value = size_value,
+    inline = str.is_empty(inline) or inline ~= 'false',
+    alt = alt,
+    fallback = get_iconify_options('fallback', kwargs, meta),
+    meta = meta
+  })
+
+  -- Prune the cache once per render, after at least one icon has populated it.
+  if not typst_cleanup_done then
+    typst_cleanup_done = true
+    typst.cleanup(meta)
+  end
+
+  return result
+end
+
 --- Render an Iconify icon as a Pandoc RawInline for HTML output.
 --- @param args table<integer, any> Icon arguments (icon set and name)
 --- @param kwargs table<string, any> Key-value options for the icon
 --- @param meta table<string, any> Document metadata
 --- @return any Pandoc RawInline for HTML or Pandoc Null for other formats
 local function iconify(args, kwargs, meta)
-  -- Detect HTML output (excluding epub which will not host the Web Component).
-  if not quarto.doc.is_format('html:js') then
+  -- HTML (excluding epub which will not host the Web Component) renders the
+  -- Web Component; Typst renders a cached SVG. Every other format renders
+  -- nothing.
+  --- @type boolean
+  local is_html = quarto.doc.is_format('html:js')
+  --- @type boolean
+  local is_typst = quarto.doc.is_format('typst')
+  if not is_html and not is_typst then
     return pandoc.Null()
   end
-
-  ensure_html_deps()
 
   --- @type string
   local icon = str.stringify(args[1])
@@ -248,9 +345,16 @@ local function iconify(args, kwargs, meta)
   end
 
   --- @type string
-  local attributes = ' icon="' .. set .. ':' .. icon .. '"'
-  --- @type string
   local default_label = 'Icon ' .. icon .. ' from ' .. set .. ' Iconify.design set.'
+
+  if is_typst then
+    return render_typst(icon, set, default_label, kwargs, meta)
+  end
+
+  ensure_html_deps()
+
+  --- @type string
+  local attributes = ' icon="' .. set .. ':' .. icon .. '"'
 
   --- @type string
   local size = resolve_size(get_iconify_options('size', kwargs, meta))

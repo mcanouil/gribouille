@@ -49,6 +49,18 @@ options:
     description: "List of local file paths containing Iconify icon-collection JSON to preload, enabling offline rendering of those icons; requires the iconify filter to be active (e.g. `filters: [iconify]`)."
     items:
       type: string
+  typst-cache:
+    type: string
+    default: ".quarto/iconify-svg"
+    description: "Directory (relative to the project root) where SVGs retrieved for Typst output are cached. Point at a tracked directory to commit a reproducible offline cache."
+  typst-cache-max-age:
+    type: number
+    default: 30
+    description: "Maximum age in days before an unused Typst cache entry is pruned. Set to 0 to disable age-based pruning."
+  typst-cache-max-entries:
+    type: number
+    default: 0
+    description: "Maximum number of Typst cache entries; the least-recently-used beyond this cap are pruned. 0 means unlimited."
 
 shortcodes:
   iconify:
@@ -80,6 +92,9 @@ shortcodes:
       rotate:
         type: string
         description: "Rotation for the icon (e.g. '90deg', '180deg', '1')."
+      color:
+        type: string
+        description: "Icon colour for Typst output (e.g. 'red', '#74aadb'); applied to monochrome icons via the Iconify API."
       inline:
         type: string
         description: "Whether to render the icon inline."
