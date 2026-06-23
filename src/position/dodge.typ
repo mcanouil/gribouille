@@ -10,7 +10,7 @@
 
 #import "../utils/group.typ": group-key
 #import "../utils/types.typ": parse-number
-#import "../scale/train.typ": discrete-slot-width
+#import "../scale/train.typ": discrete-slot-width, map-axis
 
 /// Dodge position adjustment: place grouped marks side by side.
 ///
@@ -133,11 +133,39 @@
     default: none,
   )
   let cat-range = if flipped { ctx.py-range } else { ctx.px-range }
-  if cat-trained == none or cat-trained.type != "discrete" {
-    return (0.0, 0.0)
+  if cat-trained == none { return (0.0, 0.0) }
+
+  let span = if cat-trained.type == "discrete" {
+    discrete-slot-width(cat-trained, cat-range) * width
+  } else {
+    // Continuous axis: infer slot width from min canvas gap between unique x values.
+    // Mirrors the logic in geom-col (col.typ:294-309).
+    let resolve-data = ctx.at("resolve-data", default: none)
+    let resolve-mapping = ctx.at("resolve-mapping", default: none)
+    if resolve-data == none or resolve-mapping == none { return (0.0, 0.0) }
+    let data = resolve-data(layer)
+    let mapping = resolve-mapping(layer)
+    // resolve-mapping is flip-aware: mapping.at("x") is always the category column.
+    let x-col = mapping.at("x", default: none)
+    if x-col == none { return (0.0, 0.0) }
+    let (d-lo, d-hi) = cat-trained.domain
+    if d-hi == d-lo { return (0.0, 0.0) }
+    let (cat-lo, cat-hi) = cat-range
+    let xs = data
+      .map(r => parse-number(r.at(x-col, default: none)))
+      .filter(v => v != none)
+    let sorted = xs.dedup().sorted()
+    if sorted.len() < 2 {
+      (cat-hi - cat-lo) / 10 * width
+    } else {
+      let gaps = range(sorted.len() - 1).map(i => calc.abs(
+        map-axis(cat-trained, sorted.at(i + 1), cat-range)
+          - map-axis(cat-trained, sorted.at(i), cat-range),
+      ))
+      calc.min(..gaps) * width
+    }
   }
 
-  let span = discrete-slot-width(cat-trained, cat-range) * width
   let shift = row.at("_dodge-offset", default: 0) * span
   if flipped { (0.0, shift) } else { (shift, 0.0) }
 }

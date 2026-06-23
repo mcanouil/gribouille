@@ -17,10 +17,10 @@
 #assert.eq(parse-number(1.5), 1.5)
 
 // infer-column-type.
-#assert.eq(infer-column-type(("1", "2", "3")), "numeric")
+#assert.eq(infer-column-type(("1", "2", "3")), "string")
 #assert.eq(infer-column-type(("a", "b", "c")), "string")
 #assert.eq(infer-column-type(("1", "a", "2")), "string")
-#assert.eq(infer-column-type(("", none, "3")), "numeric")
+#assert.eq(infer-column-type(("", none, "3")), "string")
 #assert.eq(infer-column-type(()), "unknown")
 
 // pretty.

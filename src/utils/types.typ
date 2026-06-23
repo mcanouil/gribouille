@@ -117,6 +117,6 @@
   if non-empty.len() == 0 { return "unknown" }
   if non-empty.all(v => type(v) == color) { return "colour" }
   if non-empty.all(v => type(v) == length) { return "length" }
-  if non-empty.all(is-numeric-value) { return "numeric" }
+  if non-empty.all(v => type(v) == int or type(v) == float) { return "numeric" }
   "string"
 }
