@@ -60,8 +60,8 @@
   )
   if result == none { return (data: (), mapping: new-mapping) }
   let grid = result.grid
-  // `_density` is the cell's fraction of the total count, `count / sum(count)`
-  // (the ggplot2 convention). The guard keeps the division safe when every
+  // `_density` is the cell's fraction of the total count, `count / sum(count)`.
+  // The guard keeps the division safe when every
   // occupied cell carries zero weight.
   let cells = result.cells.values()
   let total = cells.map(c => c.count).sum(default: 0)

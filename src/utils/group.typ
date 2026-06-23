@@ -5,7 +5,7 @@
 // The explicit "group" aesthetic always contributes regardless of value
 // type.
 
-#import "../utils/types.typ": is-numeric-value
+#import "../utils/types.typ": is-native-numeric
 #import "../scale/train.typ": mapping-ref-col, mapping-ref-type
 #import "../utils/late-binding.typ": after-scale-source
 
@@ -59,7 +59,7 @@
     } else if aes-name != "group" {
       let val = row.at(col-name, default: none)
       let forced = mapping-ref-type(aes-val) == "discrete"
-      if not forced and is-numeric-value(val) { continue }
+      if not forced and is-native-numeric(val) { continue }
     }
 
     keys.push(str(row.at(col-name, default: "")))

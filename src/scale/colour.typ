@@ -1058,7 +1058,7 @@
 /// #let d = range(0, 12).map(i => (grp: str(i), y: i + 1))
 /// #plot(
 ///   data: d,
-///   mapping: aes(x: "grp", y: "y", fill: "y"),
+///   mapping: aes(x: as-numeric("grp"), y: "y", fill: "y"),
 ///   layers: (geom-col(),),
 ///   scales: (scale-fill-viridis-c(option: "viridis"),),
 ///   width: 10cm,
@@ -1193,7 +1193,7 @@
 /// #let d = range(0, 12).map(i => (grp: str(i), y: i + 1))
 /// #plot(
 ///   data: d,
-///   mapping: aes(x: "grp", y: "y", fill: "y"),
+///   mapping: aes(x: as-numeric("grp"), y: "y", fill: "y"),
 ///   layers: (geom-col(),),
 ///   scales: (scale-fill-viridis-b(n-breaks: 4),),
 ///   width: 10cm,

@@ -12,9 +12,9 @@
 #import "../../src/utils/types.typ": parse-temporal
 
 #let df = (
-  (x: "1", y: "10"),
-  (x: "2", y: "20"),
-  (x: "3", y: "30"),
+  (x: 1, y: 10),
+  (x: 2, y: 20),
+  (x: 3, y: 30),
 )
 #let layers = (geom-point(),)
 

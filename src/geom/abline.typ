@@ -20,8 +20,7 @@
 /// from data, bind `slope` and/or `intercept` (and optionally `colour`,
 /// `alpha`, `linewidth`, `linetype`) through \@aes and pass `data`; one line is
 /// then drawn per row, with aesthetics resolved per row. Unlike \@geom-vline
-/// and \@geom-hline, mapped slope/intercept do not extend the trained scales,
-/// matching ggplot2's `geom_abline`.
+/// and \@geom-hline, mapped slope/intercept do not extend the trained scales.
 ///
 /// \@category Geoms
 /// \@subcategory Reference lines

@@ -54,8 +54,8 @@
   // surface proportionally. At the default 0.5pt base these resolve to the
   // historical absolute thicknesses (legend-ticks 0.3pt, ...).
   panel-grid: element-line(stroke: 100%),
-  // Minor gridlines halve the resolved `panel-grid` weight (ggplot2 parity). A
-  // bare stroke record carries no `kind`, so it inherits the parent's kind and
+  // Minor gridlines halve the resolved `panel-grid` weight.
+  // A bare stroke record carries no `kind`, so it inherits the parent's kind and
   // colour: a blank `panel-grid` (e.g., theme-classic / theme-void) stays blank
   // for minors too, while a coloured grid yields a half-weight minor in the
   // same colour. The per-weight cascade lets users override major/minor or
@@ -121,4 +121,3 @@
   let v = theme.at(key, default: none)
   if v == none { black } else { v }
 }
-
