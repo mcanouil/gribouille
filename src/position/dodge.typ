@@ -139,7 +139,6 @@
     discrete-slot-width(cat-trained, cat-range) * width
   } else {
     // Continuous axis: infer slot width from min canvas gap between unique x values.
-    // Mirrors the logic in geom-col (col.typ:294-309).
     let resolve-data = ctx.at("resolve-data", default: none)
     let resolve-mapping = ctx.at("resolve-mapping", default: none)
     if resolve-data == none or resolve-mapping == none { return (0.0, 0.0) }
@@ -150,7 +149,7 @@
     if x-col == none { return (0.0, 0.0) }
     let (d-lo, d-hi) = cat-trained.domain
     if d-hi == d-lo { return (0.0, 0.0) }
-    let (cat-lo, cat-hi) = cat-range
+    let (_, cat-hi) = cat-range
     let xs = data
       .map(r => parse-number(r.at(x-col, default: none)))
       .filter(v => v != none)
