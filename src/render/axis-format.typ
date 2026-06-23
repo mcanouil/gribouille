@@ -129,7 +129,7 @@
 }
 
 // Minor gridline positions for a continuous axis, given its drawn `majors`.
-// ggplot2 parity: linear/sqrt/reverse subdivide between majors (default one
+// linear/sqrt/reverse subdivide between majors (default one
 // minor per gap) and extend one step past each end; log10 uses sub-decade
 // lines; binned scales get none. Honours a user `minor-breaks` override and an
 // `n-minor` subdivision count from the scale spec.
