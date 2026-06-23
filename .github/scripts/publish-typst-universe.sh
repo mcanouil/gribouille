@@ -9,11 +9,14 @@
 # @author Mickaël Canouil
 #
 # Usage:
-#   .github/scripts/publish-typst-universe.sh [--dry-run] [VERSION]
+#   .github/scripts/publish-typst-universe.sh [--dry-run] [--pr=NUM] [VERSION]
 #
 #   VERSION   Release tag to submit (e.g. 0.1.0). Blank uses the latest release.
 #   --dry-run Download the release asset, clone and branch locally, but skip
 #             push and PR. Still requires the release (and its asset) to exist.
+#   --pr=NUM  Retarget an existing open submission PR (typst/packages #NUM) to
+#             VERSION instead of opening a new one: reuse its head branch and
+#             edit the PR in place. Use to bump an open, unmerged submission.
 #
 # Env:
 #   TYPST_PACKAGES_FORK   Fork of typst/packages (owner/repo).
@@ -26,9 +29,11 @@ cd "${REPO_ROOT}"
 
 DRY_RUN=0
 VERSION=""
+REPLACE_PR=""
 for arg in "$@"; do
   case "${arg}" in
     --dry-run) DRY_RUN=1 ;;
+    --pr=*) REPLACE_PR="${arg#--pr=}" ;;
     -h | --help)
       awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "${BASH_SOURCE[0]}"
       exit 0
@@ -79,7 +84,25 @@ if ! gh release view "${VERSION}" >/dev/null 2>&1; then
   exit 1
 fi
 
-BRANCH="${PKG}-${VERSION}"
+# Reuse an open submission PR's head branch when retargeting it to VERSION;
+# otherwise derive a fresh per-version branch.
+if [[ -n "${REPLACE_PR}" ]]; then
+  read -r PR_STATE PR_HEAD PR_OWNER < <(gh pr view "${REPLACE_PR}" \
+    --repo typst/packages \
+    --json state,headRefName,headRepositoryOwner \
+    --jq '[.state, .headRefName, .headRepositoryOwner.login] | @tsv')
+  [[ "${PR_STATE}" == "OPEN" ]] || {
+    echo "PR #${REPLACE_PR} is not open (${PR_STATE})." >&2
+    exit 1
+  }
+  [[ "${PR_OWNER}" == "${FORK_OWNER}" ]] || {
+    echo "PR #${REPLACE_PR} head owner ${PR_OWNER} != fork owner ${FORK_OWNER}." >&2
+    exit 1
+  }
+  BRANCH="${PR_HEAD}"
+else
+  BRANCH="${PKG}-${VERSION}"
+fi
 PKG_PATH="packages/preview/${PKG}"
 
 # --- Temp workspace + cleanup -------------------------------------------------
@@ -146,16 +169,9 @@ fi
 # Force push is intentional: a re-run for the same version replaces the branch.
 git -C "${CLONE}" push --force origin "${BRANCH}"
 
-# --- Open or reuse PR against typst/packages ---------------------------------
-PR_URL="$(gh pr list \
-  --repo typst/packages \
-  --head "${FORK_OWNER}:${BRANCH}" \
-  --state open \
-  --json url --jq '.[0].url // empty')"
-
-if [[ -n "${PR_URL}" ]]; then
-  echo "Reusing existing PR: ${PR_URL}"
-else
+# --- Open, reuse, or retarget a PR against typst/packages --------------------
+BODY_FILE="${TMP}/pr-body.md"
+build_body() {
   if [[ "${IS_UPDATE}" -eq 1 ]]; then
     NEW_BOX="[ ]"
     UPDATE_BOX="[x]"
@@ -164,7 +180,6 @@ else
     UPDATE_BOX="[ ]"
   fi
 
-  BODY_FILE="${TMP}/pr-body.md"
   {
     printf 'I am submitting\n- %s a new package\n- %s an update for a package\n\n' "${NEW_BOX}" "${UPDATE_BOX}"
     printf 'Description: gribouille — create elegant graphics with the Grammar of Graphics for Typst, inspired by ggplot2 and plotnine. Declarative API: aesthetic mappings, geoms, stats, scales, coordinates, facets, themes.\n\n'
@@ -183,13 +198,33 @@ else
       printf -- '- [x] excluded PDFs or README images, if any, but not the LICENSE\n'
     fi
   } >"${BODY_FILE}"
+}
 
-  PR_URL="$(gh pr create \
+if [[ -n "${REPLACE_PR}" ]]; then
+  build_body
+  gh pr edit "${REPLACE_PR}" \
     --repo typst/packages \
-    --base main \
-    --head "${FORK_OWNER}:${BRANCH}" \
     --title "${PKG}:${VERSION}" \
-    --body-file "${BODY_FILE}")"
+    --body-file "${BODY_FILE}"
+  PR_URL="$(gh pr view "${REPLACE_PR}" --repo typst/packages --json url --jq '.url')"
+else
+  PR_URL="$(gh pr list \
+    --repo typst/packages \
+    --head "${FORK_OWNER}:${BRANCH}" \
+    --state open \
+    --json url --jq '.[0].url // empty')"
+
+  if [[ -n "${PR_URL}" ]]; then
+    echo "Reusing existing PR: ${PR_URL}"
+  else
+    build_body
+    PR_URL="$(gh pr create \
+      --repo typst/packages \
+      --base main \
+      --head "${FORK_OWNER}:${BRANCH}" \
+      --title "${PKG}:${VERSION}" \
+      --body-file "${BODY_FILE}")"
+  fi
 fi
 
 # --- Summary -----------------------------------------------------------------
