@@ -1,8 +1,6 @@
 // Unit tests for utility modules.
 
-#import "../../src/utils/types.typ": (
-  infer-column-type, is-numeric-value, parse-number,
-)
+#import "../../src/utils/types.typ": infer-column-type, parse-number
 #import "../../src/utils/pretty.typ": pretty
 #import "../../src/data.typ": as-factor, as-numeric, column
 
@@ -17,6 +15,8 @@
 #assert.eq(parse-number(1.5), 1.5)
 
 // infer-column-type.
+#assert.eq(infer-column-type((1, 2, 3)), "numeric")
+#assert.eq(infer-column-type((1.0, 2.5, 3.14)), "numeric")
 #assert.eq(infer-column-type(("1", "2", "3")), "string")
 #assert.eq(infer-column-type(("a", "b", "c")), "string")
 #assert.eq(infer-column-type(("1", "a", "2")), "string")

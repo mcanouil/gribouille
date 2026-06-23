@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- fix: `position: "dodge"` now shifts point-based geoms (text, label, point, linerange, etc.) on continuous x-axes by inferring the slot width from the minimum gap between unique positions, matching `geom-col` behaviour. (#...)
-- fix: string values such as `"0"` are no longer inferred as numeric for scale type; only Typst `int`/`float` values produce a continuous scale, matching R/ggplot2 character-vector semantics. CSV users relying on string-numeric x-columns being treated as continuous must call `as-numeric(data, "col")` first. (#...)
+- fix: `position: "dodge"` now shifts point-based geoms (text, label, point, linerange, etc.) on continuous x-axes by inferring the slot width from the minimum gap between unique positions, matching `geom-col` behaviour. (#145)
+- fix: string values such as `"0"` are no longer inferred as numeric for scale type; only Typst `int`/`float` values produce a continuous scale, matching R/ggplot2 character-vector semantics. CSV users relying on string-numeric x-columns being treated as continuous must call `as-numeric(data, "col")` first. (#145)
 - docs: the News page links the Gribouille 0.4 release announcement and shows a featured image for each release. (#141)
 
 ## 0.4.0 (2026-06-22)

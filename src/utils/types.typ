@@ -105,13 +105,6 @@
   none
 }
 
-#let is-numeric-value(v) = {
-  if v == none or v == "" { return true }
-  if type(v) == int or type(v) == float { return true }
-  if type(v) == str and v.trim().match(_numeric-re) != none { return true }
-  false
-}
-
 #let infer-column-type(values) = {
   let non-empty = values.filter(v => v != none and v != "")
   if non-empty.len() == 0 { return "unknown" }
