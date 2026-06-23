@@ -105,11 +105,13 @@
   none
 }
 
+#let is-native-numeric(v) = type(v) == int or type(v) == float
+
 #let infer-column-type(values) = {
   let non-empty = values.filter(v => v != none and v != "")
   if non-empty.len() == 0 { return "unknown" }
   if non-empty.all(v => type(v) == color) { return "colour" }
   if non-empty.all(v => type(v) == length) { return "length" }
-  if non-empty.all(v => type(v) == int or type(v) == float) { return "numeric" }
+  if non-empty.all(is-native-numeric) { return "numeric" }
   "string"
 }

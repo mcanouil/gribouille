@@ -149,7 +149,7 @@
     if x-col == none { return (0.0, 0.0) }
     let (d-lo, d-hi) = cat-trained.domain
     if d-hi == d-lo { return (0.0, 0.0) }
-    let (_, cat-hi) = cat-range
+    let (cat-lo, cat-hi) = cat-range
     let xs = data
       .map(r => parse-number(r.at(x-col, default: none)))
       .filter(v => v != none)
