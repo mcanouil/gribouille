@@ -13,7 +13,7 @@ Documentation: <https://m.canouil.dev/gribouille>.
 ## Quick look
 
 ```typst
-#import "@preview/gribouille:0.4.0": *
+#import "@preview/gribouille:0.4.1": *
 
 #let species-colours = (
   Adelie: rgb("#ff8c00"),
