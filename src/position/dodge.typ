@@ -157,9 +157,9 @@
     if sorted.len() < 2 {
       (cat-hi - cat-lo) / 10 * width
     } else {
-      let gaps = range(sorted.len() - 1).map(i => calc.abs(
-        map-axis(cat-trained, sorted.at(i + 1), cat-range)
-          - map-axis(cat-trained, sorted.at(i), cat-range),
+      let mapped = sorted.map(v => map-axis(cat-trained, v, cat-range))
+      let gaps = range(mapped.len() - 1).map(i => (
+        calc.abs(mapped.at(i + 1) - mapped.at(i))
       ))
       calc.min(..gaps) * width
     }
