@@ -7,9 +7,9 @@
 #import "../../src/aes.typ": aes
 
 #let df = (
-  (x: "1", y: "10", g: "a"),
-  (x: "2", y: "20", g: "b"),
-  (x: "3", y: "30", g: "a"),
+  (x: 1, y: 10, g: "a"),
+  (x: 2, y: 20, g: "b"),
+  (x: 3, y: 30, g: "a"),
 )
 
 #let layers = (geom-point(),)
