@@ -69,8 +69,8 @@
   if cells == none { return (data: (), mapping: new-mapping) }
   let grid = cells.grid
   let ny = grid.y-n-bins
-  // `_density` is the cell's fraction of the total count, `count / sum(count)`
-  // (the ggplot2 convention). Only non-empty cells emit rows, so the total is
+  // `_density` is the cell's fraction of the total count, `count / sum(count)`.
+  // Only non-empty cells emit rows, so the total is
   // never zero where it is used as a denominator.
   let total = cells.total
   let rows = ()
