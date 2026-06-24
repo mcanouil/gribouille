@@ -59,6 +59,8 @@ website:
             href: guides/theming.qmd
           - text: "Accessibility"
             href: guides/accessibility.qmd
+          - text: "Benchmarks"
+            href: guides/benchmarks.qmd
       - text: "Reference"
         href: reference/index.qmd
       - text: "Examples"

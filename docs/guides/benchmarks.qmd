@@ -1,0 +1,119 @@
+---
+title: "Benchmarks"
+subtitle: "Where Gribouille stays fast, and where a chart grows too heavy to compile."
+engine: markdown
+---
+
+Every Gribouille chart is compiled by Typst, and most layers draw one mark per data row.
+That makes compile cost rise with the number of elements on the page, so a chart that is instant at a few hundred points can become impractical at tens of thousands.
+This page measures that growth so you can judge, before you build a chart, whether your data volume suits the library.
+
+## How the numbers are produced
+
+A small harness under `tools/benchmark/` compiles a fixed set of charts across a range of element counts and the three output formats.
+For each cell it records the compile time, the output size, and whether the compile finished within a fixed time budget.
+A chart that exceeds the budget is recorded as a timeout rather than measured, because past that point the library is no longer a practical choice for that workload.
+
+The figures below read the recorded data and are themselves drawn with Gribouille.
+The numbers are illustrative and depend on the machine that produced them, so read the shape of each curve rather than its absolute values.
+
+### Procedure
+
+Each case is a standalone Typst file that reads its element count from `sys.inputs`, so one file covers every size, and builds deterministic synthetic data, so a given size renders the same chart on every run.
+The harness compiles the cases one at a time, never in parallel, so concurrent compiles cannot contend for the processor and distort the timings.
+It wraps each compile in `/usr/bin/time`, takes the median wall time over a few repetitions, records the output file size, and kills any compile that exceeds the time budget, marking it as a timeout.
+
+The committed dataset behind the figures on this page was produced with:
+
+```bash
+lua tools/benchmark/run.lua \
+  --variants base \
+  --sizes 100,1000,10000,100000 \
+  --formats png,svg,pdf --reps 1 --timeout 90 \
+  --out docs/benchmarks/results.csv
+```
+
+Every case follows the same shape: read the count, build the data, draw one layer.
+The point case, for instance, is:
+
+::: {.callout-note title="Benchmark case: point.typ" collapse="true"}
+
+```typst
+#import "../../../lib.typ": *
+
+#set page(width: auto, height: auto, margin: 0cm)
+
+#let n = int(sys.inputs.at("n", default: "100"))
+#let variant = sys.inputs.at("variant", default: "base")
+
+#let settings = (
+  base: (size: 1.5pt, alpha: 0.6),
+  large: (size: 4pt, alpha: 0.6),
+  star: (size: 2.5pt, shape: "star", alpha: 0.8),
+  alpha: (size: 1.5pt, alpha: 0.25),
+)
+#let opts = settings.at(variant, default: settings.base)
+
+#let d = range(0, n).map(i => {
+  let t = i / n
+  let theta = t * 6 * calc.pi
+  (x: t * 12, y: calc.sin(theta) + t * 3)
+})
+
+#plot(
+  data: d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(..opts),),
+  width: 12cm,
+  height: 7cm,
+)
+```
+
+:::
+
+The full harness, every other case, and the command-line options are in [`tools/benchmark/`](https://github.com/mcanouil/gribouille/tree/main/tools/benchmark).
+
+## Compile time against element count
+
+```{typst}
+//| echo: true
+//| code-fold: true
+//| code-summary: "Typst source for this figure"
+//| label: fig-benchmark-time
+//| fig-cap: "Compile time against element count for each chart type, on log scales. Per-row layers climb steeply and hit the time budget, while binning and aggregating layers stay within it."
+//| output-filename: "benchmarks-time.svg"
+//| file: _benchmarks-time.typ
+//| alt: "A grid of small line charts, one per chart type, plotting compile time against element count on logarithmic axes for the PNG, SVG, and PDF formats. The point, column, tile, line, and faceted smoother panels rise sharply and end in crosses that mark sizes which exceeded the time budget. The two-dimensional bin and boxplot panels rise more gently and reach the largest size without a cross."
+```
+
+Per-row layers (`geom-point`, `geom-col`, `geom-tile`) climb far faster than the data grows.
+On the test machine a scatter of one thousand points compiles in about two seconds, ten thousand takes close to a minute, and one hundred thousand never finishes inside the budget.
+Most of the cost is handling every row, so a single connected `geom-line` is markedly cheaper than the same number of separate markers.
+Aggregating layers move the ceiling outward rather than removing it.
+A two-dimensional bin or a boxplot collapses the rows to a small, fixed number of marks, so it still completes at one hundred thousand rows where every per-row layer times out, even though it too slows as the row count climbs.
+
+## Output size against element count
+
+```{typst}
+//| echo: true
+//| code-fold: true
+//| code-summary: "Typst source for this figure"
+//| label: fig-benchmark-size
+//| fig-cap: "Output size against element count for each chart type, on log scales. Vector output grows with the number of marks, while raster output stays compact."
+//| output-filename: "benchmarks-size.svg"
+//| file: _benchmarks-size.typ
+//| alt: "A grid of small line charts, one per chart type, plotting output file size against element count on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply for the per-row layers because every mark becomes a node in the file, while the PNG and PDF lines stay much lower and flatter. The binning and boxplot panels stay flat for all three formats."
+```
+
+Format matters as much as count.
+SVG stores one node per mark, so a dense scatter produces a very large file, whereas PNG rasterises to a fixed grid and stays compact regardless of mark count.
+PDF sits between the two.
+For a chart with many thousands of marks, prefer a raster format unless you specifically need vector output.
+
+## What this means for your charts
+
+- A few hundred to a few thousand marks per chart compile comfortably in any format.
+- Tens of thousands of per-row marks are slow, taking tens of seconds, and a raster format is the only sensible choice.
+- One hundred thousand per-row marks exceed the budget, so reshape the work instead of drawing every row.
+- When the data is large, reach for a layer that aggregates first, such as [`geom-bin-2d`](../reference/geoms/geom-bin-2d.qmd), [`geom-hex`](../reference/geoms/geom-hex.qmd), [`geom-histogram`](../reference/geoms/geom-histogram.qmd), or [`geom-boxplot`](../reference/geoms/geom-boxplot.qmd), which collapse the rows to few marks and push the practical ceiling much further out, though very large row counts still cost time.
+- When even the aggregation is heavy, do the summarising in a dedicated computing language such as R or Python, then pass the small, pre-computed result to Gribouille to draw.
