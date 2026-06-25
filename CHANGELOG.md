@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- docs: a Benchmarks guide measures how compile time and output size grow with element count, drawn from a committed dataset with Gribouille itself, and shows where per-row geoms become impractical for large data. (#149)
+
 ## 0.4.1 (2026-06-23)
 
 - fix: `position: "dodge"` now shifts point-based geoms (text, label, point, linerange, etc.) on continuous x-axes by inferring the slot width from the minimum gap between unique positions. (#145)
