@@ -227,8 +227,11 @@
     annotate(
       "typst",
       x: head-x - 3.5,
-      y: 125,
-      label: [+#str(peak-jump) in a day],
+      y: 115,
+      label: [#align(right)[
+        +#str(peak-jump) in a day \
+        #text(size: 0.75em)[Hacker News Front Page]
+      ]],
       colour: palette.peak,
       size: 13pt,
       anchor: "east",
