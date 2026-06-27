@@ -49,6 +49,12 @@
   }
   if trained.type == "discrete" {
     if raw == none { return ("in", raw) }
+    // A numeric value addresses a 1-indexed fractional level position rather
+    // than a level name (`map-discrete` places it at `value - 1`), e.g. a
+    // polygon vertex set between level centres or a jittered point. The
+    // renderer can place it, so the pre-pass keeps it and lets panel clipping
+    // bound any overflow; drop fires only for a non-numeric value off the set.
+    if parse-number(raw) != none { return ("in", raw) }
     let s = str(raw)
     if trained.domain.contains(s) { return ("in", raw) }
     return ("drop", raw)
