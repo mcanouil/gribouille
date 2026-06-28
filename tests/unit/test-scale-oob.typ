@@ -135,6 +135,18 @@
   assert.eq(out.counts, (:))
 }
 
+// discrete `limits` keep numeric values: a number addresses a 1-indexed
+// fractional level position (see `map-discrete`), so a polygon vertex or a
+// jittered point placed between levels survives; only a non-numeric value
+// outside the level set drops.
+#{
+  let trained = (fill: _trained-discrete(limits: ("a", "b", "c")))
+  let rows = ((v: "a"), (v: "d"), (v: 1.5), (v: 0.74), (v: 3))
+  let out = filter-oob((_layer(rows),), trained)
+  assert.eq(out.layers.at(0).data, ((v: "a"), (v: 1.5), (v: 0.74), (v: 3)))
+  assert.eq(out.counts.at("fill"), 1)
+}
+
 // a `clip: false` layer opts out of the drop pre-pass: its out-of-limits row
 // survives verbatim, while a `clip: true` sibling with the same row is dropped.
 #{

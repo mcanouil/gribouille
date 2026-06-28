@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: numeric values on a discrete scale (a polygon vertex set between level centres, a jittered point) are kept as fractional level positions instead of being dropped when the scale carries explicit `limits`. (#151)
 - docs: a Benchmarks guide measures how compile time and output size grow with element count, drawn from a committed dataset with Gribouille itself, and shows where per-row geoms become impractical for large data. (#149)
 
 ## 0.4.1 (2026-06-23)
