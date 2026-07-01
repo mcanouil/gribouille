@@ -7,6 +7,8 @@ The library implements Wilkinson's **Grammar of Graphics** in a declarative API 
 
 Documentation: <https://m.canouil.dev/gribouille>.
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mcanouil/gribouille)
+
 > [!WARNING]
 > _Gribouille_ is in active development.
 
