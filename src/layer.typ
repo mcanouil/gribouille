@@ -6,6 +6,7 @@
 
 #import "aes-keys.typ": AES-KEYS
 #import "utils/errors.typ": fail, fail-enum
+#import "utils/types.typ": split-stroke-shorthand
 
 /// Collect a geom's trailing `..args` into a constant-aesthetic param dict.
 ///
@@ -80,15 +81,27 @@
   key: auto,
   inherit-aes: true,
   clip: true,
-) = (
-  kind: "layer",
-  geom: geom,
-  mapping: mapping,
-  data: data,
-  params: params,
-  key: key,
-  stat: stat,
-  position: position,
-  inherit-aes: inherit-aes,
-  clip: clip,
-)
+) = {
+  // Desugar a native `1.3pt + accent` stroke into the split `stroke`/`colour`
+  // params the resolvers expect; other stroke forms pass through untouched.
+  let params = if type(params.at("stroke", default: none)) == stroke {
+    let split = split-stroke-shorthand(
+      params.stroke,
+      params.at("colour", default: auto),
+      auto,
+    )
+    params + (stroke: split.stroke, colour: split.colour)
+  } else { params }
+  (
+    kind: "layer",
+    geom: geom,
+    mapping: mapping,
+    data: data,
+    params: params,
+    key: key,
+    stat: stat,
+    position: position,
+    inherit-aes: inherit-aes,
+    clip: clip,
+  )
+}
