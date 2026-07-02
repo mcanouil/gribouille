@@ -115,3 +115,48 @@
   if non-empty.all(is-native-numeric) { return "numeric" }
   "string"
 }
+
+/// Desugar a Typst `stroke`-typed value into the separate `stroke` (thickness)
+/// and `colour` (paint) fields gribouille resolves independently.
+///
+/// Accepts the native `1.3pt + accent` form so a stroke's thickness and paint
+/// can be written together. The embedded paint is routed to `colour` only when
+/// `colour` is still `unset`, so an explicit `colour:` (or a mapped colour, a
+/// pin at param level) keeps priority. The geometry collapses to a bare length
+/// for the common thickness-only case, to a dictionary when the full
+/// `stroke(...)` constructor set extra fields (`cap`/`join`/`dash`/`miter-limit`),
+/// and back to `unset` for a paint-only stroke.
+///
+/// Non-`stroke` values pass through untouched, so callers can wrap every stroke
+/// param unconditionally.
+///
+/// \@internal
+/// `value` is deliberately not named `stroke`: a `stroke` parameter would shadow
+/// the built-in `stroke` type and break the `type(...) == stroke` check.
+///
+/// \@param value The raw stroke param (a `stroke`, length, dictionary, `auto`, or `none`).
+///
+/// \@param colour The sibling colour param.
+///
+/// \@param unset The caller's "not set" sentinel (`auto` for geoms, `none` for theme elements).
+/// \@returns A dict `(stroke: ..., colour: ...)` with the pair split.
+#let split-stroke-shorthand(value, colour, unset) = {
+  if type(value) != stroke { return (stroke: value, colour: colour) }
+  let out-colour = if value.paint != auto and colour == unset {
+    value.paint
+  } else { colour }
+  let geometry = (:)
+  if value.thickness != auto { geometry.insert("thickness", value.thickness) }
+  if value.cap != auto { geometry.insert("cap", value.cap) }
+  if value.join != auto { geometry.insert("join", value.join) }
+  if value.dash != auto { geometry.insert("dash", value.dash) }
+  if value.miter-limit != auto {
+    geometry.insert("miter-limit", value.miter-limit)
+  }
+  let out-stroke = if geometry.len() == 0 {
+    unset
+  } else if geometry.keys() == ("thickness",) {
+    geometry.at("thickness")
+  } else { geometry }
+  (stroke: out-stroke, colour: out-colour)
+}

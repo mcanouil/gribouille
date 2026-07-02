@@ -4,6 +4,7 @@
 ///! fields consumed internally by `merge-theme`.
 
 #import "../utils/errors.typ": assert-halign, assert-stroke, assert-text-size
+#import "../utils/types.typ": split-stroke-shorthand
 
 /// Text element: font size, weight, colour, and angle.
 ///
@@ -267,7 +268,8 @@
 ///   a ratio (e.g., `80%`) scaling the parent surface stroke, or `none` to
 ///   inherit the parent thickness unchanged. Absolute lengths win outright;
 ///   ratios cascade proportionally, so setting the base `line` stroke rescales
-///   every surface that inherits via a ratio.
+///   every surface that inherits via a ratio. The native `1pt + red` form is
+///   also accepted: its paint fills in `colour` unless `colour` is set.
 ///
 /// \@returns Element dictionary consumed by \@theme.
 ///
@@ -305,6 +307,9 @@
 ///
 /// \@see \@theme, \@element-text, \@element-rect, \@element-blank
 #let element-line(colour: none, stroke: none) = {
+  let split = split-stroke-shorthand(stroke, colour, none)
+  let stroke = split.stroke
+  let colour = split.colour
   assert-stroke("element-line", stroke)
   (
     kind: "element-line",
@@ -343,7 +348,8 @@
 /// \@param stroke Outline thickness. Either an absolute Typst length (e.g.,
 ///   `1pt`), a ratio (e.g., `80%`) scaling the parent surface stroke, or `none`
 ///   for no outline. Ratios with no absolute ancestor resolve against the
-///   default thickness.
+///   default thickness. The native `1pt + red` form is also accepted: its paint
+///   fills in `colour` unless `colour` is set.
 ///
 /// \@param inset Inner padding \@margin honoured by `plot-background` and `legend-background` (grows the painted rect outward), or `none`. Ignored on `panel-background`, `strip-background`, and `legend-bar`.
 ///
@@ -409,6 +415,9 @@
   inset: (kind: "margin", top: 5pt, right: 5pt, bottom: 5pt, left: 5pt),
   outset: none,
 ) = {
+  let split = split-stroke-shorthand(stroke, colour, none)
+  let stroke = split.stroke
+  let colour = split.colour
   assert-stroke("element-rect", stroke)
   (
     kind: "element-rect",
