@@ -126,13 +126,13 @@ Confirm every symbol against the published, machine-readable reference, which mi
    It lists every documentation page, each linking to a `.llms.md` file.
 2. Fetch the page for the symbol you need, for example:
    - `https://m.canouil.dev/gribouille/reference/geoms/geom-smooth.llms.md`
-   - `https://m.canouil.dev/gribouille/reference/scales/scale-colour-viridis.llms.md`
+   - `https://m.canouil.dev/gribouille/reference/scales/scale-colour-viridis-d.llms.md`
    - `https://m.canouil.dev/gribouille/reference/stats/stat-summary.llms.md`
    Any published page's `<page>.html` has a sibling `<page>.llms.md`.
 3. Use only the arguments documented on that page, with the documented defaults and types.
 
 Reference families under `reference/`: `core`, `geoms`, `stats`, `scales`,
-`coords`, `facets`, `positions`, `guides`, `labels`, `themes`, `helpers`,
+`coord`, `facets`, `positions`, `guides`, `labels`, `themes`, `helpers`,
 `datasets`.
 Broader tutorials live at `get-started/`, `guides/`, and `examples/`, each with a `.llms.md` companion.
 
