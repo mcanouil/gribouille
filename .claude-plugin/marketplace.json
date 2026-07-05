@@ -1,0 +1,12 @@
+{
+  "name": "gribouille",
+  "owner": { "name": "Mickaël Canouil" },
+  "description": "Author grammar-of-graphics plots with the gribouille Typst library.",
+  "plugins": [
+    {
+      "name": "gribouille",
+      "source": "./",
+      "description": "Author grammar-of-graphics plots with the gribouille Typst library."
+    }
+  ]
+}

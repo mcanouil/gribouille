@@ -1,0 +1,10 @@
+{
+  "name": "gribouille",
+  "version": "0.4.1",
+  "description": "Author grammar-of-graphics plots with the gribouille Typst library.",
+  "author": { "name": "Mickaël Canouil" },
+  "homepage": "https://m.canouil.dev/gribouille",
+  "repository": "https://github.com/mcanouil/gribouille",
+  "license": "MIT",
+  "keywords": ["typst", "plot", "chart", "grammar-of-graphics", "visualization"]
+}

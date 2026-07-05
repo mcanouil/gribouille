@@ -11,10 +11,12 @@ homepage = "https://m.canouil.dev/gribouille"
 keywords = ["plot", "chart", "grammar-of-graphics", "visualization"]
 categories = ["visualization"]
 exclude = [
+  ".claude-plugin",
   ".github",
   ".gitignore",
   "docs",
   "examples",
+  "skills",
   "tests",
   "tools",
   "GLOSSARY.md",
