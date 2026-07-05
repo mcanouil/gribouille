@@ -1,18 +1,12 @@
 ---
 name: gribouille
-description: >-
-  Author grammar-of-graphics plots with the gribouille Typst library: the
-  #plot() call, aes() mappings, geom-* layers, stat-* transforms, scale-*,
-  coords, facets, and themes. Use when building, editing, or debugging a
-  gribouille chart in a Typst document, or when a request maps data to a
-  scatter, line, bar, boxplot, smooth, contour, or similar figure in Typst.
+description: "Use when authoring, editing, or debugging a Gribouille grammar-of-graphics plot in a Typst document: writing a #plot() call with aes() mappings and geom-*, stat-*, or scale-* layers, adding coords, facets, guides, or themes, or turning data into a scatter, line, bar, boxplot, smooth, or contour figure with the @preview/gribouille package."
 ---
 
 # Authoring gribouille plots
 
-Gribouille implements Wilkinson's Grammar of Graphics for Typst, modelled on
-[`ggplot2`](https://ggplot2.tidyverse.org) (R) and [`plotnine`](https://plotnine.org) (Python).
-A plot is a stack of layers over a shared data and aesthetic mapping.
+Gribouille is a grammar-of-graphics plotting library for Typst; the API mirrors `ggplot2` (R) and `plotnine` (Python).
+A plot layers `geom-*` over shared data and an aesthetic mapping.
 
 ## Import
 
@@ -20,26 +14,22 @@ A plot is a stack of layers over a shared data and aesthetic mapping.
 #import "@preview/gribouille:0.4.1": *
 ```
 
-Pin the version to the one the user has installed.
-Confirm the current version from `https://m.canouil.dev/gribouille/llms.txt` or `typst.app/universe/package/gribouille` before writing the import.
+Pin the version to the installed one; check it via `llms.txt` or Typst Universe.
 
 ## Mental model
 
-Data flows forward through one pipeline; no stage reaches back:
+Pipeline, forward only:
 
 ```text
 data → stat → position → scale → coord → facet → theme → render
 ```
 
-Build a plot by declaring, not by drawing:
-
-- `data` is a dictionary of columns (arrays), or a built-in dataset (`penguins`, `mpg`, `economics`).
-- `mapping: aes(...)` maps column names to aesthetics (`x`, `y`, `colour`, `fill`, `shape`, `size`, `label`, …).
-- `layers` is a tuple of `geom-*` constructors; each geom may carry its own `stat`, `position`, and per-layer `mapping`.
-- `scales` control how data values map to visual values (axes, colour palettes, …).
-- `coord`, `facets`, `labels`, `guides`, `theme` shape the rest.
-
-Late binding resolves a value at a later stage: `after-stat(...)`, `after-scale(...)`, `from-theme(...)`, `stage(...)`.
+- `data`: a dictionary of column arrays, or a built-in dataset (`penguins`, `mpg`, `economics`).
+- `mapping: aes(...)`: column names to aesthetics (`x`, `y`, `colour`, `fill`, `shape`, `size`, `label`, …).
+- `layers`: a tuple of `geom-*`; each geom may set its own `stat`, `position`, and `mapping`.
+- `scales`: how values map to axes and palettes.
+- `coord`, `facets`, `labels`, `guides`, `theme`: everything else.
+- Late binding: `after-stat(...)`, `after-scale(...)`, `from-theme(...)`, `stage(...)`.
 
 ## Call shape
 
@@ -116,25 +106,18 @@ Late binding resolves a value at a later stage: `after-stat(...)`, `after-scale(
 )
 ```
 
-## Reference protocol — always confirm arguments
+## Reference protocol
 
-The library is pre-1.0; constructor names and arguments change between releases.
-Never invent or recall a geom, stat, scale, or argument from memory.
-Confirm every symbol against the published, machine-readable reference, which mirrors the site and is regenerated on every docs build:
+The API is pre-1.0; names and arguments change between releases.
+Do not recall a geom, stat, scale, or argument from memory; confirm each against the machine-readable reference.
 
-1. Fetch the index: `https://m.canouil.dev/gribouille/llms.txt`.
-   It lists every documentation page, each linking to a `.llms.md` file.
-2. Fetch the page for the symbol you need, for example:
-   - `https://m.canouil.dev/gribouille/reference/geoms/geom-smooth.llms.md`
-   - `https://m.canouil.dev/gribouille/reference/scales/scale-colour-viridis-d.llms.md`
-   - `https://m.canouil.dev/gribouille/reference/stats/stat-summary.llms.md`
-   Any published page's `<page>.html` has a sibling `<page>.llms.md`.
-3. Use only the arguments documented on that page, with the documented defaults and types.
+1. Index: `https://m.canouil.dev/gribouille/llms.txt` lists every page and its `.llms.md`.
+2. Fetch the symbol's page, e.g., `.../reference/geoms/geom-smooth.llms.md`, `.../reference/scales/scale-colour-viridis-d.llms.md`, `.../reference/stats/stat-summary.llms.md`.
+   Every `<page>.html` has a sibling `<page>.llms.md`.
+3. Use only the arguments, defaults, and types documented there.
 
-Reference families under `reference/`: `core`, `geoms`, `stats`, `scales`,
-`coord`, `facets`, `positions`, `guides`, `labels`, `themes`, `helpers`,
-`datasets`.
-Broader tutorials live at `get-started/`, `guides/`, and `examples/`, each with a `.llms.md` companion.
+Families under `reference/`: `core`, `geoms`, `stats`, `scales`, `coord`, `facets`, `positions`, `guides`, `labels`, `themes`, `helpers`, `datasets`.
+Tutorials: `get-started/`, `guides/`, `examples/`.
 
 ## Validate
 
@@ -144,4 +127,4 @@ Compile before claiming success:
 typst compile plot.typ
 ```
 
-Errors follow the shape `<scope>: <problem>; got <value>. <hint>` — read the hint, then re-check the argument against its `.llms.md` page.
+Errors follow the shape `<scope>: <problem>; got <value>. <hint>`; read the hint, then re-check the argument against its `.llms.md` page.
