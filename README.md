@@ -79,6 +79,26 @@ Documentation: <https://m.canouil.dev/gribouille>.
 )
 ```
 
+## AI assistants
+
+The documentation ships a machine-readable copy for large language models at <https://m.canouil.dev/gribouille/llms.txt>, and every page has a `.llms.md` companion.
+
+An installable skill teaches coding agents to author _Gribouille_ plots against that reference.
+Install it with the agent-neutral [`skills`](https://github.com/vercel-labs/skills) CLI:
+
+```bash
+npx skills add mcanouil/gribouille
+```
+
+The repository also doubles as a plugin marketplace:
+
+```text
+/plugin marketplace add mcanouil/gribouille
+/plugin install gribouille@gribouille
+```
+
+See the [AI Assistants guide](https://m.canouil.dev/gribouille/guides/ai-assistants.html) for details.
+
 ## Dependencies
 
 See [`typst.toml`](typst.toml) and [`src/deps.typ`](src/deps.typ) for the authoritative Typst compiler and CeTZ versions.
