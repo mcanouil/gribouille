@@ -59,7 +59,7 @@
 // --- Draw path: ISO date-string intercepts under a temporal scale render
 // without panicking. Covers the mapped channel, the scalar parameter, an
 // annotate("vline") param, and an unparseable value (silently dropped). ---
-#import "../../lib.typ": annotate, plot, scale-x-date
+#import "../../lib.typ": annotate, plot, scale-date, scales
 
 #let date-data = (
   (d: "2024-01-01", v: 1),
@@ -76,14 +76,14 @@
     geom-vline(xintercept: "not-a-date"),
     annotate("vline", xintercept: "2024-03-01"),
   ),
-  scales: (scale-x-date(),),
+  scales: scales(x: scale-date()),
   width: 8cm,
   height: 5cm,
 )
 
 // --- geom-abline with an ISO date-string intercept under a temporal y scale
 // renders without panicking (slope 0 draws a horizontal line at the date) ---
-#import "../../lib.typ": geom-abline, scale-y-date
+#import "../../lib.typ": geom-abline, scale-date, scales
 
 #plot(
   data: (("v": 1, "t": "2024-01-01"), ("v": 2, "t": "2024-02-01")),
@@ -92,7 +92,7 @@
     geom-point(),
     geom-abline(slope: 0, intercept: "2024-01-15"),
   ),
-  scales: (scale-y-date(),),
+  scales: scales(y: scale-date()),
   width: 8cm,
   height: 5cm,
 )

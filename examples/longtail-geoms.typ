@@ -36,7 +36,7 @@
       stroke: 1.2pt,
     ),
   ),
-  scales: (scale-x-continuous(breaks: (-3, -1.5, 0, 1.5, 3)),),
+  scales: scales(x: scale-continuous(breaks: (-3, -1.5, 0, 1.5, 3))),
   labels: labels(
     title: "Geom-Blank as a Frame for Geom-Function",
     x: "X",
@@ -58,7 +58,7 @@
     ),
     geom-rug(sides: "b", colour: rgb("#2ca02c"), length: 0.4cm),
   ),
-  scales: (scale-x-continuous(name: "Highway mpg"),),
+  scales: scales(x: scale-continuous(name: "Highway mpg")),
   labels: labels(title: "Forced X-Range to Highlight Rug Density", y: ""),
   theme: theme-minimal(),
   width: 12cm,

@@ -1,27 +1,24 @@
 // Date / datetime / time scale wrappers carry temporal metadata into the
 // trained dict and otherwise behave like a continuous scale.
 
-#import "../../src/scale/date.typ": (
-  scale-x-date, scale-x-datetime, scale-x-time, scale-y-date, scale-y-datetime,
-  scale-y-time,
-)
+#import "../../lib.typ": scale-date, scale-datetime, scale-time, scales
 #import "../../src/scale/train.typ": train
 
 // --- spec dicts carry kind, aesthetic, temporal, and date-format ---
 
-#let xs-date = scale-x-date()
+#let xs-date = scales(x: scale-date()).x
 #assert.eq(xs-date.kind, "scale")
 #assert.eq(xs-date.aesthetic, "x")
 #assert.eq(xs-date.type, "continuous")
 #assert.eq(xs-date.temporal, "date")
 #assert.eq(xs-date.at("date-format"), "[year]-[month repr:numerical]-[day]")
 
-#let ys-date = scale-y-date(date-format: "[year]")
+#let ys-date = scales(y: scale-date(date-format: "[year]")).y
 #assert.eq(ys-date.aesthetic, "y")
 #assert.eq(ys-date.temporal, "date")
 #assert.eq(ys-date.at("date-format"), "[year]")
 
-#let xs-dt = scale-x-datetime()
+#let xs-dt = scales(x: scale-datetime()).x
 #assert.eq(xs-dt.aesthetic, "x")
 #assert.eq(xs-dt.temporal, "datetime")
 #assert.eq(
@@ -29,16 +26,16 @@
   "[year]-[month repr:numerical]-[day] [hour]:[minute]",
 )
 
-#let ys-dt = scale-y-datetime()
+#let ys-dt = scales(y: scale-datetime()).y
 #assert.eq(ys-dt.aesthetic, "y")
 #assert.eq(ys-dt.temporal, "datetime")
 
-#let xs-time = scale-x-time()
+#let xs-time = scales(x: scale-time()).x
 #assert.eq(xs-time.aesthetic, "x")
 #assert.eq(xs-time.temporal, "time")
 #assert.eq(xs-time.at("date-format"), "[hour]:[minute]")
 
-#let ys-time = scale-y-time()
+#let ys-time = scales(y: scale-time()).y
 #assert.eq(ys-time.aesthetic, "y")
 #assert.eq(ys-time.temporal, "time")
 
@@ -63,7 +60,7 @@
 )
 
 #let trained = train(
-  scales: (scale-x-date(),),
+  scales: scales(x: scale-date()),
   layers: layers,
   mapping: (x: "x", y: "y"),
   data: d,
@@ -74,7 +71,7 @@
 #assert.eq(trained.x.domain, (8766, 8826))
 
 #let trained-dt = train(
-  scales: (scale-y-datetime(date-format: "[hour]:[minute]"),),
+  scales: scales(y: scale-datetime(date-format: "[hour]:[minute]")),
   layers: (
     (
       geom: "point",
@@ -113,7 +110,7 @@
   ),
 )
 #let trained-iso-lim = train(
-  scales: (scale-x-date(limits: ("2024-01-01", "2024-12-31")),),
+  scales: scales(x: scale-date(limits: ("2024-01-01", "2024-12-31"))),
   layers: lim-layers,
   mapping: (x: "x", y: "y"),
   data: date-rows,
@@ -125,7 +122,7 @@
 
 // `auto` on the high side keeps the trained max (parsed from the data).
 #let trained-iso-auto = train(
-  scales: (scale-x-date(limits: ("2024-01-01", auto)),),
+  scales: scales(x: scale-date(limits: ("2024-01-01", auto))),
   layers: lim-layers,
   mapping: (x: "x", y: "y"),
   data: date-rows,

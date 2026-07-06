@@ -74,13 +74,13 @@
 ///     geom-point(size: 2pt, stroke: 0.5pt, alpha: 0.5),
 ///     geom-smooth(method: "lm", se: true, alpha: 0.2),
 ///   ),
-///   scales: (
-///     scale-x-continuous(),
-///     scale-y-continuous(),
-///     scale-colour-discrete(
+///   scales: scales(
+///     x: scale-continuous(),
+///     y: scale-continuous(),
+///     colour: scale-discrete(
 ///       palette: (rgb("#ff8c00"), rgb("#800080"), rgb("#008B8B")),
 ///     ),
-///     scale-fill-discrete(
+///     fill: scale-discrete(
 ///       palette: (rgb("#ff8c00"), rgb("#800080"), rgb("#008B8B")),
 ///     ),
 ///   ),

@@ -109,14 +109,14 @@ To confirm the result, `pdfinfo -struct-text plot.pdf` should show a single `Fig
 
 ## Colour and redundant encoding
 
-Gribouille's default discrete colour scale is the [Okabe-Ito palette](../reference/scales/scale-colour-okabe-ito.qmd) (Wong 2011), chosen to stay distinguishable for the common forms of colour-vision deficiency, so a plain `aes(colour: …)` already starts on safe ground.
+Gribouille's default discrete colour scale is the [Okabe-Ito palette](../reference/scales/scale-okabe-ito.qmd) (Wong 2011), chosen to stay distinguishable for the common forms of colour-vision deficiency, so a plain `aes(colour: …)` already starts on safe ground.
 Colour still fails, though, whenever colour is *removed*: greyscale print, photocopies, some projectors.
 Two things help.
 
-- Continuous data: [`scale-colour-viridis-c`](../reference/scales/scale-colour-viridis-c.qmd) (and the binned [`scale-colour-viridis-b`](../reference/scales/scale-colour-viridis-b.qmd)) is perceptually uniform and increases monotonically in lightness, so it survives greyscale; use [`scale-colour-viridis-d`](../reference/scales/scale-colour-viridis-d.qmd) for the discrete version.
-- Other discrete palettes: [`scale-colour-brewer`](../reference/scales/scale-colour-brewer.qmd) exposes the ColorBrewer families; turn on the "colour-blind safe" filter on [colorbrewer2.org](https://colorbrewer2.org) to pick one. Avoid [`scale-colour-hue`](../reference/scales/scale-colour-hue.qmd) for categorical data unless you have a specific reason, as it is not colour-blind safe.
+- Continuous data: [`scale-viridis-c`](../reference/scales/scale-viridis-c.qmd) (and the binned [`scale-viridis-b`](../reference/scales/scale-viridis-b.qmd)) is perceptually uniform and increases monotonically in lightness, so it survives greyscale; use [`scale-viridis-d`](../reference/scales/scale-viridis-d.qmd) for the discrete version.
+- Other discrete palettes: [`scale-brewer`](../reference/scales/scale-brewer.qmd) exposes the ColorBrewer families; turn on the "colour-blind safe" filter on [colorbrewer2.org](https://colorbrewer2.org) to pick one. Avoid [`scale-hue`](../reference/scales/scale-hue.qmd) for categorical data unless you have a specific reason, as it is not colour-blind safe.
 
-The reliable fix when a figure must read in black and white is a second, non-colour channel: map the grouping variable to `shape:` and/or `linetype:` as well as `colour:`, controlled by [`scale-shape`](../reference/scales/scale-shape.qmd) and [`scale-linetype`](../reference/scales/scale-linetype.qmd).
+The reliable fix when a figure must read in black and white is a second, non-colour channel: map the grouping variable to `shape:` and/or `linetype:` as well as `colour:`, controlled by [`scale-discrete`](../reference/scales/scale-discrete.qmd) and [`scale-discrete`](../reference/scales/scale-discrete.qmd).
 Shape and linetype only stay legible for low-cardinality factors, roughly six levels or fewer.
 
 In the example below the colours are still the default Okabe-Ito, but `species` is also mapped to point shape, so the three groups remain separable with no colour at all.

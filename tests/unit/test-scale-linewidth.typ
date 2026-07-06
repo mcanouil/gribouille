@@ -1,32 +1,32 @@
 // Linewidth scale family unit tests.
 
 #import "../../src/scale/linewidth.typ": (
-  scale-linewidth-binned, scale-linewidth-continuous, scale-linewidth-identity,
-  scale-linewidth-manual,
+  _linewidth-binned, _linewidth-continuous, _linewidth-identity,
+  _linewidth-manual,
 )
 #import "../../src/utils/level-resolve.typ": resolve-level
 
-// scale-linewidth-continuous: spec dict shape.
-#let sc = scale-linewidth-continuous(range: (0.5pt, 3pt))
+// scale-continuous: spec dict shape.
+#let sc = _linewidth-continuous(range: (0.5pt, 3pt))
 #assert.eq(sc.kind, "scale")
 #assert.eq(sc.aesthetic, "linewidth")
 #assert.eq(sc.type, "continuous")
 #assert.eq(sc.range, (0.5pt, 3pt))
 
-// scale-linewidth-identity: identity passthrough, no legend.
-#let si = scale-linewidth-identity()
+// scale-identity: identity passthrough, no legend.
+#let si = _linewidth-identity()
 #assert.eq(si.aesthetic, "linewidth")
 #assert.eq(si.type, "identity")
 
-// scale-linewidth-manual: per-level Typst lengths.
-#let sm = scale-linewidth-manual(values: (0.4pt, 1pt, 2pt))
+// scale-manual: per-level Typst lengths.
+#let sm = _linewidth-manual(values: (0.4pt, 1pt, 2pt))
 #assert.eq(sm.kind, "scale")
 #assert.eq(sm.aesthetic, "linewidth")
 #assert.eq(sm.type, "discrete")
 #assert.eq(sm.palette, (0.4pt, 1pt, 2pt))
 
-// scale-linewidth-binned: continuous with binned flag.
-#let sb = scale-linewidth-binned(n-breaks: 5, range: (0.4pt, 2pt))
+// scale-binned: continuous with binned flag.
+#let sb = _linewidth-binned(n-breaks: 5, range: (0.4pt, 2pt))
 #assert.eq(sb.kind, "scale")
 #assert.eq(sb.aesthetic, "linewidth")
 #assert.eq(sb.type, "continuous")

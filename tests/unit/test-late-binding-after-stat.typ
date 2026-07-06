@@ -71,7 +71,7 @@
   ),
 )
 #let trained = train(
-  scales: (),
+  scales: (:),
   layers: layers,
   mapping: aes(x: "x", y: after-stat("count")),
   data: none,

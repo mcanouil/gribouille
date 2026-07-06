@@ -1,4 +1,4 @@
-// scale-size-manual and scale-radius alongside the existing area variant.
+// scale-manual and scale-radius alongside the existing area variant.
 
 #import "../lib.typ": *
 
@@ -24,7 +24,7 @@
     data: cont,
     mapping: aes(x: "x", y: "y", size: "w"),
     layers: (geom-point(fill: accent),),
-    scales: (scale-radius(range: (1pt, 8pt)),),
+    scales: scales(size: scale-radius(range: (1pt, 8pt))),
     labels: labels(title: "Scale-Radius (linear)", x: "X", y: "Y", size: "w"),
     theme: theme-minimal(),
     width: 12cm,
@@ -34,7 +34,7 @@
     data: cont,
     mapping: aes(x: "x", y: "y", size: "w"),
     layers: (geom-point(fill: accent),),
-    scales: (scale-size-area(range: (1pt, 8pt)),),
+    scales: scales(size: scale-area(range: (1pt, 8pt))),
     labels: labels(title: "Scale-Size-Area (sqrt)", x: "X", y: "Y", size: "w"),
     theme: theme-minimal(),
     width: 12cm,
@@ -44,12 +44,8 @@
     data: manual,
     mapping: aes(x: "x", y: "y", size: "g"),
     layers: (geom-point(fill: accent),),
-    scales: (
-      scale-size-manual(
-        values: (2pt, 4pt, 8pt),
-        limits: ("small", "medium", "large"),
-      ),
-    ),
+    scales: scales(size: scale-manual(values: (2pt, 4pt, 8pt),
+        limits: ("small", "medium", "large"),)),
     labels: labels(
       title: "Scale-Size-Manual",
       x: "X",

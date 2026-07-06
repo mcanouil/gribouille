@@ -5,9 +5,7 @@
   interpolate-stops, resolve-continuous-colour,
 )
 #import "../../src/scale/colour.typ": (
-  scale-colour-brewer, scale-colour-gradient, scale-colour-gradient2,
-  scale-colour-gradientn, scale-fill-brewer, scale-fill-gradient,
-  scale-fill-gradient2, scale-fill-gradientn,
+  _scale-brewer, _scale-gradient, _scale-gradient2, _scale-gradientn,
 )
 
 // brewer-palette returns the canonical first colour for each palette.
@@ -51,28 +49,28 @@
 }
 
 // brewer scales carry the colour array as their palette.
-#let s = scale-colour-brewer(palette: "Set1")
+#let s = _scale-brewer("colour", palette: "Set1")
 #assert.eq(s.kind, "scale")
 #assert.eq(s.aesthetic, "colour")
 #assert.eq(s.type, "discrete")
 #assert.eq(s.palette, brewer-palette("Set1"))
 
-#let sf = scale-fill-brewer(palette: "Spectral")
+#let sf = _scale-brewer("fill", palette: "Spectral")
 #assert.eq(sf.aesthetic, "fill")
 #assert.eq(sf.type, "discrete")
 #assert.eq(sf.palette, brewer-palette("Spectral"))
 
 // gradient scales carry the right palette shape.
-#let g1 = scale-colour-gradient()
+#let g1 = _scale-gradient("colour")
 #assert.eq(g1.type, "continuous")
 #assert.eq(g1.palette.len(), 2)
 
-#let g2 = scale-colour-gradient2(midpoint: 0)
+#let g2 = _scale-gradient2("colour", midpoint: 0)
 #assert.eq(g2.type, "continuous")
 #assert.eq(g2.palette.len(), 3)
 #assert.eq(g2.midpoint, 0)
 
-#let gn = scale-colour-gradientn(colours: (
+#let gn = _scale-gradientn("colour", colours: (
   rgb("#000000"),
   rgb("#888888"),
   rgb("#ffffff"),
@@ -81,10 +79,10 @@
 #assert.eq(gn.palette.len(), 3)
 
 // Fill counterparts mirror colour.
-#assert.eq(scale-fill-gradient().aesthetic, "fill")
-#assert.eq(scale-fill-gradient2(midpoint: 0).midpoint, 0)
+#assert.eq(_scale-gradient("fill").aesthetic, "fill")
+#assert.eq(_scale-gradient2("colour", midpoint: 0).midpoint, 0)
 #assert.eq(
-  scale-fill-gradientn(colours: (rgb("#000"), rgb("#fff"))).palette.len(),
+  _scale-gradientn("colour", colours: (rgb("#000"), rgb("#fff"))).palette.len(),
   2,
 )
 

@@ -50,7 +50,7 @@
 - slug: aes-promote
   section: basics
   title: "Continuous alpha and linewidth"
-  description: 'Promoted aesthetics: `alpha` and `linewidth` map directly to numeric columns through [`scale-alpha-continuous`](../reference/scales/scale-alpha-continuous.qmd) and [`scale-linewidth-continuous`](../reference/scales/scale-linewidth-continuous.qmd).'
+  description: 'Promoted aesthetics: `alpha` and `linewidth` map directly to numeric columns through [`scale-continuous`](../reference/scales/scale-continuous.qmd) and [`scale-continuous`](../reference/scales/scale-continuous.qmd).'
   alt: "Two stacked panels: a scatter where point opacity scales with a numeric score, and a line chart where stroke thickness scales with a numeric weight per group."
 
 - slug: bar-simple
@@ -122,25 +122,25 @@
 - slug: shape-linetype
   section: annotations
   title: "Shape and linetype per group"
-  description: 'A single grouping maps to [`scale-shape`](../reference/scales/scale-shape.qmd), [`scale-linetype`](../reference/scales/scale-linetype.qmd), and a discrete colour.'
+  description: 'A single grouping maps to [`scale-discrete`](../reference/scales/scale-discrete.qmd), [`scale-discrete`](../reference/scales/scale-discrete.qmd), and a discrete colour.'
   alt: "Line and point chart of three groups (A, B, and C) drawn with distinct point shapes, line dash styles, and colours per group."
 
 - slug: colour-bar
   section: scales
   title: "Continuous colour guide"
-  description: 'A colourbar appears automatically when colour is trained on a continuous variable via [`scale-colour-continuous`](../reference/scales/scale-colour-continuous.qmd).'
+  description: 'A colourbar appears automatically when colour is trained on a continuous variable via [`scale-continuous`](../reference/scales/scale-continuous.qmd).'
   alt: "Scatter plot of a cosine wave where point colour encodes a continuous temperature variable shown by a vertical colourbar legend."
 
 - slug: viridis-colour
   section: scales
   title: "Viridis continuous"
-  description: '[`scale-colour-viridis-c`](../reference/scales/scale-colour-viridis-c.qmd) maps a continuous variable through the Viridis palette.'
+  description: '[`scale-viridis-c`](../reference/scales/scale-viridis-c.qmd) maps a continuous variable through the Viridis palette.'
   alt: "Scatter plot of a sinusoidal pattern with points coloured along the Viridis continuous palette encoding values from low to high."
 
 - slug: manual-palette
   section: scales
   title: "Manual palette"
-  description: 'User-supplied colours passed to [`scale-colour-manual`](../reference/scales/scale-colour-manual.qmd).'
+  description: 'User-supplied colours passed to [`scale-manual`](../reference/scales/scale-manual.qmd).'
   alt: "Point and line chart of three groups (apple, berry, and cherry) drawn in a manual palette of red, orange, and teal."
 
 - slug: facets
@@ -212,7 +212,7 @@
 - slug: axis-lims
   section: guides
   title: "Axis limits and tick rotation"
-  description: 'Explicit domains set by [`scale-x-continuous(limits:)`](../reference/scales/scale-x-continuous.qmd) alongside tidied tick text from [`guide-axis`](../reference/guides/guide-axis.qmd).'
+  description: 'Explicit domains set by [`scale-continuous(limits:)`](../reference/scales/scale-continuous.qmd) alongside tidied tick text from [`guide-axis`](../reference/guides/guide-axis.qmd).'
   alt: "Three scatter plots of highway mpg against displacement showing the default view, the same view with rotated tick labels, and the view with explicit zero-anchored axis limits."
 
 - slug: sec-axis
@@ -386,79 +386,79 @@
 - slug: scale-alpha
   section: scales
   title: "Alpha scale family"
-  description: 'Continuous, manual per-level, and binned variants via the [`scale-alpha-*`](../reference/scales/scale-alpha-continuous.qmd) family.'
+  description: 'Continuous, manual per-level, and binned variants via the [`scale-alpha-*`](../reference/scales/scale-continuous.qmd) family.'
   alt: "Three stacked scatter panels showing the same blue points with point opacity driven by continuous, manual per-level, and binned alpha scales."
 
 - slug: scale-linewidth
   section: scales
   title: "Linewidth scale family"
-  description: 'Continuous, manual per-level, and binned variants via the [`scale-linewidth-*`](../reference/scales/scale-linewidth-continuous.qmd) family.'
+  description: 'Continuous, manual per-level, and binned variants via the [`scale-linewidth-*`](../reference/scales/scale-continuous.qmd) family.'
   alt: "Three stacked line panels with stroke thickness driven by continuous, manual per-level, and binned linewidth scales."
 
 - slug: scale-stroke
   section: scales
   title: "Stroke scale family"
-  description: 'Marker-outline thickness driven by the `stroke` aesthetic via [`scale-stroke-continuous`](../reference/scales/scale-stroke-continuous.qmd) or [`scale-stroke-manual`](../reference/scales/scale-stroke-manual.qmd).'
+  description: 'Marker-outline thickness driven by the `stroke` aesthetic via [`scale-continuous`](../reference/scales/scale-continuous.qmd) or [`scale-manual`](../reference/scales/scale-manual.qmd).'
   alt: "Two stacked panels of blue circles whose outline thickness is driven by continuous and manual stroke scales."
 
 - slug: scale-size-radius
   section: scales
   title: "Size and radius scales"
-  description: '[`scale-radius`](../reference/scales/scale-radius.qmd), [`scale-size-area`](../reference/scales/scale-size-area.qmd), and [`scale-size-manual`](../reference/scales/scale-size-manual.qmd) compared on the same data.'
+  description: '[`scale-radius`](../reference/scales/scale-radius.qmd), [`scale-area`](../reference/scales/scale-area.qmd), and [`scale-manual`](../reference/scales/scale-manual.qmd) compared on the same data.'
   alt: "Three stacked scatter panels with marker size driven by linear radius, area-preserving square-root, and manual per-level size scales."
 
 - slug: scale-shape-linetype-binned
   section: scales
   title: "Binned shape and linetype"
-  description: 'Cut a continuous variable into bins with [`scale-shape-binned`](../reference/scales/scale-shape-binned.qmd) or [`scale-linetype-binned`](../reference/scales/scale-linetype-binned.qmd).'
+  description: 'Cut a continuous variable into shape or dash bins with [`scale-binned`](../reference/scales/scale-binned.qmd) keyed to `shape` or `linetype`.'
   alt: "Three stacked panels: scatters where marker shape is binned by a continuous variable, and a line chart where dash patterns are binned across six groups."
 
 - slug: shape-character
   section: scales
   title: "Character symbols as markers"
-  description: 'Map [`scale-shape-manual`](../reference/scales/scale-shape-manual.qmd) to a plain character, a Typst `sym.` symbol, or an emoji; any value outside the built-in keywords renders as a literal glyph.'
+  description: 'Map [`scale-manual`](../reference/scales/scale-manual.qmd) to a plain character, a Typst `sym.` symbol, or an emoji; any value outside the built-in keywords renders as a literal glyph.'
   alt: "Scatter plot of penguin flipper length against body mass where each species is drawn with a different glyph: the letter A, a filled star symbol, and a penguin emoji, instead of built-in marker shapes."
 
 - slug: scale-binned
   section: scales
   title: "Binned colour and size"
-  description: 'Stepped colour gradients and area-preserving size scales via [`scale-fill-steps`](../reference/scales/scale-fill-steps.qmd), [`scale-fill-fermenter`](../reference/scales/scale-fill-fermenter.qmd), and [`scale-size-area`](../reference/scales/scale-size-area.qmd).'
+  description: 'Stepped colour gradients and area-preserving size scales via [`scale-steps`](../reference/scales/scale-steps.qmd), [`scale-fermenter`](../reference/scales/scale-fermenter.qmd), and [`scale-area`](../reference/scales/scale-area.qmd).'
   alt: "Three side-by-side scatter panels comparing a 5-bin stepped fill, a 7-bin Spectral fermenter palette, and a sub-linear size-area scale."
 
 - slug: scale-brewer-gradient
   section: scales
   title: "ColorBrewer and gradient fills"
-  description: 'Discrete [`scale-fill-brewer`](../reference/scales/scale-fill-brewer.qmd) palettes alongside continuous [`scale-fill-gradient`](../reference/scales/scale-fill-gradient.qmd) and [`scale-fill-gradient2`](../reference/scales/scale-fill-gradient2.qmd).'
+  description: 'Discrete [`scale-brewer`](../reference/scales/scale-brewer.qmd) palettes alongside continuous [`scale-gradient`](../reference/scales/scale-gradient.qmd) and [`scale-gradient2`](../reference/scales/scale-gradient2.qmd).'
   alt: "Two by two grid contrasting Set1 and Spectral discrete brewer palettes with two-stop and diverging continuous gradient fills."
 
 - slug: scale-niche
   section: scales
   title: "Grey, hue, and distiller fills"
-  description: 'Niche fill scales: [`scale-fill-grey`](../reference/scales/scale-fill-grey.qmd), [`scale-fill-hue`](../reference/scales/scale-fill-hue.qmd), and [`scale-fill-distiller`](../reference/scales/scale-fill-distiller.qmd).'
+  description: 'Niche fill scales: [`scale-grey`](../reference/scales/scale-grey.qmd), [`scale-hue`](../reference/scales/scale-hue.qmd), and [`scale-distiller`](../reference/scales/scale-distiller.qmd).'
   alt: "Three side-by-side scatter panels rendered with a discrete grey ramp, a discrete hue wheel, and a continuous Spectral distiller palette."
 
 - slug: scale-date
   section: scales
   title: "Date axis"
-  description: 'ISO date strings on x parsed and laid out by [`scale-x-date`](../reference/scales/scale-x-date.qmd) with year-month tick labels.'
+  description: 'ISO date strings on x parsed and laid out by [`scale-date`](../reference/scales/scale-date.qmd) with year-month tick labels.'
   alt: "Line and point chart of the US personal savings rate from 2008 to 2009 with year-month axis labels along the bottom."
 
 - slug: scale-log-sqrt-reverse
   section: scales
   title: "Log, sqrt, and reverse axes"
-  description: 'Continuous axis transformations via [`scale-y-log10`](../reference/scales/scale-y-log10.qmd), [`scale-y-sqrt`](../reference/scales/scale-y-sqrt.qmd), and [`scale-y-reverse`](../reference/scales/scale-y-reverse.qmd).'
+  description: 'Continuous axis transformations via [`scale-log10`](../reference/scales/scale-log10.qmd), [`scale-sqrt`](../reference/scales/scale-sqrt.qmd), and [`scale-reverse`](../reference/scales/scale-reverse.qmd).'
   alt: "Two by two grid showing the same exponential growth curve under linear, log10, square-root, and reversed y-axis transformations."
 
 - slug: scale-expand
   section: scales
   title: "Axis expansion"
-  description: 'Tune axis breathing room via [`scale-*-continuous(expand:)`](../reference/scales/scale-x-continuous.qmd) or via [`coord-cartesian(expand: false)`](../reference/coord/coord-cartesian.qmd).'
+  description: 'Tune axis breathing room via [`scale-*-continuous(expand:)`](../reference/scales/scale-continuous.qmd) or via [`coord-cartesian(expand: false)`](../reference/coord/coord-cartesian.qmd).'
   alt: "Three side-by-side scatter panels comparing the default 5% expansion, scales with expand set to false, and coord-cartesian with expand set to false."
 
 - slug: identity-scales
   section: scales
   title: "Identity scales"
-  description: '[`scale-colour-identity`](../reference/scales/scale-colour-identity.qmd) and [`scale-shape-identity`](../reference/scales/scale-shape-identity.qmd) pass column values directly to the visual property.'
+  description: '[`scale-identity`](../reference/scales/scale-identity.qmd) and [`scale-identity`](../reference/scales/scale-identity.qmd) pass column values directly to the visual property.'
   alt: "Scatter of five points where hex colour strings drive marker fill and shape names drive marker glyph directly via identity scales."
 
 - slug: refs-trans
@@ -590,7 +590,7 @@
 - slug: scale-log-pre-stat
   section: scales
   title: "Log scale pre-transforms data"
-  description: '[`scale-x-log10`](../reference/scales/scale-x-log10.qmd) transforms data before stats run; [`geom-smooth`](../reference/geoms/geom-smooth.qmd) fits the line in log space.'
+  description: '[`scale-log10`](../reference/scales/scale-log10.qmd) transforms data before stats run; [`geom-smooth`](../reference/geoms/geom-smooth.qmd) fits the line in log space.'
   alt: "Two stacked panels of the same power-law dataset with a linear smoother: the linear x panel curves while the log10 x panel produces a straight line."
 
 - slug: coord-radial-clock
@@ -716,13 +716,13 @@
 - slug: scale-okabe-ito
   section: scales
   title: "Okabe-Ito palette"
-  description: 'The colour-vision-deficiency-safe discrete palette applied through [`scale-colour-okabe-ito`](../reference/scales/scale-colour-okabe-ito.qmd) and [`scale-fill-okabe-ito`](../reference/scales/scale-fill-okabe-ito.qmd).'
+  description: 'The colour-vision-deficiency-safe discrete palette applied through [`scale-okabe-ito`](../reference/scales/scale-okabe-ito.qmd) and [`scale-okabe-ito`](../reference/scales/scale-okabe-ito.qmd).'
   alt: "Scatter plot of penguin body mass against flipper length with per-species linear fits, coloured and filled by species using the Okabe-Ito palette."
 
 - slug: scale-limits-oob
   section: scales
   title: "Out-of-range handling"
-  description: 'With a scale `limits` set, `oob: "drop"` removes out-of-range values while `oob: "squish"` clamps them to the nearest endpoint of [`scale-fill-viridis-c`](../reference/scales/scale-fill-viridis-c.qmd).'
+  description: 'With a scale `limits` set, `oob: "drop"` removes out-of-range values while `oob: "squish"` clamps them to the nearest endpoint of [`scale-viridis-c`](../reference/scales/scale-viridis-c.qmd).'
   alt: "Two scatter panels of highway mpg against displacement filled by city mpg, the first dropping out-of-range fills to grey and the second squishing them to the palette endpoints."
 
 - slug: guide-legend-order

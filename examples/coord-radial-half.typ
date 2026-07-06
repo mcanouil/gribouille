@@ -18,9 +18,7 @@
     geom-point(size: 2pt),
   ),
   coord: coord-radial(theta: "x", end: calc.pi),
-  scales: (
-    scale-x-continuous(limits: (0, 12), expand: false),
-  ),
+  scales: scales(x: scale-continuous(limits: (0, 12), expand: false)),
   labels: labels(title: "Half-Day Load"),
   theme: theme-minimal(),
   width: 12cm,

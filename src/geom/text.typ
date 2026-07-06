@@ -92,7 +92,7 @@
 ///     geom-point(size: 2pt),
 ///     geom-text(mapping: aes(nudge-y: 0.2cm)),
 ///   ),
-///   scales: (scale-y-continuous(expand: 15%),),
+///   scales: scales(y: scale-continuous(expand: 15%)),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -114,7 +114,7 @@
 ///     geom-point(size: 2pt),
 ///     geom-text(segment: true),
 ///   ),
-///   scales: (scale-x-continuous(expand: 40%),scale-y-continuous(expand: 40%),),
+///   scales: scales(x: scale-continuous(expand: 40%), y: scale-continuous(expand: 40%)),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

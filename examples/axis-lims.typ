@@ -4,7 +4,7 @@
 
 #set page(width: auto, height: auto, margin: 0cm)
 
-#let base(title, extra-scales: (), extra-guides: (:)) = plot(
+#let base(title, extra-scales: (:), extra-guides: (:)) = plot(
   data: mpg,
   mapping: aes(x: "displ", y: "hwy"),
   layers: (geom-point(size: 2.5pt, alpha: 0.7),),
@@ -26,9 +26,6 @@
   ),
   base(
     "limits: (0, 8) / (0, 50)",
-    extra-scales: (
-      scale-x-continuous(limits: (0, 8)),
-      scale-y-continuous(limits: (0, 50)),
-    ),
+    extra-scales: scales(x: scale-continuous(limits: (0, 8)), y: scale-continuous(limits: (0, 50))),
   ),
 )

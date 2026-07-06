@@ -1,27 +1,26 @@
 // Stroke scale family unit tests.
 
 #import "../../src/scale/stroke.typ": (
-  scale-stroke-binned, scale-stroke-continuous, scale-stroke-identity,
-  scale-stroke-manual,
+  _stroke-binned, _stroke-continuous, _stroke-identity, _stroke-manual,
 )
 #import "../../src/utils/level-resolve.typ": resolve-level
 
-#let sc = scale-stroke-continuous(range: (0.2pt, 1.6pt))
+#let sc = _stroke-continuous(range: (0.2pt, 1.6pt))
 #assert.eq(sc.kind, "scale")
 #assert.eq(sc.aesthetic, "stroke")
 #assert.eq(sc.type, "continuous")
 #assert.eq(sc.range, (0.2pt, 1.6pt))
 
-#let si = scale-stroke-identity()
+#let si = _stroke-identity()
 #assert.eq(si.aesthetic, "stroke")
 #assert.eq(si.type, "identity")
 
-#let sm = scale-stroke-manual(values: (0.2pt, 0.8pt, 1.6pt))
+#let sm = _stroke-manual(values: (0.2pt, 0.8pt, 1.6pt))
 #assert.eq(sm.aesthetic, "stroke")
 #assert.eq(sm.type, "discrete")
 #assert.eq(sm.palette, (0.2pt, 0.8pt, 1.6pt))
 
-#let sb = scale-stroke-binned(n-breaks: 5)
+#let sb = _stroke-binned(n-breaks: 5)
 #assert.eq(sb.aesthetic, "stroke")
 #assert.eq(sb.binned, true)
 #assert.eq(sb.n-breaks, 5)

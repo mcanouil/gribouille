@@ -49,7 +49,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(stat: stat-sum(), size: 3pt),),
-///   scales: (scale-size-area(range: (2pt, 14pt)),),
+///   scales: scales(size: scale-area(range: (2pt, 14pt))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

@@ -41,7 +41,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y", z: "z"),
 ///   layers: (geom-rect(stat: stat-summary-2d(fun: "mean", bins: 25)),),
-///   scales: (scale-fill-viridis-c(),),
+///   scales: scales(fill: scale-viridis-c()),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

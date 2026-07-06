@@ -62,13 +62,13 @@
 // --- train trains the late-bound channel and matches the baseline ------
 
 #let trained-baseline = train(
-  scales: (),
+  scales: (:),
   layers: (baseline-prep,),
   mapping: none,
   data: none,
 )
 #let trained-aliased = train(
-  scales: (),
+  scales: (:),
   layers: (aliased-prep,),
   mapping: none,
   data: none,

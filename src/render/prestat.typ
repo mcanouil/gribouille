@@ -72,7 +72,7 @@
 }
 
 #let _preprocess-data(spec) = {
-  let pre = _scale-pre-transforms(spec.at("scales", default: ()))
+  let pre = _scale-pre-transforms(spec.at("scales", default: (:)))
   if pre.len() == 0 { return spec }
   let new-layers = spec.layers.map(layer => {
     let mapping = merge-mapping(layer, spec.mapping)

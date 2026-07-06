@@ -40,7 +40,7 @@
     geom-point(size: 2.5pt),
     geom-point(data: stalled, shape: "cross", size: 3.5pt),
   ),
-  scales: (scale-x-log10(), scale-y-log10()),
+  scales: scales(x: scale-log10(), y: scale-log10()),
   facet: facet-wrap("case", ncolumn: 4),
   labels: labels(
     title: "Compile time grows superlinearly with element count",

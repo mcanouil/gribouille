@@ -104,7 +104,7 @@
 ///     geom-point(size: 2pt),
 ///     geom-label(mapping: aes(nudge-y: 0.25cm)),
 ///   ),
-///   scales: (scale-y-continuous(expand: 15%),),
+///   scales: scales(y: scale-continuous(expand: 15%)),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -132,7 +132,7 @@
 ///       inset: 4pt,
 ///     ),
 ///   ),
-///   scales: (scale-y-continuous(expand: 15%),),
+///   scales: scales(y: scale-continuous(expand: 15%)),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

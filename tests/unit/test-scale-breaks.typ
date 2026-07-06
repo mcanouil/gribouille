@@ -2,10 +2,10 @@
 // auto `pretty()` set, and breaks outside the domain are dropped.
 
 #import "../../src/scale/train.typ": train
-#import "../../src/scale/continuous.typ": (
-  scale-x-continuous, scale-x-reverse, scale-y-continuous,
+#import "../../src/scale/constructors.typ": (
+  scale-continuous, scale-date, scale-reverse,
 )
-#import "../../src/scale/date.typ": scale-x-date
+#import "../../src/scales.typ": scales
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/aes.typ": aes
 #import "../../src/render/axis-format.typ": _axis-breaks
@@ -20,7 +20,7 @@
 
 // User breaks fully inside the limits are returned verbatim, in order.
 #let trained = train(
-  scales: (scale-x-continuous(limits: (0, 10), breaks: (0, 5, 10)),),
+  scales: scales(x: scale-continuous(limits: (0, 10), breaks: (0, 5, 10))),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: df,
@@ -29,7 +29,7 @@
 
 // Breaks outside the domain are dropped; only in-range values survive.
 #let trained-oob = train(
-  scales: (scale-x-continuous(limits: (0, 10), breaks: (0, 5, 99)),),
+  scales: scales(x: scale-continuous(limits: (0, 10), breaks: (0, 5, 99))),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: df,
@@ -46,7 +46,7 @@
 
 // A single in-range break on y is honoured on its own.
 #let trained-y = train(
-  scales: (scale-y-continuous(limits: (0, 30), breaks: (15,)),),
+  scales: scales(y: scale-continuous(limits: (0, 30), breaks: (15,))),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: df,
@@ -56,7 +56,7 @@
 // A reversed scale with descending `limits` stores its domain as `(hi, lo)`;
 // in-range breaks must still survive the domain filter.
 #let trained-rev = train(
-  scales: (scale-x-reverse(limits: (2024, 2010), breaks: (2012, 2016, 2020)),),
+  scales: scales(x: scale-reverse(limits: (2024, 2010), breaks: (2012, 2016, 2020))),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: df,
@@ -65,7 +65,7 @@
 
 // A scalar `breaks` is coerced to a one-element array, not panicked on.
 #let trained-scalar = train(
-  scales: (scale-x-continuous(limits: (0, 10), breaks: 5),),
+  scales: scales(x: scale-continuous(limits: (0, 10), breaks: 5)),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: df,
@@ -75,7 +75,7 @@
 // Without limits, explicit breaks widen the domain so out-of-range breaks
 // (0 below the data minimum, 5 above the maximum) become visible.
 #let trained-expand = train(
-  scales: (scale-x-continuous(breaks: (0, 5)),),
+  scales: scales(x: scale-continuous(breaks: (0, 5))),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: df,
@@ -86,7 +86,7 @@
 // A side pinned by an explicit limit is not widened: the low bound stays at 5
 // so the break at 0 is dropped, while the unpinned high side expands to 20.
 #let trained-pin = train(
-  scales: (scale-x-continuous(limits: (5, auto), breaks: (0, 20)),),
+  scales: scales(x: scale-continuous(limits: (5, auto), breaks: (0, 20))),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: df,
@@ -96,14 +96,14 @@
 
 // `auto` on one side of `limits` keeps the trained bound for that side.
 #let trained-auto-hi = train(
-  scales: (scale-x-continuous(limits: (auto, 10)),),
+  scales: scales(x: scale-continuous(limits: (auto, 10))),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: df,
 )
 #assert.eq(trained-auto-hi.x.domain, (1.0, 10.0))
 #let trained-auto-lo = train(
-  scales: (scale-x-continuous(limits: (0, auto)),),
+  scales: scales(x: scale-continuous(limits: (0, auto))),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: df,
@@ -130,7 +130,7 @@
   (x: "2024-12-01", y: "3"),
 )
 #let trained-iso = train(
-  scales: (scale-x-date(breaks: ("2024-01-01", "2024-06-01", "2024-12-01")),),
+  scales: scales(x: scale-date(breaks: ("2024-01-01", "2024-06-01", "2024-12-01"))),
   layers: layers,
   mapping: aes(x: "x", y: "y"),
   data: date-df,

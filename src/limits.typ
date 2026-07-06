@@ -2,10 +2,9 @@
 ///!
 ///! `expand-limits` folds extra values into the trained min/max so the final
 ///! domain spans both the data and the supplied points, without clipping.
-///! For clipping use \@scale-x-continuous and \@scale-y-continuous with their
-///! `limits:` argument directly.
+///! For clipping use \@scale-continuous with its `limits:` argument directly.
 
-#import "scale/continuous.typ": scale-x-continuous, scale-y-continuous
+#import "scale/continuous.typ": _continuous-scale
 
 /// Ensure the trained domain includes the supplied values without replacing it.
 ///
@@ -22,7 +21,7 @@
 ///
 /// \@param y Single value or array of values the y-axis must include, or `none`.
 ///
-/// \@returns Array of scale specs ready to splat into `scales:` on \@plot.
+/// \@returns Aesthetic-keyed dictionary of scale specs ready to pass to `scales:` on \@plot.
 ///
 /// \@examples Force a y baseline at zero so positive observations sit above
 /// the axis floor.
@@ -54,19 +53,19 @@
 /// )
 /// ```
 ///
-/// \@see \@scale-x-continuous, \@scale-y-continuous
+/// \@see \@scale-continuous, \@scales
 #let expand-limits(x: none, y: none) = {
   let _values(v) = if type(v) == array { v } else { (v,) }
-  let out = ()
+  let out = (:)
   if x != none {
-    let s = scale-x-continuous()
+    let s = _continuous-scale("x")
     s.insert("extend", _values(x))
-    out.push(s)
+    out.insert("x", s)
   }
   if y != none {
-    let s = scale-y-continuous()
+    let s = _continuous-scale("y")
     s.insert("extend", _values(y))
-    out.push(s)
+    out.insert("y", s)
   }
   out
 }

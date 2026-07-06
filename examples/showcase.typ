@@ -17,7 +17,7 @@
     geom-smooth(method: "lm", alpha: 0.2),
   ),
   facet: facet-wrap("island", labeller: label-both()),
-  scales: (scale-y-continuous(labels: format-comma()),),
+  scales: scales(y: scale-continuous(labels: format-comma())),
   labels: labels(
     title: "Penguin Morphology by Island",
     subtitle: "Flipper length versus body mass with a per-species linear fit",

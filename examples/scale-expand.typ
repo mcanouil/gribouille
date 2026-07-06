@@ -7,7 +7,7 @@
 
 #let pts = range(1, 11).map(i => (x: i, y: i))
 
-#let base(title, scales: (), coord-arg: none) = plot(
+#let base(title, scales: (:), coord-arg: none) = plot(
   data: pts,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 2.5pt, fill: rgb("#1f77b4")),),
@@ -25,10 +25,7 @@
   base("default (5% expand)"),
   base(
     "expand: false",
-    scales: (
-      scale-x-continuous(expand: false),
-      scale-y-continuous(expand: false),
-    ),
+    scales: scales(x: scale-continuous(expand: false), y: scale-continuous(expand: false)),
   ),
   base(
     "coord-cartesian(expand: false)",

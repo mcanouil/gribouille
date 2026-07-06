@@ -31,7 +31,7 @@
     geom-line(),
     geom-point(size: 2.5pt),
   ),
-  scales: (scale-x-log10(), scale-y-log10()),
+  scales: scales(x: scale-log10(), y: scale-log10()),
   facet: facet-wrap("case", ncolumn: 4),
   labels: labels(
     title: "Vector output balloons with element count, raster stays compact",

@@ -25,6 +25,6 @@
 #grid(
   columns: 1,
   row-gutter: 0.6cm,
-  base((scale-fill-viridis-c(limits: (15, 25)),)),
-  base((scale-fill-viridis-c(limits: (15, 25), oob: "squish"),)),
+  base(scales(fill: scale-viridis-c(limits: (15, 25)))),
+  base(scales(fill: scale-viridis-c(limits: (15, 25), oob: "squish"))),
 )

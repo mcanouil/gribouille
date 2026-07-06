@@ -1,9 +1,7 @@
 // Okabe-Ito palette + default discrete scale unit tests.
 
 #import "../../src/utils/palette.typ": default-discrete, okabe-ito
-#import "../../src/scale/colour.typ": (
-  scale-colour-okabe-ito, scale-fill-okabe-ito,
-)
+#import "../../src/scale/colour.typ": _scale-okabe-ito
 
 // Canonical 8-colour Okabe-Ito ordering (Wong 2011, Nature Methods).
 #assert.eq(okabe-ito.len(), 8)
@@ -19,8 +17,8 @@
 // Okabe-Ito is the library default for unmapped discrete aesthetics.
 #assert.eq(default-discrete, okabe-ito)
 
-// scale-colour-okabe-ito carries the palette and aesthetic.
-#let sc = scale-colour-okabe-ito()
+// scale-okabe-ito carries the palette and aesthetic.
+#let sc = _scale-okabe-ito("colour")
 #assert.eq(sc.kind, "scale")
 #assert.eq(sc.aesthetic, "colour")
 #assert.eq(sc.type, "discrete")
@@ -29,8 +27,8 @@
 #assert.eq(sc.limits, none)
 #assert.eq(sc.labels, auto)
 
-// scale-fill-okabe-ito mirrors the colour twin with aesthetic "fill".
-#let sf = scale-fill-okabe-ito(name: "Group", limits: ("a", "b", "c"))
+// scale-okabe-ito mirrors the colour twin with aesthetic "fill".
+#let sf = _scale-okabe-ito("fill", name: "Group", limits: ("a", "b", "c"))
 #assert.eq(sf.aesthetic, "fill")
 #assert.eq(sf.type, "discrete")
 #assert.eq(sf.palette, okabe-ito)

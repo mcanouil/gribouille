@@ -1,12 +1,13 @@
 ///! Plot-level scale bindings.
 ///!
-///! Map aesthetic names to scale specs built with \@scale-x-continuous,
-///! \@scale-colour-viridis-d, and friends, then feed the result to \@plot via
+///! Map aesthetic names to scale specs built with \@scale-continuous,
+///! \@scale-viridis-d, and friends, then feed the result to \@plot via
 ///! the `scales:` parameter. Keying by aesthetic mirrors \@guides: a later entry
 ///! for the same aesthetic overrides an earlier one.
 
 #import "utils/errors.typ": fail, fail-enum
 #import "aes-keys.typ": AES-KEYS
+#import "scale/bind.typ": bind-scale
 
 /// Bind scale specifications to aesthetics.
 ///
@@ -40,8 +41,8 @@
 ///   mapping: aes(x: "x", y: "y", colour: "g"),
 ///   layers: (geom-point(size: 3pt),),
 ///   scales: scales(
-///     x: scale-x-continuous(limits: (0, 4)),
-///     colour: scale-colour-viridis-d(),
+///     x: scale-continuous(limits: (0, 4)),
+///     colour: scale-viridis-d(),
 ///   ),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -56,7 +57,7 @@
       "expects named arguments keyed by aesthetic; got "
         + str(args.pos().len())
         + " positional value(s)",
-      hint: "Key each scale by aesthetic, e.g. scales(x: scale-x-continuous()).",
+      hint: "Key each scale by aesthetic, e.g. scales(x: scale-continuous()).",
     )
   }
   let out = (:)
@@ -71,27 +72,23 @@
       )
     }
     if v == auto or v == none { continue }
-    if type(v) != dictionary or v.at("kind", default: none) != "scale" {
+    if (
+      type(v) != dictionary
+        or v.at("kind", default: none) != "scale"
+        or (
+          "family" not in v
+        )
+    ) {
       fail(
         "scales",
         "value for '"
           + k
-          + "' must be a scale spec (e.g. scale-x-continuous,"
-          + " scale-colour-viridis-d) or `auto` for the default; got "
+          + "' must be a scale spec (e.g. scale-continuous,"
+          + " scale-viridis-d) or `auto` for the default; got "
           + repr(v),
       )
     }
-    let baked = v.at("aesthetic", default: none)
-    if baked != none and baked != k {
-      fail(
-        "scales",
-        "scale keyed under '" + k + "' is a " + baked + " scale",
-        hint: "Key each scale under its own aesthetic, e.g. scales("
-          + baked
-          + ": ...).",
-      )
-    }
-    out.insert(k, (..v, aesthetic: k))
+    out.insert(k, bind-scale(k, v))
   }
   out
 }

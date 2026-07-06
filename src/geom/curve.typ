@@ -97,7 +97,7 @@
 ///   data: d,
 ///   mapping: aes(x: "lo", y: "grp", xend: "hi", yend: "grp"),
 ///   layers: (geom-curve(stroke: 2pt),),
-///   scales: (scale-y-discrete(),),
+///   scales: scales(y: scale-discrete()),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

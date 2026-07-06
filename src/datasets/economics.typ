@@ -60,7 +60,7 @@
 ///   data: economics,
 ///   mapping: aes(x: "date", y: "unemploy"),
 ///   layers: (geom-line(stroke: 1pt),),
-///   scales: (scale-x-date(),),
+///   scales: scales(x: scale-date()),
 ///   width: 11cm,
 ///   height: 6cm,
 /// )
@@ -77,7 +77,7 @@
 ///     geom-line(mapping: aes(y: "psavert"), colour: rgb("#1b9e77"), stroke: 1pt),
 ///     geom-line(mapping: aes(y: "uempmed"), colour: rgb("#d95f02"), stroke: 1pt),
 ///   ),
-///   scales: (scale-x-date(),),
+///   scales: scales(x: scale-date()),
 ///   labels: labels(y: "Percent / Weeks"),
 ///   width: 11cm,
 ///   height: 6cm,

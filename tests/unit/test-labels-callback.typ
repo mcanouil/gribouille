@@ -2,9 +2,10 @@
 // composes with the format helpers.
 
 #import "../../lib.typ": (
+  scales,
   aes, format-comma, format-number, format-percent, format-scientific,
-  format-title, geom-col, geom-point, labels, plot, scale-x-continuous,
-  scale-x-discrete, scale-y-continuous, typst,
+  format-title, geom-col, geom-point, labels, plot, scale-continuous,
+  scale-discrete, scale-continuous, typst,
 )
 
 #let d = (
@@ -19,10 +20,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  scales: (
-    scale-x-continuous(labels: format-comma()),
-    scale-y-continuous(labels: format-scientific()),
-  ),
+  scales: scales(x: scale-continuous(labels: format-comma()), y: scale-continuous(labels: format-scientific())),
   width: 10cm,
   height: 6cm,
 )
@@ -37,7 +35,7 @@
   data: pct,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-col(),),
-  scales: (scale-y-continuous(labels: format-percent()),),
+  scales: scales(y: scale-continuous(labels: format-percent())),
   width: 10cm,
   height: 6cm,
 )
@@ -53,7 +51,7 @@
   data: groups,
   mapping: aes(x: "x", y: "y", fill: "x"),
   layers: (geom-col(),),
-  scales: (scale-x-discrete(labels: format-title()),),
+  scales: scales(x: scale-discrete(labels: format-title())),
   width: 10cm,
   height: 6cm,
 )
@@ -63,7 +61,7 @@
   data: groups,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-col(),),
-  scales: (scale-x-discrete(labels: x => "[" + x + "]"),),
+  scales: scales(x: scale-discrete(labels: x => "[" + x + "]")),
   width: 10cm,
   height: 6cm,
 )
@@ -73,7 +71,7 @@
   data: groups,
   mapping: aes(x: "x", y: "y", fill: typst("x")),
   layers: (geom-col(),),
-  scales: (scale-x-discrete(labels: x => "$" + x + "$"),),
+  scales: scales(x: scale-discrete(labels: x => "$" + x + "$")),
   width: 10cm,
   height: 6cm,
 )

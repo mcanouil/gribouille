@@ -85,7 +85,7 @@
 ///   data: ((x: 1, y: 1234.5), (x: 2, y: 23456.7)),
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(),),
-///   scales: (scale-y-continuous(labels: format-number()),),
+///   scales: scales(y: scale-continuous(labels: format-number())),
 ///   width: 8cm,
 ///   height: 5cm,
 /// )
@@ -122,7 +122,7 @@
 ///
 /// \@returns A closure `value => string`.
 ///
-/// \@examples Thread `format-comma()` into `scale-y-continuous(labels: ...)`
+/// \@examples Thread `format-comma()` into `scale-continuous(labels: ...)`
 /// so y-axis breaks render with English thousands separators.
 /// ```
 /// //| alt: "Scatter chart of three points with y-axis tick labels rendered with comma thousands separators via format-comma."
@@ -130,7 +130,7 @@
 ///   data: ((x: 1, y: 1234), (x: 2, y: 23456), (x: 3, y: 345678)),
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 3pt),),
-///   scales: (scale-y-continuous(labels: format-comma()),),
+///   scales: scales(y: scale-continuous(labels: format-comma())),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -174,7 +174,7 @@
 ///   data: ((g: "a", y: 0.1), (g: "b", y: 0.45), (g: "c", y: 0.9)),
 ///   mapping: aes(x: "g", y: "y"),
 ///   layers: (geom-col(),),
-///   scales: (scale-y-continuous(labels: format-percent()),),
+///   scales: scales(y: scale-continuous(labels: format-percent())),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -229,7 +229,7 @@
 ///   data: ((x: 1, y: 1234.5), (x: 2, y: 7890.1), (x: 3, y: 12345.6)),
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 3pt),),
-///   scales: (scale-y-continuous(labels: format-currency(symbol: "£")),),
+///   scales: scales(y: scale-continuous(labels: format-currency(symbol: "£"))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -275,7 +275,7 @@
 ///   data: ((x: 1, y: 1e-4), (x: 2, y: 1e-2), (x: 3, y: 1), (x: 4, y: 1e4)),
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 3pt),),
-///   scales: (scale-y-continuous(labels: format-scientific(digits: 2)),),
+///   scales: scales(y: scale-continuous(labels: format-scientific(digits: 2))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -347,7 +347,7 @@
 ///   data: d,
 ///   mapping: aes(x: "g", y: "y"),
 ///   layers: (geom-col(),),
-///   scales: (scale-x-discrete(labels: format-title()),),
+///   scales: scales(x: scale-discrete(labels: format-title())),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -385,7 +385,7 @@
 ///   data: d,
 ///   mapping: aes(x: "g", y: "y"),
 ///   layers: (geom-col(),),
-///   scales: (scale-x-discrete(labels: format-upper()),),
+///   scales: scales(x: scale-discrete(labels: format-upper())),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -414,7 +414,7 @@
 ///   data: d,
 ///   mapping: aes(x: "g", y: "y"),
 ///   layers: (geom-col(),),
-///   scales: (scale-x-discrete(labels: format-lower()),),
+///   scales: scales(x: scale-discrete(labels: format-lower())),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -450,7 +450,7 @@
 ///   data: d,
 ///   mapping: aes(x: "g", y: "y"),
 ///   layers: (geom-col(),),
-///   scales: (scale-x-discrete(labels: format-wrap(width: 8)),),
+///   scales: scales(x: scale-discrete(labels: format-wrap(width: 8))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

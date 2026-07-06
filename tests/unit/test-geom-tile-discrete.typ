@@ -4,7 +4,8 @@
 // `width: 1` tile fills exactly one slot.
 
 #import "../../src/scale/train.typ": discrete-slot-width, train
-#import "../../src/scale/discrete.typ": scale-x-discrete, scale-y-discrete
+#import "../../src/scale/constructors.typ": scale-discrete
+#import "../../src/scales.typ": scales
 #import "../../src/render/domain.typ": _post-train
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/geom/tile.typ": geom-tile
@@ -22,7 +23,7 @@
 #let dd-layers = (geom-tile(),)
 #let dd-prepared = dd-layers.map(l => _prepare-layer(l, dd-mapping, dd-data))
 #let dd-trained = train(
-  scales: (scale-x-discrete(), scale-y-discrete()),
+  scales: scales(x: scale-discrete(), y: scale-discrete()),
   layers: dd-prepared,
   mapping: dd-mapping,
   data: dd-data,
@@ -55,7 +56,7 @@
 #let dc-layers = (geom-tile(),)
 #let dc-prepared = dc-layers.map(l => _prepare-layer(l, dc-mapping, dc-data))
 #let dc-trained = train(
-  scales: (scale-x-discrete(),),
+  scales: scales(x: scale-discrete()),
   layers: dc-prepared,
   mapping: dc-mapping,
   data: dc-data,

@@ -6,7 +6,8 @@
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/render/prestat.typ": _rewrite-factor-cols
 #import "../../src/scale/train.typ": map-discrete, train
-#import "../../src/scale/discrete.typ": scale-x-discrete
+#import "../../src/scale/constructors.typ": scale-discrete
+#import "../../src/scales.typ": scales
 #import "../../src/data.typ": as-factor
 #import "../../src/aes.typ": aes
 #import "../../src/geom/jitter.typ": geom-jitter

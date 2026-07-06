@@ -24,8 +24,8 @@
 #grid(
   columns: 1,
   row-gutter: 0.5cm,
-  panel("Linear y", ()),
-  panel("Log10 y", (scale-y-log10(),)),
-  panel("Sqrt y", (scale-y-sqrt(),)),
-  panel("Reversed y", (scale-y-reverse(),)),
+  panel("Linear y", (:)),
+  panel("Log10 y", scales(y: scale-log10())),
+  panel("Sqrt y", scales(y: scale-sqrt())),
+  panel("Reversed y", scales(y: scale-reverse())),
 )

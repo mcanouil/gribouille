@@ -1,8 +1,8 @@
 ///! Scale expansion plumbing for positional scales.
 ///!
-///! Positional scales (`scale-x-continuous`, `scale-y-continuous`,
-///! `scale-x-discrete`, `scale-y-discrete`, `scale-x-binned`, `scale-y-binned`,
-///! `scale-x-date`, etc.) expose an `expand:` argument that pads the data
+///! Positional scales (`scale-continuous`, `scale-continuous`,
+///! `scale-discrete`, `scale-discrete`, `scale-binned`, `scale-binned`,
+///! `scale-date`, etc.) expose an `expand:` argument that pads the data
 ///! domain so points are not flush against the panel edges.
 ///!
 ///! Each side accepts a `ratio` (multiplicative breathing room, proportional

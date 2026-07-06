@@ -1,10 +1,11 @@
-// Pre-stat scale transforms. `scale-x-log10` rewrites layer rows in place
+// Pre-stat scale transforms. `scale-log10` rewrites layer rows in place
 // before stats run, so the trained domain and downstream mapping operate in
 // stat space. Mirrors plotnine semantics.
 
 #import "../../src/aes.typ": aes
 #import "../../src/render/prestat.typ": _preprocess-data
-#import "../../src/scale/continuous.typ": scale-x-log10, scale-y-sqrt
+#import "../../src/scale/constructors.typ": scale-log10, scale-sqrt
+#import "../../src/scales.typ": scales
 #import "../../src/scale/train.typ": map-axis, map-axis-data, train
 
 #let raw = (
@@ -28,7 +29,7 @@
       inherit-aes: true,
     ),
   ),
-  scales: (scale-x-log10(), scale-y-sqrt()),
+  scales: scales(x: scale-log10(), y: scale-sqrt()),
 )
 
 #let pre-spec = _preprocess-data(spec)
@@ -73,7 +74,7 @@
       inherit-aes: true,
     ),
   ),
-  scales: (),
+  scales: (:),
 ))
 #assert.eq(no-pre.layers.at(0).at("data", default: none), none)
 

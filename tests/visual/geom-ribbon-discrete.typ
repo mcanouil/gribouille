@@ -20,7 +20,7 @@
   data: d,
   mapping: aes(x: "quarter", ymin: "lo", ymax: "hi"),
   layers: (geom-ribbon(alpha: 0.4),),
-  scales: (scale-x-discrete(),),
+  scales: scales(x: scale-discrete()),
   labels: labels(title: "geom-ribbon over a discrete x axis"),
   theme: theme-minimal(),
   width: 10cm,

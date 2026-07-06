@@ -20,7 +20,7 @@
   data: d,
   mapping: aes(x: "quarter", y: "value"),
   layers: (geom-area(alpha: 0.5),),
-  scales: (scale-x-discrete(),),
+  scales: scales(x: scale-discrete()),
   labels: labels(title: "geom-area over a discrete x axis"),
   theme: theme-minimal(),
   width: 10cm,

@@ -16,7 +16,7 @@
     data: continuous-d,
     mapping: aes(x: "x", y: "y", fill: "z"),
     layers: (geom-point(size: 4pt),),
-    scales: (scale-fill-steps(n-breaks: 5),),
+    scales: scales(fill: scale-steps(n-breaks: 5)),
     labels: labels(
       title: "Scale-Fill-Steps (5 Bins)",
       x: "X",
@@ -31,7 +31,7 @@
     data: continuous-d,
     mapping: aes(x: "x", y: "y", fill: "z"),
     layers: (geom-point(size: 4pt),),
-    scales: (scale-fill-fermenter(palette: "Spectral", n-breaks: 7),),
+    scales: scales(fill: scale-fermenter(palette: "Spectral", n-breaks: 7)),
     labels: labels(
       title: "Scale-Fill-Fermenter (Spectral, 7)",
       x: "X",
@@ -46,7 +46,7 @@
     data: area-d,
     mapping: aes(x: "x", y: "y", size: "w"),
     layers: (geom-point(fill: rgb("#1f77b4")),),
-    scales: (scale-size-area(range: (1pt, 12pt)),),
+    scales: scales(size: scale-area(range: (1pt, 12pt))),
     labels: labels(
       title: "Scale-Size-Area (sub-linear)",
       x: "X",

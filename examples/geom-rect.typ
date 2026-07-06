@@ -21,9 +21,7 @@
     fill: "version",
   ),
   layers: (geom-rect(alpha: 0.5, stroke: 0.5pt),),
-  scales: (
-    scale-x-continuous(breaks: (2018, 2020, 2022, 2024)),
-  ),
+  scales: scales(x: scale-continuous(breaks: (2018, 2020, 2022, 2024))),
   labels: labels(
     title: "Cumulative Releases per Major Version",
     subtitle: "Each box spans the version's lifetime on the timeline",

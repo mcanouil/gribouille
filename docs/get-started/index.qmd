@@ -188,8 +188,8 @@ Adding a [`geom-smooth`](../reference/geoms/geom-smooth.qmd) draws one fitted li
 
 ### 4. Pick a custom colour palette
 
-[`scale-colour-discrete`](../reference/scales/scale-colour-discrete.qmd) replaces the default palette.
-A matching [`scale-fill-discrete`](../reference/scales/scale-fill-discrete.qmd) keeps the smooth ribbon's fill in sync with the points.
+[`scale-discrete`](../reference/scales/scale-discrete.qmd) replaces the default palette.
+A matching [`scale-discrete`](../reference/scales/scale-discrete.qmd) keeps the smooth ribbon's fill in sync with the points.
 
 ::: {layout-ncol="2" layout-valign="center"}
 
@@ -215,10 +215,7 @@ A matching [`scale-fill-discrete`](../reference/scales/scale-fill-discrete.qmd) 
     geom-point(size: 2pt, alpha: 0.6),
     geom-smooth(method: "lm", alpha: 0.2),
   ),
-  scales: (
-    scale-colour-discrete(palette: cb),
-    scale-fill-discrete(palette: cb),
-  ),
+  scales: scales(colour: scale-discrete(palette: cb), fill: scale-discrete(palette: cb)),
   width: 12cm,
   height: 9cm,
 )
@@ -255,10 +252,7 @@ The same scales apply to every panel, so the species clusters can be compared ac
     geom-point(size: 2pt, alpha: 0.6),
     geom-smooth(method: "lm", alpha: 0.2),
   ),
-  scales: (
-    scale-colour-discrete(palette: cb),
-    scale-fill-discrete(palette: cb),
-  ),
+  scales: scales(colour: scale-discrete(palette: cb), fill: scale-discrete(palette: cb)),
   facet: facet-wrap("island"),
   width: 12cm,
   height: 9cm,
@@ -297,10 +291,7 @@ The single [`theme`](../reference/themes/theme.qmd) call further tweaks the titl
     geom-point(size: 2pt, alpha: 0.6),
     geom-smooth(method: "lm", alpha: 0.2),
   ),
-  scales: (
-    scale-colour-discrete(palette: cb),
-    scale-fill-discrete(palette: cb),
-  ),
+  scales: scales(colour: scale-discrete(palette: cb), fill: scale-discrete(palette: cb)),
   facet: facet-wrap("island"),
   labels: labels(
     title: "Penguin Body Mass Scales with Flipper Length",
@@ -323,7 +314,7 @@ The single [`theme`](../reference/themes/theme.qmd) call further tweaks the titl
 ### 7. Format tick labels with `format-comma`
 
 Tick labels accept any formatter callable.
-[`scale-y-continuous`](../reference/scales/scale-y-continuous.qmd) with `labels: format-comma()` renders body mass as `3,000`, `4,000`, ... instead of bare digits.
+[`scale-continuous`](../reference/scales/scale-continuous.qmd) with `labels: format-comma()` renders body mass as `3,000`, `4,000`, ... instead of bare digits.
 Sibling formatters [`format-percent`](../reference/helpers/format-percent.qmd), [`format-currency`](../reference/helpers/format-currency.qmd), and [`format-scientific`](../reference/helpers/format-scientific.qmd) share the same call shape.
 
 ::: {layout-ncol="2" layout-valign="center"}
@@ -350,11 +341,7 @@ Sibling formatters [`format-percent`](../reference/helpers/format-percent.qmd), 
     geom-point(size: 2pt, alpha: 0.6),
     geom-smooth(method: "lm", alpha: 0.2),
   ),
-  scales: (
-    scale-colour-discrete(palette: cb),
-    scale-fill-discrete(palette: cb),
-    scale-y-continuous(labels: format-comma()),
-  ),
+  scales: scales(colour: scale-discrete(palette: cb), fill: scale-discrete(palette: cb), y: scale-continuous(labels: format-comma())),
   facet: facet-wrap("island"),
   labels: labels(
     title: "Penguin Body Mass Scales with Flipper Length",
@@ -404,11 +391,7 @@ Wiring it to the `plot-subtitle` theme surface lets the subtitle mix prose with 
     geom-point(size: 2pt, alpha: 0.6),
     geom-smooth(method: "lm", alpha: 0.2),
   ),
-  scales: (
-    scale-colour-discrete(palette: cb),
-    scale-fill-discrete(palette: cb),
-    scale-y-continuous(labels: format-comma()),
-  ),
+  scales: scales(colour: scale-discrete(palette: cb), fill: scale-discrete(palette: cb), y: scale-continuous(labels: format-comma())),
   facet: facet-wrap("island"),
   labels: labels(
     title: "Penguin Body Mass Scales with Flipper Length",
@@ -480,11 +463,7 @@ Every row also carries an `island` value so [`facet-wrap`](../reference/facets/f
       size: 9pt,
     ),
   ),
-  scales: (
-    scale-colour-discrete(palette: cb),
-    scale-fill-discrete(palette: cb),
-    scale-y-continuous(labels: format-comma()),
-  ),
+  scales: scales(colour: scale-discrete(palette: cb), fill: scale-discrete(palette: cb), y: scale-continuous(labels: format-comma())),
   facet: facet-wrap("island"),
   labels: labels(
     title: "Penguin Body Mass Scales with Flipper Length",

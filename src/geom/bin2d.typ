@@ -5,7 +5,7 @@
 
 /// Two-dimensional bin layer: counts (x, y) into a rectangular grid and
 /// draws one rectangle per non-empty cell. The fill aesthetic defaults to
-/// `_count`, so a continuous fill scale (\@scale-fill-viridis-c, etc.) shades
+/// `_count`, so a continuous fill scale (\@scale-viridis-c, etc.) shades
 /// the cells by frequency.
 ///
 /// `bins` and `binwidth` accept either a scalar or an `(x, y)` pair.
@@ -46,7 +46,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-bin-2d(bins: 20),),
-///   scales: (scale-fill-viridis-c(option: "magma"),),
+///   scales: scales(fill: scale-viridis-c(option: "magma")),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

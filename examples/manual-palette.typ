@@ -1,4 +1,4 @@
-// scale-colour-manual and scale-fill-manual: user-supplied palettes.
+// scale-manual and scale-manual: user-supplied palettes.
 
 #import "../lib.typ": *
 
@@ -18,11 +18,7 @@
     geom-point(size: 2pt, alpha: 0.7),
     geom-smooth(method: "lm", alpha: 0.15),
   ),
-  scales: (
-    scale-colour-manual(values: palette),
-    scale-fill-manual(values: palette),
-    scale-y-continuous(labels: format-comma()),
-  ),
+  scales: scales(colour: scale-manual(values: palette), fill: scale-manual(values: palette), y: scale-continuous(labels: format-comma())),
   labels: labels(
     title: "Penguin Species Drawn with a Custom Palette",
     x: "Flipper Length (mm)",

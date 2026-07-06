@@ -28,7 +28,7 @@
     geom-spoke(stroke: 0.8pt),
     geom-point(size: 1.5pt),
   ),
-  scales: (scale-colour-viridis-c(),),
+  scales: scales(colour: scale-viridis-c()),
   coord: coord-fixed(),
   labels: labels(
     title: "Radial Vector Field",

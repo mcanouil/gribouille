@@ -32,7 +32,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-hex(bins: 20),),
-///   scales: (scale-fill-viridis-c(),),
+///   scales: scales(fill: scale-viridis-c()),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

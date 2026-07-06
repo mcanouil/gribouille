@@ -1,26 +1,27 @@
 // Identity scale specs and training.
 
-#import "../../src/scale/colour.typ": scale-colour-identity, scale-fill-identity
-#import "../../src/scale/shape.typ": scale-shape-identity
-#import "../../src/scale/linetype.typ": scale-linetype-identity
+#import "../../src/scale/colour.typ": _scale-identity
+#import "../../src/scale/shape.typ": _shape-identity
+#import "../../src/scale/linetype.typ": _linetype-identity
+#import "../../lib.typ": scale-identity, scales
 #import "../../src/scale/train.typ": train
 
 // --- spec dicts carry type "identity" and the right aesthetic ---
 
-#let s-colour = scale-colour-identity()
+#let s-colour = _scale-identity("colour")
 #assert.eq(s-colour.kind, "scale")
 #assert.eq(s-colour.aesthetic, "colour")
 #assert.eq(s-colour.type, "identity")
 
-#let s-fill = scale-fill-identity()
+#let s-fill = _scale-identity("fill")
 #assert.eq(s-fill.aesthetic, "fill")
 #assert.eq(s-fill.type, "identity")
 
-#let s-shape = scale-shape-identity()
+#let s-shape = _shape-identity()
 #assert.eq(s-shape.aesthetic, "shape")
 #assert.eq(s-shape.type, "identity")
 
-#let s-linetype = scale-linetype-identity()
+#let s-linetype = _linetype-identity()
 #assert.eq(s-linetype.aesthetic, "linetype")
 #assert.eq(s-linetype.type, "identity")
 
@@ -38,7 +39,7 @@
   ),
 )
 #let trained = train(
-  scales: (scale-colour-identity(),),
+  scales: scales(colour: scale-identity()),
   layers: layers,
   mapping: (x: "x", y: "y", colour: "c"),
   data: none,

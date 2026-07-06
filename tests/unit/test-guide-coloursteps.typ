@@ -1,4 +1,4 @@
-// Stepped colour scales (scale-colour-steps, scale-fill-steps, viridis-b)
+// Stepped colour scales (scale-steps, scale-steps, viridis-b)
 // surface as colourbar candidates with binned: true and bin-boundary breaks.
 
 #import "../../src/legend.typ": guides-for
@@ -10,7 +10,7 @@
   params: (colour: auto, fill: auto, shape: auto),
 )
 
-// Simulate the trained scale that scale-fill-steps(n-breaks: 5) would
+// Simulate the trained scale that scale-steps(n-breaks: 5) would
 // produce: continuous type, domain [0, 25], spec carries binned/n-breaks.
 #let trained-stepped = (
   fill: (

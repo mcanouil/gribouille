@@ -140,18 +140,9 @@ The same grammar as [`ggplot2`](https://ggplot2.tidyverse.org) and [`plotnine`](
       ),
     ),
   ),
-  scales: (
-    scale-x-continuous(),
-    scale-y-continuous(labels: format-comma()),
-    scale-colour-discrete(
-      limits: species-colours.keys(),
-      palette: species-colours.values(),
-    ),
-    scale-fill-discrete(
-      limits: species-colours.keys(),
-      palette: species-colours.values(),
-    ),
-  ),
+  scales: scales(x: scale-continuous(), y: scale-continuous(labels: format-comma()), colour: scale-discrete(limits: species-colours.keys(),
+      palette: species-colours.values(),), fill: scale-discrete(limits: species-colours.keys(),
+      palette: species-colours.values(),)),
   labels: labels(
     title: typst("Penguins *Dataset*"),
     subtitle: typst({
@@ -231,7 +222,7 @@ Stack geoms, scales, facets, and a theme until the plot is right.
     geom-smooth(method: "lm", alpha: 0.2),
   ),
   facet: facet-wrap("island", labeller: label-both()),
-  scales: (scale-y-continuous(labels: format-comma()),),
+  scales: scales(y: scale-continuous(labels: format-comma())),
   labels: labels(
     title: "Penguin Morphology by Island",
     subtitle: "Flipper length versus body mass with a per-species linear fit",

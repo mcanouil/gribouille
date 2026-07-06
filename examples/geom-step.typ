@@ -21,10 +21,7 @@
     geom-step(stroke: 1.2pt, direction: "hv", colour: rgb("#1f77b4")),
     geom-point(size: 3pt, fill: rgb("#1f77b4")),
   ),
-  scales: (
-    scale-x-continuous(breaks: (2018, 2020, 2022, 2024)),
-    scale-y-continuous(labels: format-comma()),
-  ),
+  scales: scales(x: scale-continuous(breaks: (2018, 2020, 2022, 2024)), y: scale-continuous(labels: format-comma())),
   labels: labels(
     title: "Active Users at Each Release",
     subtitle: "Step interpolation reflects discrete release events",

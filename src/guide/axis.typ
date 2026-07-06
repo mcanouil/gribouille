@@ -110,9 +110,9 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 3pt),),
-///   scales: (
-///     scale-x-continuous(transform: "log10"),
-///     scale-y-continuous(transform: "log10"),
+///   scales: scales(
+///     x: scale-continuous(transform: "log10"),
+///     y: scale-continuous(transform: "log10"),
 ///   ),
 ///   guides: guides(
 ///     x: guide-axis-logticks(),

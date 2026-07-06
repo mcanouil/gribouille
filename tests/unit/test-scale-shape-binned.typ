@@ -1,10 +1,10 @@
-// scale-shape-binned: continuous-binned shape scale.
+// scale-binned: continuous-binned shape scale.
 
-#import "../../src/scale/shape.typ": scale-shape-binned
+#import "../../src/scale/shape.typ": _shape-binned
 #import "../../src/utils/level-resolve.typ": bin-index, resolve-level
 #import "../../src/utils/palette.typ": default-shapes
 
-#let s = scale-shape-binned()
+#let s = _shape-binned()
 #assert.eq(s.kind, "scale")
 #assert.eq(s.aesthetic, "shape")
 #assert.eq(s.type, "continuous")
@@ -12,7 +12,7 @@
 #assert.eq(s.n-breaks, 4)
 #assert.eq(s.palette, default-shapes)
 
-#let s2 = scale-shape-binned(n-breaks: 6, palette: (
+#let s2 = _shape-binned(n-breaks: 6, palette: (
   "circle",
   "square",
   "triangle",
@@ -54,4 +54,4 @@
 )
 #assert.eq(resolve-level("shape", smooth, 5), none)
 
-scale-shape-binned tests passed.
+scale-binned tests passed.

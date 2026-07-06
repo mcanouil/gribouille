@@ -24,7 +24,7 @@
     geom-line(stroke: 1pt),
     geom-point(size: 4pt),
   ),
-  scales: (scale-colour-brewer(palette: "Dark2"),),
+  scales: scales(colour: scale-brewer(palette: "Dark2")),
   labels: labels(
     title: "One Shape and One Linetype per Group",
     subtitle: "Using shape + linetype + colour together makes groups legible without colour alone",

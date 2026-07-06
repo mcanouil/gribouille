@@ -14,9 +14,7 @@
       position: position-jitter(width: 0.25),
     ),
   ),
-  scales: (
-    scale-y-continuous(breaks: (15, 20, 25, 30, 35, 40)),
-  ),
+  scales: scales(y: scale-continuous(breaks: (15, 20, 25, 30, 35, 40))),
   guides: guides(colour: none),
   labels: labels(
     title: "Highway mpg per Vehicle Class",

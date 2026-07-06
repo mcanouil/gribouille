@@ -26,9 +26,9 @@
 #grid(
   columns: 1,
   row-gutter: 0.5cm,
-  panel("Linear x: smooth fits a curved line on power-law data", ()),
+  panel("Linear x: smooth fits a curved line on power-law data", (:)),
   panel(
     "Log10 x (pre-stat): smooth fits a straight line in log space",
-    (scale-x-log10(),),
+    scales(x: scale-log10()),
   ),
 )

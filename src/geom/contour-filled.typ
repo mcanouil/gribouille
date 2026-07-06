@@ -52,7 +52,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y", z: "z"),
 ///   layers: (geom-contour-filled(bins: 10),),
-///   scales: (scale-fill-viridis-c(),),
+///   scales: scales(fill: scale-viridis-c()),
 ///   width: 11cm,
 ///   height: 7cm,
 /// )

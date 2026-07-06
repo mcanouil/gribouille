@@ -11,9 +11,7 @@
     geom-mark(method: method, expand: expand, alpha: 0.25),
     geom-point(size: 2pt, alpha: 0.85),
   ),
-  scales: (
-    scale-y-continuous(labels: format-comma()),
-  ),
+  scales: scales(y: scale-continuous(labels: format-comma())),
   guides: guides(
     x: guide-axis(n-dodge: 2),
   ),

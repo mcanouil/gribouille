@@ -81,7 +81,7 @@
 /// )
 /// ```
 ///
-/// \@see \@geom-point, \@geom-smooth, \@scale-linetype, \@aes
+/// \@see \@geom-point, \@geom-smooth, \@scale-discrete, \@aes
 #let geom-line(
   mapping: none,
   data: none,

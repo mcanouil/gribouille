@@ -48,9 +48,7 @@
     geom-segment(stroke: 1.4pt),
     geom-point(size: 3pt),
   ),
-  scales: (
-    scale-x-continuous(breaks: (2020, 2022, 2024)),
-  ),
+  scales: scales(x: scale-continuous(breaks: (2020, 2022, 2024))),
   labels: labels(
     title: "Team Headcount, 2020 To 2024",
     subtitle: "Each segment connects start and end values per team",

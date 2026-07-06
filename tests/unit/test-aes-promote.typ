@@ -1,52 +1,49 @@
 // Promoted alpha and new linewidth aesthetics: spec shapes and training.
 
-#import "../../src/scale/colour.typ": (
-  scale-alpha-continuous, scale-alpha-identity,
-)
-#import "../../src/scale/linewidth.typ": (
-  scale-linewidth-continuous, scale-linewidth-identity,
-)
-#import "../../src/scale/size.typ": scale-size-continuous, scale-size-identity
+#import "../../src/scale/colour.typ": _alpha-continuous, _alpha-identity
+#import "../../src/scale/linewidth.typ": _linewidth-continuous, _linewidth-identity
+#import "../../src/scale/size.typ": _size-continuous, _size-identity
+#import "../../lib.typ": scale-identity, scales
 #import "../../src/scale/train.typ": train
 
 // --- alpha scale specs ---
 
-#let s-alpha-c = scale-alpha-continuous()
+#let s-alpha-c = _alpha-continuous()
 #assert.eq(s-alpha-c.kind, "scale")
 #assert.eq(s-alpha-c.aesthetic, "alpha")
 #assert.eq(s-alpha-c.type, "continuous")
 #assert.eq(s-alpha-c.range, (0.1, 1))
 
-#let s-alpha-c2 = scale-alpha-continuous(range: (0.2, 0.9))
+#let s-alpha-c2 = _alpha-continuous(range: (0.2, 0.9))
 #assert.eq(s-alpha-c2.range, (0.2, 0.9))
 
-#let s-alpha-id = scale-alpha-identity()
+#let s-alpha-id = _alpha-identity()
 #assert.eq(s-alpha-id.aesthetic, "alpha")
 #assert.eq(s-alpha-id.type, "identity")
 
 // --- linewidth scale specs ---
 
-#let s-lw-c = scale-linewidth-continuous()
+#let s-lw-c = _linewidth-continuous()
 #assert.eq(s-lw-c.kind, "scale")
 #assert.eq(s-lw-c.aesthetic, "linewidth")
 #assert.eq(s-lw-c.type, "continuous")
 #assert.eq(s-lw-c.range, (0.4pt, 1.4pt))
 
-#let s-lw-c2 = scale-linewidth-continuous(range: (0.5pt, 2pt))
+#let s-lw-c2 = _linewidth-continuous(range: (0.5pt, 2pt))
 #assert.eq(s-lw-c2.range, (0.5pt, 2pt))
 
-#let s-lw-id = scale-linewidth-identity()
+#let s-lw-id = _linewidth-identity()
 #assert.eq(s-lw-id.aesthetic, "linewidth")
 #assert.eq(s-lw-id.type, "identity")
 
 // --- size scale specs ---
 
-#let s-size-c = scale-size-continuous()
+#let s-size-c = _size-continuous()
 #assert.eq(s-size-c.kind, "scale")
 #assert.eq(s-size-c.aesthetic, "size")
 #assert.eq(s-size-c.type, "continuous")
 
-#let s-size-id = scale-size-identity()
+#let s-size-id = _size-identity()
 #assert.eq(s-size-id.aesthetic, "size")
 #assert.eq(s-size-id.type, "identity")
 
@@ -65,7 +62,7 @@
   ),
 )
 #let trained = train(
-  scales: (),
+  scales: (:),
   layers: layers,
   mapping: (x: "x", y: "y", alpha: "w", linewidth: "w"),
   data: none,
@@ -89,7 +86,7 @@
   ),
 )
 #let trained2 = train(
-  scales: (scale-alpha-identity(),),
+  scales: scales(alpha: scale-identity()),
   layers: layers2,
   mapping: (x: "x", y: "y", alpha: "a"),
   data: none,
@@ -109,7 +106,7 @@
   ),
 )
 #let trained3 = train(
-  scales: (scale-size-identity(),),
+  scales: scales(size: scale-identity()),
   layers: layers3,
   mapping: (x: "x", y: "y", size: "s"),
   data: none,

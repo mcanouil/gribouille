@@ -145,7 +145,7 @@
 /// )
 /// ```
 ///
-/// \@see \@geom-line, \@geom-text, \@scale-shape, \@aes
+/// \@see \@geom-line, \@geom-text, \@scale-discrete, \@aes
 #let geom-point(
   mapping: none,
   data: none,

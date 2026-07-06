@@ -34,7 +34,7 @@
   panel((0, 1), (100, 101)), // r1 c0
   panel((10, 11), (100, 101)), // r1 c1
 )
-#let spec = (mapping: (kind: "aes", x: "x", y: "y"), scales: (), data: none)
+#let spec = (mapping: (kind: "aes", x: "x", y: "y"), scales: (:), data: none)
 
 #let pt = _train-grid-panels(
   spec,
