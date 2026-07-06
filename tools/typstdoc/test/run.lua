@@ -1226,7 +1226,7 @@ describe("render: @subcategory grouping", function()
 ///
 /// @category Scales
 /// @subcategory Colour and fill: binned
-#let scale-colour-steps() = none
+#let scale-steps() = none
 ]])
     local body = render.render_sidebar({ "Scales" }, fns)
     assert_contains(body, '- section: "Colour and fill: binned"')
