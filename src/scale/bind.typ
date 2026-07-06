@@ -44,23 +44,24 @@
 // A colour/fill family shares one aesthetic-taking builder across both.
 #let _cf(builder) = (colour: _aes(builder), fill: _aes(builder))
 
+// A position family shares one builder across the x and y axes.
+#let _xy(build) = (x: build, y: build)
+
 // Position transform families pass the transform name as the builder's second
 // positional; shared across the x and y axes.
-#let _trans(name) = (
-  x: (aesthetic, ..args) => _transform-scale(aesthetic, name, ..args),
-  y: (aesthetic, ..args) => _transform-scale(aesthetic, name, ..args),
-)
+#let _trans(name) = _xy((aesthetic, ..args) => _transform-scale(
+  aesthetic,
+  name,
+  ..args,
+))
 
 // Temporal families inject their per-family `date-format` default when the
 // caller left it unset, matching the retired `scale-date` wrappers.
-#let _temporal(temporal, fmt) = {
-  let build(aesthetic, ..args) = {
-    let named = args.named()
-    if "date-format" not in named { named.insert("date-format", fmt) }
-    _temporal-scale(aesthetic, temporal, ..named)
-  }
-  (x: build, y: build)
-}
+#let _temporal(temporal, fmt) = _xy((aesthetic, ..args) => {
+  let named = args.named()
+  if "date-format" not in named { named.insert("date-format", fmt) }
+  _temporal-scale(aesthetic, temporal, ..named)
+})
 
 // family -> (aesthetic -> builder(aesthetic, ..args))
 #let _SCALE-DISPATCH = (
