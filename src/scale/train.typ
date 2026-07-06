@@ -226,7 +226,11 @@
   "continuous"
 }
 
+// Look up the user scale for `aesthetic`. Accepts the aesthetic-keyed dict from
+// `scales()` or, as a transitional bridge, the legacy array of self-identifying
+// scale objects (matched on their baked `aesthetic` field, last wins).
 #let _find-user-scale(scales, aesthetic) = {
+  if type(scales) == dictionary { return scales.at(aesthetic, default: none) }
   for s in scales {
     if s.aesthetic == aesthetic { return s }
   }
@@ -536,7 +540,7 @@
 }
 
 #let train(
-  scales: (),
+  scales: (:),
   layers: (),
   mapping: none,
   data: none,

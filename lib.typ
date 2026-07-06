@@ -117,6 +117,7 @@
 #import "src/utils/normal.typ": qnorm
 
 // Scales.
+#import "src/scales.typ": scales
 #import "src/scale/secondary.typ": dup-axis, sec-axis
 #import "src/scale/continuous.typ": scale-x-continuous, scale-y-continuous
 #import "src/scale/continuous.typ": scale-x-log10, scale-y-log10
