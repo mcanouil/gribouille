@@ -69,6 +69,21 @@
   )
 }
 
+// "<scope>: <label> maps to unknown column <repr(col)>; available columns:
+// "a", "b"." `label` is the aesthetic name for a mapping, or the facet role
+// ("variable", "rows", "columns") for a facet.
+#let unknown-column-text(scope, label, col, available, hint: none) = {
+  error-text(
+    scope,
+    label
+      + " maps to unknown column "
+      + repr(col)
+      + "; available columns: "
+      + quote-each(available),
+    hint: hint,
+  )
+}
+
 // Panic / assert wrappers ----------------------------------------------------
 
 #let fail(scope, problem, hint: none) = {
@@ -107,6 +122,10 @@
 
 #let check(cond, scope, problem, hint: none) = {
   assert(cond, message: error-text(scope, problem, hint: hint))
+}
+
+#let fail-unknown-column(scope, label, col, available, hint: none) = {
+  panic(unknown-column-text(scope, label, col, available, hint: hint))
 }
 
 // Panic unless `align` is a Typst alignment (the house type for every text /

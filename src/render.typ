@@ -15,6 +15,7 @@
 #import "render/axis-format.typ": _axis-title, _sec-spec
 #import "render/guides.typ": _axis-text-angle, _read-axis-guide
 #import "render/prestat.typ": _preprocess-data
+#import "render/validate.typ": validate-spec
 #import "render/domain.typ": (
   _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
   _apply-labels, _is-flipped, _post-train,
@@ -84,6 +85,11 @@
   let grid-col-levels = prep.grid-col-levels
   let panels = prep.panels
   let prepared = prep.prepared
+
+  // Reject an aesthetic or facet variable that names a column absent from the
+  // (stat-transformed) data, so a typo fails loudly instead of resolving to an
+  // all-`none` column.
+  validate-spec(spec, prepared)
 
   let trained = train(
     scales: spec.scales,
