@@ -1,5 +1,5 @@
 // coord-transform: warp the displayed coordinates without setting transform
-// on each scale. Equivalent to scale-x-continuous(transform: ...) in the
+// on each scale. Equivalent to scale-continuous(transform: ...) in the
 // current implementation; provided as a coord-level entry point.
 
 #import "../lib.typ": *
@@ -34,7 +34,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(size: 3pt),),
-  scales: (scale-y-continuous(transform: "sqrt"),),
+  scales: scales(y: scale-continuous(transform: "sqrt")),
   coord: coord-transform(x: "log10"),
   labels: labels(title: "Scale-Y Sqrt + Coord-Transform X log10"),
   theme: theme-minimal(),

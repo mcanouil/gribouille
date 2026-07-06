@@ -31,10 +31,7 @@
       position: position-jitterdodge(width: 0.12, dodge-width: 0.6),
     ),
   ),
-  scales: (
-    scale-x-continuous(breaks: (1, 2, 3, 4)),
-    scale-colour-brewer(palette: "Dark2"),
-  ),
+  scales: scales(x: scale-continuous(breaks: (1, 2, 3, 4)), colour: scale-brewer(palette: "Dark2")),
   labels: labels(
     title: "Dose-Response Trial Across Four Weeks",
     subtitle: "Each dose arm is dodged off the week, then jittered within its column",

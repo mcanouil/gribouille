@@ -17,7 +17,7 @@
   mapping: aes(x: "slice", y: "value", fill: "region"),
   layers: (geom-col(width: 1, position: "stack"),),
   coord: coord-radial(theta: "y"),
-  scales: (scale-y-continuous(expand: false),),
+  scales: scales(y: scale-continuous(expand: false)),
   labels: labels(title: "Revenue Share", fill: "Region"),
   theme: theme-minimal(),
   width: 12cm,

@@ -3,7 +3,7 @@
 /// Transform the displayed coordinates after statistics have run.
 ///
 /// Sets the per-axis `transform` so the trained scale's view is warped at
-/// mapping time. Accepts the same keywords as `scale-x-continuous`'s
+/// mapping time. Accepts the same keywords as `scale-continuous`'s
 /// `transform:` parameter: `"identity"`, `"log10"`, `"sqrt"`, `"reverse"`.
 ///
 /// When a positional scale already sets `transform:`, `coord-transform`
@@ -37,7 +37,7 @@
 /// )
 /// ```
 ///
-/// \@see \@plot, \@scale-x-continuous
+/// \@see \@plot, \@scale-continuous
 #let coord-transform(x: "identity", y: "identity") = (
   kind: "coord",
   coord: "transform",

@@ -81,7 +81,7 @@
 ///   data: d,
 ///   mapping: aes(x: as-factor("x"), y: as-factor("y"), fill: "v"),
 ///   layers: (geom-tile(),),
-///   scales: (scale-fill-viridis-c(option: "magma"),),
+///   scales: scales(fill: scale-viridis-c(option: "magma")),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

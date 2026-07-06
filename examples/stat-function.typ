@@ -23,7 +23,7 @@
       linetype: "dashed",
     ),
   ),
-  scales: (scale-x-continuous(breaks: (-3, -1.5, 0, 1.5, 3)),),
+  scales: scales(x: scale-continuous(breaks: (-3, -1.5, 0, 1.5, 3))),
   labels: labels(
     title: "Two Analytic Curves over a Shared X-Range",
     subtitle: "stat-function samples each function across x-limits and routes the points to geom-line",

@@ -3,7 +3,7 @@
 ///! A secondary axis draws an extra set of ticks on the opposite side of the
 ///! panel, optionally derived from the primary axis through a transformation
 ///! function. Pass the result of `dup-axis` or `sec-axis` to the `secondary:`
-///! parameter of `scale-x-continuous` or `scale-y-continuous`.
+///! parameter of `scale-continuous` or `scale-continuous`.
 
 /// Duplicate the primary axis on the opposite side of the panel.
 ///
@@ -21,7 +21,7 @@
 ///
 /// \@param labels Array of labels aligned with `breaks`, or `auto`.
 ///
-/// \@returns Secondary axis dictionary consumed by \@scale-x-continuous and \@scale-y-continuous.
+/// \@returns Secondary axis dictionary consumed by \@scale-continuous and \@scale-continuous.
 ///
 /// \@examples Mirror the x axis on top with a different title.
 /// ```
@@ -31,8 +31,8 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   scales: (
-///     scale-x-continuous(name: "x", secondary: dup-axis(name: "x'")),
+///   scales: scales(
+///     x: scale-continuous(name: "x", secondary: dup-axis(name: "x'")),
 ///   ),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -47,8 +47,8 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   scales: (
-///     scale-y-continuous(
+///   scales: scales(
+///     y: scale-continuous(
 ///       name: "y",
 ///       secondary: dup-axis(breaks: (0, 25, 50, 75, 100)),
 ///     ),
@@ -58,7 +58,7 @@
 /// )
 /// ```
 ///
-/// \@see \@sec-axis, \@scale-x-continuous, \@scale-y-continuous
+/// \@see \@sec-axis, \@scale-continuous
 #let dup-axis(name: none, breaks: auto, labels: auto) = (
   kind: "secondary-axis",
   transform: "identity",
@@ -86,7 +86,7 @@
 ///
 /// \@param labels Array of labels aligned with `breaks`, or `auto`.
 ///
-/// \@returns Secondary axis dictionary consumed by \@scale-x-continuous and \@scale-y-continuous.
+/// \@returns Secondary axis dictionary consumed by \@scale-continuous and \@scale-continuous.
 ///
 /// \@examples Celsius primary axis with a Fahrenheit secondary derived
 /// through a callable.
@@ -97,8 +97,8 @@
 ///   data: d,
 ///   mapping: aes(x: "c", y: "mpg"),
 ///   layers: (geom-point(size: 2pt),),
-///   scales: (
-///     scale-x-continuous(
+///   scales: scales(
+///     x: scale-continuous(
 ///       name: "Celsius",
 ///       secondary: sec-axis(transform: x => x * 9 / 5 + 32, name: "Fahrenheit"),
 ///     ),
@@ -117,8 +117,8 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "m"),
 ///   layers: (geom-line(stroke: 1pt),),
-///   scales: (
-///     scale-y-continuous(
+///   scales: scales(
+///     y: scale-continuous(
 ///       name: "Metres",
 ///       secondary: sec-axis(transform: m => m * 3.281, name: "Feet"),
 ///     ),
@@ -128,7 +128,7 @@
 /// )
 /// ```
 ///
-/// \@see \@dup-axis, \@scale-x-continuous, \@scale-y-continuous
+/// \@see \@dup-axis, \@scale-continuous, \@scale-continuous
 #let sec-axis(
   transform: "identity",
   name: none,

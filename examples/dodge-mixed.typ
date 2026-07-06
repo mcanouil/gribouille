@@ -17,9 +17,7 @@
   data: sales,
   mapping: aes(x: "q", y: "revenue", fill: "product"),
   layers: (geom-col(position: "dodge"),),
-  scales: (
-    scale-y-continuous(labels: format-currency(symbol: "$", digits: 0)),
-  ),
+  scales: scales(y: scale-continuous(labels: format-currency(symbol: "$", digits: 0))),
   labels: labels(
     title: "Revenue with Mixed-Width Dodge Slots",
     subtitle: "Each row supplies its own dodge slot width via the width column",

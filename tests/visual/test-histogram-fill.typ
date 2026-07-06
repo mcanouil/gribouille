@@ -19,9 +19,7 @@
   data: penguins,
   mapping: aes(x: "flipper-len", fill: "species"),
   layers: (geom-histogram(bins: 10, position: position),),
-  scales: (
-    scale-fill-discrete(limits: species, palette: palette),
-  ),
+  scales: scales(fill: scale-discrete(limits: species, palette: palette)),
   labels: labels(title: label, x: "Flipper length (mm)"),
   theme: theme-minimal(),
   width: 8cm,

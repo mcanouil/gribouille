@@ -33,7 +33,7 @@
 ///   data: d,
 ///   mapping: aes(xmin: "xmin", xmax: "xmax", ymin: "ymin", ymax: "ymax", fill: "k"),
 ///   layers: (geom-rect(),),
-///   scales: (scale-fill-manual(values: stops),),
+///   scales: scales(fill: scale-manual(values: stops)),
 ///   guides: guides(fill: none),
 ///   theme: theme-void(),
 ///   width: 8cm,

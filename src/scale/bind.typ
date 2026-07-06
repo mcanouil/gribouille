@@ -52,7 +52,7 @@
 )
 
 // Temporal families inject their per-family `date-format` default when the
-// caller left it unset, matching the retired `scale-x-date` wrappers.
+// caller left it unset, matching the retired `scale-date` wrappers.
 #let _temporal(temporal, fmt) = {
   let build(aesthetic, ..args) = {
     let named = args.named()

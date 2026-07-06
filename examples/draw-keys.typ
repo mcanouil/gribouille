@@ -26,10 +26,7 @@
     ),
     geom-line(stroke: 1.2pt),
   ),
-  scales: (
-    scale-x-continuous(name: "Week"),
-    scale-y-continuous(name: "Forecast", labels: format-comma()),
-  ),
+  scales: scales(x: scale-continuous(name: "Week"), y: scale-continuous(name: "Forecast", labels: format-comma())),
   labels: labels(
     title: "Forecast with Confidence Band",
     subtitle: "Line legend uses a stroke glyph; ribbon legend uses a rectangle",

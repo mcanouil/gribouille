@@ -452,8 +452,8 @@
 
 /// Linear-radius continuous size scale.
 ///
-/// The explicit-name alias for a linear value-to-radius size mapping;
-/// \@scale-area is the area-proportional variant.
+/// The explicit-name alias for a linear value-to-radius size mapping. The
+/// area-proportional variant is \@scale-area.
 ///
 /// \@category Scales
 /// \@subcategory Size scales

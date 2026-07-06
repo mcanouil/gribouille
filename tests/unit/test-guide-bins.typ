@@ -1,4 +1,4 @@
-// Binned non-colour scales (scale-size-binned, scale-alpha-binned, etc.)
+// Binned non-colour scales (scale-binned, scale-binned, etc.)
 // surface as size-ladder candidates with one glyph per bin at the midpoint.
 
 #import "../../src/legend.typ": guides-for
@@ -10,7 +10,7 @@
   params: (size: auto, alpha: auto),
 )
 
-// scale-alpha-binned(n-breaks: 4) over domain [1, 10] yields bins of width
+// scale-binned(n-breaks: 4) over domain [1, 10] yields bins of width
 // 2.25 with midpoints 2.125, 4.375, 6.625, 8.875.
 #let trained-binned-alpha = (
   alpha: (

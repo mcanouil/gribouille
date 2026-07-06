@@ -23,11 +23,7 @@
   data: traffic,
   mapping: aes(x: "hour", y: "day", fill: "requests"),
   layers: (geom-tile(stroke: 0.5pt, colour: rgb("#ffffff")),),
-  scales: (
-    scale-fill-viridis-c(name: "Requests / min"),
-    scale-x-discrete(limits: hours),
-    scale-y-discrete(limits: weeks.rev()),
-  ),
+  scales: scales(fill: scale-viridis-c(name: "Requests / min"), x: scale-discrete(limits: hours), y: scale-discrete(limits: weeks.rev())),
   labels: labels(
     title: "Hourly Request Volume by Day",
     subtitle: "Peak load lands midday on weekdays",

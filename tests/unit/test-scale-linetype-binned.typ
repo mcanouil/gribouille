@@ -1,13 +1,10 @@
-// scale-linetype-binned plus _continuous and _discrete aliases.
+// scale-binned plus _continuous and _discrete aliases.
 
-#import "../../src/scale/linetype.typ": (
-  scale-linetype, scale-linetype-binned, scale-linetype-continuous,
-  scale-linetype-discrete,
-)
+#import "../../src/scale/linetype.typ": _linetype-binned, _linetype-discrete
 #import "../../src/utils/level-resolve.typ": resolve-level
 #import "../../src/utils/palette.typ": default-linetypes
 
-#let s = scale-linetype-binned()
+#let s = _linetype-binned()
 #assert.eq(s.kind, "scale")
 #assert.eq(s.aesthetic, "linetype")
 #assert.eq(s.type, "continuous")
@@ -16,14 +13,14 @@
 #assert.eq(s.palette, default-linetypes)
 
 // _continuous delegates to _binned.
-#let sc = scale-linetype-continuous()
+#let sc = _linetype-binned()
 #assert.eq(sc.type, "continuous")
 #assert.eq(sc.binned, true)
 #assert.eq(sc.n-breaks, 4)
 
-// _discrete delegates to scale-linetype.
-#let sd = scale-linetype-discrete()
-#let sd-direct = scale-linetype()
+// _discrete delegates to scale-discrete.
+#let sd = _linetype-discrete()
+#let sd-direct = _linetype-discrete()
 #assert.eq(sd.type, "discrete")
 #assert.eq(sd.aesthetic, "linetype")
 #assert.eq(sd.palette, sd-direct.palette)
@@ -38,4 +35,4 @@
 #assert.eq(resolve-level("linetype", trained, 6), default-linetypes.at(1))
 #assert.eq(resolve-level("linetype", trained, 12), default-linetypes.at(2))
 
-scale-linetype-binned tests passed.
+scale-binned tests passed.

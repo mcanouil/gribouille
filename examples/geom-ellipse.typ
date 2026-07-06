@@ -22,7 +22,7 @@
     fill: "region",
   ),
   layers: (geom-ellipse(alpha: 0.5, stroke: 0.6pt),),
-  scales: (scale-fill-brewer(palette: "Set2"),),
+  scales: scales(fill: scale-brewer(palette: "Set2")),
   coord: coord-fixed(),
   labels: labels(
     title: "Catchment Regions Sketched as Ellipses",

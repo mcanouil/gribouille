@@ -1,12 +1,10 @@
 // scale-size manual + scale-radius unit tests.
 
-#import "../../src/scale/size.typ": (
-  scale-radius, scale-size-area, scale-size-continuous, scale-size-manual,
-)
+#import "../../src/scale/size.typ": _size-area, _size-continuous, _size-manual
 #import "../../src/utils/level-resolve.typ": resolve-level
 
-// scale-size-manual spec dict shape.
-#let sm = scale-size-manual(values: (2pt, 4pt, 7pt))
+// scale-manual spec dict shape.
+#let sm = _size-manual(values: (2pt, 4pt, 7pt))
 #assert.eq(sm.kind, "scale")
 #assert.eq(sm.aesthetic, "size")
 #assert.eq(sm.type, "discrete")
@@ -14,14 +12,14 @@
 
 // scale-radius is a linear value-to-radius scale; it shares "size" aesthetic
 // with scale-size-* but signals the linear-radius intent in user code.
-#let sr = scale-radius(range: (1pt, 8pt))
+#let sr = _size-continuous(range: (1pt, 8pt))
 #assert.eq(sr.aesthetic, "size")
 #assert.eq(sr.type, "continuous")
 #assert.eq(sr.range, (1pt, 8pt))
 // scale-radius leaves no `size-trans` flag on the spec, so resolve-size
-// stays on the linear branch (unlike scale-size-area which sets "area").
+// stays on the linear branch (unlike scale-area which sets "area").
 #assert.eq(sr.at("size-trans", default: none), none)
-#assert.eq(scale-size-area().size-trans, "area")
+#assert.eq(_size-area().size-trans, "area")
 
 // resolve-level honours the manual palette per-level.
 #let trained-manual = (

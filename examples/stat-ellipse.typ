@@ -16,7 +16,7 @@
     geom-ellipse(stat: stat-ellipse(level: 0.95), alpha: 0.2),
     geom-point(size: 2pt, alpha: 0.85),
   ),
-  scales: (scale-y-continuous(labels: format-comma()),),
+  scales: scales(y: scale-continuous(labels: format-comma())),
   labels: labels(
     title: "Penguin Species Clusters",
     subtitle: "stat-ellipse draws the 95% covariance ellipse around each group",

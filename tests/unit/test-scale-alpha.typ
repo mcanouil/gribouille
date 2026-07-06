@@ -1,32 +1,31 @@
 // Alpha scale family unit tests.
 
 #import "../../src/scale/colour.typ": (
-  scale-alpha-binned, scale-alpha-continuous, scale-alpha-identity,
-  scale-alpha-manual,
+  _alpha-binned, _alpha-continuous, _alpha-identity, _alpha-manual,
 )
 #import "../../src/utils/level-resolve.typ": resolve-level
 
-// scale-alpha-continuous spec dict shape.
-#let sc = scale-alpha-continuous(range: (0.2, 1))
+// scale-continuous spec dict shape.
+#let sc = _alpha-continuous(range: (0.2, 1))
 #assert.eq(sc.kind, "scale")
 #assert.eq(sc.aesthetic, "alpha")
 #assert.eq(sc.type, "continuous")
 #assert.eq(sc.range, (0.2, 1))
 
-// scale-alpha-identity passthrough, no legend.
-#let si = scale-alpha-identity()
+// scale-identity passthrough, no legend.
+#let si = _alpha-identity()
 #assert.eq(si.aesthetic, "alpha")
 #assert.eq(si.type, "identity")
 
-// scale-alpha-manual: per-level opacities.
-#let sm = scale-alpha-manual(values: (0.2, 0.55, 1))
+// scale-manual: per-level opacities.
+#let sm = _alpha-manual(values: (0.2, 0.55, 1))
 #assert.eq(sm.kind, "scale")
 #assert.eq(sm.aesthetic, "alpha")
 #assert.eq(sm.type, "discrete")
 #assert.eq(sm.palette, (0.2, 0.55, 1))
 
-// scale-alpha-binned: continuous with binned flag.
-#let sb = scale-alpha-binned(n-breaks: 5, range: (0.2, 1))
+// scale-binned: continuous with binned flag.
+#let sb = _alpha-binned(n-breaks: 5, range: (0.2, 1))
 #assert.eq(sb.kind, "scale")
 #assert.eq(sb.aesthetic, "alpha")
 #assert.eq(sb.type, "continuous")

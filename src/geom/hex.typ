@@ -57,7 +57,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-hex(bins: 25),),
-///   scales: (scale-fill-viridis-c(option: "magma"),),
+///   scales: scales(fill: scale-viridis-c(option: "magma")),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

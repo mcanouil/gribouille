@@ -31,13 +31,13 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y", colour: "sp"),
 ///   layers: (geom-point(size: 3pt),),
-///   scales: (scale-colour-manual(values: okabe-ito),),
+///   scales: scales(colour: scale-manual(values: okabe-ito)),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
 /// ```
 ///
-/// \@see \@scale-colour-okabe-ito, \@scale-fill-okabe-ito, \@brewer-palette
+/// \@see \@scale-okabe-ito, \@scale-okabe-ito, \@brewer-palette
 #let okabe-ito = (
   rgb("#e69f00"),
   rgb("#56b4e9"),
@@ -378,7 +378,7 @@
 ///   data: d,
 ///   mapping: aes(xmin: "xmin", xmax: "xmax", ymin: "ymin", ymax: "ymax", fill: "k"),
 ///   layers: (geom-rect(),),
-///   scales: (scale-fill-manual(values: pal),),
+///   scales: scales(fill: scale-manual(values: pal)),
 ///   guides: guides(fill: none),
 ///   theme: theme-void(),
 ///   width: 8cm,
@@ -398,7 +398,7 @@
 ///   data: d,
 ///   mapping: aes(xmin: "xmin", xmax: "xmax", ymin: "ymin", ymax: "ymax", fill: "k"),
 ///   layers: (geom-rect(),),
-///   scales: (scale-fill-manual(values: pal),),
+///   scales: scales(fill: scale-manual(values: pal)),
 ///   guides: guides(fill: none),
 ///   theme: theme-void(),
 ///   width: 8cm,

@@ -1,7 +1,7 @@
 ///! Plot-level scale bindings.
 ///!
-///! Map aesthetic names to scale specs built with \@scale-x-continuous,
-///! \@scale-colour-viridis-d, and friends, then feed the result to \@plot via
+///! Map aesthetic names to scale specs built with \@scale-continuous,
+///! \@scale-viridis-d, and friends, then feed the result to \@plot via
 ///! the `scales:` parameter. Keying by aesthetic mirrors \@guides: a later entry
 ///! for the same aesthetic overrides an earlier one.
 

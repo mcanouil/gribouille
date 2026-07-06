@@ -72,7 +72,7 @@
 ///   data: d,
 ///   mapping: aes(xmin: "xmin", xmax: "xmax", ymin: "ymin", ymax: "ymax", fill: "k"),
 ///   layers: (geom-rect(),),
-///   scales: (scale-fill-brewer(palette: "Set1"),),
+///   scales: scales(fill: scale-brewer(palette: "Set1")),
 ///   guides: guides(fill: none),
 ///   theme: theme-void(),
 ///   width: 8cm,

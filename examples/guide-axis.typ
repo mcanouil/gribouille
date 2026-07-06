@@ -9,7 +9,7 @@
   mapping: aes(x: "manufacturer"),
   layers: (geom-bar(),),
   guides: gs,
-  scales: (scale-y-continuous(name: "Vehicles in sample"),),
+  scales: scales(y: scale-continuous(name: "Vehicles in sample")),
   labels: labels(title: title, x: "Manufacturer"),
   theme: theme-minimal(),
   width: 12cm,

@@ -24,7 +24,7 @@
     data: cont,
     mapping: aes(x: "x", y: "y", stroke: "w"),
     layers: (geom-point(size: 6pt, fill: accent),),
-    scales: (scale-stroke-continuous(range: (0.2pt, 2pt)),),
+    scales: scales(stroke: scale-continuous(range: (0.2pt, 2pt))),
     labels: labels(
       title: "Scale-Stroke-Continuous",
       x: "X",
@@ -39,12 +39,8 @@
     data: manual,
     mapping: aes(x: "x", y: "y", stroke: "g"),
     layers: (geom-point(size: 6pt, fill: accent),),
-    scales: (
-      scale-stroke-manual(
-        values: (0.2pt, 0.8pt, 2pt),
-        limits: ("thin", "medium", "thick"),
-      ),
-    ),
+    scales: scales(stroke: scale-manual(values: (0.2pt, 0.8pt, 2pt),
+        limits: ("thin", "medium", "thick"),)),
     labels: labels(
       title: "Scale-Stroke-Manual",
       x: "X",

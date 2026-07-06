@@ -40,7 +40,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y", z: "z"),
 ///   layers: (geom-polygon(stat: stat-contour-filled(bins: 8)),),
-///   scales: (scale-fill-viridis-c(),),
+///   scales: scales(fill: scale-viridis-c()),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

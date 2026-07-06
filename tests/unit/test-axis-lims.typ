@@ -21,12 +21,12 @@
 
 #let ext = expand-limits(y: 0)
 #assert.eq(ext.len(), 1)
-#assert.eq(ext.at(0).aesthetic, "y")
-#assert.eq(ext.at(0).extend, (0,))
+#assert.eq(ext.y.aesthetic, "y")
+#assert.eq(ext.y.extend, (0,))
 
 #let ext-many = expand-limits(x: (0, 100), y: 10)
-#assert.eq(ext-many.at(0).extend, (0, 100))
-#assert.eq(ext-many.at(1).extend, (10,))
+#assert.eq(ext-many.x.extend, (0, 100))
+#assert.eq(ext-many.y.extend, (10,))
 
 // Train folds extend values into the trained domain.
 #let data = (

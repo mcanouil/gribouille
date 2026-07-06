@@ -35,7 +35,7 @@
     data: cont,
     mapping: aes(x: "x", y: "y", linewidth: "w", group: "g"),
     layers: (geom-line(),),
-    scales: (scale-linewidth-continuous(range: (0.4pt, 2.4pt)),),
+    scales: scales(linewidth: scale-continuous(range: (0.4pt, 2.4pt))),
     labels: labels(
       title: "Scale-Linewidth-Continuous",
       x: "X",
@@ -50,12 +50,8 @@
     data: manual,
     mapping: aes(x: "x", y: "y", linewidth: "g", group: "g"),
     layers: (geom-line(),),
-    scales: (
-      scale-linewidth-manual(
-        values: (0.4pt, 1.2pt, 2.4pt),
-        limits: ("thin", "medium", "thick"),
-      ),
-    ),
+    scales: scales(linewidth: scale-manual(values: (0.4pt, 1.2pt, 2.4pt),
+        limits: ("thin", "medium", "thick"),)),
     labels: labels(
       title: "Scale-Linewidth-Manual",
       x: "X",
@@ -70,7 +66,7 @@
     data: cont,
     mapping: aes(x: "x", y: "y", linewidth: "w", group: "g"),
     layers: (geom-line(),),
-    scales: (scale-linewidth-binned(n-breaks: 4, range: (0.4pt, 2.4pt)),),
+    scales: scales(linewidth: scale-binned(n-breaks: 4, range: (0.4pt, 2.4pt))),
     labels: labels(
       title: "Scale-Linewidth-Binned",
       x: "X",

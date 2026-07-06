@@ -21,9 +21,9 @@
     data: pts,
     mapping: aes(x: "x", y: "y", shape: "w"),
     layers: (geom-point(size: 4pt),),
-    scales: (scale-shape-binned(n-breaks: 4),),
+    scales: scales(shape: scale-binned(n-breaks: 4)),
     labels: labels(
-      title: "scale-shape-binned(n-breaks: 4)",
+      title: "scale-binned(n-breaks: 4)",
       x: "X",
       y: "Y",
       shape: "Bin",
@@ -36,12 +36,8 @@
     data: pts,
     mapping: aes(x: "x", y: "y", shape: "w"),
     layers: (geom-point(size: 4pt),),
-    scales: (
-      scale-shape-binned(
-        n-breaks: 6,
-        palette: ("circle", "square", "triangle", "diamond", "cross", "x"),
-      ),
-    ),
+    scales: scales(shape: scale-binned(n-breaks: 6,
+        palette: ("circle", "square", "triangle", "diamond", "cross", "x"),)),
     labels: labels(
       title: "Scale-Shape-Binned with Custom Palette",
       x: "X",
@@ -56,9 +52,9 @@
     data: lined,
     mapping: aes(x: "x", y: "y", linetype: "q", group: "q"),
     layers: (geom-line(stroke: 1pt),),
-    scales: (scale-linetype-binned(n-breaks: 3),),
+    scales: scales(linetype: scale-binned(n-breaks: 3)),
     labels: labels(
-      title: "scale-linetype-binned(n-breaks: 3)",
+      title: "scale-binned(n-breaks: 3)",
       x: "X",
       y: "Y",
       linetype: "Bin",

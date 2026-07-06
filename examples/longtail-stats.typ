@@ -10,10 +10,7 @@
   data: mpg,
   mapping: aes(x: "hwy"),
   layers: (geom-line(stat: "ecdf", colour: accent, stroke: 1.4pt),),
-  scales: (
-    scale-x-continuous(name: "Highway mpg"),
-    scale-y-continuous(name: "F(x)", limits: (0, 1)),
-  ),
+  scales: scales(x: scale-continuous(name: "Highway mpg"), y: scale-continuous(name: "F(x)", limits: (0, 1))),
   labels: labels(
     title: "ECDF via Stat-Ecdf",
     x: "Highway mpg",

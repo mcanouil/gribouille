@@ -43,7 +43,7 @@
 ///   layers: (
 ///     geom-hex(bins: 25) + (stat: stat-summary-hex(fun: "mean", bins: 25)),
 ///   ),
-///   scales: (scale-fill-viridis-c(),),
+///   scales: scales(fill: scale-viridis-c()),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

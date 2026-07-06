@@ -15,11 +15,7 @@
   data: spiral,
   mapping: aes(x: "x", y: "y", colour: "t"),
   layers: (geom-path(stroke: 1.2pt),),
-  scales: (
-    scale-colour-viridis-c(),
-    scale-x-continuous(breaks: (-6, -3, 0, 3, 6)),
-    scale-y-continuous(breaks: (-6, -3, 0, 3, 6)),
-  ),
+  scales: scales(colour: scale-viridis-c(), x: scale-continuous(breaks: (-6, -3, 0, 3, 6)), y: scale-continuous(breaks: (-6, -3, 0, 3, 6))),
   coord: coord-fixed(),
   labels: labels(
     title: "Geom-Path Follows Row Order",

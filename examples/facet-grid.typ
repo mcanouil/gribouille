@@ -9,7 +9,7 @@
   mapping: aes(x: "flipper-len", y: "body-mass", colour: "species"),
   layers: (geom-point(size: 2pt, alpha: 0.85),),
   facet: facet-grid(rows: "sex", columns: "species", labeller: label-both()),
-  scales: (scale-y-continuous(labels: format-comma()),),
+  scales: scales(y: scale-continuous(labels: format-comma())),
   guides: guides(colour: none),
   labels: labels(
     title: "Penguin Morphology by Sex and Species",

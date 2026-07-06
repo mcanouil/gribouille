@@ -1,4 +1,4 @@
-// scale-colour-okabe-ito and scale-fill-okabe-ito: CVD-safe discrete palette.
+// scale-okabe-ito and scale-okabe-ito: CVD-safe discrete palette.
 
 #import "../lib.typ": *
 
@@ -16,11 +16,7 @@
     geom-point(size: 2pt, alpha: 0.7),
     geom-smooth(method: "lm", alpha: 0.15),
   ),
-  scales: (
-    scale-colour-okabe-ito(),
-    scale-fill-okabe-ito(),
-    scale-y-continuous(labels: format-comma()),
-  ),
+  scales: scales(colour: scale-okabe-ito(), fill: scale-okabe-ito(), y: scale-continuous(labels: format-comma())),
   labels: labels(
     title: "Penguin Species with the Okabe-Ito Palette",
     x: "Flipper Length (mm)",

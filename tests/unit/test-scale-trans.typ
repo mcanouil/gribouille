@@ -1,43 +1,40 @@
 // Log/sqrt/reverse continuous scale wrappers.
 //
 // Each wrapper produces a scale spec dict with the same shape as
-// `scale-x-continuous` / `scale-y-continuous` and the appropriate `trans`
+// `scale-continuous` / `scale-continuous` and the appropriate `trans`
 // keyword. Mapping then applies the trans through `map-position`, so a
 // mid-domain value lands closer to one endpoint than the linear midpoint.
 
-#import "../../src/scale/continuous.typ": (
-  scale-x-log10, scale-x-reverse, scale-x-sqrt, scale-y-log10, scale-y-reverse,
-  scale-y-sqrt,
-)
+#import "../../src/scale/continuous.typ": _transform-scale
 #import "../../src/scale/train.typ": (
   map-axis, map-position, transform-fwd, transform-inv,
 )
 
 // --- spec dicts carry the right aesthetic and trans ---
 
-#let xs-log = scale-x-log10()
+#let xs-log = _transform-scale("x", "log10")
 #assert.eq(xs-log.kind, "scale")
 #assert.eq(xs-log.aesthetic, "x")
 #assert.eq(xs-log.type, "continuous")
 #assert.eq(xs-log.transform, "log10")
 
-#let ys-log = scale-y-log10()
+#let ys-log = _transform-scale("y", "log10")
 #assert.eq(ys-log.aesthetic, "y")
 #assert.eq(ys-log.transform, "log10")
 
-#let xs-sqrt = scale-x-sqrt()
+#let xs-sqrt = _transform-scale("x", "sqrt")
 #assert.eq(xs-sqrt.aesthetic, "x")
 #assert.eq(xs-sqrt.transform, "sqrt")
 
-#let ys-sqrt = scale-y-sqrt()
+#let ys-sqrt = _transform-scale("y", "sqrt")
 #assert.eq(ys-sqrt.aesthetic, "y")
 #assert.eq(ys-sqrt.transform, "sqrt")
 
-#let xs-rev = scale-x-reverse()
+#let xs-rev = _transform-scale("x", "reverse")
 #assert.eq(xs-rev.aesthetic, "x")
 #assert.eq(xs-rev.transform, "reverse")
 
-#let ys-rev = scale-y-reverse()
+#let ys-rev = _transform-scale("y", "reverse")
 #assert.eq(ys-rev.aesthetic, "y")
 #assert.eq(ys-rev.transform, "reverse")
 

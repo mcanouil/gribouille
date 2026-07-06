@@ -20,7 +20,7 @@
   mapping: aes(x: "dir", y: "count", fill: "dir"),
   layers: (geom-col(width: 1),),
   coord: coord-radial(theta: "x"),
-  scales: (scale-x-discrete(expand: false),),
+  scales: scales(x: scale-discrete(expand: false)),
   guides: guides(fill: none),
   labels: labels(title: "Wind Directions"),
   theme: theme-minimal(),

@@ -20,13 +20,10 @@
   data: sales,
   mapping: aes(x: "q", y: "revenue", fill: "product"),
   layers: (geom-col(position: "dodge"),),
-  scales: (
-    scale-x-discrete(expand: false),
-    scale-y-continuous(expand: (0%, 10%), labels: format-currency(
+  scales: scales(x: scale-discrete(expand: false), y: scale-continuous(expand: (0%, 10%), labels: format-currency(
       symbol: "$",
       digits: 0,
-    )),
-  ),
+    ))),
   labels: labels(
     title: "Revenue by Quarter, Dodged",
     subtitle: "Side-by-side bars compare products within each quarter",

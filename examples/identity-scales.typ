@@ -16,7 +16,7 @@
   data: signals,
   mapping: aes(x: "x", y: "y", fill: "c", shape: "s"),
   layers: (geom-point(size: 4pt),),
-  scales: (scale-colour-identity(), scale-shape-identity()),
+  scales: scales(colour: scale-identity(), shape: scale-identity()),
   labels: labels(
     title: "Identity Scales Pass Column Values Straight to Aesthetics",
     subtitle: "Hex strings drive fill; shape names drive marker glyphs",

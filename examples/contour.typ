@@ -20,7 +20,7 @@
   data: d,
   mapping: aes(x: "x", y: "y", z: "z", colour: "level"),
   layers: (geom-contour(bins: 12, stroke: 0.6pt),),
-  scales: (scale-colour-viridis-c(option: "viridis"),),
+  scales: scales(colour: scale-viridis-c(option: "viridis")),
   labels: labels(
     title: "Radial Wave: 12 Contour Levels",
     subtitle: "z = sin(2.5 r) · exp(-r / 3) over a 60-by-60 grid",

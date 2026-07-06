@@ -24,7 +24,7 @@
     data: discrete-d,
     mapping: aes(x: "x", y: "y", fill: "g"),
     layers: (geom-point(size: 4pt),),
-    scales: (scale-fill-brewer(palette: "Set1"),),
+    scales: scales(fill: scale-brewer(palette: "Set1")),
     labels: labels(
       title: "Scale-Fill-Brewer (Set1)",
       x: "X",
@@ -39,7 +39,7 @@
     data: discrete-d,
     mapping: aes(x: "x", y: "y", fill: "g"),
     layers: (geom-point(size: 4pt),),
-    scales: (scale-fill-brewer(palette: "Spectral"),),
+    scales: scales(fill: scale-brewer(palette: "Spectral")),
     labels: labels(
       title: "Scale-Fill-Brewer (Spectral)",
       x: "X",
@@ -54,7 +54,7 @@
     data: continuous-d,
     mapping: aes(x: "x", y: "y", fill: "z"),
     layers: (geom-point(size: 4pt),),
-    scales: (scale-fill-gradient(),),
+    scales: scales(fill: scale-gradient()),
     labels: labels(
       title: "Scale-Fill-Gradient (two-stop)",
       x: "X",
@@ -69,9 +69,9 @@
     data: diverging-d,
     mapping: aes(x: "x", y: "y", fill: "z"),
     layers: (geom-point(size: 4pt),),
-    scales: (scale-fill-gradient2(midpoint: 0),),
+    scales: scales(fill: scale-gradient2(midpoint: 0)),
     labels: labels(
-      title: "scale-fill-gradient2 (Around 0)",
+      title: "scale-gradient2 (Around 0)",
       x: "X",
       y: "Y",
       fill: "z",

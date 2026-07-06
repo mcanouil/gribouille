@@ -4,8 +4,8 @@
   DISCRETE-AUTO-DATA-PAD, normalise-expansion,
 )
 #import "../../src/scale/train.typ": map-discrete, map-position, train
-#import "../../src/scale/continuous.typ": scale-x-continuous, scale-y-continuous
-#import "../../src/scale/discrete.typ": scale-x-discrete
+#import "../../src/scale/constructors.typ": scale-continuous, scale-discrete
+#import "../../src/scales.typ": scales
 #import "../../src/coord/cartesian.typ": coord-cartesian
 
 // Auto resolves to the per-scale-type defaults: 5% mult on continuous, no
@@ -109,7 +109,7 @@
 // the lo-side mult (auto + anchor) to 0, while the hi side honours the
 // explicit 10%. Domain is (0, 5), so the upper bound lifts by 0.1 * 5 = 0.5.
 #let bar-side-trained = train(
-  scales: (scale-y-continuous(expand: (auto, 10%)),),
+  scales: scales(y: scale-continuous(expand: (auto, 10%))),
   layers: bar-prepared,
   mapping: aes(x: "cat", y: "y"),
   data: bar-data,
@@ -155,7 +155,7 @@
 #let pt-layers = (geom-point(),)
 #let pt-prepared = pt-layers.map(l => _prepare-layer(l, pt-mapping, pt-data))
 #let pt-trained = train(
-  scales: (scale-x-continuous(expand: 5pt),),
+  scales: scales(x: scale-continuous(expand: 5pt)),
   layers: pt-prepared,
   mapping: pt-mapping,
   data: pt-data,
@@ -216,7 +216,7 @@
 
 // Explicit `expand:` on the radial scale wins over the radial override.
 #let pinned-trained = train(
-  scales: (scale-x-continuous(expand: (10%, 0%)),),
+  scales: scales(x: scale-continuous(expand: (10%, 0%))),
   layers: rose-prepared,
   mapping: rose-mapping,
   data: rose-data,

@@ -1,4 +1,4 @@
-// scale-x-date parses ISO date strings on x and renders year-month tick labels.
+// scale-date parses ISO date strings on x and renders year-month tick labels.
 
 #import "../lib.typ": *
 
@@ -11,7 +11,7 @@
     geom-line(stroke: 1.2pt, colour: rgb("#1f77b4")),
     geom-point(size: 2pt, fill: rgb("#1f77b4")),
   ),
-  scales: (scale-x-date(date-format: "[year]-[month repr:numerical]"),),
+  scales: scales(x: scale-date(date-format: "[year]-[month repr:numerical]")),
   labels: labels(
     title: "US Personal Savings Rate During the Recession",
     subtitle: "Monthly observations, 2008-2009",

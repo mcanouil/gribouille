@@ -70,7 +70,7 @@
 /// )
 /// ```
 ///
-/// \@see \@plot, \@scale-x-continuous
+/// \@see \@plot, \@scale-continuous
 #let coord-cartesian(
   x-limits: none,
   y-limits: none,

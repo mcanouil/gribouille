@@ -57,7 +57,7 @@
 /// )
 /// ```
 ///
-/// \@examples Pair with \@scale-size-area to give markers an area-proportional
+/// \@examples Pair with \@scale-area to give markers an area-proportional
 /// scaling (instead of a radius-proportional one).
 /// ```
 /// //| alt: "Scatter of x against y with marker size proportional to area encoding count of duplicate (x, y) rows."
@@ -73,7 +73,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-count(),),
-///   scales: (scale-size-area(range: (1pt, 12pt)),),
+///   scales: scales(size: scale-area(range: (1pt, 12pt))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

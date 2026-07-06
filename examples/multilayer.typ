@@ -32,7 +32,7 @@
     geom-line(stroke: 1pt),
     geom-point(size: 3pt),
   ),
-  scales: (scale-x-continuous(breaks: (1, 2, 3, 4, 5, 6)),),
+  scales: scales(x: scale-continuous(breaks: (1, 2, 3, 4, 5, 6))),
   labels: labels(
     title: "Monthly Sales by Region",
     subtitle: "Line and point layers share a single colour mapping",

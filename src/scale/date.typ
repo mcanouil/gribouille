@@ -1,6 +1,6 @@
 ///! Temporal position scales: date, datetime, and time.
 ///!
-///! These wrappers train a continuous numeric domain like \@scale-x-continuous
+///! These wrappers train a continuous numeric domain like \@scale-continuous
 ///! and only differ at axis-label time, where the numeric break is converted
 ///! back to a Typst `datetime` against a fixed epoch and rendered through
 ///! `dt.display(date-format)`.
