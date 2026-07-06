@@ -3,7 +3,7 @@
 // the fail-*/check wrappers panic and cannot be tested in Typst.
 
 #import "../../src/utils/errors.typ": (
-  enum-text, error-text, range-text, type-text,
+  enum-text, error-text, range-text, type-text, unknown-column-text,
 )
 
 // --- error-text: base grammar, period, optional hint ----------------------
@@ -47,6 +47,16 @@
 #assert.eq(
   range-text("stat", "p", -1, 0, 1, lo-open: false, hint: "Use a probability."),
   "stat: p must be in [0, 1); got -1. Use a probability.",
+)
+
+// --- unknown-column-text: aesthetic/facet-role label + available columns ---
+#assert.eq(
+  unknown-column-text("aes", "colour", "group", ("x", "y")),
+  "aes: colour maps to unknown column \"group\"; available columns: \"x\", \"y\".",
+)
+#assert.eq(
+  unknown-column-text("facet-wrap", "variable", "drv", ("displ", "hwy")),
+  "facet-wrap: variable maps to unknown column \"drv\"; available columns: \"displ\", \"hwy\".",
 )
 
 #"errors builders ok"

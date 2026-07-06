@@ -1,7 +1,7 @@
 // `_normalise-data` accepts row-store (array of dicts) or column-store
 // (dict of equal-length arrays) and returns the canonical row-store form.
 
-#import "../../src/data.typ": _normalise-data
+#import "../../src/data.typ": _normalise-data, column-names
 
 // `none` passes through unchanged so per-layer "inherit plot data" stays
 // unaffected.
@@ -39,6 +39,18 @@
 
 // Idempotent: feeding row-store back in returns it unchanged.
 #assert.eq(_normalise-data(mixed-rows), mixed-rows)
+
+// `column-names` lists a row-store's columns for mapping validation.
+#assert.eq(column-names(((a: 1, b: 2), (a: 3, b: 4))), ("a", "b"))
+// `none`, empty, and non-row-store input yield an empty list (nothing to check).
+#assert.eq(column-names(none), ())
+#assert.eq(column-names(()), ())
+#assert.eq(column-names((a: (1, 2))), ())
+// The `_gribouille-factors` sentinel from two-arg `as-factor` is excluded.
+#assert.eq(
+  column-names(((a: 1, _gribouille-factors: ("a",)),)),
+  ("a",),
+)
 
 // The following inputs panic with a clear message; uncomment one at a time
 // to verify the error path locally:

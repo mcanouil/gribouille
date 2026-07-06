@@ -13,6 +13,17 @@
   data.map(row => row.at(name, default: none))
 }
 
+// List the column names present in a normalised row-store, excluding the
+// internal `_gribouille-factors` sentinel. Returns `()` for `none`, empty, or
+// non-row-store input so callers can skip validation when there is nothing to
+// enumerate. Reads the first row only: every row carries the same keys.
+#let column-names(data) = {
+  if type(data) != array or data.len() == 0 { return () }
+  let first = data.first()
+  if type(first) != dictionary { return () }
+  first.keys().filter(k => k != "_gribouille-factors")
+}
+
 // Partition `rows` into buckets keyed by `str(key-fn(row))`.
 // Preserves input order within each bucket.
 #let group-by(rows, key-fn) = {
