@@ -18,7 +18,7 @@
   data: d,
   mapping: aes(x: "x", y: "y", fill: "fill"),
   layers: (geom-tile(),),
-  scales: (scale-fill-viridis-c(option: "viridis"),),
+  scales: scales(fill: scale-viridis-c(option: "viridis")),
   width: 12cm,
   height: 9cm,
 )

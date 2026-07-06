@@ -88,9 +88,9 @@
 ///
 /// \@param title Override the legend title; `none` keeps the default from labels or scale.
 ///
-/// \@param nrow Number of rows when laying out levels in a grid; `none` for default. Applies to discrete (swatch) and continuous size (`scale-size-*`) legends; a continuous colourbar is a single bar and ignores it.
+/// \@param nrow Number of rows when laying out levels in a grid; `none` for default. Applies to discrete (swatch) and continuous `size` scale legends; a continuous colourbar is a single bar and ignores it.
 ///
-/// \@param ncolumn Number of columns when laying out levels in a grid; `none` for default. Applies to discrete (swatch) and continuous size (`scale-size-*`) legends; a continuous colourbar is a single bar and ignores it.
+/// \@param ncolumn Number of columns when laying out levels in a grid; `none` for default. Applies to discrete (swatch) and continuous `size` scale legends; a continuous colourbar is a single bar and ignores it.
 ///
 /// \@param reverse Reverse the order of levels.
 ///

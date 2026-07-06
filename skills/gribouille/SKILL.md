@@ -42,9 +42,9 @@ data → stat → position → scale → coord → facet → theme → render
     geom-smooth(method: "lm", se: true),
     // more layers ...
   ),
-  scales: (
-    scale-x-continuous(),
-    scale-colour-discrete(...),
+  scales: scales(
+    x: scale-continuous(),
+    colour: scale-discrete(...),
     // more scales ...
   ),
   coord: coord-cartesian(),   // optional
@@ -82,14 +82,14 @@ data → stat → position → scale → coord → facet → theme → render
     geom-smooth(method: "lm", se: true, alpha: 0.2),
     geom-mark(method: "hull", expand: 5pt, alpha: 0.25),
   ),
-  scales: (
-    scale-x-continuous(),
-    scale-y-continuous(labels: format-comma()),
-    scale-colour-discrete(
+  scales: scales(
+    x: scale-continuous(),
+    y: scale-continuous(labels: format-comma()),
+    colour: scale-discrete(
       limits: species-colours.keys(),
       palette: species-colours.values(),
     ),
-    scale-fill-discrete(
+    fill: scale-discrete(
       limits: species-colours.keys(),
       palette: species-colours.values(),
     ),
@@ -112,7 +112,7 @@ The API is pre-1.0; names and arguments change between releases.
 Do not recall a geom, stat, scale, or argument from memory; confirm each against the machine-readable reference.
 
 1. Index: `https://m.canouil.dev/gribouille/llms.txt` lists every page and its `.llms.md`.
-2. Fetch the symbol's page, e.g., `.../reference/geoms/geom-smooth.llms.md`, `.../reference/scales/scale-colour-viridis-d.llms.md`, `.../reference/stats/stat-summary.llms.md`.
+2. Fetch the symbol's page, e.g., `.../reference/geoms/geom-smooth.llms.md`, `.../reference/scales/scale-viridis-d.llms.md`, `.../reference/stats/stat-summary.llms.md`.
    Every `<page>.html` has a sibling `<page>.llms.md`.
 3. Use only the arguments, defaults, and types documented there.
 
