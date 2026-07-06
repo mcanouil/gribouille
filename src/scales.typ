@@ -41,8 +41,8 @@
 ///   mapping: aes(x: "x", y: "y", colour: "g"),
 ///   layers: (geom-point(size: 3pt),),
 ///   scales: scales(
-///     x: scale-x-continuous(limits: (0, 4)),
-///     colour: scale-colour-viridis-d(),
+///     x: scale-continuous(limits: (0, 4)),
+///     colour: scale-viridis-d(),
 ///   ),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -57,7 +57,7 @@
       "expects named arguments keyed by aesthetic; got "
         + str(args.pos().len())
         + " positional value(s)",
-      hint: "Key each scale by aesthetic, e.g. scales(x: scale-x-continuous()).",
+      hint: "Key each scale by aesthetic, e.g. scales(x: scale-continuous()).",
     )
   }
   let out = (:)
@@ -72,7 +72,13 @@
       )
     }
     if v == auto or v == none { continue }
-    if type(v) != dictionary or v.at("kind", default: none) != "scale" {
+    if (
+      type(v) != dictionary
+        or v.at("kind", default: none) != "scale"
+        or (
+          "family" not in v
+        )
+    ) {
       fail(
         "scales",
         "value for '"
@@ -82,23 +88,7 @@
           + repr(v),
       )
     }
-    if "family" in v {
-      // Deferred agnostic constructor: dispatch onto this aesthetic.
-      out.insert(k, bind-scale(k, v))
-      continue
-    }
-    // Built scale that still bakes its own aesthetic: bind it to the key.
-    let baked = v.at("aesthetic", default: none)
-    if baked != none and baked != k {
-      fail(
-        "scales",
-        "scale keyed under '" + k + "' is a " + baked + " scale",
-        hint: "Key each scale under its own aesthetic, e.g. scales("
-          + baked
-          + ": ...).",
-      )
-    }
-    out.insert(k, (..v, aesthetic: k))
+    out.insert(k, bind-scale(k, v))
   }
   out
 }

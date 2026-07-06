@@ -118,68 +118,16 @@
 
 // Scales.
 #import "src/scales.typ": scales
+#import "src/scale/constructors.typ": (
+  scale-area, scale-binned, scale-binned-area, scale-brewer, scale-continuous,
+  scale-date, scale-datetime, scale-discrete, scale-distiller, scale-fermenter,
+  scale-gradient, scale-gradient2, scale-gradientn, scale-grey, scale-hue,
+  scale-identity, scale-log10, scale-manual, scale-okabe-ito, scale-radius,
+  scale-reverse, scale-sqrt, scale-steps, scale-steps2, scale-stepsn,
+  scale-time, scale-viridis-b, scale-viridis-c, scale-viridis-d,
+)
 #import "src/scale/secondary.typ": dup-axis, sec-axis
-#import "src/scale/continuous.typ": scale-x-continuous, scale-y-continuous
-#import "src/scale/continuous.typ": scale-x-log10, scale-y-log10
-#import "src/scale/continuous.typ": scale-x-sqrt, scale-y-sqrt
-#import "src/scale/continuous.typ": scale-x-reverse, scale-y-reverse
-#import "src/scale/continuous.typ": scale-x-binned, scale-y-binned
-#import "src/scale/date.typ": scale-x-date, scale-y-date
-#import "src/scale/date.typ": scale-x-datetime, scale-y-datetime
-#import "src/scale/date.typ": scale-x-time, scale-y-time
-#import "src/scale/discrete.typ": scale-x-discrete, scale-y-discrete
-#import "src/scale/colour.typ": scale-colour-continuous, scale-colour-discrete
-#import "src/scale/colour.typ": scale-fill-continuous, scale-fill-discrete
-#import "src/scale/colour.typ": scale-colour-manual, scale-fill-manual
-#import "src/scale/colour.typ": scale-colour-identity, scale-fill-identity
-#import "src/scale/colour.typ": (
-  scale-alpha-binned, scale-alpha-continuous, scale-alpha-identity,
-  scale-alpha-manual,
-)
-#import "src/scale/colour.typ": (
-  scale-colour-viridis-b, scale-colour-viridis-c, scale-colour-viridis-d,
-)
-#import "src/scale/colour.typ": (
-  scale-fill-viridis-b, scale-fill-viridis-c, scale-fill-viridis-d,
-)
-#import "src/scale/colour.typ": scale-colour-brewer, scale-fill-brewer
-#import "src/scale/colour.typ": scale-colour-okabe-ito, scale-fill-okabe-ito
-#import "src/scale/colour.typ": (
-  scale-colour-gradient, scale-colour-gradient2, scale-colour-gradientn,
-)
-#import "src/scale/colour.typ": (
-  scale-fill-gradient, scale-fill-gradient2, scale-fill-gradientn,
-)
-#import "src/scale/colour.typ": scale-colour-grey, scale-fill-grey
-#import "src/scale/colour.typ": scale-colour-hue, scale-fill-hue
-#import "src/scale/colour.typ": scale-colour-distiller, scale-fill-distiller
-#import "src/scale/colour.typ": (
-  scale-colour-fermenter, scale-colour-steps, scale-colour-steps2,
-  scale-colour-stepsn,
-)
-#import "src/scale/colour.typ": (
-  scale-fill-fermenter, scale-fill-steps, scale-fill-steps2, scale-fill-stepsn,
-)
 #import "src/utils/palette.typ": brewer-palette, okabe-ito
-#import "src/scale/size.typ": (
-  scale-radius, scale-size-area, scale-size-binned, scale-size-binned-area,
-  scale-size-continuous, scale-size-identity, scale-size-manual,
-)
-#import "src/scale/linewidth.typ": (
-  scale-linewidth-binned, scale-linewidth-continuous, scale-linewidth-identity,
-  scale-linewidth-manual,
-)
-#import "src/scale/stroke.typ": (
-  scale-stroke-binned, scale-stroke-continuous, scale-stroke-identity,
-  scale-stroke-manual,
-)
-#import "src/scale/shape.typ": (
-  scale-shape, scale-shape-binned, scale-shape-identity, scale-shape-manual,
-)
-#import "src/scale/linetype.typ": (
-  scale-linetype, scale-linetype-binned, scale-linetype-continuous,
-  scale-linetype-discrete, scale-linetype-identity, scale-linetype-manual,
-)
 #import "src/utils/colour.typ": colour-mix
 #import "src/limits.typ": expand-limits
 

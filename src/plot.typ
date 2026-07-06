@@ -31,7 +31,7 @@
 ///
 /// \@param layers Array of geom layers (e.g., \@geom-point,\@geom-line). Drawn in order.
 ///
-/// \@param scales Array of scale objects overriding defaults \@scale-x-continuous,\@scale-colour-viridis-d, etc.).
+/// \@param scales Aesthetic-keyed scale overrides built with\@scales (e.g., `scales(x: scale-continuous(), colour: scale-viridis-d())`), or the dictionary returned by\@expand-limits.
 ///
 /// \@param coord Coordinate system. Defaults to\@coord-cartesian when `none`.
 ///
@@ -105,7 +105,7 @@
   data: none,
   mapping: none,
   layers: (),
-  scales: (),
+  scales: (:),
   coord: none,
   facet: none,
   theme: none,

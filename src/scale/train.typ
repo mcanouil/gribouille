@@ -226,16 +226,9 @@
   "continuous"
 }
 
-// Look up the user scale for `aesthetic`. Accepts the aesthetic-keyed dict from
-// `scales()` or, as a transitional bridge, the legacy array of self-identifying
-// scale objects (matched on their baked `aesthetic` field, last wins).
-#let _find-user-scale(scales, aesthetic) = {
-  if type(scales) == dictionary { return scales.at(aesthetic, default: none) }
-  for s in scales {
-    if s.aesthetic == aesthetic { return s }
-  }
-  none
-}
+// Look up the user scale for `aesthetic` in the aesthetic-keyed dict built by
+// `scales()`.
+#let _find-user-scale(scales, aesthetic) = scales.at(aesthetic, default: none)
 
 #let _scale-param(target, spec, key, fallback) = {
   if target != none { return target.at(key, default: fallback) }
