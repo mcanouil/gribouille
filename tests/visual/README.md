@@ -14,7 +14,7 @@ Smallest plot that exercises the new behaviour: synthetic inline data, single la
 ### Naming
 
 `<area>-<feature>.typ`, where `<area>` is `geom`, `stat`, `position`, `scale`, `facet`, `coord`, `theme`, or `guide`.
-For example: `geom-jitter.typ`, `position-dodge-variable-width.typ`, `scale-colour-brewer.typ`.
+For example: `geom-jitter.typ`, `position-dodge-variable-width.typ`, `scale-brewer-gradient.typ`.
 
 ### Workflow
 
