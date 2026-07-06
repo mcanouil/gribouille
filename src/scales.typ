@@ -7,6 +7,7 @@
 
 #import "utils/errors.typ": fail, fail-enum
 #import "aes-keys.typ": AES-KEYS
+#import "scale/bind.typ": bind-scale
 
 /// Bind scale specifications to aesthetics.
 ///
@@ -76,11 +77,17 @@
         "scales",
         "value for '"
           + k
-          + "' must be a scale spec (e.g. scale-x-continuous,"
-          + " scale-colour-viridis-d) or `auto` for the default; got "
+          + "' must be a scale spec (e.g. scale-continuous,"
+          + " scale-viridis-d) or `auto` for the default; got "
           + repr(v),
       )
     }
+    if "family" in v {
+      // Deferred agnostic constructor: dispatch onto this aesthetic.
+      out.insert(k, bind-scale(k, v))
+      continue
+    }
+    // Built scale that still bakes its own aesthetic: bind it to the key.
     let baked = v.at("aesthetic", default: none)
     if baked != none and baked != k {
       fail(
