@@ -21,7 +21,7 @@
   data: d,
   mapping: aes(x: "x", y: "y"),
   layers: (geom-bin-2d(bins: 25),),
-  scales: (scale-fill-viridis-c(option: "magma"),),
+  scales: scales(fill: scale-viridis-c(option: "magma")),
   width: 12cm,
   height: 9cm,
 )

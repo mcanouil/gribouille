@@ -45,14 +45,14 @@ Documentation: <https://m.canouil.dev/gribouille>.
       size: 8pt,
     ),
   ),
-  scales: (
-    scale-x-continuous(),
-    scale-y-continuous(labels: format-comma()),
-    scale-colour-discrete(
+  scales: scales(
+    x: scale-continuous(),
+    y: scale-continuous(labels: format-comma()),
+    colour: scale-discrete(
       limits: species-colours.keys(),
       palette: species-colours.values(),
     ),
-    scale-fill-discrete(
+    fill: scale-discrete(
       limits: species-colours.keys(),
       palette: species-colours.values(),
     ),
