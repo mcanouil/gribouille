@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: a keyed `scales()` constructor, mirroring `guides()`, binds scale overrides to aesthetics as named arguments (e.g., `scales(x: scale-x-continuous(), colour: scale-colour-viridis-d())`) instead of a positional array; the positional form keeps working. (#157)
 - feat: an installable Agent Skill teaches coding agents to author Gribouille plots, confirming every argument against the site's `.llms.md` reference; the repository doubles as a Claude Code plugin marketplace, so the skill installs via `/plugin install` or `npx skills add`. (#154)
 - feat: geom and theme-element `stroke:` accept the native Typst `1.3pt + accent` form, writing thickness and paint together; an explicit `colour:` still wins over the embedded paint. (#153)
 - fix: mapping an aesthetic or a facet variable to a column absent from the data now fails with a clear error naming the aesthetic, the unknown column, and the available columns, instead of rendering a misleading all-`none` plot. (#156)

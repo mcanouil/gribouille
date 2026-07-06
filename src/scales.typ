@@ -1,0 +1,97 @@
+///! Plot-level scale bindings.
+///!
+///! Map aesthetic names to scale specs built with \@scale-x-continuous,
+///! \@scale-colour-viridis-d, and friends, then feed the result to \@plot via
+///! the `scales:` parameter. Keying by aesthetic mirrors \@guides: a later entry
+///! for the same aesthetic overrides an earlier one.
+
+#import "utils/errors.typ": fail, fail-enum
+#import "aes-keys.typ": AES-KEYS
+
+/// Bind scale specifications to aesthetics.
+///
+/// Accepts named arguments where each key is an aesthetic (e.g., `x`, `colour`,
+/// `fill`) and each value is a scale spec from a `scale-*` constructor, or
+/// `auto` to keep the default scale. The resulting dictionary threads into the
+/// plot spec and is honoured by scale training. When two entries target the
+/// same aesthetic the later one wins, matching \@guides.
+///
+/// \@category Scales
+/// \@stability stable
+/// \@since 0.5.0
+///
+/// \@param args Named scale specs keyed by aesthetic name.
+/// \@named-keys x y colour fill size alpha linewidth stroke shape linetype
+///   : a scale spec for the `{}` aesthetic, or `auto` for the default.
+///
+/// \@returns Dictionary mapping aesthetic name to scale spec.
+///
+/// \@examples Pin the x domain and colour the points with a discrete viridis
+/// palette in one keyed call.
+/// ```
+/// //| alt: "Scatter chart with three points coloured by group, the x axis pinned to a fixed domain and the colour scale set to a discrete viridis palette."
+/// #let d = (
+///   (x: 1, y: 1, g: "a"),
+///   (x: 2, y: 2, g: "b"),
+///   (x: 3, y: 3, g: "c"),
+/// )
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y", colour: "g"),
+///   layers: (geom-point(size: 3pt),),
+///   scales: scales(
+///     x: scale-x-continuous(limits: (0, 4)),
+///     colour: scale-colour-viridis-d(),
+///   ),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@see \@plot, \@guides
+#let scales(..args) = {
+  if args.pos().len() != 0 {
+    fail(
+      "scales",
+      "expects named arguments keyed by aesthetic; got "
+        + str(args.pos().len())
+        + " positional value(s)",
+      hint: "Key each scale by aesthetic, e.g. scales(x: scale-x-continuous()).",
+    )
+  }
+  let out = (:)
+  for (k, v) in args.named() {
+    if not AES-KEYS.contains(k) {
+      fail-enum(
+        "scales",
+        "aesthetic",
+        k,
+        AES-KEYS,
+        hint: "Key each scale by a known aesthetic name.",
+      )
+    }
+    if v == auto or v == none { continue }
+    if type(v) != dictionary or v.at("kind", default: none) != "scale" {
+      fail(
+        "scales",
+        "value for '"
+          + k
+          + "' must be a scale spec (e.g. scale-x-continuous,"
+          + " scale-colour-viridis-d) or `auto` for the default; got "
+          + repr(v),
+      )
+    }
+    let baked = v.at("aesthetic", default: none)
+    if baked != none and baked != k {
+      fail(
+        "scales",
+        "scale keyed under '" + k + "' is a " + baked + " scale",
+        hint: "Key each scale under its own aesthetic, e.g. scales("
+          + baked
+          + ": ...).",
+      )
+    }
+    out.insert(k, (..v, aesthetic: k))
+  }
+  out
+}
