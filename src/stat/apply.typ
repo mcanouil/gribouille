@@ -29,6 +29,7 @@
 #import "../utils/bin.typ": panel-bin-grid
 #import "../utils/bin2d.typ": panel-bin-grid-2d
 #import "../utils/hex.typ": panel-hex-grid
+#import "../utils/errors.typ": fail-enum
 
 // Single source of truth for every stat. `setup:` is the optional panel-level
 // pre-pass invoked before per-group `apply()`; it is `none` when the stat
@@ -153,18 +154,27 @@
   if ctor == none { (:) } else { ctor().params }
 }
 
+// Panic unless `name` is a registered stat. Called once per layer at setup, so
+// a typo like `stat: "smoothh"` fails loudly instead of silently running as
+// identity downstream.
+#let _check-stat-name(name) = {
+  if name not in _STATS {
+    fail-enum("layer", "stat", name, _STATS.keys())
+  }
+}
+
 // Resolve a layer's `stat:` field into a `(name, params)` pair. A string name
 // inherits the geom's own params over the stat constructor defaults, mirroring
 // the `position:` string form, so geom params such as `distribution` reach the
 // stat. A `stat-*()` dict carries its own name and params instead.
 #let resolve-stat-spec(stat-spec, geom-params) = {
   if type(stat-spec) == str {
+    _check-stat-name(stat-spec)
     (name: stat-spec, params: stat-default-params(stat-spec) + geom-params)
   } else {
-    (
-      name: stat-spec.at("name", default: "identity"),
-      params: stat-spec.at("params", default: (:)),
-    )
+    let name = stat-spec.at("name", default: "identity")
+    _check-stat-name(name)
+    (name: name, params: stat-spec.at("params", default: (:)))
   }
 }
 
