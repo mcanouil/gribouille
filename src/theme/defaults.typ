@@ -106,12 +106,25 @@
   tick-length: 0cm,
 )
 
+// The `tick-length` scalar cascades per axis and per side through
+// `_scalar-cascade` (theme.typ), so these suffixed keys resolve at render but
+// carry no default of their own.
+#let _tick-length-variants = (
+  "x",
+  "y",
+  "x-bottom",
+  "x-top",
+  "y-left",
+  "y-right",
+).map(suffix => "tick-length-" + suffix)
+
 // Every key a user theme may set: the base fields and surface records in
-// `default-theme` plus the per-axis/per-side cascade variants in
-// `_surface-parent` (e.g. `axis-text-x-bottom`) that resolve at render but carry
-// no default of their own. A key outside this set is never queried, so it would
-// silently do nothing.
-#let _KNOWN-THEME-KEYS = default-theme.keys() + _surface-parent.keys()
+// `default-theme`, the per-axis/per-side element variants in `_surface-parent`
+// (e.g. `axis-text-x-bottom`), and the `tick-length` scalar variants. A key
+// outside this set is never queried, so it would silently do nothing.
+#let _KNOWN-THEME-KEYS = (
+  default-theme.keys() + _surface-parent.keys() + _tick-length-variants
+)
 
 #let merge-theme(user) = {
   let src = if user == none { minimal-surfaces(_tr-ink, _tr-paper) } else {
