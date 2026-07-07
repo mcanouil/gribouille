@@ -157,6 +157,9 @@
 ///
 /// \@see \@plot, \@geom-point, \@as-factor, \@from-theme, \@after-stat,
 ///   \@after-scale, \@stage
+#import "aes-keys.typ": AES-KEYS
+#import "utils/errors.typ": fail, fail-enum
+
 #let aes(
   x: none,
   y: none,
@@ -190,38 +193,62 @@
   z: none,
   nudge-x: none,
   nudge-y: none,
-) = (
-  kind: "aes",
-  x: x,
-  y: y,
-  z: z,
-  colour: colour,
-  fill: fill,
-  size: size,
-  alpha: alpha,
-  linewidth: linewidth,
-  group: group,
-  shape: shape,
-  linetype: linetype,
-  label: label,
-  xmin: xmin,
-  xmax: xmax,
-  ymin: ymin,
-  ymax: ymax,
-  xend: xend,
-  yend: yend,
-  xintercept: xintercept,
-  yintercept: yintercept,
-  slope: slope,
-  intercept: intercept,
-  weight: weight,
-  stroke: stroke,
-  x0: x0,
-  y0: y0,
-  a: a,
-  b: b,
-  angle: angle,
-  radius: radius,
-  nudge-x: nudge-x,
-  nudge-y: nudge-y,
-)
+  ..args,
+) = {
+  // Every valid channel is a declared parameter above, so anything reaching
+  // `args` is a typo (e.g. the US spelling `color`); reject it with the known
+  // set instead of Typst's bare "unexpected argument".
+  if args.pos().len() != 0 {
+    fail(
+      "aes",
+      "expects named aesthetic mappings; got "
+        + str(args.pos().len())
+        + " positional value(s)",
+      hint: "Map each channel by name, e.g. aes(x: \"col\").",
+    )
+  }
+  for (key, _) in args.named() {
+    fail-enum(
+      "aes",
+      "aesthetic",
+      key,
+      AES-KEYS,
+      hint: "Aesthetic names use British spelling, e.g. `colour`.",
+    )
+  }
+  (
+    kind: "aes",
+    x: x,
+    y: y,
+    z: z,
+    colour: colour,
+    fill: fill,
+    size: size,
+    alpha: alpha,
+    linewidth: linewidth,
+    group: group,
+    shape: shape,
+    linetype: linetype,
+    label: label,
+    xmin: xmin,
+    xmax: xmax,
+    ymin: ymin,
+    ymax: ymax,
+    xend: xend,
+    yend: yend,
+    xintercept: xintercept,
+    yintercept: yintercept,
+    slope: slope,
+    intercept: intercept,
+    weight: weight,
+    stroke: stroke,
+    x0: x0,
+    y0: y0,
+    a: a,
+    b: b,
+    angle: angle,
+    radius: radius,
+    nudge-x: nudge-x,
+    nudge-y: nudge-y,
+  )
+}
