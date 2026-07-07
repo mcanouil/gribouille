@@ -168,14 +168,17 @@
 // the `position:` string form, so geom params such as `distribution` reach the
 // stat. A `stat-*()` dict carries its own name and params instead.
 #let resolve-stat-spec(stat-spec, geom-params) = {
-  if type(stat-spec) == str {
-    _check-stat-name(stat-spec)
-    (name: stat-spec, params: stat-default-params(stat-spec) + geom-params)
-  } else {
-    let name = stat-spec.at("name", default: "identity")
-    _check-stat-name(name)
-    (name: name, params: stat-spec.at("params", default: (:)))
+  let is-str = type(stat-spec) == str
+  let name = if is-str { stat-spec } else {
+    stat-spec.at("name", default: "identity")
   }
+  _check-stat-name(name)
+  let params = if is-str {
+    stat-default-params(name) + geom-params
+  } else {
+    stat-spec.at("params", default: (:))
+  }
+  (name: name, params: params)
 }
 
 #let setup-stat(name, data, mapping, params) = {

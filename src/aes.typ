@@ -207,11 +207,12 @@
       hint: "Map each channel by name, e.g. aes(x: \"col\").",
     )
   }
-  for (key, _) in args.named() {
+  let named = args.named()
+  if named.len() != 0 {
     fail-enum(
       "aes",
       "aesthetic",
-      key,
+      named.keys().first(),
       AES-KEYS,
       hint: "Aesthetic names use British spelling, e.g. `colour`.",
     )
