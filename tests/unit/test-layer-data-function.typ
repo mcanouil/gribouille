@@ -67,6 +67,6 @@
 // non-frame panics via `_normalise-data`. Uncomment to verify locally:
 //
 //   #let _ = _resolve-data((data: _ => 42), plot-rows)
-//     panics with: data: must be an array of dicts or a dict of arrays; got integer
+//     panics with: data: value must be an array of dicts or a dict of arrays; got 42.
 
 layer data function tests passed.

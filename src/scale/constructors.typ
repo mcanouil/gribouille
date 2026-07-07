@@ -6,6 +6,11 @@
 ///! Pass these to \@plot through \@scales, e.g.
 ///! `scales(x: scale-log10(), colour: scale-viridis-d())`.
 
+// The stub defers `args` unvalidated; `bind-scale` spreads them into the
+// family's internal builder (scale/bind.typ), whose fixed signature is the sole
+// arbiter of valid keys. A misspelled argument therefore surfaces as Typst's
+// native "unexpected argument" at bind, not a gribouille-scoped message: there
+// is no function-signature introspection to mirror each builder's keys here.
 #let _stub(family, args) = (kind: "scale", family: family, args: args)
 
 // Generic scales ------------------------------------------------------------

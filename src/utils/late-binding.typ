@@ -5,7 +5,7 @@
 ///! first bound, so callers can pull values from the trained stat output,
 ///! the resolved scale output, or the active theme.
 
-#import "errors.typ": fail
+#import "errors.typ": fail, fail-type
 
 #let _LATE-BINDING-KINDS = (
   "from-theme",
@@ -291,9 +291,11 @@
       post-col = _AFTER-STAT-COL-PREFIX + channel
       closures.push((col: post-col, expr: after-stat-expr))
     } else if after-stat-expr != none {
-      fail(
+      fail-type(
         "stage[" + channel + "].after-stat",
-        "must be string or function; got " + str(type(after-stat-expr)),
+        "after-stat",
+        after-stat-expr,
+        "a string or function",
       )
     }
     let after-scale-expr = stg.at("after-scale", default: none)
@@ -396,9 +398,11 @@
       closures.push((channel: channel, col: col, expr: expr))
       new-mapping.insert(channel, col)
     } else {
-      fail(
+      fail-type(
         "after-stat[" + channel + "]",
-        "expr must be a string or function; got " + str(type(expr)),
+        "expr",
+        expr,
+        "a string or function",
       )
     }
   }
@@ -414,7 +418,7 @@
 #let _path-parts(path) = {
   if type(path) == str { return path.split(".") }
   if type(path) == array { return path }
-  fail("from-theme", "path must be a string or array; got " + str(type(path)))
+  fail-type("from-theme", "path", path, "a string or array")
 }
 
 /// Resolve a `from-theme(path)` marker against a merged theme dictionary.

@@ -7,7 +7,7 @@
 ///! the data.
 
 #import "utils/types.typ": parse-number
-#import "utils/errors.typ": fail
+#import "utils/errors.typ": fail, fail-type
 
 #let column(data, name) = {
   data.map(row => row.at(name, default: none))
@@ -50,13 +50,7 @@
   if type(data) == array {
     for (i, row) in data.enumerate() {
       if type(row) != dictionary {
-        fail(
-          "data",
-          "row-store array must contain dictionaries; got "
-            + str(type(row))
-            + " at index "
-            + str(i),
-        )
+        fail-type("data", "row " + str(i), row, "a dictionary")
       }
     }
     return data
@@ -67,12 +61,11 @@
     let len = none
     for (k, vs) in pairs {
       if type(vs) != array {
-        fail(
+        fail-type(
           "data",
-          "column-store value for \""
-            + k
-            + "\" must be an array; got "
-            + str(type(vs)),
+          "column-store value for \"" + k + "\"",
+          vs,
+          "an array",
         )
       }
       if len == none {
@@ -98,10 +91,7 @@
       row
     })
   }
-  fail(
-    "data",
-    "must be an array of dicts or a dict of arrays; got " + str(type(data)),
-  )
+  fail-type("data", "value", data, "an array of dicts or a dict of arrays")
 }
 
 #let _mapping-ref(col, type) = (
