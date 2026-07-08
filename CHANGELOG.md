@@ -10,6 +10,7 @@
 
 ### Changes
 
+- fix: an unknown scale-* constructor argument now fails at scales() binding with the valid keys for that scale and aesthetic, and stray positional arguments are rejected instead of ignored. (#172)
 - feat: every geom exposes `key:` (legend glyph override) and, where meaningful, `stat:` and `position:`; stat-backed geoms take `stat: auto` to build their default stat from the geom parameters. (#169)
 - feat: a keyed `scales()` constructor, mirroring `guides()`, binds scale overrides to aesthetics as named arguments (e.g., `scales(x: scale-continuous(), colour: scale-viridis-d())`) instead of a positional array. (#157)
 - feat: an installable Agent Skill teaches coding agents to author Gribouille plots, confirming every argument against the site's `.llms.md` reference; the repository doubles as a Claude Code plugin marketplace, so the skill installs via `/plugin install` or `npx skills add`. (#154)
