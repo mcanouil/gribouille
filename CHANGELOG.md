@@ -4,11 +4,13 @@
 
 ### Breaking changes
 
+- feat!: `linetype` on `geom-segment`, `geom-curve`, `geom-spoke`, `geom-errorbar`, `geom-errorbarh`, `geom-linerange`, and `geom-pointrange` defaults to `auto` and honours a mapped linetype scale instead of pinning `"solid"`. (#169)
 - feat!: every constructor dict stores its concrete type under a single `name:` key; the per-family fields `geom:` (layers), `coord:`, `facet:`, `family:` (scale stubs), `labeller:`, and `key:` (draw keys) are renamed, `guide-custom()` returns `kind: "guide", name: "custom"`, and `position-fill()`/`position-identity()`/`position-stack()` carry an explicit `params: (:)`. Only code that pattern-matches the returned dicts is affected. (#168)
 - feat!: the per-aesthetic `scale-*` constructors collapse into an aesthetic-agnostic set keyed through `scales()`; the aesthetic now comes from the key, so `scale-colour-viridis-d()` becomes `scales(colour: scale-viridis-d())` and `scale-x-log10()` becomes `scales(x: scale-log10())`. `plot(scales:)` takes only the `scales()` dictionary (no positional array), and `expand-limits()` returns an aesthetic-keyed dictionary. (#158)
 
 ### Changes
 
+- feat: every geom exposes `key:` (legend glyph override) and, where meaningful, `stat:` and `position:`; stat-backed geoms take `stat: auto` to build their default stat from the geom parameters. (#169)
 - feat: a keyed `scales()` constructor, mirroring `guides()`, binds scale overrides to aesthetics as named arguments (e.g., `scales(x: scale-continuous(), colour: scale-viridis-d())`) instead of a positional array. (#157)
 - feat: an installable Agent Skill teaches coding agents to author Gribouille plots, confirming every argument against the site's `.llms.md` reference; the repository doubles as a Claude Code plugin marketplace, so the skill installs via `/plugin install` or `npx skills add`. (#154)
 - feat: geom and theme-element `stroke:` accept the native Typst `1.3pt + accent` form, writing thickness and paint together; an explicit `colour:` still wins over the embedded paint. (#153)
