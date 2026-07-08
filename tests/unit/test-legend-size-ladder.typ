@@ -1,7 +1,7 @@
 // Size-ladder key-glyph sizing: the legend reserves height and stride for the
 // resolved `size` glyph so large markers never overlap the next key.
 
-#import "../../src/legend.typ": (
+#import "../../src/render/legend.typ": (
   _GLYPH-DIAMETER-CM, _guide-shape, _ladder-key-diam-cm, _ladder-vmetrics,
   _size-ladder-height,
 )

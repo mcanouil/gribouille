@@ -1,7 +1,7 @@
 #import "render.typ": (
   _decorate-extents, _decorate-parts, _render-decorate, render-plot-deferred,
 )
-#import "legend.typ" as legend-mod
+#import "render/legend.typ" as legend-mod
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
 #import "theme/theme.typ": _text-style

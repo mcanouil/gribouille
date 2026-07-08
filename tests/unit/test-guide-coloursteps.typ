@@ -1,7 +1,7 @@
 // Stepped colour scales (scale-steps, scale-steps, viridis-b)
 // surface as colourbar candidates with binned: true and bin-boundary breaks.
 
-#import "../../src/legend.typ": guides-for
+#import "../../src/render/legend.typ": guides-for
 
 #let layer-point() = (
   geom: "point",

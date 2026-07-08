@@ -1,7 +1,7 @@
 ///! Vertical line from `ymin` to `ymax` with horizontal caps at each `x`.
 
 #import "../layer.typ": make-layer, split-aes-params
-#import "../utils/errorbar-draw.typ": _draw-errorbar-axis
+#import "errorbar-draw.typ": _draw-errorbar-axis
 
 /// Errorbar layer: vertical range with a horizontal cap at each end.
 ///

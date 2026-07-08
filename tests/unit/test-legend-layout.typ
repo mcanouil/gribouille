@@ -3,7 +3,7 @@
 // then wraps. `_grid-shape` also defaults to a single row when direction is
 // horizontal so a top/bottom legend lays out as a single line of entries.
 
-#import "../../src/legend.typ": (
+#import "../../src/render/legend.typ": (
   _grid-shape, _guide-title, _swatch-index, _swatch-rc, _title-prefix,
 )
 

@@ -7,7 +7,7 @@
 #import "../theme/theme.typ": _scalar-cascade, _text-args
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/palette.typ": default-discrete
-#import "../legend.typ" as legend-mod
+#import "legend.typ" as legend-mod
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec, _shared-axis-breaks
 #import "domain.typ": (

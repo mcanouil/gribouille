@@ -5,7 +5,7 @@
 // same trained domain and title, their guides collapse into one merged
 // swatch carrying both aesthetics.
 
-#import "../../src/legend.typ": guides-for
+#import "../../src/render/legend.typ": guides-for
 
 #let trained = (
   colour: (type: "discrete", domain: ("a", "b")),

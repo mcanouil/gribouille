@@ -4,11 +4,11 @@
 
 #import "../deps.typ": cetz
 #import "../position/dodge.typ": dodge-delta
-#import "aes-resolve.typ": aes-col
-#import "radial.typ": project-point, shift-point
-#import "repel.typ": repel
-#import "segment-route.typ": aabb-from-centre, route-segment
-#import "types.typ": parse-number
+#import "../utils/aes-resolve.typ": aes-col
+#import "../utils/radial.typ": project-point, shift-point
+#import "../utils/repel.typ": repel
+#import "../utils/segment-route.typ": aabb-from-centre, route-segment
+#import "../utils/types.typ": parse-number
 
 // Names of the geoms that share this draw pipeline. Treated as the single
 // source of truth by the renderer's pre-canvas size pass.

@@ -2,7 +2,7 @@
 
 #import "../../src/guide/legend.typ": guide-legend
 #import "../../src/guides.typ": guides
-#import "../../src/legend.typ": _default-placement, _merge-placement
+#import "../../src/render/legend.typ": _default-placement, _merge-placement
 
 // `position` defaults to `auto` so an unset side inherits from
 // `guides(default: ...)`; `direction` is likewise `auto` until the side is

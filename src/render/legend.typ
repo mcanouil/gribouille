@@ -7,26 +7,26 @@
 // alignment, direction, byrow, order) that drives where it renders and how
 // the swatch grid flows.
 
-#import "deps.typ": cetz
-#import "utils/pretty.typ": pretty
-#import "utils/format.typ": format-break
-#import "utils/measure.typ": measure-text-cm
-#import "utils/colour.typ": bin-edges, edge-midpoints, resolve-continuous-colour
-#import "utils/palette.typ": default-discrete, spec-attr, spec-palette
-#import "utils/level-resolve.typ": resolve-level
-#import "utils/errors.typ": fail, fail-type
-#import "theme/defaults.typ": resolve-colour
-#import "theme/theme.typ": (
+#import "../deps.typ": cetz
+#import "../utils/pretty.typ": pretty
+#import "../utils/format.typ": format-break
+#import "../utils/measure.typ": measure-text-cm
+#import "../utils/colour.typ": bin-edges, edge-midpoints, resolve-continuous-colour
+#import "../utils/palette.typ": default-discrete, spec-attr, spec-palette
+#import "../utils/level-resolve.typ": resolve-level
+#import "../utils/errors.typ": fail, fail-type
+#import "../theme/defaults.typ": resolve-colour
+#import "../theme/theme.typ": (
   _line-stroke, _rect-outset-cm, _rect-style, _text-args, _text-style,
   resolve-geom-defaults,
 )
-#import "guide/draw-key.typ": default-key-for, draw-glyph
-#import "guide/legend.typ": _normalise-position
-#import "scale/train.typ": mapping-display-name
-#import "utils/typst-markup.typ": resolve-prose
-#import "utils/margin.typ": length-to-cm, opposite-side
-#import "utils/aes-resolve.typ": merge-mapping, resolve-label
-#import "utils/margin.typ": resolve-margin-side-cm
+#import "../guide/draw-key.typ": default-key-for, draw-glyph
+#import "../guide/legend.typ": _normalise-position
+#import "../scale/train.typ": mapping-display-name
+#import "../utils/typst-markup.typ": resolve-prose
+#import "../utils/margin.typ": length-to-cm, opposite-side
+#import "../utils/aes-resolve.typ": merge-mapping, resolve-label
+#import "../utils/margin.typ": resolve-margin-side-cm
 
 // Aesthetic emission order. `x` and `y` train but never produce a guide; the
 // rest are emitted in this fixed order so merged guides land at the position

@@ -7,7 +7,7 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../utils/label-draw.typ": draw-segment, prepare-draw, row-centre
+#import "label-draw.typ": draw-segment, prepare-draw, row-centre
 #import "../utils/stroke.typ": build-stroke
 #import "../utils/typst-markup.typ": eval-as-markup
 #import "../theme/theme.typ": (

@@ -3,7 +3,7 @@
 // to strongest: natural default ("right") < theme(legend-position:) <
 // guides(default:) < per-aesthetic guides().
 
-#import "../../src/legend.typ": guides-for
+#import "../../src/render/legend.typ": guides-for
 #import "../../src/theme/theme.typ": theme
 #import "../../src/guide/legend.typ": guide-legend
 
