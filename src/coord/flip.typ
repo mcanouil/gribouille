@@ -67,6 +67,6 @@
 /// \@see \@plot, \@coord-cartesian, \@geom-col
 #let coord-flip(reverse: auto) = (
   kind: "coord",
-  coord: "flip",
+  name: "flip",
   reverse: reverse,
 )

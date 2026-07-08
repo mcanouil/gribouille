@@ -11,7 +11,7 @@
 // arbiter of valid keys. A misspelled argument therefore surfaces as Typst's
 // native "unexpected argument" at bind, not a gribouille-scoped message: there
 // is no function-signature introspection to mirror each builder's keys here.
-#let _stub(family, args) = (kind: "scale", family: family, args: args)
+#let _stub(family, args) = (kind: "scale", name: family, args: args)
 
 // Generic scales ------------------------------------------------------------
 

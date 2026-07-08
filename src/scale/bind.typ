@@ -146,7 +146,7 @@
 // Dispatch a deferred scale stub onto `aesthetic`, failing loudly when the
 // family is not available for that aesthetic.
 #let bind-scale(aesthetic, stub) = {
-  let family = stub.family
+  let family = stub.name
   let by-aesthetic = _SCALE-DISPATCH.at(family, default: none)
   if by-aesthetic == none {
     fail("scales", "unknown scale family " + repr(family))

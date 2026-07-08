@@ -49,7 +49,7 @@
 
 #let layers = (
   (
-    geom: "point",
+    name: "point",
     mapping: (x: "x", y: "y"),
     data: none,
     inherit-aes: true,
@@ -74,7 +74,7 @@
   scales: scales(y: scale-datetime(date-format: "[hour]:[minute]")),
   layers: (
     (
-      geom: "point",
+      name: "point",
       mapping: (x: "x", y: "y"),
       data: none,
       inherit-aes: true,
@@ -100,7 +100,7 @@
 )
 #let lim-layers = (
   (
-    geom: "point",
+    name: "point",
     mapping: (x: "x", y: "y"),
     data: none,
     inherit-aes: true,

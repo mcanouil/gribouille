@@ -8,7 +8,7 @@
 #import "../../src/guide/legend.typ": guide-legend
 
 #let layer-point() = (
-  geom: "point",
+  name: "point",
   mapping: none,
   inherit-aes: true,
   params: (colour: auto, fill: auto, shape: auto),

@@ -61,7 +61,7 @@
 /// ```
 ///
 /// \@see \@position-dodge, \@position-fill, \@position-identity
-#let position-stack() = (kind: "position", name: "stack")
+#let position-stack() = (kind: "position", name: "stack", params: (:))
 
 #let apply(data, mapping, params: (:), coord: none) = {
   let slice = if is-radial(coord) {

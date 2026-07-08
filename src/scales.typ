@@ -76,7 +76,7 @@
       type(v) != dictionary
         or v.at("kind", default: none) != "scale"
         or (
-          "family" not in v
+          "name" not in v
         )
     ) {
       fail(

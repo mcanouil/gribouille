@@ -26,7 +26,7 @@
 // --- merge preserves the marker ----------------------------------------
 
 #let layer = (
-  geom: "bar",
+  name: "bar",
   mapping: aes(y: after-stat("count")),
   data: none,
   inherit-aes: true,
@@ -64,7 +64,7 @@
 
 #let layers = (
   (
-    geom: "bar",
+    name: "bar",
     mapping: aes(x: "x", y: after-stat("count")),
     data: ((x: 1), (x: 2), (x: 3)),
     inherit-aes: true,

@@ -5,13 +5,13 @@
 
 #let c1 = coord-flip()
 #assert.eq(c1.kind, "coord")
-#assert.eq(c1.coord, "flip")
+#assert.eq(c1.name, "flip")
 #assert.eq(c1.reverse, auto)
 
 // The dict shape must stay stable so the renderer can route the spec into
 // the flip swap without touching positional or fixed-aspect coords.
 #let keys-c1 = c1.keys().sorted()
-#assert.eq(keys-c1, ("coord", "kind", "reverse"))
+#assert.eq(keys-c1, ("kind", "name", "reverse"))
 
 // Explicit reverse values carry through the spec.
 #assert.eq(coord-flip(reverse: true).reverse, true)

@@ -19,7 +19,7 @@
   mapping: (colour: "g"),
   layers: (
     (
-      geom: "point",
+      name: "point",
       mapping: none,
       inherit-aes: true,
       params: (colour: auto, fill: auto, shape: auto),
@@ -62,7 +62,7 @@
   mapping: (size: "g"),
   layers: (
     (
-      geom: "point",
+      name: "point",
       mapping: none,
       inherit-aes: true,
       params: (size: auto),

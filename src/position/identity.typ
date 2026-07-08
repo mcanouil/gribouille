@@ -52,7 +52,7 @@
 /// ```
 ///
 /// \@see \@position-stack, \@position-dodge, \@position-fill
-#let position-identity() = (kind: "position", name: "identity")
+#let position-identity() = (kind: "position", name: "identity", params: (:))
 
 #let apply(data, mapping, params: (:), coord: none) = (
   data: data,

@@ -1,7 +1,9 @@
 // Promoted alpha and new linewidth aesthetics: spec shapes and training.
 
 #import "../../src/scale/colour.typ": _alpha-continuous, _alpha-identity
-#import "../../src/scale/linewidth.typ": _linewidth-continuous, _linewidth-identity
+#import "../../src/scale/linewidth.typ": (
+  _linewidth-continuous, _linewidth-identity,
+)
 #import "../../src/scale/size.typ": _size-continuous, _size-identity
 #import "../../lib.typ": scale-identity, scales
 #import "../../src/scale/train.typ": train
@@ -51,7 +53,7 @@
 
 #let layers = (
   (
-    geom: "point",
+    name: "point",
     mapping: (x: "x", y: "y", alpha: "w", linewidth: "w"),
     data: (
       (x: 0, y: 0, w: 1),
@@ -76,7 +78,7 @@
 
 #let layers2 = (
   (
-    geom: "point",
+    name: "point",
     mapping: (x: "x", y: "y", alpha: "a"),
     data: (
       (x: 0, y: 0, a: 0.2),
@@ -96,7 +98,7 @@
 
 #let layers3 = (
   (
-    geom: "point",
+    name: "point",
     mapping: (x: "x", y: "y", size: "s"),
     data: (
       (x: 0, y: 0, s: 2pt),

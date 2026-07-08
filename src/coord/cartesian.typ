@@ -78,7 +78,7 @@
   clip: true,
 ) = (
   kind: "coord",
-  coord: "cartesian",
+  name: "cartesian",
   x-limits: x-limits,
   y-limits: y-limits,
   expand: expand,

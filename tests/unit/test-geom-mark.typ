@@ -8,7 +8,7 @@
 // Constructor returns a layer dict with the documented defaults.
 #let g = geom-mark()
 #assert.eq(g.kind, "layer")
-#assert.eq(g.geom, "mark")
+#assert.eq(g.name, "mark")
 #assert.eq(g.stat, "identity")
 #assert.eq(g.position, "identity")
 #assert.eq(g.params.method, "circle")

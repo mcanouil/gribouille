@@ -6,14 +6,14 @@
 #import "../../src/render/legend.typ": guides-for
 
 #let layer-point(colour: auto, fill: auto, shape: auto) = (
-  geom: "point",
+  name: "point",
   mapping: none,
   inherit-aes: true,
   params: (colour: colour, fill: fill, shape: shape),
 )
 
 #let layer-line(colour: auto, linetype: auto, linewidth: auto) = (
-  geom: "line",
+  name: "line",
   mapping: none,
   inherit-aes: true,
   params: (colour: colour, linetype: linetype, linewidth: linewidth),

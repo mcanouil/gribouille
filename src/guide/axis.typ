@@ -76,6 +76,7 @@
 /// \@see \@guides, \@guide-legend, \@plot
 #let guide-axis(angle: 0, n-dodge: 1) = (
   kind: "guide",
+  name: "axis",
   aesthetic: none,
   angle: angle,
   n-dodge: n-dodge,
@@ -126,6 +127,7 @@
 /// \@see \@guide-axis, \@guides
 #let guide-axis-logticks(angle: 0, n-dodge: 1) = (
   kind: "guide",
+  name: "axis-logticks",
   aesthetic: none,
   angle: angle,
   n-dodge: n-dodge,

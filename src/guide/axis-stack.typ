@@ -53,6 +53,7 @@
 /// \@see \@guide-axis, \@guide-axis-logticks, \@guides
 #let guide-axis-stack(guides: (), spacing: 4pt) = (
   kind: "guide",
+  name: "axis-stack",
   aesthetic: none,
   stack: true,
   guides: guides,

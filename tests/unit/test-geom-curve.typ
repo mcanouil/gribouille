@@ -5,7 +5,7 @@
 // Constructor returns a layer dict with the documented defaults.
 #let g = geom-curve()
 #assert.eq(g.kind, "layer")
-#assert.eq(g.geom, "curve")
+#assert.eq(g.name, "curve")
 #assert.eq(g.stat, "identity")
 #assert.eq(g.position, "identity")
 #assert.eq(g.params.curvature, 0.5)

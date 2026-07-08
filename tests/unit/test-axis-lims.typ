@@ -34,7 +34,7 @@
   (x: 4, y: 5),
 )
 #let mapping = (x: "x", y: "y")
-#let layers = ((mapping: mapping, data: data, geom: "point"),)
+#let layers = ((mapping: mapping, data: data, name: "point"),)
 #let trained = train(
   scales: expand-limits(y: 0),
   layers: layers,

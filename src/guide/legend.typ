@@ -230,6 +230,7 @@
   assert-length("guide-legend", "key-size", key-size)
   (
     kind: "guide",
+    name: "legend",
     aesthetic: none,
     title: title,
     nrow: nrow,

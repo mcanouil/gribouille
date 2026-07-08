@@ -5,7 +5,7 @@
 
 // True when the coord is any flavour of `coord-radial`.
 #let is-radial(coord) = (
-  coord != none and coord.at("coord", default: none) == "radial"
+  coord != none and coord.at("name", default: none) == "radial"
 )
 
 // "y" when theta is "x" (rose/radar) and "x" when theta is "y" (pie).

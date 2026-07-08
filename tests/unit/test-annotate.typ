@@ -6,7 +6,7 @@
 // Text annotation: x, y, label all become aesthetics with matching columns.
 #let lt = annotate("text", x: 1, y: 2, label: "hi")
 #assert.eq(lt.kind, "layer")
-#assert.eq(lt.geom, "text")
+#assert.eq(lt.name, "text")
 #assert.eq(lt.inherit-aes, false)
 #assert.eq(lt.data, ((x: 1, y: 2, label: "hi"),))
 #assert.eq(lt.mapping.kind, "aes")
@@ -57,7 +57,7 @@
 
 // Point annotation: only x, y -> no label column needed.
 #let lp = annotate("point", x: 3, y: 4)
-#assert.eq(lp.geom, "point")
+#assert.eq(lp.name, "point")
 #assert.eq(lp.data, ((x: 3, y: 4),))
 #assert.eq(lp.mapping.x, "x")
 #assert.eq(lp.mapping.y, "y")
@@ -66,19 +66,19 @@
 
 // Label annotation: same shape as text, dispatches to geom-label.
 #let ll = annotate("label", x: 0, y: 0, label: "boxed")
-#assert.eq(ll.geom, "label")
+#assert.eq(ll.name, "label")
 #assert.eq(ll.mapping.label, "label")
 
 // Segment annotation: xend / yend are aesthetics.
 #let ls = annotate("segment", x: 0, y: 0, xend: 1, yend: 1)
-#assert.eq(ls.geom, "segment")
+#assert.eq(ls.name, "segment")
 #assert.eq(ls.data, ((x: 0, y: 0, xend: 1, yend: 1),))
 #assert.eq(ls.mapping.xend, "xend")
 #assert.eq(ls.mapping.yend, "yend")
 
 // Rect annotation: xmin / xmax / ymin / ymax are aesthetics.
 #let lr = annotate("rect", xmin: 0, xmax: 1, ymin: 0, ymax: 1, fill: blue)
-#assert.eq(lr.geom, "rect")
+#assert.eq(lr.name, "rect")
 #assert.eq(lr.mapping.xmin, "xmin")
 #assert.eq(lr.mapping.xmax, "xmax")
 #assert.eq(lr.mapping.ymin, "ymin")
@@ -87,7 +87,7 @@
 
 // Vline annotation: xintercept is a layer parameter, not an aesthetic.
 #let lv = annotate("vline", xintercept: 5, colour: red)
-#assert.eq(lv.geom, "vline")
+#assert.eq(lv.name, "vline")
 #assert.eq(lv.params.xintercept, 5)
 #assert.eq(lv.params.colour, red)
 #assert.eq(lv.data, none)
@@ -96,7 +96,7 @@
 
 // Hline annotation: yintercept is a layer parameter.
 #let lh = annotate("hline", yintercept: 3)
-#assert.eq(lh.geom, "hline")
+#assert.eq(lh.name, "hline")
 #assert.eq(lh.params.yintercept, 3)
 #assert.eq(lh.data, none)
 #assert.eq(lh.mapping, none)
@@ -104,7 +104,7 @@
 // Abline annotation: slope and intercept are routed to layer params so the
 // geom can read them, even though they appear in the aesthetic key list.
 #let la = annotate("abline", slope: 2, intercept: 1)
-#assert.eq(la.geom, "abline")
+#assert.eq(la.name, "abline")
 #assert.eq(la.params.slope, 2)
 #assert.eq(la.params.intercept, 1)
 #assert.eq(la.data, none)

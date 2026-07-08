@@ -19,14 +19,14 @@
 )
 
 #let layer-point(colour: auto, fill: auto) = (
-  geom: "point",
+  name: "point",
   mapping: none,
   inherit-aes: true,
   params: (colour: colour, fill: fill),
 )
 
 #let layer-line(colour: auto) = (
-  geom: "line",
+  name: "line",
   mapping: none,
   inherit-aes: true,
   params: (colour: colour),

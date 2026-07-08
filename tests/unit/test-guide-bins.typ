@@ -4,7 +4,7 @@
 #import "../../src/render/legend.typ": guides-for
 
 #let layer-point() = (
-  geom: "point",
+  name: "point",
   mapping: none,
   inherit-aes: true,
   params: (size: auto, alpha: auto),

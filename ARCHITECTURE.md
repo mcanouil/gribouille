@@ -28,7 +28,7 @@ Entry points trace the same path:
 | `src/geom/` | Geometric layers; each exports a constructor (via `make-layer`) and a `draw(layer, ctx)`. Shared draw scaffolding for geom families (`grouped-path`, `errorbar-draw`, `ref-line`, `label-draw`) lives here too. |
 | `src/stat/` | Statistical transforms; dispatched by `src/stat/apply.typ`. |
 | `src/position/` | Position adjustments (stack, dodge, fill, jitter, …); dispatched by `src/position/apply.typ`. |
-| `src/scale/` | Aesthetic-agnostic scales: `constructors.typ` returns family-tagged stubs, `bind.typ` dispatches `(aesthetic, family)` to family-file builders (continuous, discrete, colour, date, size, …), `train.typ` trains domains. |
+| `src/scale/` | Aesthetic-agnostic scales: `constructors.typ` returns family-tagged stubs, `bind.typ` dispatches `(aesthetic, name)` to family-file builders (continuous, discrete, colour, date, size, …), `train.typ` trains domains. |
 | `src/coord/` | Coordinate systems (cartesian, fixed, flip, radial, transform). |
 | `src/facet/` | Faceting (grid, wrap) and strip labellers. |
 | `src/guide/` | Legend and axis configuration plus legend-symbol drawing. |
@@ -51,7 +51,7 @@ Design tenets worth knowing before editing:
   Provide a legend symbol via `src/guide/draw-key.typ` / `src/guide/draw-marker.typ`.
 - **A stat.** Add `src/stat/<name>.typ` and register it in [`src/stat/apply.typ`](src/stat/apply.typ).
 - **A position.** Add `src/position/<name>.typ` and register it in [`src/position/apply.typ`](src/position/apply.typ).
-- **A scale.** Add or extend the internal builder in the relevant family file (`src/scale/continuous.typ`, `src/scale/colour.typ`, …), register its `family` under each supported aesthetic in the [`src/scale/bind.typ`](src/scale/bind.typ) dispatch table, expose a public `scale-<name>` constructor in [`src/scale/constructors.typ`](src/scale/constructors.typ) (returns `_stub(family, args)`), and re-export it through [`lib.typ`](lib.typ).
+- **A scale.** Add or extend the internal builder in the relevant family file (`src/scale/continuous.typ`, `src/scale/colour.typ`, …), register its family name under each supported aesthetic in the [`src/scale/bind.typ`](src/scale/bind.typ) dispatch table, expose a public `scale-<name>` constructor in [`src/scale/constructors.typ`](src/scale/constructors.typ) (returns `_stub(family, args)`), and re-export it through [`lib.typ`](lib.typ).
 
 ## Error conventions
 

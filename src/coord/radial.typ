@@ -55,7 +55,7 @@
   clip: false,
 ) = (
   kind: "coord",
-  coord: "radial",
+  name: "radial",
   theta: theta,
   start: start,
   end: end,

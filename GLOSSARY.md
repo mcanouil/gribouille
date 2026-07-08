@@ -12,11 +12,11 @@ Run the survey command at the bottom before extending the table.
 | `aes`     | aesthetic mapping                      | `aes()` constructor; `(channel: column-name-or-marker, ...)`.                                                                           |
 | `stat`    | statistical transform                  | `stat_*` namespace; dispatched via `src/stat/apply.typ`.                                                                                |
 | `pos`     | position adjustment                    | `position_*` namespace (stack, dodge, fill, jitter, …).                                                                                 |
-| `coord`   | coordinate system                      | `coord-*` namespace; `(coord: "cartesian"\|"fixed"\|"radial"\|"transform", ...)`.                                                       |
+| `coord`   | coordinate system                      | `coord-*` namespace; `(name: "cartesian"\|"fixed"\|"radial"\|"transform", ...)`.                                                       |
 | `spec`    | plot specification dict                | the user-built dict consumed by `render-plot`.                                                                                          |
 | `ctx`     | per-draw context                       | dict passed to every geom's `draw(layer, ctx)`; built once in render/panel-draw.typ (`trained`, `px-range`/`py-range`, `palette`, resolver closures, `theme`, `flipped`, `canvas-w`/`canvas-h`, + `radial` on the geom-dispatch copy).      |
 | `mapping` | column-name dict                       | flattened `aes` (`(x: "col", y: "col", colour: "col", ...)`).                                                                           |
-| `layer`   | one entry of `spec.layers`             | dict tagged `kind: "layer"` carrying `geom`, `mapping`, `data`, …                                                                       |
+| `layer`   | one entry of `spec.layers`             | dict tagged `kind: "layer"` carrying `name` (the geom), `mapping`, `data`, …                                                                       |
 | `map`     | mapping (when shortened)               | local variable name; same shape as `mapping`.                                                                                           |
 | `params`  | layer-specific parameters              | `layer.params.<channel>` carries pinned values (`stroke`, `colour`, …).                                                                 |
 | `draw`    | per-geom render entry point            | every geom exports `draw(layer, ctx)`.                                                                                                  |
@@ -41,8 +41,8 @@ Run the survey command at the bottom before extending the table.
 | `inv`     | inverse transform  | transformed value → data (`transform-inv`).                      |
 | `sec`     | secondary axis     | `sec-axis()` config bound to the primary scale.                  |
 | `ref`     | mapping reference  | `mapping-ref` annotation (e.g., `as-factor()` forced-discrete).  |
-| `family`  | scale family       | family key on a scale stub; `bind-scale` dispatches on `(aesthetic, family)`. |
-| `stub`    | deferred scale spec | `(kind: "scale", family, args)` from a `scale-*` constructor, resolved by `scales()`. |
+| `family`  | scale family       | the scale-stub concept naming one internal builder; stored under the stub's `name:` key, `bind-scale` dispatches on `(aesthetic, name)`. |
+| `stub`    | deferred scale spec | `(kind: "scale", name, args)` from a `scale-*` constructor, resolved by `scales()`. |
 
 ## Geometry / panel
 

@@ -7,7 +7,7 @@
 // Constructor returns a layer dict with the documented defaults.
 #let g = geom-ellipse()
 #assert.eq(g.kind, "layer")
-#assert.eq(g.geom, "ellipse")
+#assert.eq(g.name, "ellipse")
 #assert.eq(g.stat, "identity")
 #assert.eq(g.position, "identity")
 #assert.eq(g.params.a, 1)
