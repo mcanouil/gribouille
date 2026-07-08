@@ -3,11 +3,7 @@
 ///! Used by positional adjustments such as `position-dodge` to choose bar
 ///! widths when the `x` aesthetic is numeric.
 
-#import "types.typ": parse-number
-
-#let _to-numeric(values) = {
-  values.map(v => parse-number(v)).filter(v => v != none)
-}
+#import "types.typ": to-numeric
 
 /// Smallest non-zero gap between unique numeric values in `values`.
 ///
@@ -43,7 +39,7 @@
 /// // r == 2.0
 /// ```
 #let resolution(values, zero: true) = {
-  let xs = _to-numeric(values)
+  let xs = to-numeric(values)
   if zero { xs.push(0.0) }
   if xs.len() < 2 { return 1 }
   let sorted = xs.sorted()

@@ -1,19 +1,13 @@
 // Two-dimensional grid binning helpers. A grid is
 // `(x-lo, x-n-bins, x-width, y-lo, y-n-bins, y-width)`.
 
-#import "bin.typ": bin-config, bin-domain, bin-midpoint, bin-of
+#import "bin.typ": bin-config, bin-domain, bin-midpoint, bin-of, split-pair
 #import "summaries.typ": read-weight
 #import "types.typ": parse-number
 
-#let _split-pair(value, fallback: none) = {
-  if value == none { return (fallback, fallback) }
-  if type(value) == array { return (value.at(0), value.at(1)) }
-  (value, value)
-}
-
 #let bin-grid-2d(xs, ys, bins, binwidth) = {
-  let (bx, by) = _split-pair(bins, fallback: 30)
-  let (wx, wy) = _split-pair(binwidth)
+  let (bx, by) = split-pair(bins, fallback: 30)
+  let (wx, wy) = split-pair(binwidth)
   let (x-lo, x-hi) = bin-domain(xs)
   let (y-lo, y-hi) = bin-domain(ys)
   let xc = bin-config(x-lo, x-hi, bx, wx)

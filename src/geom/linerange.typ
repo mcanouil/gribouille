@@ -96,6 +96,69 @@
   inherit-aes: inherit-aes,
 )
 
+// Build one row's vertical range line; shared with geom-pointrange. Returns
+// `(elem, dd, colour)` — the cetz line element to emit, the row's dodge
+// shift, and the resolved line colour for follow-up marks — or `none` when
+// the row does not resolve. `line-alpha: true` folds the alpha channel into
+// the line paint; pointrange keeps the paint opaque so its marker fill
+// inherits the plain colour.
+#let range-line-row(
+  layer,
+  mapping,
+  ctx,
+  row,
+  x-col,
+  ymin-col,
+  ymax-col,
+  theme-colour,
+  line-alpha: true,
+) = {
+  let xv = row.at(x-col, default: none)
+  let lo = parse-number(row.at(ymin-col, default: none))
+  let hi = parse-number(row.at(ymax-col, default: none))
+  if xv == none or lo == none or hi == none { return none }
+  let p-lo = project-point(ctx, xv, lo)
+  let p-hi = project-point(ctx, xv, hi)
+  if p-lo == none or p-hi == none { return none }
+  let dd = dodge-delta(ctx, layer, row)
+  let (cx-lo, cy-lo) = shift-point(p-lo, dd)
+  let (cx-hi, cy-hi) = shift-point(p-hi, dd)
+
+  let colour = resolve-channel(
+    "colour",
+    layer,
+    mapping,
+    ctx,
+    row,
+    theme-colour,
+  )
+  let paint = if line-alpha {
+    apply-alpha(colour, resolve-channel("alpha", layer, mapping, ctx, row, 1))
+  } else { colour }
+
+  let thickness = resolve-channel(
+    "linewidth",
+    layer,
+    mapping,
+    ctx,
+    row,
+    0.8pt,
+  )
+  (
+    elem: cetz.draw.line(
+      (cx-lo, cy-lo),
+      (cx-hi, cy-hi),
+      stroke: (
+        paint: paint,
+        thickness: thickness,
+        dash: layer.params.linetype,
+      ),
+    ),
+    dd: dd,
+    colour: colour,
+  )
+}
+
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
@@ -111,44 +174,16 @@
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
 
   for row in data {
-    let xv = row.at(x-col, default: none)
-    let lo = parse-number(row.at(ymin-col, default: none))
-    let hi = parse-number(row.at(ymax-col, default: none))
-    if xv == none or lo == none or hi == none { continue }
-    let p-lo = project-point(ctx, xv, lo)
-    let p-hi = project-point(ctx, xv, hi)
-    if p-lo == none or p-hi == none { continue }
-    let dd = dodge-delta(ctx, layer, row)
-    let (cx-lo, cy-lo) = shift-point(p-lo, dd)
-    let (cx-hi, cy-hi) = shift-point(p-hi, dd)
-
-    let colour = resolve-channel(
-      "colour",
+    let res = range-line-row(
       layer,
       mapping,
       ctx,
       row,
+      x-col,
+      ymin-col,
+      ymax-col,
       theme-colour,
     )
-    let alpha = resolve-channel("alpha", layer, mapping, ctx, row, 1)
-    let final-colour = apply-alpha(colour, alpha)
-
-    let thickness = resolve-channel(
-      "linewidth",
-      layer,
-      mapping,
-      ctx,
-      row,
-      0.8pt,
-    )
-    cetz.draw.line(
-      (cx-lo, cy-lo),
-      (cx-hi, cy-hi),
-      stroke: (
-        paint: final-colour,
-        thickness: thickness,
-        dash: layer.params.linetype,
-      ),
-    )
+    if res != none { res.elem }
   }
 }
