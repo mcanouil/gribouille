@@ -187,44 +187,12 @@
 // `.height` are always concrete lengths (`float.inf` for an unbounded page),
 // never `auto`. Recurses for nested compose panels. Split out from `compose` so
 // a deferred compose spec can be rendered as a panel of another composition.
-#let _render-compose(spec, container) = {
-  // Panels arrive as deferred thunks (`defer(plot, ...)` / `defer(compose,
-  // ...)`); materialise each to its spec dict here. No dimensions are injected:
-  // a plot thunk falls back to its own concrete default size for the guide
-  // probe (the real render overrides width/height to cell size later), while a
-  // compose thunk keeps `auto` so a nested composition resolves against its
-  // cell rather than the full outer canvas.
-  let panels = spec.panels.map(p => {
-    let materialised = p(as-spec: true)
-    check(
-      _is-plot-spec(materialised) or _is-compose-spec(materialised),
-      "compose",
-      "a deferred panel did not produce a plot or compose spec",
-      hint: "Wrap panels with `defer(plot, ...)` or `defer(compose, ...)`.",
-    )
-    materialised
-  })
-  let layout = spec.layout
-  let columns = spec.columns
-  let direction = spec.direction
-  let gutter = spec.gutter
-  let widths = spec.widths
-  let heights = spec.heights
-  let width = spec.width
-  let height = spec.height
-  let collect = spec.collect
-  let guides = spec.guides
-  let labels = spec.labels
-  let alt = spec.alt
-  let align-panels = spec.at("align-panels", default: false)
-  let tag-ctx = spec.at("tag-ctx", default: none)
-
-  // Resolve the chrome theme (labels, hoisted legend, panel tags) and propagate
-  // an explicit `compose(theme: ...)` into panels that set none.
-  let resolved = _resolve-compose-theme(panels, spec.at("theme", default: none))
-  let panels = resolved.panels
-  let theme = merge-theme(resolved.theme)
-
+// Guide-hoisting stage: probe each plot panel's would-be guides, keep the
+// aesthetics whose guides are identical across every panel, and settle the
+// shared legend side. Returns `(probes, hoisted, hoisted-guides,
+// legend-side)`; `probes` holds each plot panel's deferred render (or `none`
+// for a nested compose).
+#let _hoist-guides(panels, guides, collect) = {
   // Probe only plot panels with compose-level `guides` merged in; a nested
   // compose collects its own guides internally (guide collection is per level),
   // so it contributes none here and never hoists.
@@ -297,10 +265,18 @@
       ("right", "left", "top", "bottom"),
     )
   }
+  (
+    probes: probes,
+    hoisted: hoisted,
+    hoisted-guides: hoisted-guides,
+    legend-side: legend-side,
+  )
+}
 
-  // Tag descent: a nested compose inherits the ancestor's `tag-ctx` (levels,
-  // separator, affixes, corner, and the accumulated prefix); a top-level
-  // compose uses its own params, normalising `tag-levels` to an array.
+// Tag descent: a nested compose inherits the ancestor's `tag-ctx` (levels,
+// separator, affixes, corner, and the accumulated prefix); a top-level
+// compose uses its own params, normalising `tag-levels` to an array.
+#let _tag-params(spec, tag-ctx) = {
   let effective-levels = if tag-ctx != none {
     tag-ctx.levels
   } else if spec.tag-levels == none {
@@ -310,20 +286,188 @@
   } else {
     (spec.tag-levels,)
   }
-  let eff-sep = if tag-ctx != none { tag-ctx.sep } else { spec.tag-sep }
-  let eff-prefix = if tag-ctx != none { tag-ctx.prefix } else { "" }
-  let eff-tag-prefix = if tag-ctx != none {
-    tag-ctx.tag-prefix
-  } else { spec.tag-prefix }
-  let eff-tag-suffix = if tag-ctx != none {
-    tag-ctx.tag-suffix
-  } else { spec.tag-suffix }
-  let eff-corner = if tag-ctx != none { tag-ctx.corner } else {
-    spec.tag-corner
+  (
+    levels: effective-levels,
+    sep: if tag-ctx != none { tag-ctx.sep } else { spec.tag-sep },
+    prefix: if tag-ctx != none { tag-ctx.prefix } else { "" },
+    tag-prefix: if tag-ctx != none {
+      tag-ctx.tag-prefix
+    } else { spec.tag-prefix },
+    tag-suffix: if tag-ctx != none {
+      tag-ctx.tag-suffix
+    } else { spec.tag-suffix },
+    corner: if tag-ctx != none { tag-ctx.corner } else {
+      spec.tag-corner
+    },
+    level-code: if effective-levels.len() > 0 {
+      effective-levels.first()
+    } else { none },
+  )
+}
+
+// Track layout: validate `widths`/`heights` against the chosen layout and
+// carve the panel area into column/row tracks.
+#let _panel-tracks(
+  layout,
+  columns,
+  direction,
+  widths,
+  heights,
+  n,
+  area-w,
+  area-h,
+  gutter-cm,
+) = {
+  let cols = 0
+  let rows = 0
+  let col-ratios = none
+  let row-ratios = none
+  if layout == "grid" {
+    cols = if type(columns) == int { columns } else { columns.len() }
+    rows = calc.ceil(n / cols)
+    col-ratios = widths
+    row-ratios = heights
+  } else if direction == ttb or direction == btt {
+    if widths != none {
+      fail(
+        "compose",
+        "`widths` has no effect on a vertical stack",
+        hint: "Size it with `heights`.",
+      )
+    }
+    cols = 1
+    rows = n
+    row-ratios = heights
+  } else {
+    if heights != none {
+      fail(
+        "compose",
+        "`heights` has no effect on a horizontal stack",
+        hint: "Size it with `widths`.",
+      )
+    }
+    cols = n
+    rows = 1
+    col-ratios = widths
   }
-  let level-code = if effective-levels.len() > 0 {
-    effective-levels.first()
-  } else { none }
+  if col-ratios != none and col-ratios.len() != cols {
+    fail(
+      "compose",
+      "`widths` needs one entry per column ("
+        + str(cols)
+        + "); got "
+        + str(col-ratios.len()),
+    )
+  }
+  if row-ratios != none and row-ratios.len() != rows {
+    fail(
+      "compose",
+      "`heights` needs one entry per row ("
+        + str(rows)
+        + "); got "
+        + str(row-ratios.len()),
+    )
+  }
+  (
+    cols: cols,
+    rows: rows,
+    col-tracks: _tracks(area-w, cols, gutter-cm, col-ratios),
+    row-tracks: _tracks(area-h, rows, gutter-cm, row-ratios),
+  )
+}
+
+// Attach the hoisted legend canvas on its side of the panel block.
+#let _attach-legend(
+  panel-block,
+  hoisted-guides,
+  probes,
+  theme,
+  legend-side,
+  legend-size,
+  right-gap-cm,
+) = {
+  let trained = probes.find(p => p != none).trained
+  let legend-canvas = legend-mod.standalone(
+    hoisted-guides,
+    trained,
+    theme,
+    legend-side,
+    legend-size.width,
+    legend-size.height,
+  )
+  let right-gap = right-gap-cm * 1cm
+  if legend-side == "right" {
+    grid(
+      columns: (auto, auto),
+      align: horizon,
+      gutter: right-gap,
+      panel-block, legend-canvas,
+    )
+  } else if legend-side == "left" {
+    grid(
+      columns: (auto, auto),
+      align: horizon,
+      legend-canvas, panel-block,
+    )
+  } else if legend-side == "bottom" {
+    stack(dir: ttb, panel-block, align(center, legend-canvas))
+  } else {
+    stack(dir: ttb, align(center, legend-canvas), panel-block)
+  }
+}
+
+#let _render-compose(spec, container) = {
+  // Panels arrive as deferred thunks (`defer(plot, ...)` / `defer(compose,
+  // ...)`); materialise each to its spec dict here. No dimensions are injected:
+  // a plot thunk falls back to its own concrete default size for the guide
+  // probe (the real render overrides width/height to cell size later), while a
+  // compose thunk keeps `auto` so a nested composition resolves against its
+  // cell rather than the full outer canvas.
+  let panels = spec.panels.map(p => {
+    let materialised = p(as-spec: true)
+    check(
+      _is-plot-spec(materialised) or _is-compose-spec(materialised),
+      "compose",
+      "a deferred panel did not produce a plot or compose spec",
+      hint: "Wrap panels with `defer(plot, ...)` or `defer(compose, ...)`.",
+    )
+    materialised
+  })
+  let layout = spec.layout
+  let columns = spec.columns
+  let direction = spec.direction
+  let gutter = spec.gutter
+  let widths = spec.widths
+  let heights = spec.heights
+  let width = spec.width
+  let height = spec.height
+  let collect = spec.collect
+  let guides = spec.guides
+  let labels = spec.labels
+  let alt = spec.alt
+  let align-panels = spec.at("align-panels", default: false)
+  let tag-ctx = spec.at("tag-ctx", default: none)
+
+  // Resolve the chrome theme (labels, hoisted legend, panel tags) and propagate
+  // an explicit `compose(theme: ...)` into panels that set none.
+  let resolved = _resolve-compose-theme(panels, spec.at("theme", default: none))
+  let panels = resolved.panels
+  let theme = merge-theme(resolved.theme)
+
+  let hoist = _hoist-guides(panels, guides, collect)
+  let probes = hoist.probes
+  let hoisted = hoist.hoisted
+  let hoisted-guides = hoist.hoisted-guides
+  let legend-side = hoist.legend-side
+
+  let tags = _tag-params(spec, tag-ctx)
+  let effective-levels = tags.levels
+  let eff-sep = tags.sep
+  let eff-prefix = tags.prefix
+  let eff-tag-prefix = tags.tag-prefix
+  let eff-tag-suffix = tags.tag-suffix
+  let eff-corner = tags.corner
+  let level-code = tags.level-code
 
   let tag-style = _text-style(theme, "plot-tag")
   // A tag claims its own horizontal band so it never overlaps the panel. The
@@ -482,61 +626,21 @@
       )
     }
 
-    let n = panels.len()
-    let cols = 0
-    let rows = 0
-    let col-ratios = none
-    let row-ratios = none
-    if layout == "grid" {
-      cols = if type(columns) == int { columns } else { columns.len() }
-      rows = calc.ceil(n / cols)
-      col-ratios = widths
-      row-ratios = heights
-    } else if direction == ttb or direction == btt {
-      if widths != none {
-        fail(
-          "compose",
-          "`widths` has no effect on a vertical stack",
-          hint: "Size it with `heights`.",
-        )
-      }
-      cols = 1
-      rows = n
-      row-ratios = heights
-    } else {
-      if heights != none {
-        fail(
-          "compose",
-          "`heights` has no effect on a horizontal stack",
-          hint: "Size it with `widths`.",
-        )
-      }
-      cols = n
-      rows = 1
-      col-ratios = widths
-    }
-    if col-ratios != none and col-ratios.len() != cols {
-      fail(
-        "compose",
-        "`widths` needs one entry per column ("
-          + str(cols)
-          + "); got "
-          + str(col-ratios.len()),
-      )
-    }
-    if row-ratios != none and row-ratios.len() != rows {
-      fail(
-        "compose",
-        "`heights` needs one entry per row ("
-          + str(rows)
-          + "); got "
-          + str(row-ratios.len()),
-      )
-    }
-
-    let gutter-cm = gutter / 1cm
-    let col-tracks = _tracks(area-w, cols, gutter-cm, col-ratios)
-    let row-tracks = _tracks(area-h, rows, gutter-cm, row-ratios)
+    let tracks = _panel-tracks(
+      layout,
+      columns,
+      direction,
+      widths,
+      heights,
+      panels.len(),
+      area-w,
+      area-h,
+      gutter / 1cm,
+    )
+    let cols = tracks.cols
+    let rows = tracks.rows
+    let col-tracks = tracks.col-tracks
+    let row-tracks = tracks.row-tracks
 
     // `align-panels`: probe each plot panel at the size of the cell it will
     // occupy, then share margins grid-wise so plot areas line up: left/right per
@@ -601,34 +705,15 @@
   let composed = if hoisted-guides.len() == 0 {
     panel-block
   } else {
-    let trained = probes.find(p => p != none).trained
-    let legend-canvas = legend-mod.standalone(
+    _attach-legend(
+      panel-block,
       hoisted-guides,
-      trained,
+      probes,
       theme,
       legend-side,
-      legend-size.width,
-      legend-size.height,
+      legend-size,
+      right-gap-cm,
     )
-    let right-gap = right-gap-cm * 1cm
-    if legend-side == "right" {
-      grid(
-        columns: (auto, auto),
-        align: horizon,
-        gutter: right-gap,
-        panel-block, legend-canvas,
-      )
-    } else if legend-side == "left" {
-      grid(
-        columns: (auto, auto),
-        align: horizon,
-        legend-canvas, panel-block,
-      )
-    } else if legend-side == "bottom" {
-      stack(dir: ttb, panel-block, align(center, legend-canvas))
-    } else {
-      stack(dir: ttb, align(center, legend-canvas), panel-block)
-    }
   }
 
   let decorated = if labels == none {
