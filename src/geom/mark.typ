@@ -162,6 +162,8 @@
 ///
 /// \@param position Position adjustment name. Usually `"identity"`.
 ///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -204,6 +206,7 @@
   alpha: auto,
   stat: "identity",
   position: "identity",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = {
@@ -234,6 +237,7 @@
       + split-aes-params("geom-mark", args),
     stat: stat,
     position: position,
+    key: key,
     inherit-aes: inherit-aes,
   )
 }

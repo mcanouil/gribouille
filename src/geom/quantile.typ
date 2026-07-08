@@ -39,6 +39,10 @@
 ///
 /// \@param position Position adjustment name. Usually `"identity"`.
 ///
+/// \@param stat Statistical transform. `auto` builds the geom's default stat from the parameters above; pass a stat name or stat object to override.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -73,7 +77,9 @@
   alpha: auto,
   linetype: auto,
   linewidth: auto,
+  stat: auto,
   position: "identity",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = make-layer(
@@ -89,7 +95,8 @@
     linewidth: linewidth,
   )
     + split-aes-params("geom-quantile", args),
-  stat: stat-quantile(quantiles: quantiles, n-samples: n-samples),
+  stat: if stat == auto { stat-quantile(quantiles: quantiles, n-samples: n-samples) } else { stat },
   position: position,
+  key: key,
   inherit-aes: inherit-aes,
 )

@@ -3,6 +3,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point, shift-point
 #import "../position/dodge.typ": dodge-delta
@@ -29,11 +30,13 @@
 ///
 /// \@param alpha Line opacity in `[0, 1]`.
 ///
-/// \@param linetype Dash keyword. Defaults to `"solid"`.
+/// \@param linetype Dash keyword (e.g., `"solid"`, `"dashed"`). `auto` honours the linetype scale.
 ///
 /// \@param stat Statistical transform name. Usually `"identity"`.
 ///
 /// \@param position Position adjustment name. Usually `"identity"`.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
 ///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
@@ -80,9 +83,10 @@
   stroke: auto,
   colour: auto,
   alpha: auto,
-  linetype: "solid",
+  linetype: auto,
   stat: "identity",
   position: "identity",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = make-layer(
@@ -93,6 +97,7 @@
     + split-aes-params("geom-linerange", args),
   stat: stat,
   position: position,
+  key: key,
   inherit-aes: inherit-aes,
 )
 
@@ -151,7 +156,7 @@
       stroke: (
         paint: paint,
         thickness: thickness,
-        dash: layer.params.linetype,
+        dash: resolve-linetype(layer, mapping, ctx, row),
       ),
     ),
     dd: dd,

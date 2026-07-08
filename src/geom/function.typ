@@ -37,6 +37,8 @@
 ///
 /// \@param linetype Dash keyword. Defaults to `"solid"`.
 ///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping. Defaults to `false`.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -87,6 +89,7 @@
   colour: auto,
   alpha: auto,
   linetype: "solid",
+  key: auto,
   inherit-aes: false,
   ..args,
 ) = {
@@ -106,6 +109,7 @@
       linetype: linetype,
     )
       + split-aes-params("geom-function", args),
+    key: key,
     inherit-aes: inherit-aes,
   )
 }

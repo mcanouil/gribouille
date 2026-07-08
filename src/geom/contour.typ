@@ -32,6 +32,12 @@
 ///
 /// \@param linetype Dash keyword.
 ///
+/// \@param stat Statistical transform. `auto` builds the geom's default stat from the parameters above; pass a stat name or stat object to override.
+///
+/// \@param position Position adjustment name. Usually left at `"identity"`.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -66,6 +72,9 @@
   colour: auto,
   alpha: auto,
   linetype: auto,
+  stat: auto,
+  position: "identity",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = make-layer(
@@ -80,6 +89,8 @@
     linetype: linetype,
   )
     + split-aes-params("geom-contour", args),
-  stat: stat-contour(bins: bins, binwidth: binwidth, breaks: breaks),
+  stat: if stat == auto { stat-contour(bins: bins, binwidth: binwidth, breaks: breaks) } else { stat },
+  position: position,
+  key: key,
   inherit-aes: inherit-aes,
 )

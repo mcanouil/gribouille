@@ -36,6 +36,10 @@
 ///
 /// \@param position Position adjustment. Defaults to `"stack"` so a `fill`/`colour` mapping yields stacked contributions per group.
 ///
+/// \@param stat Statistical transform. `auto` builds the geom's default stat from the parameters above; pass a stat name or stat object to override.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -96,7 +100,9 @@
   fill: auto,
   stroke: none,
   alpha: auto,
+  stat: auto,
   position: "stack",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = make-layer(
@@ -111,7 +117,8 @@
     width: width,
   )
     + split-aes-params("geom-histogram", args),
-  stat: stat-bin(bins: bins, binwidth: binwidth),
+  stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else { stat },
   position: position,
+  key: key,
   inherit-aes: inherit-aes,
 )

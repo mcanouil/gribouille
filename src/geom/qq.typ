@@ -37,6 +37,10 @@
 ///
 /// \@param position Position adjustment name. Usually `"identity"`.
 ///
+/// \@param stat Statistical transform name or stat object.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -73,13 +77,15 @@
   mapping: none,
   data: none,
   size: auto,
-  stroke: auto,
-  fill: auto,
   colour: auto,
+  fill: auto,
+  stroke: auto,
   alpha: auto,
   shape: auto,
   distribution: "normal",
+  stat: "qq",
   position: "identity",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = make-layer(
@@ -96,7 +102,8 @@
     distribution: distribution,
   )
     + split-aes-params("geom-qq", args),
-  stat: "qq",
+  stat: stat,
   position: position,
+  key: key,
   inherit-aes: inherit-aes,
 )

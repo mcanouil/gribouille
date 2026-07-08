@@ -41,6 +41,12 @@
 ///
 /// \@param alpha Cell opacity in `[0, 1]`.
 ///
+/// \@param stat Statistical transform. `auto` builds the geom's default stat from the parameters above; pass a stat name or stat object to override.
+///
+/// \@param position Position adjustment name. Usually left at `"identity"`.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -73,6 +79,9 @@
   fill: auto,
   stroke: none,
   alpha: auto,
+  stat: auto,
+  position: "identity",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = make-layer(
@@ -86,7 +95,9 @@
     alpha: alpha,
   )
     + split-aes-params("geom-hex", args),
-  stat: stat-bin-hex(bins: bins, binwidth: binwidth),
+  stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else { stat },
+  position: position,
+  key: key,
   inherit-aes: inherit-aes,
 )
 

@@ -48,6 +48,12 @@
 ///
 /// \@param linetype Dash keyword for the fitted line. `auto` resolves via the linetype scale or defaults to `"solid"`.
 ///
+/// \@param stat Statistical transform. `auto` builds the geom's default stat from the parameters above; pass a stat name or stat object to override.
+///
+/// \@param position Position adjustment name. Usually left at `"identity"`.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -129,6 +135,9 @@
   fill: auto,
   alpha: auto,
   linetype: auto,
+  stat: auto,
+  position: "identity",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = make-layer(
@@ -146,7 +155,9 @@
     linetype: linetype,
   )
     + split-aes-params("geom-smooth", args),
-  stat: stat-smooth(method: method, se: se, level: level),
+  stat: if stat == auto { stat-smooth(method: method, se: se, level: level) } else { stat },
+  position: position,
+  key: key,
   inherit-aes: inherit-aes,
 )
 
