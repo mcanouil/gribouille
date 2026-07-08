@@ -908,16 +908,6 @@
   fail("legend._guide-height", "unknown guide kind " + repr(g.kind))
 }
 
-// Recompute `width` and `height` after `placement.direction` has been mutated.
-// Used by `compose()` whenever it coerces a hoisted guide's side because
-// horizontal vs vertical layouts have different footprints.
-#let recompute-extent(g, size-pt) = {
-  let out = g
-  out.width = _guide-width(out, size-pt)
-  out.height = _guide-height(out, size-pt)
-  out
-}
-
 #let guides-for(
   spec,
   trained,

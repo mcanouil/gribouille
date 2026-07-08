@@ -80,7 +80,7 @@
     let yv = row.at(y-col, default: none)
     if xv == none or yv == none { continue }
     let key = str(xv) + "\u{1}" + str(yv)
-    if not order.contains(key) {
+    if key not in proto {
       order.push(key)
       proto.insert(key, (x: xv, y: yv))
     }

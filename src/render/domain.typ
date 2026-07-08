@@ -287,23 +287,6 @@
   trained
 }
 
-// Swap a layer's mapping x and y so direction-agnostic geoms read the user's
-// original y column where they expect x and vice versa. Direction-sensitive
-// geoms (col, hline, vline, abline) read `ctx.flipped` instead and rotate
-// their drawing without a mapping swap.
-#let _flip-layer-mapping(layer) = {
-  let mapping = layer.at("mapping", default: none)
-  if mapping == none { return layer }
-  let x = mapping.at("x", default: none)
-  let y = mapping.at("y", default: none)
-  let new-mapping = mapping
-  new-mapping.insert("x", y)
-  new-mapping.insert("y", x)
-  let new = layer
-  new.mapping = new-mapping
-  new
-}
-
 // Shrink the inner panel along the longer axis so that one x data unit
 // projects to `ratio` y data units. Returns the adjusted (width, height).
 // Falls back to the input box if either trained scale is missing or has a
