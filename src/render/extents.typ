@@ -5,6 +5,7 @@
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "../utils/measure.typ": measure-labels-cm
+#import "../utils/palette.typ": spec-attr
 #import "../utils/format.typ": format-break
 #import "../scale/secondary.typ" as secondary-mod
 #import "axis-format.typ": _axis-breaks, _axis-label
@@ -84,11 +85,11 @@
   )
 )
 
-#let _trained-labels-cb(trained) = if (
-  trained.at("spec", default: none) != none
-) {
-  trained.spec.at("labels", default: auto)
-} else { auto }
+#let _trained-labels-cb(trained) = spec-attr(
+  trained,
+  "labels",
+  fallback: auto,
+)
 
 // Collect the formatted tick labels for the trained scale and measure them
 // via Typst. Returns `(width, height)` in cm of the longest label's ink box.

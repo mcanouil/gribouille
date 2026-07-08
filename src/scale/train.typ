@@ -469,6 +469,15 @@
   let level-index = if scale-type == "discrete" {
     _level-index(domain)
   } else { none }
+  // Canonical trained-scale shape (GLOSSARY.md "trained"). Later pipeline
+  // stages extend it in place:
+  //   - `temporal` / `date-format` just below, on date/datetime/time scales;
+  //   - `reverse` in `_apply-flip` (render/domain.typ), discrete-axis flip;
+  //   - `view-transform` (continuous) / `view-index` (discrete) and
+  //     `view-pad-cm` in `_apply-expand` (render/domain.typ), the expanded
+  //     view window that axis breaks and panel mapping read.
+  // Read `spec` keys through `spec-attr` (utils/palette.typ), not by direct
+  // `.spec.at(...)` pokes.
   let entry = (
     type: scale-type,
     domain: domain,

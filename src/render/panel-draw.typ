@@ -17,7 +17,7 @@
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "../utils/format.typ": format-break
-#import "../utils/palette.typ": default-discrete
+#import "../utils/palette.typ": default-discrete, spec-attr
 #import "../scale/secondary.typ" as secondary-mod
 #import "legend.typ" as legend-mod
 #import "common.typ": (
@@ -185,6 +185,13 @@
     out
   }
 
+  // Canonical per-draw context handed to every geom's `draw(layer, ctx)`
+  // (GLOSSARY.md "ctx"): `trained`, `px-range`/`py-range` (panel extents in
+  // canvas cm), `palette`, the `resolve-mapping`/`resolve-data`/
+  // `resolve-colour` closures, `theme`, `flipped`, `canvas-w`/`canvas-h`.
+  // The geom-dispatch copy (`inner-ctx`, below) additionally carries
+  // `radial` (`none` on cartesian panels); read optional keys with
+  // `ctx.at(key, default: ...)`.
   let ctx = (
     trained: trained,
     px-range: px-range,
@@ -333,9 +340,7 @@
     typst-mark: if trained != none {
       trained.at("typst-mark", default: false)
     } else { false },
-    labels: if trained != none and trained.at("spec", default: none) != none {
-      trained.spec.at("labels", default: auto)
-    } else { auto },
+    labels: spec-attr(trained, "labels", fallback: auto),
   )
   let _x-disp = _axis-display(x-trained)
   let _y-disp = _axis-display(y-trained)

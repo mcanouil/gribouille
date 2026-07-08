@@ -3,6 +3,7 @@
 
 #import "../scale/train.typ": transform-fwd, transform-inv
 #import "../utils/colour.typ": edge-midpoints
+#import "../utils/palette.typ": spec-attr
 #import "../utils/pretty.typ": pretty, pretty-log10, pretty-sqrt
 #import "../utils/format.typ": format-break
 
@@ -11,17 +12,8 @@
 // mapping column name (which may be `none` when neither is set). Used by the
 // cartesian title path and the faceted (wrap/grid) finishers.
 #let _axis-title(trained, mapping-name) = {
-  if (
-    trained != none
-      and trained.spec != none
-      and trained.spec.at(
-        "blank",
-        default: false,
-      )
-  ) { return none }
-  let from-scale = if trained != none and trained.spec != none {
-    trained.spec.name
-  } else { none }
+  if spec-attr(trained, "blank", fallback: false) { return none }
+  let from-scale = spec-attr(trained, "name")
   if from-scale != none { from-scale } else { mapping-name }
 }
 
@@ -220,12 +212,8 @@
   format-break(n)
 }
 
-#let _sec-spec(scale) = if (
-  scale != none
-    and scale.type == "continuous"
-    and scale.at("spec", default: none) != none
-) {
-  scale.spec.at("secondary", default: none)
+#let _sec-spec(scale) = if scale != none and scale.type == "continuous" {
+  spec-attr(scale, "secondary")
 } else { none }
 
 // Pre-compute primary and secondary x/y axis breaks for a trained scale set.

@@ -1,7 +1,7 @@
 #import "./level-resolve.typ": (
   continuous-numeric, discrete-index, discrete-numeric, spec-range,
 )
-#import "./palette.typ": spec-palette
+#import "./palette.typ": spec-attr, spec-palette
 #import "./types.typ": parse-number
 #import "./late-binding.typ": after-scale-source, apply-after-scale
 #import "../theme/theme.typ": resolve-geom-defaults, resolve-geom-linewidth
@@ -283,9 +283,7 @@
 // Continuous size honours the spec's `size-trans: "area"` easing so marker
 // area, not radius, tracks the data value.
 #let _size-continuous(trained, v, range) = {
-  let size-trans = if trained.spec == none { "identity" } else {
-    trained.spec.at("size-trans", default: "identity")
-  }
+  let size-trans = spec-attr(trained, "size-trans", fallback: "identity")
   if size-trans != "area" { return continuous-numeric(trained, v, range) }
   let (d-lo, d-hi) = trained.domain
   let (r-lo, r-hi) = range

@@ -11,7 +11,9 @@
 #import "../utils/pretty.typ": pretty
 #import "../utils/format.typ": format-break
 #import "../utils/measure.typ": measure-text-cm
-#import "../utils/colour.typ": bin-edges, edge-midpoints, resolve-continuous-colour
+#import "../utils/colour.typ": (
+  bin-edges, edge-midpoints, resolve-continuous-colour,
+)
 #import "../utils/palette.typ": default-discrete, spec-attr, spec-palette
 #import "../utils/level-resolve.typ": resolve-level
 #import "../utils/errors.typ": fail, fail-type
@@ -94,16 +96,12 @@
 #let _guide-title(t, spec, aes-name) = {
   // `labels(colour: none)` sets `spec.blank` to suppress the legend title and
   // collapse the space it would reserve.
-  if (
-    t.at("spec", default: none) != none and t.spec.at("blank", default: false)
-  ) {
+  if spec-attr(t, "blank", fallback: false) {
     return none
   }
-  if (
-    t.at("spec", default: none) != none
-      and t.spec.at("name", default: none) != none
-  ) {
-    t.spec.name
+  let from-scale = spec-attr(t, "name")
+  if from-scale != none {
+    from-scale
   } else if spec.mapping != none {
     mapping-display-name(spec.mapping.at(aes-name, default: aes-name))
   } else {
@@ -406,9 +404,7 @@
 
   if t.type == "discrete" {
     let levels = t.domain
-    let labels = if (
-      t.at("spec", default: none) != none
-    ) { t.spec.at("labels", default: auto) } else { auto }
+    let labels = spec-attr(t, "labels", fallback: auto)
     cand.insert("levels", levels)
     cand.insert("labels", labels)
   } else {

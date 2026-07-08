@@ -14,7 +14,7 @@ Run the survey command at the bottom before extending the table.
 | `pos`     | position adjustment                    | `position_*` namespace (stack, dodge, fill, jitter, …).                                                                                 |
 | `coord`   | coordinate system                      | `coord-*` namespace; `(coord: "cartesian"\|"fixed"\|"radial"\|"transform", ...)`.                                                       |
 | `spec`    | plot specification dict                | the user-built dict consumed by `render-plot`.                                                                                          |
-| `ctx`     | per-draw context                       | dict passed to every geom's `draw(layer, ctx)`.                                                                                         |
+| `ctx`     | per-draw context                       | dict passed to every geom's `draw(layer, ctx)`; built once in render/panel-draw.typ (`trained`, `px-range`/`py-range`, `palette`, resolver closures, `theme`, `flipped`, `canvas-w`/`canvas-h`, + `radial` on the geom-dispatch copy).      |
 | `mapping` | column-name dict                       | flattened `aes` (`(x: "col", y: "col", colour: "col", ...)`).                                                                           |
 | `layer`   | one entry of `spec.layers`             | dict tagged `kind: "layer"` carrying `geom`, `mapping`, `data`, …                                                                       |
 | `map`     | mapping (when shortened)               | local variable name; same shape as `mapping`.                                                                                           |
@@ -36,7 +36,7 @@ Run the survey command at the bottom before extending the table.
 
 | Term      | Expansion          | Notes                                                            |
 | --------- | ------------------ | ---------------------------------------------------------------- |
-| `trained` | scale-trained dict | `ctx.trained.<aes>`; carries `type`, `domain`, `range`, palette. |
+| `trained` | scale-trained dict | `ctx.trained.<aes>`; carries `type`, `domain`, `level-index`, `spec`, `transform`, `pre-transformed`, `typst-mark` (+ optional `temporal`/`date-format`, `reverse`, `view-transform`/`view-index`/`view-pad-cm` added by render/domain.typ). Built by `_train-entry` (scale/train.typ); read `spec` keys via `spec-attr`. |
 | `fwd`     | forward transform  | data → transformed value (`transform-fwd`).                      |
 | `inv`     | inverse transform  | transformed value → data (`transform-inv`).                      |
 | `sec`     | secondary axis     | `sec-axis()` config bound to the primary scale.                  |
