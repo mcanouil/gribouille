@@ -5,13 +5,9 @@
 ///! collapse to `(y: none, ymin: none, ymax: none)` so the caller can decide
 ///! how to handle missing buckets.
 
-#import "types.typ": parse-number
+#import "types.typ": parse-number, to-numeric
 #import "normal.typ": qnorm
 #import "errors.typ": fail, fail-range, fail-type
-
-#let _to-numeric(values) = {
-  values.map(v => parse-number(v)).filter(v => v != none)
-}
 
 // Read a weight value from a row, coercing strings via `float`. Treats a
 // `none` weight column as unit weight; treats a missing/`none` cell as
@@ -49,20 +45,14 @@
 
 #let _empty-summary = (y: none, ymin: none, ymax: none)
 
-#let _sum(xs) = {
-  let acc = 0.0
-  for v in xs { acc = acc + v }
-  acc
-}
-
-#let _mean(xs) = _sum(xs) / xs.len()
+#let _mean(xs) = xs.sum(default: 0.0) / xs.len()
 
 // Weighted mean with non-negative weights. Returns `none` when the total
 // weight is zero so the caller can treat the bucket as empty (matching the
 // `_empty-summary` shape). The companion `_wsd` returns `0.0` for the
 // degenerate cases instead, mirroring `_sd`'s contract for unit weights.
 #let _wmean(xs, ws) = {
-  let total = _sum(ws)
+  let total = ws.sum(default: 0.0)
   if total == 0 { return none }
   let acc = 0.0
   for i in range(xs.len()) { acc += ws.at(i) * xs.at(i) }
@@ -74,7 +64,7 @@
 #let _wsd(xs, ws) = {
   let n = xs.len()
   if n < 2 { return 0.0 }
-  let total = _sum(ws)
+  let total = ws.sum(default: 0.0)
   if total == 0 { return 0.0 }
   let m = _wmean(xs, ws)
   if m == none { return 0.0 }
@@ -93,8 +83,38 @@
   let n = xs.len()
   if n < 2 { return 0.0 }
   let m = _mean(xs)
-  let ss = _sum(xs.map(v => (v - m) * (v - m)))
+  let ss = xs.map(v => (v - m) * (v - m)).sum(default: 0.0)
   calc.sqrt(ss / (n - 1))
+}
+
+// Shared `mean ± k * deviation` skeleton behind `mean`, `mean-se`,
+// `mean-cl-normal`, and `mean-sd`; `spread` selects the deviation
+// ("none", "se", "sd") and each branch handles unit vs frequency weights.
+#let _mean-band(values, weights, k, spread) = {
+  let (m, dev) = if weights != none {
+    let p = _to-weighted(values, weights)
+    let n = p.xs.len()
+    if n == 0 { return _empty-summary }
+    let m = _wmean(p.xs, p.ws)
+    if m == none { return _empty-summary }
+    let dev = if spread == "sd" { _wsd(p.xs, p.ws) } else if spread == "se" {
+      let total = p.ws.sum(default: 0.0)
+      if n < 2 or total == 0 {
+        0.0
+      } else { _wsd(p.xs, p.ws) / calc.sqrt(total) }
+    } else { 0.0 }
+    (m, dev)
+  } else {
+    let xs = to-numeric(values)
+    let n = xs.len()
+    if n == 0 { return _empty-summary }
+    let m = _mean(xs)
+    let dev = if spread == "sd" { _sd(xs) } else if spread == "se" {
+      if n < 2 { 0.0 } else { _sd(xs) / calc.sqrt(n) }
+    } else { 0.0 }
+    (m, dev)
+  }
+  (y: m, ymin: m - k * dev, ymax: m + k * dev)
 }
 
 // Linear-interpolation quantile (R type 7, numpy default) on a sorted
@@ -134,19 +154,7 @@
 /// #let s = mean((2, 3, 4, 5, 6))
 /// // s.y == 4, s.ymin == 4, s.ymax == 4
 /// ```
-#let mean(values, weights: none) = {
-  if weights != none {
-    let p = _to-weighted(values, weights)
-    if p.xs.len() == 0 { return _empty-summary }
-    let m = _wmean(p.xs, p.ws)
-    if m == none { return _empty-summary }
-    return (y: m, ymin: m, ymax: m)
-  }
-  let xs = _to-numeric(values)
-  if xs.len() == 0 { return _empty-summary }
-  let m = _mean(xs)
-  (y: m, ymin: m, ymax: m)
-}
+#let mean(values, weights: none) = _mean-band(values, weights, 0, "none")
 
 /// Median as a degenerate summary `(y, ymin: y, ymax: y)`.
 ///
@@ -169,7 +177,7 @@
 /// // s.y == 2.5
 /// ```
 #let median(values) = {
-  let xs = _to-numeric(values)
+  let xs = to-numeric(values)
   if xs.len() == 0 { return _empty-summary }
   let m = quantile-type-7(xs.sorted(), 0.5)
   (y: m, ymin: m, ymax: m)
@@ -200,7 +208,7 @@
   if q < 0 or q > 1 {
     fail-range("quantile", "q", q, 0, 1, lo-open: false, hi-open: false)
   }
-  let xs = _to-numeric(values)
+  let xs = to-numeric(values)
   if xs.len() == 0 { return _empty-summary }
   let v = quantile-type-7(xs.sorted(), q)
   (y: v, ymin: v, ymax: v)
@@ -244,7 +252,7 @@
       )
     }
   }
-  let xs = _to-numeric(values)
+  let xs = to-numeric(values)
   if xs.len() == 0 { return _empty-summary }
   let sorted = xs.sorted()
   (
@@ -284,24 +292,7 @@
 /// #let s = mean-se((2, 3, 4, 5, 6), multiplier: 2)
 /// ```
 #let mean-se(values, multiplier: 1, weights: none) = {
-  if weights != none {
-    let p = _to-weighted(values, weights)
-    let n = p.xs.len()
-    if n == 0 { return _empty-summary }
-    let m = _wmean(p.xs, p.ws)
-    if m == none { return _empty-summary }
-    let total = _sum(p.ws)
-    let se = if n < 2 or total == 0 {
-      0.0
-    } else { _wsd(p.xs, p.ws) / calc.sqrt(total) }
-    return (y: m, ymin: m - multiplier * se, ymax: m + multiplier * se)
-  }
-  let xs = _to-numeric(values)
-  let n = xs.len()
-  if n == 0 { return _empty-summary }
-  let m = _mean(xs)
-  let se = if n < 2 { 0.0 } else { _sd(xs) / calc.sqrt(n) }
-  (y: m, ymin: m - multiplier * se, ymax: m + multiplier * se)
+  _mean-band(values, weights, multiplier, "se")
 }
 
 /// Mean with normal-approximation confidence interval.
@@ -338,24 +329,7 @@
     fail-range("mean-cl-normal", "conf", conf, 0, 1)
   }
   let z = qnorm((1 + conf) / 2)
-  if weights != none {
-    let p = _to-weighted(values, weights)
-    let n = p.xs.len()
-    if n == 0 { return _empty-summary }
-    let m = _wmean(p.xs, p.ws)
-    if m == none { return _empty-summary }
-    let total = _sum(p.ws)
-    let se = if n < 2 or total == 0 {
-      0.0
-    } else { _wsd(p.xs, p.ws) / calc.sqrt(total) }
-    return (y: m, ymin: m - z * se, ymax: m + z * se)
-  }
-  let xs = _to-numeric(values)
-  let n = xs.len()
-  if n == 0 { return _empty-summary }
-  let m = _mean(xs)
-  let se = if n < 2 { 0.0 } else { _sd(xs) / calc.sqrt(n) }
-  (y: m, ymin: m - z * se, ymax: m + z * se)
+  _mean-band(values, weights, z, "se")
 }
 
 /// Mean and standard-deviation band: `mean ± multiplier * sd`.
@@ -383,19 +357,7 @@
 /// #let s = mean-sd((2, 3, 4, 5, 6), multiplier: 2)
 /// ```
 #let mean-sd(values, multiplier: 1, weights: none) = {
-  if weights != none {
-    let p = _to-weighted(values, weights)
-    if p.xs.len() == 0 { return _empty-summary }
-    let m = _wmean(p.xs, p.ws)
-    if m == none { return _empty-summary }
-    let s = _wsd(p.xs, p.ws)
-    return (y: m, ymin: m - multiplier * s, ymax: m + multiplier * s)
-  }
-  let xs = _to-numeric(values)
-  if xs.len() == 0 { return _empty-summary }
-  let m = _mean(xs)
-  let s = _sd(xs)
-  (y: m, ymin: m - multiplier * s, ymax: m + multiplier * s)
+  _mean-band(values, weights, multiplier, "sd")
 }
 
 /// Median plus a central interval covering `conf` proportion of the data.
@@ -429,7 +391,7 @@
   if conf <= 0 or conf >= 1 {
     fail-range("median-hilow", "conf", conf, 0, 1)
   }
-  let xs = _to-numeric(values)
+  let xs = to-numeric(values)
   if xs.len() == 0 { return _empty-summary }
   let sorted = xs.sorted()
   let tail = (1 - conf) / 2
@@ -485,7 +447,7 @@
   if conf <= 0 or conf >= 1 {
     fail-range("mean-cl-boot", "conf", conf, 0, 1)
   }
-  let xs = _to-numeric(values)
+  let xs = to-numeric(values)
   let n = xs.len()
   if n == 0 { return _empty-summary }
   let m = _mean(xs)
@@ -605,15 +567,15 @@
   mean: values => mean(values).y,
   median: values => median(values).y,
   sum: values => {
-    let xs = _to-numeric(values)
+    let xs = to-numeric(values)
     if xs.len() == 0 { none } else { xs.sum() }
   },
   min: values => {
-    let xs = _to-numeric(values)
+    let xs = to-numeric(values)
     if xs.len() == 0 { none } else { calc.min(..xs) }
   },
   max: values => {
-    let xs = _to-numeric(values)
+    let xs = to-numeric(values)
     if xs.len() == 0 { none } else { calc.max(..xs) }
   },
 )

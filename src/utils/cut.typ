@@ -9,7 +9,9 @@
 #import "errors.typ": fail, fail-type
 #import "summaries.typ": quantile-type-7
 
-#let _to-numeric(values) = {
+// Keeps `none` entries (unlike `types.to-numeric`) so bin labels stay
+// positionally aligned with the input rows.
+#let _parse-numbers(values) = {
   values.map(v => parse-number(v))
 }
 
@@ -108,7 +110,7 @@
 /// ```
 #let cut-interval(values, n: 4, labels: auto) = {
   if n < 1 { fail("cut-interval", "n must be >= 1; got " + repr(n)) }
-  let parsed = _to-numeric(values)
+  let parsed = _parse-numbers(values)
   let numeric = _filter-numeric(parsed)
   if numeric.len() == 0 {
     return parsed.map(_ => none)
@@ -168,7 +170,7 @@
 /// ```
 #let cut-number(values, n: 4, labels: auto) = {
   if n < 1 { fail("cut-number", "n must be >= 1; got " + repr(n)) }
-  let parsed = _to-numeric(values)
+  let parsed = _parse-numbers(values)
   let numeric = _filter-numeric(parsed)
   if numeric.len() == 0 {
     return parsed.map(_ => none)
@@ -227,7 +229,7 @@
   if width <= 0 {
     fail("cut-width", "width must be positive; got " + repr(width))
   }
-  let parsed = _to-numeric(values)
+  let parsed = _parse-numbers(values)
   let numeric = _filter-numeric(parsed)
   if numeric.len() == 0 {
     return parsed.map(_ => none)

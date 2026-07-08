@@ -6,6 +6,14 @@
 #import "summaries.typ": read-weight
 #import "errors.typ": check
 
+// Split a scalar-or-`(x, y)` parameter (e.g., `bins`, `binwidth`) into a
+// per-axis pair, applying `fallback` to a `none` value.
+#let split-pair(value, fallback: none) = {
+  if value == none { return (fallback, fallback) }
+  if type(value) == array { return (value.at(0), value.at(1)) }
+  (value, value)
+}
+
 // Compute `(lo, hi)` from a non-empty numeric vector. Spreads to `(lo, lo+1)`
 // when all values are equal, so downstream computations don't divide by zero.
 #let bin-domain(xs) = {

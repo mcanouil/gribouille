@@ -14,7 +14,12 @@
   after-scale-source, is-late-binding, late-binding-name,
 )
 
-#let _resolve-mapping(layer, plot-mapping) = {
+// Merge the layer and plot mappings WITHOUT stripping `mapping-ref`
+// annotations: training reads them to force discrete/numeric typing.
+// The render-side `_resolve-mapping` (`render/common.typ`) strips them.
+// Not shared with `merge-mapping` (`utils/aes-resolve.typ`): importing it
+// here would close the cycle train -> aes-resolve -> level-resolve -> train.
+#let _merged-mapping(layer, plot-mapping) = {
   if layer.at("inherit-aes", default: true) and plot-mapping != none {
     let merged = plot-mapping
     if layer.mapping != none {
@@ -30,7 +35,10 @@
   }
 }
 
-#let _resolve-data(layer, plot-data) = {
+// Training runs on prepared layers whose literal `data` is already in
+// canonical row-store form, so unlike the render-side `_resolve-data`
+// (`render/common.typ`) only a function value needs normalising.
+#let _layer-data(layer, plot-data) = {
   if layer.data == none { return plot-data }
   if type(layer.data) == function {
     return _normalise-data((layer.data)(plot-data))
@@ -99,8 +107,8 @@
 }
 
 #let _column-for-aesthetic(layer, aesthetic, plot-mapping, plot-data) = {
-  let mapping = _resolve-mapping(layer, plot-mapping)
-  let data = _resolve-data(layer, plot-data)
+  let mapping = _merged-mapping(layer, plot-mapping)
+  let data = _layer-data(layer, plot-data)
   if mapping == none { return none }
   let raw = mapping.at(aesthetic, default: none)
   if raw == none { return none }
@@ -284,9 +292,9 @@
   let cache = (:)
   for a in aes-list { cache.insert(a, (cols: (), typst-mark: false)) }
   for layer in layers {
-    let layer-mapping = _resolve-mapping(layer, mapping)
+    let layer-mapping = _merged-mapping(layer, mapping)
     if layer-mapping == none { continue }
-    let layer-data = _resolve-data(layer, data)
+    let layer-data = _layer-data(layer, data)
     let layer-factor-levels = layer.at("_factor-levels", default: (:))
     for a in aes-list {
       let raw = layer-mapping.at(a, default: none)

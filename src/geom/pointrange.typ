@@ -5,8 +5,8 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point, shift-point
-#import "../position/dodge.typ": dodge-delta
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
+#import "linerange.typ": range-line-row
 
 /// Pointrange layer: a marker at `(x, y)` plus a linerange from `ymin` to `ymax`.
 ///
@@ -130,51 +130,30 @@
   for row in data {
     let xv = row.at(x-col, default: none)
     let mid = parse-number(row.at(y-col, default: none))
-    let lo = parse-number(row.at(ymin-col, default: none))
-    let hi = parse-number(row.at(ymax-col, default: none))
-    if xv == none or mid == none or lo == none or hi == none { continue }
+    if xv == none or mid == none { continue }
     let p-mid = project-point(ctx, xv, mid)
-    let p-lo = project-point(ctx, xv, lo)
-    let p-hi = project-point(ctx, xv, hi)
-    if p-mid == none or p-lo == none or p-hi == none { continue }
-    let dd = dodge-delta(ctx, layer, row)
-    let (cx-mid, cy-mid) = shift-point(p-mid, dd)
-    let (cx-lo, cy-lo) = shift-point(p-lo, dd)
-    let (cx-hi, cy-hi) = shift-point(p-hi, dd)
-
-    let final-colour = resolve-channel(
-      "colour",
+    if p-mid == none { continue }
+    let res = range-line-row(
       layer,
       mapping,
       ctx,
       row,
+      x-col,
+      ymin-col,
+      ymax-col,
       theme-colour,
+      line-alpha: false,
     )
+    if res == none { continue }
+    res.elem
+    let (cx-mid, cy-mid) = shift-point(p-mid, res.dd)
     let final-fill = resolve-channel(
       "fill",
       layer,
       mapping,
       ctx,
       row,
-      final-colour,
-    )
-
-    let thickness = resolve-channel(
-      "linewidth",
-      layer,
-      mapping,
-      ctx,
-      row,
-      0.8pt,
-    )
-    cetz.draw.line(
-      (cx-lo, cy-lo),
-      (cx-hi, cy-hi),
-      stroke: (
-        paint: final-colour,
-        thickness: thickness,
-        dash: layer.params.linetype,
-      ),
+      res.colour,
     )
     let radius = resolve-channel(
       "size",

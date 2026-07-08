@@ -2,25 +2,19 @@
 // single hex grid; the nearest-centre rule matches the Voronoi regions of the
 // combined lattice.
 
-#import "bin.typ": bin-domain
+#import "bin.typ": bin-domain, split-pair
 #import "summaries.typ": read-weight
 #import "types.typ": parse-number
 
 #let _SQRT3-OVER-2 = calc.sqrt(3) / 2
-
-#let _split-pair(value, fallback: none) = {
-  if value == none { return (fallback, fallback) }
-  if type(value) == array { return (value.at(0), value.at(1)) }
-  (value, value)
-}
 
 // Build a hex grid from extents. `bins` and `binwidth` accept either a
 // scalar (applied to both axes) or an `(x, y)` pair. The default `dy`
 // gives a regular hex; callers may override it when axes have very
 // different scales (which produces oblong cells that no longer tile).
 #let hex-grid(xs, ys, bins, binwidth) = {
-  let (bx, by) = _split-pair(bins, fallback: 30)
-  let (wx, wy) = _split-pair(binwidth)
+  let (bx, by) = split-pair(bins, fallback: 30)
+  let (wx, wy) = split-pair(binwidth)
   let (x-lo, x-hi) = bin-domain(xs)
   let (y-lo, y-hi) = bin-domain(ys)
   let dx = if wx != none { wx } else { (x-hi - x-lo) / bx }

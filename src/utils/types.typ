@@ -105,6 +105,11 @@
   none
 }
 
+// Parse every entry via `parse-number` and drop the unparseable ones.
+#let to-numeric(values) = {
+  values.map(parse-number).filter(v => v != none)
+}
+
 #let is-native-numeric(v) = type(v) == int or type(v) == float
 
 #let infer-column-type(values) = {

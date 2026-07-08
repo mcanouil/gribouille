@@ -76,12 +76,6 @@
   params: (method: method, se: se, level: level),
 )
 
-#let _sum(xs) = {
-  let acc = 0.0
-  for v in xs { acc = acc + v }
-  acc
-}
-
 // Columns that implicitly group rows so each subset gets its own fit. The
 // contract matches geom-line: `group`, `colour`, `fill`, `linetype` — any
 // discrete aesthetic that would warrant a separate path.
@@ -150,19 +144,25 @@
       .filter(p => p != none and p.w > 0)
     let n = pairs.len()
     if n < 2 { continue }
-    let w-sum = _sum(pairs.map(p => p.w))
+    let w-sum = pairs.map(p => p.w).sum(default: 0.0)
     if w-sum == 0 { continue }
-    let x-mean = _sum(pairs.map(p => p.w * p.x)) / w-sum
-    let y-mean = _sum(pairs.map(p => p.w * p.y)) / w-sum
-    let sxx = _sum(pairs.map(p => p.w * (p.x - x-mean) * (p.x - x-mean)))
-    let sxy = _sum(pairs.map(p => p.w * (p.x - x-mean) * (p.y - y-mean)))
+    let x-mean = pairs.map(p => p.w * p.x).sum(default: 0.0) / w-sum
+    let y-mean = pairs.map(p => p.w * p.y).sum(default: 0.0) / w-sum
+    let sxx = pairs
+      .map(p => p.w * (p.x - x-mean) * (p.x - x-mean))
+      .sum(default: 0.0)
+    let sxy = pairs
+      .map(p => p.w * (p.x - x-mean) * (p.y - y-mean))
+      .sum(default: 0.0)
     if sxx == 0 { continue }
     let slope = sxy / sxx
     let intercept = y-mean - slope * x-mean
-    let rss = _sum(pairs.map(p => {
-      let resid = p.y - (intercept + slope * p.x)
-      p.w * resid * resid
-    }))
+    let rss = pairs
+      .map(p => {
+        let resid = p.y - (intercept + slope * p.x)
+        p.w * resid * resid
+      })
+      .sum(default: 0.0)
     let dof = calc.max(1, n - 2)
     let sigma2 = rss / dof
     let xs = pairs.map(p => p.x)

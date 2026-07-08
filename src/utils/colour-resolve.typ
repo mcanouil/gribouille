@@ -104,45 +104,74 @@
   apply-after-scale(scaled, spec, ctx, sample-row)
 }
 
-/// Read `col` through the trained linewidth scale, falling back to
-/// `default-thickness` when the column or scale is missing.
+/// Read `col` through the trained scale of a length-valued aesthetic
+/// (`linewidth`, `stroke`, `size`), falling back to `fallback` when the
+/// column or scale is missing.
 ///
 /// \@internal
+/// \@param aesthetic Trained-scale key (`"linewidth"`, `"stroke"`, `"size"`).
+///
+/// \@param default-range Output range when the trained spec sets none.
+///
 /// \@param col Source column name or `none`.
 ///
 /// \@param ctx Plot context exposing `trained`.
 ///
 /// \@param sample-row The row to read.
 ///
-/// \@param default-thickness Fallback length.
-/// \@returns A Typst length suitable for `stroke.thickness`.
-#let _resolve-linewidth-natural(col, ctx, sample-row, default-thickness) = {
-  let trained = ctx.trained.at("linewidth", default: none)
-  if col == none or trained == none { return default-thickness }
+/// \@param fallback Fallback length.
+///
+/// \@param map-continuous Override for the continuous branch, `(trained,
+///   value, range) => length`; `none` uses \@continuous-numeric.
+/// \@returns A Typst length.
+#let _resolve-length-natural(
+  aesthetic,
+  default-range,
+  col,
+  ctx,
+  sample-row,
+  fallback,
+  map-continuous: none,
+) = {
+  let trained = ctx.trained.at(aesthetic, default: none)
+  if col == none or trained == none { return fallback }
   let raw = sample-row.at(col, default: none)
-  if raw == none { return default-thickness }
+  if raw == none { return fallback }
   if trained.type == "identity" {
     if type(raw) == length { return raw }
     let v = parse-number(raw)
-    if v == none { return default-thickness }
+    if v == none { return fallback }
     return v * 1pt
   }
-  let range = spec-range(trained, (0.4pt, 1.4pt))
+  let range = spec-range(trained, default-range)
   let resolved = if trained.type == "continuous" {
     let v = parse-number(raw)
-    if v == none { return default-thickness }
-    continuous-numeric(trained, v, range)
+    if v == none { return fallback }
+    if map-continuous == none { continuous-numeric(trained, v, range) } else {
+      map-continuous(trained, v, range)
+    }
   } else {
     let pal = spec-palette(trained, none)
     if pal != none and pal.len() > 0 {
       let idx = discrete-index(trained, raw)
-      if idx == none { return default-thickness }
+      if idx == none { return fallback }
       pal.at(calc.rem(idx, pal.len()))
     } else {
       discrete-numeric(trained, raw, range)
     }
   }
-  if resolved == none { default-thickness } else { resolved }
+  if resolved == none { fallback } else { resolved }
+}
+
+#let _resolve-linewidth-natural(col, ctx, sample-row, default-thickness) = {
+  _resolve-length-natural(
+    "linewidth",
+    (0.4pt, 1.4pt),
+    col,
+    ctx,
+    sample-row,
+    default-thickness,
+  )
 }
 
 /// Resolve a per-row stroke thickness.
@@ -196,45 +225,15 @@
   apply-after-scale(scaled, spec, ctx, sample-row)
 }
 
-/// Read `col` through the trained stroke scale, falling back to
-/// `default-thickness` when the column or scale is missing.
-///
-/// \@internal
-/// \@param col Source column name or `none`.
-///
-/// \@param ctx Plot context exposing `trained`.
-///
-/// \@param sample-row The row to read.
-///
-/// \@param default-thickness Fallback length.
-/// \@returns A Typst length suitable for `stroke.thickness`.
 #let _resolve-stroke-width-natural(col, ctx, sample-row, default-thickness) = {
-  let trained = ctx.trained.at("stroke", default: none)
-  if col == none or trained == none { return default-thickness }
-  let raw = sample-row.at(col, default: none)
-  if raw == none { return default-thickness }
-  if trained.type == "identity" {
-    if type(raw) == length { return raw }
-    let v = parse-number(raw)
-    if v == none { return default-thickness }
-    return v * 1pt
-  }
-  let range = spec-range(trained, (0.2pt, 1.4pt))
-  let resolved = if trained.type == "continuous" {
-    let v = parse-number(raw)
-    if v == none { return default-thickness }
-    continuous-numeric(trained, v, range)
-  } else {
-    let pal = spec-palette(trained, none)
-    if pal != none and pal.len() > 0 {
-      let idx = discrete-index(trained, raw)
-      if idx == none { return default-thickness }
-      pal.at(calc.rem(idx, pal.len()))
-    } else {
-      discrete-numeric(trained, raw, range)
-    }
-  }
-  if resolved == none { default-thickness } else { resolved }
+  _resolve-length-natural(
+    "stroke",
+    (0.2pt, 1.4pt),
+    col,
+    ctx,
+    sample-row,
+    default-thickness,
+  )
 }
 
 /// Resolve a per-row marker outline thickness from the `stroke` aesthetic.
@@ -281,58 +280,31 @@
   apply-after-scale(scaled, spec, ctx, sample-row)
 }
 
-/// Read `col` through the trained size scale (with optional `area`
-/// transform), falling back to `default-size` when the column or scale
-/// is missing.
-///
-/// \@internal
-/// \@param col Source column name or `none`.
-///
-/// \@param ctx Plot context exposing `trained`.
-///
-/// \@param sample-row The row to read.
-///
-/// \@param default-size Fallback length.
-/// \@returns A Typst length suitable for a marker radius.
-#let _resolve-size-natural(col, ctx, sample-row, default-size) = {
-  let trained = ctx.trained.at("size", default: none)
-  if col == none or trained == none { return default-size }
-  let raw = sample-row.at(col, default: none)
-  if raw == none { return default-size }
-  if trained.type == "identity" {
-    if type(raw) == length { return raw }
-    let v = parse-number(raw)
-    if v == none { return default-size }
-    return v * 1pt
-  }
-  let range = spec-range(trained, (1pt, 6pt))
+// Continuous size honours the spec's `size-trans: "area"` easing so marker
+// area, not radius, tracks the data value.
+#let _size-continuous(trained, v, range) = {
   let size-trans = if trained.spec == none { "identity" } else {
     trained.spec.at("size-trans", default: "identity")
   }
-  let resolved = if trained.type == "continuous" {
-    let v = parse-number(raw)
-    if v == none { return default-size }
-    if size-trans == "area" {
-      let (d-lo, d-hi) = trained.domain
-      let (r-lo, r-hi) = range
-      if d-hi == d-lo { return (r-lo + r-hi) / 2 }
-      let t = (v - d-lo) / (d-hi - d-lo)
-      let t-clamped = if t < 0 { 0 } else if t > 1 { 1 } else { t }
-      r-lo + calc.sqrt(t-clamped) * (r-hi - r-lo)
-    } else {
-      continuous-numeric(trained, v, range)
-    }
-  } else {
-    let pal = spec-palette(trained, none)
-    if pal != none and pal.len() > 0 {
-      let idx = discrete-index(trained, raw)
-      if idx == none { return default-size }
-      pal.at(calc.rem(idx, pal.len()))
-    } else {
-      discrete-numeric(trained, raw, range)
-    }
-  }
-  if resolved == none { default-size } else { resolved }
+  if size-trans != "area" { return continuous-numeric(trained, v, range) }
+  let (d-lo, d-hi) = trained.domain
+  let (r-lo, r-hi) = range
+  if d-hi == d-lo { return (r-lo + r-hi) / 2 }
+  let t = (v - d-lo) / (d-hi - d-lo)
+  let t-clamped = if t < 0 { 0 } else if t > 1 { 1 } else { t }
+  r-lo + calc.sqrt(t-clamped) * (r-hi - r-lo)
+}
+
+#let _resolve-size-natural(col, ctx, sample-row, default-size) = {
+  _resolve-length-natural(
+    "size",
+    (1pt, 6pt),
+    col,
+    ctx,
+    sample-row,
+    default-size,
+    map-continuous: _size-continuous,
+  )
 }
 
 /// Resolve a per-row marker size.
