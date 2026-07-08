@@ -10,7 +10,7 @@
 #import "../data.typ": group-by
 #import "common.typ": _per-side, _resolve-data
 #import "prestat.typ": _raw-levels-for
-#import "layer-prep.typ": _prepare-layer
+#import "layer-prep.typ": prepare-layers
 
 #let _render-style(theme) = (
   strip-text: _text-style(theme, "strip-text"),
@@ -169,17 +169,35 @@
   let size = params.at("size", default: 8pt)
   let inset = params.at("inset", default: 0pt)
   let inset-cm = if type(inset) == length { inset / 1cm } else { 0.0 }
-  let sizes = layer
-    .at("data", default: ())
-    .map(row => {
-      let label = if use-const { const-label } else {
-        row.at(label-col, default: none)
-      }
-      if label == none { return (w: 0.0, h: 0.0) }
-      if label-typst and type(label) == str { label = eval-as-markup(label) }
-      let m = measure-text-cm(label, size)
-      (w: m.width + 2 * inset-cm, h: m.height + 2 * inset-cm)
-    })
+  // Measure each distinct label once; repeated per-row values (and the
+  // constant-label case) reuse the cached extent.
+  let measure-entry = label => {
+    let rendered = if label-typst and type(label) == str {
+      eval-as-markup(label)
+    } else { label }
+    let m = measure-text-cm(rendered, size)
+    (w: m.width + 2 * inset-cm, h: m.height + 2 * inset-cm)
+  }
+  let const-entry = if use-const { measure-entry(const-label) } else { none }
+  let cache = (:)
+  let sizes = ()
+  for row in layer.at("data", default: ()) {
+    if use-const {
+      sizes.push(const-entry)
+      continue
+    }
+    let label = row.at(label-col, default: none)
+    if label == none {
+      sizes.push((w: 0.0, h: 0.0))
+      continue
+    }
+    if type(label) == str {
+      if label not in cache { cache.insert(label, measure-entry(label)) }
+      sizes.push(cache.at(label))
+    } else {
+      sizes.push(measure-entry(label))
+    }
+  }
   let new = layer
   new.insert("_label-sizes", sizes)
   new
@@ -211,21 +229,21 @@
     ))
     wrap-levels.map(level => (
       level: level,
-      layers: spec
-        .layers
-        .enumerate()
-        .map(((i, l)) => {
-          let with-subset = l
-          with-subset.data = layer-groups.at(i).at(level, default: ())
-          with-subset.insert("data-trusted", true)
-          _prepare-layer(
-            with-subset,
-            spec.mapping,
-            spec.data,
-            theme: theme,
-            coord: coord,
-          )
-        }),
+      layers: prepare-layers(
+        spec
+          .layers
+          .enumerate()
+          .map(((i, l)) => {
+            let with-subset = l
+            with-subset.data = layer-groups.at(i).at(level, default: ())
+            with-subset.insert("data-trusted", true)
+            with-subset
+          }),
+        spec.mapping,
+        spec.data,
+        theme: theme,
+        coord: coord,
+      ),
     ))
   } else if facet-grid-mode {
     let keyers = _grid-facet-keyers(spec)
@@ -240,21 +258,21 @@
         out.push((
           row-level: row-lv,
           col-level: col-lv,
-          layers: spec
-            .layers
-            .enumerate()
-            .map(((i, l)) => {
-              let with-subset = l
-              with-subset.data = layer-groups.at(i).at(key, default: ())
-              with-subset.insert("data-trusted", true)
-              _prepare-layer(
-                with-subset,
-                spec.mapping,
-                spec.data,
-                theme: theme,
-                coord: coord,
-              )
-            }),
+          layers: prepare-layers(
+            spec
+              .layers
+              .enumerate()
+              .map(((i, l)) => {
+                let with-subset = l
+                with-subset.data = layer-groups.at(i).at(key, default: ())
+                with-subset.insert("data-trusted", true)
+                with-subset
+              }),
+            spec.mapping,
+            spec.data,
+            theme: theme,
+            coord: coord,
+          ),
         ))
       }
     }
@@ -266,13 +284,13 @@
     for panel in panels { union += panel.layers }
     union
   } else {
-    spec.layers.map(l => _prepare-layer(
-      l,
+    prepare-layers(
+      spec.layers,
       spec.mapping,
       spec.data,
       theme: theme,
       coord: coord,
-    ))
+    )
   }
 
   (

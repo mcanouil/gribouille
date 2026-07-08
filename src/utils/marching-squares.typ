@@ -63,6 +63,79 @@
   }
 }
 
+// Extract isoline segments for every entry of `levels` in a single grid
+// pass. Returns one `((x0, y0), (x1, y1))` segment array per level, element
+// for element what per-level `isolines` calls would produce; corners are
+// read once per cell and a cell whose corner range brackets no level is
+// skipped outright (case 0 / case 15 yield no segments).
+#let isolines-multi(xs, ys, z, levels) = {
+  let nx = xs.len()
+  let ny = ys.len()
+  let out = levels.map(_ => ())
+  if nx < 2 or ny < 2 or levels.len() == 0 { return out }
+  for i in range(nx - 1) {
+    let xw = xs.at(i)
+    let xe = xs.at(i + 1)
+    let col-w = z.at(i)
+    let col-e = z.at(i + 1)
+    for j in range(ny - 1) {
+      let ys-bottom = ys.at(j)
+      let yn-top = ys.at(j + 1)
+      let sw = col-w.at(j)
+      let se = col-e.at(j)
+      let ne = col-e.at(j + 1)
+      let nw = col-w.at(j + 1)
+      // Sparse grids leave incomplete cells as `none`; skip them.
+      if sw == none or se == none or ne == none or nw == none { continue }
+      let corner-lo = calc.min(nw, ne, se, sw)
+      let corner-hi = calc.max(nw, ne, se, sw)
+      for (li, level) in levels.enumerate() {
+        // `level <= corner-lo` puts every corner above (case 15) and
+        // `level > corner-hi` every corner below (case 0); neither emits.
+        if level <= corner-lo or level > corner-hi { continue }
+        let case = (
+          (if nw >= level { 8 } else { 0 })
+            + (if ne >= level { 4 } else { 0 })
+            + (if se >= level { 2 } else { 0 })
+            + (if sw >= level { 1 } else { 0 })
+        )
+        let segs = _CASES.at(case)
+        if segs == none {
+          segs = _disambiguate-saddle(case, nw, ne, se, sw, level)
+        }
+        for (ea, eb) in segs {
+          let p0 = _edge-point(
+            ea,
+            level,
+            nw,
+            ne,
+            se,
+            sw,
+            xw,
+            xe,
+            ys-bottom,
+            yn-top,
+          )
+          let p1 = _edge-point(
+            eb,
+            level,
+            nw,
+            ne,
+            se,
+            sw,
+            xw,
+            xe,
+            ys-bottom,
+            yn-top,
+          )
+          out.at(li).push((p0, p1))
+        }
+      }
+    }
+  }
+  out
+}
+
 // Extract isoline segments at `level` from a regular `(xs, ys, z)` grid.
 // `xs` and `ys` are sorted ascending; `z` is `z[i][j]` indexed by
 // `(x-index, y-index)`. Returns a flat array of `((x0, y0), (x1, y1))` pairs.

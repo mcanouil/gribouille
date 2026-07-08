@@ -16,10 +16,16 @@
 
 // Walk a list of labels, measure each at `size`, and return the max width
 // and max height observed (cm). Returns `(0.0, 0.0)` for an empty list.
+// Duplicate string labels are measured once; the max is unchanged.
 #let measure-labels-cm(labels, size) = {
   let max-w = 0.0
   let max-h = 0.0
+  let seen = (:)
   for label in labels {
+    if type(label) == str {
+      if label in seen { continue }
+      seen.insert(label, true)
+    }
     let m = measure-text-cm(label, size)
     if m.width > max-w { max-w = m.width }
     if m.height > max-h { max-h = m.height }
