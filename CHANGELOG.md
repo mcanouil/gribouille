@@ -4,6 +4,7 @@
 
 ### Breaking changes
 
+- feat!: every constructor dict stores its concrete type under a single `name:` key; the per-family fields `geom:` (layers), `coord:`, `facet:`, `family:` (scale stubs), `labeller:`, and `key:` (draw keys) are renamed, `guide-custom()` returns `kind: "guide", name: "custom"`, and `position-fill()`/`position-identity()`/`position-stack()` carry an explicit `params: (:)`. Only code that pattern-matches the returned dicts is affected. (#168)
 - feat!: the per-aesthetic `scale-*` constructors collapse into an aesthetic-agnostic set keyed through `scales()`; the aesthetic now comes from the key, so `scale-colour-viridis-d()` becomes `scales(colour: scale-viridis-d())` and `scale-x-log10()` becomes `scales(x: scale-log10())`. `plot(scales:)` takes only the `scales()` dictionary (no positional array), and `expand-limits()` returns an aesthetic-keyed dictionary. (#158)
 
 ### Changes
