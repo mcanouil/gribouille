@@ -3,7 +3,7 @@
 
 #import "identity.typ" as identity-stat
 #import "bin.typ" as bin-stat
-#import "bin2d.typ" as bin2d-stat
+#import "bin-2d.typ" as bin-2d-stat
 #import "bin-hex.typ" as bin-hex-stat
 #import "bindot.typ" as bindot-stat
 #import "contour.typ" as contour-stat
@@ -27,7 +27,7 @@
 #import "connect.typ" as connect-stat
 #import "align.typ" as align-stat
 #import "../utils/bin.typ": panel-bin-grid
-#import "../utils/bin2d.typ": panel-bin-grid-2d
+#import "../utils/bin-2d.typ": panel-bin-grid-2d
 #import "../utils/hex.typ": panel-hex-grid
 #import "../utils/errors.typ": fail-enum
 
@@ -45,8 +45,8 @@
     setup: panel-bin-grid,
   ),
   "bin-2d": (
-    apply: bin2d-stat.apply,
-    ctor: bin2d-stat.stat-bin-2d,
+    apply: bin-2d-stat.apply,
+    ctor: bin-2d-stat.stat-bin-2d,
     setup: panel-bin-grid-2d,
   ),
   "bin-hex": (

@@ -1,7 +1,7 @@
 ///! Rectangular two-dimensional binning. Wraps \@stat-bin-2d over rect output.
 
 #import "../layer.typ": make-layer, split-aes-params
-#import "../stat/bin2d.typ": stat-bin-2d
+#import "../stat/bin-2d.typ": stat-bin-2d
 
 /// Two-dimensional bin layer: counts (x, y) into a rectangular grid and
 /// draws one rectangle per non-empty cell. The fill aesthetic defaults to

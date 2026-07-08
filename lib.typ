@@ -37,7 +37,7 @@
 #import "src/geom/area.typ": geom-area
 #import "src/geom/rect.typ": geom-rect
 #import "src/geom/tile.typ": geom-tile
-#import "src/geom/bin2d.typ": geom-bin-2d
+#import "src/geom/bin-2d.typ": geom-bin-2d
 #import "src/geom/hex.typ": geom-hex
 #import "src/geom/contour.typ": geom-contour
 #import "src/geom/contour-filled.typ": geom-contour-filled
@@ -81,7 +81,7 @@
 #import "src/stat/sum.typ": stat-sum
 #import "src/stat/function.typ": stat-function
 #import "src/stat/bin.typ": stat-bin
-#import "src/stat/bin2d.typ": stat-bin-2d
+#import "src/stat/bin-2d.typ": stat-bin-2d
 #import "src/stat/bin-hex.typ": stat-bin-hex
 #import "src/stat/contour.typ": stat-contour
 #import "src/stat/contour-filled.typ": stat-contour-filled

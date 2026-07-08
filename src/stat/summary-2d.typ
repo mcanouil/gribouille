@@ -1,5 +1,5 @@
 #import "../utils/aes-resolve.typ": stat-output-mapping
-#import "../utils/bin2d.typ": bin-2d-cells, bin-midpoint-2d
+#import "../utils/bin-2d.typ": bin-2d-cells, bin-midpoint-2d
 #import "../utils/summaries.typ": reduce-scalar
 
 /// Two-dimensional summary statistic.

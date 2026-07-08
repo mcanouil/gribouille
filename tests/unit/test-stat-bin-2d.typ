@@ -2,8 +2,8 @@
 // a grid and emits one row per non-empty cell with corners and a count.
 
 #import "../../src/aes.typ": aes
-#import "../../src/stat/bin2d.typ": apply, stat-bin-2d
-#import "../../src/utils/bin2d.typ": (
+#import "../../src/stat/bin-2d.typ": apply, stat-bin-2d
+#import "../../src/utils/bin-2d.typ": (
   bin-grid-2d, bin-of-2d, panel-bin-grid-2d, resolve-bin-grid-2d,
 )
 

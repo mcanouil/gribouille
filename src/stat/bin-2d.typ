@@ -1,7 +1,7 @@
 ///! Rectangular two-dimensional binning. Backing statistic for \@geom-bin-2d.
 
 #import "../utils/aes-resolve.typ": stat-output-mapping
-#import "../utils/bin2d.typ": bin-2d-cells, bin-midpoint-2d, panel-bin-grid-2d
+#import "../utils/bin-2d.typ": bin-2d-cells, bin-midpoint-2d, panel-bin-grid-2d
 
 /// Two-dimensional bin statistic: partition (x, y) into a rectangular grid
 /// and count rows per cell.
