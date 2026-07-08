@@ -13,15 +13,15 @@
 
 #import "./colour.typ": bin-edges, bin-index-edges, resolve-continuous-colour
 #import "./palette.typ": (
-  default-linetypes, default-shapes, palette-at, spec-palette,
+  default-linetypes, default-shapes, palette-at, spec-attr, spec-palette,
 )
 #import "../scale/train.typ": map-continuous
 
-#let spec-range(trained, fallback) = {
-  let spec = trained.at("spec", default: none)
-  if spec == none { return fallback }
-  spec.at("range", default: fallback)
-}
+#let spec-range(trained, fallback) = spec-attr(
+  trained,
+  "range",
+  fallback: fallback,
+)
 
 #let discrete-index(trained, level) = {
   let s = str(level)

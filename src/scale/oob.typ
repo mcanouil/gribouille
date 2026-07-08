@@ -8,6 +8,7 @@
 
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
+#import "../utils/palette.typ": spec-attr
 #import "train.typ": _to-stat, mapping-ref-col, view-bounds-stat
 #import "../utils/errors.typ": fail
 
@@ -124,7 +125,7 @@
               + " value "
               + repr(cell)
               + " outside limits "
-              + repr(t.spec.at("limits")),
+              + repr(spec-attr(t, "limits")),
             hint: "Set `oob: \"squish\"` to clamp, widen `limits`, "
               + "or remove `strict: true` to drop silently.",
           )
