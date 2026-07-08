@@ -27,6 +27,7 @@ Run the survey command at the bottom before extending the table.
 | `as-spec` | spec-return switch                     | internal `plot`/`compose` param; `true` returns the spec dict instead of content, set by `compose` when materialising a deferred panel. |
 | `compose` | multi-plot composition                 | arranges deferred panels and hoists shared legends; see `src/compose.typ`.                                                              |
 | `hoist`   | per-aesthetic legend lift              | promote a per-panel guide into the shared legend when every panel agrees on the scale.                                                  |
+| `scales`  | keyed-by-aesthetic scale binder        | `scales()` dict fed to `plot()` (`src/scales.typ`); a later entry for an aesthetic wins.                                                |
 | `probe`   | first-pass deferred render             | initial `render-plot-deferred` call that reads guides before suppression.                                                               |
 | `fail`    | panic helper                           | `src/utils/errors.typ` (`fail`, `fail-enum`, `fail-type`, `fail-range`); never inline a panic string.                                   |
 | `check`   | assert helper                          | `src/utils/errors.typ`; wraps `assert` with the shared message grammar.                                                                 |
@@ -40,6 +41,8 @@ Run the survey command at the bottom before extending the table.
 | `inv`     | inverse transform  | transformed value → data (`transform-inv`).                      |
 | `sec`     | secondary axis     | `sec-axis()` config bound to the primary scale.                  |
 | `ref`     | mapping reference  | `mapping-ref` annotation (e.g., `as-factor()` forced-discrete).  |
+| `family`  | scale family       | family key on a scale stub; `bind-scale` dispatches on `(aesthetic, family)`. |
+| `stub`    | deferred scale spec | `(kind: "scale", family, args)` from a `scale-*` constructor, resolved by `scales()`. |
 
 ## Geometry / panel
 

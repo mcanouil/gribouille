@@ -14,7 +14,7 @@ data ──▶ stat ──▶ position ──▶ scale ──▶ coord ──▶
 Entry points trace the same path:
 
 - [`lib.typ`](lib.typ) is the public facade.
-  It re-exports every user-facing function (`plot`, `aes`, `geom-*`, `stat-*`, `scale-*`, `theme-*`, `labels`, `guides`, `compose`, …).
+  It re-exports every user-facing function (`plot`, `aes`, `annotate`, `geom-*`, `stat-*`, `scale-*`, `scales`, `theme-*`, `labels`, `guides`, `compose`, …).
   Internal helpers stay unexported and are `_`-prefixed.
 - [`src/plot.typ`](src/plot.typ) is the grammar entry point.
   It normalises data, flattens the aesthetic mapping, merges per-layer mappings, and builds the spec dict.
@@ -28,7 +28,7 @@ Entry points trace the same path:
 | `src/geom/` | Geometric layers; each exports a constructor (via `make-layer`) and a `draw(layer, ctx)`. |
 | `src/stat/` | Statistical transforms; dispatched by `src/stat/apply.typ`. |
 | `src/position/` | Position adjustments (stack, dodge, fill, jitter, …); dispatched by `src/position/apply.typ`. |
-| `src/scale/` | Scale training and per-aesthetic scales (continuous, discrete, date, colour, size, shape, …). |
+| `src/scale/` | Aesthetic-agnostic scales: `constructors.typ` returns family-tagged stubs, `bind.typ` dispatches `(aesthetic, family)` to family-file builders (continuous, discrete, colour, date, size, …), `train.typ` trains domains. |
 | `src/coord/` | Coordinate systems (cartesian, fixed, flip, radial, transform). |
 | `src/facet/` | Faceting (grid, wrap) and strip labellers. |
 | `src/guide/` | Legend and axis configuration plus legend-symbol drawing. |
@@ -43,6 +43,7 @@ Design tenets worth knowing before editing:
 - **Late binding.** Aesthetic values can resolve at later stages (`after-stat`, `after-scale`, `from-theme`, `stage`); see [`src/utils/late-binding.typ`](src/utils/late-binding.typ).
 - **Per-facet stat re-training.** Stats such as smooth, bin, and boxplot re-run per panel to respect facet semantics.
 - **Single CeTZ import.** Only [`src/deps.typ`](src/deps.typ) imports third-party packages; `tools/typstdoc` rejects `@preview/*` imports elsewhere under `src/`.
+- **Keyed-by-aesthetic plot inputs.** `scales()` ([`src/scales.typ`](src/scales.typ)), `guides()` ([`src/guides.typ`](src/guides.typ)), and `labels()` ([`src/labels.typ`](src/labels.typ)) each build a dict keyed by aesthetic and feed it to `plot()`; a later entry for the same aesthetic wins. `expand-limits` ([`src/limits.typ`](src/limits.typ)) and `annotate` ([`src/annotate.typ`](src/annotate.typ)) are top-level shortcuts, and [`src/aes-keys.typ`](src/aes-keys.typ) single-sources the `AES-KEYS` channel list.
 
 ## Adding things
 
@@ -50,7 +51,7 @@ Design tenets worth knowing before editing:
   Provide a legend symbol via `src/guide/draw-key.typ` / `src/guide/draw-marker.typ`.
 - **A stat.** Add `src/stat/<name>.typ` and register it in [`src/stat/apply.typ`](src/stat/apply.typ).
 - **A position.** Add `src/position/<name>.typ` and register it in [`src/position/apply.typ`](src/position/apply.typ).
-- **A scale.** Add `src/scale/<name>.typ` and wire it through [`src/scale/train.typ`](src/scale/train.typ).
+- **A scale.** Add or extend the internal builder in the relevant family file (`src/scale/continuous.typ`, `src/scale/colour.typ`, …), register its `family` under each supported aesthetic in the [`src/scale/bind.typ`](src/scale/bind.typ) dispatch table, expose a public `scale-<name>` constructor in [`src/scale/constructors.typ`](src/scale/constructors.typ) (returns `_stub(family, args)`), and re-export it through [`lib.typ`](lib.typ).
 
 ## Error conventions
 
