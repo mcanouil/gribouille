@@ -28,7 +28,7 @@ Entry points trace the same path:
 | `src/geom/` | Geometric layers; each exports a constructor (via `make-layer`) and a `draw(layer, ctx)`. Shared draw scaffolding for geom families (`grouped-path`, `errorbar-draw`, `ref-line`, `label-draw`) lives here too. |
 | `src/stat/` | Statistical transforms; dispatched by `src/stat/apply.typ`. |
 | `src/position/` | Position adjustments (stack, dodge, fill, jitter, …); dispatched by `src/position/apply.typ`. |
-| `src/scale/` | Aesthetic-agnostic scales: `constructors.typ` returns family-tagged stubs, `bind.typ` dispatches `(aesthetic, name)` to family-file builders (continuous, discrete, colour, date, size, …), `train.typ` trains domains. |
+| `src/scale/` | Aesthetic-agnostic scales: `constructors.typ` returns family-tagged stubs, `bind.typ` validates stub arguments against per-builder key tuples (sync-checked by `tools/typstdoc/scale_keys.lua`) and dispatches `(aesthetic, name)` to family-file builders (continuous, discrete, colour, date, size, …), `train.typ` trains domains. |
 | `src/coord/` | Coordinate systems (cartesian, fixed, flip, radial, transform). |
 | `src/facet/` | Faceting (grid, wrap) and strip labellers. |
 | `src/guide/` | Legend and axis configuration plus legend-symbol drawing. |

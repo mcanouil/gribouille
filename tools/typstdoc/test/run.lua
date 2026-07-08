@@ -1598,6 +1598,21 @@ describe("tidydoc: tinymist docstring emitter", function()
 end)
 
 -- -----------------------------------------------------------------------
+
+describe("scale_keys: bind key tuples match builder signatures", function()
+  local scale_keys = require("scale_keys")
+  local repo_root = ROOT:match("^(.*)/tools/typstdoc$")
+    or (ROOT == "tools/typstdoc" and ".")
+
+  it("every bind.typ key tuple matches its builder's named parameters", function()
+    local problems = scale_keys.check(repo_root)
+    if #problems > 0 then
+      error("bind.typ key tuples out of sync:\n  " .. table.concat(problems, "\n  "), 2)
+    end
+  end)
+end)
+
+-- -----------------------------------------------------------------------
 cleanup()
 
 io.write(string.format("\n%d passed, %d failed\n", T.passed, T.failed))

@@ -1,16 +1,17 @@
 ///! Public aesthetic-agnostic scale constructors.
 ///!
-///! Each constructor returns a deferred stub `(kind: "scale", family: ...,
+///! Each constructor returns a deferred stub `(kind: "scale", name: ...,
 ///! args: ...)`. The aesthetic is supplied by the `scales()` key, which
 ///! dispatches the stub to the matching internal builder (see scale/bind.typ).
 ///! Pass these to \@plot through \@scales, e.g.
 ///! `scales(x: scale-log10(), colour: scale-viridis-d())`.
 
-// The stub defers `args` unvalidated; `bind-scale` spreads them into the
-// family's internal builder (scale/bind.typ), whose fixed signature is the sole
-// arbiter of valid keys. A misspelled argument therefore surfaces as Typst's
-// native "unexpected argument" at bind, not a gribouille-scoped message: there
-// is no function-signature introspection to mirror each builder's keys here.
+// The stub defers `args` unvalidated because the valid key set depends on
+// the aesthetic, which is only known when `scales()` binds the stub.
+// `bind-scale` (scale/bind.typ) then checks every named key against the
+// bound builder's key tuple and rejects positional arguments before
+// spreading, so a misspelled argument fails with a scales-scoped message
+// listing the valid keys for that scale and aesthetic.
 #let _stub(family, args) = (kind: "scale", name: family, args: args)
 
 // Generic scales ------------------------------------------------------------
