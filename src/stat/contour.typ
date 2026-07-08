@@ -2,7 +2,7 @@
 
 #import "../utils/aes-resolve.typ": stat-output-mapping
 #import "../utils/contour-grid.typ": grid-from-rows, resolve-levels
-#import "../utils/marching-squares.typ": isolines
+#import "../utils/marching-squares.typ": isolines-multi
 
 /// Marching-squares contour statistic.
 ///
@@ -77,8 +77,9 @@
     params.at("breaks", default: auto),
   )
   let rows = ()
+  let seg-lists = isolines-multi(grid.xs, grid.ys, grid.z, levels)
   for (li, level) in levels.enumerate() {
-    let segs = isolines(grid.xs, grid.ys, grid.z, level)
+    let segs = seg-lists.at(li)
     for (si, ((x0, y0), (x1, y1))) in segs.enumerate() {
       let group = str(li) + ":" + str(si)
       rows.push((x: x0, y: y0, _level: level, group: group))

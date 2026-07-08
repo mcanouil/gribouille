@@ -55,12 +55,74 @@
   (layer: new-layer, mapping: new-mapping)
 }
 
+// Run a non-identity stat: split by discrete-aesthetic groups, apply the
+// stat to each group independently, then recombine. A panel-level setup
+// pass first lets binning stats compute a shared partition over the full
+// data so groups end up on the same bin grid. Returns the stat output rows
+// and mapping.
+#let _stat-pass(resolved-stat, data, mapping, stripped) = {
+  let stat-name = resolved-stat.name
+  let resolved-params = setup-stat(
+    stat-name,
+    data,
+    stripped,
+    resolved-stat.params,
+  )
+  let gcols = group-cols(mapping)
+  let group-list = partition-by-group(data, mapping)
+  let combined = ()
+  let last-mapping = stripped
+  for g in group-list {
+    let r = apply-stat(stat-name, g.data, stripped, resolved-params)
+    last-mapping = r.mapping
+    // Re-inject group column values from the first row of this group so
+    // scale training and position adjustments can still see them.
+    let proto = g.data.at(0, default: (:))
+    let enriched = r.data.map(row => {
+      let new-row = row
+      for gc in gcols {
+        if new-row.at(gc, default: none) == none {
+          new-row.insert(gc, proto.at(gc, default: none))
+        }
+      }
+      new-row
+    })
+    combined += enriched
+  }
+  // stat-output-mapping preserves whatever keys we passed in, but we
+  // passed `stripped` so any `as-factor`/`as-numeric`/`typst` wrappers
+  // were dropped. Restore them on aesthetics the stat passed through
+  // unchanged so scale training can read the forced type.
+  for (k, v) in mapping.pairs() {
+    if v == none { continue }
+    let plain = stripped.at(k, default: none)
+    if plain == none or v == plain { continue }
+    if last-mapping.at(k, default: none) == plain {
+      last-mapping.insert(k, v)
+    }
+  }
+  // Re-attach grouping aesthetics the stat dropped from its base mapping;
+  // the columns were re-injected above so downstream can still resolve them.
+  for gc-key in group-aesthetics {
+    let v = mapping.at(gc-key, default: none)
+    if v == none { continue }
+    if last-mapping.at(gc-key, default: none) == none {
+      last-mapping.insert(gc-key, v)
+    }
+  }
+  // Expose a positional column reused by a grouping aesthetic (e.g. fill ==
+  // x) under its source name; `group-cols` cannot re-inject an x/y column.
+  combined = expose-shared-positional(combined, mapping, last-mapping)
+  (data: combined, mapping: last-mapping)
+}
+
 #let _prepare-layer(
   layer,
   plot-mapping,
   plot-data,
   theme: none,
   coord: none,
+  stat-override: none,
 ) = {
   // Keep mapping-ref annotations intact on the layer so scale training can
   // read forced types; only strip them when the renderer hands a mapping to
@@ -91,64 +153,20 @@
   let stat-identity = stat-name == none or stat-name == "identity"
   let stat-data = data
   let stat-mapping = if stat-identity { mapping } else { stripped }
-  if not stat-identity {
-    // compute-group pattern: split by discrete-aesthetic groups,
-    // apply the stat to each group independently, then recombine.
-    // A panel-level setup pass first lets binning stats compute a shared
-    // partition over the full data so groups end up on the same bin grid.
-    let resolved-params = setup-stat(
-      stat-name,
+  if stat-override != none {
+    // A caller (see `prepare-layers`) already ran this layer's stat pass
+    // for an identical (stat, data, mapping) sibling; reuse its output.
+    stat-data = stat-override.data
+    stat-mapping = stat-override.mapping
+  } else if not stat-identity {
+    let pass = _stat-pass(
+      (name: stat-name, params: stat-params),
       data,
+      mapping,
       stripped,
-      stat-params,
     )
-    let gcols = group-cols(mapping)
-    let group-list = partition-by-group(data, mapping)
-    let combined = ()
-    let last-mapping = stripped
-    for g in group-list {
-      let r = apply-stat(stat-name, g.data, stripped, resolved-params)
-      last-mapping = r.mapping
-      // Re-inject group column values from the first row of this group so
-      // scale training and position adjustments can still see them.
-      let proto = g.data.at(0, default: (:))
-      let enriched = r.data.map(row => {
-        let new-row = row
-        for gc in gcols {
-          if new-row.at(gc, default: none) == none {
-            new-row.insert(gc, proto.at(gc, default: none))
-          }
-        }
-        new-row
-      })
-      combined += enriched
-    }
-    // stat-output-mapping preserves whatever keys we passed in, but we
-    // passed `stripped` so any `as-factor`/`as-numeric`/`typst` wrappers
-    // were dropped. Restore them on aesthetics the stat passed through
-    // unchanged so scale training can read the forced type.
-    for (k, v) in mapping.pairs() {
-      if v == none { continue }
-      let plain = stripped.at(k, default: none)
-      if plain == none or v == plain { continue }
-      if last-mapping.at(k, default: none) == plain {
-        last-mapping.insert(k, v)
-      }
-    }
-    // Re-attach grouping aesthetics the stat dropped from its base mapping;
-    // the columns were re-injected above so downstream can still resolve them.
-    for gc-key in group-aesthetics {
-      let v = mapping.at(gc-key, default: none)
-      if v == none { continue }
-      if last-mapping.at(gc-key, default: none) == none {
-        last-mapping.insert(gc-key, v)
-      }
-    }
-    // Expose a positional column reused by a grouping aesthetic (e.g. fill ==
-    // x) under its source name; `group-cols` cannot re-inject an x/y column.
-    combined = expose-shared-positional(combined, mapping, last-mapping)
-    stat-data = combined
-    stat-mapping = last-mapping
+    stat-data = pass.data
+    stat-mapping = pass.mapping
   }
 
   // Resolve `after-stat` markers now that the stat has run; downstream
@@ -218,4 +236,68 @@
   }
   if not stat-identity { new.stat = "identity" }
   new
+}
+
+// Run only the stat stage for a layer, mirroring `_prepare-layer`'s pre-stat
+// pipeline (from-theme resolution, stage stash, data resolution). Feeds the
+// `stat-override` fast path below; keep the two preambles in sync.
+#let _layer-stat(layer, plot-mapping, plot-data, theme: none) = {
+  let mapping = merge-mapping(layer, plot-mapping)
+  if theme != none {
+    let resolved = _apply-from-theme(layer, mapping, theme)
+    layer = resolved.layer
+    mapping = resolved.mapping
+  }
+  let mapping = stash-stages(mapping).mapping
+  let data = _resolve-data(layer, plot-data)
+  let resolved-stat = resolve-stat-spec(
+    layer.at("stat", default: "identity"),
+    layer.at("params", default: (:)),
+  )
+  _stat-pass(resolved-stat, data, mapping, _strip-mapping-refs(mapping))
+}
+
+// Prepare a list of layers, running a non-identity stat once per unique
+// (resolved stat, layer data, merged mapping) triple: a geom-line +
+// geom-ribbon pair over the same `stat-summary(fun: "mean-cl-boot")`
+// bootstraps once instead of once per layer. Keys compare structurally;
+// closure-valued stat params compare by identity, so sharing only happens
+// within one constructed stat object.
+#let prepare-layers(
+  layers,
+  plot-mapping,
+  plot-data,
+  theme: none,
+  coord: none,
+) = {
+  let memo = ()
+  let out = ()
+  for layer in layers {
+    let resolved = resolve-stat-spec(
+      layer.at("stat", default: "identity"),
+      layer.at("params", default: (:)),
+    )
+    let override = none
+    if resolved.name != none and resolved.name != "identity" {
+      let key = (
+        stat: resolved,
+        data: layer.at("data", default: none),
+        mapping: merge-mapping(layer, plot-mapping),
+      )
+      let hit = memo.find(e => e.key == key)
+      if hit != none { override = hit.value } else {
+        override = _layer-stat(layer, plot-mapping, plot-data, theme: theme)
+        memo.push((key: key, value: override))
+      }
+    }
+    out.push(_prepare-layer(
+      layer,
+      plot-mapping,
+      plot-data,
+      theme: theme,
+      coord: coord,
+      stat-override: override,
+    ))
+  }
+  out
 }
