@@ -4,6 +4,7 @@
 
 #import "../deps.typ": cetz
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/level-resolve.typ": discrete-index
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
 #import "../utils/radial.typ": project-point, shift-point
@@ -19,7 +20,7 @@
       let xn = if x-trained.type == "continuous" {
         parse-number(xv)
       } else {
-        x-trained.domain.position(v => v == str(xv))
+        discrete-index(x-trained, xv)
       }
       (row: row, xn: xn)
     })

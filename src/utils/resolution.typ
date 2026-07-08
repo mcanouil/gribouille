@@ -45,12 +45,8 @@
 #let resolution(values, zero: true) = {
   let xs = _to-numeric(values)
   if zero { xs.push(0.0) }
-  let unique = ()
-  for v in xs {
-    if not unique.contains(v) { unique.push(v) }
-  }
-  if unique.len() < 2 { return 1 }
-  let sorted = unique.sorted()
+  if xs.len() < 2 { return 1 }
+  let sorted = xs.sorted()
   let best = none
   let i = 1
   while i < sorted.len() {

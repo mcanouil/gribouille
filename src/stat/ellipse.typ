@@ -94,13 +94,13 @@
   let proto = (:)
   for row in data {
     let key = group-key(row, mapping)
-    let bucket = buckets.at(key, default: ())
-    bucket.push(row)
-    buckets.insert(key, bucket)
-    if not order.contains(key) {
+    if key not in buckets {
       order.push(key)
       proto.insert(key, row)
     }
+    let bucket = buckets.at(key, default: ())
+    bucket.push(row)
+    buckets.insert(key, bucket)
   }
 
   let out-mapping = base-mapping

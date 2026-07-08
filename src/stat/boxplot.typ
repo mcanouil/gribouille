@@ -145,10 +145,10 @@
   for row in data {
     let key = str(row.at(x-col, default: ""))
     if key == "" { continue }
+    if key not in buckets { order.push(key) }
     let bucket = buckets.at(key, default: ())
     bucket.push(row)
     buckets.insert(key, bucket)
-    if not order.contains(key) { order.push(key) }
   }
 
   let out = ()

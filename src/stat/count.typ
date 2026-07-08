@@ -74,7 +74,7 @@
     if raw == none { continue }
     let key = str(raw)
     if key == "" { continue }
-    if not order.contains(key) { order.push(key) }
+    if key not in counts { order.push(key) }
     counts.insert(
       key,
       counts.at(key, default: 0) + read-weight(row, weight-col),

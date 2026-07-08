@@ -143,6 +143,21 @@
 ) = {
   _check-spec-args(mapping, layers, coord)
   let alt = _resolve-alt(alt, labels)
+  let spec = (
+    data: _normalise-data(data),
+    mapping: mapping,
+    layers: layers,
+    scales: scales,
+    coord: coord,
+    facet: facet,
+    theme: theme,
+    labels: labels,
+    guides: guides,
+    width: width,
+    height: height,
+    alt: alt,
+    strict: strict,
+  )
   // Deferred plots skip the context block because `context` returns
   // content; compose() resolves the active theme from its own context
   // before handing the spec to the renderer.
@@ -154,51 +169,21 @@
         hint: "A deferred panel needs concrete dimensions to probe its guides.",
       )
     }
-    return (
-      data: _normalise-data(data),
-      mapping: mapping,
-      layers: layers,
-      scales: scales,
-      coord: coord,
-      facet: facet,
-      theme: theme,
-      labels: labels,
-      guides: guides,
-      width: width,
-      height: height,
-      alt: alt,
-      strict: strict,
-    )
+    return spec
   }
   layout(size => context {
     // `auto` fills the container; when the container is unbounded (e.g., a
     // `width: auto` page) there is no size to take, so fall back to the same
     // default dimensions the signature uses.
-    let resolved-width = if width != auto {
-      width
-    } else if size.width.pt() < float.inf {
-      size.width
-    } else { 10cm }
-    let resolved-height = if height != auto {
-      height
-    } else if size.height.pt() < float.inf {
-      size.height
-    } else { 7cm }
-    let spec = (
-      data: _normalise-data(data),
-      mapping: mapping,
-      layers: layers,
-      scales: scales,
-      coord: coord,
-      facet: facet,
-      theme: theme,
-      labels: labels,
-      guides: guides,
-      width: resolved-width,
-      height: resolved-height,
-      alt: alt,
-      strict: strict,
-    )
+    let spec = spec
+    if width == auto {
+      spec.width = if size.width.pt() < float.inf { size.width } else { 10cm }
+    }
+    if height == auto {
+      spec.height = if size.height.pt() < float.inf { size.height } else {
+        7cm
+      }
+    }
     let rendered = render-plot(spec)
     if alt != none {
       figure(

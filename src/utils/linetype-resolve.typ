@@ -1,5 +1,5 @@
 #import "palette.typ": default-linetypes, palette-at, spec-palette
-#import "level-resolve.typ": resolve-binned
+#import "level-resolve.typ": discrete-index, resolve-binned
 #import "late-binding.typ": after-scale-source, apply-after-scale
 
 /// Resolve a per-row linetype dash keyword.
@@ -40,7 +40,7 @@
       if resolved == none { "solid" } else { resolved }
     } else {
       let palette = spec-palette(linetype-trained, default-linetypes)
-      let idx = linetype-trained.domain.position(v => v == str(sample))
+      let idx = discrete-index(linetype-trained, sample)
       if idx == none { "solid" } else { palette-at(palette, idx) }
     }
   }
