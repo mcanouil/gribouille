@@ -10,7 +10,7 @@
 #import "theme/defaults.typ": merge-theme
 #import "theme/theme.typ": _rect-outset-cm, _scalar-cascade, _text-style
 #import "utils/margin.typ": opposite-side, perpendicular-sides
-#import "legend.typ" as legend-mod
+#import "render/legend.typ" as legend-mod
 #import "render/common.typ": _per-side, _strip-mapping-refs
 #import "render/axis-format.typ": _axis-title, _sec-spec
 #import "render/guides.typ": _axis-text-angle, _read-axis-guide

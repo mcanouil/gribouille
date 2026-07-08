@@ -3,7 +3,7 @@
 // labels, title, and grid options all match. Key glyph precedence is
 // aesthetic-driven (shape > linetype/linewidth > size > geom fallback).
 
-#import "../../src/legend.typ": guides-for
+#import "../../src/render/legend.typ": guides-for
 
 #let layer-point(colour: auto, fill: auto, shape: auto) = (
   geom: "point",

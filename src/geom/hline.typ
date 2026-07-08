@@ -6,7 +6,7 @@
 ///! data value because the y axis becomes the rendered horizontal axis.
 
 #import "../layer.typ": make-layer, split-aes-params
-#import "../utils/ref-line.typ": _draw-axis-lines
+#import "ref-line.typ": _draw-axis-lines
 
 /// Horizontal reference line at one or more y intercepts.
 ///

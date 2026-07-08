@@ -3,7 +3,7 @@
 // title precedence resolved by `_title-align` and the alignment stored by the
 // `guide-legend` / `element-text` constructors.
 
-#import "../../src/legend.typ": (
+#import "../../src/render/legend.typ": (
   _align-offset, _hjust-below, _hjust-right-of, _label-align, _title-align,
   _title-resolved-align,
 )

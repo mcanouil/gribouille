@@ -5,7 +5,7 @@
 // The overrun panic itself (in `render-plot`) cannot be caught in a unit test;
 // it is exercised manually via a short plot with a caption and a tall legend.
 
-#import "../../src/legend.typ": side-stacked-height
+#import "../../src/render/legend.typ": side-stacked-height
 #import "../../src/theme/grey.typ": theme-grey
 
 #let th = theme-grey()

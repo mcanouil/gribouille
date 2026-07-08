@@ -19,7 +19,7 @@
 #import "../utils/format.typ": format-break
 #import "../utils/palette.typ": default-discrete
 #import "../scale/secondary.typ" as secondary-mod
-#import "../legend.typ" as legend-mod
+#import "legend.typ" as legend-mod
 #import "common.typ": (
   _per-side, _resolve-data, _resolve-mapping, _should-draw-tick,
 )

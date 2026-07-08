@@ -4,7 +4,7 @@
 // legends ignore the override (their glyph encodes the `size` scale).
 
 #import "../../src/guide/legend.typ": guide-legend
-#import "../../src/legend.typ": (
+#import "../../src/render/legend.typ": (
   _row-stack-height, _swatch-key-diam-cm, _swatch-lead-cm, _swatch-line-h-cm,
   _swatch-stride-cm, guides-for,
 )

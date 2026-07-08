@@ -5,7 +5,7 @@
 #import "../theme/theme.typ": _rect-style, _text-args, _text-style
 #import "../utils/typst-markup.typ": eval-as-markup, resolve-prose
 #import "../utils/measure.typ": measure-labels-cm, measure-text-cm
-#import "../utils/label-draw.typ" as label-draw
+#import "../geom/label-draw.typ" as label-draw
 #import "../facet/labellers.typ" as labellers
 #import "../data.typ": group-by
 #import "common.typ": _per-side, _resolve-data

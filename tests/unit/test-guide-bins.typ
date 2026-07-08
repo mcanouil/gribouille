@@ -1,7 +1,7 @@
 // Binned non-colour scales (scale-binned, scale-binned, etc.)
 // surface as size-ladder candidates with one glyph per bin at the midpoint.
 
-#import "../../src/legend.typ": guides-for
+#import "../../src/render/legend.typ": guides-for
 
 #let layer-point() = (
   geom: "point",

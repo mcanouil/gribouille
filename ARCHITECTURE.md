@@ -25,7 +25,7 @@ Entry points trace the same path:
 
 | Directory | Purpose |
 | --- | --- |
-| `src/geom/` | Geometric layers; each exports a constructor (via `make-layer`) and a `draw(layer, ctx)`. |
+| `src/geom/` | Geometric layers; each exports a constructor (via `make-layer`) and a `draw(layer, ctx)`. Shared draw scaffolding for geom families (`grouped-path`, `errorbar-draw`, `ref-line`, `label-draw`) lives here too. |
 | `src/stat/` | Statistical transforms; dispatched by `src/stat/apply.typ`. |
 | `src/position/` | Position adjustments (stack, dodge, fill, jitter, …); dispatched by `src/position/apply.typ`. |
 | `src/scale/` | Aesthetic-agnostic scales: `constructors.typ` returns family-tagged stubs, `bind.typ` dispatches `(aesthetic, family)` to family-file builders (continuous, discrete, colour, date, size, …), `train.typ` trains domains. |
@@ -33,8 +33,8 @@ Entry points trace the same path:
 | `src/facet/` | Faceting (grid, wrap) and strip labellers. |
 | `src/guide/` | Legend and axis configuration plus legend-symbol drawing. |
 | `src/theme/` | Theme structure, named themes, element builders, global state. |
-| `src/render/` | Rendering pipeline: domain, facet layout, panel draw, canvas, chrome. |
-| `src/utils/` | Shared helpers: types, formatting, colour, late-binding, binning, label drawing, errors. |
+| `src/render/` | Rendering pipeline: domain, facet layout, panel draw, canvas, chrome, legend renderer (`render/legend.typ`). |
+| `src/utils/` | Shared leaf helpers: types, formatting, colour, late-binding, binning, errors. No cetz drawing lives here. |
 | `src/datasets/` | Built-in example datasets (economics, mpg, penguins). |
 
 Design tenets worth knowing before editing:

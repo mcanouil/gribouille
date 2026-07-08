@@ -6,7 +6,7 @@
 ///! same data value because the x axis becomes the rendered vertical axis.
 
 #import "../layer.typ": make-layer, split-aes-params
-#import "../utils/ref-line.typ": _draw-axis-lines
+#import "ref-line.typ": _draw-axis-lines
 
 /// Vertical reference line at one or more x intercepts.
 ///
