@@ -4,7 +4,7 @@
 
 #let c = coord-transform()
 #assert.eq(c.kind, "coord")
-#assert.eq(c.coord, "transform")
+#assert.eq(c.name, "transform")
 #assert.eq(c.x, "identity")
 #assert.eq(c.y, "identity")
 

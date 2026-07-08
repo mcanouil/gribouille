@@ -71,12 +71,12 @@
   if spec.facet == none { return }
   let cols = column-names(spec.data)
   if cols.len() == 0 { return }
-  if spec.facet.facet == "wrap" {
+  if spec.facet.name == "wrap" {
     let variable = spec.facet.variable
     if variable not in cols {
       fail-unknown-column("facet-wrap", "variable", variable, cols)
     }
-  } else if spec.facet.facet == "grid" {
+  } else if spec.facet.name == "grid" {
     let roles = (("rows", spec.facet.rows), ("columns", spec.facet.columns))
     for (role, variable) in roles {
       if variable != none and variable not in cols {

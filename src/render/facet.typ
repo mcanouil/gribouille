@@ -150,7 +150,7 @@
 // router consumes the sizes to clip connectors at the label edge and to
 // detect crossings against sibling labels.
 #let _measure-label-sizes(layer) = {
-  let geom = layer.at("geom", default: none)
+  let geom = layer.at("name", default: none)
   if geom not in label-draw.LABEL-GEOMS { return layer }
   let params = layer.at("params", default: (:))
   if not (
@@ -186,8 +186,8 @@
 }
 
 #let _render-prepare(spec, theme) = {
-  let facet-wrap-mode = spec.facet != none and spec.facet.facet == "wrap"
-  let facet-grid-mode = spec.facet != none and spec.facet.facet == "grid"
+  let facet-wrap-mode = spec.facet != none and spec.facet.name == "wrap"
+  let facet-grid-mode = spec.facet != none and spec.facet.name == "grid"
   let coord = spec.at("coord", default: none)
 
   let wrap-levels = if facet-wrap-mode {

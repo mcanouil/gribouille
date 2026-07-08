@@ -123,7 +123,7 @@
   }
   (
     kind: "facet",
-    facet: "wrap",
+    name: "wrap",
     variable: variable,
     ncolumn: ncolumn,
     nrow: nrow,

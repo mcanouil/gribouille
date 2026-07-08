@@ -625,8 +625,8 @@
   inner-ctx.radial = inner-radial
   if inner-radial != none {
     for layer in prepared {
-      if not _RADIAL-AWARE.at(layer.geom, default: false) {
-        fail("coord-radial", "does not support geom-" + layer.geom)
+      if not _RADIAL-AWARE.at(layer.name, default: false) {
+        fail("coord-radial", "does not support geom-" + layer.name)
       }
     }
   }
@@ -638,7 +638,7 @@
     import cetz.draw: floating, hide, rect
     hide(rect((0, 0), (panel-w, panel-h)), bounds: true)
     for layer in subset {
-      let draw = _geom-draw.at(layer.geom, default: none)
+      let draw = _geom-draw.at(layer.name, default: none)
       if draw != none {
         floating({ draw(layer, inner-ctx) })
       }

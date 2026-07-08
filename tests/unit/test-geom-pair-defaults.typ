@@ -21,8 +21,8 @@
   geom-boxplot(),
   geom-point(),
 ) {
-  assert.eq(layer.params.fill, auto, message: layer.geom + " fill")
-  assert.eq(layer.params.colour, auto, message: layer.geom + " colour")
+  assert.eq(layer.params.fill, auto, message: layer.name + " fill")
+  assert.eq(layer.params.colour, auto, message: layer.name + " colour")
 }
 
 // 2. Pinned values flow through to params.
@@ -39,7 +39,7 @@
 
 #import "../../src/utils/aes-pair.typ": resolve-pair-defaults
 
-#let layer-of(params) = (geom: "rect", params: params)
+#let layer-of(params) = (name: "rect", params: params)
 #let ink = rgb("#000000")
 #let neutral = rgb("#4c78a8")
 

@@ -32,7 +32,7 @@
   palette: (rgb("#111111"),),
   theme: (ink: black),
 )
-#let layer-of(params) = (geom: "point", params: params)
+#let layer-of(params) = (name: "point", params: params)
 
 // --- after-scale on `colour` darkens the channel default ---------------
 

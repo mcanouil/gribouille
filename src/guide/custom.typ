@@ -33,7 +33,7 @@
 ///
 /// \@param byrow Accepted for API uniformity with `guide-legend`; ignored because custom content is opaque.
 ///
-/// \@returns Marker dictionary tagged `kind: "guide-custom"`, consumed by \@guides.
+/// \@returns Marker dictionary tagged `kind: "guide", name: "custom"`, consumed by \@guides.
 ///
 /// \@examples Add a free-form annotation block alongside the colour legend.
 /// ```
@@ -71,7 +71,8 @@
   order: none,
   byrow: false,
 ) = (
-  kind: "guide-custom",
+  kind: "guide",
+  name: "custom",
   content: content,
   width: width,
   height: height,

@@ -50,6 +50,6 @@
 /// \@see \@plot, \@coord-cartesian
 #let coord-fixed(ratio: 1) = (
   kind: "coord",
-  coord: "fixed",
+  name: "fixed",
   ratio: ratio,
 )

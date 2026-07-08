@@ -4,7 +4,7 @@
 
 #let g = geom-spoke()
 #assert.eq(g.kind, "layer")
-#assert.eq(g.geom, "spoke")
+#assert.eq(g.name, "spoke")
 #assert.eq(g.stat, "identity")
 #assert.eq(g.position, "identity")
 #assert.eq(g.params.angle, 0deg)

@@ -10,7 +10,7 @@
 
 #let eb = geom-errorbar()
 #assert.eq(eb.kind, "layer")
-#assert.eq(eb.geom, "errorbar")
+#assert.eq(eb.name, "errorbar")
 #assert.eq(eb.stat, "identity")
 #assert.eq(eb.position, "identity")
 #assert.eq(eb.params.width, 0.4)
@@ -19,7 +19,7 @@
 
 #let ebh = geom-errorbarh()
 #assert.eq(ebh.kind, "layer")
-#assert.eq(ebh.geom, "errorbarh")
+#assert.eq(ebh.name, "errorbarh")
 #assert.eq(ebh.stat, "identity")
 #assert.eq(ebh.position, "identity")
 #assert.eq(ebh.params.height, 0.4)
@@ -28,7 +28,7 @@
 
 #let lr = geom-linerange()
 #assert.eq(lr.kind, "layer")
-#assert.eq(lr.geom, "linerange")
+#assert.eq(lr.name, "linerange")
 #assert.eq(lr.stat, "identity")
 #assert.eq(lr.position, "identity")
 #assert.eq(lr.params.alpha, auto)
@@ -36,7 +36,7 @@
 
 #let cb = geom-crossbar()
 #assert.eq(cb.kind, "layer")
-#assert.eq(cb.geom, "crossbar")
+#assert.eq(cb.name, "crossbar")
 #assert.eq(cb.stat, "identity")
 #assert.eq(cb.position, "identity")
 #assert.eq(cb.params.width, 0.6)
@@ -44,7 +44,7 @@
 
 #let pr = geom-pointrange()
 #assert.eq(pr.kind, "layer")
-#assert.eq(pr.geom, "pointrange")
+#assert.eq(pr.name, "pointrange")
 #assert.eq(pr.stat, "identity")
 #assert.eq(pr.position, "identity")
 #assert.eq(pr.params.alpha, auto)

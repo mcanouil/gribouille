@@ -52,7 +52,7 @@
 /// ```
 ///
 /// \@see \@draw-key-line, \@draw-key-rect, \@draw-key-path, \@draw-key-blank
-#let draw-key-point() = (kind: "draw-key", key: "point")
+#let draw-key-point() = (kind: "draw-key", name: "point")
 
 /// Draw-key returning a short horizontal line.
 ///
@@ -100,7 +100,7 @@
 /// ```
 ///
 /// \@see \@draw-key-point, \@draw-key-rect, \@draw-key-path, \@draw-key-blank
-#let draw-key-line() = (kind: "draw-key", key: "line")
+#let draw-key-line() = (kind: "draw-key", name: "line")
 
 /// Draw-key returning a small filled rectangle.
 ///
@@ -147,7 +147,7 @@
 /// ```
 ///
 /// \@see \@draw-key-point, \@draw-key-line, \@draw-key-path, \@draw-key-blank
-#let draw-key-rect() = (kind: "draw-key", key: "rect")
+#let draw-key-rect() = (kind: "draw-key", name: "rect")
 
 /// Draw-key returning a short polyline.
 ///
@@ -194,7 +194,7 @@
 /// ```
 ///
 /// \@see \@draw-key-point, \@draw-key-line, \@draw-key-rect, \@draw-key-blank
-#let draw-key-path() = (kind: "draw-key", key: "path")
+#let draw-key-path() = (kind: "draw-key", name: "path")
 
 /// Draw-key that draws nothing.
 ///
@@ -246,7 +246,7 @@
 /// ```
 ///
 /// \@see \@draw-key-point, \@draw-key-line, \@draw-key-rect, \@draw-key-path
-#let draw-key-blank() = (kind: "draw-key", key: "blank")
+#let draw-key-blank() = (kind: "draw-key", name: "blank")
 
 // Default key kind for a geom name. Returns one of "point", "line", "rect",
 // or "blank" so the legend can pick a glyph automatically.

@@ -10,7 +10,7 @@
 
 #let c = coord-radial()
 #assert.eq(c.kind, "coord")
-#assert.eq(c.coord, "radial")
+#assert.eq(c.name, "radial")
 #assert.eq(c.theta, "x")
 #assert.eq(c.start, 0)
 #assert.eq(c.direction, 1)

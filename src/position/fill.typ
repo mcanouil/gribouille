@@ -54,7 +54,7 @@
 /// ```
 ///
 /// \@see \@position-stack, \@position-dodge, \@position-identity
-#let position-fill() = (kind: "position", name: "fill")
+#let position-fill() = (kind: "position", name: "fill", params: (:))
 
 #let apply(data, mapping, params: (:), coord: none) = {
   let slice = if is-radial(coord) {

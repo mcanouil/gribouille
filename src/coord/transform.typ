@@ -40,7 +40,7 @@
 /// \@see \@plot, \@scale-continuous
 #let coord-transform(x: "identity", y: "identity") = (
   kind: "coord",
-  coord: "transform",
+  name: "transform",
   x: x,
   y: y,
 )

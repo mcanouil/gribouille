@@ -40,14 +40,14 @@
 
 #let l-count = geom-count()
 #assert.eq(l-count.kind, "layer")
-#assert.eq(l-count.geom, "point")
+#assert.eq(l-count.name, "point")
 #assert.eq(l-count.stat, "sum")
 
 // --- geom-errorbarh: layer dict shape -------------------------------------
 
 #let l-eb = geom-errorbarh(height: 0.4)
 #assert.eq(l-eb.kind, "layer")
-#assert.eq(l-eb.geom, "errorbarh")
+#assert.eq(l-eb.name, "errorbarh")
 #assert.eq(l-eb.params.height, 0.4)
 #assert.eq(l-eb.stat, "identity")
 

@@ -126,7 +126,7 @@
     y-max: none,
   )
   for layer in layers {
-    let geom = layer.at("geom", default: none)
+    let geom = layer.at("name", default: none)
     let mapping = layer.at("mapping", default: none)
     let layer-data = layer.at("data", default: ())
 
@@ -205,7 +205,7 @@
 // coord-transform warps the view at mapping time. Skips axes whose scale
 // already pre-transformed the data: pre- and post-stat warps don't compose.
 #let _apply-coord-transform(trained, coord) = {
-  if coord == none or coord.at("coord", default: none) != "transform" {
+  if coord == none or coord.at("name", default: none) != "transform" {
     return trained
   }
   for axis in ("x", "y") {
@@ -233,7 +233,7 @@
 // so re-apply them after any per-panel retraining.
 #let _apply-coord(trained, coord) = {
   if coord == none { return trained }
-  if coord.coord != "cartesian" { return trained }
+  if coord.name != "cartesian" { return trained }
   let x-limits = coord.at("x-limits", default: none)
   if (
     x-limits != none
@@ -259,7 +259,7 @@
 
 // Detect whether the spec asks for axis-flipping at render time.
 #let _is-flipped(coord) = (
-  coord != none and coord.at("coord", default: none) == "flip"
+  coord != none and coord.at("name", default: none) == "flip"
 )
 
 // Swap the trained x and y scales so the renderer's bottom axis shows the
@@ -292,7 +292,7 @@
 // Falls back to the input box if either trained scale is missing or has a
 // zero-length domain.
 #let _fixed-inner-size(coord, trained, box-w, box-h) = {
-  if coord == none or coord.coord != "fixed" { return (box-w, box-h) }
+  if coord == none or coord.name != "fixed" { return (box-w, box-h) }
   let x-trained = trained.at("x", default: none)
   let y-trained = trained.at("y", default: none)
   if x-trained == none or y-trained == none { return (box-w, box-h) }
@@ -324,7 +324,7 @@
 #let _apply-expand(trained, coord) = {
   let coord-no-expand = (
     coord != none
-      and coord.at("coord", default: none) == "cartesian"
+      and coord.at("name", default: none) == "cartesian"
       and coord.at("expand", default: true) == false
   )
   // Under `coord-radial`, the radial axis maps view-min to canvas radius 0,

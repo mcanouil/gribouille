@@ -51,6 +51,7 @@
   cap: "none",
 ) = (
   kind: "guide",
+  name: "axis-theta",
   aesthetic: "theta",
   angle: angle,
   minor-ticks: minor-ticks,

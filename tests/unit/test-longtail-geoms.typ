@@ -7,7 +7,7 @@
 
 #let bl = geom-blank()
 #assert.eq(bl.kind, "layer")
-#assert.eq(bl.geom, "blank")
+#assert.eq(bl.name, "blank")
 #assert.eq(bl.stat, "identity")
 #assert.eq(bl.position, "identity")
 #assert.eq(bl.mapping, none)
@@ -16,7 +16,7 @@
 
 #let rg = geom-rug()
 #assert.eq(rg.kind, "layer")
-#assert.eq(rg.geom, "rug")
+#assert.eq(rg.name, "rug")
 #assert.eq(rg.stat, "identity")
 #assert.eq(rg.position, "identity")
 #assert.eq(rg.params.sides, "bl")
@@ -31,7 +31,7 @@
 
 #let fn = geom-function(fun: x => x)
 #assert.eq(fn.kind, "layer")
-#assert.eq(fn.geom, "function")
+#assert.eq(fn.name, "function")
 #assert.eq(fn.stat, "identity")
 #assert.eq(fn.position, "identity")
 #assert.eq(fn.params.n, 101)

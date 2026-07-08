@@ -20,7 +20,7 @@
   layers: (
     (
       kind: "layer",
-      geom: "point",
+      name: "point",
       mapping: none,
       data: none,
       params: (:),
@@ -65,7 +65,7 @@
   layers: (
     (
       kind: "layer",
-      geom: "point",
+      name: "point",
       mapping: none,
       data: none,
       params: (:),

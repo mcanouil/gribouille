@@ -4,7 +4,8 @@
 #import "../../src/guides.typ": guides
 
 #let g = guide-custom([Hello])
-#assert.eq(g.kind, "guide-custom")
+#assert.eq(g.kind, "guide")
+#assert.eq(g.name, "custom")
 #assert.eq(g.width, auto)
 #assert.eq(g.height, auto)
 #assert.eq(g.title, none)
@@ -36,7 +37,8 @@
 #assert.eq(hidden.placement.side, "none")
 
 #let bound = guides(custom: guide-custom([x], width: 3cm))
-#assert.eq(bound.custom.kind, "guide-custom")
+#assert.eq(bound.custom.kind, "guide")
+#assert.eq(bound.custom.name, "custom")
 #assert.eq(bound.custom.width, 3cm)
 
 Guide-custom tests passed.

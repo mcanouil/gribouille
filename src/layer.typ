@@ -94,7 +94,7 @@
   } else { params }
   (
     kind: "layer",
-    geom: geom,
+    name: geom,
     mapping: mapping,
     data: data,
     params: params,

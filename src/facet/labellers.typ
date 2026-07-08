@@ -35,7 +35,7 @@
 /// \@see \@label-both, \@label-context, \@label-wrap, \@labeller
 #let label-value() = (
   kind: "labeller",
-  labeller: "value",
+  name: "value",
 )
 
 /// Labeller showing both the variable name and the level.
@@ -91,7 +91,7 @@
 /// \@see \@label-value, \@label-context, \@labeller
 #let label-both(separator: ": ") = (
   kind: "labeller",
-  labeller: "both",
+  name: "both",
   separator: separator,
 )
 
@@ -129,7 +129,7 @@
 /// \@see \@label-value, \@label-both, \@labeller
 #let label-context() = (
   kind: "labeller",
-  labeller: "context",
+  name: "context",
 )
 
 /// Labeller wrapping long labels onto multiple lines.
@@ -189,7 +189,7 @@
 /// \@see \@label-value, \@label-both, \@labeller
 #let label-wrap(width: 20, inner: none) = (
   kind: "labeller",
-  labeller: "wrap",
+  name: "wrap",
   width: width,
   inner: inner,
 )
@@ -265,9 +265,9 @@
 /// \@see \@label-value, \@label-both, \@label-context
 #let labeller(rules: (:), default: none) = (
   kind: "labeller",
-  labeller: "compound",
+  name: "compound",
   rules: rules,
-  default: if default == none { (kind: "labeller", labeller: "value") } else {
+  default: if default == none { (kind: "labeller", name: "value") } else {
     default
   },
 )
@@ -275,8 +275,8 @@
 // Resolve a labeller for a specific facet variable. Compound labellers pick
 // the rule matching `var`, falling back to `default`.
 #let _pick(lab, var) = {
-  if lab == none { return (kind: "labeller", labeller: "value") }
-  if lab.labeller != "compound" { return lab }
+  if lab == none { return (kind: "labeller", name: "value") }
+  if lab.name != "compound" { return lab }
   lab.rules.at(var, default: lab.default)
 }
 
@@ -316,13 +316,13 @@
 // `none` if the renderer cannot supply it.
 #let apply-one(lab, var, level, count) = {
   if lab == none { return level }
-  if lab.labeller == "value" { return level }
-  if lab.labeller == "both" { return var + lab.separator + level }
-  if lab.labeller == "context" {
+  if lab.name == "value" { return level }
+  if lab.name == "both" { return var + lab.separator + level }
+  if lab.name == "context" {
     if count == none { return level }
     return level + " (n = " + str(count) + ")"
   }
-  if lab.labeller == "wrap" {
+  if lab.name == "wrap" {
     let inner-text = if lab.inner == none { level } else {
       apply-one(lab.inner, var, level, count)
     }

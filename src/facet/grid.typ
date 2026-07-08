@@ -89,7 +89,7 @@
   }
   (
     kind: "facet",
-    facet: "grid",
+    name: "grid",
     rows: rows,
     columns: columns,
     scales: scales,

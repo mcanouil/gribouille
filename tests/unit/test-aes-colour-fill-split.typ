@@ -22,7 +22,7 @@
 )
 
 #let layer(fill: auto, alpha: 1) = (
-  geom: "point",
+  name: "point",
   params: (fill: fill, alpha: alpha),
 )
 
@@ -106,7 +106,7 @@
 // consults the trained colour scale and returns the colour-scale paint.
 #assert.eq(
   resolve-stroke-colour(
-    (geom: "point", params: (colour: auto, alpha: 1)),
+    (name: "point", params: (colour: auto, alpha: 1)),
     (colour: "k"),
     ctx-colour,
     (k: "a"),
@@ -119,7 +119,7 @@
 // value wins and the colour-scale paint is ignored.
 #assert.eq(
   resolve-stroke-colour(
-    (geom: "point", params: (colour: rgb("#abcdef"), alpha: 1)),
+    (name: "point", params: (colour: rgb("#abcdef"), alpha: 1)),
     (colour: "k"),
     ctx-colour,
     (k: "a"),
@@ -132,7 +132,7 @@
 // is ignored and the resolver returns `none`.
 #assert.eq(
   resolve-stroke-colour(
-    (geom: "point", params: (colour: none, alpha: 1)),
+    (name: "point", params: (colour: none, alpha: 1)),
     (colour: "k"),
     ctx-colour,
     (k: "a"),
@@ -158,7 +158,7 @@
 // the resulting paint must match the explicitly transparentised colour.
 #assert.eq(
   resolve-stroke-colour(
-    (geom: "point", params: (colour: rgb("#abcdef"), alpha: 0.5)),
+    (name: "point", params: (colour: rgb("#abcdef"), alpha: 0.5)),
     (colour: "k"),
     ctx-colour,
     (k: "a"),
@@ -177,7 +177,7 @@
 )
 #assert.eq(
   resolve-stroke-colour(
-    (geom: "point", params: (colour: auto, alpha: 1)),
+    (name: "point", params: (colour: auto, alpha: 1)),
     (:),
     make-ctx((:)),
     (:),
@@ -189,7 +189,7 @@
 // 13. `aes-set` distinguishes pinned, mapped, and unset states. A `none`
 // pin counts as unset for the exclusive-default rule, so disabling one
 // aesthetic does not strip the other aesthetic's default.
-#let make-layer(params) = (geom: "x", params: params)
+#let make-layer(params) = (name: "x", params: params)
 #assert.eq(aes-set(make-layer((colour: auto)), (:), "colour"), false)
 #assert.eq(aes-set(make-layer((colour: none)), (:), "colour"), false)
 #assert.eq(

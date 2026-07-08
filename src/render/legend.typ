@@ -204,7 +204,7 @@
     let merged = merge-mapping(layer, plot-mapping)
     if merged == none { continue }
     if merged.at(aes-name, default: none) == none { continue }
-    let geom = layer.at("geom", default: "")
+    let geom = layer.at("name", default: "")
     if not _geom-uses-aesthetic(geom, aes-name) { continue }
     if _layer-pins(layer, aes-name) { continue }
     out.push(layer)
@@ -276,7 +276,11 @@
 
   let prefers-path = members.any(c => c.contributors.any(layer => {
     let key-override = layer.at("key", default: auto)
-    key-override != auto and key-override != none and key-override.key == "path"
+    (
+      key-override != auto
+        and key-override != none
+        and key-override.name == "path"
+    )
   }))
 
   if has("shape") { return "point" }
@@ -293,10 +297,10 @@
   let best-prio = 0
   for c in members {
     for layer in c.contributors {
-      let geom = layer.at("geom", default: "")
+      let geom = layer.at("name", default: "")
       let key-override = layer.at("key", default: auto)
       let candidate = if key-override != auto and key-override != none {
-        key-override.key
+        key-override.name
       } else {
         default-key-for(geom)
       }
@@ -1038,7 +1042,7 @@
   // measurement helpers stay O(1).
   for g in overrides.values() {
     if type(g) != dictionary { continue }
-    if g.at("kind", default: none) != "guide-custom" { continue }
+    if g.at("name", default: none) != "custom" { continue }
     let placement = g.at("placement", default: _default-placement)
     if placement.side == "none" { continue }
     let cm-w = _custom-dim-cm(g.width, _CUSTOM-DEFAULT-WIDTH)

@@ -29,7 +29,7 @@
 
 #let layers = (
   (
-    geom: "point",
+    name: "point",
     mapping: (x: "x", y: "y", colour: "c"),
     data: (
       (x: 0, y: 0, c: "#1b9e77"),
