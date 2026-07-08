@@ -8,7 +8,8 @@
 #import "elements.typ": (
   element-blank, element-geom, element-line, element-rect, element-text,
 )
-#import "theme.typ": default-stroke-thickness
+#import "theme.typ": _surface-parent, default-stroke-thickness
+#import "../utils/errors.typ": fail
 
 // Read document colours injected by the typst-render Quarto extension via
 // --input flags. Falls back to black/white when rendering standalone.
@@ -105,12 +106,40 @@
   tick-length: 0cm,
 )
 
+// The `tick-length` scalar cascades per axis and per side through
+// `_scalar-cascade` (theme.typ), so these suffixed keys resolve at render but
+// carry no default of their own.
+#let _tick-length-variants = (
+  "x",
+  "y",
+  "x-bottom",
+  "x-top",
+  "y-left",
+  "y-right",
+).map(suffix => "tick-length-" + suffix)
+
+// Every key a user theme may set: the base fields and surface records in
+// `default-theme`, the per-axis/per-side element variants in `_surface-parent`
+// (e.g. `axis-text-x-bottom`), and the `tick-length` scalar variants. A key
+// outside this set is never queried, so it would silently do nothing.
+#let _KNOWN-THEME-KEYS = (
+  default-theme.keys() + _surface-parent.keys() + _tick-length-variants
+)
+
 #let merge-theme(user) = {
   let src = if user == none { minimal-surfaces(_tr-ink, _tr-paper) } else {
     user
   }
   let merged = default-theme
   for (k, v) in src.pairs() {
+    if k not in _KNOWN-THEME-KEYS {
+      fail(
+        "theme",
+        "unknown element " + repr(k),
+        hint: "Key overrides by element, e.g. \"axis-text\", \"panel-grid\", "
+          + "\"legend-background\"; see the theme reference for the full set.",
+      )
+    }
     merged.insert(k, v)
   }
   merged

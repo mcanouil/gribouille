@@ -43,6 +43,9 @@
     if mapping == none { continue }
     let input = column-names(_resolve-data(layer, plot-data))
     let allowed = input + produced.filter(col => col not in input)
+    // No columns to check against (empty data, or a data-free layer such as a
+    // pure annotation): skip rather than reject every mapping. A typo on an
+    // empty dataset goes uncaught, but there is nothing to draw either.
     if allowed.len() == 0 { continue }
     for aesthetic in AES-KEYS {
       let raw = mapping.at(aesthetic, default: none)

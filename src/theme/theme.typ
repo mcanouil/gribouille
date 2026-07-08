@@ -691,6 +691,15 @@
 ///
 /// \@see \@theme-grey, \@theme-minimal, \@theme-classic, \@theme-void, \@element-text, \@element-line, \@element-rect, \@element-blank, \@margin
 #let theme(..fields) = {
+  if fields.pos().len() != 0 {
+    fail(
+      "theme",
+      "expects named element overrides; got "
+        + str(fields.pos().len())
+        + " positional value(s)",
+      hint: "Key each override by element, e.g. theme(axis-text: element-text(...)).",
+    )
+  }
   let out = (kind: "theme", name: "custom")
   _apply-overrides(out, fields)
 }

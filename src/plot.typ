@@ -1,6 +1,30 @@
 #import "render.typ": render-plot
 #import "data.typ": _normalise-data
-#import "utils/errors.typ": fail
+#import "utils/errors.typ": fail, fail-type
+
+// Panic unless `value` is `none` or a dictionary tagged with `kind`, e.g. an
+// `aes()` mapping or a `coord-*()` spec.
+#let _check-kind(name, value, kind, expected) = {
+  if (
+    value != none
+      and (
+        type(value) != dictionary or value.at("kind", default: none) != kind
+      )
+  ) {
+    fail-type("plot", name, value, expected)
+  }
+}
+
+// Reject the structural spec arguments up front so a wrong-typed `mapping`,
+// `layers`, or `coord` fails with a named message instead of a cryptic Typst
+// error deep in the renderer.
+#let _check-spec-args(mapping, layers, coord) = {
+  _check-kind("mapping", mapping, "aes", "an `aes()` mapping or `none`")
+  _check-kind("coord", coord, "coord", "a `coord-*()` spec or `none`")
+  if type(layers) != array {
+    fail-type("plot", "layers", layers, "an array of geom layers")
+  }
+}
 
 // Effective alt text: an explicit `plot(alt:)` wins; otherwise a `labels(alt:)`
 // fills in (its `auto` default and `none` both count as unset), so the labels
@@ -117,6 +141,7 @@
   strict: false,
   as-spec: false,
 ) = {
+  _check-spec-args(mapping, layers, coord)
   let alt = _resolve-alt(alt, labels)
   // Deferred plots skip the context block because `context` returns
   // content; compose() resolves the active theme from its own context

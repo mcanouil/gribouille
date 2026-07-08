@@ -56,13 +56,13 @@
 // to verify the error path locally:
 //
 //   #let _ = _normalise-data(42)
-//     panics with: data: must be an array of dicts or a dict of arrays; got integer
+//     panics with: data: value must be an array of dicts or a dict of arrays; got 42.
 //
 //   #let _ = _normalise-data(((a: 1), 2))
-//     panics with: data: row-store array must contain dictionaries; got integer at index 1
+//     panics with: data: row 1 must be a dictionary; got 2.
 //
 //   #let _ = _normalise-data((a: 1, b: (2,)))
-//     panics with: data: column-store value for "a" must be an array; got integer
+//     panics with: data: column-store value for "a" must be an array; got 1.
 //
 //   #let _ = _normalise-data((a: (1, 2, 3), b: (4, 5)))
 //     panics with: data: column-store columns must share the same length; got "a"=3, "b"=2
