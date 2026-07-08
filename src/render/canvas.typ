@@ -533,26 +533,15 @@
   })
 }
 
-#let _render-canvas-single(
-  spec,
-  theme,
-  trained,
-  prepared,
-  coord,
-  guides,
-  legend-gap,
-  sec-y-extent,
-  sec-x-extent,
-  margin,
-  width-units,
-  height-units,
-  x-extents,
-  y-extents,
-  x-title-extents,
-  y-title-extents,
-  x-sec-extents,
-  y-sec-extents,
-) = {
+// Single-panel canvas builder; takes the same named-dict ctx convention as
+// `_render-canvas-wrap` / `_render-canvas-grid`.
+#let _render-canvas-single(ctx) = {
+  let coord = ctx.coord
+  let trained = ctx.trained
+  let margin = ctx.margin
+  let width-units = ctx.width-units
+  let height-units = ctx.height-units
+
   let px-lo = margin.left
   let px-hi = width-units - margin.right
   let py-lo = margin.bottom
@@ -566,28 +555,28 @@
     import cetz.draw: hide, rect
     hide(rect((0, 0), (width-units, height-units)), bounds: true)
     _draw-axis-and-layers(
-      prepared,
+      ctx.prepared,
       trained,
-      theme,
-      spec,
+      ctx.theme,
+      ctx.spec,
       (px-lo, py-lo),
       (inner-w, inner-h),
-      guides: guides,
+      guides: ctx.guides,
       legend-args: (
         panel-rect: (x: px-lo, y: py-lo, w: inner-w, h: inner-h),
         margin: margin,
-        legend-gap: legend-gap,
-        sec-y-extent: sec-y-extent,
-        sec-x-extent: sec-x-extent,
+        legend-gap: ctx.legend-gap,
+        sec-y-extent: ctx.sec-y-extent,
+        sec-x-extent: ctx.sec-x-extent,
         right-strip: 0.0,
       ),
       flipped: _is-flipped(coord),
-      x-extents: x-extents,
-      y-extents: y-extents,
-      x-title-extents: x-title-extents,
-      y-title-extents: y-title-extents,
-      x-sec-extents: x-sec-extents,
-      y-sec-extents: y-sec-extents,
+      x-extents: ctx.x-extents,
+      y-extents: ctx.y-extents,
+      x-title-extents: ctx.x-title-extents,
+      y-title-extents: ctx.y-title-extents,
+      x-sec-extents: ctx.x-sec-extents,
+      y-sec-extents: ctx.y-sec-extents,
       canvas-w: width-units,
       canvas-h: height-units,
     )
