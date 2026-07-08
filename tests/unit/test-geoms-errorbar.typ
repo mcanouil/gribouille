@@ -15,7 +15,7 @@
 #assert.eq(eb.position, "identity")
 #assert.eq(eb.params.width, 0.4)
 #assert.eq(eb.params.alpha, auto)
-#assert.eq(eb.params.linetype, "solid")
+#assert.eq(eb.params.linetype, auto)
 
 #let ebh = geom-errorbarh()
 #assert.eq(ebh.kind, "layer")
@@ -24,7 +24,7 @@
 #assert.eq(ebh.position, "identity")
 #assert.eq(ebh.params.height, 0.4)
 #assert.eq(ebh.params.alpha, auto)
-#assert.eq(ebh.params.linetype, "solid")
+#assert.eq(ebh.params.linetype, auto)
 
 #let lr = geom-linerange()
 #assert.eq(lr.kind, "layer")
@@ -32,7 +32,7 @@
 #assert.eq(lr.stat, "identity")
 #assert.eq(lr.position, "identity")
 #assert.eq(lr.params.alpha, auto)
-#assert.eq(lr.params.linetype, "solid")
+#assert.eq(lr.params.linetype, auto)
 
 #let cb = geom-crossbar()
 #assert.eq(cb.kind, "layer")
@@ -48,7 +48,7 @@
 #assert.eq(pr.stat, "identity")
 #assert.eq(pr.position, "identity")
 #assert.eq(pr.params.alpha, auto)
-#assert.eq(pr.params.linetype, "solid")
+#assert.eq(pr.params.linetype, auto)
 
 // Layer params honour overrides.
 #let eb2 = geom-errorbar(width: 0.2, colour: red, alpha: 0.5)

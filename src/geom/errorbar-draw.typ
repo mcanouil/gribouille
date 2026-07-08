@@ -11,6 +11,7 @@
 #import "../position/apply.typ": layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../scale/train.typ": map-position
 #import "../utils/band.typ": axis-band
 #import "../utils/radial.typ": (
@@ -99,7 +100,7 @@
     let stroke-spec = (
       paint: final-colour,
       thickness: thickness,
-      dash: layer.params.linetype,
+      dash: resolve-linetype(layer, mapping, ctx, row),
     )
 
     if ctx.at("radial", default: none) != none {

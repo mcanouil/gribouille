@@ -41,7 +41,9 @@
 ///
 /// \@param alpha Line opacity in `[0, 1]`.
 ///
-/// \@param linetype Dash keyword. Defaults to `"solid"`.
+/// \@param linetype Dash keyword (e.g., `"solid"`, `"dashed"`). `auto` honours the linetype scale.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
 ///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping. Defaults to `false`.
 ///
@@ -107,10 +109,11 @@
   data: none,
   slope: 1,
   intercept: 0,
-  colour: auto,
   stroke: auto,
+  colour: auto,
   alpha: auto,
   linetype: auto,
+  key: auto,
   inherit-aes: false,
   ..args,
 ) = make-layer(
@@ -126,6 +129,7 @@
     linetype: linetype,
   )
     + split-aes-params("geom-abline", args),
+  key: key,
   inherit-aes: inherit-aes,
 )
 

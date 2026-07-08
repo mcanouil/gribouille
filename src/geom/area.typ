@@ -53,6 +53,8 @@
 ///
 /// \@param position Position adjustment name. Defaults to `"stack"`.
 ///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -113,6 +115,7 @@
   direction: none,
   stat: "align",
   position: "stack",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = {
@@ -133,6 +136,7 @@
       + split-aes-params("geom-area", args),
     stat: stat,
     position: position,
+    key: key,
     inherit-aes: inherit-aes,
   )
 }

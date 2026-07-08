@@ -11,7 +11,7 @@
 #assert.eq(g.params.curvature, 0.5)
 #assert.eq(g.params.angle, 90deg)
 #assert.eq(g.params.n, 32)
-#assert.eq(g.params.linetype, "solid")
+#assert.eq(g.params.linetype, auto)
 
 // Layer params honour overrides.
 #let g2 = geom-curve(curvature: -1, angle: 60deg, n: 64, stroke: 1pt)

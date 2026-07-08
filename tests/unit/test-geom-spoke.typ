@@ -9,7 +9,7 @@
 #assert.eq(g.position, "identity")
 #assert.eq(g.params.angle, 0deg)
 #assert.eq(g.params.radius, 1)
-#assert.eq(g.params.linetype, "solid")
+#assert.eq(g.params.linetype, auto)
 #assert.eq(g.params.stroke, auto)
 
 #let g2 = geom-spoke(angle: 45deg, radius: 2, stroke: 1pt, colour: red)

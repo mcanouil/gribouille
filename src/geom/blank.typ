@@ -19,6 +19,12 @@
 ///
 /// \@param data Layer-specific dataset, or a function applied to the plot data returning the layer frame. Falls back to the plot data when `none`.
 ///
+/// \@param stat Statistical transform name or stat object.
+///
+/// \@param position Position adjustment name. Usually left at `"identity"`.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -57,6 +63,9 @@
 #let geom-blank(
   mapping: none,
   data: none,
+  stat: "identity",
+  position: "identity",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = make-layer(
@@ -64,6 +73,9 @@
   mapping: mapping,
   data: data,
   params: split-aes-params("geom-blank", args),
+  stat: stat,
+  position: position,
+  key: key,
   inherit-aes: inherit-aes,
 )
 

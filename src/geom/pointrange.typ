@@ -32,11 +32,13 @@
 ///
 /// \@param alpha Opacity in `[0, 1]`.
 ///
-/// \@param linetype Dash keyword for the range line. Defaults to `"solid"`.
+/// \@param linetype Dash keyword (e.g., `"solid"`, `"dashed"`). `auto` honours the linetype scale.
 ///
 /// \@param stat Statistical transform name. Usually `"identity"`.
 ///
 /// \@param position Position adjustment name. Usually `"identity"`.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
 ///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
@@ -87,9 +89,10 @@
   colour: auto,
   fill: auto,
   alpha: auto,
-  linetype: "solid",
+  linetype: auto,
   stat: "identity",
   position: "identity",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = make-layer(
@@ -107,6 +110,7 @@
     + split-aes-params("geom-pointrange", args),
   stat: stat,
   position: position,
+  key: key,
   inherit-aes: inherit-aes,
 )
 

@@ -33,6 +33,8 @@
 ///
 /// \@param position Position adjustment name. Defaults to `"jitter"`.
 ///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -74,13 +76,14 @@
   mapping: none,
   data: none,
   size: auto,
-  stroke: auto,
-  fill: auto,
   colour: auto,
+  fill: auto,
+  stroke: auto,
   alpha: auto,
   shape: auto,
   stat: "identity",
   position: "jitter",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = geom-point(
@@ -94,6 +97,7 @@
   shape: shape,
   stat: stat,
   position: position,
+  key: key,
   inherit-aes: inherit-aes,
   ..args,
 )

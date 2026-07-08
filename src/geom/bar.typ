@@ -33,6 +33,10 @@
 ///
 /// \@param position Position adjustment: `"stack"` (default), `"dodge"`, `"fill"`, or `"identity"`.
 ///
+/// \@param stat Statistical transform name or stat object.
+///
+/// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
+///
 /// \@param inherit-aes Whether to merge the plot-level mapping into this layer's mapping.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -96,12 +100,14 @@
 #let geom-bar(
   mapping: none,
   data: none,
+  stat: "count",
   width: 0.9,
   colour: auto,
   fill: auto,
   stroke: none,
   alpha: auto,
   position: "stack",
+  key: auto,
   inherit-aes: true,
   ..args,
 ) = geom-col(
@@ -112,8 +118,9 @@
   fill: fill,
   stroke: stroke,
   alpha: alpha,
-  stat: "count",
+  stat: stat,
   position: position,
+  key: key,
   inherit-aes: inherit-aes,
   ..args,
 )
