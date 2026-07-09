@@ -93,5 +93,5 @@
 #let seal-seam(stroke-spec, fill) = {
   if stroke-spec != none { return stroke-spec }
   if not is-opaque(fill) { return none }
-  build-stroke(0.4pt, fill)
+  build-stroke(1.2pt, fill)
 }
