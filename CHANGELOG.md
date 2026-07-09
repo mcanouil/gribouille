@@ -10,6 +10,7 @@
 
 ### Changes
 
+- fix: stat-quantile replaces the O(n³) pair enumeration with an exact O(n² log n) breakpoint search, scaling geom-quantile to thousands of rows with identical fits on unique optima. (#174)
 - fix: an unknown scale-* constructor argument now fails at scales() binding with the valid keys for that scale and aesthetic, and stray positional arguments are rejected instead of ignored. (#172)
 - feat: every geom exposes `key:` (legend glyph override) and, where meaningful, `stat:` and `position:`; stat-backed geoms take `stat: auto` to build their default stat from the geom parameters. (#169)
 - feat: a keyed `scales()` constructor, mirroring `guides()`, binds scale overrides to aesthetics as named arguments (e.g., `scales(x: scale-continuous(), colour: scale-viridis-d())`) instead of a positional array. (#157)
