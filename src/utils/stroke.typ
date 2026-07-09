@@ -1,4 +1,6 @@
-#import "colour-resolve.typ": resolve-stroke-colour, resolve-stroke-width
+#import "colour-resolve.typ": (
+  is-opaque, resolve-stroke-colour, resolve-stroke-width,
+)
 #import "../theme/theme.typ": default-stroke-thickness
 
 /// Build a CeTZ stroke dictionary by injecting `paint` into a thickness-only stroke spec, or returns `none` when the layer disabled the stroke.
@@ -89,7 +91,7 @@
 /// \@param fill The resolved fill colour or `none`.
 /// \@returns The stroke to draw with: the input when set, a fill-paint hairline when sealing applies, `none` otherwise.
 #let seal-seam(stroke-spec, fill) = {
-  if stroke-spec != none or fill == none { return stroke-spec }
-  if fill.components().last() != 100% { return none }
-  (paint: fill, thickness: 0.4pt)
+  if stroke-spec != none { return stroke-spec }
+  if not is-opaque(fill) { return none }
+  build-stroke(0.4pt, fill)
 }
