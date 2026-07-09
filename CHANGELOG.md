@@ -19,6 +19,7 @@
 - feat: an installable Agent Skill teaches coding agents to author Gribouille plots, confirming every argument against the site's `.llms.md` reference; the repository doubles as a Claude Code plugin marketplace, so the skill installs via `/plugin install` or `npx skills add`. (#154)
 - feat: geom and theme-element `stroke:` accept the native Typst `1.3pt + accent` form, writing thickness and paint together; an explicit `colour:` still wins over the embedded paint. (#153)
 - fix: fill opacity defaults to 1 on `geom-area`, `geom-ribbon`, `geom-polygon`, `geom-ellipse`, and `geom-mark` instead of an implicit 0.3-0.6 translucency; explicit `alpha:` values and mapped alpha aesthetics are unaffected. (#179)
+- fix: `geom-contour-filled` and `geom-density-2d-filled` paint each iso-band cell's edge with its own fill, removing the hairline background lattice that antialiasing bled through between abutting cells. (#178)
 - fix: stat-quantile replaces the O(n³) pair enumeration with an exact O(n² log n) breakpoint search, scaling geom-quantile to thousands of rows with identical fits on unique optima. (#174)
 - fix: an unknown scale-* constructor argument now fails at scales() binding with the valid keys for that scale and aesthetic, and stray positional arguments are rejected instead of ignored. (#172)
 - fix: an unknown `stat`, scale `transform`, or `oob` name now fails with a clear error instead of silently rendering as identity or dropping rows. (#162)
