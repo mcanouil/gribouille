@@ -75,8 +75,8 @@
 /// #plot(
 ///   data: d,
 ///   mapping: aes(x: "x", y: "grp"),
-///   layers: (geom-density-ridges(),),
-///   scales: scales(y: scale-discrete(expand: (5%, 25%))),
+///   layers: (geom-density-ridges(scale: 1.4),),
+///   scales: scales(y: scale-discrete(expand: (auto, 45%))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -95,8 +95,8 @@
 /// #plot(
 ///   data: d,
 ///   mapping: aes(x: "x", y: "grp", fill: "grp"),
-///   layers: (geom-density-ridges(alpha: 0.7),),
-///   scales: scales(y: scale-discrete(expand: (5%, 25%))),
+///   layers: (geom-density-ridges(scale: 1.4, alpha: 0.7),),
+///   scales: scales(y: scale-discrete(expand: (auto, 45%))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

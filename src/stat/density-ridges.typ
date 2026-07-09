@@ -52,8 +52,8 @@
 /// #plot(
 ///   data: d,
 ///   mapping: aes(x: "x", y: "grp"),
-///   layers: (geom-density-ridges(stat: stat-density-ridges(adjust: 0.5)),),
-///   scales: scales(y: scale-discrete(expand: (5%, 25%))),
+///   layers: (geom-density-ridges(scale: 1.4, stat: stat-density-ridges(adjust: 0.5)),),
+///   scales: scales(y: scale-discrete(expand: (auto, 45%))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
