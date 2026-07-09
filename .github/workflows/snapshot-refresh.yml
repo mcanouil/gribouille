@@ -12,6 +12,11 @@ on:
         required: false
         type: boolean
         default: false
+      force:
+        description: "Delete every golden before re-minting so all snapshots update and orphaned files are dropped."
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -74,6 +79,7 @@ jobs:
         uses: ./.github/actions/typst-snapshot
         with:
           mode: update
+          force: ${{ inputs.force }}
 
       - name: Commit goldens (PR or direct)
         env:
