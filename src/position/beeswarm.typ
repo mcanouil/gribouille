@@ -32,19 +32,20 @@
 ///
 /// \@returns Position dictionary with `name: "beeswarm"`, consumed by \@plot.
 ///
-/// \@examples Swarm overplotted points per group.
+/// \@examples Swarm overplotted points per group; a tighter `width` keeps
+/// the cloud close to its spine.
 /// ```
-/// //| alt: "Beeswarm chart with groups a, b on the x-axis and values on the y-axis; points spread sideways into violin-shaped swarms, wider where values cluster."
+/// //| alt: "Beeswarm chart with groups a, b on the x-axis and values on the y-axis; points spread sideways into narrow swarms that taper towards sparse values."
 /// #let d = ()
 /// #for grp in ("a", "b") {
-///   for i in range(0, 40) {
-///     d.push((grp: grp, y: calc.sin(i * 0.7) * 2 + (if grp == "b" { 4 } else { 0 })))
+///   for i in range(0, 50) {
+///     d.push((grp: grp, y: calc.sin(i * 0.7) + calc.sin(i * 1.9) + (if grp == "b" { 4 } else { 0 })))
 ///   }
 /// }
 /// #plot(
 ///   data: d,
 ///   mapping: aes(x: as-factor("grp"), y: "y"),
-///   layers: (geom-point(size: 2pt, position: position-beeswarm()),),
+///   layers: (geom-point(size: 2pt, position: position-beeswarm(width: 0.25)),),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )

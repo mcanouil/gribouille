@@ -46,11 +46,11 @@
 ///
 /// \@examples Swarms of two shifted samples over a discrete axis.
 /// ```
-/// //| alt: "Beeswarm chart with groups a, b on the x-axis and values on the y-axis; each group's points spread sideways into a violin-shaped swarm, wider where values cluster."
+/// //| alt: "Beeswarm chart with groups a, b on the x-axis and values on the y-axis; each group's points spread sideways into a swarm that is widest where values cluster and tapers towards the extremes."
 /// #let d = ()
 /// #for grp in ("a", "b") {
-///   for i in range(0, 40) {
-///     d.push((grp: grp, y: calc.sin(i * 0.7) * 2 + (if grp == "b" { 4 } else { 0 })))
+///   for i in range(0, 50) {
+///     d.push((grp: grp, y: calc.sin(i * 0.7) + calc.sin(i * 1.9) + (if grp == "b" { 4 } else { 0 })))
 ///   }
 /// }
 /// #plot(
