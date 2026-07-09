@@ -9,6 +9,7 @@
 #import "contour.typ" as contour-stat
 #import "contour-filled.typ" as contour-filled-stat
 #import "count.typ" as count-stat
+#import "density.typ" as density-stat
 #import "sum.typ" as sum-stat
 #import "smooth.typ" as smooth-stat
 #import "boxplot.typ" as boxplot-stat
@@ -70,6 +71,10 @@
   count: (
     apply: count-stat.apply,
     ctor: count-stat.stat-count,
+  ),
+  density: (
+    apply: density-stat.apply,
+    ctor: density-stat.stat-density,
   ),
   sum: (
     apply: sum-stat.apply,

@@ -10,12 +10,13 @@
 
 ### Changes
 
-- fix: stat-quantile replaces the O(n³) pair enumeration with an exact O(n² log n) breakpoint search, scaling geom-quantile to thousands of rows with identical fits on unique optima. (#174)
-- fix: an unknown scale-* constructor argument now fails at scales() binding with the valid keys for that scale and aesthetic, and stray positional arguments are rejected instead of ignored. (#172)
+- feat: `geom-density` and `stat-density` bring native 1D kernel density estimation: Gaussian kernels evaluated directly on an `n`-point grid, Silverman (`bw.nrd0`) bandwidth with `adjust` and `trim` control, weight support, and `_density`/`_count`/`_scaled`/`_n` after-stat columns. (#175)
 - feat: every geom exposes `key:` (legend glyph override) and, where meaningful, `stat:` and `position:`; stat-backed geoms take `stat: auto` to build their default stat from the geom parameters. (#169)
 - feat: a keyed `scales()` constructor, mirroring `guides()`, binds scale overrides to aesthetics as named arguments (e.g., `scales(x: scale-continuous(), colour: scale-viridis-d())`) instead of a positional array. (#157)
 - feat: an installable Agent Skill teaches coding agents to author Gribouille plots, confirming every argument against the site's `.llms.md` reference; the repository doubles as a Claude Code plugin marketplace, so the skill installs via `/plugin install` or `npx skills add`. (#154)
 - feat: geom and theme-element `stroke:` accept the native Typst `1.3pt + accent` form, writing thickness and paint together; an explicit `colour:` still wins over the embedded paint. (#153)
+- fix: stat-quantile replaces the O(n³) pair enumeration with an exact O(n² log n) breakpoint search, scaling geom-quantile to thousands of rows with identical fits on unique optima. (#174)
+- fix: an unknown scale-* constructor argument now fails at scales() binding with the valid keys for that scale and aesthetic, and stray positional arguments are rejected instead of ignored. (#172)
 - fix: an unknown `stat`, scale `transform`, or `oob` name now fails with a clear error instead of silently rendering as identity or dropping rows. (#162)
 - fix: `theme()` rejects unknown or misspelled element keys and positional arguments instead of storing a key the renderer never reads. (#162)
 - fix: `aes()` rejects unknown aesthetic names, such as the US spelling `color`, with a message listing the valid channels. (#162)

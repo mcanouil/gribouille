@@ -152,10 +152,15 @@
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   let default-thickness = resolve-geom-linewidth(g-defaults)
+  // Wrappers with a visible default outline (geom-density) opt in via the
+  // internal `outline-role` param; a plain area keeps no outline default.
   let (default-colour, default-fill) = resolve-pair-defaults(
     layer,
     mapping,
-    resolve-geom-colour(g-defaults, role: none),
+    resolve-geom-colour(
+      g-defaults,
+      role: layer.params.at("outline-role", default: none),
+    ),
     resolve-geom-fill(g-defaults, role: "tint"),
   )
 
