@@ -58,6 +58,10 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-density-2d-filled(bins: 8),),
+///   scales: scales(
+///     x: scale-continuous(expand: (0, 0)),
+///     y: scale-continuous(expand: (0, 0)),
+///   ),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
