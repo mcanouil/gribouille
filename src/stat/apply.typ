@@ -11,6 +11,7 @@
 #import "count.typ" as count-stat
 #import "density.typ" as density-stat
 #import "density-2d.typ" as density-2d-stat
+#import "density-ridges.typ" as density-ridges-stat
 #import "density-2d-filled.typ" as density-2d-filled-stat
 #import "ydensity.typ" as ydensity-stat
 #import "sum.typ" as sum-stat
@@ -86,6 +87,10 @@
   "density-2d-filled": (
     apply: density-2d-filled-stat.apply,
     ctor: density-2d-filled-stat.stat-density-2d-filled,
+  ),
+  "density-ridges": (
+    apply: density-ridges-stat.apply,
+    ctor: density-ridges-stat.stat-density-ridges,
   ),
   ydensity: (
     apply: ydensity-stat.apply,

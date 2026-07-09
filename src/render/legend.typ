@@ -160,6 +160,7 @@
   "polygon",
   "boxplot",
   "violin",
+  "density-ridges",
   "crossbar",
   "smooth",
   "point",

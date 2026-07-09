@@ -8,6 +8,7 @@
 #import "../utils/summaries.typ": read-weight
 #import "../utils/aes-resolve.typ": stat-output-mapping
 #import "../utils/errors.typ": fail-enum
+#import "../utils/group.typ": bucket-by-col
 #import "../utils/kde.typ": kde-1d, validate-kde-params
 
 /// Y-density statistic: Gaussian kernel density estimate of y per x bucket.
@@ -97,22 +98,10 @@
 
   // Bucket rows by their raw x value in first-appearance order so the
   // downstream discrete x scale keeps the input's level ordering.
-  let buckets = (:)
-  let order = ()
-  for row in data {
-    let key = str(row.at(x-col, default: ""))
-    if key == "" { continue }
-    if key not in buckets { order.push(key) }
-    let bucket = buckets.at(key, default: ())
-    bucket.push(row)
-    buckets.insert(key, bucket)
-  }
-
   // One KDE per bucket; width normalisation needs every bucket's peak, so
   // estimate first and scale in a second pass.
   let estimates = ()
-  for key in order {
-    let rows = buckets.at(key)
+  for rows in bucket-by-col(data, x-col) {
     let pairs = rows
       .map(r => {
         let yv = parse-number(r.at(y-col, default: none))

@@ -292,6 +292,7 @@
     "polygon",
     "boxplot",
     "violin",
+    "density-ridges",
     "crossbar",
     "label",
     "ellipse",
