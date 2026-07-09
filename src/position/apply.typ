@@ -12,6 +12,7 @@
 #import "fill.typ" as fill-pos
 #import "jitter.typ" as jitter-pos
 #import "jitterdodge.typ" as jitterdodge-pos
+#import "beeswarm.typ" as beeswarm-pos
 #import "nudge.typ" as nudge-pos
 
 #let _POSITIONS = (
@@ -21,6 +22,7 @@
   fill: fill-pos.apply,
   jitter: jitter-pos.apply,
   jitterdodge: jitterdodge-pos.apply,
+  beeswarm: beeswarm-pos.apply,
   nudge: nudge-pos.apply,
 )
 

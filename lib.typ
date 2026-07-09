@@ -72,6 +72,7 @@
 #import "src/geom/typst.typ": geom-typst
 #import "src/geom/label.typ": geom-label
 #import "src/geom/jitter.typ": geom-jitter
+#import "src/geom/beeswarm.typ": geom-beeswarm
 #import "src/geom/blank.typ": geom-blank
 #import "src/geom/rug.typ": geom-rug
 #import "src/geom/function.typ": geom-function
@@ -155,6 +156,7 @@
 #import "src/position/identity.typ": position-identity
 #import "src/position/jitter.typ": position-jitter
 #import "src/position/jitterdodge.typ": position-jitterdodge
+#import "src/position/beeswarm.typ": position-beeswarm
 #import "src/position/nudge.typ": position-nudge
 
 // Facets.
