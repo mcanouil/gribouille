@@ -12,8 +12,9 @@
 #assert.eq(s2.params.quantiles, (0.1, 0.9))
 #assert.eq(s2.params.n-samples, 32)
 
-// Collinear data y = 2x + 1: every pair fits exactly, loss is zero, the
-// algorithm picks the first valid pair. All quantile fits coincide.
+// Collinear data y = 2x + 1: every pair has slope 2, so the single
+// candidate slope yields the exact line with zero loss. All quantile fits
+// coincide.
 #let data = range(0, 5).map(i => (x: i, y: 2 * i + 1))
 #let r = apply(
   data,
