@@ -291,6 +291,7 @@
     "ribbon",
     "polygon",
     "boxplot",
+    "violin",
     "crossbar",
     "label",
     "ellipse",

@@ -29,6 +29,9 @@
   "contour-filled": (outputs: ("x", "y", "group", "_level")),
   count: (outputs: ("x", "_count")),
   density: (outputs: ("x", "y", "_density", "_count", "_scaled", "_n")),
+  ydensity: (
+    outputs: ("x", "y", "violinwidth", "_density", "_count", "_scaled", "_n"),
+  ),
   sum: (outputs: ("x", "y", "_n", "_prop")),
   smooth: (outputs: ("x", "y", "ymin", "ymax")),
   boxplot: (

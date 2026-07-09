@@ -159,6 +159,7 @@
   "ribbon",
   "polygon",
   "boxplot",
+  "violin",
   "crossbar",
   "smooth",
   "point",

@@ -6,13 +6,9 @@
 ///! (O(rows × n) per group, workable for plot-sized inputs).
 
 #import "../utils/types.typ": parse-number
-#import "../utils/summaries.typ": quantile-type-7, read-weight
+#import "../utils/summaries.typ": read-weight
 #import "../utils/aes-resolve.typ": stat-output-mapping
-#import "../utils/errors.typ": fail-range, fail-type
-
-// Grid extension beyond the data range, in bandwidths. Matches R's
-// `density(..., cut = 3)` default for the Gaussian kernel.
-#let _CUT = 3
+#import "../utils/kde.typ": kde-1d, validate-kde-params
 
 /// Density statistic: Gaussian kernel density estimate of the x sample.
 ///
@@ -81,50 +77,13 @@
   params: (bw: bw, adjust: adjust, n: n, trim: trim),
 )
 
-// Silverman's rule of thumb (R's `bw.nrd0`): 0.9 times the lesser of the
-// standard deviation and IQR/1.34, times n^(-1/5), with R's fallback chain
-// when the spread estimate degenerates to zero.
-#let _bw-nrd0(xs) = {
-  let n = xs.len()
-  let mean = xs.sum() / n
-  let sd = calc.sqrt(
-    xs.map(v => (v - mean) * (v - mean)).sum() / (n - 1),
-  )
-  let sorted = xs.sorted()
-  let iqr = quantile-type-7(sorted, 0.75) - quantile-type-7(sorted, 0.25)
-  let spread = calc.min(sd, iqr / 1.34)
-  if spread == 0 { spread = sd }
-  if spread == 0 { spread = calc.abs(xs.first()) }
-  if spread == 0 { spread = 1.0 }
-  0.9 * spread * calc.pow(n, -0.2)
-}
-
-#let _validate(params) = {
-  let bw = params.at("bw", default: auto)
-  if bw != auto and (type(bw) not in (int, float) or bw <= 0) {
-    fail-type("stat-density", "bw", bw, "a positive number or `auto`")
-  }
-  let adjust = params.at("adjust", default: 1)
-  if type(adjust) not in (int, float) or adjust <= 0 {
-    fail-type("stat-density", "adjust", adjust, "a positive number")
-  }
-  let n = params.at("n", default: 512)
-  if type(n) != int or n < 2 {
-    fail-type("stat-density", "n", n, "an integer of at least 2")
-  }
-  let trim = params.at("trim", default: false)
-  if type(trim) != bool {
-    fail-type("stat-density", "trim", trim, "a boolean")
-  }
-}
-
 #let apply(data, mapping, params: (:)) = {
   let x-col = if mapping != none { mapping.at("x", default: none) } else {
     none
   }
   let new-mapping = stat-output-mapping(mapping, (x: "x", y: "y"))
   if x-col == none { return (data: (), mapping: new-mapping) }
-  _validate(params)
+  validate-kde-params("stat-density", params)
   let weight-col = mapping.at("weight", default: none)
   let pairs = data
     .map(r => {
@@ -135,40 +94,23 @@
     .filter(p => p != none and p.w > 0)
   if pairs.len() < 2 { return (data: (), mapping: new-mapping) }
 
-  let xs = pairs.map(p => p.x)
-  let total-weight = pairs.map(p => p.w).sum()
-  let bw-base = params.at("bw", default: auto)
-  let bw = if bw-base == auto { _bw-nrd0(xs) } else { float(bw-base) }
-  bw = bw * params.at("adjust", default: 1)
-
-  let x-lo = calc.min(..xs)
-  let x-hi = calc.max(..xs)
-  if not params.at("trim", default: false) {
-    x-lo -= _CUT * bw
-    x-hi += _CUT * bw
-  }
-  let n-grid = params.at("n", default: 512)
   let n-obs = pairs.len()
-  let norm = 1 / (bw * calc.sqrt(2 * calc.pi))
-
-  let rows = range(n-grid).map(i => {
-    let g = if x-hi == x-lo { x-lo } else {
-      x-lo + (x-hi - x-lo) * i / (n-grid - 1)
-    }
-    let density = (
-      pairs
-        .map(p => {
-          let z = (g - p.x) / bw
-          p.w * calc.exp(-0.5 * z * z)
-        })
-        .sum()
-        * norm
-        / total-weight
-    )
-    (x: g, y: density, _density: density, _count: density * n-obs, _n: n-obs)
-  })
-  let peak = calc.max(..rows.map(r => r.y))
+  let estimate = kde-1d(
+    pairs,
+    bw: params.at("bw", default: auto),
+    adjust: params.at("adjust", default: 1),
+    n: params.at("n", default: 512),
+    trim: params.at("trim", default: false),
+  )
+  let peak = calc.max(..estimate.rows.map(r => r.density))
   let denom = if peak > 0 { peak } else { 1 }
-  rows = rows.map(r => r + (_scaled: r.y / denom))
+  let rows = estimate.rows.map(r => (
+    x: r.x,
+    y: r.density,
+    _density: r.density,
+    _count: r.density * n-obs,
+    _scaled: r.density / denom,
+    _n: n-obs,
+  ))
   (data: rows, mapping: new-mapping)
 }

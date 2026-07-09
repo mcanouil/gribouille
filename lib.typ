@@ -55,6 +55,7 @@
 #import "src/geom/smooth.typ": geom-smooth
 #import "src/geom/ribbon.typ": geom-ribbon
 #import "src/geom/boxplot.typ": geom-boxplot
+#import "src/geom/violin.typ": geom-violin
 #import "src/geom/errorbar.typ": geom-errorbar
 #import "src/geom/errorbarh.typ": geom-errorbarh
 #import "src/geom/count.typ": geom-count
@@ -80,6 +81,7 @@
 #import "src/stat/identity.typ": stat-identity
 #import "src/stat/count.typ": stat-count
 #import "src/stat/density.typ": stat-density
+#import "src/stat/ydensity.typ": stat-ydensity
 #import "src/stat/sum.typ": stat-sum
 #import "src/stat/function.typ": stat-function
 #import "src/stat/bin.typ": stat-bin
