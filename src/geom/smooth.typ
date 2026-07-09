@@ -1,8 +1,10 @@
 ///! Smoothed trend line with optional confidence ribbon.
 ///!
-///! v1 supports `method: "lm"` only (ordinary least squares, closed-form). The
-///! underlying fit is computed by \@stat-smooth, which also returns the
-///! pointwise confidence band drawn when `se: true`.
+///! `method: "lm"` fits a straight line (closed-form weighted least
+///! squares); `method: "loess"` follows local structure with
+///! tricube-weighted polynomial fits. The underlying fit is computed by
+///! \@stat-smooth, which also returns the pointwise confidence band drawn
+///! when `se: true`.
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
@@ -32,11 +34,15 @@
 ///
 /// \@param data Layer-specific dataset, or a function applied to the plot data returning the layer frame. Falls back to the plot data when `none`.
 ///
-/// \@param method Smoother method. `"lm"` is the only supported value in v1.
+/// \@param method Smoother method: `"lm"` (weighted least squares line) or `"loess"` (tricube-weighted local polynomials).
 ///
 /// \@param se Whether to draw the confidence ribbon around the fit.
 ///
 /// \@param level Confidence level for the ribbon (e.g., `0.95`).
+///
+/// \@param span Loess neighbourhood as a fraction of the data in `(0, 1]`; smaller spans follow the data more closely.
+///
+/// \@param degree Loess local polynomial degree: `0`, `1`, or `2`.
 ///
 /// \@param stroke Line thickness (a Typst length).
 ///
@@ -130,6 +136,8 @@
   method: "lm",
   se: true,
   level: 0.95,
+  span: 0.75,
+  degree: 2,
   stroke: auto,
   colour: auto,
   fill: auto,
@@ -148,6 +156,8 @@
     method: method,
     se: se,
     level: level,
+    span: span,
+    degree: degree,
     stroke: stroke,
     colour: colour,
     fill: fill,
@@ -155,7 +165,15 @@
     linetype: linetype,
   )
     + split-aes-params("geom-smooth", args),
-  stat: if stat == auto { stat-smooth(method: method, se: se, level: level) } else { stat },
+  stat: if stat == auto {
+    stat-smooth(
+      method: method,
+      se: se,
+      level: level,
+      span: span,
+      degree: degree,
+    )
+  } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
