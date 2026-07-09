@@ -59,6 +59,7 @@
 #import "../geom/label.typ" as label-geom
 #import "../geom/boxplot.typ" as boxplot-geom
 #import "../geom/violin.typ" as violin-geom
+#import "../geom/density-ridges.typ" as density-ridges-geom
 #import "../geom/errorbar.typ" as errorbar-geom
 #import "../geom/errorbarh.typ" as errorbarh-geom
 #import "../geom/linerange.typ" as linerange-geom
@@ -98,6 +99,7 @@
   label: label-geom.draw,
   boxplot: boxplot-geom.draw,
   violin: violin-geom.draw,
+  "density-ridges": density-ridges-geom.draw,
   errorbar: errorbar-geom.draw,
   errorbarh: errorbarh-geom.draw,
   linerange: linerange-geom.draw,

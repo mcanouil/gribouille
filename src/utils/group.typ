@@ -97,6 +97,32 @@
   order.map(k => (key: k, data: groups.at(k)))
 }
 
+/// Bucket rows by the string form of one column's value, in first-appearance
+/// order, dropping rows whose value is empty.
+///
+/// Shared by the per-level stats and geoms (boxplot, ydensity,
+/// density-ridges) that reduce each distinct value of a discrete positional
+/// column to one summary or curve. First-appearance order keeps the
+/// downstream discrete scale's level ordering aligned with the input.
+/// \@param data Array of row dictionaries to bucket.
+///
+/// \@param col Column name whose value keys the buckets.
+/// \@returns Array of row-dictionary arrays, one bucket per distinct value, in first-appearance order.
+/// \@internal
+#let bucket-by-col(data, col) = {
+  let buckets = (:)
+  let order = ()
+  for row in data {
+    let key = str(row.at(col, default: ""))
+    if key == "" { continue }
+    if key not in buckets { order.push(key) }
+    let bucket = buckets.at(key, default: ())
+    bucket.push(row)
+    buckets.insert(key, bucket)
+  }
+  order.map(k => buckets.at(k))
+}
+
 /// Return the column names for all grouping aesthetics (not x or y).
 ///
 /// Used by the per-group stat framework to know which columns to re-inject

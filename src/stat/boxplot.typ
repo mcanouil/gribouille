@@ -7,6 +7,7 @@
 
 #import "../utils/types.typ": parse-number
 #import "../utils/summaries.typ": quantile-type-7
+#import "../utils/group.typ": bucket-by-col
 
 /// Boxplot statistic: per-x five-number summary with outlier list.
 ///
@@ -140,20 +141,9 @@
   // Bucket rows by their raw x value; emit one summary row per bucket in
   // first-appearance order so the downstream discrete x scale keeps the
   // same level ordering as the input.
-  let buckets = (:)
-  let order = ()
-  for row in data {
-    let key = str(row.at(x-col, default: ""))
-    if key == "" { continue }
-    if key not in buckets { order.push(key) }
-    let bucket = buckets.at(key, default: ())
-    bucket.push(row)
-    buckets.insert(key, bucket)
-  }
-
   let out = ()
-  for key in order {
-    let summary = _summarise(buckets.at(key), x-col, y-col, coefficient)
+  for rows in bucket-by-col(data, x-col) {
+    let summary = _summarise(rows, x-col, y-col, coefficient)
     if summary == none { continue }
     out.push(summary)
   }

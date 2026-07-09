@@ -190,6 +190,7 @@
   b: none,
   angle: none,
   radius: none,
+  height: none,
   z: none,
   nudge-x: none,
   nudge-y: none,
@@ -249,6 +250,7 @@
     b: b,
     angle: angle,
     radius: radius,
+    height: height,
     nudge-x: nudge-x,
     nudge-y: nudge-y,
   )

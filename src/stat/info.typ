@@ -31,6 +31,9 @@
   density: (outputs: ("x", "y", "_density", "_count", "_scaled", "_n")),
   "density-2d": (outputs: ("x", "y", "group", "_level")),
   "density-2d-filled": (outputs: ("x", "y", "group", "_level")),
+  "density-ridges": (
+    outputs: ("x", "y", "height", "_density", "_scaled", "_n"),
+  ),
   ydensity: (
     outputs: ("x", "y", "violinwidth", "_density", "_count", "_scaled", "_n"),
   ),

@@ -58,6 +58,7 @@
 #import "src/geom/ribbon.typ": geom-ribbon
 #import "src/geom/boxplot.typ": geom-boxplot
 #import "src/geom/violin.typ": geom-violin
+#import "src/geom/density-ridges.typ": geom-density-ridges
 #import "src/geom/errorbar.typ": geom-errorbar
 #import "src/geom/errorbarh.typ": geom-errorbarh
 #import "src/geom/count.typ": geom-count
@@ -86,6 +87,7 @@
 #import "src/stat/density-2d.typ": stat-density-2d
 #import "src/stat/density-2d-filled.typ": stat-density-2d-filled
 #import "src/stat/ydensity.typ": stat-ydensity
+#import "src/stat/density-ridges.typ": stat-density-ridges
 #import "src/stat/sum.typ": stat-sum
 #import "src/stat/function.typ": stat-function
 #import "src/stat/bin.typ": stat-bin
