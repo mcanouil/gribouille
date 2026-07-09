@@ -51,6 +51,7 @@
 #import "src/geom/bar.typ": geom-bar
 #import "src/geom/histogram.typ": geom-histogram
 #import "src/geom/freqpoly.typ": geom-freqpoly
+#import "src/geom/density.typ": geom-density
 #import "src/geom/smooth.typ": geom-smooth
 #import "src/geom/ribbon.typ": geom-ribbon
 #import "src/geom/boxplot.typ": geom-boxplot
@@ -78,6 +79,7 @@
 // Stats.
 #import "src/stat/identity.typ": stat-identity
 #import "src/stat/count.typ": stat-count
+#import "src/stat/density.typ": stat-density
 #import "src/stat/sum.typ": stat-sum
 #import "src/stat/function.typ": stat-function
 #import "src/stat/bin.typ": stat-bin
