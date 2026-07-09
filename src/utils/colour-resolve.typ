@@ -60,11 +60,7 @@
 #let is-opaque(colour) = {
   // Non-colour paints (tilings, gradients) report not-opaque so seam
   // sealing skips them rather than stroking with a patterned paint.
-  (
-    colour != none
-      and type(colour) == color
-      and colour.components().last() == 100%
-  )
+  type(colour) == color and colour.components().last() == 100%
 }
 
 #let _clamp(x, lo, hi) = {
