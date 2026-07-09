@@ -85,6 +85,28 @@
 #assert.eq(lr.mapping.ymax, "ymax")
 #assert.eq(lr.mapping.fill, "fill")
 
+// `fill: none` is a param sentinel ("no fill"), not data: it must reach the
+// geom as a layer parameter, leaving the positional aesthetics still mapped.
+#let lr-none = annotate("rect", xmin: 0, xmax: 1, ymin: 0, ymax: 1, fill: none)
+#assert.eq(lr-none.params.fill, none)
+#assert.eq(lr-none.mapping.at("fill", default: "unset"), none)
+#assert.eq(lr-none.data, ((xmin: 0, xmax: 1, ymin: 0, ymax: 1),))
+#assert.eq(lr-none.mapping.xmin, "xmin")
+
+// `fill: auto` is likewise a sentinel ("resolve via the scale"): forwarded as a
+// param, not stored as a data cell.
+#let lr-auto = annotate("rect", xmin: 0, xmax: 1, ymin: 0, ymax: 1, fill: auto)
+#assert.eq(lr-auto.params.fill, auto)
+#assert.eq(lr-auto.mapping.at("fill", default: "unset"), none)
+#assert.eq(lr-auto.data, ((xmin: 0, xmax: 1, ymin: 0, ymax: 1),))
+
+// A `none` sentinel on a non-colour aesthetic (`size` on geom-point) also lands
+// on params via `split-aes-params`, not in the mapping/data.
+#let lp-none = annotate("point", x: 1, y: 1, size: none)
+#assert.eq(lp-none.params.size, none)
+#assert.eq(lp-none.mapping.at("size", default: "unset"), none)
+#assert.eq(lp-none.data, ((x: 1, y: 1),))
+
 // Vline annotation: xintercept is a layer parameter, not an aesthetic.
 #let lv = annotate("vline", xintercept: 5, colour: red)
 #assert.eq(lv.name, "vline")

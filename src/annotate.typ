@@ -102,7 +102,10 @@
 ///   and `geom = "label"`, `size` is treated as a layer parameter (the text
 ///   size, a Typst length) rather than an aesthetic. Anything else (e.g.,
 ///   `stroke`, `fontsize`, `xintercept`, `yintercept`) is forwarded to the
-///   geom constructor as a layer parameter.
+///   geom constructor as a layer parameter. A `none` or `auto` value on an
+///   aesthetic name is also forwarded as a layer parameter, so it reaches the
+///   geom as the disable / scale-resolve sentinel (e.g., `fill: none` draws an
+///   unfilled shape) instead of being stored as a data cell.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
 ///
@@ -180,7 +183,7 @@
   let mapping-args = (:)
   let layer-args = (:)
   for (k, v) in named.pairs() {
-    if k in aes-keys {
+    if k in aes-keys and v != none and v != auto {
       // Preserve a `typst()` tag on the column reference so the geom
       // evaluates the value as Typst markup; the row stores the unwrapped
       // source string.
@@ -192,6 +195,9 @@
         mapping-args.insert(k, k)
       }
     } else {
+      // Non-aesthetic names, plus `none`/`auto` sentinels on aesthetic names,
+      // go to the geom constructor as layer parameters, where a `none` fill
+      // disables the fill and an `auto` colour resolves via the scale.
       layer-args.insert(k, v)
     }
   }
