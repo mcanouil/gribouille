@@ -57,7 +57,7 @@
 ///   mapping: aes(x: "grp", y: "y"),
 ///   layers: (
 ///     geom-line(stat: stat-summary(fun: "mean-se")),
-///     geom-ribbon(stat: stat-summary(fun: "mean-se")),
+///     geom-ribbon(stat: stat-summary(fun: "mean-se"), alpha: 0.5),
 ///   ),
 ///   width: 10cm,
 ///   height: 6cm,
