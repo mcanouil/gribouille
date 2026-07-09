@@ -10,6 +10,7 @@
 
 ### Changes
 
+- feat: `position-beeswarm` and `geom-beeswarm` arrange overplotted points into a deterministic density-shaped swarm (van der Corput walk scaled by each point's kernel density), a reproducible alternative to `position-jitter`. (#181)
 - feat: `geom-density-ridges` and `stat-density-ridges` draw overlapping ridgeline plots from raw observations: one Gaussian-KDE ridge per y bucket with heights normalised across buckets, a `scale` parameter in y-level units, and a new `height` aesthetic channel. (#180)
 - feat: `geom-density-2d`/`geom-density-2d-filled` and their stats trace iso-lines or shade iso-bands of a native 2D Gaussian kernel density estimate of the raw `(x, y)` sample, with per-axis bandwidth and grid control. (#178)
 - feat: `geom-smooth`/`stat-smooth` gain `method: "loess"` with `span` and `degree` control: native tricube-weighted local polynomial fits with a pointwise confidence band on `n − trace(L)` degrees of freedom. (#177)
