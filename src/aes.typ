@@ -76,6 +76,8 @@
 ///
 /// \@param radius Column name for the spoke length in data units (\@geom-spoke).
 ///
+/// \@param height Column name for the ridge height above its baseline (\@geom-density-ridges).
+///
 /// \@param z Column name for the value summarised over a 2D grid (\@stat-summary-2d, \@stat-summary-hex).
 ///
 /// \@param nudge-x Column name or scalar x offset for text/label/typst geoms. A number shifts in data units; a Typst length (e.g., `4pt`, `0.2cm`) shifts in canvas units.
