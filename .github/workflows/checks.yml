@@ -31,6 +31,13 @@ on:
       - "LICENSE"
       - ".github/actions/**"
       - ".github/workflows/checks.yml"
+  workflow_dispatch:
+    inputs:
+      fuzz:
+        description: "ImageMagick -fuzz tolerance for the visual snapshot diff (e.g., 0%, 2%)."
+        required: false
+        type: string
+        default: "2%"
 
 permissions:
   contents: read
@@ -197,6 +204,7 @@ jobs:
         uses: ./.github/actions/typst-snapshot
         with:
           mode: check
+          fuzz: ${{ inputs.fuzz || '2%' }}
 
       - name: Summary
         if: always()

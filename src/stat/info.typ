@@ -29,6 +29,8 @@
   "contour-filled": (outputs: ("x", "y", "group", "_level")),
   count: (outputs: ("x", "_count")),
   density: (outputs: ("x", "y", "_density", "_count", "_scaled", "_n")),
+  "density-2d": (outputs: ("x", "y", "group", "_level")),
+  "density-2d-filled": (outputs: ("x", "y", "group", "_level")),
   ydensity: (
     outputs: ("x", "y", "violinwidth", "_density", "_count", "_scaled", "_n"),
   ),

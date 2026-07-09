@@ -46,6 +46,18 @@
   if alpha < 1 { colour.transparentize((1 - alpha) * 100%) } else { colour }
 }
 
+/// Whether a resolved colour is fully opaque.
+///
+/// Reads the alpha channel back off a colour (`components()` puts it last
+/// in every colour space), the inverse question to \@apply-alpha.
+///
+/// \@internal
+/// \@param colour A resolved colour value or `none`.
+/// \@returns `true` when the colour exists and carries no transparency.
+#let is-opaque(colour) = {
+  colour != none and colour.components().last() == 100%
+}
+
 #let _clamp(x, lo, hi) = {
   if x < lo { lo } else if x > hi { hi } else { x }
 }

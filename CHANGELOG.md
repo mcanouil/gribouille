@@ -10,6 +10,7 @@
 
 ### Changes
 
+- feat: `geom-density-2d`/`geom-density-2d-filled` and their stats trace iso-lines or shade iso-bands of a native 2D Gaussian kernel density estimate of the raw `(x, y)` sample, with per-axis bandwidth and grid control. (#178)
 - feat: `geom-smooth`/`stat-smooth` gain `method: "loess"` with `span` and `degree` control: native tricube-weighted local polynomial fits with a pointwise confidence band on `n − trace(L)` degrees of freedom. (#177)
 - feat: `geom-violin` and `stat-ydensity` draw mirrored per-bucket density silhouettes with `scale: "area"`/`"count"`/`"width"` normalisation, `trim` control, and dodge support, sharing the native Gaussian KDE core with `stat-density`. (#176)
 - feat: `geom-density` and `stat-density` bring native 1D kernel density estimation: Gaussian kernels evaluated directly on an `n`-point grid, Silverman (`bw.nrd0`) bandwidth with `adjust` and `trim` control, weight support, and `_density`/`_count`/`_scaled`/`_n` after-stat columns. (#175)
@@ -17,6 +18,8 @@
 - feat: a keyed `scales()` constructor, mirroring `guides()`, binds scale overrides to aesthetics as named arguments (e.g., `scales(x: scale-continuous(), colour: scale-viridis-d())`) instead of a positional array. (#157)
 - feat: an installable Agent Skill teaches coding agents to author Gribouille plots, confirming every argument against the site's `.llms.md` reference; the repository doubles as a Claude Code plugin marketplace, so the skill installs via `/plugin install` or `npx skills add`. (#154)
 - feat: geom and theme-element `stroke:` accept the native Typst `1.3pt + accent` form, writing thickness and paint together; an explicit `colour:` still wins over the embedded paint. (#153)
+- fix: fill opacity defaults to 1 on `geom-area`, `geom-ribbon`, `geom-polygon`, `geom-ellipse`, and `geom-mark` instead of an implicit 0.3-0.6 translucency; explicit `alpha:` values and mapped alpha aesthetics are unaffected. (#179)
+- fix: abutting opaque fills (tiles, hexes, stacked bars and areas, iso-band cells) are stroked with their own fill colour, removing the hairline background seams that antialiasing bled through between adjacent shapes. (#178)
 - fix: stat-quantile replaces the O(n³) pair enumeration with an exact O(n² log n) breakpoint search, scaling geom-quantile to thousands of rows with identical fits on unique optima. (#174)
 - fix: an unknown scale-* constructor argument now fails at scales() binding with the valid keys for that scale and aesthetic, and stray positional arguments are rejected instead of ignored. (#172)
 - fix: an unknown `stat`, scale `transform`, or `oob` name now fails with a clear error instead of silently rendering as identity or dropping rows. (#162)

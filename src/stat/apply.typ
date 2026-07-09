@@ -10,6 +10,8 @@
 #import "contour-filled.typ" as contour-filled-stat
 #import "count.typ" as count-stat
 #import "density.typ" as density-stat
+#import "density-2d.typ" as density-2d-stat
+#import "density-2d-filled.typ" as density-2d-filled-stat
 #import "ydensity.typ" as ydensity-stat
 #import "sum.typ" as sum-stat
 #import "smooth.typ" as smooth-stat
@@ -76,6 +78,14 @@
   density: (
     apply: density-stat.apply,
     ctor: density-stat.stat-density,
+  ),
+  "density-2d": (
+    apply: density-2d-stat.apply,
+    ctor: density-2d-stat.stat-density-2d,
+  ),
+  "density-2d-filled": (
+    apply: density-2d-filled-stat.apply,
+    ctor: density-2d-filled-stat.stat-density-2d-filled,
   ),
   ydensity: (
     apply: ydensity-stat.apply,

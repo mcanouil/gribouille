@@ -173,7 +173,7 @@
       row,
       default-fill,
       colour-fallback: false,
-      default-alpha: 0.6,
+      default-alpha: 1,
     )
     let stroke-spec = resolve-stroke-spec(
       layer,

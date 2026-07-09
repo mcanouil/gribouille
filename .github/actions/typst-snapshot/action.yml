@@ -14,6 +14,14 @@ inputs:
     description: "Parallel typst compiles passed as --jobs (default: 4 to match ubuntu-latest vCPUs)."
     required: false
     default: "4"
+  fuzz:
+    description: "ImageMagick -fuzz tolerance passed as --fuzz in check mode (default: 2%)."
+    required: false
+    default: "2%"
+  force:
+    description: "In update mode, delete every golden first so all snapshots re-mint and orphaned files are dropped."
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -34,12 +42,21 @@ runs:
       env:
         MODE: ${{ inputs.mode }}
         JOBS: ${{ inputs.jobs }}
+        FUZZ: ${{ inputs.fuzz }}
+        FORCE: ${{ inputs.force }}
       run: |
         set -euo pipefail
         log="${RUNNER_TEMP}/snapshot.log"
         case "${MODE}" in
-          check)  lua tools/snapshot/run.lua --check --jobs "${JOBS}" 2>&1 | tee "${log}" ;;
-          update) lua tools/snapshot/run.lua --update --jobs "${JOBS}" 2>&1 | tee "${log}" ;;
+          check)
+            lua tools/snapshot/run.lua --check --jobs "${JOBS}" --fuzz "${FUZZ}" 2>&1 | tee "${log}"
+            ;;
+          update)
+            if [[ "${FORCE}" == "true" ]]; then
+              rm -rf tests/visual/golden
+            fi
+            lua tools/snapshot/run.lua --update --jobs "${JOBS}" 2>&1 | tee "${log}"
+            ;;
           *) echo "::error::unknown snapshot mode: ${MODE}"; exit 2 ;;
         esac
 

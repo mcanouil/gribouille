@@ -17,7 +17,11 @@
   data: d,
   mapping: aes(x: "x", y: "y", z: "z"),
   layers: (geom-contour-filled(bins: 10),),
-  scales: scales(fill: scale-viridis-c(option: "magma")),
+  scales: scales(
+    x: scale-continuous(expand: (0, 0)),
+    y: scale-continuous(expand: (0, 0)),
+    fill: scale-viridis-c(option: "magma"),
+  ),
   labels: labels(
     title: "Radial Wave: 10 Filled Bands",
     subtitle: "z = sin(2.5 r) · exp(-r / 3) over a 50-by-50 grid",

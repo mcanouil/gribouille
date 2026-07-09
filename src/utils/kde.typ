@@ -27,6 +27,12 @@
   0.9 * spread * calc.pow(n, -0.2)
 }
 
+// R's `bw.nrd` (Scott's variation): like `bw-nrd0` but with the 1.06
+// factor. MASS::kde2d seeds its per-axis bandwidths from this rule.
+#let bw-nrd(values) = {
+  bw-nrd0(values) * 1.06 / 0.9
+}
+
 // Panic unless the shared KDE parameters are well-formed. `scope` names the
 // calling stat so the message points at the user-facing constructor.
 #let validate-kde-params(scope, params) = {
@@ -84,4 +90,70 @@
     (x: g, density: density)
   })
   (rows: rows, bw: resolved-bw)
+}
+
+// Evenly spaced grid over the data range extended by `_CUT` bandwidths so
+// the density decays towards zero before the boundary.
+#let _kde-axis(values, bw, n) = {
+  let lo = calc.min(..values) - _CUT * bw
+  let hi = calc.max(..values) + _CUT * bw
+  range(n).map(i => lo + (hi - lo) * i / (n - 1))
+}
+
+// One axis's kernel-bandwidth resolution for `kde-2d`: `auto` applies
+// `bw-nrd / 4` (the kernel standard deviation MASS::kde2d derives from its
+// full-width `h`), with a positive floor for degenerate spreads.
+#let _kde-2d-bw(values, bw, adjust) = {
+  let resolved = if bw == auto { bw-nrd(values) / 4 } else { float(bw) }
+  resolved = resolved * adjust
+  if resolved <= 0 { 1.0 } else { resolved }
+}
+
+// Weighted 2D Gaussian product-kernel density of `pairs` (dicts with
+// numeric `x`, `y` and positive weight `w`; the caller filters) over an
+// `n × n` grid (or `(nx, ny)` tuple). `bw: auto` derives per-axis kernel
+// standard deviations from `bw-nrd / 4`; a number applies to both axes and
+// an `(x, y)` tuple sets them separately. The product kernel is separable,
+// so each axis's kernel matrix is evaluated once and combined per cell.
+// Returns `(xs, ys, z, z-lo, z-hi, bw)` in the layout the contour and
+// isoband consumers expect (`z` indexed `z.at(xi).at(yi)`).
+#let kde-2d(pairs, bw: auto, adjust: 1, n: 50) = {
+  let (nx, ny) = if type(n) == array { n } else { (n, n) }
+  let (bw-x, bw-y) = if type(bw) == array { bw } else { (bw, bw) }
+  let xs-data = pairs.map(p => p.x)
+  let ys-data = pairs.map(p => p.y)
+  let hx = _kde-2d-bw(xs-data, bw-x, adjust)
+  let hy = _kde-2d-bw(ys-data, bw-y, adjust)
+
+  let xs = _kde-axis(xs-data, hx, nx)
+  let ys = _kde-axis(ys-data, hy, ny)
+  let kernel-x = xs.map(g => xs-data.map(v => {
+    let z = (g - v) / hx
+    calc.exp(-0.5 * z * z)
+  }))
+  let kernel-y = ys.map(g => ys-data.map(v => {
+    let z = (g - v) / hy
+    calc.exp(-0.5 * z * z)
+  }))
+  let weights = pairs.map(p => p.w)
+  let total-weight = weights.sum()
+  let norm = 1 / (2 * calc.pi * hx * hy * total-weight)
+  let n-data = pairs.len()
+
+  let z = ()
+  let z-lo = none
+  let z-hi = none
+  for kx in kernel-x {
+    let column = ()
+    for ky in kernel-y {
+      let density = (
+        range(n-data).map(d => weights.at(d) * kx.at(d) * ky.at(d)).sum() * norm
+      )
+      z-lo = if z-lo == none { density } else { calc.min(z-lo, density) }
+      z-hi = if z-hi == none { density } else { calc.max(z-hi, density) }
+      column.push(density)
+    }
+    z.push(column)
+  }
+  (xs: xs, ys: ys, z: z, z-lo: z-lo, z-hi: z-hi, bw: (hx, hy))
 }

@@ -14,7 +14,7 @@
 #import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/band.typ": band-polygon
-#import "../utils/stroke.typ": resolve-stroke-spec
+#import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
   resolve-geom-linewidth,
@@ -178,7 +178,7 @@
       leader,
       default-fill,
       colour-fallback: false,
-      default-alpha: 0.3,
+      default-alpha: 1,
     )
     let stroke-spec = resolve-stroke-spec(
       layer,
@@ -193,7 +193,7 @@
       ..pts,
       close: true,
       fill: final-fill,
-      stroke: stroke-spec,
+      stroke: seal-seam(stroke-spec, final-fill),
     )
   }
 }
