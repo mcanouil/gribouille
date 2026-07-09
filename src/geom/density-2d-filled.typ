@@ -105,7 +105,6 @@
     fill: fill,
     stroke: stroke,
     alpha: alpha,
-    tile-seam: true,
   )
     + split-aes-params("geom-density-2d-filled", args),
   stat: if stat == auto {

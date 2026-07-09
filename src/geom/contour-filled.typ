@@ -93,7 +93,6 @@
     fill: fill,
     stroke: stroke,
     alpha: alpha,
-    tile-seam: true,
   )
     + split-aes-params("geom-contour-filled", args),
   stat: if stat == auto {

@@ -72,3 +72,24 @@
   } else { stroke-param }
   build-stroke(resolved-param, paint)
 }
+
+/// Seal the antialiasing seams between abutting filled shapes.
+///
+/// The rasteriser antialiases every shared edge of adjacent fills (tiles,
+/// hexes, stacked bars and areas, iso-band cells) independently, bleeding
+/// the background through as a hairline lattice. When the caller resolved
+/// no stroke and the fill is fully opaque, stroke the shape with its own
+/// fill so the seams disappear; the same-colour edge is invisible.
+/// Translucent fills keep their `none` stroke, as the fill/stroke overlap
+/// would darken their rims.
+///
+/// \@internal
+/// \@param stroke-spec The resolved stroke (from \@resolve-stroke-spec) or `none`.
+///
+/// \@param fill The resolved fill colour or `none`.
+/// \@returns The stroke to draw with: the input when set, a fill-paint hairline when sealing applies, `none` otherwise.
+#let seal-seam(stroke-spec, fill) = {
+  if stroke-spec != none or fill == none { return stroke-spec }
+  if fill.components().last() != 100% { return none }
+  (paint: fill, thickness: 0.4pt)
+}

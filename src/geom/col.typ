@@ -15,7 +15,7 @@
 #import "../utils/radial.typ": (
   radial-axis-ranges, radial-category-span, radial-wedge,
 )
-#import "../utils/stroke.typ": resolve-stroke-spec
+#import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
   resolve-geom-linewidth,
@@ -218,7 +218,7 @@
       ..pts,
       close: true,
       fill: final-fill,
-      stroke: stroke-spec,
+      stroke: seal-seam(stroke-spec, final-fill),
     )
   }
 }
@@ -369,7 +369,7 @@
       a,
       b,
       fill: final-fill,
-      stroke: stroke-spec,
+      stroke: seal-seam(stroke-spec, final-fill),
     )
   }
 }

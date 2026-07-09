@@ -8,7 +8,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": radial-wedge
-#import "../utils/stroke.typ": resolve-stroke-spec
+#import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../utils/band.typ": axis-band
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -199,7 +199,7 @@
         ..pts,
         close: true,
         fill: final-fill,
-        stroke: stroke-spec,
+        stroke: seal-seam(stroke-spec, final-fill),
       )
     } else {
       let xe = axis-band(x-trained, x, w / 2, ctx.px-range)
@@ -211,7 +211,7 @@
         (cx0, cy0),
         (cx1, cy1),
         fill: final-fill,
-        stroke: stroke-spec,
+        stroke: seal-seam(stroke-spec, final-fill),
       )
     }
   }

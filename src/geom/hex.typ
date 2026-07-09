@@ -9,7 +9,7 @@
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/hex.typ": hex-vertices
 #import "../utils/radial.typ": project-point
-#import "../utils/stroke.typ": resolve-stroke-spec
+#import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../utils/types.typ": parse-number
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -159,7 +159,7 @@
       ..pts,
       close: true,
       fill: final-fill,
-      stroke: stroke-spec,
+      stroke: seal-seam(stroke-spec, final-fill),
     )
   }
 }
