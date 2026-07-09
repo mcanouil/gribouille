@@ -58,7 +58,11 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y", z: "z"),
 ///   layers: (geom-contour-filled(bins: 10),),
-///   scales: scales(fill: scale-viridis-c()),
+///   scales: scales(
+///     x: scale-continuous(expand: (0, 0)),
+///     y: scale-continuous(expand: (0, 0)),
+///     fill: scale-viridis-c(),
+///   ),
 ///   width: 11cm,
 ///   height: 7cm,
 /// )
@@ -89,9 +93,12 @@
     fill: fill,
     stroke: stroke,
     alpha: alpha,
+    tile-seam: true,
   )
     + split-aes-params("geom-contour-filled", args),
-  stat: if stat == auto { stat-contour-filled(bins: bins, binwidth: binwidth, breaks: breaks) } else { stat },
+  stat: if stat == auto {
+    stat-contour-filled(bins: bins, binwidth: binwidth, breaks: breaks)
+  } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

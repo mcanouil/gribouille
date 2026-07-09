@@ -68,6 +68,10 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-density-2d-filled(),),
+///   scales: scales(
+///     x: scale-continuous(expand: (0,0)),
+///     y: scale-continuous(expand: (0,0)),
+///   ),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -101,6 +105,7 @@
     fill: fill,
     stroke: stroke,
     alpha: alpha,
+    tile-seam: true,
   )
     + split-aes-params("geom-density-2d-filled", args),
   stat: if stat == auto {

@@ -164,6 +164,18 @@
       default-colour,
       default-thickness: default-thickness,
     )
+    // Iso-band geoms tile the panel with abutting cells; the rasteriser
+    // antialiases every shared edge, bleeding the background through as a
+    // hairline lattice. They opt into `tile-seam` to paint each cell's edge
+    // with its own fill, which is invisible on opaque fills but would darken
+    // the rims of a translucent stand-alone polygon.
+    if (
+      stroke-spec == none
+        and final-fill != none
+        and layer.params.at("tile-seam", default: false)
+    ) {
+      stroke-spec = (paint: final-fill, thickness: 0.4pt)
+    }
 
     cetz.draw.line(
       ..pts,
