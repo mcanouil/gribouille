@@ -178,7 +178,7 @@
       leader,
       default-fill,
       colour-fallback: false,
-      default-alpha: 0.3,
+      default-alpha: 1,
     )
     let stroke-spec = resolve-stroke-spec(
       layer,
