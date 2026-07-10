@@ -10,6 +10,7 @@
 
 ### Changes
 
+- feat: `stat-waffle` turns per-group counts (one per row, or the rounded `weight` sum) into unit cells on an integer grid, column-major from the bottom-left with groups tiling consecutive runs; render waffle charts with `geom-tile`. (#189)
 - feat: `stat-difference` shades the band between two series by which one is on top: exact linear crossovers are inserted as shared vertices so ribbon segments meet cleanly, and each run carries a `_sign` level (names via `levels:`) for `fill: after-stat("_sign")`. (#186)
 - feat: fills accept native Typst `tiling` paints, both as fixed `fill:` values and through `scale-manual(values:)`, with legend swatches rendering the patterns; per-row alpha and seam sealing skip non-colour paints. (#182)
 - feat: `position-beeswarm` and `geom-beeswarm` arrange overplotted points into a deterministic density-shaped swarm (van der Corput walk scaled by each point's kernel density), a reproducible alternative to `position-jitter`. (#181)
