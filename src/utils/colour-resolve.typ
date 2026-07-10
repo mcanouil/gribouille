@@ -42,6 +42,9 @@
 /// \@returns The colour with alpha applied.
 #let apply-alpha(colour, alpha) = {
   if colour == none { return none }
+  // Non-colour paints (a Typst `tiling` or `gradient` used as a fill) have
+  // no alpha channel to scale; pass them through untouched.
+  if type(colour) != color { return colour }
   if alpha == none { return colour }
   if alpha < 1 { colour.transparentize((1 - alpha) * 100%) } else { colour }
 }
@@ -55,7 +58,9 @@
 /// \@param colour A resolved colour value or `none`.
 /// \@returns `true` when the colour exists and carries no transparency.
 #let is-opaque(colour) = {
-  colour != none and colour.components().last() == 100%
+  // Non-colour paints (tilings, gradients) report not-opaque so seam
+  // sealing skips them rather than stroking with a patterned paint.
+  type(colour) == color and colour.components().last() == 100%
 }
 
 #let _clamp(x, lo, hi) = {
