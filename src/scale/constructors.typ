@@ -173,6 +173,33 @@
 /// )
 /// ```
 ///
+/// \@examples A tiling can carry both a base fill colour and a pattern:
+/// place a full-tile box for the background, then the pattern strokes on
+/// top. Legend swatches show both.
+/// ```
+/// //| alt: "Dodged bar chart with groups a, b on the x-axis and three bars per group filled in yellow, blue, and green, each overlaid with diagonal stripes in a darker shade of its own colour; the legend swatches show the same colour-and-stripe combinations."
+/// #let coloured-stripes(base, ink) = tiling(size: (5pt, 5pt))[
+///   #place(box(width: 5pt, height: 5pt, fill: base))
+///   #place(line(start: (0%, 100%), end: (100%, 0%), stroke: 1pt + ink))
+/// ]
+/// #let d = (
+///   (g: "a", k: "u", n: 3), (g: "a", k: "v", n: 2), (g: "a", k: "w", n: 4),
+///   (g: "b", k: "u", n: 4), (g: "b", k: "v", n: 3), (g: "b", k: "w", n: 2),
+/// )
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "g", y: "n", fill: "k"),
+///   layers: (geom-col(position: "dodge"),),
+///   scales: scales(fill: scale-manual(values: (
+///     coloured-stripes(rgb("#fde68a"), rgb("#b45309")),
+///     coloured-stripes(rgb("#bfdbfe"), rgb("#1d4ed8")),
+///     coloured-stripes(rgb("#bbf7d0"), rgb("#047857")),
+///   ))),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@scales, \@scale-discrete, \@scale-identity
 #let scale-manual(..args) = _stub("manual", args)
 
