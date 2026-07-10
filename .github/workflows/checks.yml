@@ -74,6 +74,12 @@ jobs:
           set -euo pipefail
           lua tools/typstdoc/main.lua --check
 
+      - name: Check skill inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          lua tools/skill-inventory.lua --check
+
       - name: Summary
         if: always()
         shell: bash
