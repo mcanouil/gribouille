@@ -10,6 +10,7 @@
 
 ### Changes
 
+- feat: `stat-difference` shades the band between two series by which one is on top: exact linear crossovers are inserted as shared vertices so ribbon segments meet cleanly, and each run carries a `_sign` level (names via `levels:`) for `fill: after-stat("_sign")`. (#186)
 - feat: fills accept native Typst `tiling` paints, both as fixed `fill:` values and through `scale-manual(values:)`, with legend swatches rendering the patterns; per-row alpha and seam sealing skip non-colour paints. (#182)
 - feat: `position-beeswarm` and `geom-beeswarm` arrange overplotted points into a deterministic density-shaped swarm (van der Corput walk scaled by each point's kernel density), a reproducible alternative to `position-jitter`. (#181)
 - feat: `geom-density-ridges` and `stat-density-ridges` draw overlapping ridgeline plots from raw observations: one Gaussian-KDE ridge per y bucket with heights normalised across buckets, a `scale` parameter in y-level units, and a new `height` aesthetic channel. (#180)
@@ -21,6 +22,7 @@
 - feat: a keyed `scales()` constructor, mirroring `guides()`, binds scale overrides to aesthetics as named arguments (e.g., `scales(x: scale-continuous(), colour: scale-viridis-d())`) instead of a positional array. (#157)
 - feat: an installable Agent Skill teaches coding agents to author Gribouille plots, confirming every argument against the site's `.llms.md` reference; the repository doubles as a Claude Code plugin marketplace, so the skill installs via `/plugin install` or `npx skills add`. (#154)
 - feat: geom and theme-element `stroke:` accept the native Typst `1.3pt + accent` form, writing thickness and paint together; an explicit `colour:` still wins over the embedded paint. (#153)
+- fix: pre-stat grouping skips late-binding markers without a source column (e.g., `fill: after-stat("_sign")`, `colour: after-stat("_level")`) instead of crashing on the marker dict; the stat-output column groups the rows once the stat has run. (#186)
 - fix: `annotate` forwards a `none` or `auto` value on an aesthetic keyword (e.g., `annotate("rect", fill: none)`) to the geom as a layer parameter instead of storing it as a data cell, so the disable / scale-resolve sentinel applies and the shape is drawn unfilled. (#183)
 - fix: fill opacity defaults to 1 on `geom-area`, `geom-ribbon`, `geom-polygon`, `geom-ellipse`, and `geom-mark` instead of an implicit 0.3-0.6 translucency; explicit `alpha:` values and mapped alpha aesthetics are unaffected. (#179)
 - fix: abutting opaque fills (tiles, hexes, stacked bars and areas, iso-band cells) are stroked with their own fill colour, removing the hairline background seams that antialiasing bled through between adjacent shapes. (#178)
