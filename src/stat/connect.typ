@@ -1,13 +1,31 @@
 ///! Connection vertices between consecutive observations.
 ///!
 ///! `stat-connect` expands each gap between two ordered points into a
-///! step-, mid-, or linear-style connector by inserting intermediate
-///! vertices. Pair with `geom-path` (or `geom-line`) to render.
+///! step-, mid-, sigmoid-, or linear-style connector by inserting
+///! intermediate vertices. Pair with `geom-path` (or `geom-line`) to
+///! render.
 
 #import "../utils/types.typ": parse-number
-#import "../utils/errors.typ": fail-enum
+#import "../utils/errors.typ": fail, fail-enum
 
-#let _CONNECTION-MODES = ("hv", "vh", "mid", "linear")
+#let _CONNECTION-MODES = ("hv", "vh", "mid", "sigmoid", "linear")
+
+#let _logistic(u) = 1.0 / (1.0 + calc.exp(-u))
+
+// Interior vertices of a logistic S-curve from (x1, y1) to (x2, y2):
+// y(t) = y1 + (y2 - y1) * (sigma(s * (2t - 1)) - sigma(-s)) / (sigma(s) - sigma(-s))
+// over n points at t = j / (n + 1). The rescale by sigma(±s) pins the
+// curve exactly onto both endpoints, so steeper `smooth` values change
+// the shape but never detach the connector from its observations.
+#let _sigmoid-interior(x1, y1, x2, y2, smooth, n) = {
+  let lo = _logistic(-smooth)
+  let span = _logistic(smooth) - lo
+  range(1, n + 1).map(j => {
+    let t = j / (n + 1)
+    let eased = (_logistic(smooth * (2 * t - 1)) - lo) / span
+    (x: x1 + (x2 - x1) * t, y: y1 + (y2 - y1) * eased)
+  })
+}
 
 /// Connection statistic: expand consecutive points with intermediate vertices.
 ///
@@ -15,6 +33,9 @@
 /// - `"hv"` (default): horizontal then vertical. Inserts `(x_{i+1}, y_i)` between each pair.
 /// - `"vh"`: vertical then horizontal. Inserts `(x_i, y_{i+1})`.
 /// - `"mid"`: half-step both ways. Inserts `(mid, y_i)` and `(mid, y_{i+1})` at the midpoint.
+/// - `"sigmoid"`: logistic S-curve. Inserts `n` vertices easing y between
+///   the pair, rescaled so the curve passes exactly through both
+///   observations; the bump-chart connector.
 /// - `"linear"`: pass-through (no intermediate vertices).
 ///
 /// \@category Stats
@@ -22,7 +43,14 @@
 /// \@stability stable
 /// \@since 0.6.0
 ///
-/// \@param connection Connection mode (`"hv"` / `"vh"` / `"mid"` / `"linear"`).
+/// \@param connection Connection mode (`"hv"` / `"vh"` / `"mid"` / `"sigmoid"` / `"linear"`).
+///
+/// \@param smooth Steepness of the `"sigmoid"` S-curve (a positive number).
+///   Larger values flatten the shoulders and sharpen the middle transition;
+///   ignored by the other modes.
+///
+/// \@param n Number of intermediate vertices inserted per gap by
+///   `"sigmoid"` (a positive integer); ignored by the other modes.
 ///
 /// \@returns Statistic object with `name: "connect"`, consumed by geom layers.
 ///
@@ -40,12 +68,53 @@
 /// )
 /// ```
 ///
+/// \@examples Bump chart: rank trajectories eased through sigmoid
+/// connectors, rank 1 on top via a reversed y scale.
+/// ```
+/// //| alt: "Bump chart of three teams' ranks over five rounds; smooth S-shaped connectors ease each team between rank positions, with rank 1 at the top."
+/// #let ranks = (
+///   alpha: (1, 1, 2, 3, 3),
+///   beta: (2, 3, 1, 1, 2),
+///   gamma: (3, 2, 3, 2, 1),
+/// )
+/// #let d = ()
+/// #for (team, rs) in ranks {
+///   for (i, r) in rs.enumerate() { d.push((round: i + 1, rank: r, team: team)) }
+/// }
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "round", y: "rank", colour: "team"),
+///   layers: (
+///     geom-line(stat: stat-connect(connection: "sigmoid"), stroke: 2pt),
+///     geom-point(size: 3.5pt),
+///   ),
+///   scales: scales(
+///     y: scale-continuous(transform: "reverse", breaks: (1, 2, 3)),
+///   ),
+///   width: 12cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@geom-step, \@geom-path
-#let stat-connect(connection: "hv") = {
+#let stat-connect(connection: "hv", smooth: 8, n: 20) = {
   if not _CONNECTION-MODES.contains(connection) {
     fail-enum("stat-connect", "connection", connection, _CONNECTION-MODES)
   }
-  (kind: "stat", name: "connect", params: (connection: connection))
+  if type(smooth) not in (int, float) or smooth <= 0 {
+    fail(
+      "stat-connect",
+      "smooth must be a positive number, got " + repr(smooth),
+    )
+  }
+  if type(n) != int or n < 1 {
+    fail("stat-connect", "n must be a positive integer, got " + repr(n))
+  }
+  (
+    kind: "stat",
+    name: "connect",
+    params: (connection: connection, smooth: smooth, n: n),
+  )
 }
 
 #let apply(data, mapping, params: (:)) = {
@@ -92,6 +161,18 @@
       out.push(
         prev.row + ((x-col): prev.row.at(x-col), (y-col): cur.row.at(y-col)),
       )
+    } else if mode == "sigmoid" {
+      let interior = _sigmoid-interior(
+        prev.x,
+        prev.y,
+        cur.x,
+        cur.y,
+        params.at("smooth", default: 8),
+        params.at("n", default: 20),
+      )
+      for p in interior {
+        out.push(prev.row + ((x-col): p.x, (y-col): p.y))
+      }
     } else {
       let mid = (prev.x + cur.x) / 2
       out.push(prev.row + ((x-col): mid, (y-col): prev.row.at(y-col)))
