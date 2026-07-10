@@ -136,4 +136,96 @@
 #assert.eq(id.data, df)
 #assert.eq(id.mapping, mapping)
 
+// --- streamgraph offsets on stack -------------------------------------------
+// Two x buckets so per-bucket baselines are visibly independent.
+// Bucket x = 0: a = 3, b = 5, c = 2 (tot 10); bucket x = 1: all 1 (tot 3).
+
+#let sg = (
+  (x: 0, g: "a", y: 3),
+  (x: 0, g: "b", y: 5),
+  (x: 0, g: "c", y: 2),
+  (x: 1, g: "a", y: 1),
+  (x: 1, g: "b", y: 1),
+  (x: 1, g: "c", y: 1),
+)
+#let sg-mapping = (x: "x", y: "y", fill: "g")
+
+// silhouette: every stack centred on zero (base = -tot / 2).
+#let sil = apply-position(
+  "stack",
+  sg,
+  sg-mapping,
+  params: (offset: "silhouette"),
+)
+#assert-close(sil.data.at(0).ymin, 2)
+#assert-close(sil.data.at(0).ymax, 5)
+#assert-close(sil.data.at(1).ymin, -3)
+#assert-close(sil.data.at(1).ymax, 2)
+#assert-close(sil.data.at(2).ymin, -5)
+#assert-close(sil.data.at(2).ymax, -3)
+#assert-close(sil.data.at(3).ymin, 0.5)
+#assert-close(sil.data.at(3).ymax, 1.5)
+#assert-close(sil.data.at(5).ymin, -1.5)
+#assert-close(sil.data.at(5).ymax, -0.5)
+
+// wiggle: Byron-Wattenberg baseline. Bucket x = 0, top-down (a, b, c) with
+// weights (1, 2, 3): g0 = -(1*3 + 2*5 + 3*2) / 4 = -4.75. Bucket x = 1:
+// g0 = -(1 + 2 + 3) / 4 = -1.5.
+#let wig = apply-position(
+  "stack",
+  sg,
+  sg-mapping,
+  params: (offset: "wiggle"),
+)
+#assert-close(wig.data.at(0).ymin, 2.25)
+#assert-close(wig.data.at(0).ymax, 5.25)
+#assert-close(wig.data.at(1).ymin, -2.75)
+#assert-close(wig.data.at(1).ymax, 2.25)
+#assert-close(wig.data.at(2).ymin, -4.75)
+#assert-close(wig.data.at(2).ymax, -2.75)
+#assert-close(wig.data.at(3).ymin, 0.5)
+#assert-close(wig.data.at(3).ymax, 1.5)
+#assert-close(wig.data.at(4).ymin, -0.5)
+#assert-close(wig.data.at(4).ymax, 0.5)
+#assert-close(wig.data.at(5).ymin, -1.5)
+#assert-close(wig.data.at(5).ymax, -0.5)
+
+// The default and the explicit "none" offset agree with plain stacking.
+#let none-offset = apply-position(
+  "stack",
+  sg,
+  sg-mapping,
+  params: (offset: "none"),
+)
+#let plain = apply-position("stack", sg, sg-mapping)
+#assert.eq(none-offset.data, plain.data)
+
+// Zero-total buckets (stat-align's edge pads) are dropped under a shifted
+// offset instead of pinching the stream to y = 0, and kept under "none".
+#let padded = (
+  ((x: -0.01, g: "a", y: 0), (x: -0.01, g: "b", y: 0))
+    + sg.slice(0, 2)
+    + ((x: 2, g: "a", y: 0), (x: 2, g: "b", y: 4))
+)
+#let sil-pad = apply-position(
+  "stack",
+  padded,
+  sg-mapping,
+  params: (offset: "silhouette"),
+)
+#assert.eq(sil-pad.data.len(), 4)
+#assert(sil-pad.data.all(r => r.x != -0.01))
+// A zero row in a non-empty bucket stays: zero-height band at its stacked
+// position (base -2, below the b = 4 band).
+#let zero-row = sil-pad.data.find(r => r.x == 2 and r.g == "a")
+#assert-close(zero-row.ymin, 2)
+#assert-close(zero-row.ymax, 2)
+#let none-pad = apply-position(
+  "stack",
+  padded,
+  sg-mapping,
+  params: (offset: "none"),
+)
+#assert.eq(none-pad.data.len(), 6)
+
 Position tests passed.

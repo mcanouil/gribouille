@@ -10,6 +10,7 @@
 
 ### Changes
 
+- feat: `position-stack` gains streamgraph baseline offsets: `offset: "silhouette"` centres each stack on zero and `offset: "wiggle"` uses the Byron-Wattenberg wiggle-minimising baseline, turning stacked `geom-area` into a streamgraph. (#187)
 - feat: `stat-difference` shades the band between two series by which one is on top: exact linear crossovers are inserted as shared vertices so ribbon segments meet cleanly, and each run carries a `_sign` level (names via `levels:`) for `fill: after-stat("_sign")`. (#186)
 - feat: fills accept native Typst `tiling` paints, both as fixed `fill:` values and through `scale-manual(values:)`, with legend swatches rendering the patterns; per-row alpha and seam sealing skip non-colour paints. (#182)
 - feat: `position-beeswarm` and `geom-beeswarm` arrange overplotted points into a deterministic density-shaped swarm (van der Corput walk scaled by each point's kernel density), a reproducible alternative to `position-jitter`. (#181)
