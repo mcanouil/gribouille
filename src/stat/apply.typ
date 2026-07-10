@@ -31,6 +31,7 @@
 #import "manual.typ" as manual-stat
 #import "connect.typ" as connect-stat
 #import "align.typ" as align-stat
+#import "difference.typ" as difference-stat
 #import "../utils/bin.typ": panel-bin-grid
 #import "../utils/bin-2d.typ": panel-bin-grid-2d
 #import "../utils/hex.typ": panel-hex-grid
@@ -169,6 +170,10 @@
       mapping,
       params: params,
     ),
+  ),
+  difference: (
+    apply: difference-stat.apply,
+    ctor: difference-stat.stat-difference,
   ),
 )
 
