@@ -1,0 +1,333 @@
+---
+title: "Recipes"
+subtitle: "Common chart types and effects built by composing layers and native Typst, no dedicated geom required."
+engine: markdown
+---
+
+Gribouille is pure Typst, so a plot is ordinary content: it can be filtered, layered, placed, and arranged with the language you already have.
+Many chart types that ship as dedicated geoms in R extension packages are, underneath, a two-layer composition or a `place()` call.
+This page collects those compositions as ready-to-adapt recipes.
+Each one uses only the bundled datasets ([`mpg`](../reference/datasets/mpg.qmd), [`penguins`](../reference/datasets/penguins.qmd)) and stable API.
+
+## Lollipop
+
+A lollipop chart is a bar chart with the ink budget of a point: one [`geom-segment`](../reference/geoms/geom-segment.qmd) stem from zero plus one [`geom-point`](../reference/geoms/geom-point.qmd) head.
+Summarise the data first with plain Typst array methods, and add a `zero` column so the stem has a start row to map.
+Because the segment layer maps `y: "zero"`, the value `0` trains the y scale and the baseline is included automatically.
+Discrete scales sort their levels alphabetically, so passing the sorted classes as `limits:` is what puts the categories in value order.
+
+```{typst}
+//| echo: true
+//| output-filename: "recipes-lollipop.svg"
+//| alt: "Lollipop chart of mean highway fuel economy by vehicle class, sorted ascending from pickup to compact; each class shows a thin vertical stem from zero topped by a point."
+#let mean-hwy = {
+  let classes = mpg.map(r => r.class).dedup()
+  let means = classes.map(c => {
+    let rows = mpg.filter(r => r.class == c)
+    (class: c, hwy: rows.map(r => r.hwy).sum() / rows.len(), zero: 0)
+  })
+  means.sorted(key: r => r.hwy)
+}
+
+#plot(
+  data: mean-hwy,
+  mapping: aes(x: "class", y: "hwy"),
+  layers: (
+    geom-segment(
+      mapping: aes(y: "zero", xend: "class", yend: "hwy"),
+      stroke: 1.5pt,
+    ),
+    geom-point(size: 4pt, fill: okabe-ito.at(4)),
+  ),
+  scales: scales(x: scale-discrete(limits: mean-hwy.map(r => r.class))),
+  labels: labels(
+    title: "Fuel economy by vehicle class",
+    x: "Vehicle class",
+    y: "Mean highway mpg",
+  ),
+  width: 12cm,
+  height: 7cm,
+)
+```
+
+## Dumbbell
+
+A dumbbell chart shows two values per category joined by a connector: the same segment-plus-points idea with the segment spanning the two values instead of dropping to zero.
+Fixed colours identify the two ends, so no legend is needed; name them in the caption instead.
+
+```{typst}
+//| echo: true
+//| output-filename: "recipes-dumbbell.svg"
+//| alt: "Dumbbell chart of mean city versus highway fuel economy by vehicle class; each class shows a grey connector between an orange city point and a blue highway point, with highway always higher."
+#let economy = {
+  let classes = mpg.map(r => r.class).dedup()
+  let means = classes.map(c => {
+    let rows = mpg.filter(r => r.class == c)
+    (
+      class: c,
+      cty: rows.map(r => r.cty).sum() / rows.len(),
+      hwy: rows.map(r => r.hwy).sum() / rows.len(),
+    )
+  })
+  means.sorted(key: r => r.hwy)
+}
+
+#plot(
+  data: economy,
+  mapping: aes(y: "class"),
+  layers: (
+    geom-segment(
+      mapping: aes(x: "cty", xend: "hwy", yend: "class"),
+      stroke: 1.5pt,
+      colour: luma(60%),
+    ),
+    geom-point(mapping: aes(x: "cty"), size: 3.5pt, fill: okabe-ito.at(0)),
+    geom-point(mapping: aes(x: "hwy"), size: 3.5pt, fill: okabe-ito.at(4)),
+  ),
+  scales: scales(y: scale-discrete(limits: economy.map(r => r.class))),
+  labels: labels(
+    title: "City vs. highway fuel economy",
+    caption: "City (orange) to highway (blue), mean mpg per class.",
+    x: "Mean fuel economy (mpg)",
+    y: "Vehicle class",
+  ),
+  width: 12cm,
+  height: 7cm,
+)
+```
+
+## Highlighting a group
+
+To make one group pop, draw everything in a muted grey first, then redraw the group of interest on top.
+A layer's `data:` accepts a function applied to the plot data, so the highlight layer filters inline without preparing a second dataset.
+
+```{typst}
+//| echo: true
+//| output-filename: "recipes-highlight.svg"
+//| alt: "Scatter chart of penguin body mass against flipper length with most points in light grey; the Chinstrap penguins stand out in vermilion in the middle of the range, labelled above their cluster."
+#plot(
+  data: penguins,
+  mapping: aes(x: "flipper-len", y: "body-mass"),
+  layers: (
+    geom-point(colour: luma(70%), size: 2pt),
+    geom-point(
+      data: rows => rows.filter(r => r.species == "Chinstrap"),
+      colour: okabe-ito.at(5),
+      size: 2.5pt,
+    ),
+    annotate(
+      "text",
+      x: 196,
+      y: 4950,
+      label: "Chinstrap",
+      colour: okabe-ito.at(5),
+    ),
+  ),
+  labels: labels(
+    title: "Chinstrap sits between the other two species",
+    x: "Flipper length (mm)",
+    y: "Body mass (g)",
+  ),
+  width: 12cm,
+  height: 7.5cm,
+)
+```
+
+The base layer keeps every point in the scales, so the highlighted group sits in its true context rather than on a rescaled panel.
+
+## Zoom inset
+
+To magnify a crowded region, render the same plot twice: once in full with an [`annotate`](../reference/geoms/annotate.qmd) rectangle marking the window, and once with scale `limits` cut to that window.
+The inset is ordinary content, so native `place()` pins it in a corner; a plain `box` gives it a backing card (swap `white` for your page colour on tinted paper).
+
+```{typst}
+//| echo: true
+//| output-filename: "recipes-zoom-inset.svg"
+//| alt: "Scatter chart of penguin body mass against flipper length coloured by species, with a rectangle marking the crowded 188 to 200 millimetre region and a magnified inset of that window pinned to the top-left corner."
+#let window = (x: (188, 200), y: (3200, 4300))
+
+#let inset = plot(
+  data: penguins,
+  mapping: aes(x: "flipper-len", y: "body-mass", colour: "species"),
+  layers: (geom-point(size: 2.5pt),),
+  scales: scales(
+    x: scale-continuous(limits: window.x),
+    y: scale-continuous(limits: window.y),
+  ),
+  guides: guides(colour: none),
+  labels: labels(x: "", y: ""),
+  theme: theme-minimal(),
+  width: 4.6cm,
+  height: 3.4cm,
+)
+
+#box({
+  plot(
+    data: penguins,
+    mapping: aes(x: "flipper-len", y: "body-mass", colour: "species"),
+    layers: (
+      geom-point(size: 2pt),
+      annotate(
+        "rect",
+        xmin: window.x.at(0),
+        xmax: window.x.at(1),
+        ymin: window.y.at(0),
+        ymax: window.y.at(1),
+        fill: none,
+        stroke: 0.8pt + luma(40%),
+      ),
+    ),
+    labels: labels(
+      title: "Where Adelie and Chinstrap overlap",
+      x: "Flipper length (mm)",
+      y: "Body mass (g)",
+    ),
+    width: 13cm,
+    height: 9cm,
+  )
+  place(
+    top + left,
+    dx: 1.9cm,
+    dy: 1.4cm,
+    box(
+      fill: white,
+      stroke: 0.5pt + luma(60%),
+      inset: 2pt,
+      inset,
+    ),
+  )
+})
+```
+
+The default out-of-range handling drops rows outside the `limits`, which is exactly the zoom semantics the inset wants.
+To pin content at a data position instead of a page corner, use `annotate("typst", x: …, y: …, label: …)`, which accepts any content block, including a whole plot.
+
+## Marginal distribution
+
+A marginal panel is a [`compose`](../reference/core/compose.qmd) stack: a short density panel above the scatter, with `align-panels: true` so the two x axes line up and `heights` setting the panel proportions.
+Both panels share the same explicit x `limits` so their axes cover the same range.
+The top panel hides its legend, and the scatter moves its legend to the bottom so a right-hand legend does not narrow one row against the other.
+
+```{typst}
+//| echo: true
+//| output-filename: "recipes-marginal.svg"
+//| alt: "A short density panel of flipper length by species stacked above a scatter chart of body mass against flipper length, x axes aligned, with one species legend below the scatter."
+#let shared-x = scale-continuous(limits: (170, 235))
+#let top = defer(
+  plot,
+  data: penguins,
+  mapping: aes(x: "flipper-len", colour: "species"),
+  layers: (geom-density(),),
+  scales: scales(x: shared-x),
+  guides: guides(colour: none),
+  labels: labels(x: "", y: ""),
+  theme: theme-minimal(axis-text-y: element-blank()),
+)
+#let scatter = defer(
+  plot,
+  data: penguins,
+  mapping: aes(x: "flipper-len", y: "body-mass", colour: "species"),
+  layers: (geom-point(size: 2pt),),
+  scales: scales(x: shared-x),
+  guides: guides(colour: guide-legend(position: "bottom")),
+  labels: labels(x: "Flipper length (mm)", y: "Body mass (g)"),
+)
+
+#box(
+  width: 14cm,
+  height: 10cm,
+  compose(
+    top,
+    scatter,
+    columns: 1,
+    heights: (1, 3),
+    align-panels: true,
+  ),
+)
+```
+
+The same pattern gives a right-hand margin: put a [`geom-violin`](../reference/geoms/geom-violin.qmd) panel with a constant x beside the scatter in a two-column `compose`.
+
+## Irregular layouts
+
+[`compose`](../reference/core/compose.qmd) earns its keep when panels share legends or need aligned axes.
+For everything else, plots are content and native `grid()` already does irregular layouts, spanning cells, and empty spacer cells.
+
+```{typst}
+//| echo: true
+//| output-filename: "recipes-grid-layout.svg"
+//| alt: "Three panels arranged in a grid: a wide scatter chart of highway mpg against displacement spans the full top row, with a histogram of highway mpg and a boxplot of highway mpg by cylinder count side by side below."
+#let wide = plot(
+  data: mpg,
+  mapping: aes(x: "displ", y: "hwy"),
+  layers: (geom-point(size: 2pt),),
+  labels: labels(x: "Engine displacement (L)", y: "Highway mpg"),
+  width: 13.5cm,
+  height: 5cm,
+)
+#let left = plot(
+  data: mpg,
+  mapping: aes(x: "hwy"),
+  layers: (geom-histogram(bins: 15),),
+  labels: labels(x: "Highway mpg", y: "Count"),
+  width: 6.5cm,
+  height: 4.5cm,
+)
+#let right = plot(
+  data: mpg,
+  mapping: aes(x: as-factor("cyl"), y: "hwy"),
+  layers: (geom-boxplot(),),
+  labels: labels(x: "Cylinders", y: "Highway mpg"),
+  width: 6.5cm,
+  height: 4.5cm,
+)
+
+#grid(
+  columns: (auto, auto),
+  gutter: 0.5cm,
+  grid.cell(colspan: 2, wide),
+  left,
+  right,
+)
+```
+
+## Line casing
+
+A trend line crossing a dense scatter reads better with a casing: the same line drawn first in the paper colour at a heavier weight, so it carries a thin halo that separates it from the points underneath.
+[`from-theme`](../reference/core/from-theme.qmd) keeps the casing correct on any background.
+
+```{typst}
+//| echo: true
+//| output-filename: "recipes-line-casing.svg"
+//| alt: "Scatter chart of body mass against flipper length with a loess trend line; the line carries a thin background-coloured halo that keeps it legible where it crosses dense clusters of points."
+#plot(
+  data: penguins,
+  mapping: aes(x: "flipper-len", y: "body-mass"),
+  layers: (
+    geom-point(size: 2pt, alpha: 0.6),
+    geom-smooth(
+      method: "loess",
+      se: false,
+      stroke: 4pt,
+      mapping: aes(colour: from-theme("paper")),
+    ),
+    geom-smooth(method: "loess", se: false, stroke: 1.5pt, colour: okabe-ito.at(4)),
+  ),
+  labels: labels(
+    title: "Body mass rises with flipper length",
+    x: "Flipper length (mm)",
+    y: "Body mass (g)",
+  ),
+  width: 12cm,
+  height: 8cm,
+)
+```
+
+The same two-layer trick de-emphasises context: draw background layers with a low `alpha` or a muted fixed colour, and reserve full saturation for the layer that carries the message.
+
+## See also
+
+- [`compose`](../reference/core/compose.qmd) and [`defer`](../reference/core/defer.qmd) for shared legends, tags, and aligned panels.
+- [`annotate`](../reference/geoms/annotate.qmd) for one-off marks, including `clip: false` overlays that may leave the panel.
+- [`geom-typst`](../reference/geoms/geom-typst.qmd) for arbitrary Typst content pinned at data coordinates.
+- [Theming](theming.qmd) for the `theme()` keys used to mute or blank chrome in these recipes.
