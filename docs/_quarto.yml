@@ -57,6 +57,8 @@ website:
         menu:
           - text: "Theming"
             href: guides/theming.qmd
+          - text: "Recipes"
+            href: guides/recipes.qmd
           - text: "Accessibility"
             href: guides/accessibility.qmd
           - text: "Benchmarks"
