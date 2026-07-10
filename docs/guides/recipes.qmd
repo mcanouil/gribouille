@@ -104,7 +104,7 @@ A layer's `data:` accepts a function applied to the plot data, so the highlight 
 ```{typst}
 //| echo: true
 //| output-filename: "recipes-highlight.svg"
-//| alt: "Scatter chart of penguin body mass against flipper length with most points in light grey; the Chinstrap penguins stand out in vermillion in the middle of the range, labelled above their cluster."
+//| alt: "Scatter chart of penguin body mass against flipper length with most points in light grey; the Chinstrap penguins stand out in vermilion in the middle of the range, labelled above their cluster."
 #plot(
   data: penguins,
   mapping: aes(x: "flipper-len", y: "body-mass"),
