@@ -68,10 +68,8 @@
   let starts = (:)
   let cursor = 0
   for g in partition-by-group(data, mapping) {
-    let count = calc.round(
-      g.data.map(r => read-weight(r, weight-col)).sum(default: 0),
-    )
-    let count = calc.max(0, int(count))
+    let total = g.data.map(r => read-weight(r, weight-col)).sum(default: 0)
+    let count = calc.max(0, int(calc.round(total)))
     starts.insert(g.key, (start: cursor, count: count))
     cursor += count
   }
