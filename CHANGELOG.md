@@ -33,6 +33,7 @@
 - fix: data-ingestion and `from-theme` path errors now show the offending value. (#162)
 - fix: mapping an aesthetic or a facet variable to a column absent from the data now fails with a clear error naming the aesthetic, the unknown column, and the available columns, instead of rendering a misleading all-`none` plot. (#156)
 - fix: numeric values on a discrete scale (a polygon vertex set between level centres, a jittered point) are kept as fractional level positions instead of being dropped when the scale carries explicit `limits`. (#151)
+- docs: the agent skill covers the current API: the aesthetic-agnostic `scales()` constructors, the density and pattern-fill idioms, and a symbol inventory regenerated from `lib.typ` and checked in CI. (#184)
 - docs: each scale constructor reference page carries a runnable example in the keyed `scales()` form. (#160)
 - docs: an AI Assistants guide explains how to use Gribouille with large language models through the `llms.txt` machine-readable documentation and the installable skill. (#154)
 - docs: a Benchmarks guide measures how compile time and output size grow with element count, drawn from a committed dataset with Gribouille itself, and shows where per-row geoms become impractical for large data. (#149)
