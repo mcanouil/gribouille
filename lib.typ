@@ -113,6 +113,7 @@
 #import "src/stat/connect.typ": stat-connect
 #import "src/stat/align.typ": stat-align
 #import "src/stat/difference.typ": stat-difference
+#import "src/stat/waffle.typ": stat-waffle
 
 // Helpers.
 #import "src/plot.typ": get-alt-text

@@ -67,6 +67,7 @@
   connect: (outputs: ("x", "y")),
   align: (outputs: ("x", "y")),
   difference: (outputs: ("x", "ymin", "ymax", "group", "_sign")),
+  waffle: (outputs: ("x", "y")),
 )
 
 /// Look up the metadata record for a stat by name.
