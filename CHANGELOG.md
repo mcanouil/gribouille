@@ -10,6 +10,7 @@
 
 ### Changes
 
+- feat: `stat-connect` gains `connection: "sigmoid"`, a logistic S-curve connector rescaled through both observations with `smooth` and `n` control; paired with `geom-line` and a reversed y scale it draws bump charts. (#188)
 - feat: `stat-difference` shades the band between two series by which one is on top: exact linear crossovers are inserted as shared vertices so ribbon segments meet cleanly, and each run carries a `_sign` level (names via `levels:`) for `fill: after-stat("_sign")`. (#186)
 - feat: fills accept native Typst `tiling` paints, both as fixed `fill:` values and through `scale-manual(values:)`, with legend swatches rendering the patterns; per-row alpha and seam sealing skip non-colour paints. (#182)
 - feat: `position-beeswarm` and `geom-beeswarm` arrange overplotted points into a deterministic density-shaped swarm (van der Corput walk scaled by each point's kernel density), a reproducible alternative to `position-jitter`. (#181)
