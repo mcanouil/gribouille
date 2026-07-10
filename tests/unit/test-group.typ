@@ -5,6 +5,7 @@
 )
 #import "../../src/aes.typ": aes
 #import "../../src/data.typ": as-factor
+#import "../../src/utils/late-binding.typ": after-stat
 
 // --- group-aesthetics canonical order ---
 
@@ -128,5 +129,14 @@
 #let m-fill-is-y = aes(x: "x", y: "h", fill: "h")
 #let y-exposed = expose-shared-positional(y-rows, m-fill-is-y, (x: "x", y: "y"))
 #assert.eq(y-exposed.at(0).at("h"), "lo")
+
+// --- sourceless markers carry no grouping variable ---
+// An `after-stat` marker names a column that does not exist until the stat
+// has run, so pre-stat grouping must skip it instead of using the marker
+// dict as a column name.
+
+#let m-after-stat = aes(x: "x", y: "y", fill: after-stat("_sign"))
+#assert.eq(group-key(row1, m-after-stat), "_all")
+#assert.eq(group-cols(m-after-stat), ())
 
 Group tests passed.

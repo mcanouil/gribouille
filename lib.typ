@@ -112,6 +112,7 @@
 #import "src/stat/manual.typ": stat-manual
 #import "src/stat/connect.typ": stat-connect
 #import "src/stat/align.typ": stat-align
+#import "src/stat/difference.typ": stat-difference
 
 // Helpers.
 #import "src/plot.typ": get-alt-text

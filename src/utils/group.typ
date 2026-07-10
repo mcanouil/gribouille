@@ -16,9 +16,13 @@
 
 // Grouping column for a mapping value: unwrap an `after-scale` marker to its
 // source column (a stage's `start`) and a mapping-ref/typst-markup to its
-// column. Returns `none` for a source-less marker (a pure `after-scale`
-// closure), which callers skip since it carries no grouping variable.
-#let _group-col(value) = mapping-ref-col(after-scale-source(value))
+// column. Returns `none` for any marker without a source column (a pure
+// `after-scale` closure, an `after-stat` before its stat has run), which
+// callers skip since it carries no grouping variable.
+#let _group-col(value) = {
+  let col = mapping-ref-col(after-scale-source(value))
+  if type(col) == str { col } else { none }
+}
 
 /// Compute a canonical group key for a row.
 ///

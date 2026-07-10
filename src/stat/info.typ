@@ -66,6 +66,7 @@
   manual: (outputs: ()),
   connect: (outputs: ("x", "y")),
   align: (outputs: ("x", "y")),
+  difference: (outputs: ("x", "ymin", "ymax", "group", "_sign")),
 )
 
 /// Look up the metadata record for a stat by name.
