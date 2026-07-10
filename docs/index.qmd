@@ -92,6 +92,11 @@ The same grammar as [`ggplot2`](https://ggplot2.tidyverse.org) and [`plotnine`](
   ]
 }
 
+#let species-scale = scale-discrete(
+  limits: species-colours.keys(),
+  palette: species-colours.values(),
+)
+
 #plot(
   data: penguins,
   mapping: aes(
@@ -140,9 +145,12 @@ The same grammar as [`ggplot2`](https://ggplot2.tidyverse.org) and [`plotnine`](
       ),
     ),
   ),
-  scales: scales(x: scale-continuous(), y: scale-continuous(labels: format-comma()), colour: scale-discrete(limits: species-colours.keys(),
-      palette: species-colours.values(),), fill: scale-discrete(limits: species-colours.keys(),
-      palette: species-colours.values(),)),
+  scales: scales(
+    x: scale-continuous(),
+    y: scale-continuous(labels: format-comma()),
+    colour: species-scale,
+    fill: species-scale,
+  ),
   labels: labels(
     title: typst("Penguins *Dataset*"),
     subtitle: typst({
@@ -153,9 +161,6 @@ The same grammar as [`ggplot2`](https://ggplot2.tidyverse.org) and [`plotnine`](
         .join(", ")
     }),
     caption: "Data from Palmer Archipelago (Antarctica) penguin dataset.",
-    colour: "Species",
-    fill: "Species",
-    shape: "Species",
     x: "Flipper Length (mm)",
     y: "Body Mass (g)",
   ),
@@ -163,11 +168,7 @@ The same grammar as [`ggplot2`](https://ggplot2.tidyverse.org) and [`plotnine`](
     axis-line: element-line(stroke: 0.5pt),
     tick-length: 0.05cm,
   ),
-  guides: guides(
-    colour: none,
-    fill: none,
-    shape: none,
-  ),
+  guides: guides(default: none,),
   width: 12cm,
   height: 9cm,
 )
