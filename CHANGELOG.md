@@ -10,6 +10,7 @@
 
 ### Changes
 
+- feat: `stat-waffle` turns per-group counts (one per row, or the rounded `weight` sum) into unit cells on an integer grid, column-major from the bottom-left with groups tiling consecutive runs; render waffle charts with `geom-tile`. (#189)
 - feat: `stat-connect` gains `connection: "sigmoid"`, a logistic S-curve connector rescaled through both observations with `smooth` and `n` control; paired with `geom-line` and a reversed y scale it draws bump charts. (#188)
 - feat: `position-stack` gains streamgraph baseline offsets: `offset: "silhouette"` centres each stack on zero and `offset: "wiggle"` uses the Byron-Wattenberg wiggle-minimising baseline, turning stacked `geom-area` into a streamgraph. (#187)
 - feat: `stat-difference` shades the band between two series by which one is on top: exact linear crossovers are inserted as shared vertices so ribbon segments meet cleanly, and each run carries a `_sign` level (names via `levels:`) for `fill: after-stat("_sign")`. (#186)

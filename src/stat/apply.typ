@@ -32,6 +32,7 @@
 #import "connect.typ" as connect-stat
 #import "align.typ" as align-stat
 #import "difference.typ" as difference-stat
+#import "waffle.typ" as waffle-stat
 #import "../utils/bin.typ": panel-bin-grid
 #import "../utils/bin-2d.typ": panel-bin-grid-2d
 #import "../utils/hex.typ": panel-hex-grid
@@ -174,6 +175,15 @@
   difference: (
     apply: difference-stat.apply,
     ctor: difference-stat.stat-difference,
+  ),
+  waffle: (
+    apply: waffle-stat.apply,
+    ctor: waffle-stat.stat-waffle,
+    setup: (data, mapping, params) => waffle-stat.setup(
+      data,
+      mapping,
+      params: params,
+    ),
   ),
 )
 
