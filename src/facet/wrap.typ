@@ -32,6 +32,10 @@
 /// \@param labeller Labeller controlling strip text. Defaults to
 ///   `label-value()` which shows the level as-is.
 ///
+/// \@param gutter Spacing between panels. A length (e.g., `0.5cm`) applies to
+///   both axes, or a dictionary `(x:, y:)` sets the column and row gaps
+///   independently. `auto` (default) inherits `theme(panel-spacing:)`.
+///
 /// \@param axes Which panels draw their own positional axes. One of
 ///   `"margins"` (default; outer edge plus any panel whose neighbour slot
 ///   is empty), `"all_x"` (every panel draws bottom and top x axes),
@@ -108,6 +112,7 @@
   nrow: none,
   scales: "fixed",
   labeller: label-value(),
+  gutter: auto,
   axes: "margins",
 ) = {
   if not ("fixed", "free", "free_x", "free_y").contains(scales) {
@@ -129,6 +134,7 @@
     nrow: nrow,
     scales: scales,
     labeller: labeller,
+    gutter: gutter,
     axes: axes,
   )
 }

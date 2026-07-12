@@ -49,6 +49,7 @@ local NON_ELEMENT_GROUPS = {
 local NON_ELEMENT_KEYS = {
   ["legend-key"] = true,
   ["legend-position"] = true,
+  ["panel-spacing"] = true,
 }
 
 -- Group order for the rendered table. Each group lists root keys; variants
@@ -58,7 +59,7 @@ local GROUP_ORDER = {
   { name = "plot", keys = { "plot-title", "plot-subtitle", "plot-caption", "plot-tag", "plot-background" } },
   { name = "axis", keys = { "axis-title", "axis-text", "axis-line", "axis-ticks" } },
   { name = "ticks", keys = { "tick-labels", "tick-length" } },
-  { name = "panel", keys = { "panel-grid", "panel-background" } },
+  { name = "panel", keys = { "panel-grid", "panel-background", "panel-spacing" } },
   { name = "legend", keys = { "legend-title", "legend-text", "legend-ticks", "legend-background", "legend-bar", "legend-key", "legend-position" } },
   { name = "strip", keys = { "strip-text", "strip-background" } },
   { name = "geom", keys = { "geom" } },

@@ -6,6 +6,7 @@
 #import "theme/defaults.typ": merge-theme
 #import "theme/theme.typ": _text-style
 #import "utils/errors.typ": check, fail, fail-enum, fail-type
+#import "utils/gutter.typ": resolve-gutter
 
 // The public `compose` parameter `layout` shadows Typst's builtin `layout`
 // function inside the body; capture the builtin here so the container size is
@@ -316,7 +317,8 @@
   n,
   area-w,
   area-h,
-  gutter-cm,
+  gutter-x-cm,
+  gutter-y-cm,
 ) = {
   let cols = 0
   let rows = 0
@@ -371,8 +373,8 @@
   (
     cols: cols,
     rows: rows,
-    col-tracks: _tracks(area-w, cols, gutter-cm, col-ratios),
-    row-tracks: _tracks(area-h, rows, gutter-cm, row-ratios),
+    col-tracks: _tracks(area-w, cols, gutter-x-cm, col-ratios),
+    row-tracks: _tracks(area-h, rows, gutter-y-cm, row-ratios),
   )
 }
 
@@ -436,7 +438,7 @@
   let layout = spec.layout
   let columns = spec.columns
   let direction = spec.direction
-  let gutter = spec.gutter
+  let gutters = resolve-gutter(spec.gutter, scope: "compose")
   let widths = spec.widths
   let heights = spec.heights
   let width = spec.width
@@ -635,7 +637,8 @@
       panels.len(),
       area-w,
       area-h,
-      gutter / 1cm,
+      gutters.x,
+      gutters.y,
     )
     let cols = tracks.cols
     let rows = tracks.rows
@@ -696,9 +699,19 @@
       ))
     }
     if layout == "grid" {
-      grid(columns: cols, gutter: gutter, ..cells)
+      grid(
+        columns: cols,
+        column-gutter: gutters.x * 1cm,
+        row-gutter: gutters.y * 1cm,
+        ..cells,
+      )
     } else {
-      stack(dir: direction, spacing: gutter, ..cells)
+      let spacing = if direction == ttb or direction == btt {
+        gutters.y * 1cm
+      } else {
+        gutters.x * 1cm
+      }
+      stack(dir: direction, spacing: spacing, ..cells)
     }
   }
 
@@ -768,7 +781,9 @@
 ///   `"stack"` layout. Ignored for `"grid"`.
 ///
 /// \@param gutter Spacing between panels and between the panel block and the
-///   shared legend.
+///   shared legend. A length (e.g., `0.5cm`) applies to both axes, or a
+///   dictionary `(x:, y:)` sets the column and row gaps independently (a missing
+///   key falls back to `0.5cm`).
 ///
 /// \@param widths Relative column widths (grid) or panel widths along a
 ///   horizontal stack, as an array of weights (e.g., `(2, 1)`). They set the

@@ -7,6 +7,7 @@
 #import "../theme/theme.typ": _scalar-cascade, _text-args
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/palette.typ": default-discrete
+#import "../utils/gutter.typ": resolve-gutter
 #import "legend.typ" as legend-mod
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec, _shared-axis-breaks
@@ -232,6 +233,15 @@
   out
 }
 
+// Resolve a facet's panel gutter to `(x:, y:)` cm floats: the facet's own
+// `gutter:` argument wins, otherwise the theme `panel-spacing` (default 0.5cm).
+#let _facet-gutter(facet, theme, scope) = resolve-gutter(
+  if facet.at("gutter", default: auto) == auto {
+    theme.at("panel-spacing", default: 0.5cm)
+  } else { facet.gutter },
+  scope: scope,
+)
+
 #let _render-canvas-wrap(ctx) = {
   let spec = ctx.spec
   let theme = ctx.theme
@@ -308,8 +318,9 @@
     i => _panel-row-count(panels.at(i).layers),
   )
   let strip-h = _strip-band(strip-texts, style, 0.45)
-  let gutter-x = 0.4
-  let gutter-y = 0.4
+  let gutters = _facet-gutter(spec.facet, theme, "facet-wrap")
+  let gutter-x = gutters.x
+  let gutter-y = gutters.y
   let grid-w = width-units - margin.left - margin.right
   let grid-h = height-units - margin.bottom - margin.top
   let panel-w = (grid-w - gutter-x * (ncol - 1)) / ncol
@@ -439,8 +450,9 @@
   }
   let strip-h = _strip-band(col-strip-texts, style, 0.45)
   let strip-w = _strip-band(row-strip-texts, style, 0.55)
-  let gutter-x = 0.3
-  let gutter-y = 0.3
+  let gutters = _facet-gutter(spec.facet, theme, "facet-grid")
+  let gutter-x = gutters.x
+  let gutter-y = gutters.y
   let top-strip = if col-var != none { strip-h } else { 0.0 }
   let right-strip = if row-var != none { strip-w } else { 0.0 }
   let inner-right = margin.right + right-strip

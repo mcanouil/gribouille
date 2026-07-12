@@ -26,6 +26,10 @@
 /// \@param labeller Labeller controlling strip text. Defaults to
 ///   `label-value()` which shows the level as-is.
 ///
+/// \@param gutter Spacing between panels. A length (e.g., `0.5cm`) applies to
+///   both axes, or a dictionary `(x:, y:)` sets the column and row gaps
+///   independently. `auto` (default) inherits `theme(panel-spacing:)`.
+///
 /// \@returns Facet dictionary consumed by \@plot.
 ///
 /// \@examples Two discrete variables driving the row and column structure.
@@ -75,6 +79,7 @@
   columns: none,
   scales: "fixed",
   labeller: label-value(),
+  gutter: auto,
 ) = {
   if not ("fixed", "free", "free_x", "free_y").contains(scales) {
     fail-enum(
@@ -94,5 +99,6 @@
     columns: columns,
     scales: scales,
     labeller: labeller,
+    gutter: gutter,
   )
 }
