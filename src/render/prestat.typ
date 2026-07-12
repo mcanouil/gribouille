@@ -89,23 +89,33 @@
   new-spec
 }
 
+// Reserved prefix for the per-axis numeric position column synthesised below.
+#let _POS-COL-PREFIX = "_gribouille-pos-"
+
 // Rewrite each discrete-marked positional column to its 1-indexed level
 // position so position adjustments (`position-jitter`, ...) operate in
 // numeric space. Without this, jitter would offset the raw level values
 // directly and the discrete scale would train on the jittered floats.
-// The level set is stashed on the layer so scale training can restore it
-// as the discrete domain.
+//
+// The indices are written to a *separate* synthetic column (never over the
+// source column) so a non-positional aesthetic mapped to the same column
+// (`aes(x: as-factor("g"), fill: "g")`) still reads the raw levels. Callers
+// repoint the positional mapping entry to the synthetic column via `repoint`.
+// The level set is stashed on the layer (keyed by the synthetic column) so
+// scale training can restore it as the discrete domain.
 #let _rewrite-factor-cols(mapping, data) = {
   if mapping == none {
-    return (data: data, factor-levels: (:))
+    return (data: data, factor-levels: (:), repoint: (:))
   }
   let factor-levels = (:)
+  let repoint = (:)
   let new-data = data
   for axis in ("x", "y") {
     let raw = mapping.at(axis, default: none)
     if raw == none { continue }
     let col = mapping-ref-col(raw)
     if _resolve-forced-type(raw, new-data, col) != "discrete" { continue }
+    let pos-col = _POS-COL-PREFIX + col
     // Build levels and the level→index map in a single pass; Typst closures
     // capture variables read-only, so the value rewrite below still needs a
     // second `.map`.
@@ -123,10 +133,11 @@
       let v = row.at(col, default: none)
       if v == none { return row }
       let r = row
-      r.insert(col, level-map.at(str(v)))
+      r.insert(pos-col, level-map.at(str(v)))
       r
     })
-    factor-levels.insert(col, levels)
+    factor-levels.insert(pos-col, levels)
+    repoint.insert(axis, pos-col)
   }
-  (data: new-data, factor-levels: factor-levels)
+  (data: new-data, factor-levels: factor-levels, repoint: repoint)
 }

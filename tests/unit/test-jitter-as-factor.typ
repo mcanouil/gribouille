@@ -1,7 +1,8 @@
-// `as-factor("col")` paired with `position-jitter` rewrites the column to
-// 1-indexed level positions before jitter runs, so the discrete domain
+// `as-factor("col")` paired with `position-jitter` writes 1-indexed level
+// positions to a synthetic column before jitter runs, so the discrete domain
 // stays anchored on the user's intended levels rather than collapsing onto
-// the jittered floats.
+// the jittered floats. The source column is left intact so an aesthetic
+// mapped to the same column (e.g. `colour: "cyl"`) still reads raw levels.
 
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/render/prestat.typ": _rewrite-factor-cols
@@ -23,20 +24,28 @@
   (cyl: 6, hwy: 23),
 )
 
-// Inline `as-factor("cyl")` — `_rewrite-factor-cols` should rewrite cyl
-// values to 1-indexed integers and record the original levels.
+// Inline `as-factor("cyl")` — `_rewrite-factor-cols` writes 1-indexed
+// integers to the synthetic `_gribouille-pos-cyl` column, records the
+// original levels under that key, and repoints x to it, all while leaving
+// the source `cyl` column untouched.
 #let mapping = aes(x: as-factor("cyl"), y: "hwy")
+#let pos-col = "_gribouille-pos-cyl"
 #let r = _rewrite-factor-cols(mapping, raw)
-#assert.eq(r.factor-levels, (cyl: ("4", "6", "8")))
-#assert.eq(r.data.at(0).cyl, 1)
-#assert.eq(r.data.at(1).cyl, 2)
-#assert.eq(r.data.at(3).cyl, 3)
+#assert.eq(r.factor-levels, ((pos-col): ("4", "6", "8")))
+#assert.eq(r.repoint, (x: pos-col))
+#assert.eq(r.data.at(0).at(pos-col), 1)
+#assert.eq(r.data.at(1).at(pos-col), 2)
+#assert.eq(r.data.at(3).at(pos-col), 3)
+// The source `cyl` column keeps its raw levels for other aesthetics.
+#assert.eq(r.data.at(0).cyl, 4)
+#assert.eq(r.data.at(3).cyl, 8)
 // `hwy` is untouched.
 #assert.eq(r.data.at(0).hwy, 25)
 
-// Without `as-factor`, columns pass through unchanged.
+// Without `as-factor`, columns pass through unchanged and nothing is repointed.
 #let plain-r = _rewrite-factor-cols(aes(x: "cyl", y: "hwy"), raw)
 #assert.eq(plain-r.factor-levels, (:))
+#assert.eq(plain-r.repoint, (:))
 #assert.eq(plain-r.data, raw)
 
 // --- end-to-end: `geom-jitter` + `as-factor` trains the right domain ---
@@ -45,12 +54,16 @@
   geom-jitter(position: position-jitter(width: 0.12, seed: 1)),
 )
 #let prepared = layers.map(l => _prepare-layer(l, mapping, raw))
-// The prepared layer carries the recorded levels and rewritten data.
-#assert.eq(prepared.at(0).at("_factor-levels"), (cyl: ("4", "6", "8")))
-// Jitter writes back fractional values around 1, 2, 3.
+// The prepared layer carries the recorded levels keyed by the synthetic
+// column, and its x mapping is repointed to that column.
+#assert.eq(prepared.at(0).at("_factor-levels"), ((pos-col): ("4", "6", "8")))
+#assert.eq(prepared.at(0).mapping.x.var, pos-col)
+// Jitter writes fractional values around 1, 2, 3 to the synthetic column;
+// the source `cyl` column keeps its raw levels.
 #for row in prepared.at(0).data {
-  assert(row.cyl >= 1 - 0.12 - 1e-9)
-  assert(row.cyl <= 3 + 0.12 + 1e-9)
+  assert(row.at(pos-col) >= 1 - 0.12 - 1e-9)
+  assert(row.at(pos-col) <= 3 + 0.12 + 1e-9)
+  assert(row.cyl in (4, 6, 8))
 }
 
 #let trained = train(layers: prepared, mapping: mapping, data: raw)

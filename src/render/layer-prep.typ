@@ -15,6 +15,7 @@
   expose-shared-positional, group-aesthetics, group-cols, partition-by-group,
 )
 #import "../utils/palette.typ": default-discrete
+#import "../data.typ": _mapping-ref
 #import "common.typ": _resolve-data, _strip-mapping-refs, _typst-marks-of
 #import "prestat.typ": _rewrite-factor-cols
 
@@ -204,9 +205,17 @@
     // domain. See `_rewrite-factor-cols` for the full rationale.
     let rewritten = _rewrite-factor-cols(stat-mapping, stat-data)
     factor-levels = rewritten.factor-levels
+    // `_rewrite-factor-cols` wrote the 1-indexed positions to synthetic
+    // columns; repoint the positional mapping entries to them so positions,
+    // training, and the geom draw all read the numeric spine, while any other
+    // aesthetic mapped to the same source column keeps reading its raw levels.
+    let repoint = rewritten.repoint
     // Position needs plain column names; strip again in case stat-identity
     // left annotations in place.
     let pos-in = _strip-mapping-refs(stat-mapping)
+    for (axis, pos-col) in repoint {
+      pos-in.insert(axis, pos-col)
+    }
     let r = apply-position(
       position-name,
       rewritten.data,
@@ -222,6 +231,12 @@
       if merged.at(k, default: none) == none {
         merged.insert(k, v)
       }
+    }
+    // Repoint x/y to the synthetic position column, forcing the discrete type
+    // so training keeps the level domain (from `_factor-levels`) and
+    // `map-discrete` reads the offset floats as fractional level positions.
+    for (axis, pos-col) in repoint {
+      merged.insert(axis, _mapping-ref(pos-col, "discrete"))
     }
     pos-mapping = merged
   }
