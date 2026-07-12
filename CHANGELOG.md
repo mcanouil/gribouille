@@ -10,8 +10,8 @@
 
 ### Changes
 
-- feat: `facet-wrap` and `facet-grid` gain a `gutter` argument and honour a new `theme(panel-spacing:)` default (a length for both axes or a `(x:, y:)` dictionary), replacing the fixed 0.4/0.3cm panel gaps with a shared 0.5cm default. (#...)
-- feat: `compose` `gutter` accepts a `(x:, y:)` dictionary for independent column and row spacing alongside the existing scalar length. (#...)
+- feat: `facet-wrap` and `facet-grid` gain a `gutter` argument and honour a new `theme(panel-spacing:)` default (a length for both axes or a `(x:, y:)` dictionary), replacing the fixed 0.4/0.3cm panel gaps with a shared 0.5cm default. (#191)
+- feat: `compose` `gutter` accepts a `(x:, y:)` dictionary for independent column and row spacing alongside the existing scalar length. (#191)
 - feat: `stat-waffle` turns per-group counts (one per row, or the rounded `weight` sum) into unit cells on an integer grid, column-major from the bottom-left with groups tiling consecutive runs; render waffle charts with `geom-tile`. (#189)
 - feat: `stat-connect` gains `connection: "sigmoid"`, a logistic S-curve connector rescaled through both observations with `smooth` and `n` control; paired with `geom-line` and a reversed y scale it draws bump charts. (#188)
 - feat: `position-stack` gains streamgraph baseline offsets: `offset: "silhouette"` centres each stack on zero and `offset: "wiggle"` uses the Byron-Wattenberg wiggle-minimising baseline, turning stacked `geom-area` into a streamgraph. (#187)
