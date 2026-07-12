@@ -10,6 +10,7 @@
 
 ### Changes
 
+- docs: the published Typst Universe README drops the repo-only "Ask DeepWiki" badge and now keeps the "AI assistants" section. (#194)
 - docs: add streamgraph, bump chart, difference band, and waffle chart gallery examples. (#193)
 - feat: `facet-wrap` and `facet-grid` gain a `gutter` argument and honour a new `theme(panel-spacing:)` default (a length for both axes or a `(x:, y:)` dictionary), replacing the fixed 0.4/0.3cm panel gaps with a shared 0.5cm default. (#191)
 - feat: `compose` `gutter` accepts a `(x:, y:)` dictionary for independent column and row spacing alongside the existing scalar length. (#191)
