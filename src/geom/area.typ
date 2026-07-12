@@ -161,7 +161,10 @@
       g-defaults,
       role: layer.params.at("outline-role", default: none),
     ),
-    resolve-geom-fill(g-defaults, role: "tint"),
+    resolve-geom-fill(
+      g-defaults,
+      role: layer.params.at("fill-role", default: "tint"),
+    ),
   )
 
   let ymin-col = mapping.at("ymin", default: none)

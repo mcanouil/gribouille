@@ -32,7 +32,7 @@
 ///
 /// \@param colour Fixed outline colour. `auto` resolves via the colour scale, falling back to the theme `ink`.
 ///
-/// \@param fill Fixed fill colour under the curve. `none` (default) leaves the curve unfilled; `auto` resolves via the fill scale.
+/// \@param fill Fixed fill colour under the curve. `auto` (default) leaves the curve unfilled until the fill aesthetic is mapped, then shades under it via the fill scale; a fixed colour fills unconditionally and `none` disables the fill.
 ///
 /// \@param stroke Outline thickness (a Typst length) or stroke dictionary; `none` disables the outline.
 ///
@@ -78,7 +78,7 @@
 /// #plot(
 ///   data: d,
 ///   mapping: aes(x: "x", fill: "grp"),
-///   layers: (geom-density(fill: auto, alpha: 0.4),),
+///   layers: (geom-density(alpha: 0.4),),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -93,7 +93,7 @@
   n: 512,
   trim: false,
   colour: auto,
-  fill: none,
+  fill: auto,
   stroke: auto,
   alpha: auto,
   stat: auto,
@@ -112,6 +112,7 @@
     alpha: alpha,
     direction: none,
     outline-role: "ink",
+    fill-role: none,
   )
     + split-aes-params("geom-density", args),
   stat: if stat == auto {

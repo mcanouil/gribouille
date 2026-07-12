@@ -239,16 +239,19 @@
 ///   rect / tile family;
 /// - `"paper"`: the paper role (\@geom-boxplot, \@geom-crossbar, \@geom-point,
 ///   \@geom-label);
-/// - `"ink"`: the ink role (\@geom-dotplot).
+/// - `"ink"`: the ink role (\@geom-dotplot);
+/// - `none`: no default fill (\@geom-density), so the absence of a fill
+///   survives until the user maps `fill` or pins `element-geom.fill`.
 ///
 /// \@internal
 /// \@param defaults Element-geom record from \@resolve-geom-defaults.
 ///
-/// \@param role Fill role key: `"tint"`, `"paper"`, or `"ink"`.
-/// \@returns A colour.
+/// \@param role Fill role key: `"tint"`, `"paper"`, `"ink"`, or `none`.
+/// \@returns A colour or `none`.
 #let resolve-geom-fill(defaults, role: "tint") = {
   let v = defaults.at("fill", default: none)
   if v != none { return v }
+  if role == none { return none }
   if role == "tint" {
     return colour-mix(defaults.ink, defaults.paper, fill-tint-amount)
   }
