@@ -6,6 +6,7 @@
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/scale/train.typ": train
 #import "../../src/data.typ": as-factor
+#import "../../src/utils/typst-markup.typ": typst
 #import "../../src/aes.typ": aes
 #import "../../src/geom/jitter.typ": geom-jitter
 #import "../../src/position/jitter.typ": position-jitter
@@ -41,5 +42,19 @@
 #assert.eq(trained.x.type, "discrete")
 #assert.eq(trained.colour.type, "discrete")
 #assert.eq(trained.colour.domain, ("a", "b", "c"))
+
+// --- typst-markup on the positional axis survives the repoint ---
+// `typst(as-factor("grp"))` marks the x ticks for Typst-markup evaluation;
+// repointing x to the synthetic column must keep that mark so the axis still
+// renders its ticks as markup.
+#let typst-mapping = aes(x: typst(as-factor("grp")), y: "hwy")
+#let typst-prepared = layers.map(l => _prepare-layer(l, typst-mapping, raw))
+#let typst-trained = train(
+  layers: typst-prepared,
+  mapping: typst-mapping,
+  data: raw,
+)
+#assert.eq(typst-trained.x.type, "discrete")
+#assert(typst-trained.x.typst-mark)
 
 as-factor + jitter + shared colour column tests passed.

@@ -15,6 +15,7 @@
   expose-shared-positional, group-aesthetics, group-cols, partition-by-group,
 )
 #import "../utils/palette.typ": default-discrete
+#import "../utils/typst-markup.typ": is-typst-markup, typst
 #import "../data.typ": _mapping-ref
 #import "common.typ": _resolve-data, _strip-mapping-refs, _typst-marks-of
 #import "prestat.typ": _rewrite-factor-cols
@@ -235,8 +236,14 @@
     // Repoint x/y to the synthetic position column, forcing the discrete type
     // so training keeps the level domain (from `_factor-levels`) and
     // `map-discrete` reads the offset floats as fractional level positions.
+    // Preserve a `typst(...)` wrapper on the axis so its ticks still render as
+    // Typst markup.
     for (axis, pos-col) in repoint {
-      merged.insert(axis, _mapping-ref(pos-col, "discrete"))
+      let ref = _mapping-ref(pos-col, "discrete")
+      if is-typst-markup(stat-mapping.at(axis, default: none)) {
+        ref = typst(ref)
+      }
+      merged.insert(axis, ref)
     }
     pos-mapping = merged
   }
