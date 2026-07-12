@@ -84,6 +84,11 @@
   tick-length: 0.1cm,
   tick-labels: true,
 
+  // Spacing between facet panels. A length applies to both axes; a `(x:, y:)`
+  // dictionary sets column and row gaps independently. A facet's own `gutter:`
+  // argument overrides this.
+  panel-spacing: 0.5cm,
+
   // Global legend placement; `auto` defers to the natural default (`"right"`).
   // Accepts the same values as `guide-legend(position:)` and is overridden by
   // any explicit `guides()` placement.

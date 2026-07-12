@@ -168,7 +168,7 @@ Each takes a [`margin`](../reference/themes/margin.qmd) with any subset of `top`
 `inset` grows the painted rectangle outward to wrap its content; only `plot-background` and `legend-background` honour it.
 `outset` reserves outer whitespace: on `panel-background`, `legend-background`, and `legend-bar` the reservation widens the surrounding cetz chrome slot (shrinking the panel canvas); on `plot-background` it wraps the rendered block in `pad()`.
 `strip-background` ignores both fields: the facet band has no surrounding slot to grow or reserve into.
-Facet column and row gutters are a renderer constant, not a theme field.
+Facet column and row gutters come from `panel-spacing`, defaulting to `0.5cm`; set a length to space both axes equally or a `(x:, y:)` dictionary to space them independently, and a per-facet `facet-wrap(gutter:)` / `facet-grid(gutter:)` overrides the theme.
 The gap between tick labels and the axis title is controlled by `axis-title.margin`; gaps around any other text surface use the per-element `margin` field on its [`element-text`](../reference/themes/element-text.qmd).
 
 ## Complete vs partial themes
