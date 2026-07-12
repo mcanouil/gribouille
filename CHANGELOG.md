@@ -10,6 +10,7 @@
 
 ### Changes
 
+- docs: add streamgraph, bump chart, difference band, and waffle chart gallery examples. (#193)
 - feat: `facet-wrap` and `facet-grid` gain a `gutter` argument and honour a new `theme(panel-spacing:)` default (a length for both axes or a `(x:, y:)` dictionary), replacing the fixed 0.4/0.3cm panel gaps with a shared 0.5cm default. (#191)
 - feat: `compose` `gutter` accepts a `(x:, y:)` dictionary for independent column and row spacing alongside the existing scalar length. (#191)
 - feat: `stat-waffle` turns per-group counts (one per row, or the rounded `weight` sum) into unit cells on an integer grid, column-major from the bottom-left with groups tiling consecutive runs; render waffle charts with `geom-tile`. (#189)
