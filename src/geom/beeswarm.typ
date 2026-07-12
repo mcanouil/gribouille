@@ -62,7 +62,6 @@
 /// )
 /// ```
 ///
-///
 /// \@examples Colour the swarm by the same discrete column driving the x
 /// slots; each group keeps its scale colour under the offsets.
 /// ```
