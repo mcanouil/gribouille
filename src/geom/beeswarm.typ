@@ -62,6 +62,25 @@
 /// )
 /// ```
 ///
+/// \@examples Colour the swarm by the same discrete column driving the x
+/// slots; each group keeps its scale colour under the offsets.
+/// ```
+/// //| alt: "Beeswarm chart with groups a, b, c on the x-axis and values on the y-axis; each group's swarm is drawn in its own colour, matching the legend."
+/// #let d = ()
+/// #for grp in ("a", "b", "c") {
+///   for i in range(0, 40) {
+///     d.push((grp: grp, y: calc.sin(i * 0.7) + calc.sin(i * 1.9) + (if grp == "b" { 3 } else if grp == "c" { 6 } else { 0 })))
+///   }
+/// }
+/// #plot(
+///   data: d,
+///   mapping: aes(x: as-factor("grp"), y: "y", colour: "grp"),
+///   layers: (geom-beeswarm(size: 2pt),),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@position-beeswarm, \@geom-jitter, \@geom-violin
 #let geom-beeswarm(
   mapping: none,
