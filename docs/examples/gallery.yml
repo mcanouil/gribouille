@@ -742,3 +742,27 @@
   title: "Composed panels with shared legends"
   description: '[`compose`](../reference/core/compose.qmd) arranges several deferred plots and hoists legends shared across panels via `collect`, with `guides(default: guide-legend(position: ...))` controlling where the merged legend sits.'
   alt: "A grid of fuel-economy scatter panels sharing a single cylinder-count colour legend, shown under several legend collection modes and placement settings."
+
+- slug: streamgraph
+  section: geoms
+  title: "Streamgraph"
+  description: '[`geom-area`](../reference/geoms/geom-area.qmd) on a [`position-stack(offset: "silhouette")`](../reference/positions/position-stack.qmd) baseline centres each stack on zero for the classic ThemeRiver flow.'
+  alt: "Streamgraph of four genre bands (drama, comedy, action, and sci-fi) flowing symmetrically around a central baseline over 24 months, with band thickness encoding titles released per month."
+
+- slug: bump-chart
+  section: stats
+  title: "Bump chart"
+  description: '[`stat-connect(connection: "sigmoid")`](../reference/stats/stat-connect.qmd) eases [`geom-line`](../reference/geoms/geom-line.qmd) between ranks with logistic connectors; a reversed y scale puts rank 1 on top.'
+  alt: "Bump chart of four teams' ranks across six rounds, with smooth S-shaped connectors easing each team between rank positions and points at every round, rank 1 at the top."
+
+- slug: diff-forecast
+  section: stats
+  title: "Difference band"
+  description: '[`stat-difference`](../reference/stats/stat-difference.qmd) shades the [`geom-ribbon`](../reference/geoms/geom-ribbon.qmd) between forecast and actuals by which series leads, splitting the band cleanly at every crossing via `fill: after-stat("_sign")`.'
+  alt: "Forecast versus actual sales over 12 weeks, with the band between the solid forecast line and dashed actuals line shaded by whether actuals ran above or below forecast, split cleanly at each crossover."
+
+- slug: waffle
+  section: stats
+  title: "Waffle chart"
+  description: '[`stat-waffle`](../reference/stats/stat-waffle.qmd) turns per-group counts into unit [`geom-tile`](../reference/geoms/geom-tile.qmd) cells, filling the grid column by column from the bottom-left.'
+  alt: "Waffle chart of 100 support tickets in a 10-row grid, coloured by status: 58 resolved, 27 in progress, 9 blocked, and 6 new, reading column by column from the left."
