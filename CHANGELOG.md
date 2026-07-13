@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix: support explicit `as-factor()` on `x` for `geom-violin`, `geom-boxplot`, and other per-group stats when a grouping aesthetic reuses the same column. (#195)
+
 ## 0.5.0 (2026-07-13)
 
 ### Breaking changes
