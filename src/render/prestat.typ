@@ -5,7 +5,7 @@
   _SYNTHETIC-FEEDERS, _find-user-scale, _resolve-forced-type, mapping-ref-col,
   transform-fwd,
 )
-#import "../utils/types.typ": parse-number
+#import "../utils/types.typ": infer-column-type, parse-number
 #import "../utils/aes-resolve.typ": merge-mapping
 #import "common.typ": _resolve-data
 
@@ -92,10 +92,15 @@
 // Reserved prefix for the per-axis numeric position column synthesised below.
 #let _POS-COL-PREFIX = "_gribouille-pos-"
 
-// Rewrite each discrete-marked positional column to its 1-indexed level
-// position so position adjustments (`position-jitter`, ...) operate in
+// Rewrite each discrete positional column to its 1-indexed level position so
+// position adjustments (`position-jitter`, `position-beeswarm`, ...) operate in
 // numeric space. Without this, jitter would offset the raw level values
 // directly and the discrete scale would train on the jittered floats.
+//
+// A column is treated as discrete when it is forced (`as-factor`/sentinel) or
+// when its values infer as strings, mirroring `_scale-type-from-cache` so the
+// numeric spine and the trained scale never disagree on discreteness. Numeric
+// columns stay continuous and are left untouched.
 //
 // The indices are written to a *separate* synthetic column (never over the
 // source column) so a non-positional aesthetic mapped to the same column
@@ -114,21 +119,35 @@
     let raw = mapping.at(axis, default: none)
     if raw == none { continue }
     let col = mapping-ref-col(raw)
-    if _resolve-forced-type(raw, new-data, col) != "discrete" { continue }
+    let forced = _resolve-forced-type(raw, new-data, col)
+    let discrete = if forced != none {
+      forced == "discrete"
+    } else {
+      (
+        infer-column-type(new-data.map(row => row.at(col, default: none)))
+          == "string"
+      )
+    }
+    if not discrete { continue }
     let pos-col = _POS-COL-PREFIX + col
-    // Build levels and the level→index map in a single pass; Typst closures
-    // capture variables read-only, so the value rewrite below still needs a
+    // Number levels in sorted order to match the alphabetically sorted trained
+    // domain (`_discrete-domain-from-cache`), so `map-discrete`'s numeric branch
+    // (`idx = value - 1`) indexes the spine into the right slot for any input
+    // order. Typst closures capture read-only, so the value rewrite needs a
     // second `.map`.
+    let seen = (:)
     let levels = ()
-    let level-map = (:)
     for row in new-data {
       let v = row.at(col, default: none)
       if v == none { continue }
       let s = str(v)
-      if level-map.at(s, default: none) != none { continue }
-      level-map.insert(s, levels.len() + 1)
+      if seen.at(s, default: false) { continue }
+      seen.insert(s, true)
       levels.push(s)
     }
+    levels = levels.sorted()
+    let level-map = (:)
+    for (i, s) in levels.enumerate() { level-map.insert(s, i + 1) }
     new-data = new-data.map(row => {
       let v = row.at(col, default: none)
       if v == none { return row }

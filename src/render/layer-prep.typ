@@ -28,6 +28,12 @@
   not positional-aesthetics.contains(a)
 ))
 
+// Positions that numerically offset a positional value, so a discrete
+// positional column must first be rewritten to its numeric level spine. The
+// remaining non-identity positions (`dodge`, `stack`, `fill`) leave x
+// categorical and are excluded.
+#let _NUMERIC-OFFSET-POSITIONS = ("jitter", "beeswarm", "jitterdodge", "nudge")
+
 // Resolve `from-theme(...)` markers in `mapping`. The resolved scalar is
 // pushed into `layer.params.<channel>` and the mapping entry is cleared so
 // scale training and per-row mapping reads see no ghost binding.
@@ -200,11 +206,18 @@
   let pos-mapping = stat-mapping
   let factor-levels = (:)
   if position-name != none and position-name != "identity" {
-    // Rewrite `as-factor`-marked positional columns to 1-indexed level
-    // positions before position adjusts them, so `position-jitter` and
-    // friends operate in numeric space without exploding the discrete
-    // domain. See `_rewrite-factor-cols` for the full rationale.
-    let rewritten = _rewrite-factor-cols(stat-mapping, stat-data)
+    // Rewrite discrete positional columns to 1-indexed level positions before
+    // the position adjusts them, so offsetting positions operate in numeric
+    // space without exploding the discrete domain. Only positions that
+    // numerically shift a positional value need this; `dodge`/`stack`/`fill`
+    // keep x categorical (they annotate rows or stack y), and rewriting their
+    // x would turn a plain string category into a synthetic column the bar
+    // domain scan cannot read. See `_rewrite-factor-cols` for the rationale.
+    let rewritten = if _NUMERIC-OFFSET-POSITIONS.contains(position-name) {
+      _rewrite-factor-cols(stat-mapping, stat-data)
+    } else {
+      (data: stat-data, factor-levels: (:), repoint: (:))
+    }
     factor-levels = rewritten.factor-levels
     // `_rewrite-factor-cols` wrote the 1-indexed positions to synthetic
     // columns; repoint the positional mapping entries to them so positions,

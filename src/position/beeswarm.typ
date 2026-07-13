@@ -17,10 +17,9 @@
 /// sparse tails stay close to the spine, and the result is a violin-shaped
 /// swarm.
 ///
-/// Only continuous (numeric) x columns are offset: a discrete x is left
-/// alone. Force a discrete column through the swarm by mapping it
-/// with \@as-factor, which keeps the axis labels while the offsets apply
-/// to the underlying level positions.
+/// A discrete (categorical) x is swarmed directly on its level positions,
+/// keeping the axis labels. \@as-factor is only needed to force a numeric
+/// column onto a discrete axis.
 ///
 /// \@category Positions
 /// \@stability stable
