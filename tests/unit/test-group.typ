@@ -124,6 +124,19 @@
 #let pre = expose-shared-positional(pre-rows, m-same, (x: "x"))
 #assert.eq(pre.at(0).at("g"), "keep")
 
+// An `as-factor` x re-attached to the output mapping (a `mapping-ref` dict, not
+// a string) must be unwrapped before it is used as a column key. Here the stat
+// kept x under its source column, so out-col unwraps to "g" == src and the
+// column is already present: no crash, no double exposure.
+#let same-rows = ((g: "a", y: 1.0), (g: "b", y: 2.0))
+#let factor-out = expose-shared-positional(
+  same-rows,
+  m-same,
+  (x: as-factor("g"), y: "y"),
+)
+#assert.eq(factor-out.at(0).at("g"), "a")
+#assert.eq(factor-out.at(1).at("g"), "b")
+
 // y reused by a grouping aesthetic is exposed too (axis: "x" summary path).
 #let y-rows = ((x: 1.0, y: "lo"),)
 #let m-fill-is-y = aes(x: "x", y: "h", fill: "h")

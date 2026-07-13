@@ -172,7 +172,7 @@
   for axis in ("x", "y") {
     let src = _group-col(input-mapping.at(axis, default: none))
     if src == none { continue }
-    let out-col = output-mapping.at(axis, default: none)
+    let out-col = _group-col(output-mapping.at(axis, default: none))
     if out-col == none or out-col == src { continue }
     let reused = group-aesthetics.any(a => (
       _group-col(input-mapping.at(a, default: none)) == src
