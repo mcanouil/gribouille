@@ -1,11 +1,12 @@
 title: Code Window
 author: Mickaël Canouil
-version: 1.2.0
-quarto-required: ">=1.9.36"
+version: 1.2.1
+quarto-required: '>=1.9.36'
+source: mcanouil/quarto-code-window@1.2.1
+source-type: registry
 contributes:
   filters:
     - at: pre-quarto
       path: main.lua
     - at: post-quarto
       path: _modules/hotfix/typst-title-fix.lua
-source: mcanouil/quarto-code-window@1.2.0

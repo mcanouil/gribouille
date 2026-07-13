@@ -358,7 +358,6 @@ local function build_typst_function_def(has_hotfixes)
         below: 0pt,
         radius: 0pt,
         stroke: (bottom: 1pt + border-colour),
-        sticky: true,
         title-bar,
       )
       // Strip code block chrome so content fills flush against the window body.
