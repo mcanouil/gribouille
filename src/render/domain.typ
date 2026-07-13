@@ -1,7 +1,7 @@
 // Domain scanning, coordinate-system application, and post-training domain
 // fix-ups (bar-zero floor, bin/ribbon/ellipse padding, expansion, flip).
 
-#import "../scale/train.typ": transform-fwd
+#import "../scale/train.typ": mapping-ref-col, transform-fwd
 #import "../scale/expansion.typ": DISCRETE-AUTO-DATA-PAD, normalise-expansion
 #import "../utils/radial.typ": radial-axis-of
 #import "../utils/types.typ": parse-number
@@ -61,7 +61,7 @@
 // `cols` accumulator.
 #let _scan-col(layer, mapping, layer-data) = {
   let x-col = if mapping == none { none } else {
-    mapping.at("x", default: none)
+    mapping-ref-col(mapping.at("x", default: none))
   }
   let xs = if x-col != none {
     layer-data

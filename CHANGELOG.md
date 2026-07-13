@@ -44,6 +44,7 @@
 - fix: data-ingestion and `from-theme` path errors now show the offending value. (#162)
 - fix: mapping an aesthetic or a facet variable to a column absent from the data now fails with a clear error naming the aesthetic, the unknown column, and the available columns, instead of rendering a misleading all-`none` plot. (#156)
 - fix: numeric values on a discrete scale (a polygon vertex set between level centres, a jittered point) are kept as fractional level positions instead of being dropped when the scale carries explicit `limits`. (#151)
+- feat: `geom-beeswarm`, `position-jitter`, and `position-jitterdodge` swarm or jitter a discrete (categorical) x directly, like `geom-violin`; `as-factor` is no longer required and is only needed to force a numeric column onto a discrete axis. Level positions now follow the sorted axis domain, so the swarm aligns regardless of row order. (#196)
 - fix: support explicit `as-factor()` on `x` for `geom-violin`, `geom-boxplot`, and other per-group stats when a grouping aesthetic reuses the same column. (#195)
 - docs: a Recipes guide shows chart types and effects built by composing layers and native Typst, with no dedicated geom: lollipop and dumbbell charts, group highlighting, zoom insets, marginal panels, irregular grid layouts, and trend-line casing. (#185)
 - docs: the agent skill covers the current API: the aesthetic-agnostic `scales()` constructors, the density and pattern-fill idioms, and a symbol inventory regenerated from `lib.typ` and checked in CI. (#184)

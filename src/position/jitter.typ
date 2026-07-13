@@ -12,9 +12,9 @@
 /// `seed` always produces the same offsets, so the figure is stable across
 /// renders.
 ///
-/// Only continuous (numeric) columns are jittered: a discrete x is left
-/// alone. Users wanting jitter over a discrete axis should map the column
-/// via `as-numeric` first.
+/// A discrete (categorical) axis is jittered directly across its level
+/// band. \@as-factor is only needed to force a numeric column onto a
+/// discrete axis.
 ///
 /// \@category Positions
 /// \@stability stable
