@@ -8,6 +8,7 @@
 
 ### Changes
 
+- docs: add a "Wrangling data" guide walking a dataset from coercion through grouped aggregation, reshaping, and joining into `#plot`, with guidance on when native Typst suffices. (#unreleased)
 - feat: `summarise(data, ..aggregations, by:)` and `count(data, ..cols, sort:)` bring grouped aggregation to the row-store data model: one output row per group, named `rows => value` aggregation closures, first-appearance group order, column-store input accepted, and output that feeds `#plot` directly. (#unreleased)
 - feat: `as-numeric(data, col, na:)` takes a list of sentinel values (a bare value is accepted); cells equal to a sentinel (string cells compared trimmed) become `none` before parsing, so missing-value placeholders such as `"NA"` or `"-99"` do not survive as spurious numbers. (#unreleased)
 - feat: column/row selection verbs `select(data, ..names)`, `rename(data, ..renames)`, `relocate(data, ..cols, before:, after:)`, `drop-na(data, ..cols)`, `distinct(data, ..cols)`, and `slice-max`/`slice-min(data, col, n: 1, by:)` reshape, dedup, and rank a row-store (non-numeric or missing values sort last when ranking), accept column-store input, and feed `#plot` directly. (#unreleased)
