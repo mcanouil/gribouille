@@ -482,45 +482,19 @@
 /// custom callables can take a sink (`..args`) to ignore extras. Unknown
 /// string names panic.
 ///
-/// \@category Helpers
-/// \@subcategory Summary functions
-/// \@stability stable
-/// \@since 0.0.1
-///
 /// \@param name Summary helper name, or a callable returning `(y, ymin, ymax)`.
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
 /// \@param fun-args Keyword arguments forwarded to the helper or callable.
 ///
-/// \@param weights Optional array of non-negative weights aligned with `values` (`none` for unit weights). Forwarded to helpers that honour weights (`mean`, `mean-se`, `mean-sd`, `mean-cl-normal`); helpers without a weighted formulation ignore the parameter.
+/// \@param weights Optional array of non-negative weights aligned with `values`
+/// (`none` for unit weights). Forwarded to helpers that honour weights (`mean`,
+/// `mean-se`, `mean-sd`, `mean-cl-normal`); helpers without a weighted
+/// formulation ignore the parameter.
 ///
-/// \@returns Dict `(y, ymin, ymax)`.
-///
-/// \@examples-static Dispatch by name; equivalent to calling \@mean-se
-/// directly.
-/// ```
-/// #let s = summarise("mean-se", (2, 3, 4, 5, 6))
-/// ```
-///
-/// \@examples-static Pass keyword arguments via `fun-args` to forward
-/// helper-specific parameters.
-/// ```
-/// #let s = summarise(
-///   "median-hilow",
-///   (1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-///   fun-args: (conf: 0.9),
-/// )
-/// ```
-///
-/// \@examples-static Pass a callable to compute an arbitrary summary.
-/// ```
-/// #let s = summarise(
-///   (xs, ..args) => (y: xs.sum() / xs.len(), ymin: xs.first(), ymax: xs.last()),
-///   (1, 2, 3, 4, 5),
-/// )
-/// ```
-#let summarise(name, values, fun-args: (:), weights: none) = {
+/// \@internal
+#let _apply-summary(name, values, fun-args: (:), weights: none) = {
   if type(name) == function {
     if weights == none { return name(values, ..fun-args) }
     return name(values, weights: weights, ..fun-args)
@@ -554,7 +528,7 @@
     return quantiles(values, probs: probs)
   }
   fail(
-    "summarise",
+    "apply-summary",
     "unknown summary function "
       + repr(name)
       + "; expected a callable or one of mean-se, mean-cl-normal, "
@@ -583,7 +557,7 @@
 /// Apply a reduction by keyword (`"mean"`, `"median"`, `"sum"`, `"min"`,
 /// `"max"`) or a callable `values => scalar`. Used by 2D summary stats.
 ///
-/// Distinct from `summarise`, which returns a `(y, ymin, ymax)` triple for
+/// Distinct from `_apply-summary`, which returns a `(y, ymin, ymax)` triple for
 /// 1D bands.
 ///
 /// \@param name Reduction keyword or callable `values => scalar`.

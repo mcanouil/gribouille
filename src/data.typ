@@ -114,6 +114,16 @@
 ///
 /// \@param ..args Either `(data, col)` or `(col)`. See arities.
 ///
+/// \@param na Sentinel values treated as missing: a cell equal to any entry
+/// (a bare value is wrapped to a single-entry list) becomes `none` before
+/// parsing, so string placeholders such as `"NA"` or `"-99"` do not survive as
+/// spurious numbers. String cells are compared with surrounding whitespace
+/// trimmed, matching `parse-number`, so a padded `" -99 "` still matches the
+/// sentinel `"-99"`; pass sentinels without padding. Equality is
+/// type-sensitive: a native `-99` cell matches the sentinel `-99`, not
+/// `"-99"`. Applies to the two-arg form only (the one-arg tag form ignores
+/// it).
+///
 /// \@arity (data, col): Return a new dataset with `col` converted to numbers via `parse-number`.
 /// \@arity (col): Return a `mapping-ref` dict tagging `col` as continuous for \@aes.
 ///
@@ -156,17 +166,30 @@
 /// )
 /// ```
 ///
+/// \@examples-static Two-arg form with `na:` maps the missing-value
+/// placeholders to `none` before parsing, leaving genuine numbers intact.
+/// ```
+/// #let raw = ((x: "1"), (x: "NA"), (x: "-99"), (x: "3"))
+/// #let d = as-numeric(raw, "x", na: ("NA", "-99"))
+/// // d is ((x: 1.0), (x: none), (x: none), (x: 3.0))
+/// ```
+///
 /// \@see \@as-factor, \@aes
-#let as-numeric(..args) = {
+#let as-numeric(..args, na: ()) = {
   let pos = args.pos()
   if pos.len() == 1 {
     return _mapping-ref(pos.at(0), "continuous")
   }
   let (data, col) = pos
+  let sentinels = if type(na) == array { na } else { (na,) }
   data.map(row => {
     let v = row.at(col, default: none)
+    let needle = if type(v) == str { v.trim() } else { v }
     let new-row = row
-    new-row.insert(col, parse-number(v))
+    new-row.insert(
+      col,
+      if sentinels.contains(needle) { none } else { parse-number(v) },
+    )
     new-row
   })
 }
