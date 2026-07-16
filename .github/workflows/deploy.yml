@@ -17,6 +17,20 @@ on:
       - "typst.toml"
       - "CHANGELOG.md"
       - ".github/workflows/deploy.yml"
+  # Build (but never deploy) on pull requests: rendering the site is the only thing
+  # that compiles the Typst blocks in the docs, so without this a broken block is
+  # only caught once it has already landed on main.
+  pull_request:
+    paths:
+      - "docs/**"
+      - "lib.typ"
+      - "src/**"
+      - "examples/**"
+      - "tools/typstdoc/**"
+      - "tools/package.sh"
+      - "typst.toml"
+      - "CHANGELOG.md"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -26,15 +40,17 @@ on:
         required: false
         default: ""
 
+# Only the deploy job touches Pages; it raises its own permissions. Everything else,
+# including the pull-request build of unreviewed content, stays read-only.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # GitHub Pages only accepts one deployment at a time; queue instead of cancel.
+# Pull requests never deploy, so give them a per-ref group: they can run in parallel
+# with each other and with a deploy, and a new push supersedes the previous build.
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('docs-pr-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   resolve:
@@ -84,13 +100,18 @@ jobs:
         shell: bash
         env:
           LATEST_TAG: ${{ steps.latest-tag.outputs.tag }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
           # Navbar version-switch targets need absolute URLs: relative paths cannot
           # reach the stable root from deep dev pages. Derive them from the site URL.
           SITE_URL=$(awk '/^[[:space:]]*site-url:/ { sub(/^[[:space:]]*site-url:[[:space:]]*/, ""); gsub(/["'\'']/, ""); print; exit }' docs/_quarto.yml)
           [[ -n "${SITE_URL}" ]] || { echo "::error::site-url not found in docs/_quarto.yml"; exit 1; }
-          if [ -n "${LATEST_TAG}" ]; then
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
+            # The release profile renders the Typst code from the latest tag, which a
+            # pull request cannot change, so building it here would only burn time.
+            matrix='{"include":[{"profile":"dev","ref":"","version":"dev","switch_label":"","switch_href":"","assets_dir":""}]}'
+          elif [ -n "${LATEST_TAG}" ]; then
             # Release at root (tagged ref), dev at /dev/ (triggering ref, i.e. main).
             # Switch link: release points to dev, dev points back to the stable root.
             matrix='{"include":[{"profile":"release","ref":"'"${LATEST_TAG}"'","version":"'"${LATEST_TAG}"'","switch_label":"Development version","switch_href":"'"${SITE_URL}/dev/"'","assets_dir":""},{"profile":"dev","ref":"","version":"dev","switch_label":"Stable ('"${LATEST_TAG}"')","switch_href":"'"${SITE_URL}/"'","assets_dir":"docs/_site/dev"}]}'
@@ -154,9 +175,24 @@ jobs:
         shell: bash
         run: echo "DEV_VERSION=$(date -u +%Y.%-m.%-d)" >> "${GITHUB_ENV}"
 
+      # typst-render swaps a placeholder in for a Typst block that fails to compile
+      # and the render still exits 0, so a broken figure ships with every job green.
+      # Match the failures in the log: they arrive as INFO records, so --log-level
+      # cannot select them, and --fail-if-warnings would trip on benign warnings.
       - name: Render site
         shell: bash
-        run: quarto render docs --profile "${{ matrix.profile }}"
+        env:
+          RENDER_LOG: ${{ runner.temp }}/render.log
+        run: |
+          set -euo pipefail
+          quarto render docs --profile "${{ matrix.profile }}" \
+            --log "${RENDER_LOG}" --log-format json-stream
+          failures=$(jq -r '.msg' "${RENDER_LOG}" | grep '\[typst-render\] Compilation failed' || true)
+          if [ -n "${failures}" ]; then
+            echo "::error::Typst blocks failed to compile; see the failures below."
+            echo "${failures}"
+            exit 1
+          fi
 
       - name: Set up Lua
         if: ${{ matrix.assets_dir != '' }}
@@ -170,6 +206,7 @@ jobs:
         run: tools/package.sh archive "${{ matrix.assets_dir }}" gribouille "${DEV_VERSION}"
 
       - name: Upload site artifact
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-artifact@v7
         with:
           name: site-${{ matrix.profile }}
@@ -180,6 +217,13 @@ jobs:
     name: Deploy docs to GitHub Pages
     needs: [ resolve, build ]
     runs-on: ubuntu-latest
+    # Pull requests build to catch Typst failures; publishing stays a main-only step.
+    if: ${{ github.event_name != 'pull_request' }}
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 
     environment:
       name: github-pages
