@@ -1497,6 +1497,68 @@ describe("examples: gallery consistency", function()
     end
     assert_eq(#examples.bad_intents(entries), 0)
   end)
+
+  local page = [[
+---
+title: "Comparison and ranking"
+gallery-intent: comparison
+listing:
+  - id: gallery
+    contents: gallery.yml
+    include:
+      intent: comparison
+---
+]]
+
+  it("reads both intent declarations from a page", function()
+    local decl = examples.parse_page_intent(page)
+    assert_eq(decl.declared, "comparison")
+    assert_eq(decl.include, "comparison")
+  end)
+
+  it("reads a hub page that declares no listing filter", function()
+    local decl = examples.parse_page_intent('---\ngallery-intent: hub\ntoc: false\n---\n')
+    assert_eq(decl.declared, "hub")
+    assert_eq(decl.include, nil)
+  end)
+
+  it("flags an intent with no page", function()
+    local drift = examples.intent_drift({ comparison = "comparison.qmd" }, { comparison = true, themes = true })
+    assert_eq(#drift, 1)
+    assert_contains(drift[1], 'themes')
+    assert_contains(drift[1], "no page")
+  end)
+
+  it("flags a page declaring an unknown intent", function()
+    local drift = examples.intent_drift({ flow = "flow.qmd" }, { flow = false })
+    assert_eq(#drift, 1)
+    assert_contains(drift[1], "flow.qmd")
+    assert_contains(drift[1], "unknown intent")
+  end)
+
+  it("flags a page whose two intent declarations disagree", function()
+    local drift = examples.intent_drift(
+      { comparison = "comparison.qmd" },
+      { comparison = true },
+      { ["comparison.qmd"] = "distribution" }
+    )
+    assert_eq(#drift, 1)
+    assert_contains(drift[1], "comparison.qmd")
+    assert_contains(drift[1], "distribution")
+  end)
+
+  it("ignores the hub page, which filters no intent", function()
+    local drift = examples.intent_drift({ hub = "index.qmd" }, { comparison = true, hub = nil })
+    assert_eq(#drift, 1, "only the page-less comparison intent should be reported")
+    assert_contains(drift[1], "comparison")
+  end)
+
+  it("passes when every intent has a matching page", function()
+    local pages = {}
+    for intent in pairs(examples.INTENTS) do pages[intent] = intent .. ".qmd" end
+    pages[examples.HUB_INTENT] = "index.qmd"
+    assert_eq(#examples.intent_drift(pages), 0)
+  end)
 end)
 
 -- -----------------------------------------------------------------------
