@@ -123,11 +123,21 @@
 )
 #import "src/utils/summaries.typ": (
   mean, mean-cl-boot, mean-cl-normal, mean-sd, mean-se, median, median-hilow,
-  quantile, quantiles, summarise,
+  quantile, quantiles,
 )
 #import "src/utils/cut.typ": cut-interval, cut-number, cut-width
 #import "src/utils/resolution.typ": resolution
 #import "src/utils/normal.typ": qnorm
+
+// Wrangle.
+#import "src/wrangle/summarise.typ": count, summarise
+#import "src/wrangle/select.typ": (
+  distinct, drop-na, relocate, rename, select, slice-max, slice-min,
+)
+#import "src/wrangle/reshape.typ": pivot-longer, pivot-wider
+#import "src/wrangle/join.typ": (
+  anti-join, bind-cols, bind-rows, full-join, inner-join, left-join, semi-join,
+)
 
 // Scales.
 #import "src/scales.typ": scales

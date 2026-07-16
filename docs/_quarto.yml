@@ -59,6 +59,8 @@ website:
             href: guides/theming.qmd
           - text: "Recipes"
             href: guides/recipes.qmd
+          - text: "Wrangling data"
+            href: guides/wrangle.qmd
           - text: "Accessibility"
             href: guides/accessibility.qmd
           - text: "Benchmarks"

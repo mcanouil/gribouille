@@ -5,7 +5,7 @@
 ///! `src/utils/summaries.typ`.
 
 #import "../utils/types.typ": parse-number
-#import "../utils/summaries.typ": summarise
+#import "../utils/summaries.typ": _apply-summary
 #import "../utils/errors.typ": fail-enum
 
 /// Per-axis reduction to a central value and an uncertainty band.
@@ -108,8 +108,8 @@
   let xs = data.map(r => r.at(x-col, default: none))
   let ys = data.map(r => r.at(y-col, default: none))
   let weights = _weights-of(data, weight-col)
-  let sx = summarise(fun, xs, fun-args: fun-args, weights: weights)
-  let sy = summarise(fun, ys, fun-args: fun-args, weights: weights)
+  let sx = _apply-summary(fun, xs, fun-args: fun-args, weights: weights)
+  let sy = _apply-summary(fun, ys, fun-args: fun-args, weights: weights)
   if sx.y == none or sy.y == none {
     return (data: (), mapping: (x: "x", y: "y", ymin: "ymin", ymax: "ymax"))
   }
@@ -215,7 +215,12 @@
       let rows = bucketed.buckets.at(key)
       let xs = rows.map(r => r.at(x-col, default: none))
       let weights = _weights-of(rows, weight-col)
-      let summary = summarise(fun, xs, fun-args: fun-args, weights: weights)
+      let summary = _apply-summary(
+        fun,
+        xs,
+        fun-args: fun-args,
+        weights: weights,
+      )
       if summary.y == none { continue }
       let raw-y = rows.first().at(y-col, default: none)
       let parsed-y = parse-number(raw-y)
@@ -248,7 +253,7 @@
     let rows = bucketed.buckets.at(key)
     let ys = rows.map(r => r.at(y-col, default: none))
     let weights = _weights-of(rows, weight-col)
-    let summary = summarise(fun, ys, fun-args: fun-args, weights: weights)
+    let summary = _apply-summary(fun, ys, fun-args: fun-args, weights: weights)
     if summary.y == none { continue }
 
     let raw-x = rows.first().at(x-col, default: none)

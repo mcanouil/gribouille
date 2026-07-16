@@ -6,7 +6,7 @@
 #import "../../src/stat/function.typ": stat-function
 #import "../../src/geom/count.typ": geom-count
 #import "../../src/geom/errorbarh.typ": geom-errorbarh
-#import "../../src/utils/summaries.typ": mean-cl-boot, summarise
+#import "../../src/utils/summaries.typ": _apply-summary, mean-cl-boot
 
 // --- stat-sum: counts unique (x, y) pairs ---------------------------------
 
@@ -106,8 +106,8 @@
 #let r-boot-99 = mean-cl-boot(xs, conf: 0.99, n-boot: 200, seed: 42)
 #assert((r-boot-99.ymax - r-boot-99.ymin) >= (r-boot-a.ymax - r-boot-a.ymin))
 
-// summarise() dispatches by name.
-#let r-disp-kebab = summarise(
+// _apply-summary() dispatches by name.
+#let r-disp-kebab = _apply-summary(
   "mean-cl-boot",
   xs,
   fun-args: (conf: 0.95, n-boot: 200, seed: 42),

@@ -4,7 +4,7 @@
 ///! each bin reduces the y values inside to a `(y, ymin, ymax)` summary
 ///! using one of the helpers in `src/utils/summaries.typ`.
 
-#import "../utils/summaries.typ": summarise
+#import "../utils/summaries.typ": _apply-summary
 #import "../utils/bin.typ": bin-1d-cells, bin-midpoint, panel-bin-grid
 #import "../utils/aes-resolve.typ": stat-output-mapping
 
@@ -110,7 +110,7 @@
     let bucket = cells.buckets.at(i)
     if bucket.ys.len() == 0 { continue }
     let weights = if weight-col == none { none } else { bucket.ws }
-    let summary = summarise(
+    let summary = _apply-summary(
       fun,
       bucket.ys,
       fun-args: fun-args,

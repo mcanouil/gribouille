@@ -37,6 +37,47 @@
 #let df2 = ((a: "1", b: "x"), (a: "2.5", b: "y"))
 #assert.eq(column(as-numeric(df2, "a"), "a"), (1.0, 2.5))
 
+// as-numeric na: sentinels map to none before parsing; genuine numbers parse,
+// including a sentinel that would otherwise parse as a valid number ("-99").
+#let df3 = ((a: "1"), (a: "NA"), (a: "-99"), (a: "3"))
+#assert.eq(column(as-numeric(df3, "a", na: ("NA", "-99")), "a"), (
+  1.0,
+  none,
+  none,
+  3.0,
+))
+
+// A bare sentinel is wrapped to a single-entry list (no substring matching).
+#assert.eq(column(as-numeric(df3, "a", na: "NA"), "a"), (1.0, none, -99.0, 3.0))
+
+// The default keeps the current behaviour (no sentinels).
+#assert.eq(column(as-numeric(df3, "a"), "a"), (1.0, none, -99.0, 3.0))
+
+// The one-arg tag form ignores na: and still returns a mapping-ref.
+#assert.eq(as-numeric("a", na: ("NA",)).kind, "mapping-ref")
+
+// String cells are compared trimmed (matching parse-number), so a padded
+// numeric sentinel still matches instead of leaking through as a number.
+#let df4 = ((a: " -99 "), (a: " NA "), (a: "5"))
+#assert.eq(column(as-numeric(df4, "a", na: ("-99", "NA")), "a"), (
+  none,
+  none,
+  5.0,
+))
+
+// Equality is type-sensitive: a native -99 cell needs a native sentinel.
+#let df5 = ((a: -99), (a: 7))
+#assert.eq(column(as-numeric(df5, "a", na: ("-99",)), "a"), (-99.0, 7.0))
+#assert.eq(column(as-numeric(df5, "a", na: (-99,)), "a"), (none, 7.0))
+
+// Sentinels match whole trimmed cells, never substrings ("9" does not hit "-99").
+#assert.eq(column(as-numeric(df3, "a", na: ("9",)), "a"), (
+  1.0,
+  none,
+  -99.0,
+  3.0,
+))
+
 // as-factor.
 #assert.eq(column(as-factor(((a: 1),), "a"), "a"), ("1",))
 

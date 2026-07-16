@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+
+- feat!: the summary-dispatch kernel `summarise(name, values)` leaves the public API (renamed to the internal `_apply-summary`), freeing the `summarise` name for the new wrangle verb; the `fun:` argument of `stat-summary` and `stat-summary-bin` (a name string or callable) is unchanged. (#198)
+
+### Changes
+
+- docs: add a "Wrangling data" guide walking a dataset from coercion through grouped aggregation, reshaping, and joining into `#plot`, with guidance on when native Typst suffices. (#198)
+- feat: `summarise(data, ..aggregations, by:)` and `count(data, ..cols, sort:)` bring grouped aggregation to the row-store data model: one output row per group, named `rows => value` aggregation closures, first-appearance group order, column-store input accepted, and output that feeds `#plot` directly. (#198)
+- feat: `as-numeric(data, col, na:)` takes a list of sentinel values (a bare value is accepted); cells equal to a sentinel (string cells compared trimmed) become `none` before parsing, so missing-value placeholders such as `"NA"` or `"-99"` do not survive as spurious numbers. (#198)
+- feat: column/row selection verbs `select(data, ..names)`, `rename(data, ..renames)`, `relocate(data, ..cols, before:, after:)`, `drop-na(data, ..cols)`, `distinct(data, ..cols)`, and `slice-max`/`slice-min(data, col, n: 1, by:)` reshape, dedup, and rank a row-store (non-numeric or missing values sort last when ranking), accept column-store input, and feed `#plot` directly. (#198)
+- feat: reshaping verbs `pivot-longer(data, cols, names-to:, values-to:)` and `pivot-wider(data, names-from:, values-from:)` melt columns into a name/value pair and spread them back (round-tripping modulo column order), filling absent combinations with `none`, failing on an ambiguous duplicate spread, and carrying the `as-factor` tag on surviving identifier columns. (#198)
+- feat: join and bind verbs `left-join`/`inner-join`/`full-join`/`semi-join`/`anti-join(x, y, by:)` combine two row-stores on shared key columns (a natural join on the common columns when `by: none`, a non-key column present in both is an error), and `bind-rows(..datasets)`/`bind-cols(..datasets)` stack or glue datasets, unioning columns with `none`-fill or zipping them by row position. (#198)
+
 ## 0.5.0 (2026-07-13)
 
 ### Breaking changes
