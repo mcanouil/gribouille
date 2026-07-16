@@ -468,7 +468,7 @@
   showcase: true
   title: "A defensible pie"
   description: 'When a pie is fine: three slices under [`coord-radial`](../reference/coord/coord-radial.qmd), keyed directly in the coloured subtitle, no legend to shuttle between.'
-  alt: "Pie chart of vehicle shares by cylinder count with three slices: four cylinders takes about half, six and eight cylinders split the rest evenly."
+  alt: "Pie chart of vehicle shares by cylinder count with three slices: four cylinders takes almost half, six and eight cylinders split the rest evenly."
 
 - slug: bar-stacked
   intent: part-to-whole
@@ -550,7 +550,7 @@
   chart: "point ranges"
   showcase: true
   title: "Intervals over dynamite bars"
-  description: '[`geom-pointrange`](../reference/geoms/geom-pointrange.qmd) with a normal-theory 95% CI from [`stat-summary`](../reference/stats/stat-summary.qmd): the car-class intervals overlap, so the ranking the means suggest does not survive the uncertainty.'
+  description: '[`geom-pointrange`](../reference/geoms/geom-pointrange.qmd) with a normal-theory 95% CI from [`stat-summary`](../reference/stats/stat-summary.qmd): the compact, midsize, and subcompact intervals overlap, so the ranking those three means suggest does not survive the uncertainty.'
   alt: "Point-range chart of mean highway mpg per vehicle class with 95% confidence intervals; the compact, midsize, and subcompact intervals overlap heavily, while the two single-observation classes show a bare dot and no interval."
 
 - slug: forecast-fan
