@@ -377,7 +377,7 @@ Wiring it to the `plot-subtitle` theme surface lets the subtitle mix prose with 
   rgb("#D55E00"),
   rgb("#009E73"),
 )
-#let n = penguins.species.len()
+#let n = penguins.map(r => r.species).len()
 
 #plot(
   data: penguins,
@@ -429,7 +429,7 @@ Every row also carries an `island` value so [`facet-wrap`](../reference/facets/f
   rgb("#D55E00"),
   rgb("#009E73"),
 )
-#let n = penguins.species.len()
+#let n = penguins.map(r => r.species).len()
 
 #let species-counts = (
   (island: "Torgersen", flipper-len: 172, body-mass: 6200, species: "Adelie",    label: $N_"Adelie" = 52$),
