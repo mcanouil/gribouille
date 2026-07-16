@@ -1,0 +1,28 @@
+---
+title: "Uncertainty and error"
+subtitle: "Show intervals, ranges, and confidence around estimates."
+gallery-intent: uncertainty
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: uncertainty
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+An estimate without its uncertainty overstates what you know; these charts put the interval on the page.
+Point-plus-interval geoms beat "dynamite" bars because they show the range without implying a bar's zero baseline, and ribbons carry intervals along a continuous axis.
+Always say what the interval is (standard error, 95% confidence, prediction quantiles) in the caption; an unlabelled band is decoration.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

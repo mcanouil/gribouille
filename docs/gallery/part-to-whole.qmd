@@ -1,0 +1,28 @@
+---
+title: "Part-to-whole and cyclical"
+subtitle: "Show shares of a total, or wrap a sequence around a circle."
+gallery-intent: part-to-whole
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: part-to-whole
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+Use these charts when the total matters as much as the parts, or when the data is inherently circular (hours, compass directions, repeated cycles).
+Stacked and filled bars compare shares across groups; waffles make a single share countable; pies are fine for a handful of directly labelled slices, and misleading beyond that.
+Keep segment order consistent across bars, label slices directly rather than through a legend, and reserve radial layouts for data with a genuine angular meaning.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

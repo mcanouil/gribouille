@@ -1,0 +1,28 @@
+---
+title: "Facets, coordinates, and composition"
+subtitle: "Split data into small multiples, transform coordinates, and compose panels."
+gallery-intent: layout
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: layout
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+Small multiples are the strongest answer to overplotting: one panel per group, shared axes, and the eye does the comparison.
+[`facet-wrap`](../reference/facets/facet-wrap.qmd) and [`facet-grid`](../reference/facets/facet-grid.qmd) handle the splitting, with free scales when panels span very different ranges; keep scales shared whenever the comparison is the point.
+Coordinate systems clip, fix, flip, or transform the panel itself, and [`compose`](../reference/core/compose.qmd) arranges several plots with shared legends.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

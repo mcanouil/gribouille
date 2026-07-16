@@ -1,0 +1,28 @@
+---
+title: "Axes, legends, and guides"
+subtitle: "Control tick labels, axis transforms, and legend layout."
+gallery-intent: axes-legends
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: axes-legends
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+Guides translate scales back into something a reader can decode: axes, legends, and colourbars.
+These examples rotate and dodge crowded tick labels, add log-scale minor ticks and secondary axes, and control legend order, alignment, and placement down to an arbitrary canvas offset.
+A guide earns its space only when the reader needs it; drop the legend entirely once series are labelled directly.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

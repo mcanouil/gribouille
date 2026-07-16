@@ -1,0 +1,28 @@
+---
+title: "Evolution and time"
+subtitle: "Show how values change over time or along an ordered sequence."
+gallery-intent: evolution
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: evolution
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+These charts answer "how did it change?": trends, seasonality, turning points, and rank shifts along an ordered axis.
+Lines are the default; areas add a sense of cumulative magnitude but need a zero baseline; steps suit values that hold between events.
+Label series directly at the line ends instead of relying on a legend, annotate the context that explains a shift, and split tangled series into small multiples rather than letting spaghetti build up.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

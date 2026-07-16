@@ -1,0 +1,29 @@
+---
+title: "Colour and encodings"
+subtitle: "Map data to colour, size, shape, opacity, and line style."
+gallery-intent: colour-scales
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: colour-scales
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+Scales decide how a data column becomes a visual property; getting them right is most of what makes a chart readable.
+Use a colour-vision-deficiency-safe palette such as [Okabe-Ito](../reference/scales/scale-okabe-ito.qmd) for categories, a perceptually uniform ramp such as [Viridis](../reference/scales/scale-viridis-c.qmd) for continuous values, and a diverging gradient only when the data has a meaningful midpoint.
+Beyond colour, these examples map size, shape, opacity, stroke, and line style, and show manual and binned variants of each family.
+See the [accessibility guide](../guides/accessibility.qmd) for the reasoning behind these defaults.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

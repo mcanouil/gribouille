@@ -1461,6 +1461,42 @@ describe("examples: gallery consistency", function()
     assert_eq(orphans[1], "alpha")
     assert_eq(orphans[2], "zeta")
   end)
+
+  local intent_gallery = [[
+# header comment
+- slug: bar-simple
+  intent: comparison
+- slug: histogram
+  intent: distribution
+- slug: mystery
+  intent: nonsense
+- slug: no-intent
+  title: "No intent field"
+]]
+
+  it("parses ordered slug/intent entries from a gallery body", function()
+    local entries = examples.parse_entries(intent_gallery)
+    assert_eq(#entries, 4)
+    assert_eq(entries[1].slug, "bar-simple")
+    assert_eq(entries[1].intent, "comparison")
+    assert_eq(entries[3].intent, "nonsense")
+    assert_eq(entries[4].intent, nil)
+  end)
+
+  it("flags missing and unknown intents", function()
+    local bad = examples.bad_intents(examples.parse_entries(intent_gallery))
+    assert_eq(#bad, 2)
+    assert_eq(bad[1], "mystery (nonsense)")
+    assert_eq(bad[2], "no-intent (missing)")
+  end)
+
+  it("accepts every documented intent key", function()
+    local entries = {}
+    for intent in pairs(examples.INTENTS) do
+      entries[#entries + 1] = { slug = "x-" .. intent, intent = intent }
+    end
+    assert_eq(#examples.bad_intents(entries), 0)
+  end)
 end)
 
 -- -----------------------------------------------------------------------

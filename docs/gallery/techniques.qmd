@@ -1,0 +1,28 @@
+---
+title: "Advanced techniques"
+subtitle: "Late-binding aesthetics, identity scales, weights, and pipeline escape hatches."
+gallery-intent: techniques
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: techniques
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+These examples reach into the layer pipeline itself: binding aesthetics to stat outputs with [`after-stat`](../reference/core/after-stat.qmd), transforming resolved values with [`after-scale`](../reference/core/after-scale.qmd), pulling theme colours with [`from-theme`](../reference/core/from-theme.qmd), and splicing arbitrary closures with `stat-manual`.
+They also cover identity scales, per-row weights, factor coercion, and how reference lines interact with axis transforms.
+Reach for them when the standard mappings cannot express what you need; most plots never will.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

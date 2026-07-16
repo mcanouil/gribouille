@@ -123,26 +123,48 @@ end
 
 local EXAMPLE_SKIP_EXT = { pdf = true, png = true, jpg = true, jpeg = true, gif = true, svg = true }
 
--- Every `examples/*.typ` must have a `gallery.yml` slug or be excluded
--- (see examples.EXCLUDE), otherwise it never renders in the slug-driven gallery.
+-- Every `examples/*.typ` must have a gallery slug (in either the examples or
+-- the intent gallery) or be excluded (see examples.EXCLUDE), otherwise it
+-- never renders in the slug-driven galleries. Intent gallery entries must
+-- also carry a valid intent (see examples.INTENTS) or they land on no page.
 local function enforce_examples_gallery(opts)
   if not util.dir_exists(opts.examples) then return end
+  local function report(msg)
+    if opts.check or opts.strict then
+      util.die(msg)
+    else
+      util.log_warn(msg)
+    end
+  end
+
   local gallery_path = opts.docs .. "/examples/gallery.yml"
   if not util.file_exists(gallery_path) then
     util.die("gallery file not found: " .. gallery_path)
   end
   local content, err = util.read_file(gallery_path)
   if not content then util.die("could not read gallery: " .. gallery_path .. ": " .. tostring(err)) end
-  local orphans = examples.orphans(util.list_dir_files(opts.examples), examples.parse_slugs(content))
-  if #orphans == 0 then return end
-  local msg = string.format(
-    "%d example(s) missing a gallery.yml entry (add one, or extend examples.EXCLUDE): %s",
-    #orphans, table.concat(orphans, ", "))
-  if opts.check or opts.strict then
-    util.die(msg)
-  else
-    util.log_warn(msg)
+  local slugs = examples.parse_slugs(content)
+
+  local intent_path = opts.docs .. "/gallery/gallery.yml"
+  if util.file_exists(intent_path) then
+    local intent_content, intent_err = util.read_file(intent_path)
+    if not intent_content then
+      util.die("could not read gallery: " .. intent_path .. ": " .. tostring(intent_err))
+    end
+    for slug in pairs(examples.parse_slugs(intent_content)) do slugs[slug] = true end
+    local bad = examples.bad_intents(examples.parse_entries(intent_content))
+    if #bad > 0 then
+      report(string.format(
+        "%d gallery entr%s with a missing or unknown intent in %s: %s",
+        #bad, #bad == 1 and "y" or "ies", intent_path, table.concat(bad, ", ")))
+    end
   end
+
+  local orphans = examples.orphans(util.list_dir_files(opts.examples), slugs)
+  if #orphans == 0 then return end
+  report(string.format(
+    "%d example(s) missing a gallery.yml entry (add one, or extend examples.EXCLUDE): %s",
+    #orphans, table.concat(orphans, ", ")))
 end
 
 local function copy_examples(opts)
