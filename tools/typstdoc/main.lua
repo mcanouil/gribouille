@@ -151,8 +151,9 @@ local function enforce_examples_gallery(opts)
     if not intent_content then
       util.die("could not read gallery: " .. intent_path .. ": " .. tostring(intent_err))
     end
-    for slug in pairs(examples.parse_slugs(intent_content)) do slugs[slug] = true end
-    local bad = examples.bad_intents(examples.parse_entries(intent_content))
+    local entries = examples.parse_entries(intent_content)
+    for _, entry in ipairs(entries) do slugs[entry.slug] = true end
+    local bad = examples.bad_intents(entries)
     if #bad > 0 then
       report(string.format(
         "%d gallery entr%s with a missing or unknown intent in %s: %s",

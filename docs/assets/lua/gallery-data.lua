@@ -8,6 +8,18 @@
 -- filters `gallery.yml` to that intent, prepending one hidden `{typst}` chunk
 -- per item and appending a `#modal-<slug>` div carrying the rewritten `.typ`
 -- source for the `modal` extension to wrap as a Bootstrap modal.
+--
+-- The helpers below are a deliberate, temporary fork of `examples-data.lua`,
+-- which serves the older section-based gallery under `examples/`. Fold this
+-- back into a single filter (or drop the note) once `docs/examples/` goes away;
+-- until then, a fix to `rewrite_lib_import` or `parse_yaml_list` belongs in
+-- both files.
+--
+-- The hub renders its heroes under a `hero-` prefix rather than reusing the
+-- intent pages' SVGs. That costs 12 extra Typst compilations per build and buys
+-- build-order independence: `quarto render gallery/index.qmd` alone yields a
+-- complete hub instead of one wired to artefacts a sibling page may not have
+-- produced yet.
 
 local function read_file(path)
   local f = io.open(path, 'rb')

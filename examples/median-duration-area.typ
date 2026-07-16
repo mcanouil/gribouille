@@ -7,7 +7,7 @@
 
 #let accent = okabe-ito.at(1)
 
-#let peak = economics.sorted(key: row => row.uempmed).last()
+#let peak = slice-max(economics, "uempmed").first()
 
 #plot(
   data: economics,

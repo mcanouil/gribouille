@@ -15,19 +15,26 @@
     .map(pair => (month: pair.at(0) + 1, value: pair.at(1)))
 )
 
+// Two-sided band multipliers, derived rather than pasted: a 50% band spans
+// the central half of the normal, so its edge is the 75th percentile.
+#let z50 = qnorm(0.75)
+#let z80 = qnorm(0.90)
+#let z95 = qnorm(0.975)
+
 #let last = observed.last()
 #let slope = 0.42
 #let forecast = range(0, 7).map(step => {
   let spread = 0.35 * step
+  let fit = last.value + slope * step
   (
     month: last.month + step,
-    fit: last.value + slope * step,
-    lo50: last.value + slope * step - 0.674 * spread,
-    hi50: last.value + slope * step + 0.674 * spread,
-    lo80: last.value + slope * step - 1.282 * spread,
-    hi80: last.value + slope * step + 1.282 * spread,
-    lo95: last.value + slope * step - 1.960 * spread,
-    hi95: last.value + slope * step + 1.960 * spread,
+    fit: fit,
+    lo50: fit - z50 * spread,
+    hi50: fit + z50 * spread,
+    lo80: fit - z80 * spread,
+    hi80: fit + z80 * spread,
+    lo95: fit - z95 * spread,
+    hi95: fit + z95 * spread,
   )
 })
 

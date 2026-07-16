@@ -12,10 +12,14 @@
 #   intent:      page key, one of: comparison | distribution | evolution | correlation |
 #                part-to-whole | uncertainty | annotation | colour-scales |
 #                axes-legends | layout | themes | techniques.
-#   data:        data-shape badge, one of: "one numeric" | "one categorical" |
-#                "two numerics" | "two categoricals" | "numeric vs categorical" |
-#                "three or more variables" | "time series" | "coordinates" | "any".
-#   chart:       optional chart-type badge, e.g. "grouped bar chart".
+#   data:        optional data-shape badge, one of: "one numeric" |
+#                "one categorical" | "two numerics" | "two categoricals" |
+#                "numeric vs categorical" | "three or more variables" |
+#                "time series" | "coordinates" | "any". Omit where every entry
+#                on the page would carry the same value: a badge that varies
+#                with nothing tells the reader nothing.
+#   chart:       optional chart-type badge, e.g. "grouped bar chart". Omit when
+#                it would merely repeat `title`.
 #   showcase:    optional `true`; showcase entries render first and larger.
 #   title:       card heading.
 #   description: Pandoc markdown.
@@ -122,7 +126,6 @@
 - slug: histogram
   intent: distribution
   data: "one numeric"
-  chart: "histogram"
   title: "Histogram"
   description: 'Continuous x binned with [`stat-bin`](../reference/stats/stat-bin.qmd) via [`geom-histogram`](../reference/geoms/geom-histogram.qmd).'
   alt: "Histogram of highway fuel economy across 12 equal-width bins, with most vehicles concentrated between roughly 25 and 30 mpg."
@@ -223,7 +226,6 @@
 - slug: geom-area
   intent: evolution
   data: "time series"
-  chart: "area chart"
   title: "Area chart"
   description: 'Filled polygon from y = 0 to y, drawn by [`geom-area`](../reference/geoms/geom-area.qmd).'
   alt: "Area and line chart of monthly US unemployment from 2008 to 2009, with the area shaded blue under the rising line."
@@ -247,7 +249,6 @@
 - slug: streamgraph
   intent: evolution
   data: "time series"
-  chart: "streamgraph"
   title: "Streamgraph"
   description: '[`geom-area`](../reference/geoms/geom-area.qmd) on a [`position-stack(offset: "silhouette")`](../reference/positions/position-stack.qmd) baseline centres each stack on zero for the classic ThemeRiver flow.'
   alt: "Streamgraph of four genre bands (drama, comedy, action, and sci-fi) flowing symmetrically around a central baseline over 24 months, with band thickness encoding titles released per month."
@@ -255,7 +256,6 @@
 - slug: bump-chart
   intent: evolution
   data: "time series"
-  chart: "bump chart"
   title: "Bump chart"
   description: '[`stat-connect(connection: "sigmoid")`](../reference/stats/stat-connect.qmd) eases [`geom-line`](../reference/geoms/geom-line.qmd) between ranks with logistic connectors; a reversed y scale puts rank 1 on top.'
   alt: "Bump chart of four teams' ranks across six rounds, with smooth S-shaped connectors easing each team between rank positions and points at every round, rank 1 at the top."
@@ -420,7 +420,6 @@
 - slug: geom-tile
   intent: correlation
   data: "three or more variables"
-  chart: "heatmap"
   title: "Heatmap"
   description: '[`geom-tile`](../reference/geoms/geom-tile.qmd) renders an x/y/fill grid as filled rectangles.'
   alt: "Heatmap of hourly request volume across seven days and six hours of day, with the Viridis palette highlighting weekday midday peaks."
@@ -436,7 +435,6 @@
 - slug: geom-spoke
   intent: correlation
   data: "coordinates"
-  chart: "vector field"
   title: "Vector field"
   description: '[`geom-spoke`](../reference/geoms/geom-spoke.qmd) draws short oriented segments from an angle and a radius.'
   alt: "Seven by seven grid of arrows pointing radially outward, with colour encoding distance from the origin via the Viridis palette."
@@ -489,7 +487,6 @@
 - slug: waffle
   intent: part-to-whole
   data: "one categorical"
-  chart: "waffle chart"
   title: "Waffle chart"
   description: '[`stat-waffle`](../reference/stats/stat-waffle.qmd) turns per-group counts into unit [`geom-tile`](../reference/geoms/geom-tile.qmd) cells, filling the grid column by column from the bottom-left.'
   alt: "Waffle chart of 100 support tickets in a 10-row grid, coloured by status: 58 resolved, 27 in progress, 9 blocked, and 6 new, reading column by column from the left."
@@ -505,7 +502,6 @@
 - slug: coord-radial-rose
   intent: part-to-whole
   data: "one categorical"
-  chart: "rose chart"
   title: "Rose chart"
   description: 'Discrete categories distributed around the circle via `coord-radial(theta: "x")` with [`geom-col`](../reference/geoms/geom-col.qmd); bar height encodes the count.'
   alt: "Rose chart of wind direction counts across eight compass points (N, NE, E, SE, S, SW, W, and NW), with bar height encoding the count and each bar filled by direction."
@@ -529,7 +525,6 @@
 - slug: coord-radial-radar
   intent: part-to-whole
   data: "three or more variables"
-  chart: "radar chart"
   title: "Radar chart"
   description: 'Closed polygon under `coord-radial(theta: "x")` with one vertex per axis, drawn via [`geom-polygon`](../reference/geoms/geom-polygon.qmd).'
   alt: "Radar chart of a six-axis vehicle profile, showing a translucent blue polygon and points at each axis vertex inside a circular radial panel."
@@ -556,7 +551,6 @@
 - slug: forecast-fan
   intent: uncertainty
   data: "time series"
-  chart: "fan chart"
   showcase: true
   title: "Fan chart"
   description: 'Graded 50/80/95% ribbons layered with [`geom-ribbon`](../reference/geoms/geom-ribbon.qmd) around a dashed extrapolation, each band labelled in-plot so the shading is never decoration.'
@@ -1011,49 +1005,42 @@
 
 - slug: themed
   intent: themes
-  data: "any"
   title: "Minimal theme"
   description: 'Per-element overrides with [`theme`](../reference/themes/theme.qmd) on top of [`theme-minimal`](../reference/themes/theme-minimal.qmd).'
   alt: "Three scatter plots of two groups drawn side by side, each using a different built-in theme: minimal, classic, and void."
 
 - slug: theme-override
   intent: themes
-  data: "any"
   title: "Theme overrides"
   description: 'Custom text sizes, panel fill, and grid colour passed through [`theme`](../reference/themes/theme.qmd).'
   alt: "Line and point chart of the curve y equals 0.1 times x squared over 12 steps, rendered with enlarged axis titles and a cream panel background."
 
 - slug: theme-text-align
   intent: themes
-  data: "any"
   title: "Text alignment"
   description: 'Per-surface horizontal alignment via [`element-text`](../reference/themes/element-text.qmd) `align`: title and subtitle default left, caption right, axis titles centred.'
   alt: "Line and point chart of the curve y equals 0.1 times x squared with a centred title, a left subtitle, a right caption, and the x-axis title pushed to the right end of the axis."
 
 - slug: theme-set
   intent: themes
-  data: "any"
   title: "Global theme default"
   description: '[`theme-set`](../reference/themes/theme-set.qmd) installs a global default; explicit `theme:` arguments still take precedence per plot.'
   alt: "Two stacked penguin scatter plots: the first inherits a globally-installed theme-minimal, the second overrides it with theme-dark."
 
 - slug: themes-gallery
   intent: themes
-  data: "any"
   title: "Theme presets"
   description: 'Side-by-side gallery of [`theme-bw`](../reference/themes/theme-bw.qmd), [`theme-linedraw`](../reference/themes/theme-linedraw.qmd), [`theme-light`](../reference/themes/theme-light.qmd), [`theme-dark`](../reference/themes/theme-dark.qmd), and [`theme-minimal`](../reference/themes/theme-minimal.qmd).'
   alt: "Grid of the same two-group scatter rendered with theme-minimal, theme-bw, theme-linedraw, theme-light, and theme-dark."
 
 - slug: theme-element-geom
   intent: themes
-  data: "any"
   title: "theme(geom: element-geom(...))"
   description: 'Pin layer-default `fill`, `colour`, and `linewidth` across the supporting geoms via [`element-geom`](../reference/themes/element-geom.qmd) on `theme.geom`.'
   alt: "Two stacked rows of bar and line panels: the first under the default theme, the second after a single theme(geom: element-geom(...)) override re-tints both geoms."
 
 - slug: theme-sub
   intent: themes
-  data: "any"
   title: "Theme shortcut groups"
   description: 'Compose [`theme`](../reference/themes/theme.qmd) overrides via family-scoped `theme-sub-axis`, `theme-sub-legend`, and `theme-sub-plot` to keep verbose theme blocks readable.'
   alt: "Dodged bar chart of quarterly revenue by segment styled with theme-sub-axis, theme-sub-legend, and theme-sub-plot shortcuts."
