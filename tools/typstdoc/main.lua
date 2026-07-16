@@ -163,7 +163,7 @@ local function enforce_examples_gallery(opts)
   local orphans = examples.orphans(util.list_dir_files(opts.examples), slugs)
   if #orphans == 0 then return end
   report(string.format(
-    "%d example(s) missing a gallery.yml entry (add one, or extend examples.EXCLUDE): %s",
+    "%d example(s) missing an entry in either gallery.yml (add one, or extend examples.EXCLUDE): %s",
     #orphans, table.concat(orphans, ", ")))
 end
 

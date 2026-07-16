@@ -342,7 +342,7 @@
   data: "two numerics"
   chart: "scatter plot"
   title: "Bundled mpg dataset"
-  description: 'Highway mpg against engine displacement, filled by class — a quick look at the bundled [`mpg`](../reference/datasets/mpg.qmd) dataset.'
+  description: 'Highway mpg against engine displacement, filled by class: a quick look at the bundled [`mpg`](../reference/datasets/mpg.qmd) dataset.'
   alt: "Scatter plot of highway mpg against engine displacement, with points filled by vehicle class, showing highway mpg falling as displacement rises."
 
 - slug: smooth
@@ -1071,7 +1071,7 @@
   intent: techniques
   data: "any"
   title: "after-stat: bind to a stat output"
-  description: '[`after-stat`](../reference/core/after-stat.qmd) binds an aesthetic to a column produced by the layer''s stat — here y is mapped to the `_count` column emitted by `stat-count`.'
+  description: '[`after-stat`](../reference/core/after-stat.qmd) binds an aesthetic to a column produced by the layer''s stat; here y is mapped to the `_count` column emitted by `stat-count`.'
   alt: "Bar chart of category counts with the y aesthetic bound explicitly via after-stat, matching the implicit y default."
 
 - slug: late-binding-after-scale
