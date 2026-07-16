@@ -1,5 +1,5 @@
-// Showcase: scatter with a trend line and named outliers; the two-seaters
-// that defy the trend get labels instead of leaving readers guessing.
+// Showcase: scatter with a trend line and a named outlier; the two-seater
+// that defies the trend gets a label instead of leaving readers guessing.
 
 #import "../lib.typ": *
 

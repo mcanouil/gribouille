@@ -210,7 +210,7 @@
   showcase: true
   title: "Area chart with annotated peak"
   description: '[`geom-area`](../reference/geoms/geom-area.qmd) keeps its zero baseline while [`annotate`](../reference/geoms/annotate.qmd) names the extremum instead of leaving readers to find it.'
-  alt: "Area chart of median unemployment duration rising from about 9 weeks in 2008 to a labelled peak of 20.1 weeks in late 2009."
+  alt: "Area chart of median unemployment duration rising from about 9 weeks in early 2008 to a labelled peak of 20.1 weeks in late 2009."
 
 - slug: multilayer
   intent: evolution
@@ -319,7 +319,7 @@
   showcase: true
   title: "Count heatmap with in-cell values"
   description: 'Class-by-cylinder counts from [`count`](../reference/helpers/count.qmd) drawn with [`geom-tile`](../reference/geoms/geom-tile.qmd) on a single-hue [`scale-gradient`](../reference/scales/scale-gradient.qmd), with the number printed in every cell.'
-  alt: "Blue heatmap of vehicle counts by class and cylinder count with the count printed in each cell; four-cylinder compacts are darkest with six vehicles."
+  alt: "Blue heatmap of vehicle counts by class and cylinder count with the count printed in each cell; four-cylinder compacts are darkest with six vehicles, and empty combinations are left blank."
 
 - slug: minimal
   intent: correlation
@@ -450,7 +450,7 @@
   showcase: true
   title: "Shares, not counts"
   description: '[`position-fill`](../reference/positions/position-fill.qmd) normalises every bar to 1 so composition, not volume, is the message; the y axis reads as percentages via [`format-percent`](../reference/helpers/format-percent.qmd).'
-  alt: "Proportional stacked bar chart of cylinder-count shares within each vehicle class, with small cars dominated by four cylinders and pickups and SUVs by six and eight."
+  alt: "Proportional stacked bar chart of cylinder-count shares within each vehicle class, with small cars dominated by four cylinders and pickups and SUVs mostly six and eight."
 
 - slug: species-waffle
   intent: part-to-whole
@@ -550,8 +550,8 @@
   chart: "point ranges"
   showcase: true
   title: "Intervals over dynamite bars"
-  description: '[`geom-pointrange`](../reference/geoms/geom-pointrange.qmd) with a normal-theory 95% CI from [`stat-summary`](../reference/stats/stat-summary.qmd): small classes get visibly wide intervals, and the caption states what the range is.'
-  alt: "Point-range chart of mean highway mpg per vehicle class with 95% confidence intervals; subcompact shows a very wide interval while larger classes are tight."
+  description: '[`geom-pointrange`](../reference/geoms/geom-pointrange.qmd) with a normal-theory 95% CI from [`stat-summary`](../reference/stats/stat-summary.qmd): the car-class intervals overlap, so the ranking the means suggest does not survive the uncertainty.'
+  alt: "Point-range chart of mean highway mpg per vehicle class with 95% confidence intervals; the compact, midsize, and subcompact intervals overlap heavily, while the two single-observation classes show a bare dot and no interval."
 
 - slug: forecast-fan
   intent: uncertainty

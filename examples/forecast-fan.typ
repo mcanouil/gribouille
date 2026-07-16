@@ -68,7 +68,7 @@
     annotate(
       "text",
       x: 18.2,
-      y: 17.3,
+      y: 18.6,
       label: "50%",
       size: 8pt,
       anchor: "west",
@@ -77,7 +77,7 @@
     annotate(
       "text",
       x: 18.2,
-      y: 19.1,
+      y: 19.9,
       label: "80%",
       size: 8pt,
       anchor: "west",
@@ -86,7 +86,7 @@
     annotate(
       "text",
       x: 18.2,
-      y: 21.4,
+      y: 21.3,
       label: "95%",
       size: 8pt,
       anchor: "west",

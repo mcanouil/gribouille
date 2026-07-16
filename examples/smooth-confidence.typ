@@ -22,7 +22,7 @@
     ),
   ),
   labels: labels(
-    title: "Each added litre of displacement costs about 3.5 highway mpg",
+    title: "Each added litre of displacement costs about 3.8 highway mpg",
     subtitle: "Linear fit with its 95% confidence band",
     x: "Engine displacement (litres)",
     y: "Highway mpg",

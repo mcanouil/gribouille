@@ -16,7 +16,7 @@
     fill: scale-okabe-ito(),
   ),
   labels: labels(
-    title: "Small cars run on four cylinders, pickups and SUVs do not",
+    title: "Small cars run on four cylinders, pickups and SUVs rarely do",
     subtitle: "Share of cylinder counts within each vehicle class",
     x: "",
     y: "Share of vehicles",

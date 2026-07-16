@@ -30,7 +30,7 @@
     ),
   ),
   labels: labels(
-    title: "Four-cylinder engines power half the fleet",
+    title: "Four-cylinder engines power almost half the fleet",
     subtitle: typst({
       [Share of vehicles by cylinder count: ]
       shares

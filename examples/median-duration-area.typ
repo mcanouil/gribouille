@@ -27,10 +27,10 @@
   ),
   scales: scales(
     x: scale-date(date-format: "[year]-[month repr:numerical]"),
-    y: scale-continuous(limits: (0, 26)),
+    y: scale-continuous(limits: (0, 22)),
   ),
   labels: labels(
-    title: "Job searches stretched to half a year by late 2009",
+    title: "Job searches more than doubled in length during the recession",
     subtitle: "Median duration of unemployment (weeks), monthly",
     x: "Month",
     y: "Median duration (weeks)",

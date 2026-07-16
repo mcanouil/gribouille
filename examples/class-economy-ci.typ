@@ -27,11 +27,11 @@
     ),
   ),
   labels: labels(
-    title: "Few observations, wide intervals: small classes stay uncertain",
+    title: "Compact, midsize, and subcompact cannot be told apart",
     subtitle: "Mean highway mpg per vehicle class with 95% confidence intervals",
     x: "",
     y: "Highway mpg",
-    caption: "Interval: normal-theory 95% CI of the mean. Source: bundled mpg dataset.",
+    caption: "Interval: normal-theory 95% CI of the mean; classes with a single observation carry no interval. Source: bundled mpg dataset.",
   ),
   theme: theme-minimal(),
   width: 12cm,
