@@ -11,7 +11,7 @@ The wrangle verbs fill the three gaps native Typst leaves open: grouped aggregat
 Every wrangle verb accepts a row-store (or a column-store dictionary of arrays) and returns a row-store, so its result feeds `#plot` with no adapter.
 
 ::: {.callout-note}
-The wrangle verbs are experimental: their interfaces may change without notice while the design settles, and they may move into a separate package in the future.
+The wrangle verbs are experimental: their interfaces may change without notice while the design settles, and they may move into a dedicated Typst data-wrangling package in the future.
 Native Typst array methods and the plotting API remain stable.
 :::
 
