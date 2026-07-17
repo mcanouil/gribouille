@@ -29,18 +29,47 @@
         const byLength = versions.slice().sort((a, b) => b.url.length - a.url.length);
         const current = byLength.find((version) => here.startsWith(version.url));
 
+        // Path of the current page beneath its version base, e.g. `guides/theming.html`.
+        // Empty on a version home page.
+        let relative = "";
+        if (current) {
+          const base = new URL(current.url).pathname;
+          if (window.location.pathname.startsWith(base)) {
+            relative = window.location.pathname.slice(base.length);
+          }
+        }
+
         const items = document.createDocumentFragment();
         versions.forEach((version) => {
           const item = document.createElement('li');
           const link = document.createElement('a');
           link.className = 'dropdown-item';
-          link.href = version.url;
+          // Land on the same page in the target version, carrying any hash anchor.
+          const candidate = new URL(relative, version.url).href + window.location.hash;
+          link.href = candidate;
           link.textContent = version.latest
             ? version.version + ' (latest)'
             : version.version;
-          if (current && version.url === current.url) {
+          const isCurrent = current && version.url === current.url;
+          if (isCurrent) {
             link.classList.add('active');
             link.setAttribute('aria-current', 'page');
+          }
+          // The same page may not exist in every version (a guide added later, or
+          // a dev-only page). Probe before navigating and fall back to the version
+          // home on a miss. Skipped for the current version and for home links,
+          // where the href already resolves.
+          if (!isCurrent && relative !== "") {
+            link.addEventListener('click', (event) => {
+              event.preventDefault();
+              fetch(candidate, { method: 'HEAD' })
+                .then((response) => {
+                  window.location.href = response.ok ? candidate : version.url;
+                })
+                .catch(() => {
+                  window.location.href = version.url;
+                });
+            });
           }
           item.appendChild(link);
           items.appendChild(item);
