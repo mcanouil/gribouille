@@ -16,11 +16,18 @@
     const slot = anchor.closest('li');
     if (!slot) return;
 
+    // The version dropdown holds nothing else, so when the version list cannot be
+    // read the control must still lead somewhere: point it at the releases page
+    // rather than leaving an empty menu.
+    const fallback = () => {
+      anchor.href = "https://github.com/mcanouil/gribouille/releases";
+    };
+
     fetch("/gribouille/versions.json")
       .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
       .then((versions) => {
         if (!Array.isArray(versions) || versions.length === 0) {
-          slot.remove();
+          fallback();
           return;
         }
         // The root URL is a prefix of every versioned URL, so the longest match
@@ -76,6 +83,6 @@
         });
         slot.replaceWith(items);
       })
-      .catch(() => slot.remove());
+      .catch(fallback);
   });
 </script>
