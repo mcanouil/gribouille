@@ -89,9 +89,12 @@ website:
               >}} Changelog"
             href: changelog.qmd
           - text: "---"
+          # Placeholder: assets/scripts/version-switcher.html replaces this item at
+          # load with one entry per version read from the site-root versions.json.
+          # A static list cannot express a set that grows with each release.
           - text: "{{< iconify octicon:versions-16 title=\"Switch version\" label=\"Switch
-              version\" >}} {{< env VERSION_SWITCH >}}"
-            href: "{{< env VERSION_SWITCH_URL >}}"
+              version\" >}} Versions"
+            href: "#version-switcher"
       - text: "{{< iconify octicon:heart-fill-16 title=\"Sponsor\" label=\"Sponsor\"
           >}}"
         href: https://github.com/sponsors/mcanouil?o=esb
@@ -130,6 +133,7 @@ format:
       - file: assets/scripts/gallery-toc.html
       - file: assets/scripts/ordinal-dates.html
       - file: assets/scripts/tooltips.html
+      - file: assets/scripts/version-switcher.html
 
 execute:
   freeze: false

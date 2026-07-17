@@ -8,6 +8,7 @@
 
 ### Changes
 
+- docs: pages declare the release that introduced them with `since:`, so a guide documenting unreleased API renders a short pointer to the development documentation on the stable site instead of broken figures. (#202)
 - docs: add a "Wrangling data" guide walking a dataset from coercion through grouped aggregation, reshaping, and joining into `#plot`, with guidance on when native Typst suffices. (#198)
 - feat: `summarise(data, ..aggregations, by:)` and `count(data, ..cols, sort:)` bring grouped aggregation to the row-store data model: one output row per group, named `rows => value` aggregation closures, first-appearance group order, column-store input accepted, and output that feeds `#plot` directly. (#198)
 - feat: `as-numeric(data, col, na:)` takes a list of sentinel values (a bare value is accepted); cells equal to a sentinel (string cells compared trimmed) become `none` before parsing, so missing-value placeholders such as `"NA"` or `"-99"` do not survive as spurious numbers. (#198)

@@ -2,6 +2,7 @@
 title: "Wrangling data"
 subtitle: "Shape a dataset for `#plot`: coerce, summarise, reshape, and join a row-store with native Typst and the wrangle verbs."
 engine: markdown
+since: "0.6.0"
 ---
 
 Gribouille reads a dataset as a _row-store_: an array of dictionaries, one dictionary per row, with the column names as shared keys.

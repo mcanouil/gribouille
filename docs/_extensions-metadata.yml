@@ -1,6 +1,9 @@
-# Project-wide filter chain. Order matters: examples-data must run first so
-# `typst-render` and `modal` see the blocks it injects on the examples page.
+# Project-wide filter chain. Order matters: version-gate must run first so a page
+# too new for the version being built never reaches `typst-render`; examples-data
+# must run before `typst-render` and `modal` so they see the blocks it injects on
+# the examples page.
 filters:
+  - assets/lua/version-gate.lua
   - assets/lua/examples-data.lua
   - typst-render
   - modal

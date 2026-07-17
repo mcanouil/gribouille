@@ -1,0 +1,49 @@
+<script id="quarto-version-switcher" type="text/javascript">
+  /**
+   * @license MIT
+   * @copyright 2026 Mickaël Canouil
+   * @author Mickaël Canouil
+   */
+  // Builds the navbar version list from the site-root `versions.json` rather than
+  // from each site's own config, so publishing a new version lists it on every
+  // already-deployed site without rebuilding them.
+  document.addEventListener("DOMContentLoaded", function () {
+    const anchor = document.querySelector('a[href="#version-switcher"]');
+    if (!anchor) return;
+    const slot = anchor.closest('li');
+    if (!slot) return;
+
+    fetch("/gribouille/versions.json")
+      .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
+      .then((versions) => {
+        if (!Array.isArray(versions) || versions.length === 0) {
+          slot.remove();
+          return;
+        }
+        // The root URL is a prefix of every versioned URL, so the longest match
+        // rather than the first identifies the version actually being viewed.
+        const here = window.location.href;
+        const byLength = versions.slice().sort((a, b) => b.url.length - a.url.length);
+        const current = byLength.find((version) => here.startsWith(version.url));
+
+        const items = document.createDocumentFragment();
+        versions.forEach((version) => {
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.className = 'dropdown-item';
+          link.href = version.url;
+          link.textContent = version.latest
+            ? version.version + ' (latest)'
+            : version.version;
+          if (current && version.url === current.url) {
+            link.classList.add('active');
+            link.setAttribute('aria-current', 'page');
+          }
+          item.appendChild(link);
+          items.appendChild(item);
+        });
+        slot.replaceWith(items);
+      })
+      .catch(() => slot.remove());
+  });
+</script>
