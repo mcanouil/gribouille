@@ -84,6 +84,21 @@ jobs:
           [[ -n "$version" ]] || { echo "::error::compiler not found in typst.toml"; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - name: Set up Lua
+        uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.4"
+
+      # A page calling API newer than the latest release must declare `since:`, or
+      # it compiles against the pinned source and fails the release render. Catch
+      # that here, in seconds, rather than minutes into the render. Lives in this
+      # workflow rather than checks.yml because only this one triggers on `docs/**`.
+      - name: Validate `since:` on docs pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          lua tools/docs-since.lua --check
+
       - name: Resolve latest release tag
         id: latest-tag
         shell: bash

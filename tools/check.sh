@@ -60,12 +60,15 @@ compile_glob() {
 if command -v lua5.4 >/dev/null 2>&1; then
   lua5.4 tools/typstdoc/test/run.lua
   lua5.4 tools/skill-inventory.lua --check
+  lua5.4 tools/docs-since.lua --check
 elif command -v lua >/dev/null 2>&1; then
   lua tools/typstdoc/test/run.lua
   lua tools/skill-inventory.lua --check
+  lua tools/docs-since.lua --check
 else
   printf 'typstdoc tests: SKIP (lua not installed)\n'
   printf 'skill inventory: SKIP (lua not installed)\n'
+  printf 'docs since: SKIP (lua not installed)\n'
 fi
 
 compile_glob "unit"     "tests/unit/*.typ"

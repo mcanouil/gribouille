@@ -51,6 +51,25 @@ Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `
 Please consult that glossary before introducing new short identifiers.
 [`ARCHITECTURE.md`](ARCHITECTURE.md) maps the rendering pipeline, module boundaries, and where to add a geom, stat, scale, or position.
 
+### Documenting unreleased API
+
+The documentation site renders its pages from `main`, but pins `src/` and `lib.typ` to the latest release tag, so that the stable site documents the version people can actually install.
+A page calling API that is newer than the latest release therefore cannot compile, and fails the release build.
+
+When a page documents API that has not shipped yet, declare it in the frontmatter, matching the newest `@since` the page calls:
+
+```yaml
+---
+title: "Wrangling data"
+since: "0.6.0"
+---
+```
+
+The stable site then renders a short pointer to the development documentation in place of the page, and the development site renders it in full.
+The tag stays harmless once that version ships, so there is nothing to remove later.
+
+Verify with `lua tools/docs-since.lua --check`, which [`tools/check.sh`](tools/check.sh) runs for you.
+
 ### Error messages
 
 Never inline a panic string.
