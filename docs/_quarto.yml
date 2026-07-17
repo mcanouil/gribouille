@@ -49,9 +49,9 @@ website:
     background: dark
     search: true
     left:
-      - text: "{{< iconify octicon:home-16 title=\"Home\" label=\"Home\" >}} Home"
-        href: index.qmd
-        aria-label: "Home"
+      # - text: "{{< iconify octicon:home-16 title=\"Home\" label=\"Home\" >}} Home"
+      #   href: index.qmd
+      #   aria-label: "Home"
       - text: "{{< iconify octicon:rocket-16 title=\"Get Started\" label=\"Get Started\" >}} Get Started"
         href: get-started/index.qmd
         aria-label: "Get Started"
