@@ -76,27 +76,21 @@ website:
     right:
       - text: "{{< iconify octicon:tag-16 title=\"Current version\" label=\"Current version\" >}} {{< env VERSION >}}"
         menu:
-          - text: "{{< iconify simple-icons:typst title=\"Typst Universe\" label=\"Typst
-              Universe\" >}} Typst Universe"
+          - text: "{{< iconify simple-icons:typst title=\"Typst Universe\" label=\"Typst Universe\" >}} Typst Universe"
             href: https://typst.app/universe/package/gribouille
-          - text: "{{< iconify octicon:repo-16 title=\"GitHub repository\" label=\"GitHub
-              repository\" >}} Source code"
+          - text: "{{< iconify octicon:repo-16 title=\"GitHub repository\" label=\"GitHub repository\" >}} Source code"
             href: https://github.com/mcanouil/gribouille
-          - text: "{{< iconify octicon:tag-16 title=\"All releases\" label=\"All releases\"
-              >}} All releases"
+          - text: "{{< iconify octicon:tag-16 title=\"All releases\" label=\"All releases\" >}} All releases"
             href: https://github.com/mcanouil/gribouille/releases
-          - text: "{{< iconify octicon:history-16 title=\"Changelog\" label=\"Changelog\"
-              >}} Changelog"
+          - text: "{{< iconify octicon:history-16 title=\"Changelog\" label=\"Changelog\" >}} Changelog"
             href: changelog.qmd
           - text: "---"
           # Placeholder: assets/scripts/version-switcher.html replaces this item at
           # load with one entry per version read from the site-root versions.json.
           # A static list cannot express a set that grows with each release.
-          - text: "{{< iconify octicon:versions-16 title=\"Switch version\" label=\"Switch
-              version\" >}} Versions"
+          - text: "{{< iconify octicon:versions-16 title=\"Switch version\" label=\"Switch version\" >}} Versions"
             href: "#version-switcher"
-      - text: "{{< iconify octicon:heart-fill-16 title=\"Sponsor\" label=\"Sponsor\"
-          >}}"
+      - text: "{{< iconify octicon:heart-fill-16 title=\"Sponsor\" label=\"Sponsor\" >}}"
         href: https://github.com/sponsors/mcanouil?o=esb
         aria-label: "Sponsor"
 
