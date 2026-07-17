@@ -66,6 +66,7 @@ jobs:
       typst-version: ${{ steps.typst-version.outputs.version }}
       tag: ${{ steps.latest-tag.outputs.tag }}
       matrix: ${{ steps.matrix.outputs.matrix }}
+      versions: ${{ steps.matrix.outputs.versions }}
 
     steps:
       - name: Checkout repository
@@ -83,6 +84,21 @@ jobs:
           [[ -n "$version" ]] || { echo "::error::compiler not found in typst.toml"; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - name: Set up Lua
+        uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.4"
+
+      # A page calling API newer than the latest release must declare `since:`, or
+      # it compiles against the pinned source and fails the release render. Catch
+      # that here, in seconds, rather than minutes into the render. Lives in this
+      # workflow rather than checks.yml because only this one triggers on `docs/**`.
+      - name: Validate `since:` on docs pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          lua tools/docs-since.lua --check
+
       - name: Resolve latest release tag
         id: latest-tag
         shell: bash
@@ -95,31 +111,47 @@ jobs:
             echo "Latest release tag: ${LATEST_TAG}"
           fi
 
+      # Every version is built on pull requests too, not just dev: docs content comes
+      # from the branch under review while `src` stays pinned to the tag, so a page
+      # written against unreleased API only fails on the release build. Building dev
+      # alone is what let the wrangle guide reach the published release site broken.
       - name: Build render matrix
         id: matrix
         shell: bash
         env:
           LATEST_TAG: ${{ steps.latest-tag.outputs.tag }}
-          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          # Navbar version-switch targets need absolute URLs: relative paths cannot
-          # reach the stable root from deep dev pages. Derive them from the site URL.
+          # versions.json entries need absolute URLs: the switcher is reachable from
+          # any depth on any site, so relative paths cannot address the other sites.
           SITE_URL=$(awk '/^[[:space:]]*site-url:/ { sub(/^[[:space:]]*site-url:[[:space:]]*/, ""); gsub(/["'\'']/, ""); print; exit }' docs/_quarto.yml)
           [[ -n "${SITE_URL}" ]] || { echo "::error::site-url not found in docs/_quarto.yml"; exit 1; }
-          if [ "${EVENT_NAME}" = "pull_request" ]; then
-            # The release profile renders the Typst code from the latest tag, which a
-            # pull request cannot change, so building it here would only burn time.
-            matrix='{"include":[{"profile":"dev","ref":"","version":"dev","switch_label":"","switch_href":"","assets_dir":""}]}'
-          elif [ -n "${LATEST_TAG}" ]; then
+          if [ -n "${LATEST_TAG}" ]; then
             # Release at root (tagged ref), dev at /dev/ (triggering ref, i.e. main).
-            # Switch link: release points to dev, dev points back to the stable root.
-            matrix='{"include":[{"profile":"release","ref":"'"${LATEST_TAG}"'","version":"'"${LATEST_TAG}"'","switch_label":"Development version","switch_href":"'"${SITE_URL}/dev/"'","assets_dir":""},{"profile":"dev","ref":"","version":"dev","switch_label":"Stable ('"${LATEST_TAG}"')","switch_href":"'"${SITE_URL}/"'","assets_dir":"docs/_site/dev"}]}'
+            # Only these two are published. Archiving older releases at /x.y.z/ needs
+            # the delta between main's docs and the tag to be additive, since `since:`
+            # can express API that was added but not API renamed or removed; 0.4.0 and
+            # older cross the row-store migration (3fbf2cfb) and cannot build. Start
+            # archiving from 1.0.0.
+            matrix=$(jq -nc --arg tag "${LATEST_TAG}" '{include:[
+              {profile:"release", ref:$tag, version:$tag, assets_dir:""},
+              {profile:"dev", ref:"", version:"dev", assets_dir:"docs/_site/dev"}
+            ]}')
+            versions=$(jq -nc --arg tag "${LATEST_TAG}" --arg site "${SITE_URL}" '[
+              {version:$tag, url:($site + "/"), latest:true},
+              {version:"dev", url:($site + "/dev/")}
+            ]')
           else
-            # No release yet: dev content at root, single site with nothing to switch to.
-            matrix='{"include":[{"profile":"no-release","ref":"","version":"dev","switch_label":"","switch_href":"","assets_dir":"docs/_site"}]}'
+            # No release yet: dev content at root, single site and a single version.
+            matrix=$(jq -nc '{include:[
+              {profile:"no-release", ref:"", version:"dev", assets_dir:"docs/_site"}
+            ]}')
+            versions=$(jq -nc --arg site "${SITE_URL}" '[{version:"dev", url:($site + "/")}]')
           fi
-          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "matrix=${matrix}"
+            echo "versions=${versions}"
+          } >> "${GITHUB_OUTPUT}"
 
   build:
     name: Render ${{ matrix.profile }} site
@@ -133,9 +165,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       QUARTO_TYPST: typst
+      # Drives the navbar label, the example `@preview` import rewrite, and the
+      # `since:` page gate in assets/lua/version-gate.lua.
       VERSION: ${{ matrix.version }}
-      VERSION_SWITCH: ${{ matrix.switch_label }}
-      VERSION_SWITCH_URL: ${{ matrix.switch_href }}
 
     steps:
       - name: Checkout repository
@@ -162,6 +194,22 @@ jobs:
         uses: typst-community/setup-typst@v5
         with:
           typst-version: ${{ needs.resolve.outputs.typst-version }}
+
+      # typst-render caches compiled figures under `docs/.quarto` (gitignored), so
+      # every run otherwise recompiles all ~4000 of them from scratch at roughly a
+      # second each. Each filename embeds a hash of the block and of the Typst
+      # sources it imports, so a source change cannot serve a stale figure; the
+      # compiler version is not part of that hash, hence the key. Bump the `v1`
+      # epoch to discard accumulated entries (nothing prunes them: cache-refresh
+      # is off).
+      - name: Cache compiled Typst figures
+        uses: actions/cache@v6
+        with:
+          path: docs/.quarto/typst-render
+          key: >-
+            typst-render-v1-${{ matrix.version }}-${{ needs.resolve.outputs.typst-version }}-${{ github.sha }}
+          restore-keys: |
+            typst-render-v1-${{ matrix.version }}-${{ needs.resolve.outputs.typst-version }}-
 
       - name: Set up Quarto CLI
         uses: quarto-dev/quarto-actions/setup@v2
@@ -237,9 +285,16 @@ jobs:
           merge-multiple: true
           path: docs/_site
 
+      # Written once at the site root and read by every site's version switcher, so
+      # publishing a version lists it on the already-deployed sites without a rebuild.
       - name: Prepare site for deployment
         shell: bash
-        run: touch docs/_site/.nojekyll
+        env:
+          VERSIONS: ${{ needs.resolve.outputs.versions }}
+        run: |
+          set -euo pipefail
+          touch docs/_site/.nojekyll
+          jq -e . <<< "${VERSIONS}" > docs/_site/versions.json
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
