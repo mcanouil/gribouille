@@ -8,7 +8,10 @@
   // from each site's own config, so publishing a new version lists it on every
   // already-deployed site without rebuilding them.
   document.addEventListener("DOMContentLoaded", function () {
-    const anchor = document.querySelector('a[href="#version-switcher"]');
+    // Quarto rewrites the placeholder href to a relative path (`./#version-switcher`
+    // at the root, `../#version-switcher` deeper), so match the fragment suffix
+    // rather than an exact href.
+    const anchor = document.querySelector('a[href$="#version-switcher"]');
     if (!anchor) return;
     const slot = anchor.closest('li');
     if (!slot) return;
