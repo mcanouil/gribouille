@@ -49,30 +49,39 @@ website:
     background: dark
     search: true
     left:
-      - text: "Home"
+      - text: "{{< iconify octicon:home-16 title=\"Home\" label=\"Home\" >}} Home"
         href: index.qmd
-      - text: "Get Started"
+        aria-label: "Home"
+      - text: "{{< iconify octicon:rocket-16 title=\"Get Started\" label=\"Get Started\" >}} Get Started"
         href: get-started/index.qmd
-      - text: "Guides"
+        aria-label: "Get Started"
+      - text: "{{< iconify octicon:book-16 title=\"Guides\" label=\"Guides\" >}} Guides"
+        aria-label: "Guides"
         menu:
-          - text: "Theming"
+          - text: "{{< iconify octicon:paintbrush-16 title=\"Theming\" label=\"Theming\" >}} Theming"
             href: guides/theming.qmd
-          - text: "Recipes"
+          - text: "{{< iconify octicon:list-unordered-16 title=\"Recipes\" label=\"Recipes\" >}} Recipes"
             href: guides/recipes.qmd
-          - text: "Wrangling data"
+          - text: "{{< iconify octicon:database-16 title=\"Wrangling data\" label=\"Wrangling data\" >}} Wrangling data"
             href: guides/wrangle.qmd
-          - text: "Accessibility"
+          - text: "{{< iconify octicon:accessibility-16 title=\"Accessibility\" label=\"Accessibility\" >}} Accessibility"
             href: guides/accessibility.qmd
-          - text: "Benchmarks"
+          - text: "{{< iconify octicon:graph-16 title=\"Benchmarks\" label=\"Benchmarks\" >}} Benchmarks"
             href: guides/benchmarks.qmd
-          - text: "AI Assistants"
+          - text: "{{< iconify octicon:copilot-16 title=\"AI Assistants\" label=\"AI Assistants\" >}} AI Assistants"
             href: guides/ai-assistants.qmd
-      - text: "Reference"
+      - text: "{{< iconify octicon:code-16 title=\"Reference\" label=\"Reference\" >}} Reference"
         href: reference/index.qmd
-      - text: "Examples"
+        aria-label: "Reference"
+      - text: "{{< iconify octicon:image-16 title=\"Examples\" label=\"Examples\" >}} Examples"
         href: examples/index.qmd
-      - text: "News"
+        aria-label: "Examples"
+      - text: "{{< iconify octicon:megaphone-16 title=\"News\" label=\"News\" >}} News"
         href: news/index.qmd
+        aria-label: "News"
+      - text: "{{< iconify octicon:history-16 title=\"Changelog\" label=\"Changelog\" >}} Changelog"
+        href: changelog.qmd
+        aria-label: "Changelog"
     right:
       # Versions only: assets/scripts/version-switcher.html replaces the placeholder
       # below at load with one entry per version read from the site-root
@@ -82,17 +91,15 @@ website:
         menu:
           - text: "{{< iconify octicon:versions-16 title=\"Switch version\" label=\"Switch version\" >}} Versions"
             href: "#version-switcher"
-      - text: "{{< iconify octicon:kebab-horizontal title=\"More\" label=\"More\" >}}"
-        aria-label: "Project links"
-        menu:
-          - text: "{{< iconify simple-icons:typst title=\"Typst Universe\" label=\"Typst Universe\" >}} Typst Universe"
-            href: https://typst.app/universe/package/gribouille
-          - text: "{{< iconify octicon:repo-16 title=\"GitHub repository\" label=\"GitHub repository\" >}} Source code"
-            href: https://github.com/mcanouil/gribouille
-          - text: "{{< iconify octicon:tag-16 title=\"All releases\" label=\"All releases\" >}} All releases"
-            href: https://github.com/mcanouil/gribouille/releases
-          - text: "{{< iconify octicon:history-16 title=\"Changelog\" label=\"Changelog\" >}} Changelog"
-            href: changelog.qmd
+      - text: "{{< iconify simple-icons:typst title=\"Typst Universe\" label=\"Typst Universe\" >}} Typst Universe"
+        href: https://typst.app/universe/package/gribouille
+        aria-label: "Typst Universe"
+      - text: "{{< iconify octicon:repo-16 title=\"GitHub repository\" label=\"GitHub repository\" >}} Source code"
+        href: https://github.com/mcanouil/gribouille
+        aria-label: "Source code"
+      - text: "{{< iconify octicon:tag-16 title=\"All releases\" label=\"All releases\" >}} All releases"
+        href: https://github.com/mcanouil/gribouille/releases
+        aria-label: "All releases"
       - text: "{{< iconify octicon:heart-fill-16 title=\"Sponsor\" label=\"Sponsor\" >}}"
         href: https://github.com/sponsors/mcanouil?o=esb
         aria-label: "Sponsor"
