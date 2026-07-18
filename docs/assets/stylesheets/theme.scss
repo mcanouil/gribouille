@@ -1114,12 +1114,47 @@ blockquote {
 .news-release {
   @include soft-card;
   padding: 1.25rem 1.4rem;
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.news-thumb-link {
+  flex: 0 0 auto;
+  display: block;
+  line-height: 0;
+}
+
+.news-thumb {
+  width: 320px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 2400 / 1260;
+  object-fit: cover;
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-md);
+  background: var(--gb-paper);
+}
+
+.news-release-body {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .news-release-head {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+@media (max-width: 575.98px) {
+  .news-release {
+    flex-direction: column;
+  }
+
+  .news-thumb {
+    width: 100%;
+  }
 }
 
 .news-version {

@@ -32,6 +32,10 @@ function formatDate(value) {
 <% for (const item of items) { %>
 ```{=html}
 <li class="news-release">
+<a class="news-thumb-link" href="<%= item.path %>" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+<img class="news-thumb" src="<%= item.path %>featured.png" alt="Social card for <%= item.title %>" loading="lazy">
+</a>
+<div class="news-release-body">
 <div class="news-release-head">
 <span class="news-version">v<%= item.version %></span>
 <div class="listing-date"><%= formatDate(item.date) %></div>
@@ -45,6 +49,7 @@ function formatDate(value) {
 
 ```{=html}
 <a class="news-read" href="<%= item.path %>" target="_blank" rel="noopener noreferrer">Read the announcement</a>
+</div>
 </li>
 ```
 <% } %>

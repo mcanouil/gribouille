@@ -2,7 +2,6 @@
   title: "Gribouille 0.5"
   date: "2026-07-13"
   path: "https://mickael.canouil.fr/posts/2026-07-13-gribouille-0-5/"
-  image: "assets/gribouille-0.5.png"
   description: |
     Gribouille 0.5.0 brings native kernel density estimation to Typst:
     densities, violins, two-dimensional densities, ridgelines, and a LOESS
@@ -14,7 +13,6 @@
   title: "Gribouille 0.4"
   date: "2026-06-22"
   path: "https://mickael.canouil.fr/posts/2026-06-22-gribouille-0-4/"
-  image: "assets/gribouille-0.4.png"
   description: |
     Gribouille 0.4.0 teaches the scales to read dates and times from plain strings,
     lets any character stand in as a point marker, and splits the
@@ -25,7 +23,6 @@
   title: "Gribouille 0.3"
   date: "2026-06-15"
   path: "https://mickael.canouil.fr/posts/2026-06-15-gribouille-0-3/"
-  image: "assets/gribouille-0.3.png"
   description: |
     Gribouille 0.3.0 gives guides and axes a much finer on/off switch,
     lets compose() carry its own theme, and makes geom-area() stack by
@@ -34,7 +31,6 @@
   title: "Gribouille 0.2"
   date: "2026-06-03"
   path: "https://mickael.canouil.fr/posts/2026-06-03-gribouille-0-2/"
-  image: "assets/gribouille-0.2.png"
   description: |
     Gribouille 0.2.0 is the first feature update since the launch, and 0.2.1
     follows shortly after. `compose()` can now number panels, nest, carry its
@@ -46,7 +42,6 @@
   title: "Grammar of Graphics for Typst"
   date: "2026-05-20"
   path: "https://mickael.canouil.fr/posts/2026-05-20-gribouille-grammar-of-graphics-for-typst/"
-  image: "assets/gribouille-0.1.png"
   description: |
     Gribouille is a new Typst package that brings Wilkinson's grammar of
     graphics natively into Typst, in the spirit of `ggplot2` and `plotnine`.
