@@ -3,28 +3,53 @@
   date: "2026-07-13"
   path: "https://mickael.canouil.fr/posts/2026-07-13-gribouille-0-5/"
   image: "assets/gribouille-0.5.png"
-  description: "What is new in Gribouille 0.5."
+  description: |
+    Gribouille 0.5.0 brings native kernel density estimation to Typst:
+    densities, violins, two-dimensional densities, ridgelines, and a LOESS
+    smoother, all computed in pure markup. It also rewrites the scale system
+    so the per-aesthetic `scale-*` constructors collapse into a single keyed
+    `scales()`, the largest breaking change of the release. Streamgraphs, bump
+    charts, and waffle charts join the roster too.
 - version: "0.4"
   title: "Gribouille 0.4"
   date: "2026-06-22"
   path: "https://mickael.canouil.fr/posts/2026-06-22-gribouille-0-4/"
   image: "assets/gribouille-0.4.png"
-  description: "What is new in Gribouille 0.4."
+  description: |
+    Gribouille 0.4.0 teaches the scales to read dates and times from plain strings,
+    lets any character stand in as a point marker, and splits the
+    panel grid into a major and minor cascade with minor gridlines on by default.
+    It also renames `labs()` to `labels()`,
+    and closes with a real chart built from the package's own GitHub star history.
 - version: "0.3"
   title: "Gribouille 0.3"
   date: "2026-06-15"
   path: "https://mickael.canouil.fr/posts/2026-06-15-gribouille-0-3/"
   image: "assets/gribouille-0.3.png"
-  description: "What is new in Gribouille 0.3."
+  description: |
+    Gribouille 0.3.0 gives guides and axes a much finer on/off switch,
+    lets compose() carry its own theme, and makes geom-area() stack by
+    default. A long list of legend and annotation fixes rounds it out.
 - version: "0.2"
   title: "Gribouille 0.2"
   date: "2026-06-03"
   path: "https://mickael.canouil.fr/posts/2026-06-03-gribouille-0-2/"
   image: "assets/gribouille-0.2.png"
-  description: "What is new in Gribouille 0.2."
+  description: |
+    Gribouille 0.2.0 is the first feature update since the launch, and 0.2.1
+    follows shortly after. `compose()` can now number panels, nest, carry its
+    own titles, hoist a single shared legend, and line panels up across the grid
+    with `align-panels`, `facet-grid()` gains free scales, and labels and guides
+    get tidier controls. Most of the work, though, went into the internals, where
+    a long list of panics became clear errors and correct output.
 - version: "0.1"
   title: "Grammar of Graphics for Typst"
   date: "2026-05-20"
   path: "https://mickael.canouil.fr/posts/2026-05-20-gribouille-grammar-of-graphics-for-typst/"
   image: "assets/gribouille-0.1.png"
-  description: "Introducing Gribouille, the Grammar of Graphics for Typst."
+  description: |
+    Gribouille is a new Typst package that brings Wilkinson's grammar of
+    graphics natively into Typst, in the spirit of `ggplot2` and `plotnine`.
+    Version 0.1.0 ships alongside an updated `Typst Render` Quarto extension
+    whose new `typst_define()` helper streams arbitrary Python and R values,
+    from a scalar to a Polars DataFrame, straight into Typst code blocks.

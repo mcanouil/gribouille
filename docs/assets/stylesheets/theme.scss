@@ -1101,6 +1101,71 @@ blockquote {
   }
 }
 
+// --- News releases. -----------------------------------------------------
+.news-releases {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.news-release {
+  @include soft-card;
+  padding: 1.25rem 1.4rem;
+}
+
+.news-release-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.news-version {
+  background: var(--gb-tint-primary);
+  color: var(--gb-primary);
+  border: 1px solid var(--gb-primary);
+  border-radius: var(--gb-radius-sm);
+  font-family: $font-family-monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+}
+
+.news-release .listing-date {
+  color: var(--gb-muted);
+  font-size: 0.9rem;
+}
+
+.news-release-title {
+  font-family: $font-family-serif;
+  font-size: 1.35rem;
+  margin: 0.6rem 0 0.4rem;
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.news-release-description {
+  color: var(--gb-muted);
+  margin-bottom: 0.75rem;
+}
+
+.news-read {
+  display: inline-block;
+  color: var(--gb-primary);
+  font-weight: 600;
+  text-decoration: none;
+
+  &::after {
+    content: " \2192";
+  }
+
+  &:hover, &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
 // ========================================================================
 // Home page — sketch/crayon landing blocks.
 // ========================================================================

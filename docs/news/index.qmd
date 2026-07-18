@@ -3,10 +3,9 @@ title: "News"
 subtitle: "Release announcements."
 listing:
   - id: news
+    template: ../assets/templates/_news-releases.ejs.md
     contents: ../_news.yml
-    type: default
     sort: "date desc"
-    fields: [image, date, title, description]
     sort-ui: false
     filter-ui: false
     feed: false
