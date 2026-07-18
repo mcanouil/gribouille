@@ -8,6 +8,7 @@
 
 ### Changes
 
+- docs: the navbar GitHub icon becomes a widget showing live star and fork counts and a project menu (repository, issues, pull requests, releases, star, fork, Typst Universe, sponsor), replacing the separate Typst Universe, source-code, releases, and sponsor links; the version switcher, GitHub widget, search button, and colour-scheme toggle share one pill button style. (#205)
 - docs: pages declare the release that introduced them with `since:`, so a guide documenting unreleased API renders a short pointer to the development documentation on the stable site instead of broken figures. (#202)
 - docs: add a "Wrangling data" guide walking a dataset from coercion through grouped aggregation, reshaping, and joining into `#plot`, with guidance on when native Typst suffices. (#198)
 - feat: `summarise(data, ..aggregations, by:)` and `count(data, ..cols, sort:)` bring grouped aggregation to the row-store data model: one output row per group, named `rows => value` aggregation closures, first-appearance group order, column-store input accepted, and output that feeds `#plot` directly. (#198)

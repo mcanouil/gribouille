@@ -91,18 +91,14 @@ website:
         menu:
           - text: "{{< iconify octicon:versions-16 title=\"Switch version\" label=\"Switch version\" >}} Versions"
             href: "#version-switcher"
-      - text: "{{< iconify simple-icons:typst title=\"Typst Universe\" label=\"Typst Universe\" >}}"
-        href: https://typst.app/universe/package/gribouille
-        aria-label: "Typst Universe"
-      - text: "{{< iconify octicon:repo-16 title=\"GitHub repository\" label=\"GitHub repository\" >}}"
-        href: https://github.com/mcanouil/gribouille
-        aria-label: "Source code"
-      - text: "{{< iconify octicon:tag-16 title=\"All releases\" label=\"All releases\" >}}"
-        href: https://github.com/mcanouil/gribouille/releases
-        aria-label: "All releases"
-      - text: "{{< iconify octicon:heart-fill-16 title=\"Sponsor\" label=\"Sponsor\" >}}"
-        href: https://github.com/sponsors/mcanouil?o=esb
-        aria-label: "Sponsor"
+      # GitHub widget: assets/scripts/github-widget.html replaces this placeholder
+      # at load with a button showing live star/fork counts and a project menu
+      # (repository, issues, pull requests, releases, star, fork, Typst Universe,
+      # sponsor), superseding the former standalone "Typst Universe", "Source
+      # code", "All releases", and "Sponsor" links.
+      - text: "{{< iconify octicon:mark-github-16 title=\"GitHub\" label=\"GitHub\" >}}"
+        href: "#github-widget"
+        aria-label: "GitHub"
 
 brand: _brand.yml
 
@@ -138,6 +134,7 @@ format:
       - file: assets/scripts/ordinal-dates.html
       - file: assets/scripts/tooltips.html
       - file: assets/scripts/version-switcher.html
+      - file: assets/scripts/github-widget.html
 
 execute:
   freeze: false
