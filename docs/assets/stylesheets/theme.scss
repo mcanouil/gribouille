@@ -91,6 +91,29 @@ $_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
   box-shadow: 4px 4px 0 0 var(--gb-ink);
 }
 
+// Shared shell for every right-side navbar control (version switcher, GitHub
+// widget trigger, search button, colour-scheme toggle) so they read as one set.
+// Size (text pill vs square icon) is layered on top per control.
+@mixin pill-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gb-surface);
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-sm);
+  color: var(--gb-ink) !important;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 150ms var(--gb-ease), border-color 150ms var(--gb-ease),
+              color 150ms var(--gb-ease);
+}
+
+@mixin pill-button-active {
+  background: var(--gb-tint-primary);
+  border-color: var(--gb-primary);
+  color: var(--gb-primary) !important;
+}
+
 // Paint a Bootstrap .bi::before glyph from an SVG mask, so the shape follows
 // the SVG path and the colour follows the supplied fill.
 @mixin toggle-icon($icon, $color) {
@@ -364,6 +387,173 @@ a.navbar-brand {
   margin: 0.35rem 0;
 }
 
+// --- Right-side navbar buttons/widgets. ---------------------------------
+// One pill shell (see @mixin pill-button) for the whole navbar-right set: the
+// version switcher, the GitHub widget trigger, the search button, and the
+// colour-scheme toggle. Text controls get horizontal padding; icon-only tools
+// are square. Spacing is harmonised to 0.4rem across the set: the collapse is
+// grown so `justify-content: space-between` cannot open a gap before the tools,
+// then every boundary (ms-auto gap, tool margins) uses the same 0.4rem.
+.navbar .navbar-collapse {
+  flex-grow: 1;
+}
+
+.navbar .navbar-nav.ms-auto {
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.navbar #quarto-search {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.4rem;
+}
+
+.navbar .quarto-navbar-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.4rem;
+}
+
+// Shared shell for all four controls.
+.navbar .navbar-nav.ms-auto > .nav-item > .nav-link,
+.gh-widget-trigger,
+.navbar #quarto-search .aa-DetachedSearchButton,
+.navbar .quarto-navbar-tools .quarto-color-scheme-toggle {
+  @include pill-button;
+}
+
+// Text pills (version switcher, GitHub widget) get horizontal padding.
+.navbar .navbar-nav.ms-auto > .nav-item > .nav-link,
+.gh-widget-trigger {
+  padding: 0.3rem 0.6rem;
+}
+
+// Icon-only tools (search, toggle) are a fixed 2rem square with the glyph
+// centred; the search button ships its own shadow, so drop it.
+.navbar #quarto-search .aa-DetachedSearchButton,
+.navbar .quarto-navbar-tools .quarto-color-scheme-toggle {
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  box-shadow: none;
+}
+
+// Hover/open state for all four.
+.navbar .navbar-nav.ms-auto > .nav-item > .nav-link:hover,
+.navbar .navbar-nav.ms-auto > .nav-item.show > .nav-link,
+.gh-widget-trigger:hover,
+.gh-widget-open .gh-widget-trigger,
+.navbar #quarto-search .aa-DetachedSearchButton:hover,
+.navbar #quarto-search .aa-DetachedSearchButton:focus-visible,
+.navbar .quarto-navbar-tools .quarto-color-scheme-toggle:hover,
+.navbar .quarto-navbar-tools .quarto-color-scheme-toggle:focus-visible {
+  @include pill-button-active;
+}
+
+// --- GitHub widget (navbar). --------------------------------------------
+// assets/scripts/github-widget.html replaces the `#github-widget` placeholder
+// with a button showing live star/fork counts and a project menu. Ported from
+// posit-dev/great-docs, restyled onto the gribouille tokens.
+#github-widget {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.gh-icon {
+  flex-shrink: 0;
+}
+
+.gh-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gh-stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.gh-stat svg {
+  opacity: 0.85;
+}
+
+.gh-count {
+  min-width: 1rem;
+  text-align: center;
+}
+
+.gh-dropdown-arrow {
+  opacity: 0.7;
+  transition: transform 150ms var(--gb-ease);
+}
+
+.gh-widget-open .gh-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.gh-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 12rem;
+  background: var(--gb-paper);
+  border: 1px solid var(--gb-hairline);
+  border-radius: var(--gb-radius-md);
+  box-shadow: var(--gb-shadow-soft);
+  padding: 0.35rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 150ms var(--gb-ease), transform 150ms var(--gb-ease),
+              visibility 150ms var(--gb-ease);
+  z-index: 1000;
+}
+
+.gh-widget-open .gh-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.gh-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.4rem 0.7rem;
+  color: var(--gb-ink);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: var(--gb-radius-sm);
+  transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease);
+}
+
+.gh-dropdown-item:hover,
+.gh-dropdown-item:focus-visible {
+  background: var(--gb-tint-primary);
+  color: var(--gb-primary);
+  text-decoration: none;
+}
+
+.gh-dropdown-item svg,
+.gh-dropdown-item iconify-icon {
+  flex-shrink: 0;
+}
+
+.gh-dropdown-divider {
+  height: 1px;
+  margin: 0.35rem 0;
+  background: var(--gb-hairline);
+}
+
 // --- Colour-scheme toggle (sun/moon). -----------------------------------
 // Quarto auto-injects the toggle when both light and dark themes are set, and
 // adds `.alternate` to the element when the non-default scheme is active.
@@ -407,6 +597,31 @@ a.navbar-brand {
   color: var(--gb-primary) !important;
   background: var(--gb-tint-primary);
   text-decoration: none;
+}
+
+// --- Search button internals. -------------------------------------------
+// The pill shell is applied above with the rest of the navbar-right set; these
+// rules tame the autocomplete library's own chrome so the icon-only pill stays
+// a compact square. `#quarto-search` (id) outranks the library's `.aa-*` rules.
+// Collapse the library's fixed-width icon slot and oversized glyph down to a
+// ~1rem icon, and follow currentColor so hover flips it to brand primary.
+.navbar #quarto-search .aa-DetachedSearchButtonIcon {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  color: currentColor;
+}
+
+.navbar #quarto-search .aa-DetachedSearchButtonIcon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+// The placeholder/query slots are empty in the overlay button; hide them so the
+// pill stays a compact icon-only square like the toggle.
+.navbar #quarto-search .aa-DetachedSearchButtonPlaceholder,
+.navbar #quarto-search .aa-DetachedSearchButtonQuery {
+  display: none;
 }
 
 // --- Sidebar. ------------------------------------------------------------
