@@ -75,9 +75,11 @@ runs:
           printf '%s\0' "${FILES[@]}" \
             | xargs -0 -n 1 -P "$(getconf _NPROCESSORS_ONLN)" bash -c 'compile_one "$1"' _
         fi
-        PASSED=$(cat "${RESULTS}"/*.status 2>/dev/null | grep -c '^pass ' || true)
-        FAILURES=$(cat "${RESULTS}"/*.status 2>/dev/null | awk '/^fail /{ sub(/^fail /, ""); print }')
+        # The extra /dev/null keeps cat off stdin when nullglob leaves no matches.
+        PASSED=$(cat "${RESULTS}"/*.status /dev/null | grep -c '^pass ' || true)
+        FAILURES=$(cat "${RESULTS}"/*.status /dev/null | awk '/^fail /{ sub(/^fail /, ""); print }')
         FAILED_COUNT=$(grep -c . <<< "${FAILURES}" || true)
+        rm -rf "${RESULTS}"
         {
           echo "passed=${PASSED}"
           echo "total=${TOTAL}"

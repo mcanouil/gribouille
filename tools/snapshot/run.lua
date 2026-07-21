@@ -95,7 +95,11 @@ local function compile_pool(sources, opts)
       "typst compile %s --root %s --ignore-system-fonts --ppi %d %s 2>&1",
       shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(png)
     )
-    pending[#pending + 1] = { idx = i, handle = io.popen(cmd, "r"), png = png }
+    local handle = io.popen(cmd, "r")
+    if not handle then
+      error(string.format("snapshot: failed to spawn typst for %s (io.popen returned nil)", s.src_typ))
+    end
+    pending[#pending + 1] = { idx = i, handle = handle, png = png }
   end
   while #pending > 0 do reap_oldest() end
   return results
