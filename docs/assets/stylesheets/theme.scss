@@ -554,6 +554,57 @@ a.navbar-brand {
   background: var(--gb-hairline);
 }
 
+// Below the navbar-collapse breakpoint, wrap the nav into a left-aligned
+// horizontal row instead of a full-width vertical stack, and neutralise
+// Bootstrap's `navbar-nav-scroll` region (max-height + overflow-y: auto) which
+// otherwise clips the absolute dropdown. Re-anchor the menu to the left so it
+// overlays on top and stays on screen.
+//
+// Reusable rule: below this breakpoint Bootstrap forces navbar `.dropdown-menu`
+// back to `position: static`, so an open menu flows in-document and grows the
+// navbar instead of overlaying. Re-anchor it (like the custom `.gh-dropdown`) to
+// `position: absolute` against a `position: relative` `.nav-item` so any navbar
+// dropdown overlays on top and leaves the navbar height untouched.
+@media (max-width: 991.98px) {
+  .navbar .navbar-collapse .navbar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    width: auto;
+    max-height: none;
+    overflow: visible;
+
+    .nav-link {
+      width: auto;
+    }
+  }
+
+  .navbar .navbar-collapse .navbar-nav .nav-item.dropdown {
+    position: relative;
+  }
+
+  .navbar .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+  }
+
+  .gh-dropdown {
+    right: auto;
+    left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gh-widget-trigger,
+  .gh-dropdown-arrow,
+  .gh-dropdown,
+  .gh-dropdown-item {
+    transition: none;
+  }
+}
+
 // --- Colour-scheme toggle (sun/moon). -----------------------------------
 // Quarto auto-injects the toggle when both light and dark themes are set, and
 // adds `.alternate` to the element when the non-default scheme is active.
