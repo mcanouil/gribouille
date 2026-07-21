@@ -46,7 +46,7 @@ local function parse_args(argv)
     -- failing on structural changes; `tolerance` stays 0 (no stray pixels).
     fuzz = "2%",
     only = nil,
-    jobs = tonumber(os.getenv("JOBS")) or 1,
+    jobs = math.max(1, tonumber(os.getenv("JOBS")) or 1),
   }
   local i = 1
   local function take_value(flag)

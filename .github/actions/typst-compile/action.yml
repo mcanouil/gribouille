@@ -85,7 +85,7 @@ runs:
           echo "total=${TOTAL}"
           echo "failed=${FAILED_COUNT}"
           echo "failures<<EOF"
-          echo "${FAILURES}"
+          [[ -n "${FAILURES}" ]] && echo "${FAILURES}"
           echo "EOF"
         } >> "${GITHUB_OUTPUT}"
         if [[ ${FAILED_COUNT} -gt 0 ]]; then exit 1; fi
