@@ -42,28 +42,50 @@ runs:
       run: |
         set -euo pipefail
         shopt -s nullglob
-        FAILED_COUNT=0
-        PASSED=0
-        TOTAL=0
-        FAILURES=()
-        for f in ${GLOB}; do
-          TOTAL=$((TOTAL + 1))
-          echo "::group::Compile ${f}"
-          if typst compile "${f}" --root "${ROOT}" "/tmp/$(basename "${f%.typ}").pdf"; then
-            PASSED=$((PASSED + 1))
+        # shellcheck disable=SC2206 # unquoted on purpose: the input is a glob to expand.
+        FILES=(${GLOB})
+        TOTAL=${#FILES[@]}
+        RESULTS=$(mktemp -d)
+        : > "${RESULTS}/status"
+        mkdir "${RESULTS}/logs"
+        export ROOT RESULTS
+        # Compile in parallel across all cores. Workers cannot share stdout
+        # (interleaved group markers), so each writes its own log block and a
+        # status line (short O_APPEND writes are atomic); logs are replayed in
+        # input order once all compiles finish.
+        compile_one() {
+          set -euo pipefail
+          f="$1"
+          if out=$(typst compile "${f}" --root "${ROOT}" "/tmp/$(basename "${f%.typ}").pdf" 2>&1); then
+            status=pass
           else
-            echo "::error file=${f}::Typst compilation failed"
-            FAILED_COUNT=$((FAILED_COUNT + 1))
-            FAILURES+=("${f}")
+            status=fail
           fi
-          echo "::endgroup::"
-        done
+          {
+            echo "::group::Compile ${f}"
+            [[ -n "${out}" ]] && printf '%s\n' "${out}"
+            [[ "${status}" == "fail" ]] && echo "::error file=${f}::Typst compilation failed"
+            echo "::endgroup::"
+          } > "${RESULTS}/logs/${f//\//_}.log"
+          echo "${status} ${f}" >> "${RESULTS}/status"
+        }
+        export -f compile_one
+        if [[ ${TOTAL} -gt 0 ]]; then
+          # shellcheck disable=SC2016 # single quotes on purpose: $1 expands in the sub-bash.
+          printf '%s\0' "${FILES[@]}" \
+            | xargs -0 -n 1 -P "$(getconf _NPROCESSORS_ONLN)" bash -c 'compile_one "$1"' _
+          for f in "${FILES[@]}"; do cat "${RESULTS}/logs/${f//\//_}.log"; done
+        fi
+        PASSED=$(grep -c '^pass ' "${RESULTS}/status" || true)
+        FAILURES=$(sed -n 's/^fail //p' "${RESULTS}/status")
+        FAILED_COUNT=$((TOTAL - PASSED))
+        rm -rf "${RESULTS}"
         {
           echo "passed=${PASSED}"
           echo "total=${TOTAL}"
           echo "failed=${FAILED_COUNT}"
           echo "failures<<EOF"
-          for path in "${FAILURES[@]}"; do echo "${path}"; done
+          [[ -n "${FAILURES}" ]] && echo "${FAILURES}"
           echo "EOF"
         } >> "${GITHUB_OUTPUT}"
         if [[ ${FAILED_COUNT} -gt 0 ]]; then exit 1; fi

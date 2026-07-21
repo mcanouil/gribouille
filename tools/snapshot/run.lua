@@ -28,12 +28,18 @@ Options:
   --tolerance <n> Max AE pixel count per diff (default: 0).
   --fuzz <pct>    ImageMagick `-fuzz` value (default: 2%).
   --only <key>    Only run sources whose key contains this substring.
-  --jobs <n>      Parallel typst compiles (default: $JOBS or 1).
+  --jobs <n>      Parallel typst compiles (default: $JOBS or processor count).
   --help          Show this help and exit.
 ]]
 
 local shell_quote = common.shell_quote
 local function abs(path) return common.abs(ROOT, path) end
+
+local function processor_count()
+  local code, out = util.popen_capture("getconf _NPROCESSORS_ONLN 2>/dev/null")
+  if code == 0 then return tonumber(out:match("%d+")) end
+  return nil
+end
 
 local function parse_args(argv)
   local opts = {
@@ -46,7 +52,7 @@ local function parse_args(argv)
     -- failing on structural changes; `tolerance` stays 0 (no stray pixels).
     fuzz = "2%",
     only = nil,
-    jobs = tonumber(os.getenv("JOBS")) or 1,
+    jobs = math.max(1, tonumber(os.getenv("JOBS")) or processor_count() or 1),
   }
   local i = 1
   local function take_value(flag)
@@ -75,30 +81,33 @@ local function parse_args(argv)
   return opts
 end
 
--- Spawn up to `jobs` typst processes in parallel and drain each batch
--- before starting the next. Returns an array aligned with `sources`,
--- where each entry is `{ code, log, png }`.
-local function compile_batch(sources, opts)
+-- Keep up to `jobs` typst processes in flight as a sliding window: reap the
+-- oldest handle to free a slot before spawning the next source, instead of
+-- draining a whole batch behind its slowest compile. Returns an array aligned
+-- with `sources`, where each entry is `{ code, log, png }`.
+local function compile_pool(sources, opts)
   local results = {}
-  local i = 1
-  while i <= #sources do
-    local batch = {}
-    while #batch < opts.jobs and i <= #sources do
-      local s = sources[i]
-      local png = string.format("%s/png/%s.png", opts.build_root, s.key)
-      local cmd = string.format(
-        "typst compile %s --root %s --ignore-system-fonts --ppi %d %s 2>&1",
-        shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(png)
-      )
-      batch[#batch + 1] = { idx = i, handle = io.popen(cmd, "r"), png = png }
-      i = i + 1
-    end
-    for _, b in ipairs(batch) do
-      local out = b.handle:read("*a")
-      local _, _, code = b.handle:close()
-      results[b.idx] = { code = code or 0, log = out, png = b.png }
-    end
+  local pending = {}
+  local function reap_oldest()
+    local b = table.remove(pending, 1)
+    local out = b.handle:read("*a")
+    local _, _, code = b.handle:close()
+    results[b.idx] = { code = code or 0, log = out, png = b.png }
   end
+  for i, s in ipairs(sources) do
+    if #pending >= opts.jobs then reap_oldest() end
+    local png = string.format("%s/png/%s.png", opts.build_root, s.key)
+    local cmd = string.format(
+      "typst compile %s --root %s --ignore-system-fonts --ppi %d %s 2>&1",
+      shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(png)
+    )
+    local handle = io.popen(cmd, "r")
+    if not handle then
+      error(string.format("snapshot: failed to spawn typst for %s (io.popen returned nil)", s.src_typ))
+    end
+    pending[#pending + 1] = { idx = i, handle = handle, png = png }
+  end
+  while #pending > 0 do reap_oldest() end
   return results
 end
 
@@ -148,7 +157,7 @@ local function main()
 
   opts.build_root = build_root
   local compile_fail, diff_fail, missing, ok = {}, {}, {}, 0
-  local compiled = compile_batch(sources, opts)
+  local compiled = compile_pool(sources, opts)
 
   for i, s in ipairs(sources) do
     local r = compiled[i]
