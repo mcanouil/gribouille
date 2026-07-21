@@ -28,12 +28,18 @@ Options:
   --tolerance <n> Max AE pixel count per diff (default: 0).
   --fuzz <pct>    ImageMagick `-fuzz` value (default: 2%).
   --only <key>    Only run sources whose key contains this substring.
-  --jobs <n>      Parallel typst compiles (default: $JOBS or 1).
+  --jobs <n>      Parallel typst compiles (default: $JOBS or processor count).
   --help          Show this help and exit.
 ]]
 
 local shell_quote = common.shell_quote
 local function abs(path) return common.abs(ROOT, path) end
+
+local function processor_count()
+  local code, out = util.popen_capture("getconf _NPROCESSORS_ONLN 2>/dev/null")
+  if code == 0 then return tonumber(out:match("%d+")) end
+  return nil
+end
 
 local function parse_args(argv)
   local opts = {
@@ -46,7 +52,7 @@ local function parse_args(argv)
     -- failing on structural changes; `tolerance` stays 0 (no stray pixels).
     fuzz = "2%",
     only = nil,
-    jobs = math.max(1, tonumber(os.getenv("JOBS")) or 1),
+    jobs = math.max(1, tonumber(os.getenv("JOBS")) or processor_count() or 1),
   }
   local i = 1
   local function take_value(flag)

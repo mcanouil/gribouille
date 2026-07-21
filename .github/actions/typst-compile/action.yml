@@ -46,39 +46,39 @@ runs:
         FILES=(${GLOB})
         TOTAL=${#FILES[@]}
         RESULTS=$(mktemp -d)
+        : > "${RESULTS}/status"
+        mkdir "${RESULTS}/logs"
         export ROOT RESULTS
-        # Compile in parallel across all cores; buffer each file's log and
-        # print it atomically so groups do not interleave. Status lines land
-        # in one file per compile, aggregated below.
+        # Compile in parallel across all cores. Workers cannot share stdout
+        # (interleaved group markers), so each writes its own log block and a
+        # status line (short O_APPEND writes are atomic); logs are replayed in
+        # input order once all compiles finish.
         compile_one() {
           set -euo pipefail
           f="$1"
-          out=$(mktemp)
-          if typst compile "${f}" --root "${ROOT}" "/tmp/$(basename "${f%.typ}").pdf" > "${out}" 2>&1; then
+          if out=$(typst compile "${f}" --root "${ROOT}" "/tmp/$(basename "${f%.typ}").pdf" 2>&1); then
             status=pass
           else
             status=fail
           fi
           {
             echo "::group::Compile ${f}"
-            cat "${out}"
+            [[ -n "${out}" ]] && printf '%s\n' "${out}"
             [[ "${status}" == "fail" ]] && echo "::error file=${f}::Typst compilation failed"
             echo "::endgroup::"
-          } > "${out}.block"
-          cat "${out}.block"
-          rm -f "${out}" "${out}.block"
-          echo "${status} ${f}" > "${RESULTS}/$(echo "${f}" | tr '/' '_').status"
+          } > "${RESULTS}/logs/${f//\//_}.log"
+          echo "${status} ${f}" >> "${RESULTS}/status"
         }
         export -f compile_one
         if [[ ${TOTAL} -gt 0 ]]; then
           # shellcheck disable=SC2016 # single quotes on purpose: $1 expands in the sub-bash.
           printf '%s\0' "${FILES[@]}" \
             | xargs -0 -n 1 -P "$(getconf _NPROCESSORS_ONLN)" bash -c 'compile_one "$1"' _
+          for f in "${FILES[@]}"; do cat "${RESULTS}/logs/${f//\//_}.log"; done
         fi
-        # The extra /dev/null keeps cat off stdin when nullglob leaves no matches.
-        PASSED=$(cat "${RESULTS}"/*.status /dev/null | grep -c '^pass ' || true)
-        FAILURES=$(cat "${RESULTS}"/*.status /dev/null | awk '/^fail /{ sub(/^fail /, ""); print }')
-        FAILED_COUNT=$(grep -c . <<< "${FAILURES}" || true)
+        PASSED=$(grep -c '^pass ' "${RESULTS}/status" || true)
+        FAILURES=$(sed -n 's/^fail //p' "${RESULTS}/status")
+        FAILED_COUNT=$((TOTAL - PASSED))
         rm -rf "${RESULTS}"
         {
           echo "passed=${PASSED}"
