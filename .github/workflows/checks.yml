@@ -103,6 +103,7 @@ jobs:
               echo "- Status: failed (${passed}/${total})"
               echo ""
               echo "### Failures"
+              # shellcheck disable=SC2016 # `$` is a sed regex anchor, not an expansion.
               grep -E '^  FAIL ' "${log}" | sed -E 's/^  FAIL (.*)$/- `\1`/'
             else
               echo "- Status: passed (${passed}/${total})"
@@ -255,13 +256,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Resolve typst-package-check revision
+        id: pkgcheck-rev
+        shell: bash
+        run: |
+          set -euo pipefail
+          rev=$(git ls-remote https://github.com/typst/package-check HEAD | cut -f1)
+          [[ -n "$rev" ]] || { echo "::error::could not resolve typst/package-check HEAD"; exit 1; }
+          echo "rev=${rev}" >> "${GITHUB_OUTPUT}"
+
+      # `cargo install` rebuilds from scratch every run and Swatinem/rust-cache
+      # does not cover its build artefacts; cache the installed binary instead,
+      # keyed on the upstream revision so it re-mints when package-check moves.
+      - name: Cache typst-package-check binary
+        id: pkgcheck-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/bin/typst-package-check
+          key: typst-package-check-${{ steps.pkgcheck-rev.outputs.rev }}
+
       - name: Install Rust toolchain
+        if: steps.pkgcheck-cache.outputs.cache-hit != 'true'
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo
+        if: steps.pkgcheck-cache.outputs.cache-hit != 'true'
         uses: Swatinem/rust-cache@v2
 
       - name: Install typst-package-check
+        if: steps.pkgcheck-cache.outputs.cache-hit != 'true'
         shell: bash
         run: cargo install --git https://github.com/typst/package-check --locked
 

@@ -11,9 +11,9 @@ inputs:
     required: false
     default: "check"
   jobs:
-    description: "Parallel typst compiles passed as --jobs (default: 4 to match ubuntu-latest vCPUs)."
+    description: "Parallel typst compiles passed as --jobs (default: number of processors on the runner)."
     required: false
-    default: "4"
+    default: ""
   fuzz:
     description: "ImageMagick -fuzz tolerance passed as --fuzz in check mode (default: 2%)."
     required: false
@@ -30,8 +30,14 @@ runs:
       shell: bash
       # The harness compiles with --ignore-system-fonts, so only Typst's
       # embedded fonts are used; no system font packages are needed here.
+      # ubuntu-latest ships ImageMagick preinstalled; only install on runners
+      # that lack it.
       run: |
         set -euo pipefail
+        if command -v compare > /dev/null; then
+          echo "ImageMagick already available: $(compare -version | head -1)"
+          exit 0
+        fi
         sudo apt-get update
         sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
           imagemagick
@@ -47,6 +53,7 @@ runs:
       run: |
         set -euo pipefail
         log="${RUNNER_TEMP}/snapshot.log"
+        JOBS="${JOBS:-$(getconf _NPROCESSORS_ONLN)}"
         case "${MODE}" in
           check)
             lua tools/snapshot/run.lua --check --jobs "${JOBS}" --fuzz "${FUZZ}" 2>&1 | tee "${log}"

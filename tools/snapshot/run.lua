@@ -75,30 +75,29 @@ local function parse_args(argv)
   return opts
 end
 
--- Spawn up to `jobs` typst processes in parallel and drain each batch
--- before starting the next. Returns an array aligned with `sources`,
--- where each entry is `{ code, log, png }`.
-local function compile_batch(sources, opts)
+-- Keep up to `jobs` typst processes in flight as a sliding window: reap the
+-- oldest handle to free a slot before spawning the next source, instead of
+-- draining a whole batch behind its slowest compile. Returns an array aligned
+-- with `sources`, where each entry is `{ code, log, png }`.
+local function compile_pool(sources, opts)
   local results = {}
-  local i = 1
-  while i <= #sources do
-    local batch = {}
-    while #batch < opts.jobs and i <= #sources do
-      local s = sources[i]
-      local png = string.format("%s/png/%s.png", opts.build_root, s.key)
-      local cmd = string.format(
-        "typst compile %s --root %s --ignore-system-fonts --ppi %d %s 2>&1",
-        shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(png)
-      )
-      batch[#batch + 1] = { idx = i, handle = io.popen(cmd, "r"), png = png }
-      i = i + 1
-    end
-    for _, b in ipairs(batch) do
-      local out = b.handle:read("*a")
-      local _, _, code = b.handle:close()
-      results[b.idx] = { code = code or 0, log = out, png = b.png }
-    end
+  local pending = {}
+  local function reap_oldest()
+    local b = table.remove(pending, 1)
+    local out = b.handle:read("*a")
+    local _, _, code = b.handle:close()
+    results[b.idx] = { code = code or 0, log = out, png = b.png }
   end
+  for i, s in ipairs(sources) do
+    if #pending >= opts.jobs then reap_oldest() end
+    local png = string.format("%s/png/%s.png", opts.build_root, s.key)
+    local cmd = string.format(
+      "typst compile %s --root %s --ignore-system-fonts --ppi %d %s 2>&1",
+      shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(png)
+    )
+    pending[#pending + 1] = { idx = i, handle = io.popen(cmd, "r"), png = png }
+  end
+  while #pending > 0 do reap_oldest() end
   return results
 end
 
@@ -148,7 +147,7 @@ local function main()
 
   opts.build_root = build_root
   local compile_fail, diff_fail, missing, ok = {}, {}, {}, 0
-  local compiled = compile_batch(sources, opts)
+  local compiled = compile_pool(sources, opts)
 
   for i, s in ipairs(sources) do
     local r = compiled[i]
