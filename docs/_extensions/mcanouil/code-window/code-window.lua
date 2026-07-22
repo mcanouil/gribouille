@@ -520,7 +520,11 @@ local function process_html(block)
     return block
   end
 
-  local filename = block.classes[1]
+  -- Default/unknown/no-language blocks carry their label on
+  -- code-window-auto-label (set by the language module); everything else uses
+  -- its language class.
+  local filename = block.attributes['code-window-auto-label'] or block.classes[1]
+  block.attributes['code-window-auto-label'] = nil
 
   -- Set the filename attribute so Quarto creates its own .code-with-filename
   -- wrapper. This preserves the CodeBlock+OrderedList sibling structure
@@ -786,7 +790,10 @@ local function resolve_window_params(block)
 
   if (not filename or filename == '') and not no_auto then
     if CONFIG.auto_filename and block.classes and #block.classes > 0 then
-      filename = block.classes[1]
+      -- Default/unknown/no-language blocks carry their label on
+      -- code-window-auto-label; everything else uses its language class.
+      filename = block.attributes['code-window-auto-label'] or block.classes[1]
+      block.attributes['code-window-auto-label'] = nil
       is_auto = true
     end
   end
