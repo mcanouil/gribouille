@@ -819,7 +819,8 @@ a.navbar-brand {
 
 // Quarto hard-codes #dee2e6 on the panel's left/right/bottom edges, which does
 // not adapt to dark; re-derive them so all four edges match the tab borders.
-[data-bs-theme] .panel-tabset > .tab-content {
+// html (not the never-set data-bs-theme) raises specificity over Quarto's rule.
+html .panel-tabset > .tab-content {
   border-color: color-mix(in srgb, var(--gb-ink) 15%, var(--gb-paper));
 }
 
