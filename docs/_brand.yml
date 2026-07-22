@@ -31,7 +31,7 @@ color:
     crayon-teal: "#1F7A8C"
     crayon-teal-dk: "#5BB5C7"
     crayon-mustard: "#F4B740"
-    crayon-must-dk: "#FFD166"
+    crayon-mustard-dk: "#FFD166"
     crayon-mint: "#7FC8A9"
     crayon-mint-dk: "#9CDCC0"
   foreground:
@@ -48,7 +48,7 @@ color:
     dark: crayon-teal-dk
   tertiary:
     light: crayon-mustard
-    dark: crayon-must-dk
+    dark: crayon-mustard-dk
   success:
     light: crayon-mint
     dark: crayon-mint-dk
@@ -57,7 +57,7 @@ color:
     dark: crayon-teal-dk
   warning:
     light: crayon-mustard
-    dark: crayon-must-dk
+    dark: crayon-mustard-dk
   danger: "#B23A2B"
   light: paper-light
   dark: ink-light

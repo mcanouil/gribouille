@@ -35,6 +35,8 @@ website:
 
   page-footer:
     border: true
+    background: dark
+    foreground: light
     left: |
       Powered by [{{< iconify simple-icons:quarto title="Quarto Logo" label="Quarto Logo" >}} Quarto](https://quarto.org).
     center: |
@@ -47,6 +49,7 @@ website:
     logo: assets/images/logo-dark.svg
     logo-alt: "Gribouille"
     background: dark
+    foreground: light
     search: true
     left:
       # - text: "{{< iconify octicon:home-16 title=\"Home\" label=\"Home\" >}} Home"
@@ -109,6 +112,7 @@ format:
     code-copy: true
     code-link: false
     code-overflow: wrap
+    anchor-sections: true
     link-external-newwindow: true
     fig-align: center
     grid:
@@ -116,23 +120,24 @@ format:
       body-width: 1100px
       margin-width: 300px
     theme:
-      light:
+      light: &theme
         - cosmo
         - brand
         - assets/stylesheets/theme.scss
-      dark:
-        - cosmo
-        - brand
-        - assets/stylesheets/theme.scss
+      dark: *theme
+    respect-user-color-scheme: true
     syntax-highlighting:
       light: github-light
       dark: github-dark
+    include-before-body:
+      - file: assets/scripts/skip-link.html
     include-after-body:
       - file: assets/scripts/current-year.html
       - file: assets/scripts/external-links.html
       - file: assets/scripts/gallery-toc.html
       - file: assets/scripts/ordinal-dates.html
-      - file: assets/scripts/tooltips.html
+      - file: assets/scripts/a11y-fixes.html
+      - file: assets/scripts/navbar-tooltips.html
       - file: assets/scripts/version-switcher.html
       - file: assets/scripts/github-widget.html
 

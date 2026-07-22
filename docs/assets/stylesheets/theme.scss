@@ -3,7 +3,12 @@
 // @copyright 2026 Mickaël Canouil
 // @author Mickaël Canouil
 
-// Palette tokens (kept in sync with docs/_brand.yml).
+// Palette. Mirrors docs/_brand.yml, which is the source of truth; the keys here
+// must match its color.palette names exactly. Quarto does not expose the brand
+// palette as Sass variables to a user theme sheet (only as runtime
+// --quarto-scss-export-brand-* custom properties), and this runtime engine needs
+// both the light and dark hexes at compile time to emit the per-scheme --gb-*
+// tokens in a single sheet, so the values are duplicated here deliberately.
 $paper-light:        #FFFAF0;
 $paper-dark:         #161B1E;
 $ink-light:          #1A1A1A;
@@ -98,10 +103,10 @@ $_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--gb-surface);
-  border: 1px solid var(--gb-hairline);
+  background: var(--gb-navbar-surface);
+  border: 1px solid var(--gb-navbar-hairline);
   border-radius: var(--gb-radius-sm);
-  color: var(--gb-ink) !important;
+  color: var(--gb-navbar-fg) !important;
   cursor: pointer;
   font-size: 0.85rem;
   transition: background 150ms var(--gb-ease), border-color 150ms var(--gb-ease),
@@ -109,9 +114,9 @@ $_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
 }
 
 @mixin pill-button-active {
-  background: var(--gb-tint-primary);
-  border-color: var(--gb-primary);
-  color: var(--gb-primary) !important;
+  background: var(--gb-navbar-tint);
+  border-color: var(--gb-navbar-primary);
+  color: var(--gb-navbar-primary) !important;
 }
 
 // Paint a Bootstrap .bi::before glyph from an SVG mask, so the shape follows
@@ -142,6 +147,18 @@ $_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
   --gb-radius-lg: 1rem;
 
   --gb-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  // Navbar is dark-pinned in both schemes (see .navbar): these fixed tokens come
+  // from the dark palette so the bar, its dropdowns, the right-side widgets, and
+  // their tooltips stay dark and never invert in light mode. Defined once here
+  // (not per [data-bs-theme]) so both compiles resolve them identically.
+  --gb-navbar-bg:       #{$paper-dark};
+  --gb-navbar-surface:  #{$surface-dark};
+  --gb-navbar-fg:       #{$ink-dark};
+  --gb-navbar-muted:    #{$muted-dark};
+  --gb-navbar-primary:  #{$crayon-red-dk};
+  --gb-navbar-hairline: rgb(244 237 223 / 0.12);
+  --gb-navbar-tint:     rgb(255 111 96 / 0.14);
 
   // Source SVG: assets/images/doodles/underline.svg
   --gb-underline: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMTQiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPgogIDxwYXRoIGQ9Ik0zIDkgQyAyMCAzLCA0MCAxMiwgNjAgNyBTIDEwMCAzLCAxMjAgOSBTIDE2MCA0LCAxOTcgOCIKICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=");
@@ -286,10 +303,42 @@ main li a:not(.btn):not(:has(img)):not(:has(svg)):not(:has(iconify-icon)):focus-
   pointer-events: none;
 }
 
+// --- Focus outline. ------------------------------------------------------
+// Quarto leaves interactive controls with only the browser default focus ring;
+// give every control a visible outline (the link rule above only recolours
+// text, which is not a sufficient keyboard-focus indicator on buttons/icons).
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid var(--gb-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+// --- Skip link. ----------------------------------------------------------
+// Quarto/Bootstrap ships the skip link visually-hidden-focusable but unstyled,
+// so it is near-invisible when focused; give it a visible chip on focus.
+.skip-link:focus {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 2000;
+  padding: 0.5rem 0.9rem;
+  border-radius: $border-radius-sm;
+  background-color: var(--gb-ink);
+  color: var(--gb-paper);
+  font-weight: 600;
+  box-shadow: 4px 4px 0 0 var(--gb-ink);
+}
+
 // --- Navbar. -------------------------------------------------------------
+// Dark-pinned in both schemes via the fixed --gb-navbar-* tokens, matching the
+// other sites: the bar, its dropdowns, widgets, and tooltips cannot invert or
+// go invisible in light mode. !important beats Quarto's `.navbar a` colour.
 .navbar {
-  background: var(--gb-paper) !important;
-  border-bottom: 1px solid var(--gb-hairline);
+  background: var(--gb-navbar-bg) !important;
+  border-bottom: 1px solid var(--gb-navbar-hairline);
   padding-top: 0.9rem;
   padding-bottom: 0.9rem;
   backdrop-filter: saturate(180%) blur(6px);
@@ -299,7 +348,7 @@ main li a:not(.btn):not(:has(img)):not(:has(svg)):not(:has(iconify-icon)):focus-
   font-family: $font-family-sans-serif;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: var(--gb-ink) !important;
+  color: var(--gb-navbar-fg) !important;
   text-transform: none;
   text-decoration: none;
 }
@@ -316,7 +365,7 @@ a.navbar-brand {
 
 .navbar .nav-link:hover,
 .navbar .nav-link.active {
-  color: var(--gb-primary) !important;
+  color: var(--gb-navbar-primary) !important;
 }
 
 .navbar .nav-link.active::after {
@@ -326,7 +375,7 @@ a.navbar-brand {
   right: 0.6rem;
   bottom: -0.05rem;
   height: 0.4em;
-  background: var(--gb-primary);
+  background: var(--gb-navbar-primary);
   -webkit-mask: var(--gb-underline) no-repeat center / 100% 100%;
           mask: var(--gb-underline) no-repeat center / 100% 100%;
 }
@@ -353,8 +402,8 @@ a.navbar-brand {
 
 // --- Navbar dropdown (version selector). --------------------------------
 .navbar .dropdown-menu {
-  background: var(--gb-paper);
-  border: 1px solid var(--gb-hairline);
+  background: var(--gb-navbar-surface);
+  border: 1px solid var(--gb-navbar-hairline);
   border-radius: var(--gb-radius-md);
   box-shadow: var(--gb-shadow-soft);
   font-family: $font-family-sans-serif;
@@ -363,7 +412,7 @@ a.navbar-brand {
 }
 
 .navbar .dropdown-item {
-  color: var(--gb-ink);
+  color: var(--gb-navbar-fg);
   border-radius: var(--gb-radius-sm);
   padding: 0.4rem 0.7rem;
   transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease);
@@ -372,18 +421,18 @@ a.navbar-brand {
 .navbar .dropdown-item:hover,
 .navbar .dropdown-item:focus,
 .navbar .dropdown-item:focus-visible {
-  background: var(--gb-tint-primary);
-  color: var(--gb-primary);
+  background: var(--gb-navbar-tint);
+  color: var(--gb-navbar-primary);
 }
 
 .navbar .dropdown-item.active,
 .navbar .dropdown-item:active {
-  background: var(--gb-primary);
-  color: var(--gb-paper);
+  background: var(--gb-navbar-primary);
+  color: var(--gb-navbar-bg);
 }
 
 .navbar .dropdown-divider {
-  border-top-color: var(--gb-hairline);
+  border-top-color: var(--gb-navbar-hairline);
   margin: 0.35rem 0;
 }
 
@@ -504,8 +553,8 @@ a.navbar-brand {
   top: calc(100% + 6px);
   right: 0;
   min-width: 12rem;
-  background: var(--gb-paper);
-  border: 1px solid var(--gb-hairline);
+  background: var(--gb-navbar-surface);
+  border: 1px solid var(--gb-navbar-hairline);
   border-radius: var(--gb-radius-md);
   box-shadow: var(--gb-shadow-soft);
   padding: 0.35rem;
@@ -528,7 +577,7 @@ a.navbar-brand {
   align-items: center;
   gap: 10px;
   padding: 0.4rem 0.7rem;
-  color: var(--gb-ink);
+  color: var(--gb-navbar-fg);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
@@ -538,8 +587,8 @@ a.navbar-brand {
 
 .gh-dropdown-item:hover,
 .gh-dropdown-item:focus-visible {
-  background: var(--gb-tint-primary);
-  color: var(--gb-primary);
+  background: var(--gb-navbar-tint);
+  color: var(--gb-navbar-primary);
   text-decoration: none;
 }
 
@@ -551,7 +600,7 @@ a.navbar-brand {
 .gh-dropdown-divider {
   height: 1px;
   margin: 0.35rem 0;
-  background: var(--gb-hairline);
+  background: var(--gb-navbar-hairline);
 }
 
 // Below the navbar-collapse breakpoint, wrap the nav into a left-aligned
@@ -594,6 +643,34 @@ a.navbar-brand {
     right: auto;
     left: 0;
   }
+}
+
+// --- Scrollbars. ---------------------------------------------------------
+// Quarto leaves the browser default scrollbar, a light-grey bar that clashes
+// with the tinted surfaces; derive it from the page tokens so it tracks the
+// active scheme, with the primary crayon on hover. Global rules cover the code
+// blocks, tables, and TOC that scroll, so no default bar reappears.
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gb-muted) var(--gb-surface);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gb-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gb-muted);
+  border-radius: var(--gb-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gb-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -711,7 +788,11 @@ a.navbar-brand {
 
 // --- Tabsets (.panel-tabset). -------------------------------------------
 .panel-tabset .nav-tabs {
-  border-bottom: 1px solid var(--gb-hairline);
+  // This line is the panel box's top edge. --gb-hairline is only 12% alpha, so
+  // it went invisible in dark; mix ink into paper (the runtime equivalent of
+  // the other sites' body-mix) for a border that reads in both schemes and
+  // matches the tab-content edges below.
+  border-bottom: 1px solid color-mix(in srgb, var(--gb-ink) 15%, var(--gb-paper));
 }
 
 .panel-tabset .nav-tabs .nav-link {
@@ -732,8 +813,14 @@ a.navbar-brand {
 .panel-tabset .nav-tabs .nav-link.active {
   color: var(--gb-primary);
   background: transparent;
-  border-color: var(--gb-hairline);
+  border-color: color-mix(in srgb, var(--gb-ink) 15%, var(--gb-paper));
   border-bottom-color: var(--gb-paper);
+}
+
+// Quarto hard-codes #dee2e6 on the panel's left/right/bottom edges, which does
+// not adapt to dark; re-derive them so all four edges match the tab borders.
+[data-bs-theme] .panel-tabset > .tab-content {
+  border-color: color-mix(in srgb, var(--gb-ink) 15%, var(--gb-paper));
 }
 
 // --- Cards (landing and category index). --------------------------------
@@ -1031,9 +1118,9 @@ header#title-block-header .subtitle {
 // Tippy.js (loaded by Quarto in tippy.umd.min.js) styled with the gribouille
 // palette. Bound by assets/scripts/tooltips.html on navbar/footer surfaces.
 .tippy-box[data-theme~="gb"] {
-  background: var(--gb-ink);
-  color: var(--gb-paper);
-  border: 1px solid var(--gb-primary);
+  background: var(--gb-navbar-bg);
+  color: var(--gb-navbar-fg);
+  border: 1px solid var(--gb-navbar-primary);
   border-radius: var(--gb-radius-sm);
   box-shadow: var(--gb-shadow-lift);
   font-family: $font-family-sans-serif;
