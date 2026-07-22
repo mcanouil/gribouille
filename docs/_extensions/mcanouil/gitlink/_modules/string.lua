@@ -98,6 +98,68 @@ function M.strip_surrounding(text)
   return "", text, ""
 end
 
+--- Peel unbalanced surrounding brackets and trailing punctuation from a token.
+--- Unlike `strip_surrounding`, this does not require a balanced pair: it removes
+--- any run of leading opening-bracket characters and any run of trailing
+--- closing-bracket or punctuation characters. This handles bracket groups that
+--- Pandoc split across whitespace, e.g. "(#2," and "#3)" from "(#2, #3)".
+--- Leading set: ( [ { " ' ` and the 2-byte UTF-8 « (\xC2\xAB).
+--- Trailing set: ) ] } " ' ` , . ; : ! ? and the 2-byte UTF-8 » (\xC2\xBB).
+--- @param text string The input text
+--- @return string prefix Characters peeled from the start (may be empty)
+--- @return string inner The inner text after peeling
+--- @return string suffix Characters peeled from the end (may be empty)
+function M.strip_edges(text)
+  if not text or text == "" then
+    return "", text or "", ""
+  end
+
+  local leading = {
+    ["("] = true, ["["] = true, ["{"] = true,
+    ['"'] = true, ["'"] = true, ["`"] = true,
+  }
+  local trailing = {
+    [")"] = true, ["]"] = true, ["}"] = true,
+    ['"'] = true, ["'"] = true, ["`"] = true,
+    [","] = true, ["."] = true, [";"] = true,
+    [":"] = true, ["!"] = true, ["?"] = true,
+  }
+
+  local first = 1
+  local last = #text
+  local prefix = ""
+  local suffix = ""
+
+  while first <= last do
+    if text:sub(first, first + 1) == "\xC2\xAB" then
+      prefix = prefix .. "\xC2\xAB"
+      first = first + 2
+    elseif leading[text:sub(first, first)] then
+      prefix = prefix .. text:sub(first, first)
+      first = first + 1
+    else
+      break
+    end
+  end
+
+  while last >= first do
+    -- The two-byte window can only match a real «/» pair: the leading loop
+    -- never leaves \xC2 at first - 1 (openers are ASCII or the \xAB of a peeled
+    -- «), so the guillemet check cannot straddle the already-peeled prefix.
+    if last >= 2 and text:sub(last - 1, last) == "\xC2\xBB" then
+      suffix = "\xC2\xBB" .. suffix
+      last = last - 2
+    elseif trailing[text:sub(last, last)] then
+      suffix = text:sub(last, last) .. suffix
+      last = last - 1
+    else
+      break
+    end
+  end
+
+  return prefix, text:sub(first, last), suffix
+end
+
 --- Find a balanced bracket pair anywhere in the text and split around it.
 --- Walks the text from `start_pos` looking for an opening bracket whose matching
 --- closing bracket appears later in the string. Returns the text split into

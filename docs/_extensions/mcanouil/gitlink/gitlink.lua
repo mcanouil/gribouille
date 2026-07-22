@@ -755,6 +755,62 @@ local function process_commits(elem, current_platform, current_base_url)
   return nil, nil, nil
 end
 
+--- Try the issue/MR, commit, and user matchers on a single token's text.
+--- @param text string The token text to match
+--- @return pandoc.Link|pandoc.Span|nil A link, a badge span, or nil
+local function match_single(text)
+  local elem = pandoc.Str(text)
+  return process_issues_and_mrs(elem, platform, base_url)
+    or process_commits(elem, platform, base_url)
+    or process_users(elem, platform)
+end
+
+--- Match a token's text as a single reference or a comma-separated group.
+--- First tries a whole-text match. If that fails and the text is a
+--- comma-separated group (two or more segments), matches every segment; the
+--- group is recognised only when *all* segments are valid references, so mixed
+--- text such as "1,000" or "#1,note" is left untouched. Comma separators are
+--- preserved as literal `Str` inlines.
+--- @param text string The token text (already stripped of surrounding brackets)
+--- @return pandoc.Link|pandoc.Span|pandoc.List|nil A link, a badge span, a list of inlines, or nil
+local function match_reference_group(text)
+  local link = match_single(text)
+  if link then
+    return link
+  end
+
+  if not text:find(",", 1, true) then
+    return nil
+  end
+
+  local links = {}
+  local count = 0
+  for segment in (text .. ","):gmatch("([^,]*),") do
+    if segment == "" then
+      return nil
+    end
+    local seg_link = match_single(segment)
+    if not seg_link then
+      return nil
+    end
+    count = count + 1
+    links[count] = seg_link
+  end
+
+  if count < 2 then
+    return nil
+  end
+
+  local result = pandoc.List({})
+  for i = 1, count do
+    if i > 1 then
+      result:insert(pandoc.Str(","))
+    end
+    result:insert(links[i])
+  end
+  return result
+end
+
 --- Main Git hosting processing function
 --- Attempts to convert string elements into Git hosting links by trying different patterns
 --- @param elem pandoc.Str The string element to process
@@ -776,30 +832,31 @@ local function process_gitlink(elem)
     end
   end
 
-  -- Fast path: try matching the raw text directly
-  local link = process_issues_and_mrs(elem, platform, base_url)
-    or process_commits(elem, platform, base_url)
-    or process_users(elem, platform)
-
+  -- Fast path: match the raw text directly, including bare comma-separated
+  -- groups such as "#2,#3".
+  local link = match_reference_group(elem.text)
   if link then
     return link
   end
 
-  -- Slow path: strip one layer of surrounding punctuation and retry
-  local prefix, inner, suffix = str.strip_surrounding(elem.text)
+  -- Slow path: peel unbalanced surrounding brackets and trailing punctuation
+  -- and retry. This also handles bracket groups that Pandoc split across
+  -- whitespace, e.g. "(#2," and "#3)" from "(#2, #3)", and single-token groups
+  -- such as "(#2,#3)".
+  local prefix, inner, suffix = str.strip_edges(elem.text)
   if prefix ~= "" or suffix ~= "" then
     if inner ~= "" then
-      local inner_elem = pandoc.Str(inner)
-      link = process_issues_and_mrs(inner_elem, platform, base_url)
-        or process_commits(inner_elem, platform, base_url)
-        or process_users(inner_elem, platform)
-
+      link = match_reference_group(inner)
       if link then
         local result = pandoc.List({})
         if prefix ~= "" then
           result:insert(pandoc.Str(prefix))
         end
-        result:insert(link)
+        if pandoc.utils.type(link) == "List" then
+          result:extend(link)
+        else
+          result:insert(link)
+        end
         if suffix ~= "" then
           result:insert(pandoc.Str(suffix))
         end
@@ -811,7 +868,7 @@ local function process_gitlink(elem)
   -- Embedded path: scan for a bracket pair anywhere inside the token and
   -- retry the matchers on the bracket content. Handles cases where the
   -- bracket is surrounded by additional text or punctuation, e.g.
-  -- "something(#1)", "(#1).", ".(#1).", "(#1)something".
+  -- "something(#1)", "(#1).", ".(#1).", "(#1)something", "something(#1,#2)".
   local search_pos = 1
   while true do
     local b_prefix, b_content, b_suffix, open_pos = str.find_bracketed_content(elem.text, search_pos)
@@ -819,17 +876,17 @@ local function process_gitlink(elem)
       break
     end
 
-    local content_elem = pandoc.Str(b_content)
-    local content_link = process_issues_and_mrs(content_elem, platform, base_url)
-      or process_commits(content_elem, platform, base_url)
-      or process_users(content_elem, platform)
-
+    local content_link = match_reference_group(b_content)
     if content_link then
       local result = pandoc.List({})
       if b_prefix ~= "" then
         result:insert(pandoc.Str(b_prefix))
       end
-      result:insert(content_link)
+      if pandoc.utils.type(content_link) == "List" then
+        result:extend(content_link)
+      else
+        result:insert(content_link)
+      end
       if b_suffix ~= "" then
         result:insert(pandoc.Str(b_suffix))
       end
@@ -905,12 +962,15 @@ end
 --- Process Link elements to shorten platform URLs used as link text.
 --- When `gitlink.normalize-links` is true (the default), an autolink whose text
 --- equals its target (e.g. `<https://github.com/owner/repo/issues/1>`) is
---- shortened to the platform-style form (e.g. `#1`).
+--- unwrapped so the later `Str` pass converts the bare URL to its platform-style
+--- form (e.g. `#1`). Unwrapping (rather than returning the converted link here)
+--- avoids a doubly nested link, because the `Str` pass also descends into link
+--- content and would re-process the shortened text.
 --- When `gitlink.fetch-titles` is true, an autolink whose target points at a
 --- known platform URL is given a title-derived link text (issue/PR/commit
 --- title) instead of the URL when the fetch succeeds.
 --- @param elem pandoc.Link The link element to process
---- @return pandoc.Link The original or modified link
+--- @return pandoc.Link|pandoc.Str The original link, a retitled link, or the unwrapped URL
 local function process_link(elem)
   if not is_enabled or not normalize_links then
     return elem
@@ -927,11 +987,14 @@ local function process_link(elem)
       end
     end
 
+    -- Only unwrap when the URL is a recognised platform reference; otherwise the
+    -- autolink is left untouched so ordinary URLs keep their link.
+    -- `process_gitlink` returns its argument unchanged when nothing matches, so
+    -- an identity check reliably detects a conversion. `pandoc.utils.type`
+    -- cannot be used here: it reports "Inline" for both `Str` and `Link`.
     local temp_str = pandoc.Str(link_text)
-    local result = process_gitlink(temp_str)
-
-    if pandoc.utils.type(result) == "Link" then
-      return result
+    if process_gitlink(temp_str) ~= temp_str then
+      return temp_str
     end
   end
 
