@@ -1,0 +1,15 @@
+---
+title: "Page not found"
+toc: false
+sidebar: false
+---
+
+::: {.atelier-404}
+
+[404]{.atelier-404-code aria-hidden="true"}
+
+The page you are looking for does not exist or has moved.
+
+[Back to home](/){.atelier-404-home}
+
+:::

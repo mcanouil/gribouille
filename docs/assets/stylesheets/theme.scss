@@ -1180,6 +1180,44 @@ blockquote {
 }
 
 // ========================================================================
+// 404 page — ghost numeral hero.
+// ========================================================================
+// Quarto renders 404.qmd as an ordinary page with no distinguishing class;
+// the page opts in by wrapping its content in a .atelier-404 div.
+.atelier-404 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+  min-height: 55vh;
+}
+
+.atelier-404 .atelier-404-code {
+  font-size: clamp(6rem, 20vw, 11rem);
+  font-weight: 700;
+  line-height: 1;
+  color: color-mix(in srgb, var(--gb-paper) 88%, var(--gb-ink));
+  user-select: none;
+}
+
+.atelier-404 .atelier-404-home {
+  display: inline-block;
+  padding: 0.45rem 1.1rem;
+  border: 1px solid var(--gb-primary);
+  border-radius: var(--gb-radius-md);
+  color: var(--gb-primary);
+  text-decoration: none;
+}
+
+.atelier-404 .atelier-404-home:hover,
+.atelier-404 .atelier-404-home:focus-visible {
+  background: color-mix(in srgb, var(--gb-paper) 92%, var(--gb-ink));
+  text-decoration: underline;
+}
+
+// ========================================================================
 // Home page — sketch/crayon landing blocks.
 // ========================================================================
 
