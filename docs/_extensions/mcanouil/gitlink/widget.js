@@ -5,9 +5,9 @@
  * is injected by the gitlink Lua filter as a JSON script element; counts come
  * from the platform REST API, cached in localStorage for four hours so the
  * rate limit is not hit on every page view. A stale cache or `?` covers a
- * failed request. Octicon bodies for the icons the menu uses arrive in the
- * configuration (`icons`); other icon names render as Bootstrap Icons, which
- * Quarto bundles with every HTML page.
+ * failed request. Octicon path data for the icons the menu uses arrives in
+ * the configuration (`icons`); other icon names render as Bootstrap Icons,
+ * which Quarto bundles with every HTML page.
  *
  * @license MIT
  * @copyright 2026 Mickaël Canouil
@@ -21,8 +21,11 @@
 
   const CACHE_DURATION = 4 * 60 * 60 * 1000;
 
-  const ARROW_SVG =
-    '<svg class="gitlink-widget-arrow" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/></svg>';
+  const SVG_NS = "http://www.w3.org/2000/svg";
+
+  const ARROW_PATHS = [
+    { d: "M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z" },
+  ];
 
   const readConfig = () => {
     const node = document.getElementById("gitlink-widget-config");
@@ -62,25 +65,32 @@
     }
   };
 
-  // An icon spec is a name whose octicon body was embedded in the config, a
-  // Bootstrap icon name (Quarto bundles Bootstrap Icons and uses the same
-  // names for its navbar tools and callouts), or a raw `<svg` string for the
-  // widget's own internals. Returns an element or null.
+  // Build an SVG element from path attribute objects ({d, fill-rule}) so no
+  // HTML string is ever parsed.
+  const buildSvg = (paths, size) => {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 16 16");
+    svg.setAttribute("width", String(size));
+    svg.setAttribute("height", String(size));
+    svg.setAttribute("fill", "currentColor");
+    svg.setAttribute("aria-hidden", "true");
+    paths.forEach((attrs) => {
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("d", attrs.d);
+      if (attrs["fill-rule"]) path.setAttribute("fill-rule", attrs["fill-rule"]);
+      svg.appendChild(path);
+    });
+    return svg;
+  };
+
+  // An icon spec is a name whose octicon paths were embedded in the config,
+  // or a Bootstrap icon name (Quarto bundles Bootstrap Icons and uses the
+  // same names for its navbar tools and callouts). Returns an element or null.
   const buildIcon = (spec, size, icons) => {
     if (!spec) return null;
-    const holder = document.createElement("span");
-    holder.className = "gitlink-widget-icon";
-    holder.setAttribute("aria-hidden", "true");
-    if (typeof spec === "string" && spec.indexOf("<svg") === 0) {
-      holder.innerHTML = spec;
-      return holder;
-    }
-    const body = icons && icons[spec];
-    if (body) {
-      holder.innerHTML =
-        '<svg viewBox="0 0 16 16" width="' + size + '" height="' + size +
-        '" fill="currentColor" aria-hidden="true">' + body + "</svg>";
-      return holder.firstChild;
+    const paths = icons && icons[spec];
+    if (paths) {
+      return buildSvg(paths, size);
     }
     if (typeof spec === "string" && /^[a-z0-9-]+$/.test(spec)) {
       const icon = document.createElement("i");
@@ -130,8 +140,9 @@
       trigger.appendChild(stats);
     }
 
-    const arrow = buildIcon(ARROW_SVG, 16, config.icons);
-    trigger.appendChild(arrow.firstChild);
+    const arrow = buildSvg(ARROW_PATHS, 16);
+    arrow.classList.add("gitlink-widget-arrow");
+    trigger.appendChild(arrow);
     return trigger;
   };
 

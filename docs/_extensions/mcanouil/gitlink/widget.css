@@ -160,8 +160,7 @@
 }
 
 .navbar .gitlink-widget-item svg,
-.navbar .gitlink-widget-item .bi,
-.navbar .gitlink-widget-item .gitlink-widget-icon {
+.navbar .gitlink-widget-item .bi {
   flex-shrink: 0;
 }
 
