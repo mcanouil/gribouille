@@ -102,20 +102,98 @@ local function resolve_template(template, context)
   return resolved
 end
 
---- Render a metadata value to an HTML string for use as a link label.
---- Inline values are written with the HTML writer so shortcode output in the
---- metadata (e.g. an iconify icon in an extra-link's `text`) survives; plain
---- values are escaped.
+--- @type table<string, boolean> Elements allowed in structured label parts
+local ALLOWED_LABEL_TAGS = {
+  ['iconify-icon'] = true,
+  span = true,
+  em = true,
+  strong = true,
+  code = true,
+  sub = true,
+  sup = true,
+  i = true,
+}
+
+--- @type table<string, boolean> Attributes allowed on label elements
+local ALLOWED_LABEL_ATTRIBUTES = {
+  class = true,
+  icon = true,
+  width = true,
+  height = true,
+  inline = true,
+  title = true,
+  role = true,
+  ['aria-label'] = true,
+  ['aria-hidden'] = true,
+}
+
+--- Extract allowlisted elements and text from a raw HTML fragment into label
+--- parts. Elements outside the allowlist are dropped and their surrounding
+--- text kept, so widget.js can rebuild the label with createElement and
+--- setAttribute without ever parsing HTML in the browser.
+--- @param html string The raw HTML fragment (e.g. shortcode output)
+--- @param parts table<integer, table> The accumulating list of label parts
+local function raw_html_to_parts(html, parts)
+  local position = 1
+  while true do
+    local start_pos, end_pos, tag, attr_text = html:find('<([%w-]+)(.-)>', position)
+    local before = html:sub(position, (start_pos or 0) - 1):gsub('<[^>]*>', '')
+    if before ~= '' then
+      table.insert(parts, { text = before })
+    end
+    if not start_pos then
+      break
+    end
+    local tag_lower = tag:lower()
+    if ALLOWED_LABEL_TAGS[tag_lower] then
+      local attrs = {}
+      for name, value in attr_text:gmatch('([%w-]+)%s*=%s*"([^"]*)"') do
+        if ALLOWED_LABEL_ATTRIBUTES[name:lower()] then
+          attrs[name:lower()] = value
+        end
+      end
+      -- Valueless boolean attributes (e.g. iconify's `inline`).
+      local remainder = attr_text:gsub('([%w-]+)%s*=%s*"[^"]*"', '')
+      for name in remainder:gmatch('([%w-]+)') do
+        if ALLOWED_LABEL_ATTRIBUTES[name:lower()] and attrs[name:lower()] == nil then
+          attrs[name:lower()] = ''
+        end
+      end
+      table.insert(parts, { tag = tag_lower, attrs = attrs })
+    end
+    position = end_pos + 1
+  end
+end
+
+--- Convert a metadata value to a structured label: either a plain string or
+--- a list of parts ({text} or {tag, attrs}) preserving allowlisted shortcode
+--- output (e.g. an iconify icon in an extra-link's `text`).
 --- @param value any The metadata value
---- @return string The HTML string
-local function meta_to_html(value)
-  if pandoc.utils.type(value) == 'Inlines' then
-    local ok, rendered = pcall(pandoc.write, pandoc.Pandoc({ pandoc.Plain(value) }), 'html')
-    if ok then
-      return (rendered:gsub('%s+$', ''))
+--- @return string|table The label string or parts list
+local function meta_to_label(value)
+  if pandoc.utils.type(value) ~= 'Inlines' then
+    return str.stringify(value)
+  end
+  local parts = {}
+  local buffer = {}
+  local function flush()
+    if #buffer > 0 then
+      table.insert(parts, { text = table.concat(buffer) })
+      buffer = {}
     end
   end
-  return str.escape_html(str.stringify(value))
+  for _, inline in ipairs(value) do
+    if inline.t == 'RawInline' and (inline.format == 'html' or inline.format == 'html5') then
+      flush()
+      raw_html_to_parts(inline.text, parts)
+    elseif inline.t == 'Space' or inline.t == 'SoftBreak' then
+      table.insert(buffer, ' ')
+    else
+      table.insert(buffer, str.stringify(inline))
+    end
+  end
+  flush()
+  return parts
 end
 
 --- Whether the widget is enabled in the metadata (default false).
@@ -175,9 +253,9 @@ local function resolve_extra_links(extra_meta, repo_url, extension_name)
     return links
   end
   for _, item in ipairs(extra_meta) do
-    local label = item['text'] and meta_to_html(item['text'])
+    local label = item['text'] and meta_to_label(item['text'])
     local href = item['href'] and str.stringify(item['href'])
-    if str.is_empty(label) or str.is_empty(href) then
+    if str.is_empty(item['text'] and str.stringify(item['text'])) or str.is_empty(href) then
       log.log_warning(
         extension_name,
         "Ignoring 'widget.extra-links' entry without both 'text' and 'href'."
@@ -287,11 +365,22 @@ local function build_config(spec)
 
   local api = platform_widget.api
   if api and not str.is_empty(api.endpoint) then
+    -- Platform headers are "Name: value" strings in the YAML (map keys would
+    -- be case-mangled); parse them here so widget.js gets a ready object.
+    local headers = {}
+    local has_headers = false
+    for _, header in ipairs(api.headers or {}) do
+      local name, value = str.stringify(header):match('^([^:]+):%s*(.+)$')
+      if name then
+        headers[name] = value
+        has_headers = true
+      end
+    end
     config.api = {
       endpoint = resolve_template(api.endpoint, context),
       starsField = api.stars_field,
       forksField = api.forks_field,
-      headers = api.headers,
+      headers = has_headers and headers or nil,
     }
   end
 

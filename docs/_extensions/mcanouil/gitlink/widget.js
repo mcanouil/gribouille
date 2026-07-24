@@ -76,41 +76,37 @@
     }
   };
 
-  // Copy sanitised label markup into `target`. Labels are HTML rendered by
-  // the Lua filter (shortcode output such as an iconify icon); rebuild them
-  // through an element and attribute allowlist instead of assigning raw HTML,
-  // so scripts, event handlers, and URL-bearing attributes never reach the
-  // live DOM. Disallowed elements are unwrapped to keep their text.
-  const ALLOWED_LABEL_TAGS = ["SPAN", "EM", "STRONG", "CODE", "SUB", "SUP", "I", "ICONIFY-ICON"];
+  // Labels arrive either as plain strings or as structured parts emitted by
+  // the Lua filter: {text} or {tag, attrs} with tags and attributes already
+  // allowlisted at render time. The same allowlist is enforced again here,
+  // and everything is built with createElement/createTextNode, so no HTML
+  // string is ever parsed in the browser.
+  const ALLOWED_LABEL_TAGS = ["span", "em", "strong", "code", "sub", "sup", "i", "iconify-icon"];
   const ALLOWED_LABEL_ATTRIBUTES = [
     "class", "icon", "width", "height", "inline", "title", "role",
     "aria-label", "aria-hidden",
   ];
 
-  const sanitiseLabelInto = (target, html) => {
-    const parsed = new DOMParser().parseFromString(html, "text/html");
-    const copyInto = (destination, source) => {
-      source.childNodes.forEach((node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          destination.appendChild(document.createTextNode(node.textContent));
-          return;
+  const buildLabelInto = (target, label) => {
+    if (typeof label === "string") {
+      target.appendChild(document.createTextNode(label));
+      return;
+    }
+    (label || []).forEach((part) => {
+      if (typeof part.text === "string") {
+        target.appendChild(document.createTextNode(part.text));
+        return;
+      }
+      if (!part.tag || ALLOWED_LABEL_TAGS.indexOf(part.tag) === -1) return;
+      const element = document.createElement(part.tag);
+      const attrs = part.attrs || {};
+      ALLOWED_LABEL_ATTRIBUTES.forEach((name) => {
+        if (typeof attrs[name] === "string") {
+          element.setAttribute(name, attrs[name]);
         }
-        if (node.nodeType !== Node.ELEMENT_NODE) return;
-        if (ALLOWED_LABEL_TAGS.indexOf(node.tagName) === -1) {
-          copyInto(destination, node);
-          return;
-        }
-        const element = document.createElement(node.tagName.toLowerCase());
-        ALLOWED_LABEL_ATTRIBUTES.forEach((name) => {
-          if (node.hasAttribute(name)) {
-            element.setAttribute(name, node.getAttribute(name));
-          }
-        });
-        copyInto(element, node);
-        destination.appendChild(element);
       });
-    };
-    copyInto(target, parsed.body);
+      target.appendChild(element);
+    });
   };
 
   // Build an SVG element from path attribute objects ({d, fill-rule}) so no
@@ -219,7 +215,7 @@
       if (icon) item.appendChild(icon);
       const label = document.createElement("span");
       label.className = "gitlink-widget-item-label";
-      sanitiseLabelInto(label, link.label);
+      buildLabelInto(label, link.label);
       item.appendChild(label);
       dropdown.appendChild(item);
     });
@@ -258,15 +254,7 @@
     }
     const stale = cached;
 
-    const headers = {};
-    (config.api.headers || []).forEach((header) => {
-      const separator = header.indexOf(": ");
-      if (separator > 0) {
-        headers[header.slice(0, separator)] = header.slice(separator + 2);
-      }
-    });
-
-    const options = { headers: headers };
+    const options = { headers: config.api.headers || {} };
     // Bound the request so a slow API falls back to the stale cache instead
     // of leaving the counts pending; older browsers just skip the timeout.
     if (typeof AbortSignal !== "undefined" && AbortSignal.timeout) {
