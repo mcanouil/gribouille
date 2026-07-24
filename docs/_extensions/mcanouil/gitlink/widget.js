@@ -1,0 +1,280 @@
+/**
+ * Gitlink - Repository Navbar Widget
+ * Replaces the `#gitlink-widget` navbar placeholder with a button showing live
+ * star and fork counts and a dropdown menu of repository links. Configuration
+ * is injected by the gitlink Lua filter as a JSON script element; counts come
+ * from the platform REST API, cached in localStorage for four hours so the
+ * rate limit is not hit on every page view. A stale cache or `?` covers a
+ * failed request. Octicon bodies for the icons the menu uses arrive in the
+ * configuration (`icons`); other icon names render as Bootstrap Icons, which
+ * Quarto bundles with every HTML page.
+ *
+ * @license MIT
+ * @copyright 2026 Mickaël Canouil
+ * @author Mickaël Canouil
+ */
+// Widget inspired by and derived from the GitHub button in
+// https://github.com/posit-dev/great-docs by Rich Iannone
+// (https://github.com/rich-iannone).
+(function () {
+  "use strict";
+
+  const CACHE_DURATION = 4 * 60 * 60 * 1000;
+
+  const ARROW_SVG =
+    '<svg class="gitlink-widget-arrow" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/></svg>';
+
+  const readConfig = () => {
+    const node = document.getElementById("gitlink-widget-config");
+    if (!node) return null;
+    try {
+      return JSON.parse(node.textContent);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Large numbers read better abbreviated: 1500 -> 1.5k, 2000000 -> 2M.
+  const formatCount = (value) => {
+    if (value === undefined || value === null || value === "?") return "?";
+    if (value >= 1e6) return (value / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+    if (value >= 1e3) return (value / 1e3).toFixed(1).replace(/\.0$/, "") + "k";
+    return String(value);
+  };
+
+  // Read and parse the cached stats, or null. Freshness is judged by the
+  // caller so expired data can still serve as a fallback on a failed refresh.
+  const readCache = (cacheKey) => {
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const writeCache = (cacheKey, data) => {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+    } catch (error) {
+      // localStorage may be unavailable (private mode, quota); counts still
+      // render from the live response, only the cache is skipped.
+    }
+  };
+
+  // An icon spec is a name whose octicon body was embedded in the config, a
+  // Bootstrap icon name (Quarto bundles Bootstrap Icons and uses the same
+  // names for its navbar tools and callouts), or a raw `<svg` string for the
+  // widget's own internals. Returns an element or null.
+  const buildIcon = (spec, size, icons) => {
+    if (!spec) return null;
+    const holder = document.createElement("span");
+    holder.className = "gitlink-widget-icon";
+    holder.setAttribute("aria-hidden", "true");
+    if (typeof spec === "string" && spec.indexOf("<svg") === 0) {
+      holder.innerHTML = spec;
+      return holder;
+    }
+    const body = icons && icons[spec];
+    if (body) {
+      holder.innerHTML =
+        '<svg viewBox="0 0 16 16" width="' + size + '" height="' + size +
+        '" fill="currentColor" aria-hidden="true">' + body + "</svg>";
+      return holder.firstChild;
+    }
+    if (typeof spec === "string" && /^[a-z0-9-]+$/.test(spec)) {
+      const icon = document.createElement("i");
+      icon.className = "bi bi-" + spec;
+      icon.setAttribute("aria-hidden", "true");
+      icon.style.fontSize = size + "px";
+      icon.style.lineHeight = "1";
+      return icon;
+    }
+    return null;
+  };
+
+  const buildStat = (name, title, iconKey, icons) => {
+    const stat = document.createElement("span");
+    stat.className = "gitlink-widget-stat gitlink-widget-" + name;
+    stat.title = title;
+    const icon = buildIcon(iconKey, 14, icons);
+    if (icon) stat.appendChild(icon);
+    const count = document.createElement("span");
+    count.className = "gitlink-widget-count";
+    count.dataset.stat = name;
+    count.textContent = "-";
+    stat.appendChild(count);
+    return stat;
+  };
+
+  const buildTrigger = (config) => {
+    const trigger = document.createElement("div");
+    trigger.className = "gitlink-widget-trigger";
+    trigger.setAttribute("role", "button");
+    trigger.setAttribute("aria-haspopup", "true");
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.setAttribute("tabindex", "0");
+    trigger.setAttribute("aria-label", config.menuLabel);
+
+    const platformIcon = buildIcon(config.icon, 20, config.icons);
+    if (platformIcon) {
+      platformIcon.classList.add("gitlink-widget-platform-icon");
+      trigger.appendChild(platformIcon);
+    }
+
+    if (config.api) {
+      const stats = document.createElement("span");
+      stats.className = "gitlink-widget-stats";
+      stats.appendChild(buildStat("stars", "Stars", "star", config.icons));
+      stats.appendChild(buildStat("forks", "Forks", "fork", config.icons));
+      trigger.appendChild(stats);
+    }
+
+    const arrow = buildIcon(ARROW_SVG, 16, config.icons);
+    trigger.appendChild(arrow.firstChild);
+    return trigger;
+  };
+
+  const buildDropdown = (config) => {
+    const dropdown = document.createElement("div");
+    dropdown.className = "gitlink-widget-dropdown";
+    dropdown.setAttribute("role", "menu");
+    dropdown.setAttribute("aria-hidden", "true");
+
+    config.links.forEach((link) => {
+      if (link.divider) {
+        const divider = document.createElement("div");
+        divider.className = "gitlink-widget-divider";
+        dropdown.appendChild(divider);
+        return;
+      }
+      const item = document.createElement("a");
+      item.className = "gitlink-widget-item";
+      item.setAttribute("role", "menuitem");
+      item.href = link.href;
+      item.target = "_blank";
+      item.rel = "noopener";
+      const icon = buildIcon(link.icon, 16, config.icons);
+      if (icon) item.appendChild(icon);
+      // Labels arrive as HTML rendered by the Lua filter, so shortcode output
+      // (e.g. an iconify icon written in the entry's `text`) survives.
+      const label = document.createElement("span");
+      label.className = "gitlink-widget-item-label";
+      label.innerHTML = link.label;
+      item.appendChild(label);
+      dropdown.appendChild(item);
+    });
+    return dropdown;
+  };
+
+  const buildWidget = (config) => {
+    const widget = document.createElement("li");
+    widget.className = "nav-item";
+    const root = document.createElement("div");
+    root.id = "gitlink-widget";
+    root.appendChild(buildTrigger(config));
+    root.appendChild(buildDropdown(config));
+    widget.appendChild(root);
+    return widget;
+  };
+
+  const showStats = (widget, stats) => {
+    const setCount = (selector, value) => {
+      const node = widget.querySelector(selector);
+      if (node) node.textContent = formatCount(value);
+    };
+    setCount('.gitlink-widget-count[data-stat="stars"]', stats.stars);
+    setCount('.gitlink-widget-count[data-stat="forks"]', stats.forks);
+  };
+
+  const loadStats = (widget, config) => {
+    if (!config.api) return;
+
+    // Read + parse the cache once; branch on freshness so the stale-fallback
+    // path does not re-read and re-parse the same entry.
+    const cached = readCache(config.cacheKey);
+    if (cached && Date.now() - cached.timestamp <= CACHE_DURATION) {
+      showStats(widget, cached);
+      return;
+    }
+    const stale = cached;
+
+    const headers = {};
+    (config.api.headers || []).forEach((header) => {
+      const separator = header.indexOf(": ");
+      if (separator > 0) {
+        headers[header.slice(0, separator)] = header.slice(separator + 2);
+      }
+    });
+
+    const options = { headers: headers };
+    // Bound the request so a slow API falls back to the stale cache instead
+    // of leaving the counts pending; older browsers just skip the timeout.
+    if (typeof AbortSignal !== "undefined" && AbortSignal.timeout) {
+      options.signal = AbortSignal.timeout(8000);
+    }
+
+    fetch(config.api.endpoint, options)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
+      .then((data) => {
+        const stats = {
+          stars: data[config.api.starsField],
+          forks: data[config.api.forksField],
+          timestamp: Date.now(),
+        };
+        writeCache(config.cacheKey, stats);
+        showStats(widget, stats);
+      })
+      .catch(() => showStats(widget, stale || { stars: "?", forks: "?" }));
+  };
+
+  const setupDropdown = (widget) => {
+    const trigger = widget.querySelector(".gitlink-widget-trigger");
+    const dropdown = widget.querySelector(".gitlink-widget-dropdown");
+    if (!trigger || !dropdown) return;
+
+    const setOpen = (open) => {
+      trigger.setAttribute("aria-expanded", String(open));
+      dropdown.setAttribute("aria-hidden", String(!open));
+      widget.classList.toggle("gitlink-widget-open", open);
+    };
+
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      setOpen(trigger.getAttribute("aria-expanded") !== "true");
+    });
+
+    trigger.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        trigger.click();
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!widget.contains(event.target)) setOpen(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") setOpen(false);
+    });
+  };
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const config = readConfig();
+    if (!config) return;
+
+    // Quarto rewrites the placeholder href to a relative path
+    // (`./#gitlink-widget` at the root, `../#gitlink-widget` deeper), so
+    // match the fragment suffix rather than an exact href.
+    const anchor = document.querySelector('a[href$="#gitlink-widget"]');
+    if (!anchor) return;
+    const slot = anchor.closest("li");
+    if (!slot) return;
+
+    const widget = buildWidget(config);
+    slot.replaceWith(widget);
+    loadStats(widget, config);
+    setupDropdown(widget);
+  });
+})();

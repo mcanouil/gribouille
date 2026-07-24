@@ -25,6 +25,24 @@ platforms:
       pull: "/{repo}/pull/{number}"
       commit: "/{repo}/commit/{sha}"
       user: "/{username}"
+    widget:
+      paths:
+        issues: "/{repo}/issues"
+        pull-requests: "/{repo}/pulls"
+        releases: "/{repo}/releases"
+        discussions: "/{repo}/discussions"
+        star: "/{repo}"
+        fork: "/{repo}/fork"
+      sponsor-url: "{base-url}/sponsors/{username}?o=esb"
+      api:
+        endpoint: "https://api.github.com/repos/{repo}"
+        stars-field: "stargazers_count"
+        forks-field: "forks_count"
+        # Headers are "Name: value" strings (not a map) so header names keep
+        # their exact casing through YAML key conversion.
+        headers:
+          - "Accept: application/vnd.github+json"
+          - "X-GitHub-Api-Version: 2022-11-28"
 
   gitlab:
     display-name: GitLab
@@ -47,6 +65,19 @@ platforms:
       pull: "/{repo}/-/merge_requests/{number}"
       commit: "/{repo}/-/commit/{sha}"
       user: "/{username}"
+    widget:
+      labels:
+        pull-requests: "Merge Requests"
+      paths:
+        issues: "/{repo}/-/issues"
+        pull-requests: "/{repo}/-/merge_requests"
+        releases: "/{repo}/-/releases"
+        star: "/{repo}"
+        fork: "/{repo}/-/forks/new"
+      api:
+        endpoint: "{base-url}/api/v4/projects/{repo-encoded}"
+        stars-field: "star_count"
+        forks-field: "forks_count"
 
   codeberg:
     display-name: Codeberg
@@ -69,6 +100,17 @@ platforms:
       pull: "/{repo}/pulls/{number}"
       commit: "/{repo}/commit/{sha}"
       user: "/{username}"
+    widget:
+      paths:
+        issues: "/{repo}/issues"
+        pull-requests: "/{repo}/pulls"
+        releases: "/{repo}/releases"
+        star: "/{repo}"
+        fork: "/{repo}/fork"
+      api:
+        endpoint: "{base-url}/api/v1/repos/{repo}"
+        stars-field: "stars_count"
+        forks-field: "forks_count"
 
   gitea:
     display-name: Gitea
@@ -91,6 +133,17 @@ platforms:
       pull: "/{repo}/pulls/{number}"
       commit: "/{repo}/commit/{sha}"
       user: "/{username}"
+    widget:
+      paths:
+        issues: "/{repo}/issues"
+        pull-requests: "/{repo}/pulls"
+        releases: "/{repo}/releases"
+        star: "/{repo}"
+        fork: "/{repo}/fork"
+      api:
+        endpoint: "{base-url}/api/v1/repos/{repo}"
+        stars-field: "stars_count"
+        forks-field: "forks_count"
 
   bitbucket:
     display-name: Bitbucket
@@ -113,3 +166,10 @@ platforms:
       pull: "/{repo}/pull-requests/{number}"
       commit: "/{repo}/commits/{sha}"
       user: "/{username}"
+    # No `api` block: the Bitbucket 2.0 API exposes no star count, so the
+    # widget renders without the stars/forks counters on this platform.
+    widget:
+      paths:
+        issues: "/{repo}/issues"
+        pull-requests: "/{repo}/pull-requests"
+        star: "/{repo}"

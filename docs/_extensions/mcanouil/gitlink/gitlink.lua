@@ -16,6 +16,7 @@ local git = require(quarto.utils.resolve_path('_modules/git.lua'):gsub('%.lua$',
 local bitbucket = require(quarto.utils.resolve_path('_modules/bitbucket.lua'):gsub('%.lua$', ''))
 local platforms = require(quarto.utils.resolve_path('_modules/platforms.lua'):gsub('%.lua$', ''))
 local colour = require(quarto.utils.resolve_path('_modules/colour.lua'):gsub('%.lua$', ''))
+local widget = require(quarto.utils.resolve_path('_modules/widget.lua'):gsub('%.lua$', ''))
 
 --- @type string The platform type (github, gitlab, codeberg, gitea, bitbucket)
 local platform = 'github'
@@ -145,6 +146,9 @@ local function reset_state()
   if platforms.clear_custom_platforms then
     platforms.clear_custom_platforms()
   end
+  -- Dependency tracking is per document; without a reset, dependencies added
+  -- for a previous document in the same process would be skipped here.
+  html_mod.reset_dependencies()
 end
 
 --- Get the cached list of all known platform names.
@@ -306,11 +310,15 @@ local function get_repository(meta)
   reset_state()
 
   -- Allow opt-out at the document level for drafts, templates, or any
-  -- document where automatic link rewriting is undesirable.
+  -- document where automatic link rewriting is undesirable. The navbar
+  -- widget is gated independently so a site can run widget-only with
+  -- `enabled: false` and `widget.enabled: true`.
   local extensions_meta = meta and meta['extensions']
   local gitlink_meta = extensions_meta and extensions_meta['gitlink']
+  local widget_meta = gitlink_meta and gitlink_meta['widget']
+  local widget_enabled = widget.is_enabled(widget_meta)
   is_enabled = read_boolean_meta(gitlink_meta, 'enabled', true)
-  if not is_enabled then
+  if not is_enabled and not widget_enabled then
     return meta
   end
 
@@ -439,6 +447,18 @@ local function get_repository(meta)
         force_mentions_set[id] = true
       end
     end
+  end
+
+  if widget_enabled then
+    widget.setup({
+      extension_name = EXTENSION_NAME,
+      widget_meta = widget_meta,
+      platform = platform,
+      platform_config = config,
+      base_url = base_url,
+      repository_name = repository_name,
+      display_name = platforms.get_platform_display_name(platform),
+    })
   end
 
   return meta
