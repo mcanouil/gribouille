@@ -94,13 +94,13 @@ website:
         menu:
           - text: "{{< iconify octicon:versions-16 title=\"Switch version\" label=\"Switch version\" >}} Versions"
             href: "#version-switcher"
-      # GitHub widget: assets/scripts/github-widget.html replaces this placeholder
-      # at load with a button showing live star/fork counts and a project menu
+      # Gitlink widget: the gitlink extension replaces this placeholder at load
+      # with a button showing live star/fork counts and a project menu
       # (repository, issues, pull requests, releases, star, fork, Typst Universe,
       # sponsor), superseding the former standalone "Typst Universe", "Source
-      # code", "All releases", and "Sponsor" links.
+      # code", "All releases", and "Sponsor" links. See _extensions-metadata.yml.
       - text: "{{< iconify octicon:mark-github-16 title=\"GitHub\" label=\"GitHub\" >}}"
-        href: "#github-widget"
+        href: "#gitlink-widget"
         aria-label: "GitHub"
 
 brand: _brand.yml
@@ -139,7 +139,6 @@ format:
       - file: assets/scripts/a11y-fixes.html
       - file: assets/scripts/navbar-tooltips.html
       - file: assets/scripts/version-switcher.html
-      - file: assets/scripts/github-widget.html
 
 execute:
   freeze: false

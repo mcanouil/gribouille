@@ -12,6 +12,21 @@
 		],
 		"description": "Activate gitlink for GitHub references"
 	},
+	"Navbar widget config": {
+		"prefix": "gitlink-widget-meta",
+		"body": [
+			"filters:",
+			"  - path: gitlink",
+			"    at: post-quarto",
+			"extensions:",
+			"  gitlink:",
+			"    platform: ${1:github}",
+			"    repository-name: ${2:owner/repo}",
+			"    widget:",
+			"      enabled: true"
+		],
+		"description": "Activate the gitlink repository navbar widget"
+	},
 	"GitLab config": {
 		"prefix": "gitlab-meta",
 		"body": [

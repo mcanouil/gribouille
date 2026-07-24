@@ -447,160 +447,38 @@ a.navbar-brand {
   flex-grow: 1;
 }
 
-.navbar .navbar-nav.ms-auto {
-  align-items: center;
-  gap: 0.4rem;
+// Layout, sizing, and the pill shell for the widget trigger, search button,
+// and colour-scheme toggle ship with the gitlink extension (widget.css and
+// widget-navbar-tools.css via `widget.style-navbar-tools`); these tokens
+// repaint them from the navbar palette, dark-pinned in both schemes.
+.navbar {
+  --gitlink-widget-border: var(--gb-navbar-hairline);
+  --gitlink-widget-accent: var(--gb-navbar-primary);
+  --gitlink-widget-accent-soft: var(--gb-navbar-tint);
+  --gitlink-widget-pill-bg: var(--gb-navbar-surface);
+  --gitlink-widget-menu-bg: var(--gb-navbar-surface);
+  --gitlink-widget-menu-fg: var(--gb-navbar-fg);
 }
 
-.navbar #quarto-search {
-  display: inline-flex;
-  align-items: center;
-  margin-left: 0.4rem;
-}
-
-.navbar .quarto-navbar-tools {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-left: 0.4rem;
-}
-
-// Shared shell for all four controls.
-.navbar .navbar-nav.ms-auto > .nav-item > .nav-link,
-.gh-widget-trigger,
-.navbar #quarto-search .aa-DetachedSearchButton,
-.navbar .quarto-navbar-tools .quarto-color-scheme-toggle {
+// The version switcher keeps the same pill shell locally.
+.navbar .navbar-nav.ms-auto > .nav-item > .nav-link {
   @include pill-button;
-}
-
-// Text pills (version switcher, GitHub widget) get horizontal padding.
-.navbar .navbar-nav.ms-auto > .nav-item > .nav-link,
-.gh-widget-trigger {
   padding: 0.3rem 0.6rem;
 }
 
-// Icon-only tools (search, toggle) are a fixed 2rem square with the glyph
-// centred; the search button ships its own shadow, so drop it.
-.navbar #quarto-search .aa-DetachedSearchButton,
-.navbar .quarto-navbar-tools .quarto-color-scheme-toggle {
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  box-shadow: none;
-}
-
-// Hover/open state for all four.
+// Hover/open state for the version switcher.
 .navbar .navbar-nav.ms-auto > .nav-item > .nav-link:hover,
-.navbar .navbar-nav.ms-auto > .nav-item.show > .nav-link,
-.gh-widget-trigger:hover,
-.gh-widget-open .gh-widget-trigger,
-.navbar #quarto-search .aa-DetachedSearchButton:hover,
-.navbar #quarto-search .aa-DetachedSearchButton:focus-visible,
-.navbar .quarto-navbar-tools .quarto-color-scheme-toggle:hover,
-.navbar .quarto-navbar-tools .quarto-color-scheme-toggle:focus-visible {
+.navbar .navbar-nav.ms-auto > .nav-item.show > .nav-link {
   @include pill-button-active;
 }
 
-// --- GitHub widget (navbar). --------------------------------------------
-// assets/scripts/github-widget.html replaces the `#github-widget` placeholder
-// with a button showing live star/fork counts and a project menu. Ported from
-// posit-dev/great-docs, restyled onto the gribouille tokens.
-#github-widget {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.gh-icon {
-  flex-shrink: 0;
-}
-
-.gh-stats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.gh-stat {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-
-.gh-stat svg {
-  opacity: 0.85;
-}
-
-.gh-count {
-  min-width: 1rem;
-  text-align: center;
-}
-
-.gh-dropdown-arrow {
-  opacity: 0.7;
-  transition: transform 150ms var(--gb-ease);
-}
-
-.gh-widget-open .gh-dropdown-arrow {
-  transform: rotate(180deg);
-}
-
-.gh-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
+// --- Gitlink widget (navbar). --------------------------------------------
+// Structure ships with the extension's widget.css; the site keeps its own
+// menu width, radius, and shadow, painted from the navbar tokens set above.
+body .navbar .gitlink-widget-dropdown {
   min-width: 12rem;
-  background: var(--gb-navbar-surface);
-  border: 1px solid var(--gb-navbar-hairline);
   border-radius: var(--gb-radius-md);
   box-shadow: var(--gb-shadow-soft);
-  padding: 0.35rem;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-8px);
-  transition: opacity 150ms var(--gb-ease), transform 150ms var(--gb-ease),
-              visibility 150ms var(--gb-ease);
-  z-index: 1000;
-}
-
-.gh-widget-open .gh-dropdown {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.gh-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0.4rem 0.7rem;
-  color: var(--gb-navbar-fg);
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border-radius: var(--gb-radius-sm);
-  transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease);
-}
-
-.gh-dropdown-item:hover,
-.gh-dropdown-item:focus-visible {
-  background: var(--gb-navbar-tint);
-  color: var(--gb-navbar-primary);
-  text-decoration: none;
-}
-
-.gh-dropdown-item svg,
-.gh-dropdown-item iconify-icon {
-  flex-shrink: 0;
-}
-
-.gh-dropdown-divider {
-  height: 1px;
-  margin: 0.35rem 0;
-  background: var(--gb-navbar-hairline);
 }
 
 // Below the navbar-collapse breakpoint, wrap the nav into a left-aligned
@@ -611,7 +489,7 @@ a.navbar-brand {
 //
 // Reusable rule: below this breakpoint Bootstrap forces navbar `.dropdown-menu`
 // back to `position: static`, so an open menu flows in-document and grows the
-// navbar instead of overlaying. Re-anchor it (like the custom `.gh-dropdown`) to
+// navbar instead of overlaying. Re-anchor it (like the widget menu) to
 // `position: absolute` against a `position: relative` `.nav-item` so any navbar
 // dropdown overlays on top and leaves the navbar height untouched.
 @media (max-width: 991.98px) {
@@ -636,11 +514,6 @@ a.navbar-brand {
   .navbar .dropdown-menu {
     position: absolute;
     top: 100%;
-    left: 0;
-  }
-
-  .gh-dropdown {
-    right: auto;
     left: 0;
   }
 }
@@ -671,15 +544,6 @@ a.navbar-brand {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gb-primary);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .gh-widget-trigger,
-  .gh-dropdown-arrow,
-  .gh-dropdown,
-  .gh-dropdown-item {
-    transition: none;
-  }
 }
 
 // --- Colour-scheme toggle (sun/moon). -----------------------------------
@@ -725,31 +589,6 @@ a.navbar-brand {
   color: var(--gb-primary) !important;
   background: var(--gb-tint-primary);
   text-decoration: none;
-}
-
-// --- Search button internals. -------------------------------------------
-// The pill shell is applied above with the rest of the navbar-right set; these
-// rules tame the autocomplete library's own chrome so the icon-only pill stays
-// a compact square. `#quarto-search` (id) outranks the library's `.aa-*` rules.
-// Collapse the library's fixed-width icon slot and oversized glyph down to a
-// ~1rem icon, and follow currentColor so hover flips it to brand primary.
-.navbar #quarto-search .aa-DetachedSearchButtonIcon {
-  width: auto;
-  margin: 0;
-  padding: 0;
-  color: currentColor;
-}
-
-.navbar #quarto-search .aa-DetachedSearchButtonIcon svg {
-  width: 1.05rem;
-  height: 1.05rem;
-}
-
-// The placeholder/query slots are empty in the overlay button; hide them so the
-// pill stays a compact icon-only square like the toggle.
-.navbar #quarto-search .aa-DetachedSearchButtonPlaceholder,
-.navbar #quarto-search .aa-DetachedSearchButtonQuery {
-  display: none;
 }
 
 // --- Sidebar. ------------------------------------------------------------

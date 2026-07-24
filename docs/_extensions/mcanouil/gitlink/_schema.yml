@@ -79,3 +79,66 @@ options:
     description: "List of citation IDs to force-treat as Git hosting mentions even when a bibliography reference with the same id exists."
     items:
       type: string
+  widget:
+    type: object
+    description: "Repository navbar widget showing live star/fork counts and a dropdown of repository links, replacing a navbar item with href '#gitlink-widget'. HTML websites only."
+    properties:
+      enabled:
+        type: boolean
+        default: false
+        description: "Whether to inject the navbar widget. Independent of the top-level 'enabled' option, so a site can run widget-only."
+      links:
+        type: object
+        description: "Toggles for the platform-derived default menu entries."
+        properties:
+          issues:
+            type: boolean
+            default: true
+            description: "Whether to include the Issues link."
+          pull-requests:
+            type: boolean
+            default: true
+            description: "Whether to include the Pull Requests (or Merge Requests) link."
+          releases:
+            type: boolean
+            default: true
+            description: "Whether to include the Releases link."
+          discussions:
+            type: boolean
+            default: false
+            description: "Whether to include the Discussions link, on platforms that support discussions."
+          star:
+            type: boolean
+            default: true
+            description: "Whether to include the Add a Star link."
+          fork:
+            type: boolean
+            default: true
+            description: "Whether to include the Create a Fork link."
+      extra-links:
+        type: array
+        description: "Additional dropdown entries appended after the default set. Hrefs starting with '/' are resolved against the repository URL."
+        items:
+          type: object
+          properties:
+            text:
+              type: string
+              required: true
+              description: "Link label."
+            href:
+              type: string
+              required: true
+              description: "Link target, absolute or relative to the repository URL when starting with '/'."
+            icon:
+              type: string
+              description: "Icon name from Quarto's bundled Bootstrap Icons (same names as navbar tools), or one of the widget's embedded octicons (see the README for the full list; embedded names win). For anything else, put a shortcode (e.g. iconify) in 'text' instead."
+      sponsor:
+        type: string
+        description: "Username for a Sponsor entry, on platforms that define a sponsor URL (GitHub)."
+      icon:
+        type: string
+        description: "Trigger icon override: a Bootstrap icon name (as bundled with Quarto) or one of the widget's embedded icons. Defaults to the platform mark."
+      style-navbar-tools:
+        type: boolean
+        default: false
+        description: "Whether to also apply the widget's bordered pill style to Quarto's navbar search button and colour-scheme toggle; sizing and spacing always match the widget."
