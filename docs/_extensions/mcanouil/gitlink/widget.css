@@ -62,11 +62,13 @@
   display: none;
 }
 
+/* The trigger is a native <button>; reset its font so it follows the navbar. */
 .gitlink-widget-trigger {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 0.3rem 0.6rem;
+  font: inherit;
   font-size: 0.85rem;
   background: var(--gitlink-widget-pill-bg, transparent);
   border: 1px solid var(--gitlink-widget-border, var(--bs-border-color-translucent, rgba(128, 128, 128, 0.3)));
@@ -199,6 +201,19 @@
     left: 0;
     right: auto;
   }
+}
+
+/* Visually hidden, available to assistive technology. */
+.gitlink-widget-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,7 +1,9 @@
 title: gitlink
 author: Mickaël Canouil
-version: 1.7.0
-quarto-required: ">=1.8.21"
+version: 1.8.0
+quarto-required: '>=1.8.21'
+source: mcanouil/quarto-gitlink@1.8.0
+source-type: registry
 contributes:
   filters:
     - gitlink.lua

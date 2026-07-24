@@ -161,13 +161,15 @@
     return stat;
   };
 
+  // Disclosure pattern: a native button toggling a plain list of links, per
+  // the ARIA Authoring Practices for navigation link collections. No menu
+  // roles, so Tab moves through the links naturally.
   const buildTrigger = (config) => {
-    const trigger = document.createElement("div");
+    const trigger = document.createElement("button");
+    trigger.type = "button";
     trigger.className = "gitlink-widget-trigger";
-    trigger.setAttribute("role", "button");
-    trigger.setAttribute("aria-haspopup", "true");
     trigger.setAttribute("aria-expanded", "false");
-    trigger.setAttribute("tabindex", "0");
+    trigger.setAttribute("aria-controls", "gitlink-widget-menu");
     trigger.setAttribute("aria-label", config.menuLabel);
 
     const platformIcon = buildIcon(config.icon, 20, config.icons);
@@ -192,8 +194,8 @@
 
   const buildDropdown = (config) => {
     const dropdown = document.createElement("div");
+    dropdown.id = "gitlink-widget-menu";
     dropdown.className = "gitlink-widget-dropdown";
-    dropdown.setAttribute("role", "menu");
     dropdown.setAttribute("aria-hidden", "true");
 
     config.links.forEach((link) => {
@@ -207,7 +209,6 @@
       if (!href) return;
       const item = document.createElement("a");
       item.className = "gitlink-widget-item";
-      item.setAttribute("role", "menuitem");
       item.href = href;
       item.target = "_blank";
       item.rel = "noopener";
@@ -217,6 +218,10 @@
       label.className = "gitlink-widget-item-label";
       buildLabelInto(label, link.label);
       item.appendChild(label);
+      const newTabHint = document.createElement("span");
+      newTabHint.className = "gitlink-widget-sr-only";
+      newTabHint.textContent = " (opens in new tab)";
+      item.appendChild(newTabHint);
       dropdown.appendChild(item);
     });
     return dropdown;
@@ -233,13 +238,25 @@
     return widget;
   };
 
-  const showStats = (widget, stats) => {
+  const showStats = (widget, stats, config) => {
     const setCount = (selector, value) => {
       const node = widget.querySelector(selector);
       if (node) node.textContent = formatCount(value);
     };
     setCount('.gitlink-widget-count[data-stat="stars"]', stats.stars);
     setCount('.gitlink-widget-count[data-stat="forks"]', stats.forks);
+
+    // Surface the counts to assistive technology; the visual counters are
+    // bare numbers with mouse-only tooltips.
+    const spoken = [];
+    if (typeof stats.stars === "number") spoken.push(formatCount(stats.stars) + " stars");
+    if (typeof stats.forks === "number") spoken.push(formatCount(stats.forks) + " forks");
+    if (spoken.length > 0) {
+      const trigger = widget.querySelector(".gitlink-widget-trigger");
+      if (trigger) {
+        trigger.setAttribute("aria-label", config.menuLabel + ", " + spoken.join(", "));
+      }
+    }
   };
 
   const loadStats = (widget, config) => {
@@ -249,7 +266,7 @@
     // path does not re-read and re-parse the same entry.
     const cached = readCache(config.cacheKey);
     if (cached && Date.now() - cached.timestamp <= CACHE_DURATION) {
-      showStats(widget, cached);
+      showStats(widget, cached, config);
       return;
     }
     const stale = cached;
@@ -270,9 +287,9 @@
           timestamp: Date.now(),
         };
         writeCache(config.cacheKey, stats);
-        showStats(widget, stats);
+        showStats(widget, stats, config);
       })
-      .catch(() => showStats(widget, stale || { stars: "?", forks: "?" }));
+      .catch(() => showStats(widget, stale || { stars: "?", forks: "?" }, config));
   };
 
   const setupDropdown = (widget) => {
@@ -286,16 +303,10 @@
       widget.classList.toggle("gitlink-widget-open", open);
     };
 
+    // The trigger is a native button, so Enter/Space activation is built in.
     trigger.addEventListener("click", (event) => {
       event.stopPropagation();
       setOpen(trigger.getAttribute("aria-expanded") !== "true");
-    });
-
-    trigger.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        trigger.click();
-      }
     });
 
     document.addEventListener("click", (event) => {
@@ -303,7 +314,13 @@
     });
 
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key !== "Escape") return;
+      // Closing while focus is on a link inside the menu would drop focus
+      // into a hidden subtree; hand it back to the trigger.
+      if (widget.contains(document.activeElement) && document.activeElement !== trigger) {
+        trigger.focus();
+      }
+      setOpen(false);
     });
   };
 
