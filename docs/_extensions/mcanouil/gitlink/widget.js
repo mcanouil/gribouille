@@ -65,6 +65,54 @@
     }
   };
 
+  // Only http(s) links belong in the menu; anything else (e.g. javascript:)
+  // is dropped.
+  const safeHref = (href) => {
+    try {
+      const url = new URL(href, window.location.href);
+      return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Copy sanitised label markup into `target`. Labels are HTML rendered by
+  // the Lua filter (shortcode output such as an iconify icon); rebuild them
+  // through an element and attribute allowlist instead of assigning raw HTML,
+  // so scripts, event handlers, and URL-bearing attributes never reach the
+  // live DOM. Disallowed elements are unwrapped to keep their text.
+  const ALLOWED_LABEL_TAGS = ["SPAN", "EM", "STRONG", "CODE", "SUB", "SUP", "I", "ICONIFY-ICON"];
+  const ALLOWED_LABEL_ATTRIBUTES = [
+    "class", "icon", "width", "height", "inline", "title", "role",
+    "aria-label", "aria-hidden",
+  ];
+
+  const sanitiseLabelInto = (target, html) => {
+    const parsed = new DOMParser().parseFromString(html, "text/html");
+    const copyInto = (destination, source) => {
+      source.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          destination.appendChild(document.createTextNode(node.textContent));
+          return;
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        if (ALLOWED_LABEL_TAGS.indexOf(node.tagName) === -1) {
+          copyInto(destination, node);
+          return;
+        }
+        const element = document.createElement(node.tagName.toLowerCase());
+        ALLOWED_LABEL_ATTRIBUTES.forEach((name) => {
+          if (node.hasAttribute(name)) {
+            element.setAttribute(name, node.getAttribute(name));
+          }
+        });
+        copyInto(element, node);
+        destination.appendChild(element);
+      });
+    };
+    copyInto(target, parsed.body);
+  };
+
   // Build an SVG element from path attribute objects ({d, fill-rule}) so no
   // HTML string is ever parsed.
   const buildSvg = (paths, size) => {
@@ -159,19 +207,19 @@
         dropdown.appendChild(divider);
         return;
       }
+      const href = safeHref(link.href);
+      if (!href) return;
       const item = document.createElement("a");
       item.className = "gitlink-widget-item";
       item.setAttribute("role", "menuitem");
-      item.href = link.href;
+      item.href = href;
       item.target = "_blank";
       item.rel = "noopener";
       const icon = buildIcon(link.icon, 16, config.icons);
       if (icon) item.appendChild(icon);
-      // Labels arrive as HTML rendered by the Lua filter, so shortcode output
-      // (e.g. an iconify icon written in the entry's `text`) survives.
       const label = document.createElement("span");
       label.className = "gitlink-widget-item-label";
-      label.innerHTML = link.label;
+      sanitiseLabelInto(label, link.label);
       item.appendChild(label);
       dropdown.appendChild(item);
     });

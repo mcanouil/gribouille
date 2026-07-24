@@ -182,6 +182,12 @@ local function resolve_extra_links(extra_meta, repo_url, extension_name)
         extension_name,
         "Ignoring 'widget.extra-links' entry without both 'text' and 'href'."
       )
+    elseif not (href:sub(1, 1) == '/' or href:match('^https?://')) then
+      log.log_warning(
+        extension_name,
+        "Ignoring 'widget.extra-links' entry '" .. str.stringify(item['text']) ..
+        "': 'href' must start with '/' or 'http(s)://'."
+      )
     else
       if href:sub(1, 1) == '/' then
         href = repo_url .. href
