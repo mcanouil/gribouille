@@ -2,6 +2,7 @@
 title: "Page not found"
 toc: false
 sidebar: false
+canonical-url: false
 ---
 
 ::: {.atelier-404}
