@@ -330,7 +330,7 @@
       content(
         (cx, cy),
         text(.._text-args(_ax-text.yl))[#label-text],
-        anchor: "east",
+        anchor: "mid-east",
         angle: r.sub.angle * 1deg,
       )
     }
@@ -548,7 +548,7 @@
             format-break(mapped),
             eval-strings: _ax-text.yr.typst,
           )],
-          anchor: "west",
+          anchor: "mid-west",
         )
       }
     }

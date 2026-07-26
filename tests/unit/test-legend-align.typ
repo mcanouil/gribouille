@@ -13,10 +13,11 @@
 #import "../../lib.typ": theme
 
 // Labels drawn to the right of a mark justify within the slot `[start, start +
-// slot-w]`; `left` keeps the west anchor at `start`.
-#assert.eq(_hjust-right-of(left, 1.0, 2.0), (1.0, "west"))
-#assert.eq(_hjust-right-of(center, 1.0, 2.0), (2.0, "center"))
-#assert.eq(_hjust-right-of(right, 1.0, 2.0), (3.0, "east"))
+// slot-w]`; `left` keeps the west anchor at `start`. The `mid-*` family centres
+// on the cap-height / baseline band, so a descender never lifts a label.
+#assert.eq(_hjust-right-of(left, 1.0, 2.0), (1.0, "mid-west"))
+#assert.eq(_hjust-right-of(center, 1.0, 2.0), (2.0, "mid"))
+#assert.eq(_hjust-right-of(right, 1.0, 2.0), (3.0, "mid-east"))
 
 // Labels drawn below a mark hold x at `cx` and only vary the anchor; `center`
 // keeps the current north anchor.

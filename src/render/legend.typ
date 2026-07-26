@@ -1151,13 +1151,17 @@
 // `slot-w` whose left edge is `start`. `left` keeps the current west anchor at
 // `start`; `center` / `right` shift toward the slot's far edge. Returns
 // `(x, anchor)` for `cetz.draw.content`.
+//
+// The `mid-*` family centres on the cap-height / baseline band instead of the
+// glyph bounds, so a descender (`Chinstrap`) no longer lifts its label above a
+// neighbour without one (`Adelie`).
 #let _hjust-right-of(align, start, slot-w) = {
   if align == right {
-    (start + slot-w, "east")
+    (start + slot-w, "mid-east")
   } else if align == center {
-    (start + slot-w / 2, "center")
+    (start + slot-w / 2, "mid")
   } else {
-    (start, "west")
+    (start, "mid-west")
   }
 }
 
@@ -1264,8 +1268,8 @@
     let rc = _swatch-rc(i, shape, byrow)
     let cx = bx + layout.offsets.at(rc.col)
     // Push the row down by the overflow of every multi-line row above it, and
-    // centre this item on its own block (`anchor: "west"`) by dropping it half
-    // its overflow so the block grows downward and the glyph stays centred.
+    // centre this item on its own block (`anchor: "mid-west"`) by dropping it
+    // half its overflow so the block grows downward and the glyph stays centred.
     let cy = top - rc.row * line-h - rows.before.at(rc.row)
     let cm = cy - glyph-size - rows.extra.at(rc.row) / 2
     let bundle = _bundle-for(level, guide.aesthetics, ctx, ink)
