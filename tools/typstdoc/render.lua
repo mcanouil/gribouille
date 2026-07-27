@@ -56,19 +56,20 @@ local function emit_frontmatter(fn, from_qmd, index, strict)
   if fn.doc.summary then
     table.insert(lines, "subtitle: " .. yaml_escape(resolved_summary(fn, from_qmd, index, strict)))
   end
-  if fn.doc.category then
-    table.insert(lines, "category: " .. yaml_escape(fn.doc.category))
-  end
-  if fn.doc.subcategory then
-    table.insert(lines, "subcategory: " .. yaml_escape(fn.doc.subcategory))
-  end
-  if fn.doc.stability and fn.doc.stability ~= "stable" then
-    table.insert(lines, "stability: " .. yaml_escape(fn.doc.stability))
-  end
   table.insert(lines, "engine: markdown")
   table.insert(lines, "---")
   table.insert(lines, "")
   return table.concat(lines, "\n")
+end
+
+-- The release that introduced the function, from `@since`. Rendered rather than
+-- carried as frontmatter: Quarto renders `title`, `subtitle`, and `engine`, and
+-- ignores every other key, so metadata that no reader sees is metadata nobody
+-- maintains. `@category` and `@subcategory` reach the page through the sidebar
+-- and the category index instead.
+local function emit_since(since)
+  if not since then return "" end
+  return string.format("*Since %s.*\n", since)
 end
 
 local function emit_stability_callout(stability)
@@ -350,6 +351,7 @@ function M.render_function(fn, index, opts)
   local pieces = {
     emit_frontmatter(fn, from_qmd, index, strict),
     emit_stability_callout(fn.doc.stability),
+    emit_since(fn.doc.since),
     emit_description(fn.doc.description, from_qmd, index, strict, fn.file, fn.line),
     emit_usage(fn),
     emit_arities(fn, from_qmd, index, strict),
