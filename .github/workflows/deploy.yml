@@ -63,7 +63,6 @@ jobs:
         || !startsWith(github.event.head_commit.message, 'ci: bump version to') }}
 
     outputs:
-      typst-version: ${{ steps.typst-version.outputs.version }}
       tag: ${{ steps.latest-tag.outputs.tag }}
       matrix: ${{ steps.matrix.outputs.matrix }}
       versions: ${{ steps.matrix.outputs.versions }}
@@ -74,15 +73,6 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
-
-      - name: Read Typst version from typst.toml
-        id: typst-version
-        shell: bash
-        run: |
-          set -euo pipefail
-          version=$(awk -F'"' '/^compiler[[:space:]]*=/ { print $2; exit }' typst.toml)
-          [[ -n "$version" ]] || { echo "::error::compiler not found in typst.toml"; exit 1; }
-          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Resolve latest release tag
         id: latest-tag
@@ -96,10 +86,13 @@ jobs:
             echo "Latest release tag: ${LATEST_TAG}"
           fi
 
-      # Every version is built on pull requests too, not just dev: docs content comes
-      # from the branch under review while `src` stays pinned to the tag, so a page
-      # written against unreleased API only fails on the release build. Building dev
-      # alone is what let the wrangle guide reach the published release site broken.
+      # Every version is built on pull requests too, not just dev: rendering is the
+      # only thing that compiles the Typst blocks, and a change to this workflow or
+      # to the site framework can break the release render without touching `main`'s
+      # own pages. `SITE_URL` and the `versions` payload below are read from the
+      # triggering ref on purpose: they describe the deployment (where the sites live,
+      # which versions exist), not the API any one site documents, and `versions.json`
+      # is written once at the site root after every profile has rendered.
       - name: Build render matrix
         id: matrix
         shell: bash
@@ -170,11 +163,36 @@ jobs:
         run: |
           set -euo pipefail
           git checkout --force "${{ matrix.ref }}"
+          head=$(git rev-parse HEAD)
+          want=$(git rev-parse "${{ matrix.ref }}^{commit}")
+          [[ "${head}" == "${want}" ]] \
+            || { echo "::error::working tree is at ${head}, expected ${want}"; exit 1; }
+
+      # The commit actually rendered: the tag for the release profile, the triggering
+      # ref otherwise. Keys the figure cache, so the release entry is written once per
+      # tag instead of once per push to main.
+      - name: Resolve rendered commit
+        id: rendered
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+
+      # Read after the ref switch: each site compiles with the compiler its own
+      # `typst.toml` pins. Inline rather than `./.github/actions/typst-version`,
+      # since a local composite action is loaded from the workspace, which is the
+      # tag's tree here and need not carry that action.
+      - name: Read Typst version from typst.toml
+        id: typst-version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(awk -F'"' '/^compiler[[:space:]]*=/ { print $2; exit }' typst.toml)
+          [[ -n "$version" ]] || { echo "::error::compiler not found in typst.toml"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Set up Typst
         uses: typst-community/setup-typst@v5
         with:
-          typst-version: ${{ needs.resolve.outputs.typst-version }}
+          typst-version: ${{ steps.typst-version.outputs.version }}
 
       # typst-render caches compiled figures under `docs/.quarto` (gitignored), so
       # every run otherwise recompiles all ~4000 of them from scratch at roughly a
@@ -188,10 +206,12 @@ jobs:
         with:
           path: docs/.quarto/typst-render
           key: >-
-            typst-render-v1-${{ matrix.version }}-${{ needs.resolve.outputs.typst-version }}-${{ github.sha }}
+            typst-render-v1-${{ matrix.version }}-${{ steps.typst-version.outputs.version }}-${{ steps.rendered.outputs.sha }}
           restore-keys: |
-            typst-render-v1-${{ matrix.version }}-${{ needs.resolve.outputs.typst-version }}-
+            typst-render-v1-${{ matrix.version }}-${{ steps.typst-version.outputs.version }}-
 
+      # No ref records a Quarto version, so both sites render with the current
+      # release; pinning it per ref would mean inventing a file to hold it.
       - name: Set up Quarto CLI
         uses: quarto-dev/quarto-actions/setup@v2
         with:

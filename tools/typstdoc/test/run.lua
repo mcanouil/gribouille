@@ -1284,7 +1284,7 @@ describe("render: @subcategory grouping", function()
     assert_contains(body, '- section: "Colour and fill: binned"')
   end)
 
-  it("writes subcategory into the function-page frontmatter", function()
+  it("keeps the function-page frontmatter to the keys Quarto renders", function()
     local fns = parsed_functions(MIXED_GEOMS)
     local index = resolve.build_index(fns)
     local abline
@@ -1292,7 +1292,25 @@ describe("render: @subcategory grouping", function()
       if fn.name == "geom-abline" then abline = fn end
     end
     local body = render.render_function(abline, index, { strict = false })
-    assert_contains(body, "subcategory: Reference lines")
+    assert_contains(body, "title: geom-abline")
+    assert_contains(body, "subtitle: An abline.")
+    assert_contains(body, "engine: markdown")
+    assert_true(not body:find("subcategory:", 1, true),
+      "classification reaches the reader through the sidebar, not the frontmatter")
+  end)
+
+  it("renders @since as a line on the function page", function()
+    local fns = parsed_functions([[
+/// A point.
+///
+/// @category Geoms
+/// @since 0.6.0
+#let geom-point() = none
+]])
+    local index = resolve.build_index(fns)
+    local body = render.render_function(fns[1], index, { strict = false })
+    assert_contains(body, "*Since 0.6.0.*")
+    assert_true(not body:find("since:", 1, true), "no inert frontmatter copy")
   end)
 end)
 
