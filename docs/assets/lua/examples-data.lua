@@ -129,7 +129,7 @@ function Pandoc(doc)
 
   local hidden = pandoc.Div(typst_blocks, pandoc.Attr('examples-typst-render', {}, { style = 'display:none' }))
 
-  local new_blocks = pandoc.List({ hidden })
+  local new_blocks = pandoc.Blocks({ hidden })
   for _, b in ipairs(doc.blocks) do new_blocks:insert(b) end
   for _, m in ipairs(modal_blocks) do new_blocks:insert(m) end
   doc.blocks = new_blocks
