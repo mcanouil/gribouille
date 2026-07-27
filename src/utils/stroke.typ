@@ -86,7 +86,7 @@
 /// would darken their rims.
 ///
 /// \@internal
-/// \@param stroke-spec The resolved stroke (from \@resolve-stroke-spec) or `none`.
+/// \@param stroke-spec The resolved stroke (from `resolve-stroke-spec`) or `none`.
 ///
 /// \@param fill The resolved fill colour or `none`.
 /// \@returns The stroke to draw with: the input when set, a fill-paint hairline when sealing applies, `none` otherwise.

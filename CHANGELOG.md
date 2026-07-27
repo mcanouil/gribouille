@@ -8,6 +8,7 @@
 
 ### Changes
 
+- docs: reference pages link every cross-reference instead of printing a bare `@geom-line` when the reference closes a parenthetical, and links no longer run into the preceding word or comma. (#...)
 - docs: every `scale-*` reference page lists the keys its `..args` accepts with their type, accepted values, and default (including `oob`, previously undocumented), instead of naming a few of them in prose. (#214)
 - docs: the navbar is dark in both light and dark schemes (matching the other project sites); add scheme-aware scrollbars, an accessible skip link and focus outline, and fix the tabset panel border that was indistinguishable from the background in dark mode. (#...)
 - docs: in the collapsed navbar, opening a menu (e.g. Guides) overlays on top instead of growing the navbar and pushing the other items down, matching the GitHub widget menu. (#...)

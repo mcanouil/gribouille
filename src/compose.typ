@@ -758,7 +758,7 @@
 /// reclaims the margin its legend would have occupied. Inspired by
 /// `patchwork::plot_layout(guides = "collect")`.
 ///
-/// Every positional argument must be a deferred panel built with\@defer
+/// Every positional argument must be a deferred panel built with \@defer
 /// (`defer(plot, ...)` or, for nesting, `defer(compose, ...)`); passing a
 /// rendered plot panics, because compose needs the spec to re-render. Panels
 /// omit their own `width`/`height`: compose sizes each cell.
@@ -767,7 +767,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param ..panels-positional Two or more deferred panels built with\@defer
+/// \@param ..panels-positional Two or more deferred panels built with \@defer
 ///   (`defer(plot, ...)`, or `defer(compose, ...)` to nest a composition). Order
 ///   is preserved by the layout (left-to-right, top-to-bottom for grids; per
 ///   `dir` for stacks).
@@ -816,24 +816,24 @@
 ///   hoisted block. Custom guides (`guide-custom`) never hoist.
 ///
 /// \@param guides Per-aesthetic guide overrides applied to the collected
-///   legend, built with\@guides, exactly as for\@plot. The collected legend's
+///   legend, built with \@guides, exactly as for \@plot. The collected legend's
 ///   side comes from here: set it per aesthetic via `guide-legend(position:
 ///   ...)` or for all at once via `guides(default: guide-legend(position:
 ///   ...))`. All collected guides must resolve to one side, otherwise compose
 ///   panics. Defaults to the guides' natural side (`"right"`).
 ///
-/// \@param labels Composition-level labels built with\@labels; only `title`,
-///   `subtitle`, and `caption` apply (panel-level labels stay on each\@plot).
+/// \@param labels Composition-level labels built with \@labels; only `title`,
+///   `subtitle`, and `caption` apply (panel-level labels stay on each \@plot).
 ///   They reuse the same chrome as a single plot, so a composition reads like
 ///   one figure.
 ///
-/// \@param theme Theme object such as\@theme-grey,\@theme-minimal, or
+/// \@param theme Theme object such as \@theme-grey, \@theme-minimal, or
 ///   \@theme-classic, controlling the composition's non-data ink: its labels,
 ///   the hoisted shared legend, and panel tags. When set, it also propagates
 ///   into panels that declare no theme of their own (a panel with its own theme
 ///   keeps it, and a nested composition inherits it recursively); otherwise the
 ///   theme shared by every panel is used, falling back to the global theme set
-///   with\@theme-set, else the default.
+///   with \@theme-set, else the default.
 ///
 /// \@param tag-levels Per-panel tag numbering. A single code numbers this
 ///   composition's panels in layout order; an array of codes assigns one code
@@ -869,9 +869,9 @@
 ///
 /// \@param alt Alt text for the whole composition. When set, the result is
 ///   wrapped in a `figure` (kind `"gribouille-plot"`) carrying this PDF
-///   alternative text, exactly as\@plot does.
+///   alternative text, exactly as \@plot does.
 ///
-/// \@param as-spec Internal switch driven by\@defer: when `true`, return a
+/// \@param as-spec Internal switch driven by \@defer: when `true`, return a
 ///   compose spec dict instead of content so this composition can be passed as a
 ///   panel to another `compose`. Use `defer(compose, ...)` rather than setting
 ///   this directly. Guide collection stays per level (a nested compose draws its
@@ -1009,7 +1009,7 @@
 /// )
 /// ```
 ///
-/// \@see\@defer,\@plot,\@aes,\@guides,\@labels
+/// \@see \@defer, \@plot, \@aes, \@guides, \@labels
 #let compose(
   ..panels-positional,
   layout: "grid",
@@ -1101,9 +1101,9 @@
   _layout(container => context { _render-compose(spec, container) })
 }
 
-/// Build a deferred panel for\@compose.
+/// Build a deferred panel for \@compose.
 ///
-/// `defer` partial-applies a renderer (\@plot or\@compose) so the result is a
+/// `defer` partial-applies a renderer (\@plot or \@compose) so the result is a
 /// thunk rather than rendered content. \@compose invokes the thunk itself,
 /// supplying the cell dimensions and the internal `as-spec` switch, then probes
 /// each panel's guides and re-renders with the hoisted aesthetics suppressed.
@@ -1114,13 +1114,13 @@
 /// \@stability stable
 /// \@since 0.3.0
 ///
-/// \@param renderer The renderer to defer: the\@plot or\@compose function.
+/// \@param renderer The renderer to defer: the \@plot or \@compose function.
 ///
 /// \@param ..args Arguments forwarded to `renderer`, e.g. `data`, `mapping`,
-///   and `layers` for\@plot, or the panel thunks and layout options for a
-///   nested\@compose.
+///   and `layers` for \@plot, or the panel thunks and layout options for a
+///   nested \@compose.
 ///
-/// \@returns A deferred-panel thunk to pass as a positional argument to\@compose.
+/// \@returns A deferred-panel thunk to pass as a positional argument to \@compose.
 ///
 /// \@examples Two deferred scatter panels sharing a hoisted colour legend.
 /// ```
@@ -1136,5 +1136,5 @@
 /// )
 /// ```
 ///
-/// \@see\@compose,\@plot
+/// \@see \@compose, \@plot
 #let defer(renderer, ..args) = renderer.with(..args)

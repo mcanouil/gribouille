@@ -1,7 +1,7 @@
 ///! Iso-line 2D density statistic. Backing stat for \@geom-density-2d.
 ///!
 ///! Estimates a 2D Gaussian kernel density over the `(x, y)` sample
-///! (\@kde-2d) and emits the marching-squares iso-line segments of the
+///! (`kde-2d`) and emits the marching-squares iso-line segments of the
 ///! estimated surface, so the layer draws density contours directly from
 ///! raw observations.
 
