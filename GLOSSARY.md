@@ -36,7 +36,7 @@ Run the survey command at the bottom before extending the table.
 
 | Term      | Expansion          | Notes                                                            |
 | --------- | ------------------ | ---------------------------------------------------------------- |
-| `trained` | scale-trained dict | `ctx.trained.<aes>`; carries `type`, `domain`, `level-index`, `spec`, `transform`, `pre-transformed`, `typst-mark` (+ optional `temporal`/`date-format`, `reverse`, `view-transform`/`view-index`/`view-pad-cm` added by render/domain.typ). Built by `_train-entry` (scale/train.typ); read `spec` keys via `spec-attr`. |
+| `trained` | scale-trained dict | `ctx.trained.<aes>`; carries `type`, `domain`, `level-index`, `spec`, `transform`, `pre-transformed`, `typst-mark`, `integer` (+ optional `temporal`/`date-format`, `reverse`, `view-transform`/`view-index`/`view-pad-cm` added by render/domain.typ). Built by `_train-entry` (scale/train.typ); read `spec` keys via `spec-attr`. |
 | `fwd`     | forward transform  | data → transformed value (`transform-fwd`).                      |
 | `inv`     | inverse transform  | transformed value → data (`transform-inv`).                      |
 | `sec`     | secondary axis     | `sec-axis()` config bound to the primary scale.                  |

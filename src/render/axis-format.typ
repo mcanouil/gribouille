@@ -75,7 +75,9 @@
   }
   if transform == "log10" { return pretty-log10(lo, hi) }
   if transform == "sqrt" { return pretty-sqrt(lo, hi) }
-  pretty(lo, hi, n: 5)
+  // A scale trained on whole numbers keeps whole breaks, so a narrow range
+  // (years, small counts, a few epoch days) never labels half-steps.
+  pretty(lo, hi, n: 5, integer: trained.at("integer", default: false))
 }
 
 // Visible domain (data space) for a trained continuous scale, mirroring the
