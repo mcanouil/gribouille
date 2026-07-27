@@ -4,6 +4,7 @@ subtitle: "Create elegant graphics with the Grammar of Graphics for Typst."
 toc: false
 sidebar: false
 engine: markdown
+since: "0.6.0"
 include-in-header:
   - text: |
       <style>
@@ -166,6 +167,7 @@ The same grammar as [`ggplot2`](https://ggplot2.tidyverse.org) and [`plotnine`](
   ),
   theme: theme-minimal(
     axis-line: element-line(stroke: 0.5pt),
+    axis-ticks: element-tick(length: 0.05cm),
   ),
   guides: guides(default: none,),
   width: 12cm,

@@ -2,6 +2,7 @@
 title: "Theming"
 subtitle: "Map every visible region of a plot to the `theme()` key that styles it."
 engine: markdown
+since: "0.6.0"
 ---
 
 A _Gribouille_ plot is a stack of named regions: an outer canvas, an inner panel (or grid of panels), a strip band for facets, a legend column, a title block on top, a caption underneath, and axes around the edges.
@@ -120,6 +121,38 @@ Every other surface keeps its default.
 ```
 
 Each line maps directly to one row in the [region table](#region-to-theme-key-reference): change a single key, the matching region updates, nothing else moves.
+
+## Ticks and their labels
+
+Tick marks are one record: [`element-tick`](../reference/themes/element-tick.qmd) carries the mark's `colour`, `stroke`, and `length` together, on `axis-ticks` and its per-axis, per-side, and minor variants.
+A `length` given as a ratio scales the length inherited from the parent surface, exactly as `size` and `stroke` do elsewhere, so the y ticks below come out half the length of the x ticks without naming an absolute value.
+
+```{typst}
+//| echo: true
+//| output-filename: "theming-ticks.svg"
+//| alt: "Scatter plot with long tick marks on the x axis, half-length ticks on the y axis, and no tick labels on the right-hand side."
+#let df = range(0, 12).map(i => (x: i, y: i * i * 0.1))
+
+#plot(
+  data: df,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(size: 3pt, fill: rgb("#d6604d")),),
+  scales: scales(y: scale-continuous(secondary: dup-axis())),
+  theme: theme(
+    axis-line: element-line(stroke: 0.5pt),
+    axis-ticks: element-tick(length: 0.25cm, stroke: 0.8pt),
+    axis-ticks-y: element-tick(length: 50%),
+    axis-text-y-right: element-blank(),
+  ),
+  labels: labels(x: "Step", y: "y = 0.1 × x²"),
+  width: 12cm,
+  height: 7cm,
+)
+```
+
+Tick labels live entirely in `axis-text`, so hiding them is the same per-side [`element-blank`](../reference/themes/element-blank.qmd) as anywhere else: the duplicated right-hand axis above keeps its marks and drops its labels, along with the width they would have reserved.
+Blanking `axis-ticks` on a side does the same for the marks.
+Minor marks (the sub-decade ticks that [`guide-axis-logticks`](../reference/guides/guide-axis-logticks.qmd) adds on a log axis) inherit that record through `axis-ticks-minor`, defaulting to half the major length in the same stroke.
 
 ## Tune the outer canvas
 
