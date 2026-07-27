@@ -35,8 +35,6 @@ website:
 
   page-footer:
     border: true
-    background: dark
-    foreground: light
     left: |
       Powered by [{{< iconify simple-icons:quarto title="Quarto Logo" label="Quarto Logo" >}} Quarto](https://quarto.org).
     center: |
