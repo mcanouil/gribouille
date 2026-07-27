@@ -11,7 +11,7 @@ A plot layers `geom-*` over shared data and an aesthetic mapping.
 ## Import
 
 ```typst
-#import "@preview/gribouille:0.5.0": *
+#import "@preview/gribouille:0.6.0": *
 ```
 
 Pin the version to the installed one; check it via `llms.txt` or Typst Universe.
@@ -97,7 +97,7 @@ Arguments, defaults, and types still come from each symbol's `.llms.md` referenc
 ## Worked example
 
 ```typst
-#import "@preview/gribouille:0.5.0": *
+#import "@preview/gribouille:0.6.0": *
 
 #let species-colours = (
   Adelie: rgb("#ff8c00"),
