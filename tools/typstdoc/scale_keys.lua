@@ -3,8 +3,14 @@
 -- arguments against those tuples before spreading them into a builder, so a
 -- builder parameter added or renamed without updating its tuple would make
 -- the eager validation lie; this check fails the test run instead.
+--
+-- `check_docs` closes the same loop on the reference pages: each `scale-*`
+-- constructor documents its accepted keys with `@named-keys`, which must match
+-- the union of the tuples its family reaches in the dispatch table.
 
 local M = {}
+
+local CONSTRUCTORS_FILE = "src/scale/constructors.typ"
 
 local FAMILY_FILES = {
   "src/scale/continuous.typ",
@@ -124,6 +130,87 @@ local function dispatch_pairs(text)
   return pairs_
 end
 
+-- Split the `_SCALE-DISPATCH` body into `family -> {tuple names}`. `_trans`
+-- and `_temporal` name no tuple at the call site, so map them the way
+-- IMPLICIT_PAIRS does for the builder check.
+local function dispatch_families(text)
+  local _, open_idx = text:find("#let%s+_SCALE%-DISPATCH%s*=%s*%(")
+  if not open_idx then error("scale_keys: _SCALE-DISPATCH not found in " .. BIND_FILE) end
+  local body = balanced(text, open_idx)
+  local families = {}
+  local depth = 0
+  local in_string = false
+  local start = 1
+  local function take(part)
+    local family, value = part:match("^%s*([%w%-]+)%s*:%s*(.*)$")
+    if not family then return end
+    local names = {}
+    for tuple in value:gmatch("(_[%w%-]+%-KEYS)") do table.insert(names, tuple) end
+    if value:find("_trans%(") then table.insert(names, "_POS-TRANSFORM-KEYS") end
+    if value:find("_temporal%(") then table.insert(names, "_TEMPORAL-KEYS") end
+    families[family] = names
+  end
+  for i = 1, #body do
+    local c = body:sub(i, i)
+    if in_string then
+      if c == "\\" then --[[ skip escapes ]]
+      elseif c == '"' then in_string = false end
+    elseif c == '"' then
+      in_string = true
+    elseif c == "(" or c == "[" or c == "{" then
+      depth = depth + 1
+    elseif c == ")" or c == "]" or c == "}" then
+      depth = depth - 1
+    elseif c == "," and depth == 0 then
+      take(body:sub(start, i - 1))
+      start = i + 1
+    end
+  end
+  take(body:sub(start))
+  return families
+end
+
+-- Keys documented on one constructor: the `@named-keys` list (with its
+-- indented continuation lines) plus the set of `@param` names in the block.
+local function parse_doc_block(block, fn)
+  local keys, params = {}, {}
+  local collecting = false
+  for _, line in ipairs(block) do
+    local body = line:sub(4)
+    if body:sub(1, 1) == " " then body = body:sub(2) end
+    body = body:gsub("\\@", "@")
+    local named = body:match("^@named%-keys%s+(.*)$")
+    if named then
+      collecting = true
+      for key in named:gmatch("[%w_%-]+") do table.insert(keys, key) end
+    elseif collecting and body:match("^%s+%S") and not body:find("@") then
+      for key in body:gmatch("[%w_%-]+") do table.insert(keys, key) end
+    else
+      collecting = false
+      local pname = body:match("^@param%s+([%w_%-]+)")
+      if pname then params[pname] = true end
+    end
+  end
+  return { fn = fn, keys = keys, params = params }
+end
+
+-- `family -> parsed doc block` for every `scale-*(..args) = _stub(...)`.
+local function documented_keys(text)
+  local docs = {}
+  local block = {}
+  for line in (text .. "\n"):gmatch("([^\n]*)\n") do
+    local trimmed = line:match("^%s*(.-)%s*$")
+    if trimmed:sub(1, 3) == "///" then
+      table.insert(block, trimmed)
+    else
+      local fn, family = trimmed:match('^#let%s+(scale%-[%w%-]+)%(%.%.args%)%s*=%s*_stub%("([%w%-]+)"')
+      if fn then docs[family] = parse_doc_block(block, fn) end
+      block = {}
+    end
+  end
+  return docs
+end
+
 local function to_set(list)
   local set = {}
   for _, v in ipairs(list) do set[v] = true end
@@ -188,6 +275,64 @@ function M.check(root)
   end
   if #associations == 0 then
     table.insert(problems, "no builder/keys associations found in " .. BIND_FILE)
+  end
+  return problems
+end
+
+-- Compare each constructor's documented `@named-keys` against the union of the
+-- tuples its family reaches, so the reference pages cannot drift from the keys
+-- bind-scale actually accepts. Returns a list of mismatch strings.
+function M.check_docs(root)
+  local bind_text = read_file(root .. "/" .. BIND_FILE)
+  local tuples = key_tuples(bind_text)
+  local families = dispatch_families(bind_text)
+  local docs = documented_keys(read_file(root .. "/" .. CONSTRUCTORS_FILE))
+
+  local names = {}
+  for family in pairs(families) do table.insert(names, family) end
+  table.sort(names)
+
+  local problems = {}
+  for _, family in ipairs(names) do
+    local expected = {}
+    local expected_list = {}
+    for _, tuple_name in ipairs(families[family]) do
+      local tuple = tuples[tuple_name]
+      if tuple == nil then
+        table.insert(problems, tuple_name .. " referenced by family " .. family .. " but not defined")
+      else
+        for _, key in ipairs(tuple) do
+          if not expected[key] then
+            expected[key] = true
+            table.insert(expected_list, key)
+          end
+        end
+      end
+    end
+    local doc = docs[family]
+    if doc == nil then
+      table.insert(problems, "family " .. family .. " has no constructor in " .. CONSTRUCTORS_FILE)
+    else
+      local documented = to_set(doc.keys)
+      for _, key in ipairs(expected_list) do
+        if not documented[key] then
+          table.insert(problems, doc.fn .. ' @named-keys omits "' .. key
+            .. '" (documents: ' .. sorted_join(doc.keys) .. ")")
+        end
+      end
+      for _, key in ipairs(doc.keys) do
+        if not expected[key] then
+          table.insert(problems, doc.fn .. ' @named-keys lists "' .. key
+            .. '" but no bound scale accepts it (accepts: ' .. sorted_join(expected_list) .. ")")
+        end
+        if not doc.params[key] then
+          table.insert(problems, doc.fn .. ' documents key "' .. key .. '" with no matching @param line')
+        end
+      end
+    end
+  end
+  if #names == 0 then
+    table.insert(problems, "no scale families found in " .. BIND_FILE)
   end
   return problems
 end

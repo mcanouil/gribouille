@@ -41,7 +41,8 @@
 // positionals (`aesthetic`, `transform`, `temporal`) are not user keys.
 // `tools/typstdoc/scale_keys.lua` (run by the typstdoc test suite inside
 // `tools/check.sh`) cross-checks every tuple against the builder
-// signatures; keep them in sync.
+// signatures, and the `@named-keys` list each `scale-*` constructor
+// documents against the tuples its family reaches below; keep them in sync.
 #let _POS-CONTINUOUS-KEYS = (
   "name",
   "limits",
