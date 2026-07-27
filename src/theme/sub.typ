@@ -417,7 +417,7 @@
 ///
 /// \@param caption Same for `plot-caption`.
 ///
-/// \@param tag Same for `plot-tag` (the per-panel tag drawn by\@compose).
+/// \@param tag Same for `plot-tag` (the per-panel tag drawn by \@compose).
 ///
 /// \@returns Theme dictionary with the named plot overrides applied.
 ///

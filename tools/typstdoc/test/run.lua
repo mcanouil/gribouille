@@ -848,11 +848,63 @@ describe("resolve: cross-references", function()
     end, "@missing%(%)")
   end)
 
-  it("leaves a lone trailing ( or ) untouched around @ref", function()
-    local out_open = resolve.resolve_refs_in_text("(@bar(x)", "core/foo.qmd", bar_index, false)
-    assert_contains(out_open, "@bar(x")
-    local out_close = resolve.resolve_refs_in_text("@bar) tail", "core/foo.qmd", bar_index, false)
-    assert_contains(out_close, "@bar) tail")
+  it("leaves a lone opening ( untouched: @bar(x reads as a call signature", function()
+    local out = resolve.resolve_refs_in_text("(@bar(x)", "core/foo.qmd", bar_index, false)
+    assert_contains(out, "@bar(x")
+  end)
+
+  it("resolves a @ref closing a parenthetical and keeps the )", function()
+    local out = resolve.resolve_refs_in_text("(e.g., @bar) tail", "core/foo.qmd", bar_index, false)
+    assert_contains(out, "(e.g., [`bar`](../geoms/bar.qmd)) tail")
+  end)
+
+  it("resolves a @ref followed by punctuation", function()
+    local out = resolve.resolve_refs_in_text("See @bar, then @bar.", "core/foo.qmd", bar_index, false)
+    assert_contains(out, "[`bar`](../geoms/bar.qmd), then [`bar`](../geoms/bar.qmd).")
+  end)
+
+  it("errors on an unresolved @ref closing a parenthetical under strict", function()
+    assert_throws(function()
+      resolve.resolve_refs_in_text("(see @missing).", "core/foo.qmd", {}, true, "x.typ", 1)
+    end, "unresolved")
+  end)
+end)
+
+-- -----------------------------------------------------------------------
+
+describe("sources: @refs in doc comments", function()
+  local repo_root = ROOT:match("^(.*)/tools/typstdoc$")
+    or (ROOT == "tools/typstdoc" and ".")
+
+  -- A ref glued to the previous character renders glued too, e.g. `for\@compose`
+  -- becomes ``for[`compose`](compose.qmd)`` on the page. `(`, `[`, and `/` are
+  -- legitimate: `(\@plot)`, `[\@plot]`, and `\@geom-point/\@geom-label`.
+  it("every \\@ref is preceded by whitespace, (, [, / or line start", function()
+    local problems = {}
+    local listing = io.popen("find " .. repo_root .. "/src -name '*.typ' | sort")
+    for path in listing:lines() do
+      local lineno = 0
+      for line in io.lines(path) do
+        lineno = lineno + 1
+        if line:match("^%s*///") then
+          local from = 1
+          while true do
+            local s = line:find("\\@", from, true)
+            if not s then break end
+            local before = s > 1 and line:sub(s - 1, s - 1) or ""
+            if before ~= "" and not before:match("[%s%(%[/]") then
+              local rel = path:gsub("^" .. repo_root:gsub("%p", "%%%0") .. "/", "")
+              table.insert(problems, string.format("%s:%d: %s", rel, lineno, line:match("^%s*(.-)%s*$")))
+            end
+            from = s + 2
+          end
+        end
+      end
+    end
+    listing:close()
+    if #problems > 0 then
+      error("\\@ref glued to the preceding character:\n  " .. table.concat(problems, "\n  "), 2)
+    end
   end)
 end)
 
