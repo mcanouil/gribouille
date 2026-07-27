@@ -11,9 +11,17 @@
 
 // Data range of the trained values, or `none` when the vector is empty (an
 // unmapped scale, or one whose every cell failed to parse as a number).
+// Folded rather than spread through `calc.min`, which would push one argument
+// per row onto the call stack for a large dataset.
 #let _range-of(values) = {
   if values.len() == 0 { return none }
-  (calc.min(..values), calc.max(..values))
+  let lo = values.first()
+  let hi = lo
+  for v in values {
+    if v < lo { lo = v }
+    if v > hi { hi = v }
+  }
+  (lo, hi)
 }
 
 /// Breaks spaced a fixed distance apart.
@@ -55,6 +63,11 @@
     "width must be a number; got " + repr(width),
   )
   check(width > 0, "breaks-width", "width must be positive; got " + repr(width))
+  check(
+    type(offset) == int or type(offset) == float,
+    "breaks-width",
+    "offset must be a number; got " + repr(offset),
+  )
   values => {
     let span = _range-of(values)
     if span == none { return () }
