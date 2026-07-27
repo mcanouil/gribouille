@@ -23,6 +23,15 @@
 // larger `m` still yields more ticks.
 #assert(extended(0, 100, m: 10).len() > extended(0, 100, m: 3).len())
 
+// A large `m` reaches the tick counts it needs: over 0 to 100 asking for 20
+// steps by 5, which takes 21 candidate ticks. The search bound has to follow
+// `m` rather than sit at a constant, or the answer silently falls back to the
+// 11-tick sequence stepping by 10.
+#let twenty = extended(0, 100, m: 20)
+#assert.eq(twenty.len(), 21)
+#assert.eq(twenty.at(1) - twenty.at(0), 5.0)
+#assert.eq(extended(0, 100, m: 40).len(), 41)
+
 // --- every break lies inside the requested interval ---
 
 #let inside(lo, hi, breaks) = breaks.all(b => b >= lo and b <= hi)
@@ -60,6 +69,19 @@
 #assert.eq(extended(0, 0, m: 5), (-1.0, 0.0, 1.0))
 // A reversed interval is read as its span, not as an empty one.
 #assert.eq(extended(100, 0, m: 5), extended(0, 100, m: 5))
+
+// --- intervals no candidate can serve report what they found ---
+
+// An interval narrower than the whole step it is restricted to keeps the best
+// sequence, whose ticks then all fall outside: the caller draws no tick rather
+// than a fractional one. No axis reaches this, since a whole-numbered scale
+// always spans at least one whole value, and neither does `breaks-extended`,
+// which only sets `integer` when every value is whole.
+#assert.eq(extended(0.2, 0.4, m: 5, integer: true), ())
+
+// Below that, no candidate is scored at all and the interval itself comes
+// back, so the result is never empty of information.
+#assert.eq(extended(0.0001, 0.0002, m: 5, integer: true), (0.0001, 0.0002))
 
 // --- it is the automatic axis placement ---
 
