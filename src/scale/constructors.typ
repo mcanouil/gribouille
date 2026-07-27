@@ -27,7 +27,57 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the bound scale (e.g. `name`, `limits`, `breaks`, `labels`, and aesthetic-specific keys such as `transform` or `range`).
+/// \@param args Named arguments forwarded to the bound scale.
+///
+/// \@named-keys name limits oob breaks minor-breaks n-minor labels transform
+///   expand secondary palette range n-breaks
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks. On the binned
+///   `linetype` ladder they are bin edges instead.
+///
+/// \@param minor-breaks Array of minor-gridline positions in data units, or
+///   `auto` (default) to subdivide the majors, using sub-decade lines under
+///   `"log10"`. `x`/`y` only.
+///
+/// \@param n-minor Integer count of minor gridlines between adjacent majors, or
+///   `auto` (default) for one; ignored when `minor-breaks` is set. `x`/`y`
+///   only.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
+///
+/// \@param transform `"identity"` (default), `"log10"`, `"sqrt"`, or
+///   `"reverse"`. `x`/`y` only.
+///
+/// \@param expand Padding around the domain as a ratio (`5%`), a length
+///   (`5pt`), a `relative`, or a `(lo, hi)` pair whose sides may each be
+///   `auto`; `false` or `none` removes it. `auto` (default) pads 5% per side.
+///   `x`/`y` only.
+///
+/// \@param secondary Secondary axis built with \@dup-axis or \@sec-axis, or
+///   `none` (default). `x`/`y` only.
+///
+/// \@param palette Typst gradient or array of colours interpolated across the
+///   domain on `colour`/`fill`, or an array of dash keywords on `linetype`;
+///   `auto` (default) uses viridis and the built-in dash set respectively.
+///
+/// \@param range Output `(lo, hi)` pair: lengths for `size` (default `(1pt,
+///   6pt)`), `linewidth` (default `(0.4pt, 1.4pt)`), and `stroke` (default
+///   `(0.2pt, 1.4pt)`); numbers in `[0, 1]` for `alpha` (default `(0.1, 1)`).
+///
+/// \@param n-breaks Integer number of equal-width bins used when `breaks` is
+///   `auto`; default 4. `linetype` only.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -59,7 +109,33 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the bound scale (e.g. `name`, `limits`, `labels`, `palette`).
+/// \@param args Named arguments forwarded to the bound scale.
+///
+/// \@named-keys name limits oob labels expand palette
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Array of level names selecting which levels appear and in
+///   which order; `none` (default) keeps the trained levels.
+///
+/// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
+///   (default) removes them; `"squish"` censors too, since clamping has no
+///   meaning on levels.
+///
+/// \@param labels Array of labels in level order, a function of the level
+///   returning a string or content, or `auto` (default) to print the level
+///   itself.
+///
+/// \@param expand Padding around the domain as a ratio (`5%`), a length
+///   (`5pt`), a `relative`, or a `(lo, hi)` pair whose sides may each be
+///   `auto`; `false` or `none` removes it. `auto` (default) pads 0.6 of a level
+///   slot per side. `x`/`y` only.
+///
+/// \@param palette Array of output values, one per level and recycled when
+///   shorter than the level count: colours for `colour`/`fill`, marker keywords
+///   for `shape`, dash keywords for `linetype`. `auto` (default) uses that
+///   aesthetic's built-in set.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -91,7 +167,37 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the bound scale (e.g. `n-breaks`, `breaks`, `name`, `limits`, and `range` or `palette`).
+/// \@param args Named arguments forwarded to the bound scale.
+///
+/// \@named-keys name limits oob n-breaks breaks labels range palette
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param n-breaks Integer number of equal-width bins used when `breaks` is
+///   `auto`; default 10 on `x`/`y` and 4 on the other aesthetics.
+///
+/// \@param breaks Array of bin edges, ticked at the bin midpoints and
+///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
+///   bins.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
+///
+/// \@param range Output `(lo, hi)` pair: lengths for `size` (default `(1pt,
+///   6pt)`), `linewidth` (default `(0.4pt, 1.4pt)`), and `stroke` (default
+///   `(0.2pt, 1.4pt)`); numbers in `[0, 1]` for `alpha` (default `(0.1, 1)`).
+///
+/// \@param palette Array of per-bin output values: marker keywords for `shape`,
+///   dash keywords for `linetype`. `auto` (default) uses that aesthetic's
+///   built-in set.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -125,7 +231,29 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the bound scale (e.g. `values`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the bound scale.
+///
+/// \@named-keys values name limits oob labels
+///
+/// \@param values Array of output values in level order, recycled when shorter
+///   than the number of levels: any Typst paint for `colour`/`fill`, numbers in
+///   `[0, 1]` for `alpha`, lengths for `size`/`linewidth`/`stroke`, marker
+///   keywords for `shape`, and dash keywords for `linetype`. Default `()` holds
+///   no value, so pass at least one.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Array of level names selecting which levels appear and in
+///   which order; `none` (default) keeps the trained levels.
+///
+/// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
+///   (default) removes them; `"squish"` censors too, since clamping has no
+///   meaning on levels.
+///
+/// \@param labels Array of labels in level order, a function of the level
+///   returning a string or content, or `auto` (default) to print the level
+///   itself.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -223,7 +351,12 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the bound scale (e.g. `name`).
+/// \@param args Named arguments forwarded to the bound scale.
+///
+/// \@named-keys name
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -259,7 +392,32 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the axis scale (e.g. `name`, `limits`, `breaks`, `minor-breaks`, `n-minor`, `labels`).
+/// \@param args Named arguments forwarded to the axis scale.
+///
+/// \@named-keys name limits oob breaks minor-breaks n-minor labels
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param minor-breaks Array of minor-gridline positions in data units, or
+///   `auto` (default) to subdivide the majors, using sub-decade lines under
+///   `"log10"`.
+///
+/// \@param n-minor Integer count of minor gridlines between adjacent majors, or
+///   `auto` (default) for one; ignored when `minor-breaks` is set.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -289,7 +447,32 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the axis scale (e.g. `name`, `limits`, `breaks`, `minor-breaks`, `n-minor`, `labels`).
+/// \@param args Named arguments forwarded to the axis scale.
+///
+/// \@named-keys name limits oob breaks minor-breaks n-minor labels
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param minor-breaks Array of minor-gridline positions in data units, or
+///   `auto` (default) to subdivide the majors, using sub-decade lines under
+///   `"log10"`.
+///
+/// \@param n-minor Integer count of minor gridlines between adjacent majors, or
+///   `auto` (default) for one; ignored when `minor-breaks` is set.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -319,7 +502,32 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the axis scale (e.g. `name`, `limits`, `breaks`, `minor-breaks`, `n-minor`, `labels`).
+/// \@param args Named arguments forwarded to the axis scale.
+///
+/// \@named-keys name limits oob breaks minor-breaks n-minor labels
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param minor-breaks Array of minor-gridline positions in data units, or
+///   `auto` (default) to subdivide the majors, using sub-decade lines under
+///   `"log10"`.
+///
+/// \@param n-minor Integer count of minor gridlines between adjacent majors, or
+///   `auto` (default) for one; ignored when `minor-breaks` is set.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -350,7 +558,33 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the axis scale (e.g. `name`, `limits`, `breaks`, `labels`, `expand`, `date-format`).
+/// \@param args Named arguments forwarded to the axis scale.
+///
+/// \@named-keys name limits oob breaks labels expand date-format
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair of numbers or ISO-8601 strings,
+///   where either side may be `auto` to train that side from the data; `none`
+///   (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in the scale's numeric units, a bare
+///   number for a single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
+///
+/// \@param expand Padding around the domain as a ratio (`5%`), a length
+///   (`5pt`), a `relative`, or a `(lo, hi)` pair whose sides may each be
+///   `auto`; `false` or `none` removes it. `auto` (default) pads 5% per side.
+///
+/// \@param date-format Typst `datetime.display` format string; default
+///   `"[year]-[month repr:numerical]-[day]"`.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -378,7 +612,33 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the axis scale (e.g. `name`, `limits`, `breaks`, `labels`, `expand`, `date-format`).
+/// \@param args Named arguments forwarded to the axis scale.
+///
+/// \@named-keys name limits oob breaks labels expand date-format
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair of numbers or ISO-8601 strings,
+///   where either side may be `auto` to train that side from the data; `none`
+///   (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in the scale's numeric units, a bare
+///   number for a single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
+///
+/// \@param expand Padding around the domain as a ratio (`5%`), a length
+///   (`5pt`), a `relative`, or a `(lo, hi)` pair whose sides may each be
+///   `auto`; `false` or `none` removes it. `auto` (default) pads 5% per side.
+///
+/// \@param date-format Typst `datetime.display` format string; default
+///   "[year]-[month repr:numerical]-[day] [hour]:[minute]".
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -406,7 +666,33 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the axis scale (e.g. `name`, `limits`, `breaks`, `labels`, `expand`, `date-format`).
+/// \@param args Named arguments forwarded to the axis scale.
+///
+/// \@named-keys name limits oob breaks labels expand date-format
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair of numbers or ISO-8601 strings,
+///   where either side may be `auto` to train that side from the data; `none`
+///   (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in the scale's numeric units, a bare
+///   number for a single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
+///
+/// \@param expand Padding around the domain as a ratio (`5%`), a length
+///   (`5pt`), a `relative`, or a `(lo, hi)` pair whose sides may each be
+///   `auto`; `false` or `none` removes it. `auto` (default) pads 5% per side.
+///
+/// \@param date-format Typst `datetime.display` format string; default
+///   "[hour]:[minute]".
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -439,7 +725,26 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `option`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys option name limits oob labels
+///
+/// \@param option Viridis variant: `"viridis"` (default), `"magma"`,
+///   `"plasma"`, `"inferno"`, or `"cividis"`.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Array of level names selecting which levels appear and in
+///   which order; `none` (default) keeps the trained levels.
+///
+/// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
+///   (default) removes them; `"squish"` censors too, since clamping has no
+///   meaning on levels.
+///
+/// \@param labels Array of labels in level order, a function of the level
+///   returning a string or content, or `auto` (default) to print the level
+///   itself.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -467,7 +772,28 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `option`, `name`, `limits`, `breaks`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys option name limits oob breaks labels
+///
+/// \@param option Viridis variant: `"viridis"` (default), `"magma"`,
+///   `"plasma"`, `"inferno"`, or `"cividis"`.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -495,7 +821,32 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `option`, `n-breaks`, `breaks`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys option n-breaks breaks name limits oob labels
+///
+/// \@param option Viridis variant: `"viridis"` (default), `"magma"`,
+///   `"plasma"`, `"inferno"`, or `"cividis"`.
+///
+/// \@param n-breaks Integer number of equal-width bins used when `breaks` is
+///   `auto`; default 5.
+///
+/// \@param breaks Array of bin edges, ticked at the bin midpoints and
+///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
+///   bins.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -525,7 +876,26 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `palette`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys palette name limits oob labels
+///
+/// \@param palette ColorBrewer set name resolved through \@brewer-palette, e.g.
+///   `"Set1"` or `"Spectral"`; default `"Set1"`.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Array of level names selecting which levels appear and in
+///   which order; `none` (default) keeps the trained levels.
+///
+/// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
+///   (default) removes them; `"squish"` censors too, since clamping has no
+///   meaning on levels.
+///
+/// \@param labels Array of labels in level order, a function of the level
+///   returning a string or content, or `auto` (default) to print the level
+///   itself.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -553,7 +923,23 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys name limits oob labels
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Array of level names selecting which levels appear and in
+///   which order; `none` (default) keeps the trained levels.
+///
+/// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
+///   (default) removes them; `"squish"` censors too, since clamping has no
+///   meaning on levels.
+///
+/// \@param labels Array of labels in level order, a function of the level
+///   returning a string or content, or `auto` (default) to print the level
+///   itself.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -583,7 +969,29 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `low`, `high`, `name`, `limits`, `breaks`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys low high name limits oob breaks labels
+///
+/// \@param low Bin or ramp low-end colour; default `rgb("#132B43")`.
+///
+/// \@param high Bin or ramp high-end colour; default `rgb("#56B1F7")`.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -613,7 +1021,33 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `low`, `mid`, `high`, `midpoint`, `name`, `limits`, `breaks`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys low mid high midpoint name limits oob breaks labels
+///
+/// \@param low Bin or ramp low-end colour; default `rgb("#1F77B4")`.
+///
+/// \@param mid Bin or ramp midpoint colour; default `rgb("#FFFFFF")`.
+///
+/// \@param high Bin or ramp high-end colour; default `rgb("#D62728")`.
+///
+/// \@param midpoint Data value placed at `mid`, in data units; default `0`.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -643,7 +1077,29 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `colours`, `name`, `limits`, `breaks`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys colours name limits oob breaks labels
+///
+/// \@param colours Array of colours interpolated in order from the low end of
+///   the domain to the high end; default `()` holds no colour, so pass at least
+///   two.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -675,7 +1131,28 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `start`, `end`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys start end name limits oob labels
+///
+/// \@param start Lightness of the first grey, a number in `[0, 1]`; default
+///   `0.2`.
+///
+/// \@param end Lightness of the last grey, a number in `[0, 1]`; default `0.8`.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Array of level names selecting which levels appear and in
+///   which order; `none` (default) keeps the trained levels.
+///
+/// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
+///   (default) removes them; `"squish"` censors too, since clamping has no
+///   meaning on levels.
+///
+/// \@param labels Array of labels in level order, a function of the level
+///   returning a string or content, or `auto` (default) to print the level
+///   itself.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -703,7 +1180,30 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `hue`, `chroma`, `luminance`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys hue chroma luminance name limits oob labels
+///
+/// \@param hue `(start, end)` angle pair sweeping the HCL hue circle; default
+///   `(15deg, 375deg)`.
+///
+/// \@param chroma HCL chroma, a number; default `100`.
+///
+/// \@param luminance HCL luminance, a number; default `65`.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Array of level names selecting which levels appear and in
+///   which order; `none` (default) keeps the trained levels.
+///
+/// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
+///   (default) removes them; `"squish"` censors too, since clamping has no
+///   meaning on levels.
+///
+/// \@param labels Array of labels in level order, a function of the level
+///   returning a string or content, or `auto` (default) to print the level
+///   itself.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -731,7 +1231,31 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `palette`, `direction`, `name`, `limits`, `breaks`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys palette direction name limits oob breaks labels
+///
+/// \@param palette ColorBrewer set name resolved through \@brewer-palette, e.g.
+///   `"Set1"` or `"Spectral"`; default `"Spectral"`.
+///
+/// \@param direction `1` (default) keeps the palette order; a negative value
+///   reverses it.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -759,7 +1283,33 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `low`, `high`, `n-breaks`, `breaks`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys low high n-breaks breaks name limits oob labels
+///
+/// \@param low Bin or ramp low-end colour; default `rgb("#132B43")`.
+///
+/// \@param high Bin or ramp high-end colour; default `rgb("#56B1F7")`.
+///
+/// \@param n-breaks Integer number of equal-width bins used when `breaks` is
+///   `auto`; default 5.
+///
+/// \@param breaks Array of bin edges, ticked at the bin midpoints and
+///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
+///   bins.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -787,7 +1337,37 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `low`, `mid`, `high`, `midpoint`, `n-breaks`, `breaks`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys low mid high midpoint n-breaks breaks name limits oob labels
+///
+/// \@param low Bin or ramp low-end colour; default `rgb("#005A32")`.
+///
+/// \@param mid Bin or ramp midpoint colour; default `white`.
+///
+/// \@param high Bin or ramp high-end colour; default `rgb("#A50026")`.
+///
+/// \@param midpoint Data value placed at `mid`, in data units; default `0`.
+///
+/// \@param n-breaks Integer number of equal-width bins used when `breaks` is
+///   `auto`; default 5.
+///
+/// \@param breaks Array of bin edges, ticked at the bin midpoints and
+///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
+///   bins.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -815,7 +1395,33 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `colours`, `n-breaks`, `breaks`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys colours n-breaks breaks name limits oob labels
+///
+/// \@param colours Array of colours interpolated in order from the low end of
+///   the domain to the high end; default `()` holds no colour, so pass at least
+///   two.
+///
+/// \@param n-breaks Integer number of equal-width bins used when `breaks` is
+///   `auto`; default 5.
+///
+/// \@param breaks Array of bin edges, ticked at the bin midpoints and
+///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
+///   bins.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -846,7 +1452,35 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the colour/fill scale (e.g. `palette`, `n-breaks`, `breaks`, `direction`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the colour/fill scale.
+///
+/// \@named-keys palette n-breaks breaks direction name limits oob labels
+///
+/// \@param palette ColorBrewer set name resolved through \@brewer-palette, e.g.
+///   `"Set1"` or `"Spectral"`; default `"Spectral"`.
+///
+/// \@param n-breaks Integer number of equal-width bins used when `breaks` is
+///   `auto`; default 5.
+///
+/// \@param breaks Array of bin edges, ticked at the bin midpoints and
+///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
+///   bins.
+///
+/// \@param direction `1` (default) keeps the palette order; a negative value
+///   reverses it.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -878,7 +1512,27 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the size scale (e.g. `range`, `name`, `limits`, `breaks`, `labels`).
+/// \@param args Named arguments forwarded to the size scale.
+///
+/// \@named-keys name range limits oob breaks labels
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param range Marker-radius `(lo, hi)` length pair; default `(1pt, 6pt)`.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -906,7 +1560,31 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the size scale (e.g. `n-breaks`, `breaks`, `range`, `name`, `limits`, `labels`).
+/// \@param args Named arguments forwarded to the size scale.
+///
+/// \@named-keys n-breaks breaks range name limits oob labels
+///
+/// \@param n-breaks Integer number of equal-width bins used when `breaks` is
+///   `auto`; default 4.
+///
+/// \@param breaks Array of bin edges, ticked at the bin midpoints and
+///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
+///   bins.
+///
+/// \@param range Marker-radius `(lo, hi)` length pair; default `(1pt, 6pt)`.
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -937,7 +1615,27 @@
 /// \@stability stable
 /// \@since 0.5.0
 ///
-/// \@param args Named arguments forwarded to the size scale (e.g. `range`, `name`, `limits`, `breaks`, `labels`).
+/// \@param args Named arguments forwarded to the size scale.
+///
+/// \@named-keys name range limits oob breaks labels
+///
+/// \@param name Axis or legend title, as a string or content; `none` (default)
+///   falls back to the mapped column name.
+///
+/// \@param range Marker-radius `(lo, hi)` length pair; default `(1pt, 6pt)`.
+///
+/// \@param limits Domain as a `(lo, hi)` pair, where either side may be `auto`
+///   to train that side from the data; `none` (default) trains both sides.
+///
+/// \@param oob Handling of rows outside `limits`: `"drop"` (default) removes
+///   them, `"squish"` clamps them to the nearest limit.
+///
+/// \@param breaks Array of tick positions in data units, a bare number for a
+///   single tick, or `auto` (default) for computed breaks.
+///
+/// \@param labels Array of labels aligned with the breaks, a function of the
+///   break value returning a string or content (the `format-*` helpers return
+///   such a function), or `auto` (default) to format each break.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
