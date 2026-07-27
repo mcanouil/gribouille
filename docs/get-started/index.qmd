@@ -494,7 +494,7 @@ Every plot you build composes the same pieces.
 //| output-filename: "grammar.svg"
 //| style: "display: block; margin-inline: auto;"
 //| alt: "A plot() container surrounding six stacked parallax sheets representing the grammar layers, from bottom to top: data plus aes(), layer (geom plus stat plus position), scale-*, coord-*, facet-*, and theme plus labels."
-#import "@preview/cetz:0.5.0": canvas, draw
+#import "@preview/cetz:0.5.2": canvas, draw
 
 #let ink = if _typst_render_foreground != none {
   _typst_render_foreground
