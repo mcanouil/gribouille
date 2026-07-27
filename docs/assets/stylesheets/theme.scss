@@ -516,6 +516,21 @@ body .navbar .gitlink-widget-dropdown {
     top: 100%;
     left: 0;
   }
+
+  // Quarto orders the collapsed bar as toggler, brand, tools, search, pins the
+  // brand's inline margins to 0 !important, and hands all the free space to the
+  // search's `margin-left: auto`; that strands the colour-scheme toggle beside
+  // the brand while the search sits alone at the far right. Zero the search
+  // margin and give the brand the auto margins instead, so the free space lands
+  // either side of it: toggler left, brand centred, toggle and search grouped
+  // right. !important is required to beat Quarto's own !important margins.
+  .navbar.navbar-expand-lg .navbar-container > .navbar-brand-container {
+    margin-inline: auto !important;
+  }
+
+  .navbar.navbar-expand-lg .navbar-container > #quarto-search {
+    margin-left: 0;
+  }
 }
 
 // --- Scrollbars. ---------------------------------------------------------
