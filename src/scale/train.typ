@@ -167,15 +167,21 @@
   "yintercept",
 )
 
+// Returns `(domain: (lo, hi), integer: bool)`. `integer` marks a scale whose
+// every parsed value is a whole number (years, counts, epoch days), which
+// `_axis-breaks` uses to keep the automatic breaks whole. An unmapped scale
+// falls back to `(0, 1)` and stays unmarked, so its breaks are unchanged.
 #let _continuous-domain-from-cache(cols, aesthetic) = {
   // Single-pass min/max: avoid building an intermediate array per column,
   // which matters for plots with thousands of rows across multiple layers.
   let lo = none
   let hi = none
+  let whole = true
   for col in cols {
     for raw in col.values {
       let v = parse-number(raw)
       if v == none { continue }
+      if whole and v != calc.round(v) { whole = false }
       if lo == none {
         lo = v
         hi = v
@@ -185,11 +191,11 @@
       }
     }
   }
-  if lo == none { return (0.0, 1.0) }
+  if lo == none { return (domain: (0.0, 1.0), integer: false) }
   if lo == hi and not _SYNTHETIC-FEEDERS.contains(aesthetic) {
-    return (lo - 0.5, hi + 0.5)
+    return (domain: (lo - 0.5, hi + 0.5), integer: whole)
   }
-  (lo, hi)
+  (domain: (lo, hi), integer: whole)
 }
 
 #let _discrete-domain-from-cache(cols) = {
@@ -335,10 +341,13 @@
   } else {
     _scale-type-from-cache(cols)
   }
+  let integer = false
   let domain = if scale-type == "identity" {
     ()
   } else if scale-type == "continuous" {
-    _continuous-domain-from-cache(cols, aes)
+    let scanned = _continuous-domain-from-cache(cols, aes)
+    integer = scanned.integer
+    scanned.domain
   } else {
     _discrete-domain-from-cache(cols)
   }
@@ -476,6 +485,8 @@
   //   - `view-transform` (continuous) / `view-index` (discrete) and
   //     `view-pad-cm` in `_apply-expand` (render/domain.typ), the expanded
   //     view window that axis breaks and panel mapping read.
+  // `integer` records that every trained value was a whole number, so the
+  // automatic breaks stay whole (`_axis-breaks`, continuous guides).
   // Read `spec` keys through `spec-attr` (utils/palette.typ), not by direct
   // `.spec.at(...)` pokes.
   let entry = (
@@ -486,6 +497,7 @@
     transform: transform,
     pre-transformed: pre-transformed,
     typst-mark: cached.typst-mark,
+    integer: integer,
   )
   if user-scale != none and user-scale.at("temporal", default: none) != none {
     entry.insert("temporal", user-scale.temporal)
@@ -514,12 +526,19 @@
     let hi = if target != none and target-mapped {
       target.domain.at(1)
     } else { none }
+    // Whole-number breaks only survive when every contributing scale is
+    // itself whole: a fractional `ymin` feeder must re-enable fine breaks.
+    let integer = if target != none and target-mapped {
+      target.at("integer", default: false)
+    } else { none }
     for s in sources {
       let t = trained.at(s, default: none)
       if t == none or t.type != "continuous" { continue }
       let (slo, shi) = t.domain
       lo = if lo == none { slo } else { calc.min(lo, slo) }
       hi = if hi == none { shi } else { calc.max(hi, shi) }
+      let t-integer = t.at("integer", default: false)
+      integer = if integer == none { t-integer } else { integer and t-integer }
     }
     if lo == none or hi == none { continue }
     if lo == hi {
@@ -535,6 +554,7 @@
       transform: _scale-param(target, spec, "transform", "identity"),
       pre-transformed: _scale-param(target, none, "pre-transformed", false),
       typst-mark: _scale-param(target, none, "typst-mark", false),
+      integer: integer == true,
     )
     let temporal = _scale-param(target, spec, "temporal", none)
     if temporal != none {

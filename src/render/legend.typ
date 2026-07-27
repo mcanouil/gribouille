@@ -975,7 +975,9 @@
       let hi = first.domain.last()
       let computed = if info.binned {
         range(info.n-breaks + 1).map(i => lo + i * (hi - lo) / info.n-breaks)
-      } else { pretty(lo, hi, n: 5) }
+      } else {
+        pretty(lo, hi, n: 5, integer: first.t.at("integer", default: false))
+      }
       let breaks = _guide-breaks(info, lo, hi, computed)
       (
         kind: "colourbar",
@@ -1005,7 +1007,9 @@
           range(info.n-breaks).map(i => (
             lo + (i + 0.5) * (hi - lo) / info.n-breaks
           ))
-        } else { pretty(lo, hi, n: 5) }
+        } else {
+          pretty(lo, hi, n: 5, integer: first.t.at("integer", default: false))
+        }
         _guide-breaks(info, lo, hi, computed)
       }
       // Resolve the key glyph size against the group's own `size` scale (not
