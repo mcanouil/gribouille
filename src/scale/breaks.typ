@@ -8,6 +8,7 @@
 
 #import "../utils/errors.typ": check, fail-type
 #import "../utils/pretty.typ": pretty
+#import "../utils/extended.typ": extended
 
 // Data range of the trained values, or `none` when the vector is empty (an
 // unmapped scale, or one whose every cell failed to parse as a number).
@@ -120,6 +121,51 @@
     if span == none { return () }
     let (lo, hi) = span
     pretty(lo, hi, n: n, integer: values.all(v => v == calc.round(v)))
+  }
+}
+
+/// Round breaks from the extended Wilkinson search.
+///
+/// Scores candidate sequences on simplicity, coverage of the data, and how
+/// close the tick count lands to `n`, which is what the automatic breaks
+/// already do; call it to ask for a different `n`. The counterpart of
+/// `scales::breaks_extended()`.
+///
+/// \@category Scales
+/// \@subcategory Breaks
+/// \@stability stable
+/// \@since 0.6.0
+///
+/// \@param n Target number of ticks; the search trades it off against the
+///   other criteria, so the result may hold one or two more or fewer.
+///
+/// \@returns Closure taking the trained values and returning break positions.
+///
+/// \@examples Eight ticks where the default asks for five.
+/// ```
+/// //| alt: "Scatter chart of engine displacement against highway mileage with about eight y axis ticks."
+/// #plot(
+///   data: mpg,
+///   mapping: aes(x: "displ", y: "hwy"),
+///   layers: (geom-point(),),
+///   scales: scales(y: scale-continuous(breaks: breaks-extended(n: 8))),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@see \@breaks-pretty, \@breaks-width, \@scale-continuous
+#let breaks-extended(n: 5) = {
+  check(
+    type(n) == int and n > 1,
+    "breaks-extended",
+    "n must be an integer above 1; got " + repr(n),
+  )
+  values => {
+    let span = _range-of(values)
+    if span == none { return () }
+    let (lo, hi) = span
+    extended(lo, hi, m: n, integer: values.all(v => v == calc.round(v)))
   }
 }
 

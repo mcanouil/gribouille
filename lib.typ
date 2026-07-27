@@ -150,7 +150,9 @@
   scale-time, scale-viridis-b, scale-viridis-c, scale-viridis-d,
 )
 #import "src/scale/secondary.typ": dup-axis, sec-axis
-#import "src/scale/breaks.typ": breaks-pretty, breaks-quantile, breaks-width
+#import "src/scale/breaks.typ": (
+  breaks-extended, breaks-pretty, breaks-quantile, breaks-width,
+)
 #import "src/utils/palette.typ": brewer-palette, okabe-ito
 #import "src/utils/colour.typ": colour-mix
 #import "src/limits.typ": expand-limits
