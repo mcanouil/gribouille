@@ -92,6 +92,25 @@
 #let widened = trained-with(scales(x: scale-continuous(breaks: (-50, 50))))
 #assert.eq(widened.x.domain, (-50, 50))
 
+// --- pinned limits clip the vector the closure sees ---
+
+// Values 0 .. 20 with `limits: (5, 10)` leave the six visible ones, so a
+// quantile or a count describes the data on the panel, not the data dropped.
+#let clipped = trained-with(
+  scales(
+    x: scale-continuous(limits: (5, 10), breaks: v => (v.len(), v.first())),
+  ),
+)
+#assert.eq(clipped.x.spec.breaks, (6, 5))
+
+// One pinned side clips only that side.
+#let half-open = trained-with(
+  scales(
+    x: scale-continuous(limits: (15, auto), breaks: v => (v.len(),)),
+  ),
+)
+#assert.eq(half-open.x.spec.breaks, (6,))
+
 // --- transformed scales hand the closure data-space values ---
 
 // `_preprocess-data` warps the rows into stat space before training, exactly

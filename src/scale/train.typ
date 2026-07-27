@@ -494,8 +494,9 @@
   // A function-valued `breaks` / `minor-breaks` resolves here, against the
   // values this scale trained on, so every downstream consumer (axis ticks,
   // minor gridlines, bin edges, guides) keeps reading a plain array. The
-  // closure sees data-space values: a pre-transformed column is inverted back
-  // out of stat space first.
+  // closure sees data-space values inside the domain: a pre-transformed column
+  // is inverted back out of stat space first, and a value the user's `limits`
+  // exclude is dropped, so quantiles and counts describe the visible data.
   let breaks-from-closure = false
   if scale-type == "continuous" and user-scale != none {
     let secondary = user-scale.at("secondary", default: none)
@@ -512,6 +513,24 @@
       let values = _values-from-cache(cols + feeder-cols)
       if pre-transformed {
         values = values.map(v => transform-inv(transform, v))
+      }
+      // Only a side the user pinned clips the vector. An unpinned side is the
+      // data range itself, so clipping there would be a no-op on a mapped
+      // scale and would wrongly empty one whose domain still awaits its
+      // synthetic feeders (`_fold-positional`).
+      if explicit-lo or explicit-hi {
+        let bound = side => {
+          let v = domain.at(side)
+          if pre-transformed { transform-inv(transform, v) } else { v }
+        }
+        if explicit-lo {
+          let lo = bound(0)
+          values = values.filter(v => v >= lo)
+        }
+        if explicit-hi {
+          let hi = bound(1)
+          values = values.filter(v => v <= hi)
+        }
       }
       for key in keys {
         let resolved = _breaks-from-closure(
