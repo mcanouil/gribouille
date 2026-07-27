@@ -4,7 +4,7 @@
 // `render-plot-deferred` so the orchestrator reads as a pipeline.
 
 #import "../scale/train.typ": mapping-display-name
-#import "../theme/theme.typ": _rect-outset-cm, _scalar-cascade, _text-style
+#import "../theme/theme.typ": _rect-outset-cm, _text-style, _tick-length
 #import "../utils/margin.typ": opposite-side, perpendicular-sides
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec
@@ -38,8 +38,8 @@
   let x-sec = _sec-spec(x-trained-top)
   let y-sec = _sec-spec(y-trained-top)
   let _surface-style = (p, s, _) => _text-style(theme, p + "-" + s)
-  let _len-side = (p, s, a) => _scalar-cascade(theme, p, s, a) / 1cm
-  let tick-len = _per-side(_len-side, "tick-length")
+  let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
+  let tick-len = _per-side(_len-side, "axis-ticks")
   let ax-text = _per-side(_surface-style, "axis-text")
   let ax-title = _per-side(_surface-style, "axis-title")
 
@@ -127,14 +127,14 @@
     "y",
     default-angle: _axis-text-angle(theme, "y"),
   )
-  // Themes that disable tick labels (`theme-void`) reserve no perpendicular
-  // depth for them; otherwise the chrome margin reserves space for ink that
-  // never draws, inverting the panel rect on small plot sizes.
-  let labels-on = theme.at("tick-labels", default: true)
-  let x-label-depth = if labels-on and not x-guide.suppress {
+  // A side whose `axis-text` is blank (`theme-void`, or a per-side
+  // `element-blank()`) draws no labels, so it reserves no perpendicular depth
+  // for them; otherwise the chrome margin reserves space for ink that never
+  // draws, inverting the panel rect on small plot sizes.
+  let x-label-depth = if ax-text.xb.size > 0pt and not x-guide.suppress {
     _x-label-depth-stack(x-guide, x-extents.width, x-extents.height)
   } else { 0.0 }
-  let y-label-width = if labels-on and not y-guide.suppress {
+  let y-label-width = if ax-text.yl.size > 0pt and not y-guide.suppress {
     _y-label-width-stack(y-guide, y-extents.width, y-extents.height)
   } else { 0.0 }
   // A suppressed (`labels(x: none)`) or nameless axis title reserves no extent;

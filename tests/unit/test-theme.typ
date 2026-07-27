@@ -5,7 +5,7 @@
   _line-stroke, _rect-style, _text-style, resolve-element, theme,
 )
 #import "../../src/theme/elements.typ": (
-  element-blank, element-line, element-rect, element-text,
+  element-blank, element-line, element-rect, element-text, element-tick,
 )
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../src/theme/void.typ": theme-void
@@ -92,28 +92,79 @@
 #assert.eq(resolve-element(s5, "axis-ticks-x-bottom").stroke, 2pt)
 #assert.eq(resolve-element(s5, "axis-ticks-y-right").stroke, 2pt)
 
-// tick-length scalar cascade: side > axis > base.
-#import "../../src/theme/theme.typ": _scalar-cascade
-#let len-base = merge-theme(theme(tick-length: 0.3cm))
-#assert.eq(_scalar-cascade(len-base, "tick-length", "x-bottom", "x"), 0.3cm)
-#assert.eq(_scalar-cascade(len-base, "tick-length", "y-right", "y"), 0.3cm)
+// Tick length cascade: side > axis > family.
+#import "../../src/theme/theme.typ": _tick-length, default-tick-length
+#let len-base = merge-theme(theme(axis-ticks: element-tick(length: 0.3cm)))
+#assert.eq(_tick-length(len-base, "axis-ticks-x-bottom"), 0.3cm)
+#assert.eq(_tick-length(len-base, "axis-ticks-y-right"), 0.3cm)
 
 #let len-axis = merge-theme(theme(
-  tick-length: 0.1cm,
-  tick-length-x: 0.4cm,
+  axis-ticks: element-tick(length: 0.1cm),
+  axis-ticks-x: element-tick(length: 0.4cm),
 ))
-#assert.eq(_scalar-cascade(len-axis, "tick-length", "x-bottom", "x"), 0.4cm)
-#assert.eq(_scalar-cascade(len-axis, "tick-length", "x-top", "x"), 0.4cm)
-#assert.eq(_scalar-cascade(len-axis, "tick-length", "y-left", "y"), 0.1cm)
+#assert.eq(_tick-length(len-axis, "axis-ticks-x-bottom"), 0.4cm)
+#assert.eq(_tick-length(len-axis, "axis-ticks-x-top"), 0.4cm)
+#assert.eq(_tick-length(len-axis, "axis-ticks-y-left"), 0.1cm)
 
 #let len-side = merge-theme(theme(
-  tick-length: 0.1cm,
-  tick-length-x: 0.2cm,
-  tick-length-x-bottom: 0.5cm,
+  axis-ticks: element-tick(length: 0.1cm),
+  axis-ticks-x: element-tick(length: 0.2cm),
+  axis-ticks-x-bottom: element-tick(length: 0.5cm),
 ))
-#assert.eq(_scalar-cascade(len-side, "tick-length", "x-bottom", "x"), 0.5cm)
-#assert.eq(_scalar-cascade(len-side, "tick-length", "x-top", "x"), 0.2cm)
-#assert.eq(_scalar-cascade(len-side, "tick-length", "y-right", "y"), 0.1cm)
+#assert.eq(_tick-length(len-side, "axis-ticks-x-bottom"), 0.5cm)
+#assert.eq(_tick-length(len-side, "axis-ticks-x-top"), 0.2cm)
+#assert.eq(_tick-length(len-side, "axis-ticks-y-right"), 0.1cm)
+
+// A ratio length scales the length inherited from the parent surface.
+#assert.eq(
+  _tick-length(
+    merge-theme(theme(
+      axis-ticks: element-tick(length: 0.3cm),
+      axis-ticks-y: element-tick(length: 50%),
+    )),
+    "axis-ticks-y-left",
+  ),
+  0.15cm,
+)
+
+// Minor ticks default to half the resolved major length, per axis.
+#let minor-default = merge-theme(theme(axis-ticks: element-tick(length: 0.4cm)))
+#assert.eq(_tick-length(minor-default, "axis-ticks-minor-x"), 0.2cm)
+#assert.eq(_tick-length(minor-default, "axis-ticks-minor-y"), 0.2cm)
+#assert.eq(
+  _tick-length(
+    merge-theme(theme(axis-ticks-minor-y: element-tick(length: 0.05cm))),
+    "axis-ticks-minor-y",
+  ),
+  0.05cm,
+)
+// Minor marks inherit the major stroke and colour unless overridden.
+#let minor-inherit = merge-theme(theme(axis-ticks: element-tick(
+  colour: rgb("#334455"),
+  stroke: 0.8pt,
+)))
+#assert.eq(_line-stroke(minor-inherit, "axis-ticks-minor-x").thickness, 0.8pt)
+#assert.eq(
+  _line-stroke(minor-inherit, "axis-ticks-minor-x").paint,
+  rgb("#334455"),
+)
+
+// element-blank is the single tick off switch: no stroke and no length, so
+// nothing draws and no depth is reserved.
+#let ticks-off = merge-theme(theme(axis-ticks-x-top: element-blank()))
+#assert.eq(_tick-length(ticks-off, "axis-ticks-x-top"), 0cm)
+#assert.eq(_line-stroke(ticks-off, "axis-ticks-x-top"), none)
+#assert.eq(_tick-length(ticks-off, "axis-ticks-x-bottom"), 0.1cm)
+
+// An element-line on a tick surface carries no length, so the cascade falls
+// through to the default.
+#assert.eq(
+  _tick-length(
+    merge-theme(theme(axis-ticks: element-line(stroke: 1pt))),
+    "axis-ticks-y-left",
+  ),
+  default-tick-length,
+)
 
 // element-blank on a text surface collapses to a 0pt size so every consumer
 // that gates on `size > 0pt` skips both the ink and its reserved space.
@@ -123,6 +174,17 @@
 #assert.eq(_text-style(blank-plot-title, "plot-title").size, 0pt)
 // A normal text element keeps its declared size.
 #assert.eq(_text-style(merge-theme(theme()), "axis-title").size, 9pt)
+
+// Tick labels hide per side: `axis-text` on one side collapses to 0pt while
+// its siblings keep drawing.
+#let blank-labels = merge-theme(theme(axis-text-y-right: element-blank()))
+#assert.eq(_text-style(blank-labels, "axis-text-y-right").size, 0pt)
+#assert.eq(_text-style(blank-labels, "axis-text-y-left").size, 8pt)
+// theme-void hides every tick label through the same switch.
+#assert.eq(
+  _text-style(merge-theme(theme-void()), "axis-text-x-bottom").size,
+  0pt,
+)
 
 // Relative `%` sizes cascade from the base `text`. At the default 9pt base the
 // per-surface ratios resolve to the historical absolute sizes.

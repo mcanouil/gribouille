@@ -95,8 +95,8 @@
       panel-grid: element-blank(),
       axis-line: element-blank(),
       axis-title: element-text(size: 0pt),
-      tick-length: 0cm,
-      tick-labels: false,
+      axis-ticks: element-blank(),
+      axis-text: element-blank(),
     ),
     fields,
   )

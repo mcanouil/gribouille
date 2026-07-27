@@ -16,12 +16,11 @@
 )
 
 // Pre-geom radial pass. `rctx` carries the enclosing panel state: `spec`,
-// `theme`, `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`,
-// `ax-text`, `grid-radial`, `ax-line`, `show-x-labels`.
+// `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`,
+// `grid-radial`, `ax-line`, `show-x-labels`.
 #let _draw-radial-panel(rctx) = {
   import cetz.draw: circle, content, line
   let spec = rctx.spec
-  let theme = rctx.theme
   let outer-radial = rctx.outer-radial
   let x-trained = rctx.x-trained
   let y-trained = rctx.y-trained
@@ -125,7 +124,7 @@
 
   if (
     show-x-labels
-      and theme.tick-labels
+      and theta-text.size > 0pt
       and theta-trained != none
       and not theta-suppress
   ) {
@@ -167,13 +166,12 @@
   }
 }
 
-// Post-geom radial pass: r-axis tick labels. `rctx` carries `spec`, `theme`,
+// Post-geom radial pass: r-axis tick labels. `rctx` carries `spec`,
 // `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`,
 // `show-y-labels`.
 #let _draw-radial-r-labels(rctx) = {
   import cetz.draw: content
   let spec = rctx.spec
-  let theme = rctx.theme
   let outer-radial = rctx.outer-radial
 
   let (cx, cy) = outer-radial.centre
@@ -189,7 +187,7 @@
   } else { rctx.ax-text.xb }
   if (
     rctx.show-y-labels
-      and theme.tick-labels
+      and r-text.size > 0pt
       and r-trained != none
       and r-trained.type == "continuous"
       and not _read-r-guide(spec).suppress

@@ -29,7 +29,7 @@
 ///
 /// \@param line \@element-line or \@element-blank for `axis-line`.
 ///
-/// \@param ticks \@element-line or \@element-blank for `axis-ticks`.
+/// \@param ticks \@element-tick or \@element-blank for `axis-ticks`.
 ///
 /// \@returns Theme dictionary with the named overrides applied.
 ///
@@ -73,7 +73,7 @@
 ///
 /// \@param line \@element-line for `axis-line-x`.
 ///
-/// \@param ticks \@element-line for `axis-ticks-x`.
+/// \@param ticks \@element-tick for `axis-ticks-x`.
 ///
 /// \@returns Theme dictionary with the named x-axis overrides applied.
 ///
@@ -116,7 +116,7 @@
 ///
 /// \@param line \@element-line for `axis-line-y`.
 ///
-/// \@param ticks \@element-line for `axis-ticks-y`.
+/// \@param ticks \@element-tick for `axis-ticks-y`.
 ///
 /// \@returns Theme dictionary with the named y-axis overrides applied.
 ///

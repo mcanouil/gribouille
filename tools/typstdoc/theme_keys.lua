@@ -12,16 +12,17 @@ local M = {}
 local AXIS_FAMILIES = { "axis-text", "axis-title", "axis-line", "axis-ticks" }
 local AXIS_VARIANT_SUFFIXES = { "-x", "-x-bottom", "-x-top", "-y", "-y-left", "-y-right" }
 
--- Scalars that share the same per-axis/per-side cascade as the axis families
--- but are stored outside the element-record system, so they aren't listed in
--- _surface-parent. Their parent map is reconstructed here.
-local SCALAR_VARIANTS = { "tick-length" }
-
 -- panel-grid splits into major/minor weights, each with a per-axis (`-x`, `-y`)
 -- variant and no per-side variants. Mirrors the panel-grid block in
 -- src/theme/theme.typ::_surface-parent.
 local PANEL_GRID_WEIGHTS = { "panel-grid-major", "panel-grid-minor" }
 local PANEL_GRID_AXIS_SUFFIXES = { "-x", "-y" }
+
+-- Minor tick marks inherit `axis-ticks` and gain a per-axis variant, with no
+-- per-side variants. Mirrors the axis-ticks-minor block in
+-- src/theme/theme.typ::_surface-parent.
+local AXIS_TICKS_MINOR = "axis-ticks-minor"
+local AXIS_TICKS_MINOR_SUFFIXES = { "-x", "-y" }
 
 -- Identifier substitutions: source uses sys.inputs-driven placeholders that
 -- collapse to these literals in standalone renders.
@@ -37,10 +38,9 @@ local SKIP_KEYS = {
   name = true,
 }
 
--- Groups left out of the hover element list: scalar `tick-*` and the colour
--- params (`ink`/`paper`/`accent`), which are documented as explicit arguments.
+-- Groups left out of the hover element list: the colour params
+-- (`ink`/`paper`/`accent`), which are documented as explicit arguments.
 local NON_ELEMENT_GROUPS = {
-  ticks = true,
   colours = true,
 }
 
@@ -58,7 +58,6 @@ local GROUP_ORDER = {
   { name = "roots", keys = { "text", "line", "rect" } },
   { name = "plot", keys = { "plot-title", "plot-subtitle", "plot-caption", "plot-tag", "plot-background" } },
   { name = "axis", keys = { "axis-title", "axis-text", "axis-line", "axis-ticks" } },
-  { name = "ticks", keys = { "tick-labels", "tick-length" } },
   { name = "panel", keys = { "panel-grid", "panel-background", "panel-spacing" } },
   { name = "legend", keys = { "legend-title", "legend-text", "legend-ticks", "legend-background", "legend-bar", "legend-key", "legend-position" } },
   { name = "strip", keys = { "strip-text", "strip-background" } },
@@ -157,13 +156,16 @@ function M.read_surface_parent(path)
     parents[base .. "-y-right"] = base .. "-y"
   end
   for _, fam in ipairs(AXIS_FAMILIES) do expand_variants(fam) end
-  for _, base in ipairs(SCALAR_VARIANTS) do expand_variants(base) end
   parents["panel-grid-major"] = "panel-grid"
   parents["panel-grid-minor"] = "panel-grid"
   for _, weight in ipairs(PANEL_GRID_WEIGHTS) do
     for _, suf in ipairs(PANEL_GRID_AXIS_SUFFIXES) do
       parents[weight .. suf] = weight
     end
+  end
+  parents[AXIS_TICKS_MINOR] = "axis-ticks"
+  for _, suf in ipairs(AXIS_TICKS_MINOR_SUFFIXES) do
+    parents[AXIS_TICKS_MINOR .. suf] = AXIS_TICKS_MINOR
   end
   return parents
 end
@@ -182,6 +184,7 @@ local function type_for(key, parents, defaults)
   end
   if root == "line" then
     if key == "line" then return "@element-line" end
+    if key:match("^axis%-ticks") then return "@element-tick or @element-blank" end
     return "@element-line or @element-blank"
   end
   if root == "rect" then
@@ -197,8 +200,6 @@ local function type_for(key, parents, defaults)
     -- Root-level element records with no base-record parent, e.g. `geom`.
     if entry.kind == "element-geom" then return "@element-geom" end
   end
-  -- tick-length variants inherit from tick-length scalar.
-  if key:match("^tick%-length") then return "length" end
   -- Global legend placement: same value set as @guide-legend's `position`.
   if key == "legend-position" then return "side, alignment, or dict" end
   return "—"
@@ -213,9 +214,6 @@ end
 local function has_variants(root)
   for _, fam in ipairs(AXIS_FAMILIES) do
     if fam == root then return true end
-  end
-  for _, base in ipairs(SCALAR_VARIANTS) do
-    if base == root then return true end
   end
   return false
 end
@@ -235,6 +233,12 @@ local function variant_keys_for(root)
   local out = {}
   for _, suf in ipairs(AXIS_VARIANT_SUFFIXES) do
     table.insert(out, root .. suf)
+  end
+  if root == "axis-ticks" then
+    table.insert(out, AXIS_TICKS_MINOR)
+    for _, suf in ipairs(AXIS_TICKS_MINOR_SUFFIXES) do
+      table.insert(out, AXIS_TICKS_MINOR .. suf)
+    end
   end
   return out
 end

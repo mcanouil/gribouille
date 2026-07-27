@@ -3,7 +3,7 @@
 ///! `theme` accepts per-element overrides via named arguments. Keys can be
 ///! either low-level fields (same names as the internal `default-theme`) or
 ///! structured element records from \@element-text, \@element-line,
-///! \@element-rect, and \@element-blank.
+///! \@element-tick, \@element-rect, and \@element-blank.
 ///!
 ///! Base element keys (`text`, `line`, `rect`) set inherited parent fields:
 ///! specific child keys (e.g., `axis-text`) take priority at render time.
@@ -54,14 +54,20 @@
     out.insert(weight + "-x", weight)
     out.insert(weight + "-y", weight)
   }
+  // Minor tick marks (log sub-decade ticks) inherit the major `axis-ticks`
+  // record and gain a per-axis variant, mirroring `panel-grid-minor`. They are
+  // drawn on the primary edge only, so there are no per-side variants.
+  out.insert("axis-ticks-minor", "axis-ticks")
+  out.insert("axis-ticks-minor-x", "axis-ticks-minor")
+  out.insert("axis-ticks-minor-y", "axis-ticks-minor")
   out
 }
 
-// Resolve a child relative field (`size`, `stroke`) against the nearest
-// resolved ancestor `base`. An absolute length wins outright; a ratio scales
-// the ancestor (length -> absolute, ratio -> compounded ratio); with no
+// Resolve a child relative field (`size`, `stroke`, `length`) against the
+// nearest resolved ancestor `base`. An absolute length wins outright; a ratio
+// scales the ancestor (length -> absolute, ratio -> compounded ratio); with no
 // ancestor value the ratio is kept and deferred to the surface resolver
-// (`_text-style`, `_line-stroke`, `_rect-style`).
+// (`_text-style`, `_line-stroke`, `_rect-style`, `_tick-length`).
 #let _merge-size(base, top) = {
   if type(top) != ratio { return top }
   if base == none { return top }
@@ -70,7 +76,7 @@
 
 // Fields whose ratios scale the inherited ancestor value instead of replacing
 // it. Every other field replaces outright when the child sets it.
-#let _relative-fields = ("size", "stroke")
+#let _relative-fields = ("size", "stroke", "length")
 
 #let _merge-element(base, top) = {
   let out = base
@@ -115,27 +121,6 @@
   merged
 }
 
-/// Resolve a per-side scalar theme key with a three-step cascade: `<base>-<side>` → `<base>-<axis>` → `<base>`.
-///
-/// Returns `0pt` if no level of the cascade is set. Used for `tick-length` and any future scalar that mirrors the element cascade shape.
-///
-/// \@internal
-/// \@param theme Merged theme dictionary.
-///
-/// \@param base Scalar key root, e.g., `"tick-length"`.
-///
-/// \@param side Side suffix, e.g., `"x-bottom"`, `"y-right"`.
-///
-/// \@param axis Axis suffix, `"x"` or `"y"`.
-/// \@returns The most specific value set, falling back to base, then `0pt`.
-#let _scalar-cascade(theme, base, side, axis) = {
-  let v = theme.at(base + "-" + side, default: none)
-  if v != none { return v }
-  let av = theme.at(base + "-" + axis, default: none)
-  if av != none { return av }
-  theme.at(base, default: 0pt)
-}
-
 // Empty layer-default record reused whenever the theme has no `geom` slot
 // or carries a non-element-geom record (theme drift, partial user theme).
 // Hoisted to module scope so per-render lookups don't re-allocate it.
@@ -148,6 +133,11 @@
 
 // \@internal
 #let default-stroke-thickness = 0.5pt
+
+// Terminal fallback for a tick surface whose cascade sets no `length`, e.g. an
+// `element-line` passed to `axis-ticks`.
+// \@internal
+#let default-tick-length = 0.1cm
 
 // Single source of truth for default inheritance. Per field, the element-geom
 // slot wins first (applied in resolve-geom-defaults); if unset, each source is
@@ -409,6 +399,24 @@
   )
 }
 
+/// Resolve a tick surface into the mark length, or `0cm` for `element-blank`.
+///
+/// A blank surface draws no mark and reserves no depth, so hiding ticks is a single switch: `axis-ticks: element-blank()`. A ratio that survived the cascade (no absolute ancestor length) resolves against \@default-tick-length, which is also the fallback when no level sets `length` (an \@element-line passed to `axis-ticks`).
+///
+/// \@internal
+/// \@param theme Merged theme dictionary.
+///
+/// \@param surface Tick surface key, e.g., `"axis-ticks-x-bottom"`.
+/// \@returns Tick mark length as an absolute Typst length.
+#let _tick-length(theme, surface) = {
+  let el = resolve-element(theme, surface)
+  if el.at("kind", default: none) == "element-blank" { return 0cm }
+  let len = el.at("length", default: none)
+  if len == none { return default-tick-length }
+  if type(len) == ratio { return default-tick-length * (len / 100%) }
+  len
+}
+
 /// Resolve a rect surface into a fill colour, outline stroke, and per-side
 /// cm margins. `inset-cm` is consumed by cetz draw sites (positive values
 /// grow the painted rectangle outward from its natural bound as inner
@@ -632,7 +640,7 @@
 /// )
 /// ```
 ///
-/// \@examples Tweak the scalar fields: bigger ticks, hidden tick labels, and a
+/// \@examples Longer tick marks, tick labels hidden on both axes, and a
 /// tinted panel background padded via `element-rect`'s `inset` (inner padding).
 /// ```
 /// //| alt: "Scatter plot of cumulative response against x with longer 0.25cm ticks, hidden tick labels and a panel-background rect grown 0.4cm on every side via element-rect inset (inner padding)."
@@ -643,8 +651,8 @@
 ///   layers: (geom-point(size: 2pt),),
 ///   labels: labels(y: "Cumulative Response (Per Protocol)"),
 ///   theme: theme(
-///     tick-length: 0.25cm,
-///     tick-labels: false,
+///     axis-ticks: element-tick(length: 0.25cm),
+///     axis-text: element-blank(),
 ///     panel-background: element-rect(
 ///       fill: rgb("#f7f0e7"),
 ///       inset: margin(top: 0.4cm, right: 0.4cm, bottom: 0.4cm, left: 0.4cm),
@@ -692,7 +700,7 @@
 /// )
 /// ```
 ///
-/// \@see \@theme-grey, \@theme-minimal, \@theme-classic, \@theme-void, \@element-text, \@element-line, \@element-rect, \@element-blank, \@margin
+/// \@see \@theme-grey, \@theme-minimal, \@theme-classic, \@theme-void, \@element-text, \@element-line, \@element-tick, \@element-rect, \@element-blank, \@margin
 #let theme(..fields) = {
   if fields.pos().len() != 0 {
     fail(

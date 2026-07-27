@@ -3,7 +3,9 @@
 ///! `element_*` constructors. \@theme translates these into the flat theme
 ///! fields consumed internally by `merge-theme`.
 
-#import "../utils/errors.typ": assert-halign, assert-stroke, assert-text-size
+#import "../utils/errors.typ": (
+  assert-halign, assert-stroke, assert-text-size, assert-tick-length,
+)
 #import "../utils/types.typ": split-stroke-shorthand
 
 /// Text element: font size, weight, colour, and angle.
@@ -315,6 +317,83 @@
     kind: "element-line",
     colour: colour,
     stroke: stroke,
+  )
+}
+
+/// Tick element: a line element that also carries the tick mark length.
+///
+/// Pass the result to \@theme under `axis-ticks` and its per-axis, per-side,
+/// and minor variants (`axis-ticks-x`, `axis-ticks-y-right`,
+/// `axis-ticks-minor`, ...). \@element-line is accepted on the same keys and
+/// leaves `length` to the cascade. \@element-blank turns the marks off
+/// entirely: no ink and no reserved depth around the panel.
+///
+/// \@category Themes
+/// \@subcategory Theme elements
+/// \@stability stable
+/// \@since 0.6.0
+///
+/// \@param colour Tick colour, or `none` to inherit.
+///
+/// \@param stroke Tick thickness. Either an absolute Typst length (e.g., `1pt`),
+///   a ratio (e.g., `80%`) scaling the parent surface stroke, or `none` to
+///   inherit the parent thickness unchanged. The native `1pt + red` form is
+///   also accepted: its paint fills in `colour` unless `colour` is set.
+///
+/// \@param length Tick mark length, measured outward from the panel edge.
+///   Either an absolute Typst length (e.g., `0.2cm`), a ratio (e.g., `50%`)
+///   scaling the parent surface length, or `none` to inherit the parent length
+///   unchanged. `0cm` hides the marks while keeping their cascade in place.
+///
+/// \@returns Element dictionary consumed by \@theme.
+///
+/// \@examples Longer ticks in red on both axes.
+/// ```
+/// //| alt: "Scatter plot of y against x with 0.25cm red tick marks on both axes via element-tick on the axis-ticks surface."
+/// #let d = range(0, 10).map(i => (x: i, y: i * 0.5))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (geom-point(size: 2pt),),
+///   theme: theme(axis-ticks: element-tick(
+///     colour: rgb("#cc0000"),
+///     length: 0.25cm,
+///   )),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@examples Lengthen only the y axis; the ratio scales the length inherited
+/// from `axis-ticks`.
+/// ```
+/// //| alt: "Scatter plot of y against x where the y-axis tick marks are twice as long as the x-axis ones via a ratio length on element-tick."
+/// #let d = range(0, 10).map(i => (x: i, y: i * 0.5))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (geom-point(size: 2pt),),
+///   theme: theme(
+///     axis-ticks: element-tick(length: 0.15cm),
+///     axis-ticks-y: element-tick(length: 200%),
+///   ),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@see \@theme, \@element-line, \@element-blank
+#let element-tick(colour: none, stroke: none, length: none) = {
+  let split = split-stroke-shorthand(stroke, colour, none)
+  let stroke = split.stroke
+  let colour = split.colour
+  assert-stroke("element-tick", stroke)
+  assert-tick-length("element-tick", length)
+  (
+    kind: "element-tick",
+    colour: colour,
+    stroke: stroke,
+    length: length,
   )
 }
 

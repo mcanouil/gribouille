@@ -9,7 +9,7 @@
 )
 #import "../theme/defaults.typ": resolve-colour
 #import "../theme/theme.typ": (
-  _line-stroke, _rect-style, _scalar-cascade, _text-args, _text-style,
+  _line-stroke, _rect-style, _text-args, _text-style, _tick-length,
 )
 #import "../utils/radial.typ": radial-ctx
 #import "../utils/typst-markup.typ": resolve-prose
@@ -264,8 +264,8 @@
   )
   let _ax-line = _per-side(_stroke-side, "axis-line")
   let _ax-ticks = _per-side(_stroke-side, "axis-ticks")
-  let _len-side = (p, s, a) => _scalar-cascade(theme, p, s, a) / 1cm
-  let _tick-len = _per-side(_len-side, "tick-length")
+  let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
+  let _tick-len = _per-side(_len-side, "axis-ticks")
 
   let x-guide = _read-axis-guide(spec, "x", default-angle: _axis-text-angle(
     theme,
@@ -298,7 +298,7 @@
   let _x-rows = _stack-rows(x-guide, _X-LABEL-ROW-GAP)
   let _y-rows = _stack-rows(y-guide, _Y-LABEL-COL-GAP)
   let _draw-x-label(cx, label-text, idx) = {
-    if not (show-x-labels and theme.tick-labels) { return }
+    if not (show-x-labels and _ax-text.xb.size > 0pt) { return }
     for r in _x-rows {
       let dodge-row = calc.rem(idx, r.sub.n-dodge)
       let cy = (
@@ -317,7 +317,7 @@
     }
   }
   let _draw-y-label(cy, label-text, idx) = {
-    if not (show-y-labels and theme.tick-labels) { return }
+    if not (show-y-labels and _ax-text.yl.size > 0pt) { return }
     for r in _y-rows {
       let dodge-col = calc.rem(idx, r.sub.n-dodge)
       let cx = (
@@ -428,14 +428,18 @@
   )
 
   // Minor log ticks: opt-in via guide-axis-logticks() on a log10-trans axis.
-  // Emits half-length, unlabelled ticks at sub-decade positions (2, 3, ..., 9
-  // within each decade) covered by the visible domain.
-  let _draw-log-minors(trained, guide, axis, range, stroke, tick-len) = {
+  // Emits unlabelled ticks at sub-decade positions (2, 3, ..., 9 within each
+  // decade) covered by the visible domain, themed via `axis-ticks-minor`
+  // (default: half the resolved `axis-ticks` length, same stroke).
+  let _draw-log-minors(trained, guide, axis, range) = {
     if not guide.logticks or guide.suppress { return }
     if trained == none { return }
     if trained.type != "continuous" { return }
     if trained.at("transform", default: "identity") != "log10" { return }
-    if not _should-draw-tick(stroke, tick-len) { return }
+    let surface = "axis-ticks-minor-" + axis
+    let stroke = _line-stroke(theme, surface, fallback-colour: _ink)
+    let minor-len = _tick-length(theme, surface) / 1cm
+    if not _should-draw-tick(stroke, minor-len) { return }
     let view-transform = trained.at("view-transform", default: none)
     let (lo, hi) = if view-transform != none {
       (
@@ -444,7 +448,6 @@
       )
     } else { trained.domain }
     if lo <= 0 or hi <= 0 { return }
-    let minor-len = tick-len * 0.5
     for v in _log10-minor-positions(lo, hi) {
       if axis == "x" {
         let cx = map-axis-data(trained, v, range)
@@ -456,22 +459,8 @@
     }
   }
   if not is-radial {
-    _draw-log-minors(
-      x-trained,
-      x-guide,
-      "x",
-      px-range,
-      _ax-ticks.xb,
-      _tick-len.xb,
-    )
-    _draw-log-minors(
-      y-trained,
-      y-guide,
-      "y",
-      py-range,
-      _ax-ticks.yl,
-      _tick-len.yl,
-    )
+    _draw-log-minors(x-trained, x-guide, "x", px-range)
+    _draw-log-minors(y-trained, y-guide, "y", py-range)
   }
 
   // Secondary x-axis: draw on top edge if the trained x scale carries a
@@ -489,7 +478,7 @@
       if _should-draw-tick(_ax-ticks.xt, _tick-len.xt) {
         line((cx, py-hi), (cx, py-hi + _tick-len.xt), stroke: _ax-ticks.xt)
       }
-      if theme.tick-labels {
+      if _ax-text.xt.size > 0pt {
         let mapped = secondary-mod.apply-transform(_x-sec, b)
         content(
           (cx, py-hi + _tick-len.xt + 0.1),
@@ -550,7 +539,7 @@
       if _should-draw-tick(_ax-ticks.yr, _tick-len.yr) {
         line((px-hi, cy), (px-hi + _tick-len.yr, cy), stroke: _ax-ticks.yr)
       }
-      if theme.tick-labels {
+      if _ax-text.yr.size > 0pt {
         let mapped = secondary-mod.apply-transform(_y-sec, b)
         content(
           (px-hi + _tick-len.yr + 0.1, cy),
@@ -612,7 +601,6 @@
   if is-radial {
     _draw-radial-panel((
       spec: spec,
-      theme: theme,
       outer-radial: outer-radial,
       x-trained: x-trained,
       y-trained: y-trained,
@@ -697,7 +685,6 @@
   if is-radial {
     _draw-radial-r-labels((
       spec: spec,
-      theme: theme,
       outer-radial: outer-radial,
       x-trained: x-trained,
       y-trained: y-trained,

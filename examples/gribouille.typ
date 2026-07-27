@@ -130,7 +130,7 @@
   ),
   theme: theme-minimal(
     axis-line: element-line(stroke: 0.5pt),
-    tick-length: 0.05cm,
+    axis-ticks: element-tick(length: 0.05cm),
   ),
   guides: guides(
     colour: none,

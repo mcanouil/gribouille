@@ -303,7 +303,7 @@
     ink: palette.ink,
     paper: palette.sky-deep,
     text: element-text(font: ("Libertinus Serif", "DejaVu Sans Mono")),
-    tick-length: 0.12cm,
+    axis-ticks: element-tick(length: 0.12cm),
     panel-background: element-rect(fill: gradient.linear(
       // Hold the dark top longer so it blends into the sky-deep frame, then
       // lighten only toward the lower half of the panel.

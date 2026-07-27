@@ -1310,7 +1310,7 @@ describe("theme_keys: extractor + table render", function()
     assert_true(set["legend-bar"], "includes legend surfaces")
     assert_true(not set["legend-key"] and not set["legend-position"],
       "omits the scalar legend keys that live inside the legend group")
-    assert_true(not set["tick-length"], "omits the scalar ticks group")
+    assert_true(set["axis-ticks"], "includes the tick surface")
     assert_true(not set["ink"] and not set["paper"] and not set["accent"], "omits the colours group")
   end)
 
@@ -1336,8 +1336,7 @@ describe("theme_keys: extractor + table render", function()
   panel-background: element-rect(),
 
   plot-margin: margin(),
-  tick-length: 0.1cm,
-  tick-labels: true,
+  axis-ticks: element-tick(stroke: 0.5pt, length: 0.1cm),
 )
 ]]
 
@@ -1369,10 +1368,9 @@ describe("theme_keys: extractor + table render", function()
     assert_eq(defaults["accent"].default, 'rgb("#3366FF")')
     assert_eq(defaults["plot-margin"].kind, "margin")
     assert_eq(defaults["plot-margin"].default, "margin()")
-    assert_eq(defaults["tick-length"].kind, "length")
-    assert_eq(defaults["tick-length"].default, "0.1cm")
-    assert_eq(defaults["tick-labels"].kind, "boolean")
-    assert_eq(defaults["tick-labels"].default, "true")
+    assert_eq(defaults["axis-ticks"].kind, "element-tick")
+    assert_eq(defaults["axis-ticks"].default,
+      "element-tick(stroke: 0.5pt, length: 0.1cm)")
     assert_true(defaults["kind"] ~= nil, "raw `kind` key still surfaces from parsing")
   end)
 
@@ -1386,8 +1384,10 @@ describe("theme_keys: extractor + table render", function()
     assert_eq(parents["axis-text-y-right"], "axis-text-y")
     assert_eq(parents["axis-line-x"], "axis-line",
       "axis-line variants are added even when not in the explicit dict")
-    assert_eq(parents["tick-length-x"], "tick-length",
-      "tick-length variants reconstructed for the scalar cascade")
+    assert_eq(parents["axis-ticks-minor"], "axis-ticks",
+      "minor ticks inherit the major tick surface")
+    assert_eq(parents["axis-ticks-minor-x"], "axis-ticks-minor",
+      "minor ticks gain a per-axis variant")
   end)
 
   it("render_table emits a header and one row per record", function()

@@ -7,6 +7,7 @@
 #import "../utils/colour.typ": colour-mix
 #import "elements.typ": (
   element-blank, element-geom, element-line, element-rect, element-text,
+  element-tick,
 )
 #import "theme.typ": _surface-parent, default-stroke-thickness
 #import "../utils/errors.typ": fail
@@ -63,7 +64,12 @@
   // per-axis independently.
   panel-grid-minor: (stroke: 50%),
   axis-line: element-line(stroke: 100%),
-  axis-ticks: element-line(stroke: 100%),
+  axis-ticks: element-tick(stroke: 100%, length: 0.1cm),
+  // Minor tick marks halve the resolved `axis-ticks` length. A bare record
+  // carries no `kind`, so it inherits the parent's kind, colour, and stroke:
+  // blanking `axis-ticks` blanks the minors too, while a per-axis or per-side
+  // override rescales them proportionally.
+  axis-ticks-minor: (length: 50%),
   // Thinner than the base to keep colour-bar ticks subtle.
   legend-ticks: element-line(stroke: (0.3 / 0.5) * 100%),
 
@@ -80,9 +86,6 @@
   // entries leave the per-geom hardcoded fallback in place; users override
   // selectively via `theme(geom: element-geom(fill: ..., linewidth: ...))`.
   geom: element-geom(),
-
-  tick-length: 0.1cm,
-  tick-labels: true,
 
   // Spacing between facet panels. A length applies to both axes; a `(x:, y:)`
   // dictionary sets column and row gaps independently. A facet's own `gutter:`
@@ -108,28 +111,14 @@
     stroke: (0.4 / 0.5) * 100%,
   ),
   axis-line: element-blank(),
-  tick-length: 0cm,
+  axis-ticks: element-blank(),
 )
-
-// The `tick-length` scalar cascades per axis and per side through
-// `_scalar-cascade` (theme.typ), so these suffixed keys resolve at render but
-// carry no default of their own.
-#let _tick-length-variants = (
-  "x",
-  "y",
-  "x-bottom",
-  "x-top",
-  "y-left",
-  "y-right",
-).map(suffix => "tick-length-" + suffix)
 
 // Every key a user theme may set: the base fields and surface records in
-// `default-theme`, the per-axis/per-side element variants in `_surface-parent`
-// (e.g. `axis-text-x-bottom`), and the `tick-length` scalar variants. A key
+// `default-theme` plus the per-axis/per-side and minor element variants in
+// `_surface-parent` (e.g. `axis-text-x-bottom`, `axis-ticks-minor-x`). A key
 // outside this set is never queried, so it would silently do nothing.
-#let _KNOWN-THEME-KEYS = (
-  default-theme.keys() + _surface-parent.keys() + _tick-length-variants
-)
+#let _KNOWN-THEME-KEYS = default-theme.keys() + _surface-parent.keys()
 
 #let merge-theme(user) = {
   let src = if user == none { minimal-surfaces(_tr-ink, _tr-paper) } else {
