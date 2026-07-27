@@ -56,11 +56,15 @@ jobs:
   resolve:
     name: Resolve build matrix
     runs-on: ubuntu-latest
-    # Skip the bump-version commit on main; the Release workflow deploys docs
-    # itself via its `pages` job (workflow_call), so this push would double-deploy.
+    # Skip everything the Release workflow's version bump produces: the `ci/bump-version`
+    # pull request and the commit it lands on main. Release deploys docs itself via its
+    # `pages` job (workflow_call), so this push would double-deploy. The bump arrives as a
+    # merge commit, so match the subject anywhere in the message, not just at the start;
+    # the head branch cannot be filtered in `on:` (`pull_request.branches` selects the base).
     if: >-
-      ${{ github.event_name != 'push'
-        || !startsWith(github.event.head_commit.message, 'ci: bump version to') }}
+      ${{ (github.event_name != 'push'
+            || !contains(github.event.head_commit.message, 'ci: bump version to'))
+        && github.head_ref != 'ci/bump-version' }}
 
     outputs:
       tag: ${{ steps.latest-tag.outputs.tag }}
