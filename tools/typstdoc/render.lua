@@ -65,9 +65,6 @@ local function emit_frontmatter(fn, from_qmd, index, strict)
   if fn.doc.stability and fn.doc.stability ~= "stable" then
     table.insert(lines, "stability: " .. yaml_escape(fn.doc.stability))
   end
-  if fn.doc.since then
-    table.insert(lines, "since: " .. yaml_escape(fn.doc.since))
-  end
   table.insert(lines, "engine: markdown")
   table.insert(lines, "---")
   table.insert(lines, "")
