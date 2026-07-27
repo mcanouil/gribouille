@@ -1610,6 +1610,13 @@ describe("scale_keys: bind key tuples match builder signatures", function()
       error("bind.typ key tuples out of sync:\n  " .. table.concat(problems, "\n  "), 2)
     end
   end)
+
+  it("every constructor documents exactly the keys its family accepts", function()
+    local problems = scale_keys.check_docs(repo_root)
+    if #problems > 0 then
+      error("scale constructor @named-keys out of sync:\n  " .. table.concat(problems, "\n  "), 2)
+    end
+  end)
 end)
 
 -- -----------------------------------------------------------------------
