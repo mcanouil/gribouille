@@ -46,8 +46,8 @@
 ///   `linetype` ladder they are bin edges instead.
 ///
 /// \@param minor-breaks Array of minor-gridline positions in data units, or
-///   `auto` (default) to subdivide the majors, using sub-decade lines under
-///   `"log10"`. `x`/`y` only.
+///   `auto` (default) to subdivide the majors; a `"log10"` axis uses
+///   sub-decade lines instead. `x`/`y` only.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set. `x`/`y`
@@ -409,8 +409,8 @@
 ///   single tick, or `auto` (default) for computed breaks.
 ///
 /// \@param minor-breaks Array of minor-gridline positions in data units, or
-///   `auto` (default) to subdivide the majors, using sub-decade lines under
-///   `"log10"`.
+///   `auto` (default) to subdivide the majors; a `"log10"` axis uses
+///   sub-decade lines instead.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set.
@@ -464,8 +464,8 @@
 ///   single tick, or `auto` (default) for computed breaks.
 ///
 /// \@param minor-breaks Array of minor-gridline positions in data units, or
-///   `auto` (default) to subdivide the majors, using sub-decade lines under
-///   `"log10"`.
+///   `auto` (default) to subdivide the majors; a `"log10"` axis uses
+///   sub-decade lines instead.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set.
@@ -519,8 +519,8 @@
 ///   single tick, or `auto` (default) for computed breaks.
 ///
 /// \@param minor-breaks Array of minor-gridline positions in data units, or
-///   `auto` (default) to subdivide the majors, using sub-decade lines under
-///   `"log10"`.
+///   `auto` (default) to subdivide the majors; a `"log10"` axis uses
+///   sub-decade lines instead.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set.
