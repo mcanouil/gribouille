@@ -45,10 +45,18 @@ function M.relative_link(from_qmd, target_qmd)
   return table.concat(pieces, "/")
 end
 
+-- `@name` optionally carries a `()` call suffix, which belongs inside the
+-- rendered code span. A lone `(` instead starts an argument list written out in
+-- prose (`@bar(x`), which is not a reference; a lone `)` is just the
+-- parenthetical closing around the reference and is re-emitted after the link.
 function M.resolve_refs_in_text(text, from_qmd, index, strict, source_file, source_line)
   return (text:gsub("@([%w_%-]+)(%(?%)?)", function(name, suffix)
-    if suffix ~= "" and suffix ~= "()" then
+    if suffix == "(" then
       return "@" .. name .. suffix
+    end
+    local trailing = ""
+    if suffix == ")" then
+      suffix, trailing = "", ")"
     end
     local target = index[name]
     if not target then
@@ -58,10 +66,10 @@ function M.resolve_refs_in_text(text, from_qmd, index, strict, source_file, sour
       end
       if strict then error("typstdoc: " .. msg, 0) end
       util.log_warn(msg)
-      return "@" .. name .. suffix
+      return "@" .. name .. suffix .. trailing
     end
     local link = M.relative_link(from_qmd, target.qmd_path)
-    return string.format("[`%s%s`](%s)", name, suffix, link)
+    return string.format("[`%s%s`](%s)%s", name, suffix, link, trailing)
   end))
 end
 
