@@ -89,7 +89,7 @@ local function build_modal(slug, source)
       pandoc.Header(3, { pandoc.Code(slug .. '.typ') }),
       pandoc.CodeBlock(source, pandoc.Attr('', { 'typst' }, {})),
     },
-    pandoc.Attr('modal-' .. slug, {}, { description = 'Source for ' .. slug .. '.typ' })
+    pandoc.Attr('modal-' .. slug, {}, {})
   )
 end
 
