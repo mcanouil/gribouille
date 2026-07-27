@@ -17,9 +17,12 @@
 ///
 /// \@param name Title shown above or beside the secondary axis, or `none`.
 ///
-/// \@param breaks Array of break values, or `auto` to mirror the primary axis.
+/// \@param breaks Array of break values in primary units, a function of the
+///   trained values returning them (the `breaks-*` helpers return such a
+///   function), or `auto` to mirror the primary axis.
 ///
-/// \@param labels Array of labels aligned with `breaks`, or `auto`.
+/// \@param labels Array of labels aligned with `breaks`, a function of the
+///   break value, or `auto` to format each break.
 ///
 /// \@returns Secondary axis dictionary consumed by \@scale-continuous and \@scale-continuous.
 ///
@@ -82,9 +85,12 @@
 ///
 /// \@param name Title shown above or beside the secondary axis, or `none`.
 ///
-/// \@param breaks Array of break values in primary units, or `auto`.
+/// \@param breaks Array of break values in primary units, a function of the
+///   trained values returning them (the `breaks-*` helpers return such a
+///   function), or `auto` to mirror the primary axis.
 ///
-/// \@param labels Array of labels aligned with `breaks`, or `auto`.
+/// \@param labels Array of labels aligned with `breaks`, a function of the
+///   transformed break value, or `auto` to format each break.
 ///
 /// \@returns Secondary axis dictionary consumed by \@scale-continuous and \@scale-continuous.
 ///

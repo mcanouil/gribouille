@@ -42,12 +42,15 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks. On the binned
-///   `linetype` ladder they are bin edges instead.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks. On the binned `linetype` ladder they are bin edges
+///   instead.
 ///
-/// \@param minor-breaks Array of minor-gridline positions in data units, or
-///   `auto` (default) to subdivide the majors; a `"log10"` axis uses
-///   sub-decade lines instead. `x`/`y` only.
+/// \@param minor-breaks Array of minor-gridline positions in data units, a
+///   function of the trained values returning positions (the `breaks-*`
+///   helpers return such a function), or `auto` (default) to subdivide the
+///   majors; a `"log10"` axis uses sub-decade lines instead. `x`/`y` only.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set. `x`/`y`
@@ -183,9 +186,10 @@
 /// \@param n-breaks Integer number of equal-width bins used when `breaks` is
 ///   `auto`; default 10 on `x`/`y` and 4 on the other aesthetics.
 ///
-/// \@param breaks Array of bin edges, ticked at the bin midpoints and
-///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
-///   bins.
+/// \@param breaks Array of bin edges, a function of the trained values
+///   returning edges (the `breaks-*` helpers return such a function), ticked
+///   at the bin midpoints and overriding `n-breaks`, or `auto` (default) to
+///   cut `n-breaks` equal-width bins.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -406,11 +410,14 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
-/// \@param minor-breaks Array of minor-gridline positions in data units, or
-///   `auto` (default) to subdivide the majors; a `"log10"` axis uses
-///   sub-decade lines instead.
+/// \@param minor-breaks Array of minor-gridline positions in data units, a
+///   function of the trained values returning positions (the `breaks-*`
+///   helpers return such a function), or `auto` (default) to subdivide the
+///   majors; a `"log10"` axis uses sub-decade lines instead.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set.
@@ -461,11 +468,14 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
-/// \@param minor-breaks Array of minor-gridline positions in data units, or
-///   `auto` (default) to subdivide the majors; a `"log10"` axis uses
-///   sub-decade lines instead.
+/// \@param minor-breaks Array of minor-gridline positions in data units, a
+///   function of the trained values returning positions (the `breaks-*`
+///   helpers return such a function), or `auto` (default) to subdivide the
+///   majors; a `"log10"` axis uses sub-decade lines instead.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set.
@@ -516,11 +526,14 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
-/// \@param minor-breaks Array of minor-gridline positions in data units, or
-///   `auto` (default) to subdivide the majors; a `"log10"` axis uses
-///   sub-decade lines instead.
+/// \@param minor-breaks Array of minor-gridline positions in data units, a
+///   function of the trained values returning positions (the `breaks-*`
+///   helpers return such a function), or `auto` (default) to subdivide the
+///   majors; a `"log10"` axis uses sub-decade lines instead.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set.
@@ -573,7 +586,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in the scale's numeric units, a bare
-///   number for a single tick, or `auto` (default) for computed breaks.
+///   number for a single tick, a function of the trained values returning
+///   positions (the `breaks-*` helpers return such a function), or `auto`
+///   (default) for computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -627,7 +642,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in the scale's numeric units, a bare
-///   number for a single tick, or `auto` (default) for computed breaks.
+///   number for a single tick, a function of the trained values returning
+///   positions (the `breaks-*` helpers return such a function), or `auto`
+///   (default) for computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -681,7 +698,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in the scale's numeric units, a bare
-///   number for a single tick, or `auto` (default) for computed breaks.
+///   number for a single tick, a function of the trained values returning
+///   positions (the `breaks-*` helpers return such a function), or `auto`
+///   (default) for computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -789,7 +808,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -831,9 +852,10 @@
 /// \@param n-breaks Integer number of equal-width bins used when `breaks` is
 ///   `auto`; default 5.
 ///
-/// \@param breaks Array of bin edges, ticked at the bin midpoints and
-///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
-///   bins.
+/// \@param breaks Array of bin edges, a function of the trained values
+///   returning edges (the `breaks-*` helpers return such a function), ticked
+///   at the bin midpoints and overriding `n-breaks`, or `auto` (default) to
+///   cut `n-breaks` equal-width bins.
 ///
 /// \@param name Axis or legend title, as a string or content; `none` (default)
 ///   falls back to the mapped column name.
@@ -987,7 +1009,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -1043,7 +1067,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -1095,7 +1121,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -1251,7 +1279,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -1294,9 +1324,10 @@
 /// \@param n-breaks Integer number of equal-width bins used when `breaks` is
 ///   `auto`; default 5.
 ///
-/// \@param breaks Array of bin edges, ticked at the bin midpoints and
-///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
-///   bins.
+/// \@param breaks Array of bin edges, a function of the trained values
+///   returning edges (the `breaks-*` helpers return such a function), ticked
+///   at the bin midpoints and overriding `n-breaks`, or `auto` (default) to
+///   cut `n-breaks` equal-width bins.
 ///
 /// \@param name Axis or legend title, as a string or content; `none` (default)
 ///   falls back to the mapped column name.
@@ -1352,9 +1383,10 @@
 /// \@param n-breaks Integer number of equal-width bins used when `breaks` is
 ///   `auto`; default 5.
 ///
-/// \@param breaks Array of bin edges, ticked at the bin midpoints and
-///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
-///   bins.
+/// \@param breaks Array of bin edges, a function of the trained values
+///   returning edges (the `breaks-*` helpers return such a function), ticked
+///   at the bin midpoints and overriding `n-breaks`, or `auto` (default) to
+///   cut `n-breaks` equal-width bins.
 ///
 /// \@param name Axis or legend title, as a string or content; `none` (default)
 ///   falls back to the mapped column name.
@@ -1406,9 +1438,10 @@
 /// \@param n-breaks Integer number of equal-width bins used when `breaks` is
 ///   `auto`; default 5.
 ///
-/// \@param breaks Array of bin edges, ticked at the bin midpoints and
-///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
-///   bins.
+/// \@param breaks Array of bin edges, a function of the trained values
+///   returning edges (the `breaks-*` helpers return such a function), ticked
+///   at the bin midpoints and overriding `n-breaks`, or `auto` (default) to
+///   cut `n-breaks` equal-width bins.
 ///
 /// \@param name Axis or legend title, as a string or content; `none` (default)
 ///   falls back to the mapped column name.
@@ -1462,9 +1495,10 @@
 /// \@param n-breaks Integer number of equal-width bins used when `breaks` is
 ///   `auto`; default 5.
 ///
-/// \@param breaks Array of bin edges, ticked at the bin midpoints and
-///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
-///   bins.
+/// \@param breaks Array of bin edges, a function of the trained values
+///   returning edges (the `breaks-*` helpers return such a function), ticked
+///   at the bin midpoints and overriding `n-breaks`, or `auto` (default) to
+///   cut `n-breaks` equal-width bins.
 ///
 /// \@param direction `1` (default) keeps the palette order; a negative value
 ///   reverses it.
@@ -1528,7 +1562,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
@@ -1567,9 +1603,10 @@
 /// \@param n-breaks Integer number of equal-width bins used when `breaks` is
 ///   `auto`; default 4.
 ///
-/// \@param breaks Array of bin edges, ticked at the bin midpoints and
-///   overriding `n-breaks`, or `auto` (default) to cut `n-breaks` equal-width
-///   bins.
+/// \@param breaks Array of bin edges, a function of the trained values
+///   returning edges (the `breaks-*` helpers return such a function), ticked
+///   at the bin midpoints and overriding `n-breaks`, or `auto` (default) to
+///   cut `n-breaks` equal-width bins.
 ///
 /// \@param range Marker-radius `(lo, hi)` length pair; default `(1pt, 6pt)`.
 ///
@@ -1631,7 +1668,9 @@
 ///   them, `"squish"` clamps them to the nearest limit.
 ///
 /// \@param breaks Array of tick positions in data units, a bare number for a
-///   single tick, or `auto` (default) for computed breaks.
+///   single tick, a function of the trained values returning positions (the
+///   `breaks-*` helpers return such a function), or `auto` (default) for
+///   computed breaks.
 ///
 /// \@param labels Array of labels aligned with the breaks, a function of the
 ///   break value returning a string or content (the `format-*` helpers return
