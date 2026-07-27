@@ -84,21 +84,6 @@ jobs:
           [[ -n "$version" ]] || { echo "::error::compiler not found in typst.toml"; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Set up Lua
-        uses: leafo/gh-actions-lua@v13
-        with:
-          luaVersion: "5.4"
-
-      # A page calling API newer than the latest release must declare `since:`, or
-      # it compiles against the pinned source and fails the release render. Catch
-      # that here, in seconds, rather than minutes into the render. Lives in this
-      # workflow rather than checks.yml because only this one triggers on `docs/**`.
-      - name: Validate `since:` on docs pages
-        shell: bash
-        run: |
-          set -euo pipefail
-          lua tools/docs-since.lua --check
-
       - name: Resolve latest release tag
         id: latest-tag
         shell: bash
@@ -128,11 +113,10 @@ jobs:
           [[ -n "${SITE_URL}" ]] || { echo "::error::site-url not found in docs/_quarto.yml"; exit 1; }
           if [ -n "${LATEST_TAG}" ]; then
             # Release at root (tagged ref), dev at /dev/ (triggering ref, i.e. main).
-            # Only these two are published. Archiving older releases at /x.y.z/ needs
-            # the delta between main's docs and the tag to be additive, since `since:`
-            # can express API that was added but not API renamed or removed; 0.4.0 and
-            # older cross the row-store migration (3fbf2cfb) and cannot build. Start
-            # archiving from 1.0.0.
+            # Only these two are published. Each site is rendered from its own ref, so
+            # archiving older releases at /x.y.z/ is a matrix entry away; it waits on
+            # the toolchain, not the content: an old tag must still render with the
+            # Quarto and Typst versions CI installs. Start archiving from 1.0.0.
             matrix=$(jq -nc --arg tag "${LATEST_TAG}" '{include:[
               {profile:"release", ref:$tag, version:$tag, assets_dir:""},
               {profile:"dev", ref:"", version:"dev", assets_dir:"docs/_site/dev"}
@@ -165,8 +149,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       QUARTO_TYPST: typst
-      # Drives the navbar label, the example `@preview` import rewrite, and the
-      # `since:` page gate in assets/lua/version-gate.lua.
+      # Drives the navbar label and the example `@preview` import rewrite.
       VERSION: ${{ matrix.version }}
 
     steps:
@@ -176,19 +159,17 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
 
-      # Website framework and content always come from main; the Typst code and the
-      # docstring generator that parses it are pinned together to the release tag, so
-      # the generator never reads source written for a newer docstring format. Wipe
-      # the paths before restoring them: a plain overlay would leave files renamed or
-      # removed since the tag (e.g. a src module split in two), and the pinned
-      # generator would choke on that stale source.
-      - name: Pin Typst code to release ref
+      # The release site is rendered wholly from the tag: docs content, website
+      # framework, Typst code, and the docstring generator all move together, so a
+      # page never documents API the pinned source lacks and a breaking rename needs
+      # no gate. Actions already loaded this workflow from the triggering ref, so
+      # switching the working tree does not change the steps that follow.
+      - name: Check out the release ref
         if: ${{ matrix.ref != '' }}
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf examples src lib.typ tools/typstdoc
-          git checkout "${{ matrix.ref }}" -- examples src lib.typ tools/typstdoc
+          git checkout --force "${{ matrix.ref }}"
 
       - name: Set up Typst
         uses: typst-community/setup-typst@v5
