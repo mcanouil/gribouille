@@ -25,7 +25,7 @@
 #import "panel-radial.typ": _draw-radial-panel, _draw-radial-r-labels
 #import "axis-format.typ": (
   _axis-breaks, _axis-label, _axis-minor-breaks, _axis-title,
-  _log10-minor-positions, _sec-spec,
+  _log10-minor-positions, _sec-spec, _secondary-breaks,
 )
 #import "guides.typ": _axis-text-angle, _read-axis-guide
 #import "extents.typ": (
@@ -475,14 +475,16 @@
   }
 
   // Secondary x-axis: draw on top edge if the trained x scale carries a
-  // secondary spec. Breaks reuse the primary axis grid; their labels go
-  // through the user's transformation function.
+  // secondary spec. Breaks are its own when set, else the primary axis grid;
+  // their labels go through the user's transformation function.
   let _x-sec = _sec-spec(x-trained)
   if not is-radial and _x-sec != none and show-x-sec {
     let breaks = if axis-breaks != none and axis-breaks.x-sec != none {
       axis-breaks.x-sec
-    } else { _axis-breaks(x-trained) }
-    for b in breaks {
+    } else {
+      _secondary-breaks(x-trained, _x-sec, _axis-breaks(x-trained))
+    }
+    for (idx, b) in breaks.enumerate() {
       let cx = map-axis-data(x-trained, b, px-range)
       if _should-draw-tick(_ax-ticks.xt, _tick-len.xt) {
         line((cx, py-hi), (cx, py-hi + _tick-len.xt), stroke: _ax-ticks.xt)
@@ -492,7 +494,13 @@
         content(
           (cx, py-hi + _tick-len.xt + 0.1),
           text(.._text-args(_ax-text.xt))[#resolve-prose(
-            format-break(mapped),
+            resolve-label(
+              _x-sec.at("labels", default: auto),
+              mapped,
+              idx,
+              format-break(mapped),
+              typst-mark: _x-disp.typst-mark,
+            ),
             eval-strings: _ax-text.xt.typst,
           )],
           anchor: "south",
@@ -534,8 +542,10 @@
   if not is-radial and _y-sec != none and show-y-sec {
     let breaks = if axis-breaks != none and axis-breaks.y-sec != none {
       axis-breaks.y-sec
-    } else { _axis-breaks(y-trained) }
-    for b in breaks {
+    } else {
+      _secondary-breaks(y-trained, _y-sec, _axis-breaks(y-trained))
+    }
+    for (idx, b) in breaks.enumerate() {
       let cy = map-axis-data(y-trained, b, py-range)
       if _should-draw-tick(_ax-ticks.yr, _tick-len.yr) {
         line((px-hi, cy), (px-hi + _tick-len.yr, cy), stroke: _ax-ticks.yr)
@@ -545,7 +555,13 @@
         content(
           (px-hi + _tick-len.yr + 0.1, cy),
           text(.._text-args(_ax-text.yr))[#resolve-prose(
-            format-break(mapped),
+            resolve-label(
+              _y-sec.at("labels", default: auto),
+              mapped,
+              idx,
+              format-break(mapped),
+              typst-mark: _y-disp.typst-mark,
+            ),
             eval-strings: _ax-text.yr.typst,
           )],
           anchor: "mid-west",
