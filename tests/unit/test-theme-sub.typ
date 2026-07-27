@@ -4,25 +4,26 @@
   theme-sub-legend, theme-sub-panel, theme-sub-plot, theme-sub-strip,
 )
 #import "../../src/theme/elements.typ": (
-  element-blank, element-line, element-rect, element-text,
+  element-blank, element-line, element-rect, element-text, element-tick,
 )
 
 #let red-text = element-text(colour: red)
 #let red-line = element-line(colour: red)
 #let red-rect = element-rect(fill: red)
+#let red-tick = element-tick(colour: red, length: 0.2cm)
 
 #let _check-axis(ctor, suffix) = {
   let t = ctor(
     title: red-text,
     text: red-text,
     line: red-line,
-    ticks: red-line,
+    ticks: red-tick,
   )
   assert.eq(t.kind, "theme")
   assert.eq(t.at("axis-title" + suffix), red-text)
   assert.eq(t.at("axis-text" + suffix), red-text)
   assert.eq(t.at("axis-line" + suffix), red-line)
-  assert.eq(t.at("axis-ticks" + suffix), red-line)
+  assert.eq(t.at("axis-ticks" + suffix), red-tick)
 }
 
 #_check-axis(theme-sub-axis, "")

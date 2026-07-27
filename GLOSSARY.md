@@ -63,7 +63,7 @@ Run the survey command at the bottom before extending the table.
 | `pts`     | points                    | array of `(x, y)` tuples passed to a path/polygon draw.                               |
 | `pair`    | adjacent-row tuple        | `(prev, cur)` window over sorted rows.                                                |
 | `cap`     | cap length / cap mode     | end-cap of a stroke or arc (radial axis arc).                                         |
-| `tick`    | axis tick                 | tick mark + label record.                                                             |
+| `tick`    | axis tick                 | tick mark (`axis-ticks`, `element-tick`); the label is `axis-text`.                   |
 | `cm`      | centimetres               | Typst length unit; used in numeric helpers (`length-to-cm`).                          |
 | `pt`      | points (typographic)      | Typst length unit.                                                                    |
 

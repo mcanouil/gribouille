@@ -16,7 +16,7 @@
     y: "Highway mpg",
   ),
   theme: theme(
-    tick-length: 0.5cm,
+    axis-ticks: element-tick(length: 0.5cm),
   ),
   width: 12cm,
   height: 9cm,

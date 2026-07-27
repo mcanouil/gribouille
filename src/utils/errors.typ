@@ -188,3 +188,17 @@
     )
   }
 }
+
+// Panic unless `length` is an absolute length, a ratio (a `%` value relative to
+// the parent surface tick length), or `none` (inherit).
+#let assert-tick-length(scope, value) = {
+  if value != none and type(value) != length and type(value) != ratio {
+    fail-type(
+      scope,
+      "length",
+      value,
+      "a length (e.g., `0.1cm`), a ratio (e.g., `50%`), or `none`",
+      hint: "Use `0.1cm` for an absolute tick length or `50%` to scale the parent length.",
+    )
+  }
+}

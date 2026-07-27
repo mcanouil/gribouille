@@ -5,7 +5,7 @@ engine: markdown
 ---
 
 A _Gribouille_ plot is a stack of named regions: an outer canvas, an inner panel (or grid of panels), a strip band for facets, a legend column, a title block on top, a caption underneath, and axes around the edges.
-Each region is one entry in the [`theme()`](../reference/themes/theme.qmd) dictionary, set with an [`element-text`](../reference/themes/element-text.qmd), [`element-line`](../reference/themes/element-line.qmd), [`element-rect`](../reference/themes/element-rect.qmd), [`element-blank`](../reference/themes/element-blank.qmd), or [`margin`](../reference/themes/margin.qmd) value.
+Each region is one entry in the [`theme()`](../reference/themes/theme.qmd) dictionary, set with an [`element-text`](../reference/themes/element-text.qmd), [`element-line`](../reference/themes/element-line.qmd), [`element-tick`](../reference/themes/element-tick.qmd), [`element-rect`](../reference/themes/element-rect.qmd), [`element-blank`](../reference/themes/element-blank.qmd), or [`margin`](../reference/themes/margin.qmd) value.
 This page is a map: it shows where each region sits on a real plot, names the [`theme()`](../reference/themes/theme.qmd) key that controls it, and links worked examples for the common overrides.
 
 ## Anatomy of a plot
@@ -41,9 +41,8 @@ Minor gridlines default to half the major weight in the same colour, and a blank
 | Gridlines inside the panel, by weight and axis.                                             | `panel-grid`, `panel-grid-major`, `panel-grid-minor`, `panel-grid-major-x`, `panel-grid-major-y`, `panel-grid-minor-x`, `panel-grid-minor-y`. | [`element-line`](../reference/themes/element-line.qmd).                                                         |
 | Facet header band.                                                                           | `strip-background`, `strip-text`.                                                                                                 | [`element-rect`](../reference/themes/element-rect.qmd), [`element-text`](../reference/themes/element-text.qmd). |
 | Axis line, per side.                                                                         | `axis-line`, `axis-line-x`, `axis-line-y`, `axis-line-x-bottom`, `axis-line-x-top`, `axis-line-y-left`, `axis-line-y-right`.      | [`element-line`](../reference/themes/element-line.qmd).                                                         |
-| Axis ticks, per side.                                                                        | `axis-ticks`, `axis-ticks-x`, `axis-ticks-y`, `axis-ticks-x-bottom`, `axis-ticks-x-top`, `axis-ticks-y-left`, `axis-ticks-y-right`. | [`element-line`](../reference/themes/element-line.qmd).                                                         |
-| Tick mark length, per side.                                                                  | `tick-length`, `tick-length-x`, `tick-length-y`, `tick-length-x-bottom`, `tick-length-x-top`, `tick-length-y-left`, `tick-length-y-right`. | Typst length.                                                                                                   |
-| Tick mark labels visible.                                                                    | `tick-labels`.                                                                                                                    | Boolean.                                                                                                        |
+| Axis ticks (stroke, colour, and length), per side.                                           | `axis-ticks`, `axis-ticks-x`, `axis-ticks-y`, `axis-ticks-x-bottom`, `axis-ticks-x-top`, `axis-ticks-y-left`, `axis-ticks-y-right`. | [`element-tick`](../reference/themes/element-tick.qmd).                                                         |
+| Minor tick marks (log sub-decade ticks), per axis.                                           | `axis-ticks-minor`, `axis-ticks-minor-x`, `axis-ticks-minor-y`.                                                                   | [`element-tick`](../reference/themes/element-tick.qmd).                                                         |
 | Axis tick labels, per side.                                                                  | `axis-text`, `axis-text-x`, `axis-text-y`, `axis-text-x-bottom`, `axis-text-x-top`, `axis-text-y-left`, `axis-text-y-right`.      | [`element-text`](../reference/themes/element-text.qmd).                                                         |
 | Axis title, per side.                                                                        | `axis-title`, `axis-title-x`, `axis-title-y`, `axis-title-x-bottom`, `axis-title-x-top`, `axis-title-y-left`, `axis-title-y-right`. | [`element-text`](../reference/themes/element-text.qmd).                                                         |
 | Discrete legend box.                                                                         | `legend-background`, `legend-title`, `legend-text`.                                                                               | [`element-rect`](../reference/themes/element-rect.qmd), [`element-text`](../reference/themes/element-text.qmd). |
@@ -54,6 +53,7 @@ Minor gridlines default to half the major weight in the same colour, and a blank
 
 Any key can be hidden with [`element-blank`](../reference/themes/element-blank.qmd) in place of its normal element.
 That is how [`theme-minimal`](../reference/themes/theme-minimal.qmd) drops the axis line, the panel background, and the tick marks, for example.
+A blank surface also reserves no space, so blanking `axis-ticks` reclaims the tick depth and blanking `axis-text` on one side, such as `axis-text-y-right`, hides that side's tick labels and the width they would have taken.
 
 ## Inheritance cascade
 
@@ -77,7 +77,7 @@ An absolute length such as `12pt` pins that surface outright and ignores the cas
 ```{typst}
 //| echo: false
 //| label: fig-theme-cascade-axis
-//| fig-cap: "Axis family cascade (one template, four families). Replace `<family>` with `axis-line`, `axis-ticks`, `axis-text`, or `axis-title`. Per-side leaves cascade up to per-axis, then to the family root. `tick-length` follows the same three-step cascade with a Typst length value."
+//| fig-cap: "Axis family cascade (one template, four families). Replace `<family>` with `axis-line`, `axis-ticks`, `axis-text`, or `axis-title`. Per-side leaves cascade up to per-axis, then to the family root. `axis-ticks-minor` hangs off `axis-ticks` with a per-axis variant of its own."
 //| output-filename: "theme-cascade-axis.svg"
 //| file: _theme-cascade-axis.typ
 //| alt: "Tree diagram of the axis family cascade. A single root node labelled <family> splits into <family>-x and <family>-y, each of which then splits into two per-side leaves: <family>-x-bottom and <family>-x-top under the x branch, <family>-y-left and <family>-y-right under the y branch."

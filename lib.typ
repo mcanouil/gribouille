@@ -193,7 +193,7 @@
 #import "src/theme/theme.typ": theme
 #import "src/theme/elements.typ": (
   element-blank, element-geom, element-line, element-rect, element-text,
-  element-typst, margin,
+  element-tick, element-typst, margin,
 )
 #import "src/theme/sub.typ": (
   theme-sub-axis, theme-sub-axis-bottom, theme-sub-axis-left,

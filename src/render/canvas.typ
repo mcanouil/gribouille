@@ -4,7 +4,7 @@
 
 #import "../deps.typ": cetz
 #import "../scale/train.typ": mapping-display-name, positional-aesthetics, train
-#import "../theme/theme.typ": _scalar-cascade, _text-args
+#import "../theme/theme.typ": _text-args, _tick-length
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/palette.typ": default-discrete
 #import "../utils/gutter.typ": resolve-gutter
@@ -90,8 +90,8 @@
   }
   let x-title = _axis-title(x-trained, _map-name("x"))
   let y-title = _axis-title(y-trained, _map-name("y"))
-  let _len-side = (p, s, a) => _scalar-cascade(theme, p, s, a) / 1cm
-  let _tick-len = _per-side(_len-side, "tick-length")
+  let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
+  let _tick-len = _per-side(_len-side, "axis-ticks")
   let _xlbl-depth = _x-label-depth(0, 1, x-extents.width, x-extents.height)
   let _ylbl-width = _y-label-width(0, 1, y-extents.width, y-extents.height)
   let _xt-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
