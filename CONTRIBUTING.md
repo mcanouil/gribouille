@@ -53,22 +53,13 @@ Please consult that glossary before introducing new short identifiers.
 
 ### Documenting unreleased API
 
-The documentation site renders its pages from `main`, but pins `src/` and `lib.typ` to the latest release tag, so that the stable site documents the version people can actually install.
-A page calling API that is newer than the latest release therefore cannot compile, and fails the release build.
+Two sites are published: the stable one at the site root, rendered wholly from the latest release tag, and the development one at `/dev/`, rendered from `main`.
+Each is built from a single ref, so a page always documents the API of the version it ships with.
 
-When a page documents API that has not shipped yet, declare it in the frontmatter, matching the newest `@since` the page calls:
+Write documentation against `main` as you would any other change: a page describing unreleased API reaches the development site on merge, and the stable site when the next release is tagged.
+Renames and removals need no special handling, since the stable site never renders `main`'s prose.
 
-```yaml
----
-title: "Wrangling data"
-since: "0.6.0"
----
-```
-
-The stable site then renders a short pointer to the development documentation in place of the page, and the development site renders it in full.
-The tag stays harmless once that version ships, so there is nothing to remove later.
-
-Verify with `lua tools/docs-since.lua --check`, which [`tools/check.sh`](tools/check.sh) runs for you.
+The flip side is that a documentation fix only reaches the stable site at the next release.
 
 ### Error messages
 
