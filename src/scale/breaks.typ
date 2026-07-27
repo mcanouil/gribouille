@@ -42,14 +42,14 @@
 ///
 /// \@returns Closure taking the trained values and returning break positions.
 ///
-/// \@examples A tick every 5 miles per gallon, whatever the trained range.
+/// \@examples A tick every 2.5 miles per gallon, whatever the trained range.
 /// ```
-/// //| alt: "Scatter chart of engine displacement against highway mileage with y axis ticks every 5 miles per gallon."
+/// //| alt: "Scatter chart of engine displacement against highway mileage with y axis ticks every 2.5 miles per gallon."
 /// #plot(
 ///   data: mpg,
 ///   mapping: aes(x: "displ", y: "hwy"),
 ///   layers: (geom-point(),),
-///   scales: scales(y: scale-continuous(breaks: breaks-width(5))),
+///   scales: scales(y: scale-continuous(breaks: breaks-width(2.5))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -95,14 +95,14 @@
 ///
 /// \@returns Closure taking the trained values and returning break positions.
 ///
-/// \@examples Three intervals instead of the default five.
+/// \@examples Two intervals instead of the default five.
 /// ```
-/// //| alt: "Scatter chart of engine displacement against highway mileage with three x axis intervals."
+/// //| alt: "Scatter chart of engine displacement against highway mileage with two x axis intervals."
 /// #plot(
 ///   data: mpg,
 ///   mapping: aes(x: "displ", y: "hwy"),
 ///   layers: (geom-point(),),
-///   scales: scales(x: scale-continuous(breaks: breaks-pretty(n: 3))),
+///   scales: scales(x: scale-continuous(breaks: breaks-pretty(n: 2))),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
