@@ -9,6 +9,7 @@
 
 ### Changes
 
+- docs: the stable site is rendered wholly from the release tag instead of taking its pages from `main` against a pinned `src`, so each site documents the API it ships with; the `since:` page gate and its pointer stubs are gone, and a documentation fix now reaches the stable site at the next release rather than immediately. (#220)
 - docs: the theming guide gains a "Ticks and their labels" section showing `element-tick`, ratio lengths, minor marks, and per-side label hiding. (#219)
 - feat: minor tick marks are themable through `axis-ticks-minor` and its per-axis variants, replacing the hardcoded half-length, major-stroke sub-decade ticks drawn by `guide-axis-logticks()`; they inherit the major tick record, so the default rendering is unchanged. (#150)
 - feat: automatic continuous breaks come from the extended Wilkinson search (Talbot, Lin, and Hanrahan 2010), which scores candidate tick sequences on simplicity, coverage of the data, and tick count, replacing the fixed 1/2/5 ladder on axes and continuous guides; most plots gain rounder ticks that sit closer to the data. `breaks-extended(n:)` exposes it for a different target count. (#217)
