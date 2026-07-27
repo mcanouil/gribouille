@@ -380,26 +380,6 @@ a.navbar-brand {
           mask: var(--gb-underline) no-repeat center / 100% 100%;
 }
 
-// --- Right-side navbar widgets. -----------------------------------------
-// assets/scripts/navbar-widgets.html re-parents the search box and the
-// colour-scheme toggle into the existing .navbar-nav.ms-auto so Bootstrap
-// keeps its right-alignment.
-#gb-navbar-widgets {
-  align-items: center;
-  gap: 0.25rem;
-}
-
-#gb-navbar-widgets .nav-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.4rem 0.6rem;
-}
-
-#gb-navbar-widgets #quarto-search {
-  display: inline-flex;
-  align-items: center;
-}
-
 // --- Navbar dropdown (version selector). --------------------------------
 .navbar .dropdown-menu {
   background: var(--gb-navbar-surface);
