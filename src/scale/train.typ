@@ -9,7 +9,7 @@
 #import "../data.typ": _normalise-data, column
 #import "../utils/types.typ": infer-column-type, parse-number
 #import "../utils/typst-markup.typ": is-typst-markup
-#import "../utils/errors.typ": check, fail
+#import "../utils/errors.typ": check, fail, fail-type
 #import "../utils/late-binding.typ": (
   after-scale-source, is-late-binding, late-binding-name,
 )
@@ -198,6 +198,43 @@
   (domain: (lo, hi), integer: whole)
 }
 
+// Flatten the cached columns into the numeric vector a function-valued
+// `breaks` / `minor-breaks` is called with. Built only when such a closure is
+// present: it materialises one array per scale, which the `auto` and explicit
+// array paths never need.
+#let _values-from-cache(cols) = {
+  let out = ()
+  for col in cols {
+    for raw in col.values {
+      let v = parse-number(raw)
+      if v != none { out.push(v) }
+    }
+  }
+  out
+}
+
+// Call a user break closure on the trained values and validate its result.
+// `name` is the spec key, so the message names the argument the user wrote.
+#let _breaks-from-closure(name, closure, values) = {
+  let out = closure(values)
+  if type(out) != array { out = (out,) }
+  for b in out {
+    if type(b) != int and type(b) != float {
+      fail-type(
+        "scale",
+        name,
+        b,
+        "a number",
+        hint: "A `"
+          + name
+          + "` closure receives the scale's values and returns an array of "
+          + "numeric break positions.",
+      )
+    }
+  }
+  out
+}
+
 #let _discrete-domain-from-cache(cols) = {
   let seen = ()
   let seen-set = (:)
@@ -332,7 +369,11 @@
 
 // Compute the scale type, raw domain, and any user-limit / extend overrides
 // for a single aesthetic. Returns `none` when there is nothing to train.
-#let _train-entry(aes, cached, user-scale) = {
+// `feeder-cols` are the columns of the directional aesthetics that fold into
+// this axis (xmin/xmax/xend, ...). They do not shape the domain here (that is
+// `_fold-positional`'s job) but a `breaks` closure must see them, otherwise a
+// `geom-rect()` axis mapped only through xmin/xmax would hand it no values.
+#let _train-entry(aes, cached, user-scale, feeder-cols: ()) = {
   let cols = cached.cols
   let mapped = cols.len() > 0
   if not mapped and user-scale == none { return none }
@@ -450,12 +491,76 @@
     if explicit-hi { hi = lift(hi) }
     domain = (lo, hi)
   }
+  // A function-valued `breaks` / `minor-breaks` resolves here, against the
+  // values this scale trained on, so every downstream consumer (axis ticks,
+  // minor gridlines, bin edges, guides) keeps reading a plain array. The
+  // closure sees data-space values inside the domain: a pre-transformed column
+  // is inverted back out of stat space first, and a value the user's `limits`
+  // exclude is dropped, so quantiles and counts describe the visible data.
+  let breaks-from-closure = false
+  if scale-type == "continuous" and user-scale != none {
+    let secondary = user-scale.at("secondary", default: none)
+    // A secondary axis states its breaks in primary units, so its closure sees
+    // the same values as the primary one.
+    let secondary-closure = (
+      secondary != none
+        and type(secondary.at("breaks", default: auto)) == function
+    )
+    let keys = ("breaks", "minor-breaks").filter(k => (
+      type(user-scale.at(k, default: auto)) == function
+    ))
+    if keys.len() > 0 or secondary-closure {
+      let values = _values-from-cache(cols + feeder-cols)
+      if pre-transformed {
+        values = values.map(v => transform-inv(transform, v))
+      }
+      // Only a side the user pinned clips the vector. An unpinned side is the
+      // data range itself, so clipping there would be a no-op on a mapped
+      // scale and would wrongly empty one whose domain still awaits its
+      // synthetic feeders (`_fold-positional`).
+      if explicit-lo or explicit-hi {
+        let bound = side => {
+          let v = domain.at(side)
+          if pre-transformed { transform-inv(transform, v) } else { v }
+        }
+        if explicit-lo {
+          let lo = bound(0)
+          values = values.filter(v => v >= lo)
+        }
+        if explicit-hi {
+          let hi = bound(1)
+          values = values.filter(v => v <= hi)
+        }
+      }
+      for key in keys {
+        let resolved = _breaks-from-closure(
+          key,
+          user-scale.at(key),
+          values,
+        )
+        user-scale.insert(key, resolved)
+        if key == "breaks" { breaks-from-closure = true }
+      }
+      if secondary-closure {
+        secondary.insert(
+          "breaks",
+          _breaks-from-closure("breaks", secondary.breaks, values),
+        )
+        user-scale.insert("secondary", secondary)
+      }
+    }
+  }
   // Feature 5: explicit `breaks` widen the trained domain so requested ticks
   // are visible, except on a side pinned by an explicit limit. Breaks are in
   // data units; lift them into stat space for pre-transformed scales (dropping
   // values outside the transform's domain) so the comparison stays in the
-  // domain's native unit.
-  if scale-type == "continuous" and user-scale != none {
+  // domain's native unit. Closure-derived breaks are excluded: the domain is
+  // the closure's own input, so widening it would leave the two inconsistent.
+  if (
+    scale-type == "continuous"
+      and user-scale != none
+      and not breaks-from-closure
+  ) {
     let user-breaks = user-scale.at("breaks", default: auto)
     if type(user-breaks) == array and user-breaks.len() > 0 {
       // ISO date/datetime/time string breaks resolve to the same numeric epoch
@@ -580,7 +685,18 @@
   let cache = _train-cache(layers, mapping, data, aes-list)
   let trained = (:)
   for a in aes-list {
-    let entry = _train-entry(a, cache.at(a), _find-user-scale(scales, a))
+    let feeder-cols = if a == "x" or a == "y" {
+      _SYNTHETIC-FEEDERS
+        .filter(s => s.starts-with(a) and aes-list.contains(s))
+        .map(s => cache.at(s).cols)
+        .flatten()
+    } else { () }
+    let entry = _train-entry(
+      a,
+      cache.at(a),
+      _find-user-scale(scales, a),
+      feeder-cols: feeder-cols,
+    )
     if entry == none { continue }
     trained.insert(a, entry)
   }

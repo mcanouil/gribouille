@@ -218,6 +218,18 @@
   spec-attr(scale, "secondary")
 } else { none }
 
+// Break positions for a secondary axis, in primary units. Its own `breaks`
+// win, clipped to the visible domain the way `_axis-breaks` clips a primary
+// array; `auto` mirrors the primary grid, which is what `dup-axis` defaults to.
+#let _secondary-breaks(trained, sec, primary) = {
+  if sec == none { return none }
+  let own = sec.at("breaks", default: auto)
+  if own == auto { return primary }
+  let arr = if type(own) == array { own } else { (own,) }
+  let (lo, hi) = _visible-domain(trained)
+  arr.filter(b => b >= lo and b <= hi)
+}
+
 // Pre-compute primary and secondary x/y axis breaks for a trained scale set.
 // Callers that share `trained` across panels (e.g., grid facets without free
 // scales) build this once and pass it down so per-panel renders skip the
@@ -231,7 +243,7 @@
   let y-breaks = if yt != none and yt.type == "continuous" {
     _axis-breaks(yt)
   } else { none }
-  let x-sec-breaks = if _sec-spec(xt) != none { x-breaks } else { none }
-  let y-sec-breaks = if _sec-spec(yt) != none { y-breaks } else { none }
+  let x-sec-breaks = _secondary-breaks(xt, _sec-spec(xt), x-breaks)
+  let y-sec-breaks = _secondary-breaks(yt, _sec-spec(yt), y-breaks)
   (x: x-breaks, y: y-breaks, x-sec: x-sec-breaks, y-sec: y-sec-breaks)
 }

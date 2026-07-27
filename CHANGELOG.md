@@ -8,6 +8,9 @@
 
 ### Changes
 
+- feat: `breaks:` and `minor-breaks:` on a continuous scale accept a closure called with the vector of values the scale trained on (once per panel, so free-scale facets each get their own) and returning the tick positions; unlike an explicit array, closure breaks are clipped to the trained domain rather than widening it. (#216)
+- feat: `breaks-width(width, offset:)`, `breaks-pretty(n:)`, and `breaks-quantile(probs:)` build that closure for the common placements: a fixed step, round positions at a target count, and sample quantiles of the data. (#216)
+- fix: `dup-axis(breaks:, labels:)` and `sec-axis(breaks:, labels:)` are honoured; the secondary axis drew the primary grid with the primary formatting whatever these were set to. (#216)
 - docs: reference pages link every cross-reference instead of printing a bare `@geom-line` when the reference closes a parenthetical, and links no longer run into the preceding word or comma. (#215)
 - docs: every `scale-*` reference page lists the keys its `..args` accepts with their type, accepted values, and default (including `oob`, previously undocumented), instead of naming a few of them in prose. (#214)
 - docs: the navbar is dark in both light and dark schemes (matching the other project sites); add scheme-aware scrollbars, an accessible skip link and focus outline, and fix the tabset panel border that was indistinguishable from the background in dark mode. (#...)

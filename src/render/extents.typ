@@ -8,7 +8,7 @@
 #import "../utils/palette.typ": spec-attr
 #import "../utils/format.typ": format-break
 #import "../scale/secondary.typ" as secondary-mod
-#import "axis-format.typ": _axis-breaks, _axis-label
+#import "axis-format.typ": _axis-breaks, _axis-label, _secondary-breaks
 
 // Convert the axis-text font size in pt to cm. Used as a fallback ink-height
 // when no actual labels are measured (e.g., an axis with no breaks).
@@ -128,13 +128,15 @@
 
 // Same as `_axis-label-extents` but for the secondary axis: each break is
 // routed through the user's transformation before formatting. Returns zero
-// extents when no secondary axis is configured.
+// extents when no secondary axis is configured. Mirrors the draw in
+// `panel-draw.typ`, so the secondary's own breaks and labels win here too and
+// the reserved margin matches the labels actually drawn.
 #let _secondary-label-extents(trained, sec, size, typst-eval: false) = {
   if trained == none or sec == none { return (width: 0.0, height: 0.0) }
   if trained.type != "continuous" { return (width: 0.0, height: 0.0) }
-  let labels-cb = _trained-labels-cb(trained)
+  let labels-cb = sec.at("labels", default: auto)
   let typst-mark = trained.at("typst-mark", default: false)
-  let labels = _axis-breaks(trained)
+  let labels = _secondary-breaks(trained, sec, _axis-breaks(trained))
     .enumerate()
     .map(((idx, b)) => {
       let transformed = secondary-mod.apply-transform(sec, b)
