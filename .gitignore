@@ -23,3 +23,4 @@
 
 # Code for Issues
 /issues/*
+.kata.local.toml
