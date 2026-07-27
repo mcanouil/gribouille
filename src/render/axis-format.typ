@@ -4,7 +4,8 @@
 #import "../scale/train.typ": transform-fwd, transform-inv
 #import "../utils/colour.typ": edge-midpoints
 #import "../utils/palette.typ": spec-attr
-#import "../utils/pretty.typ": pretty, pretty-log10, pretty-sqrt
+#import "../utils/pretty.typ": pretty-log10, pretty-sqrt
+#import "../utils/extended.typ": extended
 #import "../utils/format.typ": format-break
 
 // Axis title fallback: a `labels(x: none)` suppression (`spec.blank`) wins and
@@ -77,7 +78,7 @@
   if transform == "sqrt" { return pretty-sqrt(lo, hi) }
   // A scale trained on whole numbers keeps whole breaks, so a narrow range
   // (years, small counts, a few epoch days) never labels half-steps.
-  pretty(lo, hi, n: 5, integer: trained.at("integer", default: false))
+  extended(lo, hi, m: 5, integer: trained.at("integer", default: false))
 }
 
 // Visible domain (data space) for a trained continuous scale, mirroring the

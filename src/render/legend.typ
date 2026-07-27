@@ -8,7 +8,7 @@
 // the swatch grid flows.
 
 #import "../deps.typ": cetz
-#import "../utils/pretty.typ": pretty
+#import "../utils/extended.typ": extended
 #import "../utils/format.typ": format-break
 #import "../utils/measure.typ": measure-text-cm
 #import "../utils/colour.typ": (
@@ -724,12 +724,12 @@
 }
 
 // Read back a colourbar guide's resolved breaks (stored by `guides-for`),
-// falling back to `pretty` over the domain only when none were stored.
+// falling back to `extended` over the domain only when none were stored.
 #let _colourbar-breaks(g) = {
   let breaks = g.at("breaks", default: none)
   if breaks != none { return breaks }
   let (lo, hi) = g.domain
-  pretty(lo, hi, n: 5)
+  extended(lo, hi, m: 5)
 }
 
 // Horizontal size-ladder glyph band height (cm), shared by the height estimate
@@ -969,14 +969,14 @@
       // members in the same group are intentionally dropped from the bar
       // because compositing them on a smooth gradient is awkward and rare.
       // Stepped scales (binned: true) emit n-breaks discrete patches with
-      // ticks at the bin boundaries; smooth scales fall back to pretty().
+      // ticks at the bin boundaries; smooth scales fall back to extended().
       let info = _bin-info(first.t)
       let lo = first.domain.first()
       let hi = first.domain.last()
       let computed = if info.binned {
         range(info.n-breaks + 1).map(i => lo + i * (hi - lo) / info.n-breaks)
       } else {
-        pretty(lo, hi, n: 5, integer: first.t.at("integer", default: false))
+        extended(lo, hi, m: 5, integer: first.t.at("integer", default: false))
       }
       let breaks = _guide-breaks(info, lo, hi, computed)
       (
@@ -992,7 +992,7 @@
       )
     } else {
       // Numeric ladder for size/alpha/linewidth/stroke. Binned scales emit
-      // one glyph per bin at the midpoint; smooth scales fall back to pretty().
+      // one glyph per bin at the midpoint; smooth scales fall back to extended().
       let info = _bin-info(first.t)
       let lo = first.domain.first()
       let hi = first.domain.last()
@@ -1008,7 +1008,7 @@
             lo + (i + 0.5) * (hi - lo) / info.n-breaks
           ))
         } else {
-          pretty(lo, hi, n: 5, integer: first.t.at("integer", default: false))
+          extended(lo, hi, m: 5, integer: first.t.at("integer", default: false))
         }
         _guide-breaks(info, lo, hi, computed)
       }
