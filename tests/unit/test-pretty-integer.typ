@@ -119,17 +119,19 @@
 )
 
 // The size ladder shares the rule; fractional data keeps the fine ticks.
+// Over 1 to 4 the automatic search lands on whole ticks either way, so the
+// contrast needs a range narrow enough that splitting the unit wins.
 #assert.eq(
   guide-breaks(
     "size",
-    (type: "continuous", domain: (1, 4), spec: (:), integer: true),
+    (type: "continuous", domain: (1, 2), spec: (:), integer: true),
   ),
-  (1.0, 2.0, 3.0, 4.0),
+  (1.0, 2.0),
 )
 #assert(
   guide-breaks(
     "size",
-    (type: "continuous", domain: (1, 4), spec: (:)),
+    (type: "continuous", domain: (1, 2), spec: (:)),
   ).any(b => b != calc.round(b)),
 )
 
