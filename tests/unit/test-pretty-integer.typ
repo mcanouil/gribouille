@@ -5,6 +5,7 @@
 #import "../../src/scale/train.typ": train
 #import "../../src/render/axis-format.typ": _axis-breaks
 #import "../../src/render/domain.typ": _apply-expand
+#import "../../src/render/legend.typ": guides-for
 #import "../../src/utils/pretty.typ": pretty
 
 #let layers = (geom-point(),)
@@ -86,6 +87,51 @@
   data: whole-rows,
 )
 #assert(trained-whole-feeder.y.integer)
+
+// --- continuous guides follow the same rule ---
+
+#let layer-point() = (
+  name: "point",
+  mapping: none,
+  inherit-aes: true,
+  params: (colour: auto, fill: auto, shape: auto),
+)
+
+#let guide-breaks(aesthetic, trained-entry) = {
+  let g = guides-for(
+    (
+      mapping: ((aesthetic): "z"),
+      layers: (layer-point(),),
+      guides: (:),
+    ),
+    ((aesthetic): trained-entry),
+  )
+  g.at(0).breaks
+}
+
+// A colourbar over whole-numbered data ticks whole values.
+#assert.eq(
+  guide-breaks(
+    "fill",
+    (type: "continuous", domain: (1, 4), spec: (:), integer: true),
+  ),
+  (1.0, 2.0, 3.0, 4.0),
+)
+
+// The size ladder shares the rule; fractional data keeps the fine ticks.
+#assert.eq(
+  guide-breaks(
+    "size",
+    (type: "continuous", domain: (1, 4), spec: (:), integer: true),
+  ),
+  (1.0, 2.0, 3.0, 4.0),
+)
+#assert(
+  guide-breaks(
+    "size",
+    (type: "continuous", domain: (1, 4), spec: (:)),
+  ).any(b => b != calc.round(b)),
+)
 
 // --- dates: four consecutive epoch days no longer repeat a label ---
 
