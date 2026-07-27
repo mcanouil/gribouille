@@ -20,10 +20,18 @@
 
 // Search bounds. The paper's loops run to infinity and lean on the score
 // bounds to break out; Typst has no such escape hatch, so each loop also
-// carries a hard cap that the bounds reach long before in practice.
+// carries a hard cap.
+//
+// The skip and exponent caps are slack: raising them to 4 and 8 leaves the
+// breaks of 264 sample ranges unchanged, because the simplicity and coverage
+// bounds cut those loops first. The tick cap is not, since the density bound
+// only starts biting above `m` ticks, so it follows the requested count: a
+// sequence of `m` ticks needs candidates past `m` to compete.
 #let _MAX-SKIP = 2
-#let _MAX-TICKS = 20
+#let _MIN-MAX-TICKS = 20
 #let _MAX-EXPONENT-STEPS = 3
+
+#let _max-ticks(m) = calc.max(_MIN-MAX-TICKS, 3 * m)
 
 #let _index-of-q(q) = {
   let idx = 0
@@ -104,7 +112,7 @@
       // falls short this skip level is exhausted.
       if simplicity-bound < best-score { break }
       let k = 2
-      while k <= _MAX-TICKS {
+      while k <= _max-ticks(m) {
         let dm = _density-max(k, m)
         let density-bound = (
           _W.at(0) * _simplicity-max(q, skip)
@@ -128,8 +136,6 @@
           let unit = step / skip
           // Whole-number scales reject a fractional step or offset outright,
           // which is what keeps 2020..2023 on whole years.
-          // `not` binds looser than `or` in Typst, so the negation is
-          // parenthesised: `not integer or ...` would test the whole clause.
           let whole = (
             (not integer) or (_divides(step, 1.0) and _divides(unit, 1.0))
           )
