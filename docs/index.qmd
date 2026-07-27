@@ -4,7 +4,6 @@ subtitle: "Create elegant graphics with the Grammar of Graphics for Typst."
 toc: false
 sidebar: false
 engine: markdown
-since: "0.6.0"
 include-in-header:
   - text: |
       <style>

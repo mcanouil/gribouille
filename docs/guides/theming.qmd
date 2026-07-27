@@ -2,7 +2,6 @@
 title: "Theming"
 subtitle: "Map every visible region of a plot to the `theme()` key that styles it."
 engine: markdown
-since: "0.6.0"
 ---
 
 A _Gribouille_ plot is a stack of named regions: an outer canvas, an inner panel (or grid of panels), a strip band for facets, a legend column, a title block on top, a caption underneath, and axes around the edges.
