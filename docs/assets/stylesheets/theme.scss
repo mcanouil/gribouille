@@ -178,6 +178,8 @@ $_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
   --gb-accent:    #{$crayon-mint};
 
   --gb-hairline:          rgb(26 26 26 / 0.10);
+  // Divider that must read as a line rather than whisper (page footer).
+  --gb-rule:              rgb(26 26 26 / 0.16);
   --gb-tint-primary:      rgb(233 76 61 / 0.10);
   --gb-tint-secondary:    rgb(31 122 140 / 0.10);
   --gb-tint-signal:       rgb(244 183 64 / 0.14);
@@ -203,6 +205,7 @@ $_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
   --gb-accent:    #{$crayon-mint-dk};
 
   --gb-hairline:          rgb(244 237 223 / 0.12);
+  --gb-rule:              rgb(244 237 223 / 0.28);
   --gb-tint-primary:      rgb(255 111 96 / 0.14);
   --gb-tint-secondary:    rgb(91 181 199 / 0.14);
   --gb-tint-signal:       rgb(255 209 102 / 0.16);
@@ -779,9 +782,17 @@ pre code.sourceCode span {
 }
 
 // --- Copy-to-clipboard button. ------------------------------------------
+// Size the box from the 1rem icon: left to the inherited body line-height the
+// button is taller than a one-line code block and hangs past its bottom edge.
 .code-copy-button {
   --bs-btn-color: var(--gb-muted);
   --bs-btn-hover-color: var(--gb-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.5rem;
+  padding: 0 0.35rem;
+  line-height: 1;
   color: var(--gb-muted);
   background: transparent;
   border: 1px solid var(--gb-hairline);
@@ -943,8 +954,12 @@ header#title-block-header .subtitle {
 }
 
 // --- Footer. ------------------------------------------------------------
-.page-footer, .nav-footer {
-  border-top: 1px solid var(--gb-hairline);
+// The `body ` prefix matches the specificity of Quarto's own
+// `body .nav-footer` border rule, which hard-codes rgba(0, 0, 0, 0.08) and so
+// vanished on the dark paper. --gb-rule (not --gb-hairline) keeps the line
+// legible in both schemes.
+body .page-footer, body .nav-footer {
+  border-top: 1px solid var(--gb-rule);
   background: transparent;
   color: var(--gb-muted);
   font-size: 0.9rem;

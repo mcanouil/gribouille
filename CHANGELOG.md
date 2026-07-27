@@ -9,6 +9,7 @@
 
 ### Changes
 
+- docs: footer links are legible in light mode (they were painted the page colour), the footer top rule reads in dark mode instead of being 8% black on dark paper, and the copy-to-clipboard button no longer hangs past the bottom border of a one-line code block. (#222)
 - docs: the stable site is rendered wholly from the release tag instead of taking its pages from `main` against a pinned `src`, so each site documents the API it ships with; the `since:` page gate and its pointer stubs are gone, and a documentation fix now reaches the stable site at the next release rather than immediately. (336b6987)
 - docs: the theming guide gains a "Ticks and their labels" section showing `element-tick`, ratio lengths, minor marks, and per-side label hiding. (#219)
 - feat: minor tick marks are themable through `axis-ticks-minor` and its per-axis variants, replacing the hardcoded half-length, major-stroke sub-decade ticks drawn by `guide-axis-logticks()`; they inherit the major tick record, so the default rendering is unchanged. (#150)
