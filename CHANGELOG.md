@@ -10,7 +10,7 @@
 
 - docs: the navbar is dark in both light and dark schemes (matching the other project sites); add scheme-aware scrollbars, an accessible skip link and focus outline, and fix the tabset panel border that was indistinguishable from the background in dark mode. (#...)
 - docs: in the collapsed navbar, opening a menu (e.g. Guides) overlays on top instead of growing the navbar and pushing the other items down, matching the GitHub widget menu. (#...)
-- docs: in the collapsed navbar, the colour-scheme toggle and the search button group at the right edge and the brand centres, instead of the toggle sitting beside the brand with the search alone at the far right. (#...)
+- docs: in the collapsed navbar, the colour-scheme toggle and the search button group at the right edge and the brand centres, instead of the toggle sitting beside the brand with the search alone at the far right. (#210)
 - docs: the navbar GitHub icon becomes a widget showing live star and fork counts and a project menu (repository, issues, pull requests, releases, star, fork, Typst Universe, sponsor), replacing the separate Typst Universe, source-code, releases, and sponsor links; the version switcher, GitHub widget, search button, and colour-scheme toggle share one pill button style. (#205)
 - docs: pages declare the release that introduced them with `since:`, so a guide documenting unreleased API renders a short pointer to the development documentation on the stable site instead of broken figures. (#202)
 - docs: add a "Wrangling data" guide walking a dataset from coercion through grouped aggregation, reshaping, and joining into `#plot`, with guidance on when native Typst suffices. (#198)
