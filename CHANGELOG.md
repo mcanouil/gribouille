@@ -8,6 +8,7 @@
 
 ### Changes
 
+- docs: the stable site is rendered wholly from the release tag instead of taking its pages from `main` against a pinned `src`, so each site documents the API it ships with; the `since:` page gate and its pointer stubs are gone, and a documentation fix now reaches the stable site at the next release rather than immediately. (#221)
 - feat: automatic continuous breaks come from the extended Wilkinson search (Talbot, Lin, and Hanrahan 2010), which scores candidate tick sequences on simplicity, coverage of the data, and tick count, replacing the fixed 1/2/5 ladder on axes and continuous guides; most plots gain rounder ticks that sit closer to the data. `breaks-extended(n:)` exposes it for a different target count. (#217)
 - feat: `breaks:` and `minor-breaks:` on a continuous scale accept a closure called with the vector of values the scale trained on (once per panel, so free-scale facets each get their own) and returning the tick positions; unlike an explicit array, closure breaks are clipped to the trained domain rather than widening it. (#216)
 - feat: `breaks-width(width, offset:)`, `breaks-pretty(n:)`, and `breaks-quantile(probs:)` build that closure for the common placements: a fixed step, round positions at a target count, and sample quantiles of the data. (#216)
