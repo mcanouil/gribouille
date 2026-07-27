@@ -9,6 +9,7 @@
 
 ### Changes
 
+- docs: the theming guide gains a "Ticks and their labels" section showing `element-tick`, ratio lengths, minor marks, and per-side label hiding. (#219)
 - feat: minor tick marks are themable through `axis-ticks-minor` and its per-axis variants, replacing the hardcoded half-length, major-stroke sub-decade ticks drawn by `guide-axis-logticks()`; they inherit the major tick record, so the default rendering is unchanged. (#150)
 - feat: automatic continuous breaks come from the extended Wilkinson search (Talbot, Lin, and Hanrahan 2010), which scores candidate tick sequences on simplicity, coverage of the data, and tick count, replacing the fixed 1/2/5 ladder on axes and continuous guides; most plots gain rounder ticks that sit closer to the data. `breaks-extended(n:)` exposes it for a different target count. (#217)
 - feat: `breaks:` and `minor-breaks:` on a continuous scale accept a closure called with the vector of values the scale trained on (once per panel, so free-scale facets each get their own) and returning the tick positions; unlike an explicit array, closure breaks are clipped to the trained domain rather than widening it. (#216)
