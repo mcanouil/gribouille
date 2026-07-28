@@ -5,7 +5,7 @@
 #import "../deps.typ": cetz
 #import "../position/dodge.typ": dodge-delta
 #import "../utils/aes-resolve.typ": aes-col
-#import "../utils/radial.typ": project-point, shift-point
+#import "../utils/radial.typ": axis-numeric, project-point, shift-point
 #import "../utils/repel.typ": repel
 #import "../utils/segment-route.typ": aabb-from-centre, route-segment
 #import "../utils/types.typ": parse-number
@@ -17,9 +17,10 @@
 // Renderer-owned key; geoms never reach into the layer dict directly.
 #let label-sizes-of(layer) = layer.at("_label-sizes", default: ())
 
-// Convert a row's `(nx, ny)` nudge to canvas-cm deltas. A `length` value is
-// already canvas units; a number is data units, projected through the trained
-// scales in `ctx`. Each axis falls back to `0` when its point fails to project.
+// Convert a row's `(nx, ny)` nudge to canvas-cm deltas. `x-val` and `y-val` are
+// the row's raw cells. A `length` nudge is already canvas units; a number is
+// data units on a continuous scale and level units on a discrete one, matching
+// `position-nudge`. Each axis falls back to `0` when its point fails to project.
 #let nudge-cm(ctx, x-val, y-val, nx, ny) = {
   let dx = 0.0
   let dy = 0.0
@@ -34,19 +35,25 @@
     ny = 0
   }
   if nx == 0 and ny == 0 { return (dx, dy) }
-  // A numeric nudge is in data units: project the shifted point through the
-  // trained scales and take the canvas delta. A non-numeric anchor cannot
-  // shift in data units, so that contribution stays zero.
+  // The base point projects from the raw cells so a categorical anchor
+  // resolves; only the nudged axis needs a numeric position, and the other
+  // axis keeps its raw value in the shifted point.
   let base = project-point(ctx, x-val, y-val)
   if base == none { return (dx, dy) }
   let (bx, by) = base
-  if nx != 0 and x-val != none {
-    let shifted = project-point(ctx, x-val + nx, y-val)
-    if shifted != none { dx += shifted.at(0) - bx }
+  if nx != 0 {
+    let xn = axis-numeric(ctx, "x", x-val)
+    if xn != none {
+      let shifted = project-point(ctx, xn + nx, y-val)
+      if shifted != none { dx += shifted.at(0) - bx }
+    }
   }
-  if ny != 0 and y-val != none {
-    let shifted = project-point(ctx, x-val, y-val + ny)
-    if shifted != none { dy += shifted.at(1) - by }
+  if ny != 0 {
+    let yn = axis-numeric(ctx, "y", y-val)
+    if yn != none {
+      let shifted = project-point(ctx, x-val, yn + ny)
+      if shifted != none { dy += shifted.at(1) - by }
+    }
   }
   (dx, dy)
 }
@@ -92,8 +99,8 @@
       } else {
         nudge-cm(
           ctx,
-          parse-number(xv),
-          parse-number(yv),
+          xv,
+          yv,
           _nudge-raw(nudge-x-spec, row),
           _nudge-raw(nudge-y-spec, row),
         )

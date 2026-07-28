@@ -1,7 +1,7 @@
 // Scale training and mapping tests.
 
 #import "../../src/scale/train.typ": (
-  map-continuous, map-discrete, map-position, train,
+  level-position, map-continuous, map-discrete, map-position, train,
 )
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/aes.typ": aes
@@ -40,6 +40,24 @@
 
 #assert.eq(map-position(trained.x, "2", (0.0, 10.0)), 5.0)
 #assert.eq(map-position(trained.colour, "a", (0.0, 10.0)), 2.5)
+
+// A value the discrete branch cannot read yields `none` rather than failing,
+// mirroring `map-position`'s continuous branch on an unparseable value.
+#assert.eq(map-discrete(none, ("a", "b"), (0.0, 10.0)), none)
+#assert.eq(map-discrete("z", ("a", "b"), (0.0, 10.0)), none)
+
+// `level-position` is the inverse lookup driving nudge on a discrete axis: it
+// is 1-indexed so `map-discrete` reads the result back as the same position.
+#let cat-trained = (type: "discrete", domain: ("a", "b", "c"))
+#assert.eq(level-position(cat-trained, "a"), 1)
+#assert.eq(level-position(cat-trained, "c"), 3)
+#assert.eq(level-position(cat-trained, "z"), none)
+#assert.eq(level-position(cat-trained, none), none)
+#assert.eq(level-position(cat-trained, 2.5), 2.5)
+#assert.eq(
+  map-position(cat-trained, level-position(cat-trained, "b"), (0.0, 30.0)),
+  map-position(cat-trained, "b", (0.0, 30.0)),
+)
 
 // `map-position` forwards the `reverse` flag from a discrete trained scale.
 #let rev-trained = (

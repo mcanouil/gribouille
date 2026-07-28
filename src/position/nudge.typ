@@ -11,9 +11,9 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param x Offset added to the x value of each row.
+/// \@param x Offset added to the x value of each row, in data units on a continuous scale and in level units on a discrete one.
 ///
-/// \@param y Offset added to the y value of each row.
+/// \@param y Offset added to the y value of each row, in data units on a continuous scale and in level units on a discrete one.
 ///
 /// \@returns Position dictionary with `name: "nudge"`, consumed by \@plot.
 ///

@@ -726,6 +726,9 @@
 ) = {
   let n = domain.len()
   if n == 0 { return none }
+  // Mirror the continuous branch of `map-position`, which yields `none` for a
+  // value it cannot read, rather than failing inside `str`.
+  if value == none { return none }
   let s = str(value)
   let lookup = if level-index == none { _level-index(domain) } else {
     level-index
@@ -747,6 +750,19 @@
   } else { view-index }
   if v-hi == v-lo { return (r-lo + r-hi) / 2 }
   r-lo + (idx - v-lo) * (r-hi - r-lo) / (v-hi - v-lo)
+}
+
+// 1-indexed level position of `value` on a trained discrete scale, or `none`
+// when it is neither a level nor already a numeric position. The 1-indexing
+// matches how `map-discrete` reads a bare number, so callers can offset the
+// result and feed it straight back through `map-position`.
+#let level-position(trained, value) = {
+  if value == none { return none }
+  if type(value) == int or type(value) == float { return float(value) }
+  let lookup = trained.at("level-index", default: none)
+  if lookup == none { lookup = _level-index(trained.domain) }
+  let idx = lookup.at(str(value), default: none)
+  if idx == none { none } else { idx + 1 }
 }
 
 // Panel-units span between adjacent levels for a discrete trained scale,

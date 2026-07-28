@@ -3,6 +3,7 @@
 // end-to-end renders compile (the assertion is the compile itself).
 
 #import "../../src/aes.typ": aes
+#import "../../src/geom/label-draw.typ": nudge-cm
 #import "../../src/geom/text.typ": geom-text
 #import "../../src/geom/label.typ": geom-label
 #import "../../src/geom/typst.typ": geom-typst
@@ -85,6 +86,73 @@
   layers: (geom-label(nudge-x: 0.5, nudge-y: 0.4),),
   width: 10cm,
   height: 6cm,
+)
+
+// A numeric nudge alongside a discrete positional scale: the categorical
+// anchor still projects, and a nudge on the discrete axis itself shifts in
+// level units, matching `position-nudge`.
+
+// Four levels over a 12cm panel put one slot at 3cm, so a one-level nudge on
+// the discrete axis moves 3cm and a half-level nudge 1.5cm. The continuous
+// axis spans 0..10 over 5cm, so a unit nudge moves 0.5cm. The categorical x
+// must not block the y contribution.
+#let cat-ctx = (
+  trained: (
+    x: (type: "discrete", domain: ("a", "b", "c", "d")),
+    y: (type: "continuous", domain: (0, 10)),
+  ),
+  px-range: (0.0, 12.0),
+  py-range: (0.0, 5.0),
+)
+#assert.eq(nudge-cm(cat-ctx, "a", 4, 1, 0), (3.0, 0.0))
+#assert.eq(nudge-cm(cat-ctx, "a", 4, 0.5, 0), (1.5, 0.0))
+#assert.eq(nudge-cm(cat-ctx, "a", 4, 0, 1), (0.0, 0.5))
+#assert.eq(nudge-cm(cat-ctx, "a", 4, 0.5, 1), (1.5, 0.5))
+
+// An anchor off the domain has no base point to offset from, so both axes
+// contribute nothing. `compute-placements` drops such a row before it reaches
+// here; the guard keeps the helper total for direct callers.
+#assert.eq(nudge-cm(cat-ctx, "z", 4, 1, 1), (0.0, 0.0))
+
+// A `length` nudge stays in canvas units on a categorical axis, unchanged.
+#assert.eq(nudge-cm(cat-ctx, "a", 4, 0.7cm, 0), (0.7, 0.0))
+
+#let cat = ((g: "a", v: 3), (g: "b", v: 5))
+
+// Discrete x, nudge on the continuous axis.
+#plot(
+  data: cat,
+  mapping: aes(x: "g", y: "v"),
+  layers: (geom-text(mapping: aes(label: "v"), nudge-y: 1),),
+  width: 6cm,
+  height: 4cm,
+)
+
+// Discrete x, nudge on the discrete axis: half a slot to the right.
+#plot(
+  data: cat,
+  mapping: aes(x: "g", y: "v"),
+  layers: (geom-label(mapping: aes(label: "v"), nudge-x: 0.5),),
+  width: 6cm,
+  height: 4cm,
+)
+
+// Discrete y, nudge on the continuous axis.
+#plot(
+  data: cat,
+  mapping: aes(x: "v", y: "g"),
+  layers: (geom-text(mapping: aes(label: "g"), nudge-x: 1),),
+  width: 6cm,
+  height: 4cm,
+)
+
+// Both axes nudged with a discrete x, exercising the mixed path in one call.
+#plot(
+  data: cat,
+  mapping: aes(x: "g", y: "v"),
+  layers: (geom-label(mapping: aes(label: "v"), nudge-x: 0.25, nudge-y: 0.5),),
+  width: 6cm,
+  height: 4cm,
 )
 
 geom-text/label/typst nudge + segment smoke test passed.
