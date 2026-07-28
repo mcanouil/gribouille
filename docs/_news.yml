@@ -1,3 +1,15 @@
+- version: "0.6"
+  title: "Gribouille 0.6"
+  date: "2026-07-28"
+  path: "https://mickael.canouil.fr/posts/2026-07-28-gribouille-0-6/"
+  description: |
+    Gribouille 0.6.0 adds an experimental set of data wrangling verbs, so
+    grouped aggregation, reshaping, and joining happen in the document instead
+    of in a script run beforehand. Automatic axis breaks now come from the
+    extended Wilkinson search, and `breaks-width()`, `breaks-pretty()`,
+    `breaks-extended()`, and `breaks-quantile()` place them by hand. Axis ticks
+    are themed through a single `element-tick`, the breaking change of the
+    release.
 - version: "0.5"
   title: "Gribouille 0.5"
   date: "2026-07-13"
