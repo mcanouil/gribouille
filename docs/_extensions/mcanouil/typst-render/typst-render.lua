@@ -495,7 +495,7 @@ local function resolve_typst_bin()
 
   typst_bin = typst_cli.resolve_bin()
   if not typst_bin then
-    log.log_error(EXTENSION_NAME, 'Typst binary not found. Ensure Quarto >= 1.6 is installed.')
+    log.log_error(EXTENSION_NAME, 'Typst binary not found. Ensure Quarto >= 1.10.18 is installed.')
   end
   return typst_bin
 end
