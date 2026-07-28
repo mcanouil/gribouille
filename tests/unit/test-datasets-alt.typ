@@ -33,6 +33,7 @@
   "model",
   "displ",
   "cyl",
+  "drv",
   "class",
   "cty",
   "hwy",

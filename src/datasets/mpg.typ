@@ -2,7 +2,7 @@
 ///!
 ///! A 30-row small fuel-economy reference dataset.
 ///! We ship only the columns used by current examples: `manufacturer`,
-///! `model`, `displ`, `cyl`, `class`, `cty`, `hwy`.
+///! `model`, `displ`, `cyl`, `drv`, `class`, `cty`, `hwy`.
 ///! Rows span several vehicle classes.
 
 #import "../data.typ": _normalise-data
@@ -16,6 +16,7 @@
 /// - `model` (string).
 /// - `displ` (engine displacement, litres).
 /// - `cyl` (number of cylinders).
+/// - `drv` (drive train: `"4"` four-wheel, `"f"` front-wheel, `"r"` rear-wheel).
 /// - `class` (vehicle class, e.g., `"compact"`, `"midsize"`, `"suv"`).
 /// - `cty` (city miles per gallon).
 /// - `hwy` (highway miles per gallon).
@@ -32,7 +33,7 @@
 ///
 /// \@examples Preview the first ten entries (out of 30).
 /// ```
-/// //| alt: "Table of the first ten rows of the mpg dataset with seven columns: manufacturer, model, displ, cyl, class, cty, hwy."
+/// //| alt: "Table of the first ten rows of the mpg dataset with eight columns: manufacturer, model, displ, cyl, drv, class, cty, hwy."
 /// #let rows = mpg.slice(0, 10)
 /// #let keys = rows.first().keys()
 /// #let cell(v) = if v == none { text(fill: gray, [_none_]) } else { [#v] }
@@ -202,6 +203,38 @@
     4,
     4,
     6,
+  ),
+  drv: (
+    "f",
+    "f",
+    "4",
+    "4",
+    "r",
+    "f",
+    "4",
+    "f",
+    "4",
+    "4",
+    "r",
+    "4",
+    "4",
+    "r",
+    "f",
+    "f",
+    "f",
+    "4",
+    "f",
+    "f",
+    "4",
+    "4",
+    "4",
+    "4",
+    "f",
+    "f",
+    "4",
+    "f",
+    "f",
+    "f",
   ),
   class: (
     "compact",
