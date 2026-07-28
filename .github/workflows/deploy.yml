@@ -45,12 +45,17 @@ on:
 permissions:
   contents: read
 
-# GitHub Pages only accepts one deployment at a time; queue instead of cancel.
-# Pull requests never deploy, so give them a per-ref group: they can run in parallel
-# with each other and with a deploy, and a new push supersedes the previous build.
+# GitHub Pages only accepts one deployment at a time, so every deploying run shares
+# a single repository-wide group; the group cannot be per-ref without letting two
+# refs deploy at once. Pull requests never deploy, so give them a per-ref group: they
+# can run in parallel with each other and with a deploy.
+# A new push supersedes the run it overtakes rather than queueing behind it: the site
+# is rebuilt in full from the newest sources, so the older build would publish content
+# that is already stale. Release and manual runs queue instead, so a tag is never
+# published without its docs.
 concurrency:
   group: ${{ github.event_name == 'pull_request' && format('docs-pr-{0}', github.ref) || 'pages' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 jobs:
   resolve:
