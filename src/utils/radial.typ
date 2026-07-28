@@ -1,6 +1,8 @@
 ///! Joint `(x, y) → (cx, cy)` projection helpers for `coord-radial`.
 
-#import "../scale/train.typ": discrete-slot-width, map-axis, map-position
+#import "../scale/train.typ": (
+  discrete-slot-width, level-position, map-axis, map-position,
+)
 #import "types.typ": parse-number
 
 // True when the coord is any flavour of `coord-radial`.
@@ -93,6 +95,24 @@
   let cy = map-position(yt, yv, ctx.py-range)
   if cx == none or cy == none { return none }
   (cx, cy)
+}
+
+// Trained scale for one axis, taken from the radial bundle when a radial coord
+// is active and from `ctx.trained` otherwise. Mirrors `project-point`'s split.
+#let _axis-trained(ctx, axis) = {
+  let radial = ctx.at("radial", default: none)
+  if radial != none { return radial.at(axis + "-trained", default: none) }
+  ctx.trained.at(axis, default: none)
+}
+
+// Numeric position of `value` on one axis: the parsed number on a continuous
+// scale and the 1-indexed level position on a discrete one. `none` when the
+// value resolves to neither, so callers can skip that axis.
+#let axis-numeric(ctx, axis, value) = {
+  let trained = _axis-trained(ctx, axis)
+  if trained == none { return none }
+  if trained.type == "continuous" { return parse-number(value) }
+  level-position(trained, value)
 }
 
 // Add a canvas-cm `(dx, dy)` offset to a projected `(cx, cy)` point.

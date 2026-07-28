@@ -15,8 +15,9 @@
 /// Text label layer reading strings from the `label` aesthetic.
 ///
 /// One text block is drawn per row at the mapped `(x, y)`. Offsets are mapped
-/// via the `nudge-x` and `nudge-y` aesthetics: a number shifts in data units,
-/// a Typst length shifts in canvas units. Setting `segment: true` draws a
+/// via the `nudge-x` and `nudge-y` aesthetics: a number shifts in data units
+/// on a continuous scale and in level units on a discrete one, a Typst length
+/// shifts in canvas units. Setting `segment: true` draws a
 /// connector back to the anchor point, routed to avoid the other labels of
 /// the same layer.
 ///
@@ -25,7 +26,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x`, `y`, and `label`. May map `nudge-x` and `nudge-y` for per-row offsets in data units.
+/// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x`, `y`, and `label`. May map `nudge-x` and `nudge-y` for per-row offsets, in data units on a continuous scale and in level units on a discrete one.
 ///
 /// \@param data Layer-specific dataset, or a function applied to the plot data returning the layer frame. Falls back to the plot data when `none`.
 ///

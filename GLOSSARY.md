@@ -54,8 +54,8 @@ Run the survey command at the bottom before extending the table.
 | `py`      | panel y                   | panel y range.                                                                        |
 | `dx`      | delta x                   | local x-offset delta in draw and layout helpers.                                      |
 | `dy`      | delta y                   | local y-offset delta in draw and layout helpers.                                      |
-| `nudge-x` | x offset                  | aesthetic on `geom-text`/`label`/`typst`; number = data units, length = canvas units. |
-| `nudge-y` | y offset                  | aesthetic on `geom-text`/`label`/`typst`; number = data units, length = canvas units. |
+| `nudge-x` | x offset                  | aesthetic on `geom-text`/`label`/`typst`; number = data units (continuous) or level units (discrete), length = canvas units. |
+| `nudge-y` | y offset                  | aesthetic on `geom-text`/`label`/`typst`; number = data units (continuous) or level units (discrete), length = canvas units. |
 | `aabb`    | axis-aligned bounding box | `(x-lo, y-lo, x-hi, y-hi)` dict from `utils/segment-route.typ`.                       |
 | `lo`      | lower bound               | endpoint of an interval (whisker, error bar, axis range).                             |
 | `hi`      | upper bound               | endpoint of an interval.                                                              |
@@ -78,6 +78,7 @@ Run the survey command at the bottom before extending the table.
 | `xs`        | parsed x values     | numeric x array post-`parse-number`.                                 |
 | `ys`        | parsed y values     | numeric y array.                                                     |
 | `xv` / `yv` | parsed x / y scalar | one parsed numeric value, typically inside a per-row map.            |
+| `xn` / `yn` | numeric axis position | one value resolved through `axis-numeric`: a parsed number on a continuous scale, a 1-indexed level on a discrete one. |
 | `grp`       | group key           | discrete group identifier (string, joined by `\u{1}` for compounds). |
 | `cat`       | category            | discrete level on a categorical scale.                               |
 | `num`       | numeric             | parsed scalar.                                                       |
