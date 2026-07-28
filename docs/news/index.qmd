@@ -1,6 +1,7 @@
 ---
 title: "News"
 subtitle: "Release announcements."
+toc: false
 listing:
   - id: news
     template: ../assets/templates/_news-releases.ejs.md
