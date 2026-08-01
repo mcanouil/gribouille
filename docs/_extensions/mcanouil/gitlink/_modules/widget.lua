@@ -23,7 +23,7 @@ local log = load_sibling('logging.lua')
 local html_mod = load_sibling('html.lua')
 
 --- @type string Version used for the injected HTML dependency
-local WIDGET_DEPENDENCY_VERSION = '1.7.0'
+local WIDGET_DEPENDENCY_VERSION = '1.9.0'
 
 --- @type table<string, string>|nil Octicon SVG bodies by name (loaded once per render)
 local octicons_cache = nil

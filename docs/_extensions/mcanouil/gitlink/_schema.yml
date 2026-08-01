@@ -81,12 +81,12 @@ options:
       type: string
   widget:
     type: object
-    description: "Repository navbar widget showing live star/fork counts and a dropdown of repository links, replacing a navbar item with href '#gitlink-widget'. HTML websites only."
+    description: "Repository widget showing live star/fork counts and a dropdown of repository links, replacing every navbar item, sidebar tool, or sidebar contents item with href '#gitlink-widget'. HTML websites only."
     properties:
       enabled:
         type: boolean
         default: false
-        description: "Whether to inject the navbar widget. Independent of the top-level 'enabled' option, so a site can run widget-only."
+        description: "Whether to inject the widget. Independent of the top-level 'enabled' option, so a site can run widget-only."
       links:
         type: object
         description: "Toggles for the platform-derived default menu entries."
