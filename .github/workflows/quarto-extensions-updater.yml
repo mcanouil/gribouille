@@ -59,7 +59,7 @@ jobs:
           version: "pre-release"
 
       - name: Update Quarto extensions
-        uses: mcanouil/quarto-extensions-updater@v2
+        uses: mcanouil/quarto-extensions-updater@v2.1.2
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           pr-labels: "Type: Dependencies :arrow_up:"
