@@ -1,9 +1,9 @@
-/* Gitlink repository navbar widget.
+/* Gitlink repository navigation widget (navbar or sidebar).
    Structural styling only; theming happens through the `--gitlink-widget-*`
    custom properties, which fall back to Bootstrap tokens so unthemed Quarto
    sites work out of the box. */
 
-#gitlink-widget {
+.gitlink-widget {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -123,9 +123,10 @@
   transform: rotate(180deg);
 }
 
-/* Menu rules are scoped under `.navbar` so they outrank Quarto's `.navbar a`
-   colour, which would otherwise force the navbar foreground onto the items. */
-.navbar .gitlink-widget-dropdown {
+/* Menu rules are scoped under `.gitlink-widget` so they outrank Quarto's
+   `.navbar a` and `.sidebar-navigation a` colours, which would otherwise
+   force the surrounding navigation foreground onto the items. */
+.gitlink-widget .gitlink-widget-dropdown {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -142,13 +143,13 @@
   z-index: 1000;
 }
 
-.navbar .gitlink-widget-open .gitlink-widget-dropdown {
+.gitlink-widget.gitlink-widget-open .gitlink-widget-dropdown {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
 
-.navbar .gitlink-widget-item {
+.gitlink-widget .gitlink-widget-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -161,30 +162,104 @@
   transition: background 150ms ease, color 150ms ease;
 }
 
-.navbar .gitlink-widget-item svg,
-.navbar .gitlink-widget-item .bi {
+.gitlink-widget .gitlink-widget-item svg,
+.gitlink-widget .gitlink-widget-item .bi {
   flex-shrink: 0;
 }
 
 /* Labels may carry inline markup (e.g. an iconify icon from a shortcode in
    the entry's `text`); keep any such icon aligned with the text. */
-.navbar .gitlink-widget-item .gitlink-widget-item-label {
+.gitlink-widget .gitlink-widget-item .gitlink-widget-item-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.navbar .gitlink-widget-item:hover,
-.navbar .gitlink-widget-item:focus-visible {
+.gitlink-widget .gitlink-widget-item:hover,
+.gitlink-widget .gitlink-widget-item:focus-visible {
   background: var(--gitlink-widget-accent-soft, color-mix(in srgb, var(--gitlink-widget-accent, var(--bs-link-color, #0d6efd)) 15%, transparent));
   color: var(--gitlink-widget-accent, var(--bs-link-color, #0d6efd));
   text-decoration: none;
 }
 
-.navbar .gitlink-widget-divider {
+.gitlink-widget .gitlink-widget-divider {
   height: 1px;
   margin: 0.35rem 0;
   background: var(--gitlink-widget-border, var(--bs-border-color-translucent, rgba(128, 128, 128, 0.3)));
+}
+
+/* Sidebar navigation item (`sidebar.contents`). Quarto's sidebar is an
+   `overflow-auto` scroll container, which would clip an absolutely positioned
+   menu, so the menu expands inline below the trigger, like a sidebar section.
+   `display` is not animatable, hence no transition. */
+.gitlink-widget-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.gitlink-widget-sidebar .gitlink-widget-trigger {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.gitlink-widget-sidebar .gitlink-widget-dropdown {
+  position: static;
+  display: none;
+  min-width: 0;
+  width: 100%;
+  margin-top: 0.35rem;
+  box-shadow: none;
+  transform: none;
+  transition: none;
+}
+
+.gitlink-widget-sidebar.gitlink-widget-open .gitlink-widget-dropdown {
+  display: block;
+}
+
+/* A tools row holding the widget stacks vertically: the widget trigger is a
+   counted pill, not an icon, so it takes its own line above the remaining
+   tools (colour-scheme toggle, reader toggle, overlay search). The marker
+   class is set by widget.js on whichever tools container the placeholder was
+   in; the id keeps this ahead of Quarto's own `.sidebar-tools-main` rather
+   than relying on stylesheet order. */
+#quarto-sidebar .gitlink-widget-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+/* Quarto pulls the tools row up under the sidebar title (`margin-top: -6px`),
+   which crowds the widget pill; give it room instead. */
+.sidebar-title .sidebar-tools-main.gitlink-widget-tools {
+  margin-top: 0.5rem;
+}
+
+/* The widget sits below the icon tools (colour-scheme and reader toggles) and
+   above the search control, whether search is the sidebar field below the row
+   or an overlay button inside it. */
+.gitlink-widget-tools .gitlink-widget {
+  order: 1;
+}
+
+.gitlink-widget-tools #quarto-search {
+  order: 2;
+}
+
+/* A tool sits in a strip of icon-sized controls, where an inline menu would
+   be laid out as another flex item beside them, so it keeps the overlay menu.
+   The menu is anchored to the trigger's left edge and takes its content width
+   (no 14rem floor) so it stays inside the sidebar, which clips overflow
+   rather than scrolling sideways. */
+.gitlink-widget-tools .gitlink-widget-dropdown {
+  left: 0;
+  right: auto;
+  min-width: 0;
+  width: max-content;
 }
 
 /* The collapsed navbar-nav is a Bootstrap `.navbar-nav-scroll` region
@@ -197,7 +272,7 @@
     overflow: visible;
   }
 
-  .navbar .gitlink-widget-dropdown {
+  .navbar .gitlink-widget .gitlink-widget-dropdown {
     left: 0;
     right: auto;
   }

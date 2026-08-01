@@ -1,13 +1,14 @@
 /**
- * Gitlink - Repository Navbar Widget
- * Replaces the `#gitlink-widget` navbar placeholder with a button showing live
- * star and fork counts and a dropdown menu of repository links. Configuration
- * is injected by the gitlink Lua filter as a JSON script element; counts come
- * from the platform REST API, cached in localStorage for four hours so the
- * rate limit is not hit on every page view. A stale cache or `?` covers a
- * failed request. Octicon path data for the icons the menu uses arrives in
- * the configuration (`icons`); other icon names render as Bootstrap Icons,
- * which Quarto bundles with every HTML page.
+ * Gitlink - Repository Navigation Widget
+ * Replaces every `#gitlink-widget` placeholder (navbar item, sidebar tool, or
+ * sidebar contents item) with a button showing live star and fork counts and a
+ * dropdown menu of repository links. Configuration is injected by the gitlink
+ * Lua filter as a JSON script element; counts come from the platform REST API,
+ * cached in localStorage for four hours so the rate limit is not hit on every
+ * page view, and shared by every widget on the page. A stale cache or `?`
+ * covers a failed request. Octicon path data for the icons the menu uses
+ * arrives in the configuration (`icons`); other icon names render as Bootstrap
+ * Icons, which Quarto bundles with every HTML page.
  *
  * @license MIT
  * @copyright 2026 Mickaël Canouil
@@ -164,12 +165,12 @@
   // Disclosure pattern: a native button toggling a plain list of links, per
   // the ARIA Authoring Practices for navigation link collections. No menu
   // roles, so Tab moves through the links naturally.
-  const buildTrigger = (config) => {
+  const buildTrigger = (config, menuId) => {
     const trigger = document.createElement("button");
     trigger.type = "button";
     trigger.className = "gitlink-widget-trigger";
     trigger.setAttribute("aria-expanded", "false");
-    trigger.setAttribute("aria-controls", "gitlink-widget-menu");
+    trigger.setAttribute("aria-controls", menuId);
     trigger.setAttribute("aria-label", config.menuLabel);
 
     const platformIcon = buildIcon(config.icon, 20, config.icons);
@@ -192,9 +193,9 @@
     return trigger;
   };
 
-  const buildDropdown = (config) => {
+  const buildDropdown = (config, menuId) => {
     const dropdown = document.createElement("div");
-    dropdown.id = "gitlink-widget-menu";
+    dropdown.id = menuId;
     dropdown.className = "gitlink-widget-dropdown";
     dropdown.setAttribute("aria-hidden", "true");
 
@@ -227,15 +228,17 @@
     return dropdown;
   };
 
-  const buildWidget = (config) => {
-    const widget = document.createElement("li");
-    widget.className = "nav-item";
+  // The first widget on a page keeps the historical `gitlink-widget` id; any
+  // further placeholder gets a suffixed one so ids stay unique.
+  const buildWidget = (config, index) => {
+    const rootId = index === 0 ? "gitlink-widget" : "gitlink-widget-" + index;
+    const menuId = rootId + "-menu";
     const root = document.createElement("div");
-    root.id = "gitlink-widget";
-    root.appendChild(buildTrigger(config));
-    root.appendChild(buildDropdown(config));
-    widget.appendChild(root);
-    return widget;
+    root.id = rootId;
+    root.className = "gitlink-widget";
+    root.appendChild(buildTrigger(config, menuId));
+    root.appendChild(buildDropdown(config, menuId));
+    return root;
   };
 
   const showStats = (widget, stats, config) => {
@@ -259,17 +262,19 @@
     }
   };
 
-  const loadStats = (widget, config) => {
-    if (!config.api) return;
+  // The in-flight request, shared by every widget on the page (they all read
+  // the same configuration) so several placeholders make one API call instead
+  // of racing each other before the cache is written.
+  let pendingStats = null;
 
+  const fetchStats = (config) => {
     // Read + parse the cache once; branch on freshness so the stale-fallback
     // path does not re-read and re-parse the same entry.
     const cached = readCache(config.cacheKey);
     if (cached && Date.now() - cached.timestamp <= CACHE_DURATION) {
-      showStats(widget, cached, config);
-      return;
+      return Promise.resolve(cached);
     }
-    const stale = cached;
+    if (pendingStats) return pendingStats;
 
     const options = { headers: config.api.headers || {} };
     // Bound the request so a slow API falls back to the stale cache instead
@@ -278,7 +283,7 @@
       options.signal = AbortSignal.timeout(8000);
     }
 
-    fetch(config.api.endpoint, options)
+    const request = fetch(config.api.endpoint, options)
       .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
       .then((data) => {
         const stats = {
@@ -287,9 +292,16 @@
           timestamp: Date.now(),
         };
         writeCache(config.cacheKey, stats);
-        showStats(widget, stats, config);
+        return stats;
       })
-      .catch(() => showStats(widget, stale || { stars: "?", forks: "?" }, config));
+      .catch(() => cached || { stars: "?", forks: "?" });
+    pendingStats = request;
+    return request;
+  };
+
+  const loadStats = (widget, config) => {
+    if (!config.api) return;
+    fetchStats(config).then((stats) => showStats(widget, stats, config));
   };
 
   const setupDropdown = (widget) => {
@@ -324,6 +336,31 @@
     });
   };
 
+  // Replace one placeholder anchor with a widget. Only the anchor goes, so
+  // whatever Quarto wrapped it in (`li.nav-item`, `li.sidebar-item >
+  // div.sidebar-item-container`, `div.sidebar-tools-main`) is preserved, and
+  // the widget inherits the spacing and colours of its neighbours.
+  const mountWidget = (anchor, index, config) => {
+    const root = buildWidget(config, index);
+
+    // The tools row is a horizontal strip of icon-sized controls; flag it so
+    // the CSS can stack the widget above the search and colour-scheme
+    // controls instead of squeezing the counts in beside them.
+    const tools = anchor.closest(".sidebar-tools-main, .sidebar-tools-collapse");
+    if (tools) {
+      tools.classList.add("gitlink-widget-tools");
+    } else if (anchor.closest("#quarto-sidebar")) {
+      // A sidebar navigation item is as wide as the sidebar and sits in its
+      // scroll container, so its menu expands inline rather than overlaying.
+      root.classList.add("gitlink-widget-sidebar");
+    }
+
+    anchor.replaceWith(root);
+
+    loadStats(root, config);
+    setupDropdown(root);
+  };
+
   document.addEventListener("DOMContentLoaded", function () {
     const config = readConfig();
     if (!config) return;
@@ -331,14 +368,7 @@
     // Quarto rewrites the placeholder href to a relative path
     // (`./#gitlink-widget` at the root, `../#gitlink-widget` deeper), so
     // match the fragment suffix rather than an exact href.
-    const anchor = document.querySelector('a[href$="#gitlink-widget"]');
-    if (!anchor) return;
-    const slot = anchor.closest("li");
-    if (!slot) return;
-
-    const widget = buildWidget(config);
-    slot.replaceWith(widget);
-    loadStats(widget, config);
-    setupDropdown(widget);
+    const anchors = document.querySelectorAll('a[href$="#gitlink-widget"]');
+    anchors.forEach((anchor, index) => mountWidget(anchor, index, config));
   });
 })();
