@@ -224,8 +224,13 @@
    tools (colour-scheme toggle, reader toggle, overlay search). The marker
    class is set by widget.js on whichever tools container the placeholder was
    in; the id keeps this ahead of Quarto's own `.sidebar-tools-main` rather
-   than relying on stylesheet order. */
+   than relying on stylesheet order.
+
+   The row is also the containing block for the overlay menu below. It spans
+   the sidebar, where the centred trigger does not, so anchoring the menu here
+   is what keeps it inside the column. */
 #quarto-sidebar .gitlink-widget-tools {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -241,9 +246,12 @@
 
 /* The widget sits below the icon tools (colour-scheme and reader toggles) and
    above the search control, whether search is the sidebar field below the row
-   or an overlay button inside it. */
+   or an overlay button inside it. `position: static` hands the menu's
+   containing block up to the row: the widget is `position: relative` by
+   default, which would otherwise anchor the menu to the trigger pill. */
 .gitlink-widget-tools .gitlink-widget {
   order: 1;
+  position: static;
 }
 
 .gitlink-widget-tools #quarto-search {
@@ -252,14 +260,24 @@
 
 /* A tool sits in a strip of icon-sized controls, where an inline menu would
    be laid out as another flex item beside them, so it keeps the overlay menu.
-   The menu is anchored to the trigger's left edge and takes its content width
-   (no 14rem floor) so it stays inside the sidebar, which clips overflow
-   rather than scrolling sideways. */
+
+   Quarto's sidebar does not clip: it sets `overflow-y: auto` and leaves
+   `overflow-x` at `visible`, which computes to `auto`, so a menu wider than
+   the column scrolls it sideways instead. The menu is hidden with
+   `visibility` rather than `display`, so it takes part in layout even while
+   shut and the scrollbar is there before anything is opened.
+
+   Stretching it between both edges of the row (which the rule above made the
+   containing block) is what bounds it: the trigger is centred, so anchoring
+   to the trigger left the menu running past the column's right edge. `width`
+   has to give way with it, since a specified width over-constrains an
+   absolutely positioned box and `right` is the offset that gets dropped, and
+   the 14rem floor has to go for the same reason on a narrow sidebar. */
 .gitlink-widget-tools .gitlink-widget-dropdown {
   left: 0;
-  right: auto;
+  right: 0;
   min-width: 0;
-  width: max-content;
+  width: auto;
 }
 
 /* The collapsed navbar-nav is a Bootstrap `.navbar-nav-scroll` region
