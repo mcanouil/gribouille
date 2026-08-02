@@ -138,16 +138,21 @@ function M.reset_head_injection()
   head_injected = false
 end
 
---- Per-document cache subdirectory derived from the input file stem.
---- @return string Cache subdirectory (e.g. ".quarto/typst-render/index")
-function M.doc_cache_subdir()
-  local doc_stem = 'default'
+--- Stem of the document being rendered, used to namespace per-document files.
+--- @return string Document stem (e.g. "index"), or "default" when unknown
+function M.doc_stem()
   local input_file = quarto.doc.input_file
   if input_file and input_file ~= '' then
     local input_name = pandoc.path.filename(input_file)
-    doc_stem = input_name:match('^(.+)%.[^.]+$') or input_name
+    return input_name:match('^(.+)%.[^.]+$') or input_name
   end
-  return pandoc.path.join({ '.quarto/typst-render', doc_stem })
+  return 'default'
+end
+
+--- Per-document cache subdirectory derived from the input file stem.
+--- @return string Cache subdirectory (e.g. ".quarto/typst-render/index")
+function M.doc_cache_subdir()
+  return pandoc.path.join({ '.quarto/typst-render', M.doc_stem() })
 end
 
 return M

@@ -42,8 +42,12 @@ end
 --- @param key string The metadata key to retrieve
 --- @return string|nil The metadata value as a string, or nil if not found
 --- @usage local repo = M.get_metadata_value(meta, "github", "repository-name")
+--- @note A boolean `false` is a value, not an absence, so the test is against
+---   `nil` rather than truthiness. Stringifying it yields "false", which is what
+---   a caller comparing against the string form already expects.
 function M.get_metadata_value(meta, extension_name, key)
-  if meta['extensions'] and meta['extensions'][extension_name] and meta['extensions'][extension_name][key] then
+  if meta['extensions'] and meta['extensions'][extension_name]
+      and meta['extensions'][extension_name][key] ~= nil then
     return str.stringify(meta['extensions'][extension_name][key])
   end
   return nil
@@ -173,6 +177,44 @@ function M.get_options(spec)
   end
 
   return result
+end
+
+-- ============================================================================
+-- PROJECT METADATA UTILITIES
+-- ============================================================================
+
+--- Get repo-url from Quarto project metadata via QUARTO_EXECUTE_INFO.
+--- Reads the JSON file pointed to by the QUARTO_EXECUTE_INFO environment variable
+--- and extracts repo-url from website or book metadata.
+--- @return string|nil The repo-url value, or nil if not available
+function M.get_project_repo_url()
+  local path = os.getenv("QUARTO_EXECUTE_INFO")
+  if not path then return nil end
+
+  local file = io.open(path, "r")
+  if not file then return nil end
+
+  local content = file:read("*a")
+  file:close()
+
+  if str.is_empty(content) then return nil end
+
+  local ok, info = pcall(quarto.json.decode, content)
+  if not ok or not info then return nil end
+
+  local format_meta = info["format"] and info["format"]["metadata"]
+  if not format_meta then return nil end
+
+  -- Try website.repo-url first, then book.repo-url
+  local repo_url = nil
+  if format_meta["website"] and format_meta["website"]["repo-url"] then
+    repo_url = format_meta["website"]["repo-url"]
+  elseif format_meta["book"] and format_meta["book"]["repo-url"] then
+    repo_url = format_meta["book"]["repo-url"]
+  end
+
+  if str.is_empty(repo_url) then return nil end
+  return repo_url
 end
 
 -- ============================================================================

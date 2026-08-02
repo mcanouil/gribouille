@@ -141,13 +141,14 @@ options:
     description: "Horizontal alignment for the rendered image block."
   output-directory:
     type: string
-    description: "Default output directory for saving compiled images. Per-block output-filename paths are resolved relative to this directory."
+    default: "./assets/typst-render"
+    description: "Default output directory for saving compiled images, resolved relative to the document directory. Images named from a label or a block counter are written to a subdirectory named after the document, so two documents in the same directory do not overwrite each other. Per-block output-filename paths are resolved relative to this directory, without that subdirectory. Set to an empty string to write no image files, leaving them in the render cache."
     completion:
       type: directory
   output-source:
     type: boolean
     default: false
-    description: "Also write the compiled Typst source (preamble + colour bindings + user code) next to each saved image, using the same stem with a .typ extension. Requires output-directory or output-filename to take effect."
+    description: "Also write the compiled Typst source (preamble + colour bindings + user code) next to each saved image, using the same stem with a .typ extension. Has no effect when image saving is disabled with an empty output-directory."
 
 # Per-block comment+pipe attributes (//| key: value).
 # These are parsed from the code block text, not from element attributes.
@@ -196,18 +197,18 @@ attributes:
         extensions: [.typ]
     output-directory:
       type: string
-      description: "Output directory for this block, overrides the global output-directory."
+      description: "Output directory for this block, overrides the global output-directory. Set to an empty string to write no image file for this block."
       completion:
         type: directory
     output-filename:
       type: string
-      description: "Path to save the compiled image. Leading '/' means project root (ignores output-directory). Otherwise resolved relative to output-directory. Auto-generated from label or block counter if omitted."
+      description: "Path to save the compiled image. Leading '/' means project root (ignores output-directory). Otherwise resolved relative to output-directory, without the per-document subdirectory. Auto-generated from label or block counter if omitted."
       completion:
         type: file
         extensions: [.png, .svg, .pdf]
     output-source:
       type: boolean
-      description: "Also write the compiled Typst source for this block next to its saved image. Requires output-directory or output-filename to take effect."
+      description: "Also write the compiled Typst source for this block next to its saved image. Has no effect when image saving is disabled with an empty output-directory."
     echo:
       type: [boolean, string]
       enum: [true, false, fenced]

@@ -109,9 +109,8 @@ local function colour_to_hex(value)
 end
 
 --- Read a boolean metadata value with a default.
---- `get_metadata_value()` returns nil for boolean `false` (its truthy guard
---- treats false as missing), so this helper reads the raw value directly
---- and coerces it via `tostring`.
+--- Reads the raw value rather than going through `get_metadata_value()`, so a
+--- boolean, a quoted string, and a bare YAML `false` all resolve the same way.
 --- @param gitlink_meta table|nil The `extensions.gitlink` metadata sub-table
 --- @param key string The option key
 --- @param default boolean The default when the option is absent

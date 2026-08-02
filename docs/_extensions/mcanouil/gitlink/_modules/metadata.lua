@@ -1,5 +1,5 @@
 --- MC Metadata - Extension configuration and metadata access for Quarto Lua filters and shortcodes
---- @module metadata
+--- @module "metadata"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
@@ -42,8 +42,12 @@ end
 --- @param key string The metadata key to retrieve
 --- @return string|nil The metadata value as a string, or nil if not found
 --- @usage local repo = M.get_metadata_value(meta, "github", "repository-name")
+--- @note A boolean `false` is a value, not an absence, so the test is against
+---   `nil` rather than truthiness. Stringifying it yields "false", which is what
+---   a caller comparing against the string form already expects.
 function M.get_metadata_value(meta, extension_name, key)
-  if meta['extensions'] and meta['extensions'][extension_name] and meta['extensions'][extension_name][key] then
+  if meta['extensions'] and meta['extensions'][extension_name]
+      and meta['extensions'][extension_name][key] ~= nil then
     return str.stringify(meta['extensions'][extension_name][key])
   end
   return nil

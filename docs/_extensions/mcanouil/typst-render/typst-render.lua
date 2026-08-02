@@ -44,7 +44,7 @@ local DEFAULTS = {
   cache = true,
   ['cache-refresh'] = false,
   file = nil,
-  ['output-directory'] = nil,
+  ['output-directory'] = './assets/typst-render',
   ['output-filename'] = nil,
   ['output-source'] = false,
   input = nil,
@@ -561,8 +561,15 @@ local function resolve_preamble_entry(value)
     return nil
   end
   if value:match('%.typ$') then
+    -- Every block and every inline expression resolves the preamble, so the
+    -- file is read once per document through the shared cache rather than once
+    -- per unit. It is cleared for each document during the Meta pass.
     local file_path = paths.resolve_project_path(value)
-    local content = read_file(file_path)
+    local content = read_file_cache[file_path]
+    if content == nil then
+      content = read_file(file_path)
+      read_file_cache[file_path] = content or false
+    end
     if content then
       return content
     end
@@ -803,6 +810,30 @@ local function build_typst_source(code, opts, include_page)
   return table.concat(parts, '\n')
 end
 
+--- Build the inner Typst source for `output: asis` pass-through.
+--- Unlike build_typst_source there is no `#set page(...)`: the code is emitted
+--- into the document Typst is already laying out, so it inherits the page.
+--- @param code string User Typst code
+--- @param opts table Merged options (colours must be plain strings)
+--- @return string Typst source to place inside a `#[ ... ]` scope
+local function build_asis_inner(code, opts)
+  local parts = {}
+  inject_colour_vars(parts, opts)
+  local define_preamble = build_define_preamble()
+  if define_preamble then
+    parts[#parts + 1] = define_preamble
+  end
+  if opts.foreground then
+    parts[#parts + 1] = '#set text(fill: ' .. opts.foreground .. ')'
+  end
+  local preamble = resolve_preamble(opts.preamble)
+  if preamble then
+    parts[#parts + 1] = preamble
+  end
+  parts[#parts + 1] = code
+  return table.concat(parts, '\n')
+end
+
 --- Build a human-readable cache file stem from label or block number and a
 --- content hash.  Returns e.g. "typst-fig-my-diagram-a1b2c3d4" or "typst-block-3-a1b2c3d4".
 --- @param source string Full Typst source
@@ -933,7 +964,8 @@ end
 local function resolve_output_path(global_dir, block_dir, block_filename, label, counter_name, img_format)
   -- Determine the filename
   local filename = block_filename
-  if not filename or filename == '' then
+  local auto_named = not filename or filename == ''
+  if auto_named then
     -- Auto-generate from label or counter
     local stem = (type(label) == 'string' and label ~= '') and label or counter_name
     filename = stem .. '.' .. img_format
@@ -954,8 +986,13 @@ local function resolve_output_path(global_dir, block_dir, block_filename, label,
     return nil
   end
 
-  -- Join directory and filename
-  local joined = pandoc.path.join({ dir, filename })
+  -- Labels and block counters are unique within a document only, so images
+  -- named from them go in a per-document subdirectory; two documents in the
+  -- same directory would otherwise overwrite each other's images. An explicit
+  -- output-filename is the author's own path and is left alone.
+  local joined = auto_named
+      and pandoc.path.join({ dir, typst_cli.doc_stem(), filename })
+      or pandoc.path.join({ dir, filename })
 
   return resolve_to_absolute(joined)
 end
@@ -1433,6 +1470,51 @@ local function create_error_block(id)
   )
 end
 
+--- Resolve the image format to compile for, from the requested one and the
+--- output being written. Shared by blocks and inline expressions so the two
+--- cannot drift: `html` downgrades when it cannot be honoured, and `pdf` is
+--- unusable in HTML output.
+--- @param requested string|nil Format asked for by the options
+--- @return string Effective image format
+local function resolve_compile_format(requested)
+  local img_format = requested
+  if img_format and not VALID_FORMAT_SET[img_format] then
+    log.log_warning(
+      EXTENSION_NAME,
+      'Invalid format "' .. img_format .. '"; auto-detecting from output format.'
+    )
+    img_format = nil
+  end
+  if not img_format then
+    img_format = get_image_format_for_output()
+  end
+
+  -- Native HTML output requires HTML-based output and Typst >= 0.15; otherwise
+  -- fall back to an image format with a warning.
+  img_format = resolve_html_format(img_format)
+
+  if img_format == 'pdf' and quarto.format.is_html_output() then
+    log.log_warning(
+      EXTENSION_NAME,
+      'PDF images are not supported in HTML output. Falling back to PNG.'
+    )
+    img_format = 'png'
+  end
+  return img_format
+end
+
+--- Create an inline error marker for failed Typst compilation.
+--- The inline counterpart of create_error_block; the expression it replaces is
+--- part of a sentence, so the marker has to be an inline element.
+--- @param id string Inline identifier (e.g. typst-inline-2)
+--- @return pandoc.Span Error span
+local function create_error_inline(id)
+  return pandoc.Span(
+    { pandoc.Strong({ pandoc.Str('[typst-render] ' .. compilation_failed_message(id)) }) },
+    pandoc.Attr('', { 'typst-render-error' }, {})
+  )
+end
+
 --- Compile Typst code and produce a result block (image element with alignment).
 --- @param code string User Typst code
 --- @param opts table Resolved options (colours must be plain strings)
@@ -1861,21 +1943,7 @@ local function process_codeblock(el)
     local typst_opts = has_dual_mode_colours(opts)
         and resolve_opts_colours(opts, global_brand_mode)
         or opts
-    local preamble = resolve_preamble(typst_opts.preamble)
-    local parts = {}
-    inject_colour_vars(parts, typst_opts)
-    local define_preamble = build_define_preamble()
-    if define_preamble then
-      parts[#parts + 1] = define_preamble
-    end
-    if typst_opts.foreground then
-      parts[#parts + 1] = '#set text(fill: ' .. typst_opts.foreground .. ')'
-    end
-    if preamble then
-      parts[#parts + 1] = preamble
-    end
-    parts[#parts + 1] = code
-    local inner = table.concat(parts, '\n')
+    local inner = build_asis_inner(code, typst_opts)
     local scoped_code
     if has_custom_block_options(typst_opts) then
       local params = { 'width: 100%' }
@@ -1900,31 +1968,7 @@ local function process_codeblock(el)
     return result
   end
 
-  -- Determine image format
-  local img_format = opts.format
-  if img_format and not VALID_FORMAT_SET[img_format] then
-    log.log_warning(
-      EXTENSION_NAME,
-      'Invalid format "' .. img_format .. '"; auto-detecting from output format.'
-    )
-    img_format = nil
-  end
-  if not img_format then
-    img_format = get_image_format_for_output()
-  end
-
-  -- Native HTML output requires HTML-based output and Typst >= 0.15; otherwise
-  -- fall back to an image format with a warning.
-  img_format = resolve_html_format(img_format)
-
-  -- Warn about PDF in HTML
-  if img_format == 'pdf' and quarto.format.is_html_output() then
-    log.log_warning(
-      EXTENSION_NAME,
-      'PDF images are not supported in HTML output. Falling back to PNG.'
-    )
-    img_format = 'png'
-  end
+  local img_format = resolve_compile_format(opts.format)
 
   -- Dual-mode rendering for HTML/Reveal.js when both light and dark colours are present.
   -- Native HTML output renders once (colours apply via the Typst source, not CSS classes).
@@ -2139,6 +2183,72 @@ local function create_inline_image_element(img_path, opts)
   )
 end
 
+--- Attributes accepted on an inline `{typst}` element, beyond `alt`.
+--- Only options that shape the compilation: everything describing a block
+--- (label, caption, echo, pages, layout, alignment) stays a block option.
+local INLINE_ATTRIBUTES = {
+  'format', 'dpi', 'background', 'foreground', 'cache', 'classes', 'preamble', 'input',
+}
+
+--- Fold the accepted attributes of an inline Code element into merged options.
+--- Values arrive as strings, so `cache` is mapped to a boolean and the colours
+--- go through the same resolution as a per-block override.
+--- @param attrs table|nil Element attributes
+--- @param opts table Merged options, modified in place
+local function apply_inline_attributes(attrs, opts)
+  if not attrs then
+    return
+  end
+  for _, key in ipairs(INLINE_ATTRIBUTES) do
+    local value = attrs[key]
+    if type(value) == 'string' and value ~= '' then
+      if key == 'cache' then
+        opts.cache = value ~= 'false'
+      elseif key == 'input' then
+        opts._block_input = value
+      elseif key == 'background' or key == 'foreground' then
+        -- `auto` reads _brand.yml and may resolve to nothing, so the branches
+        -- stay explicit: an `x and y or z` chain would fall through to the
+        -- literal "auto" when both the brand colour and the default are nil.
+        if value == 'auto' then
+          opts[key] = resolve_colour_config('auto', key) or DEFAULTS[key]
+        else
+          opts[key] = css_colour_to_typst(value)
+        end
+      else
+        opts[key] = value
+      end
+    end
+  end
+end
+
+--- Build the `output: asis` pass-through for an inline expression.
+--- Scoped in `#[ ... ]` so that `#let` and `#set` inside stay local, as they do
+--- for a block. No newline pads the scope: Typst swallows the break after a
+--- code statement but renders one after `#[` as a space in the sentence.
+--- @param code string User Typst code
+--- @param opts table Merged options (colours must be plain strings)
+--- @return pandoc.RawInline Raw Typst inline
+local function create_inline_asis_element(code, opts)
+  -- A blank line inside inline content starts a paragraph; the preamble is the
+  -- one part that can carry them, so runs of newlines collapse to one.
+  local inner = (build_asis_inner(code, opts):gsub('\n%s*\n+', '\n'))
+  local scoped = '#[' .. inner .. ']'
+  if has_custom_block_options(opts) then
+    local params = {}
+    if opts.margin ~= DEFAULTS.margin then
+      params[#params + 1] = 'inset: ' .. opts.margin
+    end
+    if opts.background ~= DEFAULTS.background then
+      params[#params + 1] = 'fill: ' .. opts.background
+    end
+    if #params > 0 then
+      scoped = '#box(' .. table.concat(params, ', ') .. ')[' .. scoped .. ']'
+    end
+  end
+  return pandoc.RawInline('typst', scoped)
+end
+
 --- Process a {typst} inline Code element.
 --- Compiles inline Typst expressions to tightly-cropped images.
 --- @param el pandoc.Code
@@ -2172,60 +2282,121 @@ local function process_inline_code(el)
   end
 
   local opts = cell.merge_options({}, global_config, DEFAULTS)
-  opts.width = 'auto'
-  opts.height = 'auto'
-  opts.margin = '(x: 0.5pt, top: 0.5pt, bottom: 0.25em)'
   opts._inline = true
   opts._alt = (el.attributes and el.attributes['alt'] and el.attributes['alt'] ~= '')
       and el.attributes['alt']
       or code
+  apply_inline_attributes(el.attributes, opts)
 
-  -- Resolve table-valued colours to strings (inline can't do dual-mode rendering)
-  if has_dual_mode_colours(opts) then
-    opts = resolve_opts_colours(opts, global_brand_mode)
-  end
-
+  local do_include = cell.should_include(opts)
   local output_mode = cell.resolve_output_mode(opts)
 
   if output_mode == 'false' then
     return {}
   end
 
-  if output_mode == 'asis' then
-    return pandoc.RawInline('typst', code)
+  -- Nothing to compile: leave the expression as inline code, so the source
+  -- stays readable rather than vanishing from the sentence. With include off
+  -- there is nothing to show at all, as for a block that neither evaluates
+  -- nor echoes.
+  if opts.eval == false then
+    return do_include and el or {}
   end
 
-  local img_format = opts.format
-  if img_format and not VALID_FORMAT_SET[img_format] then
-    log.log_warning(EXTENSION_NAME, 'Invalid inline format "' .. img_format .. '"; auto-detecting.')
-    img_format = nil
+  -- Native Typst output: pass through as a scoped RawInline. Any other writer
+  -- drops raw Typst, so those fall through and compile an image, as blocks do.
+  if output_mode == 'asis' and quarto.format.is_typst_output() then
+    if not do_include then
+      return {}
+    end
+    local typst_opts = has_dual_mode_colours(opts)
+        and resolve_opts_colours(opts, global_brand_mode)
+        or opts
+    return create_inline_asis_element(code, typst_opts)
   end
-  if not img_format then
-    img_format = get_image_format_for_output()
+
+  -- Geometry for the compiled image: a page just big enough for the expression,
+  -- sitting on the text baseline. Set after the pass-through, which uses the
+  -- configured margin instead.
+  opts.width = 'auto'
+  opts.height = 'auto'
+  opts.margin = '(x: 0.5pt, top: 0.5pt, bottom: 0.25em)'
+
+  local img_format = resolve_compile_format(opts.format)
+
+  --- Compile one colour mode and build its inline element.
+  --- Inline expressions carry no label or output-filename, so the image is named
+  --- from the inline counter. A failed copy falls back to the cache path so the
+  --- render still produces an image.
+  --- @param mode_opts table Options with colours resolved to strings
+  --- @param mode_suffix string|nil "-light", "-dark", or nil
+  --- @return pandoc.Inline|nil
+  local function compile_inline(mode_opts, mode_suffix)
+    local source = build_typst_source(code, mode_opts)
+    local pages = compile_typst(source, mode_opts, img_format)
+    if not pages or #pages == 0 then
+      return nil
+    end
+    local img_path = pages[1]
+    local output_path = resolve_output_path(
+      global_config['output-directory'], mode_opts['output-directory'],
+      nil, nil, inline_id, img_format
+    )
+    if output_path then
+      local out_pages = save_output_files({ img_path }, output_path, mode_suffix, img_format)
+      if out_pages then
+        img_path = out_pages[1]
+      end
+      if mode_opts['output-source'] == true then
+        save_source_file(source, output_path, mode_suffix)
+      end
+    end
+    return create_inline_image_element(img_path, mode_opts)
   end
-  img_format = resolve_html_format(img_format)
+
+  local element
   if img_format == 'html' then
+    if has_dual_mode_colours(opts) then
+      log.log_warning(
+        EXTENSION_NAME,
+        'Dual light/dark colours are not supported with format "html"; using the document brand mode.'
+      )
+      opts = resolve_opts_colours(opts, global_brand_mode)
+    end
     local html_source = build_typst_source(code, opts, false)
     local body = compile_typst_html(html_source, opts)
-    if not body then
-      log.log_warning(EXTENSION_NAME, compilation_failed_message(inline_id))
-      return el
+    element = body and create_inline_html_element(typst_cli.strip_paragraph(body), opts) or nil
+  elseif quarto.format.is_html_output() and has_dual_mode_colours(opts) then
+    -- Dual-mode rendering when both light and dark colours are present. Quarto's
+    -- own `light-content` / `dark-content` classes hide the mode that does not
+    -- match the page, and work on inline elements too.
+    local light = compile_inline(resolve_opts_colours(opts, 'light'), '-light')
+    local dark = compile_inline(resolve_opts_colours(opts, 'dark'), '-dark')
+    local inlines = {}
+    if light then
+      inlines[#inlines + 1] = pandoc.Span({ light }, pandoc.Attr('', { 'light-content' }, {}))
     end
-    return create_inline_html_element(typst_cli.strip_paragraph(body), opts)
-  end
-  if img_format == 'pdf' and quarto.format.is_html_output() then
-    img_format = 'png'
+    if dark then
+      inlines[#inlines + 1] = pandoc.Span({ dark }, pandoc.Attr('', { 'dark-content' }, {}))
+    end
+    element = #inlines > 0 and pandoc.Inlines(inlines) or nil
+  else
+    local resolved_opts = has_dual_mode_colours(opts)
+        and resolve_opts_colours(opts, global_brand_mode)
+        or opts
+    element = compile_inline(resolved_opts, nil)
   end
 
-  local full_source = build_typst_source(code, opts)
-  local pages = compile_typst(full_source, opts, img_format)
-
-  if not pages or #pages == 0 then
+  -- Compilation and file-save side effects have run; report a failure once,
+  -- then suppress embedding if include is false.
+  if not element then
     log.log_warning(EXTENSION_NAME, compilation_failed_message(inline_id))
-    return el
+    return create_error_inline(inline_id)
   end
-
-  return create_inline_image_element(pages[1], opts)
+  if not do_include then
+    return {}
+  end
+  return element
 end
 
 --- Remove stale cache files after all blocks have been processed.
