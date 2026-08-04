@@ -36,9 +36,9 @@ website:
   page-footer:
     border: true
     left: |
-      Powered by [{{< iconify simple-icons:quarto title="Quarto Logo" label="Quarto Logo" >}} Quarto](https://quarto.org).
+      Powered by [{{< iconify simple-icons:quarto aria-hidden=true >}} Quarto](https://quarto.org).
     center: |
-      &copy; []{#current-year} [Mickaël CANOUIL](https://mickael.canouil.fr). [{{< iconify octicon:heart-fill-16 title="Heart" label="Heart" >}} Sponsor](https://github.com/sponsors/mcanouil?o=esb).
+      &copy; []{#current-year} [Mickaël CANOUIL](https://mickael.canouil.fr). [{{< iconify octicon:heart-fill-16 aria-hidden=true >}} Sponsor](https://github.com/sponsors/mcanouil?o=esb).
     right: |
       Licence: [MIT](https://github.com/mcanouil/gribouille?tab=MIT-1-ov-file#readme).
 
@@ -50,37 +50,37 @@ website:
     foreground: light
     search: true
     left:
-      # - text: "{{< iconify octicon:home-16 title=\"Home\" label=\"Home\" >}} Home"
+      # - text: "{{< iconify octicon:home-16 aria-hidden=true >}} Home"
       #   href: index.qmd
       #   aria-label: "Home"
-      - text: "{{< iconify octicon:rocket-16 title=\"Get Started\" label=\"Get Started\" >}} Get Started"
+      - text: "{{< iconify octicon:rocket-16 aria-hidden=true >}} Get Started"
         href: get-started/index.qmd
         aria-label: "Get Started"
-      - text: "{{< iconify octicon:book-16 title=\"Guides\" label=\"Guides\" >}} Guides"
+      - text: "{{< iconify octicon:book-16 aria-hidden=true >}} Guides"
         aria-label: "Guides"
         menu:
-          - text: "{{< iconify octicon:paintbrush-16 title=\"Theming\" label=\"Theming\" >}} Theming"
+          - text: "{{< iconify octicon:paintbrush-16 aria-hidden=true >}} Theming"
             href: guides/theming.qmd
-          - text: "{{< iconify octicon:list-unordered-16 title=\"Recipes\" label=\"Recipes\" >}} Recipes"
+          - text: "{{< iconify octicon:list-unordered-16 aria-hidden=true >}} Recipes"
             href: guides/recipes.qmd
-          - text: "{{< iconify octicon:database-16 title=\"Wrangling data\" label=\"Wrangling data\" >}} Wrangling data"
+          - text: "{{< iconify octicon:database-16 aria-hidden=true >}} Wrangling data"
             href: guides/wrangle.qmd
-          - text: "{{< iconify octicon:accessibility-16 title=\"Accessibility\" label=\"Accessibility\" >}} Accessibility"
+          - text: "{{< iconify octicon:accessibility-16 aria-hidden=true >}} Accessibility"
             href: guides/accessibility.qmd
-          - text: "{{< iconify octicon:graph-16 title=\"Benchmarks\" label=\"Benchmarks\" >}} Benchmarks"
+          - text: "{{< iconify octicon:graph-16 aria-hidden=true >}} Benchmarks"
             href: guides/benchmarks.qmd
-          - text: "{{< iconify octicon:copilot-16 title=\"AI Assistants\" label=\"AI Assistants\" >}} AI Assistants"
+          - text: "{{< iconify octicon:copilot-16 aria-hidden=true >}} AI Assistants"
             href: guides/ai-assistants.qmd
-      - text: "{{< iconify octicon:code-16 title=\"Reference\" label=\"Reference\" >}} Reference"
+      - text: "{{< iconify octicon:code-16 aria-hidden=true >}} Reference"
         href: reference/index.qmd
         aria-label: "Reference"
-      - text: "{{< iconify octicon:image-16 title=\"Examples\" label=\"Examples\" >}} Examples"
+      - text: "{{< iconify octicon:image-16 aria-hidden=true >}} Examples"
         href: examples/index.qmd
         aria-label: "Examples"
-      - text: "{{< iconify octicon:megaphone-16 title=\"News\" label=\"News\" >}} News"
+      - text: "{{< iconify octicon:megaphone-16 aria-hidden=true >}} News"
         href: news/index.qmd
         aria-label: "News"
-      - text: "{{< iconify octicon:history-16 title=\"Changelog\" label=\"Changelog\" >}} Changelog"
+      - text: "{{< iconify octicon:history-16 aria-hidden=true >}} Changelog"
         href: changelog.qmd
         aria-label: "Changelog"
     right:
@@ -88,9 +88,9 @@ website:
       # below at load with one entry per version read from the site-root
       # versions.json. Kept apart from the resource links so the list, which grows
       # with each release, never bloats a mixed menu.
-      - text: "{{< iconify octicon:tag-16 title=\"Current version\" label=\"Current version\" >}} {{< env VERSION >}}"
+      - text: "{{< iconify octicon:tag-16 aria-hidden=true >}} {{< env VERSION >}}"
         menu:
-          - text: "{{< iconify octicon:versions-16 title=\"Switch version\" label=\"Switch version\" >}} Versions"
+          - text: "{{< iconify octicon:versions-16 aria-hidden=true >}} Versions"
             href: "#version-switcher"
       # Gitlink widget: the gitlink extension replaces this placeholder at load
       # with a button showing live star/fork counts and a project menu

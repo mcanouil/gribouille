@@ -36,7 +36,7 @@ extensions:
         - text: "Q&A"
           href: "/discussions/categories/q-a"
           icon: question
-        - text: "{{< iconify simple-icons:typst >}} Typst Universe"
+        - text: "{{< iconify simple-icons:typst aria-hidden=true >}} Typst Universe"
           href: "https://typst.app/universe/package/gribouille"
       sponsor: mcanouil
       style-navbar-tools: true
