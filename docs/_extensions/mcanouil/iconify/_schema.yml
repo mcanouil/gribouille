@@ -118,6 +118,12 @@ shortcodes:
       title:
         type: string
         description: "Title attribute for the icon tooltip."
+      aria-hidden:
+        type: string
+        description: "Marks the icon as decorative, omitting role, aria-label and title so assistive technology skips it. Use when visible text beside the icon already carries the meaning."
+        enum:
+          - "true"
+          - "false"
       fallback:
         type: string
         description: "Text or emoji shown when the icon cannot be loaded (e.g. unknown name, offline, CDN unreachable)."
@@ -166,6 +172,12 @@ shortcodes:
       title:
         type: string
         description: "Title attribute for the icon tooltip."
+      aria-hidden:
+        type: string
+        description: "Marks the icon as decorative, omitting role, aria-label and title so assistive technology skips it."
+        enum:
+          - "true"
+          - "false"
       fallback:
         type: string
         description: "Text or emoji shown when the icon cannot be loaded."

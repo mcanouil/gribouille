@@ -172,6 +172,38 @@ local function is_valid_iconify_name(value)
   return value:match('^[a-z0-9-]+$') ~= nil
 end
 
+--- Resolve the `aria-hidden` attribute, which marks an icon as decorative.
+--- A decorative icon carries no `role`, `aria-label` or `title`, so assistive
+--- technology skips it entirely. Read from the shortcode arguments alone:
+--- whether an icon is decorative depends on whether visible text sits beside
+--- that icon, which no document-level default can know.
+--- Accepts only 'true' and 'false'; anything else is ignored, and warns when
+--- `warn` is set, so a typo cannot silently strip an icon's accessible name.
+--- The `quarto` shortcode resolves the value without warning, since the icon
+--- it builds passes through this function again on the way out.
+--- @param kwargs table<string, any> Key-value options for the icon
+--- @param warn boolean Whether to warn about an unrecognised value
+--- @return boolean
+local function is_decorative(kwargs, warn)
+  --- @type string
+  local value = str.stringify(kwargs['aria-hidden'])
+  if str.is_empty(value) or value == 'false' then
+    return false
+  end
+  if value == 'true' then
+    return true
+  end
+  if warn then
+    log.log_warning(
+      EXTENSION_NAME,
+      'Ignoring invalid aria-hidden value "' .. value .. '". ' ..
+      'Use aria-hidden="true" to mark an icon as decorative, or "false". ' ..
+      'The icon keeps its accessible name.'
+    )
+  end
+  return false
+end
+
 --- Get an iconify option from arguments or metadata.
 --- Resolution order: positional/named kwargs first, then nested
 --- `extensions.iconify.<key>`, then the deprecated top-level `iconify.<key>`
@@ -208,10 +240,11 @@ end
 --- @param icon string Resolved icon name
 --- @param set string Resolved icon set
 --- @param default_label string Fallback accessibility label
+--- @param decorative boolean Whether the icon is marked decorative
 --- @param kwargs table<string, any> Key-value options for the icon
 --- @param meta table<string, any> Document metadata
 --- @return any Pandoc RawInline (Typst), Str (fallback) or Null
-local function render_typst(icon, set, default_label, kwargs, meta)
+local function render_typst(icon, set, default_label, decorative, kwargs, meta)
   --- @type string
   local size_raw = resolve_size_value(get_iconify_options('size', kwargs, meta))
   --- @type string|nil
@@ -246,10 +279,15 @@ local function render_typst(icon, set, default_label, kwargs, meta)
   local rotate = get_iconify_options('rotate', kwargs, meta)
   if not str.is_empty(rotate) then params.rotate = rotate end
 
+  --- A decorative icon carries no `alt`, which the typst module omits when the
+  --- value is empty.
   --- @type string
-  local alt = str.stringify(kwargs['label'])
-  if str.is_empty(alt) then alt = str.stringify(kwargs['title']) end
-  if str.is_empty(alt) then alt = default_label end
+  local alt = ''
+  if not decorative then
+    alt = str.stringify(kwargs['label'])
+    if str.is_empty(alt) then alt = str.stringify(kwargs['title']) end
+    if str.is_empty(alt) then alt = default_label end
+  end
 
   --- @type string
   local inline = get_iconify_options('inline', kwargs, meta)
@@ -347,8 +385,20 @@ local function iconify(args, kwargs, meta)
   --- @type string
   local default_label = 'Icon ' .. icon .. ' from ' .. set .. ' Iconify.design set.'
 
+  --- @type boolean
+  local decorative = is_decorative(kwargs, true)
+  if decorative and (not str.is_empty(str.stringify(kwargs['label'])) or
+        not str.is_empty(str.stringify(kwargs['title']))) then
+    log.log_warning(
+      EXTENSION_NAME,
+      'Icon "' .. set .. ':' .. icon .. '" sets aria-hidden="true" together ' ..
+      'with label or title. A decorative icon carries neither, so both are ' ..
+      'discarded. Drop aria-hidden to keep them.'
+    )
+  end
+
   if is_typst then
-    return render_typst(icon, set, default_label, kwargs, meta)
+    return render_typst(icon, set, default_label, decorative, kwargs, meta)
   end
 
   ensure_html_deps()
@@ -369,23 +419,31 @@ local function iconify(args, kwargs, meta)
     attributes = attributes .. ' style="' .. style .. '"'
   end
 
+  --- A decorative icon is hidden from assistive technology, so it carries
+  --- `aria-hidden` in place of `role`, and neither `aria-label` nor `title`.
   --- @type string
-  local aria_label = str.stringify(kwargs['label'])
-  if str.is_empty(aria_label) then
-    aria_label = ' aria-label="' .. default_label .. '"'
+  local role = ' role="img"'
+  if decorative then
+    role = ' aria-hidden="true"'
   else
-    aria_label = ' aria-label="' .. aria_label .. '"'
-  end
+    --- @type string
+    local aria_label = str.stringify(kwargs['label'])
+    if str.is_empty(aria_label) then
+      aria_label = ' aria-label="' .. default_label .. '"'
+    else
+      aria_label = ' aria-label="' .. aria_label .. '"'
+    end
 
-  --- @type string
-  local title = str.stringify(kwargs['title'])
-  if str.is_empty(title) then
-    title = ' title="' .. default_label .. '"'
-  else
-    title = ' title="' .. title .. '"'
-  end
+    --- @type string
+    local title = str.stringify(kwargs['title'])
+    if str.is_empty(title) then
+      title = ' title="' .. default_label .. '"'
+    else
+      title = ' title="' .. title .. '"'
+    end
 
-  attributes = attributes .. aria_label .. title
+    attributes = attributes .. aria_label .. title
+  end
 
   --- @type string
   local width = get_iconify_options('width', kwargs, meta)
@@ -427,10 +485,17 @@ local function iconify(args, kwargs, meta)
 
   if not str.is_empty(fallback) then
     ensure_fallback_runtime()
+    --- The fallback text is a sibling of the icon rather than a descendant,
+    --- so hiding the icon alone would leave the revealed text announced.
+    --- @type string
+    local wrapper_hidden = ''
+    if decorative then
+      wrapper_hidden = ' aria-hidden="true"'
+    end
     return pandoc.RawInline(
       'html',
-      '<span class="iconify-icon-wrapper" data-iconify-fallback>' ..
-      '<iconify-icon role="img"' .. attributes .. '></iconify-icon>' ..
+      '<span class="iconify-icon-wrapper" data-iconify-fallback' .. wrapper_hidden .. '>' ..
+      '<iconify-icon' .. role .. attributes .. '></iconify-icon>' ..
       '<span class="iconify-icon-fallback" hidden>' .. fallback .. '</span>' ..
       '</span>'
     )
@@ -438,7 +503,7 @@ local function iconify(args, kwargs, meta)
 
   return pandoc.RawInline(
     'html',
-    '<iconify-icon role="img"' .. attributes .. '></iconify-icon>'
+    '<iconify-icon' .. role .. attributes .. '></iconify-icon>'
   )
 end
 
@@ -452,8 +517,12 @@ local function iconify_quarto(args, kwargs, meta)
   local quarto_args = { 'simple-icons:quarto' }
   --- @type table<string, any>
   local quarto_kwargs = kwargs or {}
-  quarto_kwargs['label'] = 'Quarto icon'
-  quarto_kwargs['title'] = 'Quarto icon'
+  -- A decorative icon carries neither, and setting them here would re-introduce
+  -- exactly what `aria-hidden` removes.
+  if not is_decorative(quarto_kwargs, false) then
+    quarto_kwargs['label'] = 'Quarto icon'
+    quarto_kwargs['title'] = 'Quarto icon'
+  end
   --- @type string
   local quarto_colour = 'color:#74aadb;'
 
