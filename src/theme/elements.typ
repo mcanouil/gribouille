@@ -412,6 +412,10 @@
 /// fill or stroke is set, so they reserve plot padding on their own.
 /// `strip-background` ignores both fields -- the facet band has no
 /// surrounding slot to grow or reserve into.
+/// On `legend-background`, `inset` only grows a rect that actually paints
+/// (a fill or a stroke is set); an inside-panel guide additionally keeps
+/// its painted rect, plus any `outset`, within the panel rather than
+/// letting it overflow past an edge-flush alignment.
 ///
 /// Pass the result to \@theme under keys like `panel-background`.
 ///
@@ -480,6 +484,26 @@
 ///   theme: theme(legend-background: element-rect(
 ///     fill: rgb("#f7f0e7"),
 ///     inset: margin(top: 0.3em, right: 0.4em, bottom: 0.3em, left: 0.4em),
+///   )),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@examples An inside-panel legend keeps its painted background within
+/// the panel even flush against a corner.
+/// ```
+/// //| alt: "Scatter plot of y against x with a tinted, stroked legend background placed inside the bottom-right corner of the panel, its backdrop staying within the panel edges."
+/// #let d = range(0, 10).map(i => (x: i, y: i * 0.5, k: if calc.rem(i, 2) == 0 { "a" } else { "b" }))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y", colour: "k"),
+///   layers: (geom-point(size: 2pt),),
+///   guides: guides(colour: guide-legend(position: bottom + right)),
+///   theme: theme(legend-background: element-rect(
+///     fill: rgb("#f7f0e7"),
+///     colour: rgb("#cc7a00"),
+///     stroke: 0.6pt,
 ///   )),
 ///   width: 10cm,
 ///   height: 6cm,

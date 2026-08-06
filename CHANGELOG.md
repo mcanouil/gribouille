@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changes
+
+- fix: an inside-panel legend background stays within the panel: its painted `inset` no longer overflows past an edge-flush alignment, and `legend-background`'s `outset` now spaces the backdrop off the panel edge instead of being silently ignored. (#232)
+
 ## 0.6.0 (2026-07-28)
 
 ### Breaking changes

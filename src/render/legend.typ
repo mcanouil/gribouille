@@ -20,7 +20,7 @@
 #import "../theme/defaults.typ": resolve-colour
 #import "../theme/theme.typ": (
   _line-stroke, _rect-outset-cm, _rect-style, _text-args, _text-style,
-  resolve-geom-defaults,
+  _zero-margin-cm, resolve-geom-defaults,
 )
 #import "../guide/draw-key.typ": default-key-for, draw-glyph
 #import "../guide/legend.typ": _normalise-position
@@ -1684,30 +1684,61 @@
   )
 }
 
-// Paint the legend-background rect when the theme sets a fill or a stroke;
-// otherwise stay silent so plots without a themed legend backdrop look the
-// same as before. `inset` grows the rect outward from the guide-stack
-// bbox so the rectangle frames the legend with extra inner padding; `%`
-// inset resolves against the bbox dims (so 5% means 5% of the legend's
-// own width / height).
-#let _draw-bg(theme, ctx, x0, y0, x1, y1) = {
+// Resolve the legend-background geometry for a guide-stack bbox of size
+// `w` by `h`, once, so both the painted rect and the space reserved for it
+// come from a single `_rect-style` call. `painted` mirrors the condition
+// `_draw-bg` used to gate drawing on; `pad` is the `inset` the painted rect
+// grows outward by, zeroed when nothing paints (an absent rect has no
+// padding to give); `gap` is the `outset`, resolved whether or not the
+// rect paints, matching `_rect-outset-cm` in chrome.typ so `outset`
+// reserves whitespace on its own. `%` inset resolves against the bbox
+// dims (so 5% means 5% of the legend's own width / height); `%` outset
+// resolves against the plot canvas.
+#let _bg-metrics(theme, ctx, w, h) = {
   let bg = _rect-style(
     theme,
     "legend-background",
-    inset-ref-w: x1 - x0,
-    inset-ref-h: y1 - y0,
+    inset-ref-w: w,
+    inset-ref-h: h,
     outset-ref-w: ctx.at("canvas-w", default: 0),
     outset-ref-h: ctx.at("canvas-h", default: 0),
   )
-  if bg.fill != none or bg.stroke != none {
-    let d = bg.inset-cm
-    cetz.draw.rect(
-      (x0 - d.left, y0 - d.bottom),
-      (x1 + d.right, y1 + d.top),
-      fill: bg.fill,
-      stroke: bg.stroke,
-    )
-  }
+  let painted = bg.fill != none or bg.stroke != none
+  (
+    fill: bg.fill,
+    stroke: bg.stroke,
+    painted: painted,
+    pad: if painted { bg.inset-cm } else { _zero-margin-cm },
+    gap: bg.outset-cm,
+  )
+}
+
+// Per-side cm the legend-background claims outside the guide bbox: the
+// painted inset plus the reserved outset.
+#let _bg-edge-cm(bg) = (
+  top: bg.pad.top + bg.gap.top,
+  right: bg.pad.right + bg.gap.right,
+  bottom: bg.pad.bottom + bg.gap.bottom,
+  left: bg.pad.left + bg.gap.left,
+)
+
+// Paint the legend-background rect resolved by `_bg-metrics`, grown
+// outward from the bbox corners `(x0, y0)`-`(x1, y1)` by `pad`. Stays
+// silent when nothing paints, so plots without a themed legend backdrop
+// look the same as before.
+#let _paint-bg(bg, x0, y0, x1, y1) = {
+  if not bg.painted { return }
+  let d = bg.pad
+  cetz.draw.rect(
+    (x0 - d.left, y0 - d.bottom),
+    (x1 + d.right, y1 + d.top),
+    fill: bg.fill,
+    stroke: bg.stroke,
+  )
+}
+
+#let _draw-bg(theme, ctx, x0, y0, x1, y1) = {
+  _paint-bg(_bg-metrics(theme, ctx, x1 - x0, y1 - y0), x0, y0, x1, y1)
 }
 
 #let _draw-side(
@@ -1807,6 +1838,31 @@
   }
 }
 
+// Anchor an inside-panel guide so its legend-background -- the painted rect
+// grown by `pad`, plus the `gap` reserved around it -- lands inside
+// `panel-rect` instead of overflowing it. `edge` is the per-side cm dict
+// from `_bg-edge-cm`; with equal sides the centred branches reduce to the
+// plain panel centre, and with zero edges every branch reproduces the
+// content-box-only anchor. Returns `(x, top)`: the west and north edges of
+// the guide bbox.
+#let _inside-anchor(panel-rect, w, h, h-align, v-align, edge) = {
+  let ox = if h-align == right {
+    panel-rect.x + panel-rect.w - w - edge.right
+  } else if h-align == center {
+    panel-rect.x + (panel-rect.w - w + edge.left - edge.right) / 2
+  } else {
+    panel-rect.x + edge.left
+  }
+  let oy-top = if v-align == bottom {
+    panel-rect.y + h + edge.bottom
+  } else if v-align == horizon {
+    panel-rect.y + (panel-rect.h + h + edge.bottom - edge.top) / 2
+  } else {
+    panel-rect.y + panel-rect.h - edge.top
+  }
+  (x: ox, top: oy-top)
+}
+
 #let _draw-inside(g, ctx, panel-rect, theme) = {
   let title-h = _legend-title-h(theme)
   let align = g.placement.align
@@ -1819,25 +1875,19 @@
     if a == none { top } else { a }
   }
 
-  let ox = if h-align == right {
-    panel-rect.x + panel-rect.w - g.width
-  } else if h-align == center {
-    panel-rect.x + (panel-rect.w - g.width) / 2
-  } else {
-    panel-rect.x
-  }
-  let oy-top = if v-align == bottom {
-    panel-rect.y + g.height
-  } else if v-align == horizon {
-    panel-rect.y + (panel-rect.h + g.height) / 2
-  } else {
-    panel-rect.y + panel-rect.h
-  }
+  let bg = _bg-metrics(theme, ctx, g.width, g.height)
+  let anchor = _inside-anchor(
+    panel-rect,
+    g.width,
+    g.height,
+    h-align,
+    v-align,
+    _bg-edge-cm(bg),
+  )
+  let ox = anchor.x + _resolve-offset(g.placement.dx, panel-rect.w)
+  let oy-top = anchor.top - _resolve-offset(g.placement.dy, panel-rect.h)
 
-  ox += _resolve-offset(g.placement.dx, panel-rect.w)
-  oy-top -= _resolve-offset(g.placement.dy, panel-rect.h)
-
-  _draw-bg(theme, ctx, ox, oy-top - g.height, ox + g.width, oy-top)
+  _paint-bg(bg, ox, oy-top - g.height, ox + g.width, oy-top)
   _draw-guide-body(g, ctx, ox, oy-top, theme, title-h)
 }
 
