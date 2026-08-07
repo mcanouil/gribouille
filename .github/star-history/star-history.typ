@@ -52,7 +52,7 @@
 
 #let star-max = stars.map(row => row.stars).fold(0, calc.max)
 
-// One releases dataset (minor/major only, patch dropped): x in epoch days, y just
+// One releases dataset (minor/major only, patch dropped): x as an ISO date, y just
 // above the x-axis baseline so the tiny tags sit clear of the trail and the peak.
 #let releases = (
   csv("release-history.csv", row-type: dictionary)
@@ -158,7 +158,7 @@
       colour: palette.muted,
       fill: palette.cloud.transparentize(35%),
       stroke: 0.25pt,
-      size: 8pt,
+      size: 7.5pt,
       inset: 3pt,
       radius: 5pt,
       anchor: "west",
@@ -227,7 +227,7 @@
     annotate(
       "typst",
       x: head-x - 3.5,
-      y: 115,
+      y: 98,
       label: [#align(right)[
         +#str(peak-jump) in a day \
         #text(size: 0.75em)[Hacker News Front Page]
@@ -240,19 +240,19 @@
     annotate(
       "label",
       x: "2026-04-23",
-      y: 11.5,
+      y: 137,
       label: "Quietly built in private",
       colour: palette.ink,
       fill: palette.cloud.transparentize(20%),
       stroke: 0.6pt + palette.cloud-edge.transparentize(30%),
-      size: 12pt,
+      size: 10pt,
       inset: 6pt,
       radius: 10pt,
     ),
     annotate(
       "label",
       x: "2026-05-17",
-      y: 37.5,
+      y: 237,
       label: [#align(center)[Made public \ 17#super[th] of May]],
       colour: palette.star,
       fill: palette.cloud.transparentize(20%),
@@ -260,7 +260,7 @@
       size: 10pt,
       inset: 5pt,
       radius: 10pt,
-      anchor: "east",
+      anchor: "west",
     ),
   ),
   scales: scales(
@@ -343,11 +343,13 @@
   ),
   width: auto,
   height: auto,
-  alt: "Midnight-sky line chart of Gribouille's cumulative GitHub stars per day from April to June 2026, titled \"Gribouille, a Rising Star\". A luminous gold step trail rises from zero across a long flat run labelled \"Quietly built in private\", lifts at a gold dashed marker labelled \"Made public 17th of May\", then climbs through dashed release markers (v0.1.0 onward) to a final amber spike of "
+  alt: "Midnight-sky line chart of Gribouille's cumulative GitHub stars per day from April to August 2026, titled \"Gribouille, a Rising Star\". A luminous gold step trail rises from zero across a long flat run labelled \"Quietly built in private\", lifts at a gold dashed marker labelled \"Made public 17th of May\", then climbs through dashed release markers tagged v0.1.0 to v0.6.0 to an amber spike of "
     + str(int(peak.stars))
     + " stars, annotated \"+"
     + str(peak-jump)
-    + " in a day\". The y axis counts stars in steps of "
+    + " in a day\", after which it keeps climbing steadily to "
+    + str(int(star-max))
+    + " stars. The y axis counts stars in steps of "
     + str(y-step)
     + "; the x axis spans months.",
 )
