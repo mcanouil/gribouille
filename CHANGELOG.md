@@ -4,6 +4,7 @@
 
 ### Changes
 
+- fix: an axis title longer than the panel it labels wraps onto further lines instead of stretching the canvas past the requested `width`/`height`, which used to shift the whole figure and push the caption off the bottom edge; a title whose longest word still cannot fit now fails with the room it needs. (959g)
 - fix: an inside-panel legend background keeps its painted `inset` inside the panel at an edge-flush alignment, and `legend-background`'s `outset` now spaces the backdrop off the panel edge instead of being silently ignored. (#232)
 - docs: tighten prose and apply consistent British spelling across the README, contributor docs, docs site guides, and the AI-assistant skill. (ba666502)
 

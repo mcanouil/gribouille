@@ -14,6 +14,20 @@
   )
 }
 
+// Width (cm) of the widest run a line breaker cannot split, so callers can
+// tell "wrapped onto more lines" from "cannot fit however it wraps". A string
+// is split on whitespace and its longest word measured. Content reports `0.0`:
+// its break opportunities are not knowable from outside the layout engine.
+#let longest-unbreakable-cm(label, size) = {
+  if type(label) != str { return 0.0 }
+  label
+    .split(regex("\\s+"))
+    .fold(0.0, (m, word) => calc.max(
+      m,
+      measure(text(size: size)[#word]).width / 1cm,
+    ))
+}
+
 // Walk a list of labels, measure each at `size`, and return the max width
 // and max height observed (cm). Returns `(0.0, 0.0)` for an empty list.
 // Duplicate string labels are measured once; the max is unchanged.

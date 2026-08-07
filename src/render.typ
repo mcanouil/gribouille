@@ -252,6 +252,8 @@
   let sec-y-extent = chrome.sec-y-extent
   let x-title-extents = chrome.x-title-extents
   let y-title-extents = chrome.y-title-extents
+  let x-sec-title-extents = chrome.x-sec-title-extents
+  let y-sec-title-extents = chrome.y-sec-title-extents
 
   // A left/right legend is centred over the panel and extends symmetrically. It
   // may spill past the panel into a bare margin harmlessly, but when it reaches
@@ -321,6 +323,8 @@
       y-extents: y-extents,
       x-title-extents: x-title-extents,
       y-title-extents: y-title-extents,
+      x-sec-title-extents: x-sec-title-extents,
+      y-sec-title-extents: y-sec-title-extents,
       x-sec-extents: x-sec-extents,
       y-sec-extents: y-sec-extents,
       ax-text: ax-text,
@@ -349,6 +353,8 @@
       y-extents: y-extents,
       x-title-extents: x-title-extents,
       y-title-extents: y-title-extents,
+      x-sec-title-extents: x-sec-title-extents,
+      y-sec-title-extents: y-sec-title-extents,
       x-sec-extents: x-sec-extents,
       y-sec-extents: y-sec-extents,
     ))
@@ -370,6 +376,8 @@
       y-extents: y-extents,
       x-title-extents: x-title-extents,
       y-title-extents: y-title-extents,
+      x-sec-title-extents: x-sec-title-extents,
+      y-sec-title-extents: y-sec-title-extents,
       x-sec-extents: x-sec-extents,
       y-sec-extents: y-sec-extents,
     ))

@@ -31,8 +31,8 @@
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP, _ax-text-cm,
   _axis-guide-rows, _resolve-extents, _text-margin-cm, _title-angle,
-  _title-extent-cm, _x-label-depth, _x-label-depth-stack, _x-title-place,
-  _y-label-width, _y-label-width-stack, _y-title-place,
+  _title-body, _title-extent-cm, _x-label-depth, _x-label-depth-stack,
+  _x-title-place, _y-label-width, _y-label-width-stack, _y-title-place,
 )
 
 #import "../geom/point.typ" as point-geom
@@ -144,6 +144,8 @@
   y-extents: none,
   x-title-extents: none,
   y-title-extents: none,
+  x-sec-title-extents: none,
+  y-sec-title-extents: none,
   x-sec-extents: none,
   y-sec-extents: none,
   canvas-w: 0,
@@ -515,10 +517,14 @@
       let (cx, x-anchor) = _x-title-place(_ax-title.xt.align, px-lo, px-hi)
       content(
         (cx, py-hi + _tick-len.xt + 0.1 + x-sec-depth + x-sec-gap),
-        text(.._text-args(_ax-title.xt))[#resolve-prose(
+        _title-body(
           _x-sec.name,
-          eval-strings: _ax-title.xt.typst,
-        )],
+          _ax-title.xt,
+          x-sec-title-extents,
+          if x-anchor == "south-west" {
+            left
+          } else if x-anchor == "south-east" { right } else { center },
+        ),
         anchor: x-anchor,
         angle: _title-angle(_ax-title.xt, 0),
       )
@@ -568,7 +574,11 @@
         _y-sec-ext.width,
         _y-sec-ext.height,
       )
-      let title-text-cm = _ax-text-cm(_ax-title.yr.size)
+      let title-text-cm = _title-extent-cm(
+        _ax-title.yr,
+        y-sec-title-extents,
+        "y",
+      )
       let y-sec-gap = _text-margin-cm(_ax-title.yr, "left", _AX-TITLE-LABEL-GAP)
       let (cy, y-anchor) = _y-title-place(_ax-title.yr.align, py-lo, py-hi)
       content(
@@ -581,10 +591,14 @@
             + title-text-cm / 2,
           cy,
         ),
-        text(.._text-args(_ax-title.yr))[#resolve-prose(
+        _title-body(
           _y-sec.name,
-          eval-strings: _ax-title.yr.typst,
-        )],
+          _ax-title.yr,
+          y-sec-title-extents,
+          if y-anchor == "south" {
+            left
+          } else if y-anchor == "north" { right } else { center },
+        ),
         angle: _title-angle(_ax-title.yr, 90),
         anchor: y-anchor,
       )
@@ -729,10 +743,14 @@
     let (cx, x-anchor) = _x-title-place(_ax-title.xb.align, px-lo, px-hi)
     content(
       (cx, oy - (x-edge-offset + x-title-cm)),
-      text(.._text-args(_ax-title.xb))[#resolve-prose(
+      _title-body(
         x-title,
-        eval-strings: _ax-title.xb.typst,
-      )],
+        _ax-title.xb,
+        x-title-extents,
+        if x-anchor == "south-west" {
+          left
+        } else if x-anchor == "south-east" { right } else { center },
+      ),
       anchor: x-anchor,
       angle: _title-angle(_ax-title.xb, 0),
     )
@@ -741,10 +759,14 @@
     let (cy, y-anchor) = _y-title-place(_ax-title.yl.align, py-lo, py-hi)
     content(
       (px-lo - (y-edge-offset + y-title-cm / 2), cy),
-      text(.._text-args(_ax-title.yl))[#resolve-prose(
+      _title-body(
         y-title,
-        eval-strings: _ax-title.yl.typst,
-      )],
+        _ax-title.yl,
+        y-title-extents,
+        if y-anchor == "south" {
+          left
+        } else if y-anchor == "north" { right } else { center },
+      ),
       angle: _title-angle(_ax-title.yl, 90),
       anchor: y-anchor,
     )
