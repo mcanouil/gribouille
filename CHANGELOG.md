@@ -5,6 +5,7 @@
 ### Changes
 
 - fix: an inside-panel legend background keeps its painted `inset` inside the panel at an edge-flush alignment, and `legend-background`'s `outset` now spaces the backdrop off the panel edge instead of being silently ignored. (#232)
+- docs: tighten prose and apply consistent British spelling across the README, contributor docs, docs site guides, and the AI-assistant skill. (ba666502)
 
 ## 0.6.0 (2026-07-28)
 
