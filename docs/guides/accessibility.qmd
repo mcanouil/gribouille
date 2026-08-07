@@ -5,15 +5,19 @@ engine: markdown
 ---
 
 A Gribouille plot is an image.
-Assistive technology, tagged-PDF readers, and search indexes need a text alternative for it, and colour-coded marks need a fallback for readers who cannot tell the colours apart or who print in black and white.
+Assistive technology, tagged-PDF readers, and search indexes need a text alternative for it.
+Colour-coded marks also need a fallback for readers who cannot tell the colours apart or who print in black and white.
 This page covers the two things you control: the alt text on a plot, and the colour and shape channels it uses.
-Both apply whether you embed plots in a Quarto document or compile Typst yourself, but the alt text is set in a different place for each, so read the section that matches your workflow.
+Both apply whether you embed plots in a Quarto document or compile Typst yourself.
+Each workflow sets the alt text in a different place, so read the matching section.
 
 ## Alt text on a plot
 
 Every [`plot`](../reference/core/plot.qmd) call accepts an `alt:` parameter: the text alternative a screen reader announces in place of the figure.
-Keep it to one or two short sentences, describe the takeaway rather than just naming the axes, and do not repeat the visible title word for word.
-The visible labels (title, subtitle, caption, axis and legend titles) belong on [`labels`](../reference/labels/labels.qmd); `alt:` is the non-visible description, not a substitute for a caption.
+Keep it to one or two short sentences.
+Describe the takeaway rather than naming the axes, and do not repeat the visible title word for word.
+The visible labels (title, subtitle, caption, axis and legend titles) belong on [`labels`](../reference/labels/labels.qmd).
+The `alt:` parameter is the non-visible description, not a substitute for a caption.
 
 ```typst
 #plot(
@@ -40,9 +44,12 @@ The visible labels (title, subtitle, caption, axis and legend titles) belong on 
 
 ## Plots in Quarto
 
-The [`typst-render`](https://github.com/mcanouil/quarto-typst-render) extension compiles each `{typst}` block to a standalone image before it reaches the page, so the reader gets an `<img>` (HTML output) or an embedded `image()` call (Typst output), never your source.
-The alt text the reader hears therefore has to come from the **code block**, not from `plot(alt: …)`: an SVG carries no PDF structure tags, so a `figure(alt: …)` produced inside the block would be discarded along with the rest of the source.
-Set it with the `alt` cell option; pair it with `cap` and `label: fig-…` when you want a numbered, cross-referenceable figure:
+The [`typst-render`](https://github.com/mcanouil/quarto-typst-render) extension compiles each `{typst}` block to a standalone image before it reaches the page.
+The reader therefore gets an `<img>` (HTML output) or an embedded `image()` call (Typst output), never your source.
+The alt text the reader hears must come from the **code block**, not from `plot(alt: …)`.
+An SVG carries no PDF structure tags, so the extension discards a `figure(alt: …)` inside the block along with the rest of the source.
+Set it with the `alt` cell option.
+For a numbered, cross-referenceable figure, pair it with `cap` and `label: fig-…`:
 
 ````markdown
 ```{typst}
@@ -59,9 +66,12 @@ Set it with the `alt` cell option; pair it with `cap` and `label: fig-…` when 
 ```
 ````
 
-`alt` becomes the `alt` attribute on the rendered `<img>` in HTML and the `alt` argument of `image()` in Quarto Typst output, so the description survives in every format.
-`output-filename` follows this project's convention of a leading `/` (resolved against the Quarto project root); in your own project use whatever path your `_quarto.yml` expects.
-Keep a `plot(alt: …)` inside the block only if you also compile the same `.typ` file directly, as in the next section; through [`typst-render`](https://github.com/mcanouil/quarto-typst-render) it has no effect.
+`alt` becomes the `alt` attribute on the rendered `<img>` in HTML, and the `alt` argument of `image()` in Quarto Typst output.
+The description therefore survives in every format.
+`output-filename` follows this project's convention of a leading `/`, resolved against the Quarto project root.
+In your own project, use the path your `_quarto.yml` expects.
+If you also compile the same `.typ` file directly, as in the next section, keep a `plot(alt: …)` inside the block.
+Through [`typst-render`](https://github.com/mcanouil/quarto-typst-render) it has no effect.
 The [Get Started](../get-started/index.qmd) tutorial sets `alt` on every example block, so each step is a worked example of this pattern.
 
 For example, this page renders a penguins plot through [`typst-render`](https://github.com/mcanouil/quarto-typst-render) like so:
@@ -88,9 +98,13 @@ For example, this page renders a penguins plot through [`typst-render`](https://
 ## Tagged PDF from Typst
 
 When you compile a Typst document, Typst writes a tagged PDF by default, even without a standard flag.
-Without `alt:`, every piece of the plot's text (each axis tick value, the axis names, the legend title, the legend keys) lands in the reading order as one flat run, so a screen reader reads something like `Flipper length (mm) Body mass (g) 170 180 190 200 210 220 230 3000 4000 5000 6000 Species Adelie Chinstrap Gentoo` with no structure and no meaning.
+Without `alt:`, every piece of the plot's text lands in the reading order as one flat run.
+That text includes each axis tick value, the axis names, the legend title, and the legend keys.
+A screen reader reads something like `Flipper length (mm) Body mass (g) 170 180 190 200 210 220 230 3000 4000 5000 6000 Species Adelie Chinstrap Gentoo` with no structure and no meaning.
 
-Setting `alt:` on the `plot()` call fixes that: the plot becomes a `figure` whose PDF structure node carries your sentence, and the plot's text labels are marked as PDF artifacts so a screen reader skips them.
+Setting `alt:` on the `plot()` call fixes that.
+The plot becomes a `figure` whose PDF structure node carries your sentence.
+Gribouille also marks the plot's text labels as PDF artifacts, so a screen reader skips them.
 Two lines at the top of the document turn the [example above](#alt-text-on-a-plot) into a complete, PDF/UA-1-ready file:
 
 ```typst
@@ -104,22 +118,27 @@ Then compile it:
 typst compile plot.typ plot.pdf --pdf-standard ua-1
 ```
 
-`--pdf-standard ua-1` checks the document against PDF/UA-1, which requires (among other things) the document title above; a plain `typst compile plot.typ plot.pdf` still produces a tagged PDF, just without the conformance check.
-To confirm the result, `pdfinfo -struct-text plot.pdf` should show a single `Figure ["…your alt text…"]` node under `Document`, with no stray tick or legend text beside it.
+`--pdf-standard ua-1` checks the document against PDF/UA-1, which requires the document title above, among other things.
+A plain `typst compile plot.typ plot.pdf` still produces a tagged PDF, but without the conformance check.
+To confirm the result, run `pdfinfo -struct-text plot.pdf`.
+The output must show a single `Figure ["…your alt text…"]` node under `Document`, with no stray tick or legend text beside it.
 
 ## Colour and redundant encoding
 
-Gribouille's default discrete colour scale is the [Okabe-Ito palette](../reference/scales/scale-okabe-ito.qmd) (Wong 2011), chosen to stay distinguishable for the common forms of colour-vision deficiency, so a plain `aes(colour: …)` already starts on safe ground.
+Gribouille's default discrete colour scale is the [Okabe-Ito palette](../reference/scales/scale-okabe-ito.qmd) (Wong 2011), chosen to stay distinguishable for the common forms of colour-vision deficiency.
+A plain `aes(colour: …)` therefore already starts on safe ground.
 Colour still fails, though, whenever colour is *removed*: greyscale print, photocopies, some projectors.
 Two things help.
 
-- Continuous data: [`scale-viridis-c`](../reference/scales/scale-viridis-c.qmd) (and the binned [`scale-viridis-b`](../reference/scales/scale-viridis-b.qmd)) is perceptually uniform and increases monotonically in lightness, so it survives greyscale; use [`scale-viridis-d`](../reference/scales/scale-viridis-d.qmd) for the discrete version.
-- Other discrete palettes: [`scale-brewer`](../reference/scales/scale-brewer.qmd) exposes the ColorBrewer families; turn on the "colour-blind safe" filter on [colorbrewer2.org](https://colorbrewer2.org) to pick one. Avoid [`scale-hue`](../reference/scales/scale-hue.qmd) for categorical data unless you have a specific reason, as it is not colour-blind safe.
+- Continuous data: [`scale-viridis-c`](../reference/scales/scale-viridis-c.qmd) (and the binned [`scale-viridis-b`](../reference/scales/scale-viridis-b.qmd)) is perceptually uniform and increases monotonically in lightness, so it survives greyscale. Use [`scale-viridis-d`](../reference/scales/scale-viridis-d.qmd) for the discrete version.
+- Other discrete palettes: [`scale-brewer`](../reference/scales/scale-brewer.qmd) exposes the ColorBrewer families. Turn on the "colour-blind safe" filter on [colorbrewer2.org](https://colorbrewer2.org) to pick one. Avoid [`scale-hue`](../reference/scales/scale-hue.qmd) for categorical data unless you have a specific reason, as it is not colour-blind safe.
 
-The reliable fix when a figure must read in black and white is a second, non-colour channel: map the grouping variable to `shape:` and/or `linetype:` as well as `colour:`, controlled by [`scale-discrete`](../reference/scales/scale-discrete.qmd) and [`scale-discrete`](../reference/scales/scale-discrete.qmd).
+When a figure must read in black and white, the reliable fix is a second, non-colour channel.
+Map the grouping variable to `shape:` and/or `linetype:` as well as `colour:`, controlled by [`scale-discrete`](../reference/scales/scale-discrete.qmd) and [`scale-discrete`](../reference/scales/scale-discrete.qmd).
 Shape and linetype only stay legible for low-cardinality factors, roughly six levels or fewer.
 
-In the example below the colours are still the default Okabe-Ito, but `species` is also mapped to point shape, so the three groups remain separable with no colour at all.
+In the example below, the colours are still the default Okabe-Ito.
+The mapping also sends `species` to point shape, so the three groups remain separable with no colour at all.
 
 ```{typst}
 //| echo: true
@@ -148,4 +167,5 @@ In the example below the colours are still the default Okabe-Ito, but `species` 
 
 ## See also
 
-- [`get-alt-text`](../reference/helpers/get-alt-text.qmd) reads the alt text back off a plot spec, which is useful if you generate plots programmatically and want their descriptions in a manifest or index.
+- [`get-alt-text`](../reference/helpers/get-alt-text.qmd) reads the alt text back off a plot spec.
+  This is useful if you generate plots programmatically and want their descriptions in a manifest or index.

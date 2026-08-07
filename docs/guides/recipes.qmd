@@ -4,7 +4,7 @@ subtitle: "Common chart types and effects built by composing layers and native T
 engine: markdown
 ---
 
-Gribouille is pure Typst, so a plot is ordinary content: it can be filtered, layered, placed, and arranged with the language you already have.
+Gribouille is pure Typst, so a plot is ordinary content: you can filter, layer, place, and arrange it with the language you already have.
 Many chart types that ship as dedicated geoms in R extension packages are, underneath, a two-layer composition or a `place()` call.
 This page collects those compositions as ready-to-adapt recipes.
 Each one uses only the bundled datasets ([`mpg`](../reference/datasets/mpg.qmd), [`penguins`](../reference/datasets/penguins.qmd)) and stable API.
@@ -12,9 +12,11 @@ Each one uses only the bundled datasets ([`mpg`](../reference/datasets/mpg.qmd),
 ## Lollipop
 
 A lollipop chart is a bar chart with the ink budget of a point: one [`geom-segment`](../reference/geoms/geom-segment.qmd) stem from zero plus one [`geom-point`](../reference/geoms/geom-point.qmd) head.
-Summarise the data first with plain Typst array methods, and add a `zero` column so the stem has a start row to map.
-Because the segment layer maps `y: "zero"`, the value `0` trains the y scale and the baseline is included automatically.
-Discrete scales sort their levels alphabetically, so passing the sorted classes as `limits:` is what puts the categories in value order.
+Summarise the data first with plain Typst array methods.
+Add a `zero` column so the stem has a start row to map.
+Because the segment layer maps `y: "zero"`, the value `0` trains the y scale and the plot includes the baseline automatically.
+Discrete scales sort their levels alphabetically.
+Pass the sorted classes as `limits:` to put the categories in value order.
 
 ```{typst}
 //| echo: true
@@ -52,8 +54,10 @@ Discrete scales sort their levels alphabetically, so passing the sorted classes 
 
 ## Dumbbell
 
-A dumbbell chart shows two values per category joined by a connector: the same segment-plus-points idea with the segment spanning the two values instead of dropping to zero.
-Fixed colours identify the two ends, so no legend is needed; name them in the caption instead.
+A dumbbell chart shows two values per category, joined by a connector.
+It is the same segment-plus-points idea, but the segment spans the two values instead of dropping to zero.
+Fixed colours identify the two ends, so the plot needs no legend.
+Name the two ends in the caption instead.
 
 ```{typst}
 //| echo: true
@@ -137,8 +141,12 @@ The base layer keeps every point in the scales, so the highlighted group sits in
 
 ## Zoom inset
 
-To magnify a crowded region, render the same plot twice: once in full with an [`annotate`](../reference/geoms/annotate.qmd) rectangle marking the window, and once with scale `limits` cut to that window.
-The inset is ordinary content, so native `place()` pins it in a corner; a plain `box` gives it a backing card (swap `white` for your page colour on tinted paper).
+To magnify a crowded region, render the same plot twice.
+The first render is full, with an [`annotate`](../reference/geoms/annotate.qmd) rectangle marking the window.
+The second cuts the scale `limits` to that window.
+The inset is ordinary content, so native `place()` pins it in a corner.
+A plain `box` gives it a backing card.
+On tinted paper, swap `white` for your page colour.
 
 ```{typst}
 //| echo: true
@@ -200,13 +208,16 @@ The inset is ordinary content, so native `place()` pins it in a corner; a plain 
 ```
 
 The default out-of-range handling drops rows outside the `limits`, which is exactly the zoom semantics the inset wants.
-To pin content at a data position instead of a page corner, use `annotate("typst", x: …, y: …, label: …)`, which accepts any content block, including a whole plot.
+To pin content at a data position instead of a page corner, use `annotate("typst", x: …, y: …, label: …)`.
+It accepts any content block, including a whole plot.
 
 ## Marginal distribution
 
-A marginal panel is a [`compose`](../reference/core/compose.qmd) stack: a short density panel above the scatter, with `align-panels: true` so the two x axes line up and `heights` setting the panel proportions.
+A marginal panel is a [`compose`](../reference/core/compose.qmd) stack: a short density panel above the scatter.
+`align-panels: true` lines the two x axes up, and `heights` sets the panel proportions.
 Both panels share the same explicit x `limits` so their axes cover the same range.
-The top panel hides its legend, and the scatter moves its legend to the bottom so a right-hand legend does not narrow one row against the other.
+The top panel hides its legend, and the scatter moves its legend to the bottom.
+A right-hand legend would otherwise narrow one row against the other.
 
 ```{typst}
 //| echo: true
@@ -293,7 +304,9 @@ For everything else, plots are content and native `grid()` already does irregula
 
 ## Line casing
 
-A trend line crossing a dense scatter reads better with a casing: the same line drawn first in the paper colour at a heavier weight, so it carries a thin halo that separates it from the points underneath.
+A trend line crossing a dense scatter reads better with a casing.
+Draw the same line first in the paper colour at a heavier weight.
+It then carries a thin halo that separates it from the points underneath.
 [`from-theme`](../reference/core/from-theme.qmd) keeps the casing correct on any background.
 
 ```{typst}
@@ -323,11 +336,13 @@ A trend line crossing a dense scatter reads better with a casing: the same line 
 )
 ```
 
-The same two-layer trick de-emphasises context: draw background layers with a low `alpha` or a muted fixed colour, and reserve full saturation for the layer that carries the message.
+The same two-layer trick de-emphasises context.
+Draw background layers with a low `alpha` or a muted fixed colour.
+Reserve full saturation for the layer that carries the message.
 
 ## See also
 
 - [`compose`](../reference/core/compose.qmd) and [`defer`](../reference/core/defer.qmd) for shared legends, tags, and aligned panels.
-- [`annotate`](../reference/geoms/annotate.qmd) for one-off marks, including `clip: false` overlays that may leave the panel.
+- [`annotate`](../reference/geoms/annotate.qmd) for one-off marks, including `clip: false` overlays that can leave the panel.
 - [`geom-typst`](../reference/geoms/geom-typst.qmd) for arbitrary Typst content pinned at data coordinates.
 - [Theming](theming.qmd) for the `theme()` keys used to mute or blank chrome in these recipes.

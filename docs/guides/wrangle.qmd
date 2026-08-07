@@ -6,12 +6,13 @@ engine: markdown
 
 Gribouille reads a dataset as a _row-store_: an array of dictionaries, one dictionary per row, with the column names as shared keys.
 That is exactly the shape `csv("file.csv", row-type: dictionary)` returns, and the shape `#plot` expects.
-Because a row-store is an ordinary Typst array, most preparation is just array methods you already have.
+Because a row-store is an ordinary Typst array, most preparation uses array methods you already have.
 The wrangle verbs fill the three gaps native Typst leaves open: grouped aggregation, reshaping, and joining.
 Every wrangle verb accepts a row-store (or a column-store dictionary of arrays) and returns a row-store, so its result feeds `#plot` with no adapter.
 
 ::: {.callout-note}
-The wrangle verbs are experimental: their interfaces may change without notice while the design settles, and they may move into a dedicated Typst data-wrangling package in the future.
+The wrangle verbs are experimental: their interfaces can change without notice while the design settles.
+They can also move into a dedicated Typst data-wrangling package in the future.
 Native Typst array methods and the plotting API remain stable.
 :::
 
@@ -33,7 +34,8 @@ Rowwise work is already a one-liner, so wrapping it would add a name without add
 | **Reshape long or wide**          | [`pivot-longer`](../reference/helpers/pivot-longer.qmd), [`pivot-wider`](../reference/helpers/pivot-wider.qmd) |
 | **Combine two datasets on a key** | [`left-join`](../reference/helpers/left-join.qmd) and friends                                                  |
 
-The verbs that _do_ exist for column work ([`select`](../reference/helpers/select.qmd), [`rename`](../reference/helpers/rename.qmd), [`relocate`](../reference/helpers/relocate.qmd), [`drop-na`](../reference/helpers/drop-na.qmd), [`distinct`](../reference/helpers/distinct.qmd), [`slice-max`](../reference/helpers/slice-max.qmd)) earn their place by naming a fiddly pattern: keyed de-duplication, per-group top-n, or missing-value handling that a bare `.filter` states awkwardly.
+The verbs that _do_ exist for column work ([`select`](../reference/helpers/select.qmd), [`rename`](../reference/helpers/rename.qmd), [`relocate`](../reference/helpers/relocate.qmd), [`drop-na`](../reference/helpers/drop-na.qmd), [`distinct`](../reference/helpers/distinct.qmd), [`slice-max`](../reference/helpers/slice-max.qmd)) earn their place by naming a fiddly pattern.
+Those patterns are keyed de-duplication, per-group top-n, and missing-value handling that a bare `.filter` states awkwardly.
 
 ## Coerce columns
 
@@ -61,7 +63,8 @@ The bundled `mpg` is already typed, so the sections below skip this step.
 
 [`summarise`](../reference/helpers/summarise.qmd) collapses each group to a single row.
 Grouping is per-call through `by:`; there is no persistent grouped state to remember to undo.
-Each aggregation is a closure that receives the group's rows and returns one cell, so any expression over the rows is fair game, including counts and multi-column ratios that a column-at-a-time helper could not express.
+Each aggregation is a closure that receives the group's rows and returns one cell.
+Any expression over the rows is therefore valid, including counts and multi-column ratios that a column-at-a-time helper cannot express.
 
 ```{typst}
 //| echo: true
@@ -89,7 +92,8 @@ Each aggregation is a closure that receives the group's rows and returns one cel
 )
 ```
 
-When the aggregation is just a tally, [`count`](../reference/helpers/count.qmd) is the shorthand: it groups by the columns you name and adds an `n` column, and `sort: true` orders the groups from most to least frequent.
+When the aggregation is a tally, [`count`](../reference/helpers/count.qmd) is the shorthand: it groups by the columns you name and adds an `n` column.
+The argument `sort: true` orders the groups from most to least frequent.
 
 ```{typst}
 //| echo: true
@@ -110,7 +114,8 @@ When the aggregation is just a tally, [`count`](../reference/helpers/count.qmd) 
 
 ## Reshape long or wide
 
-Two columns that measure the same thing, such as city and highway economy, are often easier to plot once melted into a single value column with a label column beside it.
+Two columns that measure the same thing, such as city and highway economy, are often easier to plot once melted.
+The melt gives a single value column with a label column beside it.
 [`pivot-longer`](../reference/helpers/pivot-longer.qmd) gathers the named columns into a `names-to`/`values-to` pair, carrying the other columns through, so one mapping can colour or facet by the measurement.
 
 ```{typst}
@@ -139,7 +144,8 @@ Two columns that measure the same thing, such as city and highway economy, are o
 ## Join a lookup
 
 Enriching a dataset with a lookup table is a join, not a manual `dict.at(key)` per row.
-Build the lookup as its own small row-store and [`left-join`](../reference/helpers/left-join.qmd) it on the shared key: every row of the left dataset is kept, gaining the lookup's extra columns.
+Build the lookup as its own small row-store, then [`left-join`](../reference/helpers/left-join.qmd) it on the shared key.
+The join keeps every row of the left dataset and adds the lookup's extra columns.
 
 ```{typst}
 //| echo: true
@@ -174,13 +180,15 @@ Build the lookup as its own small row-store and [`left-join`](../reference/helpe
 )
 ```
 
-The other joins share the `by:` interface: [`inner-join`](../reference/helpers/inner-join.qmd) keeps only matched rows, [`full-join`](../reference/helpers/full-join.qmd) keeps both sides, and [`semi-join`](../reference/helpers/semi-join.qmd)/[`anti-join`](../reference/helpers/anti-join.qmd) filter the left dataset by whether a key exists in the right without adding columns.
+The other joins share the `by:` interface.
+[`inner-join`](../reference/helpers/inner-join.qmd) keeps only matched rows, and [`full-join`](../reference/helpers/full-join.qmd) keeps both sides.
+[`semi-join`](../reference/helpers/semi-join.qmd) and [`anti-join`](../reference/helpers/anti-join.qmd) filter the left dataset by whether a key exists in the right, and add no columns.
 To stack datasets that share columns instead of matching on a key, [`bind-rows`](../reference/helpers/bind-rows.qmd) unions their rows and fills any missing columns with `none`.
 
 ## Putting it together
 
 A whole preparation reads as one expression: summarise, enrich, then hand the result straight to `#plot`.
-With a real CSV you would open with `as-numeric` to type the measured columns first.
+With a real CSV, start with `as-numeric` to type the measured columns.
 
 ```typst
 #let data = left-join(

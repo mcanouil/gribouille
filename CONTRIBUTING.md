@@ -11,21 +11,22 @@ Pick the right channel before opening anything:
   Use [Issues → Bug report](https://github.com/mcanouil/gribouille/issues/new?template=bug.yml) only for confirmed defects with a reproducible example.
 - **Feature request or idea.**
   Open a thread in [Discussions → Ideas](https://github.com/mcanouil/gribouille/discussions/new?category=ideas).
-  Feature requests opened as issues will be redirected.
+  I redirect feature requests opened as issues.
 - **Question or help.**
   Open a thread in [Discussions → Q&A](https://github.com/mcanouil/gribouille/discussions/new?category=q-a).
 - **Existing thread.**
-  Browse [Discussions](https://github.com/mcanouil/gribouille/discussions) before creating a new one and comment on the relevant thread when it exists.
+  Browse [Discussions](https://github.com/mcanouil/gribouille/discussions) before you create a new one.
+  If a relevant thread exists, comment on it.
 
 ## Reporting a bug
 
-Before submitting a bug, please confirm all of the following:
+Before submitting a bug, confirm all of the following:
 
 1. You have searched the [issue tracker](https://github.com/mcanouil/gribouille/issues?q=is%3Aissue) and could not find a similar report.
 2. You have updated to the latest released version of Gribouille and reproduced the bug on that version.
 3. You are reporting a bug, not requesting a feature or asking a question.
 
-Every bug report should include:
+Every bug report must include:
 
 - The Gribouille version and the Typst compiler version (`typst --version`).
 - A minimal reproducible Typst document that imports Gribouille via `#import "@preview/gribouille:<version>": *`.
@@ -34,7 +35,7 @@ Every bug report should include:
 
 ## Accessibility
 
-Please keep contributed content accessible:
+Keep contributed content accessible:
 
 - Add descriptive alt text to every image, screenshot, or diagram you attach (`![alt text describing the image](url)`).
 - Do not rely on colour alone to convey meaning in screenshots, examples, or chart output.
@@ -48,18 +49,22 @@ Source modules live under [`src/`](src/).
 Tests live under [`tests/unit/`](tests/unit) and [`tests/visual/`](tests/visual).
 Helper scripts live under [`tools/`](tools), in particular [`tools/check.sh`](tools/check.sh) for local checks.
 Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `cy`, `lo`, `hi`, …) are catalogued in [`GLOSSARY.md`](GLOSSARY.md).
-Please consult that glossary before introducing new short identifiers.
+Consult that glossary before you introduce new short identifiers.
 [`ARCHITECTURE.md`](ARCHITECTURE.md) maps the rendering pipeline, module boundaries, and where to add a geom, stat, scale, or position.
 
 ### Documenting unreleased API
 
-Two sites are published: the stable one at the site root, rendered wholly from the latest release tag, and the development one at `/dev/`, rendered from `main`.
+The project publishes two sites.
+The stable site is at the site root and renders wholly from the latest release tag.
+The development site is at `/dev/` and renders from `main`.
 Each is built from a single ref, so a page always documents the API of the version it ships with.
 
-Write documentation against `main` as you would any other change: a page describing unreleased API reaches the development site on merge, and the stable site when the next release is tagged.
+Write documentation against `main` as you would any other change.
+A page that describes unreleased API reaches the development site on merge.
+It reaches the stable site when the next release is tagged.
 Renames and removals need no special handling, since the stable site never renders `main`'s prose.
 
-The flip side is that a documentation fix only reaches the stable site at the next release.
+In return, a documentation fix reaches the stable site only at the next release.
 
 ### Error messages
 
@@ -69,4 +74,5 @@ Route every validation through [`src/utils/errors.typ`](src/utils/errors.typ) (`
 ## Commit conventions
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) prefixes (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, `style:`, `test:`, `ci:`).
-Keep the subject line concise (ideally under 50 characters) and skip the body and footer unless absolutely needed.
+Keep the subject line concise (ideally under 50 characters).
+Skip the body and footer unless they are necessary.

@@ -5,7 +5,8 @@ description: "Use when authoring, editing, or debugging a Gribouille grammar-of-
 
 # Authoring gribouille plots
 
-Gribouille is a grammar-of-graphics plotting library for Typst; the API mirrors `ggplot2` (R) and `plotnine` (Python).
+Gribouille is a grammar-of-graphics plotting library for Typst.
+The API mirrors `ggplot2` (R) and `plotnine` (Python).
 A plot layers `geom-*` over shared data and an aesthetic mapping.
 
 ## Import
@@ -14,7 +15,8 @@ A plot layers `geom-*` over shared data and an aesthetic mapping.
 #import "@preview/gribouille:0.6.0": *
 ```
 
-Pin the version to the installed one; check it via `llms.txt` or Typst Universe.
+Pin the version to the installed one.
+Check it via `llms.txt` or Typst Universe.
 
 ## Mental model
 
@@ -25,9 +27,13 @@ data → stat → position → scale → coord → facet → theme → render
 ```
 
 - `data`: a dictionary of column arrays, or a built-in dataset (`penguins`, `mpg`, `economics`).
-- `mapping: aes(...)`: column names to aesthetics (`x`, `y`, `colour`, `fill`, `shape`, `size`, `alpha`, `linetype`, `label`, …); unknown channels (including the US spelling `color`) are rejected.
-- `layers`: a tuple of `geom-*`; each geom may set its own `stat`, `position`, `mapping`, and `key` (legend glyph); stat-backed geoms take `stat: auto` to build their default stat from the geom parameters.
-- `scales`: how values map to axes and palettes; see the scales section below.
+- `mapping: aes(...)`: column names to aesthetics (`x`, `y`, `colour`, `fill`, `shape`, `size`, `alpha`, `linetype`, `label`, …).
+  Gribouille rejects unknown channels, including the US spelling `color`.
+- `layers`: a tuple of `geom-*`.
+  Each geom can set its own `stat`, `position`, `mapping`, and `key` (legend glyph).
+  Stat-backed geoms take `stat: auto` to build their default stat from the geom parameters.
+- `scales`: how values map to axes and palettes.
+  See the scales section below.
 - `coord`, `facet`, `labels`, `guides`, `theme`: everything else.
 - Late binding: `after-stat(...)`, `after-scale(...)`, `from-theme(...)`, `stage(...)`.
 
@@ -62,14 +68,17 @@ data → stat → position → scale → coord → facet → theme → render
 
 ## Scales
 
-Scale constructors are aesthetic-agnostic; the aesthetic comes from the `scales()` key:
+Scale constructors are aesthetic-agnostic.
+The aesthetic comes from the `scales()` key:
 
 - `scales(colour: scale-viridis-d())`, not `scale-colour-viridis-d()`.
 - `scales(x: scale-log10())`, not `scale-x-log10()`.
 
-`plot(scales:)` accepts only the `scales()` dictionary; there is no positional array.
+`plot(scales:)` accepts only the `scales()` dictionary.
+There is no positional array.
 The same constructor adapts to its key (axis for `x`/`y`, palette for `colour`/`fill`, output range for `size`/`alpha`/…).
-Unknown constructor arguments, unknown aesthetics, and positional arguments fail at binding with the valid keys listed.
+Unknown constructor arguments, unknown aesthetics, and positional arguments fail at binding.
+The error lists the valid keys.
 
 ## Symbol inventory
 
@@ -146,7 +155,8 @@ Bind a shared scale once (`species-scale`) and reuse it for every aesthetic that
 
 ## Density and pattern fills
 
-Native kernel density estimation; the same KDE core backs `geom-violin`, `geom-density-ridges`, `geom-density-2d`, and `geom-density-2d-filled`:
+Kernel density estimation is native.
+The same KDE core backs `geom-violin`, `geom-density-ridges`, `geom-density-2d`, and `geom-density-2d-filled`:
 
 ```typst
 #plot(
@@ -156,7 +166,8 @@ Native kernel density estimation; the same KDE core backs `geom-violin`, `geom-d
 )
 ```
 
-Fills accept native Typst `tiling` paints, as fixed `fill:` values or through a palette; legend swatches render the pattern:
+Fills accept native Typst `tiling` paints, as fixed `fill:` values or through a palette.
+Legend swatches render the pattern:
 
 ```typst
 #let stripes(base, ink) = tiling(size: (5pt, 5pt))[
@@ -177,16 +188,22 @@ Fills accept native Typst `tiling` paints, as fixed `fill:` values or through a 
 
 ## Gotchas
 
-- Aesthetics use British spelling: `colour`, not `color`; `aes()` lists the valid channels on error.
-- Fill opacity defaults to 1 on `geom-area`, `geom-ribbon`, `geom-polygon`, `geom-ellipse`, and `geom-mark`; pass `alpha:` for translucency.
-- `stroke:` accepts the native Typst `1.3pt + accent` form (thickness and paint together); an explicit `colour:` wins over the embedded paint.
+- Aesthetics use British spelling: `colour`, not `color`.
+  On error, `aes()` lists the valid channels.
+- Fill opacity defaults to 1 on `geom-area`, `geom-ribbon`, `geom-polygon`, `geom-ellipse`, and `geom-mark`.
+  For translucency, pass `alpha:`.
+- `stroke:` accepts the native Typst `1.3pt + accent` form (thickness and paint together).
+  An explicit `colour:` wins over the embedded paint.
 - Unknown `stat`, scale `transform`, `oob`, or `theme()` element names fail fast instead of silently rendering as identity.
-- CSV string-numeric columns stay discrete; call `as-numeric(data, "col")` for a continuous scale.
+- CSV string-numeric columns stay discrete.
+  For a continuous scale, call `as-numeric(data, "col")`.
 
 ## Reference protocol
 
-The API is pre-1.0; names and arguments change between releases.
-Do not recall a geom, stat, scale, or argument from memory; confirm each against the machine-readable reference.
+The API is pre-1.0.
+Names and arguments change between releases.
+Do not recall a geom, stat, scale, or argument from memory.
+Confirm each against the machine-readable reference.
 
 1. Index: `https://m.canouil.dev/gribouille/llms.txt` lists every page and its `.llms.md`.
 2. Fetch the symbol's page, e.g., `.../reference/geoms/geom-smooth.llms.md`, `.../reference/scales/scale-viridis-d.llms.md`, `.../reference/stats/stat-summary.llms.md`.
@@ -204,4 +221,5 @@ Compile before claiming success:
 typst compile plot.typ
 ```
 
-Errors follow the shape `<scope>: <problem>; got <value>. <hint>`; read the hint, then re-check the argument against its `.llms.md` page.
+Errors follow the shape `<scope>: <problem>; got <value>. <hint>`.
+Read the hint, then re-check the argument against its `.llms.md` page.

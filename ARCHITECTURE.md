@@ -1,11 +1,13 @@
 # Gribouille architecture
 
 A maintainer-facing map of how the library is wired.
-For naming conventions see [`GLOSSARY.md`](GLOSSARY.md); for workflow see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+For naming conventions see [`GLOSSARY.md`](GLOSSARY.md).
+For workflow see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Pipeline
 
-Data flows forward only; no stage reaches back into an earlier one.
+Data flows forward only.
+No stage reaches back into an earlier one.
 
 ```text
 data ──▶ stat ──▶ position ──▶ scale ──▶ coord ──▶ facet ──▶ theme ──▶ render
@@ -28,7 +30,7 @@ Entry points trace the same path:
 | `src/geom/` | Geometric layers; each exports a constructor (via `make-layer`) and a `draw(layer, ctx)`. Shared draw scaffolding for geom families (`grouped-path`, `errorbar-draw`, `ref-line`, `label-draw`) lives here too. |
 | `src/stat/` | Statistical transforms; dispatched by `src/stat/apply.typ`. |
 | `src/position/` | Position adjustments (stack, dodge, fill, jitter, …); dispatched by `src/position/apply.typ`. |
-| `src/scale/` | Aesthetic-agnostic scales: `constructors.typ` returns family-tagged stubs, `bind.typ` validates stub arguments against per-builder key tuples (sync-checked by `tools/typstdoc/scale_keys.lua`) and dispatches `(aesthetic, name)` to family-file builders (continuous, discrete, colour, date, size, …), `train.typ` trains domains. |
+| `src/scale/` | Aesthetic-agnostic scales. `constructors.typ` returns family-tagged stubs. `bind.typ` validates stub arguments against per-builder key tuples (sync-checked by `tools/typstdoc/scale_keys.lua`), then dispatches `(aesthetic, name)` to family-file builders (continuous, discrete, colour, date, size, …). `train.typ` trains domains. |
 | `src/coord/` | Coordinate systems (cartesian, fixed, flip, radial, transform). |
 | `src/facet/` | Faceting (grid, wrap) and strip labellers. |
 | `src/guide/` | Legend and axis configuration plus legend-symbol drawing. |
@@ -40,10 +42,15 @@ Entry points trace the same path:
 Design tenets worth knowing before editing:
 
 - **Spec dict as the intermediate form.** `plot()` returns a spec so `compose()` can defer rendering and hoist shared legends across panels.
-- **Late binding.** Aesthetic values can resolve at later stages (`after-stat`, `after-scale`, `from-theme`, `stage`); see [`src/utils/late-binding.typ`](src/utils/late-binding.typ).
+- **Late binding.** Aesthetic values can resolve at later stages (`after-stat`, `after-scale`, `from-theme`, `stage`).
+  See [`src/utils/late-binding.typ`](src/utils/late-binding.typ).
 - **Per-facet stat re-training.** Stats such as smooth, bin, and boxplot re-run per panel to respect facet semantics.
-- **Single CeTZ import.** Only [`src/deps.typ`](src/deps.typ) imports third-party packages; `tools/typstdoc` rejects `@preview/*` imports elsewhere under `src/`.
-- **Keyed-by-aesthetic plot inputs.** `scales()` ([`src/scales.typ`](src/scales.typ)), `guides()` ([`src/guides.typ`](src/guides.typ)), and `labels()` ([`src/labels.typ`](src/labels.typ)) each build a dict keyed by aesthetic and feed it to `plot()`; a later entry for the same aesthetic wins. `expand-limits` ([`src/limits.typ`](src/limits.typ)) and `annotate` ([`src/annotate.typ`](src/annotate.typ)) are top-level shortcuts, and [`src/aes-keys.typ`](src/aes-keys.typ) single-sources the `AES-KEYS` channel list.
+- **Single CeTZ import.** Only [`src/deps.typ`](src/deps.typ) imports third-party packages.
+  `tools/typstdoc` rejects `@preview/*` imports elsewhere under `src/`.
+- **Keyed-by-aesthetic plot inputs.** `scales()` ([`src/scales.typ`](src/scales.typ)), `guides()` ([`src/guides.typ`](src/guides.typ)), and `labels()` ([`src/labels.typ`](src/labels.typ)) each build a dict keyed by aesthetic and feed it to `plot()`.
+  A later entry for the same aesthetic wins.
+  `expand-limits` ([`src/limits.typ`](src/limits.typ)) and `annotate` ([`src/annotate.typ`](src/annotate.typ)) are top-level shortcuts.
+  [`src/aes-keys.typ`](src/aes-keys.typ) single-sources the `AES-KEYS` channel list.
 
 ## Adding things
 
@@ -51,7 +58,10 @@ Design tenets worth knowing before editing:
   Provide a legend symbol via `src/guide/draw-key.typ` / `src/guide/draw-marker.typ`.
 - **A stat.** Add `src/stat/<name>.typ` and register it in [`src/stat/apply.typ`](src/stat/apply.typ).
 - **A position.** Add `src/position/<name>.typ` and register it in [`src/position/apply.typ`](src/position/apply.typ).
-- **A scale.** Add or extend the internal builder in the relevant family file (`src/scale/continuous.typ`, `src/scale/colour.typ`, …), register its family name under each supported aesthetic in the [`src/scale/bind.typ`](src/scale/bind.typ) dispatch table, expose a public `scale-<name>` constructor in [`src/scale/constructors.typ`](src/scale/constructors.typ) (returns `_stub(family, args)`), and re-export it through [`lib.typ`](lib.typ).
+- **A scale.** Add or extend the internal builder in the relevant family file (`src/scale/continuous.typ`, `src/scale/colour.typ`, …).
+  Register its family name under each supported aesthetic in the [`src/scale/bind.typ`](src/scale/bind.typ) dispatch table.
+  Expose a public `scale-<name>` constructor in [`src/scale/constructors.typ`](src/scale/constructors.typ), which returns `_stub(family, args)`.
+  Re-export it through [`lib.typ`](lib.typ).
 
 ## Error conventions
 
@@ -72,8 +82,10 @@ Typst cannot catch a panic, so the message *builders* (`error-text`, `enum-text`
 
 ## Testing and naming
 
-- [`tests/unit/`](tests/unit) holds pure-function assertions compiled by `typst compile`; add unit tests here for any new helper.
+- [`tests/unit/`](tests/unit) holds pure-function assertions compiled by `typst compile`.
+  Add unit tests here for any new helper.
 - [`tests/visual/`](tests/visual) holds PNG snapshot goldens checked via `tools/snapshot/run.lua`.
-  Goldens are CPU-architecture sensitive; refresh them through the Linux snapshot workflow, not locally.
+  Goldens are CPU-architecture sensitive.
+  Refresh them through the Linux snapshot workflow, not locally.
 - Run [`tools/check.sh`](tools/check.sh) to mirror CI (compiles every unit test and example; `--snapshot` adds the visual check).
 - Consult [`GLOSSARY.md`](GLOSSARY.md) before introducing any new short identifier.

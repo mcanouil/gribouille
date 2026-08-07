@@ -1,7 +1,8 @@
 # Gribouille internal glossary
 
 Canonical expansions for the short identifiers used across `src/`.
-Doc-only: this file does not change any name, it documents the names already in the code.
+Doc-only: this file does not change any name.
+It documents the names already in the code.
 Run the survey command at the bottom before extending the table.
 
 ## Pipeline
@@ -14,7 +15,7 @@ Run the survey command at the bottom before extending the table.
 | `pos`     | position adjustment                    | `position_*` namespace (stack, dodge, fill, jitter, …).                                                                                 |
 | `coord`   | coordinate system                      | `coord-*` namespace; `(name: "cartesian"\|"fixed"\|"radial"\|"transform", ...)`.                                                       |
 | `spec`    | plot specification dict                | the user-built dict consumed by `render-plot`.                                                                                          |
-| `ctx`     | per-draw context                       | dict passed to every geom's `draw(layer, ctx)`; built once in render/panel-draw.typ (`trained`, `px-range`/`py-range`, `palette`, resolver closures, `theme`, `flipped`, `canvas-w`/`canvas-h`, + `radial` on the geom-dispatch copy).      |
+| `ctx`     | per-draw context                       | dict passed to every geom's `draw(layer, ctx)`. Built once in render/panel-draw.typ (`trained`, `px-range`/`py-range`, `palette`, resolver closures, `theme`, `flipped`, `canvas-w`/`canvas-h`, + `radial` on the geom-dispatch copy).      |
 | `mapping` | column-name dict                       | flattened `aes` (`(x: "col", y: "col", colour: "col", ...)`).                                                                           |
 | `layer`   | one entry of `spec.layers`             | dict tagged `kind: "layer"` carrying `name` (the geom), `mapping`, `data`, …                                                                       |
 | `map`     | mapping (when shortened)               | local variable name; same shape as `mapping`.                                                                                           |
@@ -24,24 +25,24 @@ Run the survey command at the bottom before extending the table.
 | `args`    | arguments                              | Typst `..args` rest binding.                                                                                                            |
 | `fun`     | function / closure                     | user-supplied closure passed via `fun:` (`stat-manual`, `stat-summary`).                                                                |
 | `defer`   | deferred-panel helper                  | `defer(plot, ...)` / `defer(compose, ...)` partial-applies a renderer into a thunk for `compose`.                                       |
-| `as-spec` | spec-return switch                     | internal `plot`/`compose` param; `true` returns the spec dict instead of content, set by `compose` when materialising a deferred panel. |
-| `compose` | multi-plot composition                 | arranges deferred panels and hoists shared legends; see `src/compose.typ`.                                                              |
+| `as-spec` | spec-return switch                     | internal `plot`/`compose` param. `true` returns the spec dict instead of content. `compose` sets it when materialising a deferred panel. |
+| `compose` | multi-plot composition                 | arranges deferred panels and hoists shared legends. See `src/compose.typ`.                                                              |
 | `hoist`   | per-aesthetic legend lift              | promote a per-panel guide into the shared legend when every panel agrees on the scale.                                                  |
-| `scales`  | keyed-by-aesthetic scale binder        | `scales()` dict fed to `plot()` (`src/scales.typ`); a later entry for an aesthetic wins.                                                |
+| `scales`  | keyed-by-aesthetic scale binder        | `scales()` dict fed to `plot()` (`src/scales.typ`). A later entry for an aesthetic wins.                                                |
 | `probe`   | first-pass deferred render             | initial `render-plot-deferred` call that reads guides before suppression.                                                               |
-| `fail`    | panic helper                           | `src/utils/errors.typ` (`fail`, `fail-enum`, `fail-type`, `fail-range`); never inline a panic string.                                   |
+| `fail`    | panic helper                           | `src/utils/errors.typ` (`fail`, `fail-enum`, `fail-type`, `fail-range`). Never inline a panic string.                                   |
 | `check`   | assert helper                          | `src/utils/errors.typ`; wraps `assert` with the shared message grammar.                                                                 |
 
 ## Scale / training
 
 | Term      | Expansion          | Notes                                                            |
 | --------- | ------------------ | ---------------------------------------------------------------- |
-| `trained` | scale-trained dict | `ctx.trained.<aes>`; carries `type`, `domain`, `level-index`, `spec`, `transform`, `pre-transformed`, `typst-mark`, `integer` (+ optional `temporal`/`date-format`, `reverse`, `view-transform`/`view-index`/`view-pad-cm` added by render/domain.typ). Built by `_train-entry` (scale/train.typ); read `spec` keys via `spec-attr`. |
+| `trained` | scale-trained dict | `ctx.trained.<aes>`; carries `type`, `domain`, `level-index`, `spec`, `transform`, `pre-transformed`, `typst-mark`, `integer` (+ optional `temporal`/`date-format`, `reverse`, `view-transform`/`view-index`/`view-pad-cm` added by render/domain.typ). Built by `_train-entry` (scale/train.typ). Read `spec` keys via `spec-attr`. |
 | `fwd`     | forward transform  | data → transformed value (`transform-fwd`).                      |
 | `inv`     | inverse transform  | transformed value → data (`transform-inv`).                      |
 | `sec`     | secondary axis     | `sec-axis()` config bound to the primary scale.                  |
 | `ref`     | mapping reference  | `mapping-ref` annotation (e.g., `as-factor()` forced-discrete).  |
-| `family`  | scale family       | the scale-stub concept naming one internal builder; stored under the stub's `name:` key, `bind-scale` dispatches on `(aesthetic, name)`. |
+| `family`  | scale family       | the scale-stub concept naming one internal builder, stored under the stub's `name:` key. `bind-scale` dispatches on `(aesthetic, name)`. |
 | `stub`    | deferred scale spec | `(kind: "scale", name, args)` from a `scale-*` constructor, resolved by `scales()`. |
 
 ## Geometry / panel
@@ -54,8 +55,8 @@ Run the survey command at the bottom before extending the table.
 | `py`      | panel y                   | panel y range.                                                                        |
 | `dx`      | delta x                   | local x-offset delta in draw and layout helpers.                                      |
 | `dy`      | delta y                   | local y-offset delta in draw and layout helpers.                                      |
-| `nudge-x` | x offset                  | aesthetic on `geom-text`/`label`/`typst`; number = data units (continuous) or level units (discrete), length = canvas units. |
-| `nudge-y` | y offset                  | aesthetic on `geom-text`/`label`/`typst`; number = data units (continuous) or level units (discrete), length = canvas units. |
+| `nudge-x` | x offset                  | aesthetic on `geom-text`/`label`/`typst`. A number means data units (continuous) or level units (discrete). A length means canvas units. |
+| `nudge-y` | y offset                  | aesthetic on `geom-text`/`label`/`typst`. A number means data units (continuous) or level units (discrete). A length means canvas units. |
 | `aabb`    | axis-aligned bounding box | `(x-lo, y-lo, x-hi, y-hi)` dict from `utils/segment-route.typ`.                       |
 | `lo`      | lower bound               | endpoint of an interval (whisker, error bar, axis range).                             |
 | `hi`      | upper bound               | endpoint of an interval.                                                              |
@@ -131,4 +132,4 @@ grep -rhoE '\b[a-z]{1,4}\b' src --include='*.typ' \
 ```
 
 Filter out Typst keywords (`let`, `if`, `else`, `for`, `at`, `set`, …) and English words.
-Anything left at frequency ≥ 50 should be either obviously domain-clear (`data`, `name`, `plot`, `axis`, `bin`, `text`, …) or listed above.
+Anything left at frequency ≥ 50 must be either obviously domain-clear (`data`, `name`, `plot`, `axis`, `bin`, `text`, …) or listed above.

@@ -81,7 +81,8 @@ Documentation: <https://m.canouil.dev/gribouille>.
 
 ## AI assistants
 
-The documentation ships a machine-readable copy for large language models at <https://m.canouil.dev/gribouille/llms.txt>, and every page has a `.llms.md` companion.
+The documentation ships a machine-readable copy for large language models at <https://m.canouil.dev/gribouille/llms.txt>.
+Every page also has a `.llms.md` companion.
 
 An installable skill teaches coding agents to author _Gribouille_ plots against that reference.
 Install it with the agent-neutral [`skills`](https://github.com/vercel-labs/skills) CLI:
@@ -107,9 +108,12 @@ See [`typst.toml`](typst.toml) and [`src/deps.typ`](src/deps.typ) for the author
 
 > [!NOTE]
 > Gribouille is an unfunded spare-time project, and the API is still settling.
-> Bug reports and ideas are very welcome on the issue tracker.
+> Bug reports and ideas are welcome on the issue tracker.
 >
-> Pull requests are not being accepted for now: the internals shift between releases, every review costs time I have to take from the work that moves the library forward, and I am being especially careful in the current climate of unreviewed LLM-authored patches.
+> I do not accept pull requests for now.
+> The internals shift between releases.
+> Every review costs time that I must take from the work that moves the library forward.
+> I am also especially careful in the current climate of unreviewed LLM-authored patches.
 > Once the surface is stable I will revisit and open the door.
 >
 > Thanks in advance for your patience and your understanding.
@@ -120,7 +124,7 @@ Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `
 
 ## Citation
 
-If you use _Gribouille_ in your work, please cite it.
+If you use _Gribouille_ in your work, cite it.
 Citation metadata is provided in [`CITATION.cff`](CITATION.cff).
 GitHub renders it via the "Cite this repository" widget on the repository sidebar.
 

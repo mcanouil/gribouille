@@ -5,7 +5,9 @@ engine: markdown
 ---
 
 Large language models write better _Gribouille_ code when they can read the current API instead of guessing it.
-This site ships two things for that: a machine-readable copy of the whole documentation, and a skill that teaches a coding agent how to author plots.
+This site ships two things for that.
+The first is a machine-readable copy of the whole documentation.
+The second is a skill that teaches a coding agent to author plots.
 
 ## Machine-readable documentation
 
@@ -17,11 +19,12 @@ Every page on this site has a Markdown companion built for language models, foll
   For example, the `geom-point` reference at `reference/geoms/geom-point.html` is also available at [`reference/geoms/geom-point.llms.md`](https://m.canouil.dev/gribouille/reference/geoms/geom-point.llms.md).
 
 Point an assistant at `llms.txt` first, then let it fetch the specific `.llms.md` pages it needs.
-Because these files are regenerated on every build, they always match the released API.
+Every build regenerates these files, so they always match the released API.
 
 ## Skill for coding agents
 
-The skill teaches an agent the grammar-of-graphics model, the `#plot()` call shape, and a protocol to confirm every argument against the `.llms.md` reference before writing code.
+The skill teaches an agent the grammar-of-graphics model and the `#plot()` call shape.
+It also gives a protocol to confirm every argument against the `.llms.md` reference before writing code.
 It works with any agent that supports the [Agent Skills](https://code.claude.com/docs/en/skills) format.
 
 ### With `npx skills`
@@ -43,4 +46,6 @@ The repository doubles as a [Claude Code](https://claude.com/claude-code) plugin
 /plugin install gribouille@gribouille
 ```
 
-Once installed, ask the assistant to build a plot, for example "a _Gribouille_ scatter of penguin flipper length against body mass, coloured by species", and it will use the skill to write and validate the code.
+After installation, ask the assistant to build a plot.
+For example: "a _Gribouille_ scatter of penguin flipper length against body mass, coloured by species".
+The assistant uses the skill to write and validate the code.

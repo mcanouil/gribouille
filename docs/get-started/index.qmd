@@ -10,7 +10,8 @@ engine: markdown
 
 - [Typst](https://typst.app) {{< var typst.series >}} or later.
 - Familiarity with Typst `#import` syntax.
-  No prior experience with the grammar of graphics is assumed, but if you have used [`ggplot2`](https://ggplot2.tidyverse.org) in R or [`plotnine`](https://plotnine.org) in Python the mental model will feel familiar.
+  You do not need prior experience with the grammar of graphics.
+  If you have used [`ggplot2`](https://ggplot2.tidyverse.org) in R or [`plotnine`](https://plotnine.org) in Python, the mental model feels familiar.
 
 ## Installation
 
@@ -26,7 +27,9 @@ Import _Gribouille_ from Typst Universe, from the published archives, or from a 
 
 ### From release assets
 
-Download the `.tar.gz` or `.zip` attached to a [GitHub release](https://github.com/mcanouil/gribouille/releases), unpack it into Typst's local package directory under `gribouille/{{< env VERSION >}}`, then import it.
+Download the `.tar.gz` or `.zip` attached to a [GitHub release](https://github.com/mcanouil/gribouille/releases).
+Unpack it into Typst's local package directory under `gribouille/{{< env VERSION >}}`.
+Then import it.
 
 ```typst
 #import "@local/gribouille:{{< env VERSION >}}": *
@@ -43,10 +46,12 @@ Install the latest development build to try unreleased changes before they reach
 
 ::: {.callout-warning}
 This is not a stable release.
-It is rebuilt from `main` and can change without notice, so pin a stable version for production documents.
+It is rebuilt from `main` and can change without notice.
+Pin a stable version for production documents.
 :::
 
-Download the archive, unpack it into Typst's local package directory, then import it.
+Download the archive.
+Unpack it into Typst's local package directory.
 The version is the current build date, `{{< env DEV_VERSION >}}`.
 
 ::: {.panel-tabset}
@@ -110,7 +115,7 @@ We will build a single figure end to end, adding one grammar concept per step so
 
 ### 1. Data and aesthetics
 
-Every plot starts with a dataset and a [`aes`](../reference/core/aes.qmd) mapping that binds column names to visual channels.
+Every plot starts with a dataset and an [`aes`](../reference/core/aes.qmd) mapping that binds column names to visual channels.
 At minimum [`geom-point`](../reference/geoms/geom-point.qmd) needs `x` and `y`.
 
 ::: {layout-ncol="2" layout-valign="center"}
@@ -133,7 +138,7 @@ At minimum [`geom-point`](../reference/geoms/geom-point.qmd) needs `x` and `y`.
 ### 2. Encode a third variable through colour
 
 Add `colour: "species"` to the mapping and the points split visually by group.
-Every aesthetic mapping is independent of the geom, so the same colour scale will apply to whatever layers you stack on top.
+Every aesthetic mapping is independent of the geom, so the same colour scale applies to whatever layers you stack on top.
 
 ::: {layout-ncol="2" layout-valign="center"}
 
@@ -159,7 +164,7 @@ Every aesthetic mapping is independent of the geom, so the same colour scale wil
 ### 3. Stack a second layer (`geom-smooth`)
 
 Layers stack in order.
-Adding a [`geom-smooth`](../reference/geoms/geom-smooth.qmd) draws one fitted line per colour group because the `colour` aesthetic is inherited from the plot-level mapping.
+A [`geom-smooth`](../reference/geoms/geom-smooth.qmd) layer draws one fitted line per colour group because it inherits the `colour` aesthetic from the plot-level mapping.
 
 ::: {layout-ncol="2" layout-valign="center"}
 
@@ -226,7 +231,7 @@ A matching [`scale-discrete`](../reference/scales/scale-discrete.qmd) keeps the 
 ### 5. Split into small multiples with `facet-wrap`
 
 [`facet-wrap`](../reference/facets/facet-wrap.qmd) lays one panel per level of a discrete column.
-The same scales apply to every panel, so the species clusters can be compared across islands.
+The same scales apply to every panel, so you can compare the species clusters across islands.
 
 ::: {layout-ncol="2" layout-valign="center"}
 
@@ -364,7 +369,8 @@ Sibling formatters [`format-percent`](../reference/helpers/format-percent.qmd), 
 ### 8. Render Typst markup in the subtitle with `element-typst`
 
 [`element-typst`](../reference/themes/element-typst.qmd) is a drop-in replacement for [`element-text`](../reference/themes/element-text.qmd) that evaluates plain strings as Typst markup.
-Wiring it to the `plot-subtitle` theme surface lets the subtitle mix prose with math: anything between `$ $` becomes a rendered formula while the rest reads as ordinary text.
+Wiring it to the `plot-subtitle` theme surface lets the subtitle mix prose with math.
+Anything between `$ $` becomes a rendered formula, and the rest reads as ordinary text.
 
 ::: {layout-ncol="2" layout-valign="center"}
 
@@ -414,7 +420,8 @@ Wiring it to the `plot-subtitle` theme surface lets the subtitle mix prose with 
 
 ### 9. Annotate inside the panel with `geom-typst`
 
-[`geom-typst`](../reference/geoms/geom-typst.qmd) is the Typst-markup sibling of [`geom-text`](../reference/geoms/geom-text.qmd): every value of the `label` aesthetic renders as Typst at the row's `(x, y)`.
+[`geom-typst`](../reference/geoms/geom-typst.qmd) is the Typst-markup sibling of [`geom-text`](../reference/geoms/geom-text.qmd).
+Every value of the `label` aesthetic renders as Typst at the row's `(x, y)`.
 The annotation layer carries one row per `(species, island)` cell so each `$N_"species" = ...$` label rides the colour scale defined in step 4.
 Every row also carries an `island` value so [`facet-wrap`](../reference/facets/facet-wrap.qmd) routes it to the right panel.
 

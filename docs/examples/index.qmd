@@ -16,7 +16,7 @@ listing:
     page-size: 200
 ---
 
-Every example below lives in the [`examples/`](https://github.com/mcanouil/gribouille/tree/main/examples) directory of the repository.
+Every example below is in the [`examples/`](https://github.com/mcanouil/gribouille/tree/main/examples) directory of the repository.
 Click any example to view its source.
 
 ::: {#gallery}

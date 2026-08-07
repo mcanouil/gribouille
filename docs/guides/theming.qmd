@@ -4,9 +4,12 @@ subtitle: "Map every visible region of a plot to the `theme()` key that styles i
 engine: markdown
 ---
 
-A _Gribouille_ plot is a stack of named regions: an outer canvas, an inner panel (or grid of panels), a strip band for facets, a legend column, a title block on top, a caption underneath, and axes around the edges.
+A _Gribouille_ plot is a stack of named regions.
+Those regions are an outer canvas, an inner panel (or grid of panels), a strip band for facets, a legend column, a title block on top, a caption underneath, and axes around the edges.
 Each region is one entry in the [`theme()`](../reference/themes/theme.qmd) dictionary, set with an [`element-text`](../reference/themes/element-text.qmd), [`element-line`](../reference/themes/element-line.qmd), [`element-tick`](../reference/themes/element-tick.qmd), [`element-rect`](../reference/themes/element-rect.qmd), [`element-blank`](../reference/themes/element-blank.qmd), or [`margin`](../reference/themes/margin.qmd) value.
-This page is a map: it shows where each region sits on a real plot, names the [`theme()`](../reference/themes/theme.qmd) key that controls it, and links worked examples for the common overrides.
+This page is a map.
+It shows where each region sits on a real plot, and names the [`theme()`](../reference/themes/theme.qmd) key that controls it.
+It also links worked examples for the common overrides.
 
 ## Anatomy of a plot
 
@@ -51,9 +54,10 @@ Minor gridlines default to half the major weight in the same colour, and a blank
 | Base colour roles (drive geom colour resolution and theme mixing).                           | `ink`, `paper`, `accent`.                                                                                                         | Colour.                                                                                                         |
 | Layer aesthetic defaults.                                                                    | `geom`.                                                                                                                           | [`element-geom`](../reference/themes/element-geom.qmd).                                                         |
 
-Any key can be hidden with [`element-blank`](../reference/themes/element-blank.qmd) in place of its normal element.
+You can hide any key with [`element-blank`](../reference/themes/element-blank.qmd) in place of its normal element.
 That is how [`theme-minimal`](../reference/themes/theme-minimal.qmd) drops the axis line, the panel background, and the tick marks, for example.
-A blank surface also reserves no space, so blanking `axis-ticks` reclaims the tick depth and blanking `axis-text` on one side, such as `axis-text-y-right`, hides that side's tick labels and the width they would have taken.
+A blank surface also reserves no space, so blanking `axis-ticks` reclaims the tick depth.
+Blanking `axis-text` on one side, such as `axis-text-y-right`, hides that side's tick labels and the width they would have taken.
 
 ## Inheritance cascade
 
@@ -62,7 +66,8 @@ The most specific record wins; unset fields inherit from the parent.
 Two patterns repeat: base records (`text`, `line`, `rect`) feed every descendant surface, and each axis family fans out by axis then by side.
 
 Text sizes accept either an absolute length or a ratio.
-A ratio such as `80%` scales the parent surface size, so setting the base `text` size rescales every surface that inherits via a ratio (axis titles, tick labels, legend text, and so on).
+A ratio such as `80%` scales the parent surface size.
+Setting the base `text` size therefore rescales every surface that inherits via a ratio (axis titles, tick labels, legend text, and so on).
 An absolute length such as `12pt` pins that surface outright and ignores the cascade.
 
 ```{typst}
@@ -124,7 +129,8 @@ Each line maps directly to one row in the [region table](#region-to-theme-key-re
 ## Ticks and their labels
 
 Tick marks are one record: [`element-tick`](../reference/themes/element-tick.qmd) carries the mark's `colour`, `stroke`, and `length` together, on `axis-ticks` and its per-axis, per-side, and minor variants.
-A `length` given as a ratio scales the length inherited from the parent surface, exactly as `size` and `stroke` do elsewhere, so the y ticks below come out half the length of the x ticks without naming an absolute value.
+A `length` given as a ratio scales the length inherited from the parent surface, exactly as `size` and `stroke` do elsewhere.
+The y ticks below therefore come out half the length of the x ticks, without naming an absolute value.
 
 ```{typst}
 //| echo: true
@@ -149,13 +155,16 @@ A `length` given as a ratio scales the length inherited from the parent surface,
 )
 ```
 
-Tick labels live entirely in `axis-text`, so hiding them is the same per-side [`element-blank`](../reference/themes/element-blank.qmd) as anywhere else: the duplicated right-hand axis above keeps its marks and drops its labels, along with the width they would have reserved.
+Tick labels live entirely in `axis-text`, so hiding them is the same per-side [`element-blank`](../reference/themes/element-blank.qmd) as anywhere else.
+The duplicated right-hand axis above keeps its marks and drops its labels, along with the width they would have reserved.
 Blanking `axis-ticks` on a side does the same for the marks.
-Minor marks (the sub-decade ticks that [`guide-axis-logticks`](../reference/guides/guide-axis-logticks.qmd) adds on a log axis) inherit that record through `axis-ticks-minor`, defaulting to half the major length in the same stroke.
+Minor marks inherit that record through `axis-ticks-minor`, and default to half the major length in the same stroke.
+Those are the sub-decade ticks that [`guide-axis-logticks`](../reference/guides/guide-axis-logticks.qmd) adds on a log axis.
 
 ## Tune the outer canvas
 
-Grow the outer plot rectangle past its content with [`element-rect`](../reference/themes/element-rect.qmd)'s `inset` field (inner padding); reserve whitespace around the rectangle with the `outset` field (outer margin).
+Grow the outer plot rectangle past its content with [`element-rect`](../reference/themes/element-rect.qmd)'s `inset` field (inner padding).
+Reserve whitespace around the rectangle with the `outset` field (outer margin).
 Each takes a [`margin`](../reference/themes/margin.qmd) with any subset of `top`, `right`, `bottom`, `left`; sides left at `auto` add nothing.
 
 ```{typst}
@@ -198,18 +207,24 @@ Each takes a [`margin`](../reference/themes/margin.qmd) with any subset of `top`
 ```
 
 `inset` grows the painted rectangle outward to wrap its content; only `plot-background` and `legend-background` honour it.
-`outset` reserves outer whitespace: on `panel-background`, `legend-background`, and `legend-bar` the reservation widens the surrounding cetz chrome slot (shrinking the panel canvas); on `plot-background` it wraps the rendered block in `pad()`.
+`outset` reserves outer whitespace.
+On `panel-background`, `legend-background`, and `legend-bar`, the reservation widens the surrounding cetz chrome slot and shrinks the panel canvas.
+On `plot-background`, `outset` wraps the rendered block in `pad()`.
 `strip-background` ignores both fields: the facet band has no surrounding slot to grow or reserve into.
-Facet column and row gutters come from `panel-spacing`, defaulting to `0.5cm`; set a length to space both axes equally or a `(x:, y:)` dictionary to space them independently, and a per-facet `facet-wrap(gutter:)` / `facet-grid(gutter:)` overrides the theme.
-The gap between tick labels and the axis title is controlled by `axis-title.margin`; gaps around any other text surface use the per-element `margin` field on its [`element-text`](../reference/themes/element-text.qmd).
+Facet column and row gutters come from `panel-spacing`, which defaults to `0.5cm`.
+Set a length to space both axes equally, or a `(x:, y:)` dictionary to space them independently.
+A per-facet `facet-wrap(gutter:)` or `facet-grid(gutter:)` overrides the theme.
+`axis-title.margin` controls the gap between tick labels and the axis title.
+Gaps around any other text surface use the per-element `margin` field on its [`element-text`](../reference/themes/element-text.qmd).
 
 ## Complete vs partial themes
 
-[`theme()`](../reference/themes/theme.qmd) is the full base: every surface listed in the [reference table](#region-to-theme-key-reference) is populated.
+[`theme()`](../reference/themes/theme.qmd) is the full base: it populates every surface listed in the [reference table](#region-to-theme-key-reference).
 Use it when you want to start from scratch and define each region yourself.
 
 The library ships eight curated overrides on top of that base.
-Each one is a thin function that returns a theme with a handful of fields replaced; everything else cascades from [`theme()`](../reference/themes/theme.qmd).
+Each one is a thin function that returns a theme with a handful of fields replaced.
+Everything else cascades from [`theme()`](../reference/themes/theme.qmd).
 
 | Function                                                    | Effect                                                                              |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------- |
