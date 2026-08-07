@@ -263,13 +263,13 @@
       anchor: "east",
     ),
   ),
-  scales: (
-    scale-x-date(
+  scales: scales(
+    x: scale-date(
       breaks: month-firsts,
       date-format: "[month repr:long] [year]",
       expand: (0%, 0%),
     ),
-    scale-y-continuous(
+    y: scale-continuous(
       breaks: y-breaks,
       labels: y => [#box(baseline: -0.4em)[#str(int(y))]#text(
           size: 2em,
@@ -303,7 +303,7 @@
     ink: palette.ink,
     paper: palette.sky-deep,
     text: element-text(font: ("Libertinus Serif", "DejaVu Sans Mono")),
-    axis-ticks: element-tick(length: 0.12cm),
+    axis-ticks: element-tick(colour: palette.muted, length: 0.12cm),
     panel-background: element-rect(fill: gradient.linear(
       // Hold the dark top longer so it blends into the sky-deep frame, then
       // lighten only toward the lower half of the panel.
@@ -315,7 +315,6 @@
     panel-grid-major-x: element-blank(),
     panel-grid-minor: element-blank(),
     panel-grid-major-y: element-line(colour: palette.ink.transparentize(88%)),
-    axis-ticks: element-line(colour: palette.muted),
     axis-text: element-text(colour: palette.muted, size: 10pt),
     axis-title: element-text(colour: palette.ink, size: 12pt),
     axis-title-y: element-text(margin: margin(right: 14pt)),
