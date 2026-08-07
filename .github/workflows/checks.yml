@@ -20,6 +20,7 @@ on:
       - ".github/actions/**"
       - ".github/workflows/checks.yml"
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "src/**"
       - "lib.typ"
@@ -51,6 +52,8 @@ jobs:
   typstdoc-tests:
     name: Run typstdoc tests
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.draft != true }}
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -113,6 +116,8 @@ jobs:
   typst-compile:
     name: Compile Typst sources
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.draft != true }}
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -183,6 +188,8 @@ jobs:
   visual-snapshots:
     name: Visual snapshot diff
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.draft != true }}
+    timeout-minutes: 20
     # Serialise against the refresh workflow on the same ref so a
     # `snapshot-refresh` push and a checks run can't fight over goldens.
     concurrency:
@@ -248,6 +255,8 @@ jobs:
   package-check:
     name: Run typst-package-check
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.draft != true }}
+    timeout-minutes: 20
     # Repository URL check fails with 404 while `mcanouil/gribouille` stays
     # private; keep the job informational rather than blocking until then.
     continue-on-error: true

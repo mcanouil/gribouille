@@ -21,6 +21,7 @@ on:
   # that compiles the Typst blocks in the docs, so without this a broken block is
   # only caught once it has already landed on main.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "docs/**"
       - "lib.typ"
@@ -61,6 +62,7 @@ jobs:
   resolve:
     name: Resolve build matrix
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     # Skip everything the Release workflow's version bump produces: the `ci/bump-version`
     # pull request and the commit it lands on main. Release deploys docs itself via its
     # `pages` job (workflow_call), so this push would double-deploy. The bump arrives as a
@@ -69,7 +71,7 @@ jobs:
     if: >-
       ${{ (github.event_name != 'push'
             || !contains(github.event.head_commit.message, 'ci: bump version to'))
-        && github.head_ref != 'ci/bump-version' }}
+        && github.head_ref != 'ci/bump-version' && github.event.pull_request.draft != true }}
 
     outputs:
       tag: ${{ steps.latest-tag.outputs.tag }}
@@ -143,6 +145,7 @@ jobs:
     name: Render ${{ matrix.profile }} site
     needs: resolve
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     strategy:
       fail-fast: false
@@ -275,6 +278,7 @@ jobs:
     name: Deploy docs to GitHub Pages
     needs: [ resolve, build ]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Pull requests build to catch Typst failures; publishing stays a main-only step.
     if: ${{ github.event_name != 'pull_request' }}
 
