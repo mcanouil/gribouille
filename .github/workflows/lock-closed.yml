@@ -71,9 +71,9 @@ jobs:
             done < <(gh search "${subcommand}" \
               --repo "${REPO}" \
               --closed "<${THRESHOLD}" \
-              --locked=false \
               --limit 1000 \
-              --json number --jq '.[].number')
+              --json number,isLocked \
+              --jq '.[] | select(.isLocked | not) | .number')
           }
 
           lock_kind "issue" "issues"
