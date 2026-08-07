@@ -204,6 +204,37 @@ local function is_decorative(kwargs, warn)
   return false
 end
 
+--- Fold `key=value` positional arguments back into `kwargs`.
+--- Quarto parses body shortcodes with `lpegshortcode.lua`, which reads an
+--- unquoted `key=value`, but a shortcode in a metadata field (`title:`,
+--- `subtitle:`, a navbar `text:`) goes through `astshortcode.lua`, which reads
+--- a key only when the value is quoted and otherwise hands the whole token
+--- over as a positional argument. Recovering the pair here is what makes one
+--- shortcode mean the same thing in a metadata field as in the body; drop this
+--- once Quarto's metadata parser matches its body parser.
+--- An explicitly parsed entry always wins, and an icon or set name cannot
+--- contain `=`, so the icon arguments are never captured.
+--- Pandoc splits on whitespace before the extension sees the shortcode, so an
+--- unquoted value carrying a space (`label=Hello world`) recovers its first
+--- token alone. Quoting the value remains the documented form.
+--- @param args table<integer, any> Icon arguments (icon set and name)
+--- @param kwargs table<string, any> Key-value options for the icon
+--- @return table<integer, any> Icon arguments with the recovered pairs removed
+local function recover_kwargs(args, kwargs)
+  --- @type table<integer, any>
+  local positional = {}
+  for _, arg in ipairs(args) do
+    --- @type string, string
+    local key, value = string.match(str.stringify(arg), '^([%a][%w%-]*)=(.*)$')
+    if key == nil then
+      table.insert(positional, arg)
+    elseif str.is_empty(str.stringify(kwargs[key])) then
+      kwargs[key] = value
+    end
+  end
+  return positional
+end
+
 --- Get an iconify option from arguments or metadata.
 --- Resolution order: positional/named kwargs first, then nested
 --- `extensions.iconify.<key>`, then the deprecated top-level `iconify.<key>`
@@ -319,6 +350,8 @@ end
 --- @param meta table<string, any> Document metadata
 --- @return any Pandoc RawInline for HTML or Pandoc Null for other formats
 local function iconify(args, kwargs, meta)
+  args = recover_kwargs(args, kwargs)
+
   -- HTML (excluding epub which will not host the Web Component) renders the
   -- Web Component; Typst renders a cached SVG. Every other format renders
   -- nothing.
@@ -508,7 +541,7 @@ local function iconify(args, kwargs, meta)
 end
 
 --- Render Quarto icon using the iconify function with preset styling.
---- @param args table<integer, any> Icon arguments (ignored as we're using a preset icon)
+--- @param args table<integer, any> Icon arguments (the icon is a preset, so these are read only for attributes a metadata field left unparsed)
 --- @param kwargs table<string, any>|nil Key-value options that might override default styling
 --- @param meta table<string, any> Document metadata
 --- @return any Pandoc RawInline for HTML or Pandoc Null for other formats
@@ -517,6 +550,7 @@ local function iconify_quarto(args, kwargs, meta)
   local quarto_args = { 'simple-icons:quarto' }
   --- @type table<string, any>
   local quarto_kwargs = kwargs or {}
+  recover_kwargs(args, quarto_kwargs)
   -- A decorative icon carries neither, and setting them here would re-introduce
   -- exactly what `aria-hidden` removes.
   if not is_decorative(quarto_kwargs, false) then
