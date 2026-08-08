@@ -223,34 +223,134 @@
 // at its natural angle reserves exactly `_ax-text-cm(size)` as before. A title
 // that `_axis-title-extents` had to wrap is thicker than one line, so take
 // whichever is larger and the single-line case stays untouched.
+// Thickness (cm) of the title's own box across its reading direction: one line
+// unless `_axis-title-extents` had to wrap it onto more, in which case its
+// measured height wins and the single-line case stays untouched.
+#let _title-thickness-cm(style, ext) = {
+  let line-h = _ax-text-cm(style.size)
+  if ext == none or ext.at("along", default: none) == none { return line-h }
+  calc.max(line-h, ext.height)
+}
+
 #let _title-extent-cm(style, ext, axis) = {
   let title-w = if ext != none { ext.width } else { 0.0 }
-  let line-h = _ax-text-cm(style.size)
-  let line-h = if ext != none and ext.at("along", default: none) != none {
-    calc.max(line-h, ext.height)
-  } else { line-h }
+  let thickness = _title-thickness-cm(style, ext)
   let a = _title-angle(style, if axis == "x" { 0 } else { 90 }).deg()
   if axis == "x" {
-    _x-label-depth(a, 1, title-w, line-h)
+    _x-label-depth(a, 1, title-w, thickness)
   } else {
-    _y-label-width(a, 1, title-w, line-h)
+    _y-label-width(a, 1, title-w, thickness)
   }
 }
 
-// Reading length (cm) an axis title has before its projection onto the panel's
-// own axis overruns the panel. A title at angle `a` projects `len * cos(a)`
-// along an x axis and `len * sin(a)` along a y axis, so invert that. When the
-// projection vanishes the title reads across the axis rather than along it (a
-// vertical x title, a horizontal y title) and nothing constrains its length,
-// since the perpendicular depth is reserved either way: `none` means unbounded.
-#let _title-along-cm(style, axis, panel-cm) = {
+// Extent (cm) a title box actually spans along the panel's own axis: the other
+// half of the rotated bounding box from `_title-extent-cm`, which reserves the
+// perpendicular half. An x title is bounded by this against the panel width, a
+// y title against the panel height.
+#let _title-span-cm(style, ext, axis) = {
+  let along = if ext == none { none } else { ext.at("along", default: none) }
+  if along == none { return 0.0 }
+  let thickness = _title-thickness-cm(style, ext)
+  let a = _title-angle(style, if axis == "x" { 0 } else { 90 }).deg()
+  if axis == "x" {
+    _y-label-width(a, 1, along, thickness)
+  } else {
+    _x-label-depth(a, 1, along, thickness)
+  }
+}
+
+// Reading length (cm) to box an axis title at so it spans no more than
+// `panel-cm` along the panel's own axis. Rotated by `a`, a `len` x `thickness`
+// box spans `len * cos(a) + thickness * sin(a)` horizontally and
+// `len * sin(a) + thickness * cos(a)` vertically; an x title is bounded by the
+// first against the panel width, a y title by the second against the panel
+// height. `natural-cm` is the title's unwrapped single-line width.
+//
+// At the natural angles the thickness lies across the constrained span and
+// costs nothing, so the bound is the panel extent divided by the projection.
+// Off them both terms count, and shortening the box thickens it: wrapping
+// `natural-cm` into a box of width `len` takes about `natural-cm / len` lines,
+// so `thickness ~ natural-cm * line / len` and the span becomes
+// `len * s + natural-cm * line * c / len`. That is a quadratic in `len`, so
+// take its larger root and the title wraps as little as it can while still
+// fitting. A span has a floor of `2 * sqrt(natural-cm * line * s * c)`, so when
+// the panel is under it no box fits: hand back the length that comes closest
+// and let the caller's span check report it.
+//
+// When the reading direction contributes nothing to the constrained span the
+// title reads across its axis rather than along it (a vertical x title, a
+// horizontal y title): its length is then reserved as perpendicular depth
+// instead, so nothing bounds it and `none` means unbounded.
+#let _title-along-cm(style, axis, panel-cm, natural-cm) = {
   if panel-cm <= 0 { return none }
   let default-deg = if axis == "x" { 0 } else { 90 }
   let a = calc.abs(_title-angle(style, default-deg).deg()) * 1deg
-  let projection = if axis == "x" { calc.cos(a) } else { calc.sin(a) }
-  if projection <= 1e-6 { return none }
-  panel-cm / projection
+  let along-share = if axis == "x" { calc.cos(a) } else { calc.sin(a) }
+  let across-share = if axis == "x" { calc.sin(a) } else { calc.cos(a) }
+  if along-share <= 1e-6 { return none }
+  if across-share <= 1e-6 { return panel-cm / along-share }
+  let bulk = natural-cm * _ax-text-cm(style.size) * across-share
+  let discriminant = panel-cm * panel-cm - 4 * along-share * bulk
+  if discriminant <= 0 { return calc.sqrt(bulk / along-share) }
+  (panel-cm + calc.sqrt(discriminant)) / (2 * along-share)
 }
+
+// Bisection steps spent narrowing an oblique title's box onto the panel. The
+// estimate above assumes lines pack perfectly; real ones are ragged and round
+// up to whole lines, so the estimate can still overrun by a line's projection.
+// Five halvings take that to a thirty-second of the starting bracket.
+#let _TITLE-FIT-STEPS = 5
+
+// The largest reading length whose *measured* span fits `panel-cm`, and the
+// extents that go with it. At the natural angles the estimate is exact and
+// this is a single measurement. Off them it brackets: the estimate is the
+// widest box worth trying, and `sqrt(bulk / along-share)` is the box that
+// minimises the span, so if anything fits it lies between the two. Bisect
+// towards the wider end, keeping the widest box measured to fit, because a
+// wider box is a title on fewer lines.
+#let _fit-title-extents(title, style, axis, panel-cm, natural-cm) = {
+  let along = _title-along-cm(style, axis, panel-cm, natural-cm)
+  let ext = _axis-title-extents(title, style, along-cm: along)
+  let fits = ext => _title-span-cm(style, ext, axis) <= panel-cm + 1e-6
+  if along == none or fits(ext) { return (along: along, ext: ext) }
+  let default-deg = if axis == "x" { 0 } else { 90 }
+  let a = calc.abs(_title-angle(style, default-deg).deg()) * 1deg
+  let along-share = if axis == "x" { calc.cos(a) } else { calc.sin(a) }
+  let across-share = if axis == "x" { calc.sin(a) } else { calc.cos(a) }
+  if across-share <= 1e-6 { return (along: along, ext: ext) }
+  let floor = calc.sqrt(
+    natural-cm * _ax-text-cm(style.size) * across-share / along-share,
+  )
+  // Nothing between the two fits, so settle on the span minimum and let the
+  // caller report a title this panel cannot hold at this angle.
+  let best = (
+    along: floor,
+    ext: _axis-title-extents(
+      title,
+      style,
+      along-cm: floor,
+    ),
+  )
+  let (lo, hi) = (calc.min(floor, along), calc.max(floor, along))
+  for _ in range(_TITLE-FIT-STEPS) {
+    let mid = (lo + hi) / 2
+    let probe = _axis-title-extents(title, style, along-cm: mid)
+    if fits(probe) {
+      best = (along: mid, ext: probe)
+      lo = mid
+    } else { hi = mid }
+  }
+  best
+}
+
+// The horizontal alignment a wrapped title's lines take, read back off the
+// cetz anchor `_x-title-place` / `_y-title-place` pinned it with. Both of them
+// derive the anchor from the theme's `align`, so inverting it here keeps a
+// wrapped title's ragged edge on the same side as the title itself, without
+// threading the alignment through every draw site alongside the anchor.
+#let _title-align(anchor) = if anchor in ("south-west", "south") {
+  left
+} else if anchor in ("south-east", "north") { right } else { center }
 
 // The drawable body for an axis title: the same box `_axis-title-extents`
 // measured, so what the canvas reserves and what cetz lays out agree. A title
@@ -273,7 +373,7 @@
 
 // How far (cm) a title still overruns its box once wrapped: the widest run the
 // layout cannot break, less the box. Zero when it fits, and zero for content
-// titles, whose break opportunities `measure-wrapped-cm` cannot see.
+// titles, whose break opportunities `longest-unbreakable-cm` cannot see.
 #let _title-overrun-cm(ext) = {
   let along = ext.at("along", default: none)
   if along == none { return 0.0 }

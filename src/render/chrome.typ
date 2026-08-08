@@ -12,9 +12,10 @@
 #import "domain.typ": _is-flipped
 #import "../utils/errors.typ": fail
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _axis-label-extents, _axis-title-extents, _sec-extent,
-  _secondary-label-extents, _text-margin-cm, _title-along-cm, _title-extent-cm,
-  _title-overrun-cm, _x-label-depth-stack, _y-label-width-stack,
+  _AX-TITLE-LABEL-GAP, _axis-label-extents, _axis-title-extents,
+  _fit-title-extents, _sec-extent, _secondary-label-extents, _text-margin-cm,
+  _title-angle, _title-extent-cm, _title-overrun-cm, _title-span-cm,
+  _x-label-depth-stack, _y-label-width-stack,
 )
 
 // Passes allowed when settling axis-title wrapping against the panel size, and
@@ -306,56 +307,145 @@
     )
   }
 
+  // Each pass may only tighten a bound, never loosen one; erring small merely
+  // over-reserves, since a box narrower than the panel cannot overrun it.
+  let _tighten(prev, next) = if next == none {
+    prev
+  } else if prev == none { next } else { calc.min(prev, next) }
+
+  // The bound is solved from the title's unwrapped width, which does not move
+  // as the panel does, so measure it once rather than once per pass.
+  let natural = (
+    xb: _axis-title-extents(x-title, ax-title.xb).width,
+    yl: _axis-title-extents(y-title, ax-title.yl).width,
+    xt: _axis-title-extents(x-sec-title, ax-title.xt).width,
+    yr: _axis-title-extents(y-sec-title, ax-title.yr).width,
+  )
+
   let fit = _fit(none, none, none, none)
+  let along = (xb: none, yl: none, xt: none, yr: none)
   let panel-w = 0.0
   let panel-h = 0.0
   // Each pass can only take panel extent away, never give it back, so the
-  // sequence descends and is bounded below by zero: it settles. The cap is a
-  // backstop for a degenerate plot, where the panel floors in `_fit` and the
-  // canvas-minimum guard in `render-plot` take over.
+  // sequence descends and is bounded below by zero: it settles. Stop once the
+  // panel holds still AND every title fits the span it was bounded to; the cap
+  // is a backstop for a degenerate plot, where the panel floors in `_fit` and
+  // the canvas-minimum guard in `render-plot` takes over.
   for _ in range(_TITLE-FIT-PASSES) {
     let next-w = calc.max(0.0, width-units - fit.margin.left - fit.margin.right)
     let next-h = calc.max(
       0.0,
       height-units - fit.margin.top - fit.margin.bottom,
     )
-    if (
+    let settled = (
       calc.abs(next-w - panel-w) < _TITLE-FIT-TOLERANCE
         and calc.abs(next-h - panel-h) < _TITLE-FIT-TOLERANCE
-    ) { break }
+    )
+    let spans = (
+      (ax-title.xb, "x", next-w, fit.x-title-extents),
+      (ax-title.yl, "y", next-h, fit.y-title-extents),
+      (ax-title.xt, "x", next-w, fit.x-sec-title-extents),
+      (ax-title.yr, "y", next-h, fit.y-sec-title-extents),
+    )
+    let fitted = spans.all(((style, axis, panel-cm, ext)) => (
+      _title-span-cm(style, ext, axis) <= panel-cm + _TITLE-FIT-TOLERANCE
+    ))
+    if settled and fitted { break }
     panel-w = next-w
     panel-h = next-h
-    fit = _fit(
-      _title-along-cm(ax-title.xb, "x", panel-w),
-      _title-along-cm(ax-title.yl, "y", panel-h),
-      _title-along-cm(ax-title.xt, "x", panel-w),
-      _title-along-cm(ax-title.yr, "y", panel-h),
+    along = (
+      xb: _tighten(
+        along.xb,
+        _fit-title-extents(
+          x-title,
+          ax-title.xb,
+          "x",
+          panel-w,
+          natural.xb,
+        ).along,
+      ),
+      yl: _tighten(
+        along.yl,
+        _fit-title-extents(
+          y-title,
+          ax-title.yl,
+          "y",
+          panel-h,
+          natural.yl,
+        ).along,
+      ),
+      xt: _tighten(
+        along.xt,
+        _fit-title-extents(
+          x-sec-title,
+          ax-title.xt,
+          "x",
+          panel-w,
+          natural.xt,
+        ).along,
+      ),
+      yr: _tighten(
+        along.yr,
+        _fit-title-extents(
+          y-sec-title,
+          ax-title.yr,
+          "y",
+          panel-h,
+          natural.yr,
+        ).along,
+      ),
     )
+    fit = _fit(along.xb, along.yl, along.xt, along.yr)
   }
 
-  // Wrapping cannot rescue a title whose longest unbreakable run is wider than
-  // the panel: it would still push the canvas past the requested size. Say so
-  // rather than ship a figure that silently outgrows the box it was given.
-  for (side, ext) in (
-    ("x-axis", fit.x-title-extents),
-    ("y-axis", fit.y-title-extents),
-    ("secondary x-axis", fit.x-sec-title-extents),
-    ("secondary y-axis", fit.y-sec-title-extents),
+  // Two ways wrapping can fail to rescue a title, both of which would push the
+  // canvas past the requested size. Say so rather than ship a figure that
+  // silently outgrows the box it was given.
+  let _cm = v => str(calc.round(v, digits: 2))
+  for (side, axis, panel-cm, style, ext) in (
+    ("x-axis", "x", panel-w, ax-title.xb, fit.x-title-extents),
+    ("y-axis", "y", panel-h, ax-title.yl, fit.y-title-extents),
+    ("secondary x-axis", "x", panel-w, ax-title.xt, fit.x-sec-title-extents),
+    ("secondary y-axis", "y", panel-h, ax-title.yr, fit.y-sec-title-extents),
   ) {
-    let overrun = _title-overrun-cm(ext)
-    if overrun <= _TITLE-FIT-TOLERANCE { continue }
-    fail(
-      "plot",
-      "the "
-        + side
-        + " title has a "
-        + str(calc.round(ext.min-width, digits: 2))
-        + " cm word that cannot wrap into the "
-        + str(calc.round(ext.along, digits: 2))
-        + " cm the panel leaves it",
-      hint: "Shorten the title, break it with `\\`, or give the plot more "
-        + "room with `width`/`height`.",
-    )
+    // A word wider than the box it wraps in.
+    if _title-overrun-cm(ext) > _TITLE-FIT-TOLERANCE {
+      fail(
+        "plot",
+        "the "
+          + side
+          + " title has a "
+          + _cm(ext.min-width)
+          + " cm word that cannot wrap into the "
+          + _cm(ext.along)
+          + " cm the panel leaves it",
+        hint: "Shorten the title, break it with `\\`, or give the plot more "
+          + "room with `width`/`height`.",
+      )
+    }
+    // A title rotated off its axis spans the panel with both its length and
+    // its thickness, and narrowing the box trades one for the other. Past a
+    // point that trade stops paying and no box fits at all.
+    let span = _title-span-cm(style, ext, axis)
+    if span > panel-cm + _TITLE-FIT-TOLERANCE {
+      fail(
+        "plot",
+        "the "
+          + side
+          + " title spans "
+          + _cm(span)
+          + " cm along a panel of "
+          + _cm(panel-cm)
+          + " cm, and no wrapping of it at "
+          + str(calc.round(
+            _title-angle(style, if axis == "x" { 0 } else { 90 }).deg(),
+            digits: 1,
+          ))
+          + "deg spans less",
+        hint: "Shorten the title, return it to its natural angle, reduce its "
+          + "font size, or give the plot more room with `width`/`height`.",
+      )
+    }
   }
 
   let sec-x-extent = fit.sec-x-extent
