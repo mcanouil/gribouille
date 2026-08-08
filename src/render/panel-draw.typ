@@ -30,7 +30,7 @@
 #import "guides.typ": _axis-text-angle, _read-axis-guide
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP, _axis-guide-rows,
-  _resolve-extents, _text-margin-cm, _title-align, _title-angle, _title-body,
+  _resolve-extents, _text-margin-cm, _title-angle, _title-body,
   _title-extent-cm, _x-label-depth, _x-label-depth-stack, _x-title-place,
   _y-label-width, _y-label-width-stack, _y-title-place,
 )
@@ -521,7 +521,6 @@
           _x-sec.name,
           _ax-title.xt,
           x-sec-title-extents,
-          _title-align(x-anchor),
         ),
         anchor: x-anchor,
         angle: _title-angle(_ax-title.xt, 0),
@@ -593,7 +592,6 @@
           _y-sec.name,
           _ax-title.yr,
           y-sec-title-extents,
-          _title-align(y-anchor),
         ),
         angle: _title-angle(_ax-title.yr, 90),
         anchor: y-anchor,
@@ -743,7 +741,6 @@
         x-title,
         _ax-title.xb,
         x-title-extents,
-        _title-align(x-anchor),
       ),
       anchor: x-anchor,
       angle: _title-angle(_ax-title.xb, 0),
@@ -757,7 +754,6 @@
         y-title,
         _ax-title.yl,
         y-title-extents,
-        _title-align(y-anchor),
       ),
       angle: _title-angle(_ax-title.yl, 90),
       anchor: y-anchor,

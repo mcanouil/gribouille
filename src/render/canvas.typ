@@ -104,7 +104,7 @@
         margin.left + grid-w / 2,
         margin.bottom - _tick-len.xb - 0.1 - _xlbl-depth - _xt-gap - _xt-cm,
       ),
-      _title-body(x-title, _ax-title.xb, ctx.x-title-extents, center),
+      _title-body(x-title, _ax-title.xb, ctx.x-title-extents),
       anchor: "south",
       angle: _title-angle(_ax-title.xb, 0),
     )
@@ -115,7 +115,7 @@
         margin.left - _tick-len.yl - 0.1 - _ylbl-width - _yt-gap - _yt-cm / 2,
         margin.bottom + grid-h / 2,
       ),
-      _title-body(y-title, _ax-title.yl, ctx.y-title-extents, center),
+      _title-body(y-title, _ax-title.yl, ctx.y-title-extents),
       angle: _title-angle(_ax-title.yl, 90),
     )
   }

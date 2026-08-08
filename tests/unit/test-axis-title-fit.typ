@@ -270,16 +270,17 @@
 // depth instead, so nothing bounds it.
 #assert.eq(_title-along-cm((angle: 90deg, size: 9pt), "x", 6.0, 20.0), none)
 #assert.eq(_title-along-cm((angle: 0deg, size: 9pt), "y", 4.0, 20.0), none)
-// A panel with nothing left in it bounds nothing; the canvas-minimum guard in
-// `render-plot` owns that case.
+// Below the panel minimum nothing is bounded: those layouts are degenerate
+// already, and turning what used to render into a failure would be worse than
+// the cramped title. The canvas-minimum guard in `render-plot` owns them.
 #assert.eq(_title-along-cm(plain, "y", 0.0, 20.0), none)
-// No box fits a long title into a tiny panel at 45deg, because the span has a
+#assert.eq(_title-along-cm(plain, "y", 0.49, 20.0), none)
+#approx(_title-along-cm(plain, "y", 0.5, 20.0), 0.5)
+// No box fits a long title into a short panel at 45deg, because the span has a
 // floor. Hand back the length that comes closest rather than nothing.
 #context {
   let a = 45deg
-  let panel = 0.2
-  let len = _title-along-cm((angle: a, size: 9pt), "y", panel, 20.0)
-  assert(len > 0, message: "expected a drawable box width")
+  let len = _title-along-cm((angle: a, size: 9pt), "y", 1.0, 20.0)
   // The closest is the span minimum, `sqrt(bulk / along-share)`.
   approx(len, calc.sqrt(20.0 * LINE * calc.cos(a) / calc.sin(a)))
 }

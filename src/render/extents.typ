@@ -259,6 +259,10 @@
   }
 }
 
+// Smallest panel worth wrapping an axis title against, matching the 0.5 cm
+// panel floor `render-plot` and `max-right-margin` already enforce.
+#let _MIN-TITLE-PANEL = 0.5
+
 // Reading length (cm) to box an axis title at so it spans no more than
 // `panel-cm` along the panel's own axis. Rotated by `a`, a `len` x `thickness`
 // box spans `len * cos(a) + thickness * sin(a)` horizontally and
@@ -282,7 +286,11 @@
 // horizontal y title): its length is then reserved as perpendicular depth
 // instead, so nothing bounds it and `none` means unbounded.
 #let _title-along-cm(style, axis, panel-cm, natural-cm) = {
-  if panel-cm <= 0 { return none }
+  // Below the panel minimum the whole layout is already degenerate, and the
+  // canvas-minimum guard in `render-plot` is what speaks to that. Bounding a
+  // title to a few millimetres there would turn plots that used to render,
+  // however cramped, into failures. Leave them exactly as they were.
+  if panel-cm < _MIN-TITLE-PANEL { return none }
   let default-deg = if axis == "x" { 0 } else { 90 }
   let a = calc.abs(_title-angle(style, default-deg).deg()) * 1deg
   let along-share = if axis == "x" { calc.cos(a) } else { calc.sin(a) }
@@ -343,22 +351,16 @@
   best
 }
 
-// The horizontal alignment a wrapped title's lines take, read back off the
-// cetz anchor `_x-title-place` / `_y-title-place` pinned it with. Both of them
-// derive the anchor from the theme's `align`, so inverting it here keeps a
-// wrapped title's ragged edge on the same side as the title itself, without
-// threading the alignment through every draw site alongside the anchor.
-#let _title-align(anchor) = if anchor in ("south-west", "south") {
-  left
-} else if anchor in ("south-east", "north") { right } else { center }
-
 // The drawable body for an axis title: the same box `_axis-title-extents`
 // measured, so what the canvas reserves and what cetz lays out agree. A title
 // that fitted on one line carries no `along` and is drawn bare, exactly as
-// before. `fallback-align` is the surface's default when the theme leaves
-// `align` unset; it only bites once a title wraps and the lines differ in
-// length.
-#let _title-body(title, style, ext, fallback-align) = {
+// before.
+//
+// Once it wraps, the lines take the theme's `align`, the same field
+// `_x-title-place` / `_y-title-place` read to pin the block as a whole, so a
+// ragged edge falls on the side the title is already pushed to. Unset means
+// centred on both axes, which is what those two produce as well.
+#let _title-body(title, style, ext) = {
   let body = text(.._text-args(style))[#resolve-prose(
     title,
     eval-strings: style.typst,
@@ -367,8 +369,9 @@
     ext.at("along", default: none)
   }
   if along == none { return body }
-  let a = if style.align != none { style.align } else { fallback-align }
-  _title-boxed(body, along, a)
+  _title-boxed(body, along, if style.align != none { style.align } else {
+    center
+  })
 }
 
 // How far (cm) a title still overruns its box once wrapped: the widest run the
