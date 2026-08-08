@@ -111,8 +111,9 @@ local function inject_preload(meta)
 end
 
 --- Pandoc Meta handler. Inject preload script for HTML output only.
---- @param meta table<string, any>
---- @return table<string, any>
+--- Quarto's language-server plugin rewrites a filter function's doc comment,
+--- adding `@param meta pandoc.Meta` and `@return pandoc.Meta|nil` without
+--- checking for an existing annotation, so declaring either here duplicates it.
 function Meta(meta)
   if quarto.doc.is_format('html:js') then
     inject_preload(meta)

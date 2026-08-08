@@ -52,6 +52,51 @@
   ),
 )
 
+= Faceted secondary titles: one per axis, wrapped, inside the frame
+
+// Check the title only: one wrapped copy per axis, at the far edge of the grid,
+// inside the frame. The secondary tick labels themselves collide with the strip
+// bands, which is a separate defect, so under facet-grid they are painted over
+// by the column strip and under facet-wrap they overprint the strip text.
+
+#let facet-d = (
+  x: (1, 2, 3, 4, 5, 6),
+  y: (2, 4, 3, 5, 1, 6),
+  g: ("u", "u", "v", "v", "w", "w"),
+)
+
+#framed(plot(
+  data: facet-d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(),),
+  scales: scales(y: scale-continuous(
+    name: "y",
+    secondary: sec-axis(
+      transform: v => v * 2,
+      name: "Share of the year's kilos landing in China, a very long axis title",
+    ),
+  )),
+  facet: facet-wrap("g", ncolumn: 3),
+  width: 12cm,
+  height: 5cm,
+))
+
+#framed(plot(
+  data: facet-d,
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(),),
+  scales: scales(x: scale-continuous(
+    name: "x",
+    secondary: sec-axis(
+      transform: v => v * 2,
+      name: "An extremely long horizontal axis title that is wider than its panel",
+    ),
+  )),
+  facet: facet-grid(columns: "g"),
+  width: 12cm,
+  height: 5cm,
+))
+
 = A caption below a wrapped title still clears the frame
 
 #framed(plot(

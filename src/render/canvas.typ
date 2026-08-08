@@ -15,10 +15,12 @@
   _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
   _apply-labels, _fixed-inner-size, _is-flipped, _post-train,
 )
+#import "../utils/radial.typ": is-radial
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _axis-label-extents, _secondary-label-extents,
-  _text-margin-cm, _title-angle, _title-body, _title-extent-cm, _x-label-depth,
-  _y-label-width,
+  _AX-TITLE-LABEL-GAP, _axis-label-extents, _sec-title-offset-cm,
+  _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
+  _title-extent-cm, _x-label-depth, _x-title-place, _y-label-width,
+  _y-title-place,
 )
 #import "facet.typ": _draw-strip, _strip-band, _strip-texts
 #import "panel-draw.typ": _draw-axis-and-layers
@@ -98,25 +100,71 @@
   let _yt-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   let _xt-cm = _title-extent-cm(_ax-title.xb, ctx.x-title-extents, "x")
   let _yt-cm = _title-extent-cm(_ax-title.yl, ctx.y-title-extents, "y")
+  // A shared title spans the whole grid, so the themed `align` pins it to the
+  // grid's own ends, the way a single plot's pins it to the panel's.
+  let _x-span = (margin.left, margin.left + grid-w)
+  let _y-span = (margin.bottom, margin.bottom + grid-h)
   if x-title != none and _ax-title.xb.size > 0pt {
+    let (cx, x-anchor) = _x-title-place(_ax-title.xb.align, .._x-span)
     cetz.draw.content(
       (
-        margin.left + grid-w / 2,
+        cx,
         margin.bottom - _tick-len.xb - 0.1 - _xlbl-depth - _xt-gap - _xt-cm,
       ),
       _title-body(x-title, _ax-title.xb, ctx.x-title-extents),
-      anchor: "south",
+      anchor: x-anchor,
       angle: _title-angle(_ax-title.xb, 0),
     )
   }
   if y-title != none and _ax-title.yl.size > 0pt {
+    let (cy, y-anchor) = _y-title-place(_ax-title.yl.align, .._y-span)
     cetz.draw.content(
       (
         margin.left - _tick-len.yl - 0.1 - _ylbl-width - _yt-gap - _yt-cm / 2,
-        margin.bottom + grid-h / 2,
+        cy,
       ),
       _title-body(y-title, _ax-title.yl, ctx.y-title-extents),
       angle: _title-angle(_ax-title.yl, 90),
+      anchor: y-anchor,
+    )
+  }
+
+  // The secondary titles hang off the far edge of the grid rather than the
+  // panel edge a single plot uses, so the strip bands sit between the axis and
+  // its title. `_chrome-margins` reserved the same extent on that side, and the
+  // extents carried here are the ones it fitted, so a long title arrives
+  // already wrapped. Radial panels draw no secondary axis at all.
+  let _x-sec = if is-radial(ctx.coord) { none } else { _sec-spec(x-trained) }
+  let _y-sec = if is-radial(ctx.coord) { none } else { _sec-spec(y-trained) }
+  if _x-sec != none and _x-sec.name != none and _ax-title.xt.size > 0pt {
+    let _x-sec-offset = _sec-title-offset-cm(
+      _tick-len.xt,
+      ctx.x-sec-extents,
+      _ax-title.xt,
+      "x",
+    )
+    let (cx, x-anchor) = _x-title-place(_ax-title.xt.align, .._x-span)
+    cetz.draw.content(
+      (cx, margin.bottom + grid-h + top-strip + _x-sec-offset),
+      _title-body(_x-sec.name, _ax-title.xt, ctx.x-sec-title-extents),
+      anchor: x-anchor,
+      angle: _title-angle(_ax-title.xt, 0),
+    )
+  }
+  if _y-sec != none and _y-sec.name != none and _ax-title.yr.size > 0pt {
+    let _y-sec-offset = _sec-title-offset-cm(
+      _tick-len.yr,
+      ctx.y-sec-extents,
+      _ax-title.yr,
+      "y",
+    )
+    let _y-sec-cm = _title-extent-cm(_ax-title.yr, ctx.y-sec-title-extents, "y")
+    let (cy, y-anchor) = _y-title-place(_ax-title.yr.align, .._y-span)
+    cetz.draw.content(
+      (margin.left + grid-w + right-strip + _y-sec-offset + _y-sec-cm / 2, cy),
+      _title-body(_y-sec.name, _ax-title.yr, ctx.y-sec-title-extents),
+      angle: _title-angle(_ax-title.yr, 90),
+      anchor: y-anchor,
     )
   }
 
@@ -380,6 +428,8 @@
         show-y-title: false,
         show-x-sec: free-x or all-x or row == 0,
         show-y-sec: free-y or all-y or col == ncol - 1,
+        show-x-sec-title: false,
+        show-y-sec-title: false,
         flipped: _is-flipped(coord),
         axis-breaks: shared-breaks,
         x-extents: _pe.x,
@@ -488,6 +538,8 @@
           show-y-title: false,
           show-x-sec: r == 0,
           show-y-sec: c == n-cols - 1,
+          show-x-sec-title: false,
+          show-y-sec-title: false,
           flipped: _is-flipped(coord),
           axis-breaks: shared-breaks,
           x-extents: x-extents,

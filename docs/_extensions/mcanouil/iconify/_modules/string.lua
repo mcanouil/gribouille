@@ -109,7 +109,7 @@ end
 --- @param text string The text to escape
 --- @return string The escaped text safe for Typst string literals
 function M.escape_typst_string(text)
-  return text:gsub('\\', '\\\\'):gsub('"', '\\"')
+  return (text:gsub('\\', '\\\\'):gsub('"', '\\"'))
 end
 
 --- Escape special Lua pattern characters for use in string.gsub.
