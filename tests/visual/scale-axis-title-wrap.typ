@@ -54,6 +54,11 @@
 
 = Faceted secondary titles: one per axis, wrapped, inside the frame
 
+// Check the title only: one wrapped copy per axis, at the far edge of the grid,
+// inside the frame. The secondary tick labels themselves collide with the strip
+// bands, which is a separate defect, so under facet-grid they are painted over
+// by the column strip and under facet-wrap they overprint the strip text.
+
 #let facet-d = (
   x: (1, 2, 3, 4, 5, 6),
   y: (2, 4, 3, 5, 1, 6),

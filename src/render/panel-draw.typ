@@ -30,9 +30,9 @@
 #import "guides.typ": _axis-text-angle, _read-axis-guide
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP, _axis-guide-rows,
-  _resolve-extents, _text-margin-cm, _title-angle, _title-body,
-  _title-extent-cm, _x-label-depth, _x-label-depth-stack, _x-title-place,
-  _y-label-width, _y-label-width-stack, _y-title-place,
+  _resolve-extents, _sec-title-offset-cm, _text-margin-cm, _title-angle,
+  _title-body, _title-extent-cm, _x-label-depth-stack, _x-title-place,
+  _y-label-width-stack, _y-title-place,
 )
 
 #import "../geom/point.typ" as point-geom
@@ -507,21 +507,15 @@
       line((px-lo, py-hi), (px-hi, py-hi), stroke: _ax-line.xt)
     }
     if show-x-sec-title and _x-sec.name != none and _ax-title.xt.size > 0pt {
-      let _x-sec-ext = _resolve-extents(x-sec-extents, _ax-text.xt.size)
-      let x-sec-depth = _x-label-depth(
-        0,
-        1,
-        _x-sec-ext.width,
-        _x-sec-ext.height,
-      )
-      let x-sec-gap = _text-margin-cm(
+      let x-sec-offset = _sec-title-offset-cm(
+        _tick-len.xt,
+        _resolve-extents(x-sec-extents, _ax-text.xt.size),
         _ax-title.xt,
-        "bottom",
-        _AX-TITLE-LABEL-GAP,
+        "x",
       )
       let (cx, x-anchor) = _x-title-place(_ax-title.xt.align, px-lo, px-hi)
       content(
-        (cx, py-hi + _tick-len.xt + 0.1 + x-sec-depth + x-sec-gap),
+        (cx, py-hi + x-sec-offset),
         _title-body(
           _x-sec.name,
           _ax-title.xt,
@@ -569,30 +563,20 @@
       line((px-hi, py-lo), (px-hi, py-hi), stroke: _ax-line.yr)
     }
     if show-y-sec-title and _y-sec.name != none and _ax-title.yr.size > 0pt {
-      let _y-sec-ext = _resolve-extents(y-sec-extents, _ax-text.yr.size)
-      let y-sec-width = _y-label-width(
-        0,
-        1,
-        _y-sec-ext.width,
-        _y-sec-ext.height,
+      let y-sec-offset = _sec-title-offset-cm(
+        _tick-len.yr,
+        _resolve-extents(y-sec-extents, _ax-text.yr.size),
+        _ax-title.yr,
+        "y",
       )
       let title-text-cm = _title-extent-cm(
         _ax-title.yr,
         y-sec-title-extents,
         "y",
       )
-      let y-sec-gap = _text-margin-cm(_ax-title.yr, "left", _AX-TITLE-LABEL-GAP)
       let (cy, y-anchor) = _y-title-place(_ax-title.yr.align, py-lo, py-hi)
       content(
-        (
-          px-hi
-            + _tick-len.yr
-            + 0.1
-            + y-sec-width
-            + y-sec-gap
-            + title-text-cm / 2,
-          cy,
-        ),
+        (px-hi + y-sec-offset + title-text-cm / 2, cy),
         _title-body(
           _y-sec.name,
           _ax-title.yr,

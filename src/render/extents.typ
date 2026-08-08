@@ -426,12 +426,28 @@
   s => _y-label-width(s.angle, s.n-dodge, w, h),
 )
 
+// Distance (cm) from the panel edge a secondary axis sits on to the near edge
+// of its title: the tick marks, the label band, and the title-to-label gap.
+// `axis` selects orientation: `"y"` (right edge, label width) or `"x"` (top
+// edge, label depth). The reservation below and both draw sites (the single
+// panel, and the facet builders' one title per grid) measure the title from
+// here, so a change to the stack cannot move one without the others.
+#let _sec-title-offset-cm(tick-len, sec-extents, ax-title, axis) = {
+  let label-extent = if axis == "y" {
+    _y-label-width(0, 1, sec-extents.width, sec-extents.height)
+  } else {
+    _x-label-depth(0, 1, sec-extents.width, sec-extents.height)
+  }
+  let gap-side = if axis == "y" { "left" } else { "bottom" }
+  let gap = _text-margin-cm(ax-title, gap-side, _AX-TITLE-LABEL-GAP)
+  tick-len + 0.1 + label-extent + gap
+}
+
 // Reserved extent between the panel and the canvas edge for the secondary
-// axis ticks, labels, and title. `axis` selects orientation: `"y"` (right
-// edge, label width) or `"x"` (top edge, label depth). Matches the primary
-// formula so the title-to-label gap stays symmetric on opposing edges.
-// `title-ext` carries the secondary title's measured extents when it had to
-// wrap, so the reserved thickness follows its line count like the primary's.
+// axis ticks, labels, and title. Matches the primary formula so the
+// title-to-label gap stays symmetric on opposing edges. `title-ext` carries
+// the secondary title's measured extents when it had to wrap, so the reserved
+// thickness follows its line count like the primary's.
 #let _sec-extent(
   sec,
   tick-len,
@@ -441,15 +457,9 @@
   title-ext: none,
 ) = {
   if sec == none { return 0.0 }
-  let label-extent = if axis == "y" {
-    _y-label-width(0, 1, sec-extents.width, sec-extents.height)
-  } else {
-    _x-label-depth(0, 1, sec-extents.width, sec-extents.height)
-  }
   let title-cm = if sec.at("name", default: none) != none {
     _title-extent-cm(ax-title, title-ext, axis)
   } else { 0.0 }
-  let gap-side = if axis == "y" { "left" } else { "bottom" }
-  let gap = _text-margin-cm(ax-title, gap-side, _AX-TITLE-LABEL-GAP)
-  tick-len + 0.1 + label-extent + gap + title-cm + 0.05
+  let offset = _sec-title-offset-cm(tick-len, sec-extents, ax-title, axis)
+  offset + title-cm + 0.05
 }

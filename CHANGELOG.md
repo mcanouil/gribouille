@@ -5,7 +5,8 @@
 ### Changes
 
 - fix: an axis title longer than the panel it labels wraps onto further lines instead of stretching the canvas past the requested `width`/`height`, which used to shift the whole figure and push the caption off the bottom edge. A title that still cannot fit now fails with the room it needs, either because its longest word is wider than the panel or because the theme rotated it off its axis, where no wrapping gets under the span. (#234)
-- fix: a faceted plot names its secondary axes once for the whole panel grid, the way it already does for the primary axes, and wraps those titles to the room the grid leaves them. A long secondary title used to be drawn unwrapped by every panel carrying that axis, so the copies overprinted each other and stretched the canvas past the requested `width`/`height`. (#235)
+- fix: a faceted plot names its secondary axes once for the whole panel grid, the way it already does for the primary axes, and wraps those titles to the room the plot leaves them. A long secondary title used to be drawn unwrapped by every panel carrying that axis, so the copies overprinted each other and stretched the canvas past the requested `width`/`height`. (#235)
+- fix: the axis titles a faceted plot draws once for the whole grid follow the themed `axis-title` `align`, pinning to the ends of the panel grid rather than staying centred over it. (#235)
 - fix: an inside-panel legend background keeps its painted `inset` inside the panel at an edge-flush alignment, and `legend-background`'s `outset` now spaces the backdrop off the panel edge instead of being silently ignored. (#232)
 - docs: tighten prose and apply consistent British spelling across the README, contributor docs, docs site guides, and the AI-assistant skill. (ba666502)
 

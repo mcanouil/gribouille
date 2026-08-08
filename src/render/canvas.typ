@@ -17,9 +17,10 @@
 )
 #import "../utils/radial.typ": is-radial
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _axis-label-extents, _secondary-label-extents,
-  _text-margin-cm, _title-angle, _title-body, _title-extent-cm, _x-label-depth,
-  _y-label-width,
+  _AX-TITLE-LABEL-GAP, _axis-label-extents, _sec-title-offset-cm,
+  _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
+  _title-extent-cm, _x-label-depth, _x-title-place, _y-label-width,
+  _y-title-place,
 )
 #import "facet.typ": _draw-strip, _strip-band, _strip-texts
 #import "panel-draw.typ": _draw-axis-and-layers
@@ -99,25 +100,32 @@
   let _yt-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   let _xt-cm = _title-extent-cm(_ax-title.xb, ctx.x-title-extents, "x")
   let _yt-cm = _title-extent-cm(_ax-title.yl, ctx.y-title-extents, "y")
+  // A shared title spans the whole grid, so the themed `align` pins it to the
+  // grid's own ends, the way a single plot's pins it to the panel's.
+  let _x-span = (margin.left, margin.left + grid-w)
+  let _y-span = (margin.bottom, margin.bottom + grid-h)
   if x-title != none and _ax-title.xb.size > 0pt {
+    let (cx, x-anchor) = _x-title-place(_ax-title.xb.align, .._x-span)
     cetz.draw.content(
       (
-        margin.left + grid-w / 2,
+        cx,
         margin.bottom - _tick-len.xb - 0.1 - _xlbl-depth - _xt-gap - _xt-cm,
       ),
       _title-body(x-title, _ax-title.xb, ctx.x-title-extents),
-      anchor: "south",
+      anchor: x-anchor,
       angle: _title-angle(_ax-title.xb, 0),
     )
   }
   if y-title != none and _ax-title.yl.size > 0pt {
+    let (cy, y-anchor) = _y-title-place(_ax-title.yl.align, .._y-span)
     cetz.draw.content(
       (
         margin.left - _tick-len.yl - 0.1 - _ylbl-width - _yt-gap - _yt-cm / 2,
-        margin.bottom + grid-h / 2,
+        cy,
       ),
       _title-body(y-title, _ax-title.yl, ctx.y-title-extents),
       angle: _title-angle(_ax-title.yl, 90),
+      anchor: y-anchor,
     )
   }
 
@@ -129,48 +137,34 @@
   let _x-sec = if is-radial(ctx.coord) { none } else { _sec-spec(x-trained) }
   let _y-sec = if is-radial(ctx.coord) { none } else { _sec-spec(y-trained) }
   if _x-sec != none and _x-sec.name != none and _ax-title.xt.size > 0pt {
-    let _x-sec-ext = ctx.x-sec-extents
-    let _x-sec-depth = _x-label-depth(0, 1, _x-sec-ext.width, _x-sec-ext.height)
-    let _x-sec-gap = _text-margin-cm(
+    let _x-sec-offset = _sec-title-offset-cm(
+      _tick-len.xt,
+      ctx.x-sec-extents,
       _ax-title.xt,
-      "bottom",
-      _AX-TITLE-LABEL-GAP,
+      "x",
     )
+    let (cx, x-anchor) = _x-title-place(_ax-title.xt.align, .._x-span)
     cetz.draw.content(
-      (
-        margin.left + grid-w / 2,
-        margin.bottom
-          + grid-h
-          + top-strip
-          + _tick-len.xt
-          + 0.1
-          + _x-sec-depth
-          + _x-sec-gap,
-      ),
+      (cx, margin.bottom + grid-h + top-strip + _x-sec-offset),
       _title-body(_x-sec.name, _ax-title.xt, ctx.x-sec-title-extents),
-      anchor: "south",
+      anchor: x-anchor,
       angle: _title-angle(_ax-title.xt, 0),
     )
   }
   if _y-sec != none and _y-sec.name != none and _ax-title.yr.size > 0pt {
-    let _y-sec-ext = ctx.y-sec-extents
-    let _y-sec-width = _y-label-width(0, 1, _y-sec-ext.width, _y-sec-ext.height)
-    let _y-sec-gap = _text-margin-cm(_ax-title.yr, "left", _AX-TITLE-LABEL-GAP)
+    let _y-sec-offset = _sec-title-offset-cm(
+      _tick-len.yr,
+      ctx.y-sec-extents,
+      _ax-title.yr,
+      "y",
+    )
     let _y-sec-cm = _title-extent-cm(_ax-title.yr, ctx.y-sec-title-extents, "y")
+    let (cy, y-anchor) = _y-title-place(_ax-title.yr.align, .._y-span)
     cetz.draw.content(
-      (
-        margin.left
-          + grid-w
-          + right-strip
-          + _tick-len.yr
-          + 0.1
-          + _y-sec-width
-          + _y-sec-gap
-          + _y-sec-cm / 2,
-        margin.bottom + grid-h / 2,
-      ),
+      (margin.left + grid-w + right-strip + _y-sec-offset + _y-sec-cm / 2, cy),
       _title-body(_y-sec.name, _ax-title.yr, ctx.y-sec-title-extents),
       angle: _title-angle(_ax-title.yr, 90),
+      anchor: y-anchor,
     )
   }
 
