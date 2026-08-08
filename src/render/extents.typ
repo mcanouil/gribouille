@@ -214,24 +214,28 @@
   label-w-cm * calc.cos(a) + label-h-cm * calc.sin(a) + (n-dodge - 1) * 0.5
 }
 
-// Perpendicular extent (cm) reserved for an axis title rotated by its resolved
-// angle. `axis` picks both the rotated-bbox formula and the natural default
-// angle: `"x"` titles read horizontally (0deg) and occupy a depth below the
-// panel, `"y"` titles read bottom-to-top (90deg) and a width beside it. The
-// along-reading dimension is the measured title width (`ext.width`, `0` when
-// unmeasured); the perpendicular thickness stays one line height, so a title
-// at its natural angle reserves exactly `_ax-text-cm(size)` as before. A title
-// that `_axis-title-extents` had to wrap is thicker than one line, so take
-// whichever is larger and the single-line case stays untouched.
+// The box width `_axis-title-extents` settled on, or `none` when the title
+// fitted on one line and is measured and drawn unboxed as it always was.
+#let _ext-along(ext) = if ext == none { none } else {
+  ext.at("along", default: none)
+}
+
 // Thickness (cm) of the title's own box across its reading direction: one line
 // unless `_axis-title-extents` had to wrap it onto more, in which case its
 // measured height wins and the single-line case stays untouched.
 #let _title-thickness-cm(style, ext) = {
   let line-h = _ax-text-cm(style.size)
-  if ext == none or ext.at("along", default: none) == none { return line-h }
+  if _ext-along(ext) == none { return line-h }
   calc.max(line-h, ext.height)
 }
 
+// Perpendicular extent (cm) reserved for an axis title rotated by its resolved
+// angle. `axis` picks both the rotated-bbox formula and the natural default
+// angle: `"x"` titles read horizontally (0deg) and occupy a depth below the
+// panel, `"y"` titles read bottom-to-top (90deg) and a width beside it. The
+// along-reading dimension is the measured title width (`ext.width`, `0` when
+// unmeasured), the perpendicular one its thickness, so a title at its natural
+// angle on one line reserves exactly `_ax-text-cm(size)` as before.
 #let _title-extent-cm(style, ext, axis) = {
   let title-w = if ext != none { ext.width } else { 0.0 }
   let thickness = _title-thickness-cm(style, ext)
@@ -248,7 +252,7 @@
 // perpendicular half. An x title is bounded by this against the panel width, a
 // y title against the panel height.
 #let _title-span-cm(style, ext, axis) = {
-  let along = if ext == none { none } else { ext.at("along", default: none) }
+  let along = _ext-along(ext)
   if along == none { return 0.0 }
   let thickness = _title-thickness-cm(style, ext)
   let a = _title-angle(style, if axis == "x" { 0 } else { 90 }).deg()
@@ -262,6 +266,25 @@
 // Smallest panel worth wrapping an axis title against, matching the 0.5 cm
 // panel floor `render-plot` and `max-right-margin` already enforce.
 #let _MIN-TITLE-PANEL = 0.5
+
+// How much of a rotated title box's reading length (`along`) and thickness
+// (`across`) project onto the panel axis that bounds it. Both the estimate and
+// the bisection below solve against these, so they read them from one place.
+#let _title-shares(style, axis) = {
+  let default-deg = if axis == "x" { 0 } else { 90 }
+  let a = calc.abs(_title-angle(style, default-deg).deg()) * 1deg
+  if axis == "x" {
+    (along: calc.cos(a), across: calc.sin(a))
+  } else {
+    (along: calc.sin(a), across: calc.cos(a))
+  }
+}
+
+// The reading length whose span is the smallest any box of this title can
+// reach: below it, narrowing the box thickens it faster than it shortens it.
+#let _min-span-along-cm(style, shares, natural-cm) = calc.sqrt(
+  natural-cm * _ax-text-cm(style.size) * shares.across / shares.along,
+)
 
 // Reading length (cm) to box an axis title at so it spans no more than
 // `panel-cm` along the panel's own axis. Rotated by `a`, a `len` x `thickness`
@@ -291,16 +314,15 @@
   // title to a few millimetres there would turn plots that used to render,
   // however cramped, into failures. Leave them exactly as they were.
   if panel-cm < _MIN-TITLE-PANEL { return none }
-  let default-deg = if axis == "x" { 0 } else { 90 }
-  let a = calc.abs(_title-angle(style, default-deg).deg()) * 1deg
-  let along-share = if axis == "x" { calc.cos(a) } else { calc.sin(a) }
-  let across-share = if axis == "x" { calc.sin(a) } else { calc.cos(a) }
-  if along-share <= 1e-6 { return none }
-  if across-share <= 1e-6 { return panel-cm / along-share }
-  let bulk = natural-cm * _ax-text-cm(style.size) * across-share
-  let discriminant = panel-cm * panel-cm - 4 * along-share * bulk
-  if discriminant <= 0 { return calc.sqrt(bulk / along-share) }
-  (panel-cm + calc.sqrt(discriminant)) / (2 * along-share)
+  let shares = _title-shares(style, axis)
+  if shares.along <= 1e-6 { return none }
+  if shares.across <= 1e-6 { return panel-cm / shares.along }
+  let bulk = natural-cm * _ax-text-cm(style.size) * shares.across
+  let discriminant = panel-cm * panel-cm - 4 * shares.along * bulk
+  if discriminant <= 0 {
+    return _min-span-along-cm(style, shares, natural-cm)
+  }
+  (panel-cm + calc.sqrt(discriminant)) / (2 * shares.along)
 }
 
 // Bisection steps spent narrowing an oblique title's box onto the panel. The
@@ -321,23 +343,14 @@
   let ext = _axis-title-extents(title, style, along-cm: along)
   let fits = ext => _title-span-cm(style, ext, axis) <= panel-cm + 1e-6
   if along == none or fits(ext) { return (along: along, ext: ext) }
-  let default-deg = if axis == "x" { 0 } else { 90 }
-  let a = calc.abs(_title-angle(style, default-deg).deg()) * 1deg
-  let along-share = if axis == "x" { calc.cos(a) } else { calc.sin(a) }
-  let across-share = if axis == "x" { calc.sin(a) } else { calc.cos(a) }
-  if across-share <= 1e-6 { return (along: along, ext: ext) }
-  let floor = calc.sqrt(
-    natural-cm * _ax-text-cm(style.size) * across-share / along-share,
-  )
+  let shares = _title-shares(style, axis)
+  if shares.across <= 1e-6 { return (along: along, ext: ext) }
+  let floor = _min-span-along-cm(style, shares, natural-cm)
   // Nothing between the two fits, so settle on the span minimum and let the
   // caller report a title this panel cannot hold at this angle.
   let best = (
     along: floor,
-    ext: _axis-title-extents(
-      title,
-      style,
-      along-cm: floor,
-    ),
+    ext: _axis-title-extents(title, style, along-cm: floor),
   )
   let (lo, hi) = (calc.min(floor, along), calc.max(floor, along))
   for _ in range(_TITLE-FIT-STEPS) {
@@ -365,20 +378,17 @@
     title,
     eval-strings: style.typst,
   )]
-  let along = if ext == none { none } else {
-    ext.at("along", default: none)
-  }
+  let along = _ext-along(ext)
   if along == none { return body }
-  _title-boxed(body, along, if style.align != none { style.align } else {
-    center
-  })
+  let align-to = if style.align != none { style.align } else { center }
+  _title-boxed(body, along, align-to)
 }
 
 // How far (cm) a title still overruns its box once wrapped: the widest run the
 // layout cannot break, less the box. Zero when it fits, and zero for content
 // titles, whose break opportunities `longest-unbreakable-cm` cannot see.
 #let _title-overrun-cm(ext) = {
-  let along = ext.at("along", default: none)
+  let along = _ext-along(ext)
   if along == none { return 0.0 }
   calc.max(0.0, ext.at("min-width", default: 0.0) - along)
 }

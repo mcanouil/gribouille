@@ -6,8 +6,8 @@
 
 #import "../../lib.typ": *
 #import "../../src/render/extents.typ": (
-  _axis-title-extents, _fit-title-extents, _title-along-cm, _title-extent-cm,
-  _title-overrun-cm, _title-span-cm,
+  _ax-text-cm, _axis-title-extents, _fit-title-extents, _title-along-cm,
+  _title-extent-cm, _title-overrun-cm, _title-span-cm,
 )
 #import "../../src/utils/measure.typ": longest-unbreakable-cm
 
@@ -244,7 +244,7 @@
 
 // Off the natural angles both the reading length and the thickness project
 // onto the span, so the bound is the larger root of the resulting quadratic.
-#let LINE = 9 * 0.0353
+#let LINE = _ax-text-cm(9pt)
 #let root(panel, natural, s, c) = {
   let bulk = natural * LINE * c
   (panel + calc.sqrt(panel * panel - 4 * s * bulk)) / (2 * s)

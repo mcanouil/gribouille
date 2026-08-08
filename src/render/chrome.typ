@@ -151,6 +151,27 @@
   let y-sec-title = if y-sec == none { none } else {
     y-sec.at("name", default: none)
   }
+  // The four titles take identical treatment and differ only in their text
+  // style, which panel dimension bounds them, and how a failure names them.
+  // Keyed as `ax-title` is so the fitted extents travel back out by side.
+  let title-sides = (
+    (key: "xb", title: x-title, style: ax-title.xb, axis: "x", name: "x-axis"),
+    (key: "yl", title: y-title, style: ax-title.yl, axis: "y", name: "y-axis"),
+    (
+      key: "xt",
+      title: x-sec-title,
+      style: ax-title.xt,
+      axis: "x",
+      name: "secondary x-axis",
+    ),
+    (
+      key: "yr",
+      title: y-sec-title,
+      style: ax-title.yr,
+      axis: "y",
+      name: "secondary y-axis",
+    ),
+  )
   // Only reserve the title-to-label gap when a title actually renders;
   // a `0pt` axis title (e.g., `theme-void`) needs no gap, and the absolute
   // `_AX-TITLE-LABEL-GAP` would otherwise tip `bottom-extent` over the floor
@@ -230,38 +251,26 @@
   // bigger margin leaves the panel smaller again. Solve it by iterating from
   // the unwrapped state, which is the largest panel any pass can produce.
   // `along-cm: none` there reproduces the pre-wrapping measurement exactly, so
-  // a plot whose titles all fit settles on the first comparison and keeps its
-  // former layout to the bit.
-  let _fit(x-along, y-along, sec-x-along, sec-y-along) = {
+  // a plot whose titles all fit re-measures to the same extents on the second
+  // pass, settles against them, and keeps its former layout to the bit.
+  let _fit(along) = {
     // Measure the title ink so its rotated bounding box reserves the right
     // perpendicular extent at any angle, mirroring the tick-label measurement.
-    let x-title-ext = _axis-title-extents(
-      x-title,
-      ax-title.xb,
-      along-cm: x-along,
-    )
-    let y-title-ext = _axis-title-extents(
-      y-title,
-      ax-title.yl,
-      along-cm: y-along,
-    )
-    let x-sec-title-ext = _axis-title-extents(
-      x-sec-title,
-      ax-title.xt,
-      along-cm: sec-x-along,
-    )
-    let y-sec-title-ext = _axis-title-extents(
-      y-sec-title,
-      ax-title.yr,
-      along-cm: sec-y-along,
-    )
+    let ext = (:)
+    for side in title-sides {
+      ext.insert(side.key, _axis-title-extents(
+        side.title,
+        side.style,
+        along-cm: along.at(side.key),
+      ))
+    }
     let sec-x-extent = _sec-extent(
       x-sec,
       tick-len.xt,
       x-sec-extents,
       ax-title.xt,
       "x",
-      title-ext: x-sec-title-ext,
+      title-ext: ext.xt,
     )
     let sec-y-extent = _sec-extent(
       y-sec,
@@ -269,13 +278,13 @@
       y-sec-extents,
       ax-title.yr,
       "y",
-      title-ext: y-sec-title-ext,
+      title-ext: ext.yr,
     )
     let x-title-cm = if x-title != none {
-      _title-extent-cm(ax-title.xb, x-title-ext, "x")
+      _title-extent-cm(ax-title.xb, ext.xb, "x")
     } else { 0.0 }
     let y-title-cm = if y-title != none {
-      _title-extent-cm(ax-title.yl, y-title-ext, "y")
+      _title-extent-cm(ax-title.yl, ext.yl, "y")
     } else { 0.0 }
     let bottom-extent = (
       x-tick-cm + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05
@@ -300,10 +309,7 @@
       max-right-margin: max-right-margin,
       sec-x-extent: sec-x-extent,
       sec-y-extent: sec-y-extent,
-      x-title-extents: x-title-ext,
-      y-title-extents: y-title-ext,
-      x-sec-title-extents: x-sec-title-ext,
-      y-sec-title-extents: y-sec-title-ext,
+      ext: ext,
     )
   }
 
@@ -315,15 +321,13 @@
 
   // The bound is solved from the title's unwrapped width, which does not move
   // as the panel does, so measure it once rather than once per pass.
-  let natural = (
-    xb: _axis-title-extents(x-title, ax-title.xb).width,
-    yl: _axis-title-extents(y-title, ax-title.yl).width,
-    xt: _axis-title-extents(x-sec-title, ax-title.xt).width,
-    yr: _axis-title-extents(y-sec-title, ax-title.yr).width,
-  )
+  let natural = (:)
+  for side in title-sides {
+    natural.insert(side.key, _axis-title-extents(side.title, side.style).width)
+  }
 
-  let fit = _fit(none, none, none, none)
   let along = (xb: none, yl: none, xt: none, yr: none)
+  let fit = _fit(along)
   let panel-w = 0.0
   let panel-h = 0.0
   // Each pass can only take panel extent away, never give it back, so the
@@ -341,79 +345,43 @@
       calc.abs(next-w - panel-w) < _TITLE-FIT-TOLERANCE
         and calc.abs(next-h - panel-h) < _TITLE-FIT-TOLERANCE
     )
-    let spans = (
-      (ax-title.xb, "x", next-w, fit.x-title-extents),
-      (ax-title.yl, "y", next-h, fit.y-title-extents),
-      (ax-title.xt, "x", next-w, fit.x-sec-title-extents),
-      (ax-title.yr, "y", next-h, fit.y-sec-title-extents),
-    )
-    let fitted = spans.all(((style, axis, panel-cm, ext)) => (
-      _title-span-cm(style, ext, axis) <= panel-cm + _TITLE-FIT-TOLERANCE
-    ))
+    let fitted = title-sides.all(side => {
+      let panel-cm = if side.axis == "x" { next-w } else { next-h }
+      let span = _title-span-cm(side.style, fit.ext.at(side.key), side.axis)
+      span <= panel-cm + _TITLE-FIT-TOLERANCE
+    })
     if settled and fitted { break }
     panel-w = next-w
     panel-h = next-h
-    along = (
-      xb: _tighten(
-        along.xb,
+    for side in title-sides {
+      let panel-cm = if side.axis == "x" { panel-w } else { panel-h }
+      along.insert(side.key, _tighten(
+        along.at(side.key),
         _fit-title-extents(
-          x-title,
-          ax-title.xb,
-          "x",
-          panel-w,
-          natural.xb,
+          side.title,
+          side.style,
+          side.axis,
+          panel-cm,
+          natural.at(side.key),
         ).along,
-      ),
-      yl: _tighten(
-        along.yl,
-        _fit-title-extents(
-          y-title,
-          ax-title.yl,
-          "y",
-          panel-h,
-          natural.yl,
-        ).along,
-      ),
-      xt: _tighten(
-        along.xt,
-        _fit-title-extents(
-          x-sec-title,
-          ax-title.xt,
-          "x",
-          panel-w,
-          natural.xt,
-        ).along,
-      ),
-      yr: _tighten(
-        along.yr,
-        _fit-title-extents(
-          y-sec-title,
-          ax-title.yr,
-          "y",
-          panel-h,
-          natural.yr,
-        ).along,
-      ),
-    )
-    fit = _fit(along.xb, along.yl, along.xt, along.yr)
+      ))
+    }
+    fit = _fit(along)
   }
 
   // Two ways wrapping can fail to rescue a title, both of which would push the
   // canvas past the requested size. Say so rather than ship a figure that
   // silently outgrows the box it was given.
   let _cm = v => str(calc.round(v, digits: 2))
-  for (side, axis, panel-cm, style, ext) in (
-    ("x-axis", "x", panel-w, ax-title.xb, fit.x-title-extents),
-    ("y-axis", "y", panel-h, ax-title.yl, fit.y-title-extents),
-    ("secondary x-axis", "x", panel-w, ax-title.xt, fit.x-sec-title-extents),
-    ("secondary y-axis", "y", panel-h, ax-title.yr, fit.y-sec-title-extents),
-  ) {
+  for side in title-sides {
+    let ext = fit.ext.at(side.key)
+    let panel-cm = if side.axis == "x" { panel-w } else { panel-h }
     // A word wider than the box it wraps in.
     if _title-overrun-cm(ext) > _TITLE-FIT-TOLERANCE {
       fail(
         "plot",
         "the "
-          + side
+          + side.name
           + " title has a "
           + _cm(ext.min-width)
           + " cm word that cannot wrap into the "
@@ -426,19 +394,20 @@
     // A title rotated off its axis spans the panel with both its length and
     // its thickness, and narrowing the box trades one for the other. Past a
     // point that trade stops paying and no box fits at all.
-    let span = _title-span-cm(style, ext, axis)
+    let span = _title-span-cm(side.style, ext, side.axis)
     if span > panel-cm + _TITLE-FIT-TOLERANCE {
+      let default-deg = if side.axis == "x" { 0 } else { 90 }
       fail(
         "plot",
         "the "
-          + side
+          + side.name
           + " title spans "
           + _cm(span)
           + " cm along a panel of "
           + _cm(panel-cm)
           + " cm, and no wrapping of it at "
           + str(calc.round(
-            _title-angle(style, if axis == "x" { 0 } else { 90 }).deg(),
+            _title-angle(side.style, default-deg).deg(),
             digits: 1,
           ))
           + "deg spans less",
@@ -448,11 +417,6 @@
     }
   }
 
-  let sec-x-extent = fit.sec-x-extent
-  let sec-y-extent = fit.sec-y-extent
-  let x-title-extents = fit.x-title-extents
-  let y-title-extents = fit.y-title-extents
-  let max-right-margin = fit.max-right-margin
   let margin = fit.margin
   // `compose(align-panels: true)` forces a shared margin so panels' plot areas
   // line up; overlay the supplied sides, then clamp every side against this
@@ -460,7 +424,7 @@
   // bound keeps at least 0.5cm of plot opposite it, matching `max-right-margin`.
   if ctx.margin-override != none {
     margin = margin + ctx.margin-override
-    margin.right = calc.min(margin.right, max-right-margin)
+    margin.right = calc.min(margin.right, fit.max-right-margin)
     margin.left = calc.min(margin.left, calc.max(
       0.0,
       width-units - margin.right - 0.5,
@@ -482,11 +446,11 @@
     y-extents: y-extents,
     x-sec-extents: x-sec-extents,
     y-sec-extents: y-sec-extents,
-    sec-x-extent: sec-x-extent,
-    sec-y-extent: sec-y-extent,
-    x-title-extents: x-title-extents,
-    y-title-extents: y-title-extents,
-    x-sec-title-extents: fit.x-sec-title-extents,
-    y-sec-title-extents: fit.y-sec-title-extents,
+    sec-x-extent: fit.sec-x-extent,
+    sec-y-extent: fit.sec-y-extent,
+    x-title-extents: fit.ext.xb,
+    y-title-extents: fit.ext.yl,
+    x-sec-title-extents: fit.ext.xt,
+    y-sec-title-extents: fit.ext.yr,
   )
 }
