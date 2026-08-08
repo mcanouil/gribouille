@@ -10,11 +10,19 @@
 #import "axis-format.typ": _axis-title, _sec-spec
 #import "guides.typ": _axis-text-angle, _read-axis-guide
 #import "domain.typ": _is-flipped
+#import "../utils/errors.typ": fail
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _axis-label-extents, _axis-title-extents, _sec-extent,
-  _secondary-label-extents, _text-margin-cm, _title-extent-cm,
+  _AX-TITLE-LABEL-GAP, _axis-label-extents, _axis-title-extents,
+  _fit-title-extents, _sec-extent, _secondary-label-extents, _text-margin-cm,
+  _title-angle, _title-extent-cm, _title-overrun-cm, _title-span-cm,
   _x-label-depth-stack, _y-label-width-stack,
 )
+
+// Passes allowed when settling axis-title wrapping against the panel size, and
+// the cm below which two panel extents count as the same. Real plots settle in
+// two or three; the cap only bounds a degenerate one.
+#let _TITLE-FIT-PASSES = 8
+#let _TITLE-FIT-TOLERANCE = 1e-6
 
 // Compute the chrome margin and every measured extent the canvas builders
 // need. `ctx` carries: `spec`, `theme`, `trained`, `coord`, `guides`,
@@ -102,21 +110,6 @@
     typst-eval: ax-text.yr.typst,
   )
 
-  let sec-x-extent = _sec-extent(
-    x-sec,
-    tick-len.xt,
-    x-sec-extents,
-    ax-title.xt,
-    "x",
-  )
-  let sec-y-extent = _sec-extent(
-    y-sec,
-    tick-len.yr,
-    y-sec-extents,
-    ax-title.yr,
-    "y",
-  )
-
   let x-guide = _read-axis-guide(
     spec,
     "x",
@@ -152,17 +145,32 @@
   }
   let x-title = _axis-title(trained.at("x", default: none), _x-title-name)
   let y-title = _axis-title(trained.at("y", default: none), _y-title-name)
-  // Measure the title ink so its rotated bounding box reserves the right
-  // perpendicular extent at any angle, mirroring the tick-label measurement.
-  let x-title-extents = _axis-title-extents(
-    x-title,
-    ax-title.xb.size,
-    typst-eval: ax-title.xb.typst,
-  )
-  let y-title-extents = _axis-title-extents(
-    y-title,
-    ax-title.yl.size,
-    typst-eval: ax-title.yl.typst,
+  let x-sec-title = if x-sec == none { none } else {
+    x-sec.at("name", default: none)
+  }
+  let y-sec-title = if y-sec == none { none } else {
+    y-sec.at("name", default: none)
+  }
+  // The four titles take identical treatment and differ only in their text
+  // style, which panel dimension bounds them, and how a failure names them.
+  // Keyed as `ax-title` is so the fitted extents travel back out by side.
+  let title-sides = (
+    (key: "xb", title: x-title, style: ax-title.xb, axis: "x", name: "x-axis"),
+    (key: "yl", title: y-title, style: ax-title.yl, axis: "y", name: "y-axis"),
+    (
+      key: "xt",
+      title: x-sec-title,
+      style: ax-title.xt,
+      axis: "x",
+      name: "secondary x-axis",
+    ),
+    (
+      key: "yr",
+      title: y-sec-title,
+      style: ax-title.yr,
+      axis: "y",
+      name: "secondary y-axis",
+    ),
   )
   // Only reserve the title-to-label gap when a title actually renders;
   // a `0pt` axis title (e.g., `theme-void`) needs no gap, and the absolute
@@ -174,27 +182,10 @@
   let left-gap = if y-title != none and ax-title.yl.size > 0pt {
     _text-margin-cm(ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   } else { 0.0 }
-  let x-title-cm = if x-title != none {
-    _title-extent-cm(ax-title.xb, x-title-extents, "x")
-  } else { 0.0 }
-  let y-title-cm = if y-title != none {
-    _title-extent-cm(ax-title.yl, y-title-extents, "y")
-  } else { 0.0 }
   // A suppressed axis (`guides(x: none)`) draws no ticks or labels, so it
   // reserves no tick depth either; the axis line and title still render.
   let x-tick-cm = if x-guide.suppress { 0.0 } else { tick-len.xb }
   let y-tick-cm = if y-guide.suppress { 0.0 } else { tick-len.yl }
-  let bottom-extent = (
-    x-tick-cm + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05
-  )
-  let left-extent = (
-    y-tick-cm + 0.1 + y-label-width + left-gap + y-title-cm
-  )
-
-  // Cap the right margin so the legend can never push panel width below the
-  // single-tick minimum. Without the cap, `px-hi - px-lo` goes negative and
-  // axis labels render reversed (panel becomes mirror-imaged into the legend).
-  let max-right-margin = calc.max(0.0, width-units - left-extent - 0.5)
   let _side-gap = side => (
     extents.at(side) + (if extents.at(side) > 0 { legend-gap } else { 0.0 })
   )
@@ -253,22 +244,187 @@
   let _surface-out(side) = (
     panel-out.at(side) + legend-by-side.at(side) + bar-by-side.at(side)
   )
-  let margin = (
-    left: left-extent + _side-gap("left") + _surface-out("left"),
-    bottom: bottom-extent + _side-gap("bottom") + _surface-out("bottom"),
-    top: sec-x-extent + _side-gap("top") + _surface-out("top"),
-    right: calc.min(
-      sec-y-extent + _side-gap("right") + _surface-out("right"),
-      max-right-margin,
-    ),
-  )
+
+  // Everything above is independent of how the axis titles wrap. The margin is
+  // not: a title is boxed to the reading length the panel leaves it, a wrapped
+  // title is thicker than one line, a thicker title takes more margin, and a
+  // bigger margin leaves the panel smaller again. Solve it by iterating from
+  // the unwrapped state, which is the largest panel any pass can produce.
+  // `along-cm: none` there reproduces the pre-wrapping measurement exactly, so
+  // a plot whose titles all fit re-measures to the same extents on the second
+  // pass, settles against them, and keeps its former layout to the bit.
+  let _fit(along) = {
+    // Measure the title ink so its rotated bounding box reserves the right
+    // perpendicular extent at any angle, mirroring the tick-label measurement.
+    let ext = (:)
+    for side in title-sides {
+      ext.insert(side.key, _axis-title-extents(
+        side.title,
+        side.style,
+        along-cm: along.at(side.key),
+      ))
+    }
+    let sec-x-extent = _sec-extent(
+      x-sec,
+      tick-len.xt,
+      x-sec-extents,
+      ax-title.xt,
+      "x",
+      title-ext: ext.xt,
+    )
+    let sec-y-extent = _sec-extent(
+      y-sec,
+      tick-len.yr,
+      y-sec-extents,
+      ax-title.yr,
+      "y",
+      title-ext: ext.yr,
+    )
+    let x-title-cm = if x-title != none {
+      _title-extent-cm(ax-title.xb, ext.xb, "x")
+    } else { 0.0 }
+    let y-title-cm = if y-title != none {
+      _title-extent-cm(ax-title.yl, ext.yl, "y")
+    } else { 0.0 }
+    let bottom-extent = (
+      x-tick-cm + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05
+    )
+    let left-extent = (
+      y-tick-cm + 0.1 + y-label-width + left-gap + y-title-cm
+    )
+    // Cap the right margin so the legend can never push panel width below the
+    // single-tick minimum. Without the cap, `px-hi - px-lo` goes negative and
+    // axis labels render reversed (panel becomes mirror-imaged into the legend).
+    let max-right-margin = calc.max(0.0, width-units - left-extent - 0.5)
+    (
+      margin: (
+        left: left-extent + _side-gap("left") + _surface-out("left"),
+        bottom: bottom-extent + _side-gap("bottom") + _surface-out("bottom"),
+        top: sec-x-extent + _side-gap("top") + _surface-out("top"),
+        right: calc.min(
+          sec-y-extent + _side-gap("right") + _surface-out("right"),
+          max-right-margin,
+        ),
+      ),
+      max-right-margin: max-right-margin,
+      sec-x-extent: sec-x-extent,
+      sec-y-extent: sec-y-extent,
+      ext: ext,
+    )
+  }
+
+  // Each pass may only tighten a bound, never loosen one; erring small merely
+  // over-reserves, since a box narrower than the panel cannot overrun it.
+  let _tighten(prev, next) = if next == none {
+    prev
+  } else if prev == none { next } else { calc.min(prev, next) }
+
+  // The bound is solved from the title's unwrapped width, which does not move
+  // as the panel does, so measure it once rather than once per pass.
+  let natural = (:)
+  for side in title-sides {
+    natural.insert(side.key, _axis-title-extents(side.title, side.style).width)
+  }
+
+  let along = (xb: none, yl: none, xt: none, yr: none)
+  let fit = _fit(along)
+  let panel-w = 0.0
+  let panel-h = 0.0
+  // Each pass can only take panel extent away, never give it back, so the
+  // sequence descends and is bounded below by zero: it settles. Stop once the
+  // panel holds still AND every title fits the span it was bounded to; the cap
+  // is a backstop for a degenerate plot, where the panel floors in `_fit` and
+  // the canvas-minimum guard in `render-plot` takes over.
+  for _ in range(_TITLE-FIT-PASSES) {
+    let next-w = calc.max(0.0, width-units - fit.margin.left - fit.margin.right)
+    let next-h = calc.max(
+      0.0,
+      height-units - fit.margin.top - fit.margin.bottom,
+    )
+    let settled = (
+      calc.abs(next-w - panel-w) < _TITLE-FIT-TOLERANCE
+        and calc.abs(next-h - panel-h) < _TITLE-FIT-TOLERANCE
+    )
+    let fitted = title-sides.all(side => {
+      let panel-cm = if side.axis == "x" { next-w } else { next-h }
+      let span = _title-span-cm(side.style, fit.ext.at(side.key), side.axis)
+      span <= panel-cm + _TITLE-FIT-TOLERANCE
+    })
+    if settled and fitted { break }
+    panel-w = next-w
+    panel-h = next-h
+    for side in title-sides {
+      let panel-cm = if side.axis == "x" { panel-w } else { panel-h }
+      along.insert(side.key, _tighten(
+        along.at(side.key),
+        _fit-title-extents(
+          side.title,
+          side.style,
+          side.axis,
+          panel-cm,
+          natural.at(side.key),
+        ).along,
+      ))
+    }
+    fit = _fit(along)
+  }
+
+  // Two ways wrapping can fail to rescue a title, both of which would push the
+  // canvas past the requested size. Say so rather than ship a figure that
+  // silently outgrows the box it was given.
+  let _cm = v => str(calc.round(v, digits: 2))
+  for side in title-sides {
+    let ext = fit.ext.at(side.key)
+    let panel-cm = if side.axis == "x" { panel-w } else { panel-h }
+    // A word wider than the box it wraps in.
+    if _title-overrun-cm(ext) > _TITLE-FIT-TOLERANCE {
+      fail(
+        "plot",
+        "the "
+          + side.name
+          + " title has a "
+          + _cm(ext.min-width)
+          + " cm word that cannot wrap into the "
+          + _cm(ext.along)
+          + " cm the panel leaves it",
+        hint: "Shorten the title, break it with `\\`, or give the plot more "
+          + "room with `width`/`height`.",
+      )
+    }
+    // A title rotated off its axis spans the panel with both its length and
+    // its thickness, and narrowing the box trades one for the other. Past a
+    // point that trade stops paying and no box fits at all.
+    let span = _title-span-cm(side.style, ext, side.axis)
+    if span > panel-cm + _TITLE-FIT-TOLERANCE {
+      let default-deg = if side.axis == "x" { 0 } else { 90 }
+      fail(
+        "plot",
+        "the "
+          + side.name
+          + " title spans "
+          + _cm(span)
+          + " cm along a panel of "
+          + _cm(panel-cm)
+          + " cm, and no wrapping of it at "
+          + str(calc.round(
+            _title-angle(side.style, default-deg).deg(),
+            digits: 1,
+          ))
+          + "deg spans less",
+        hint: "Shorten the title, return it to its natural angle, reduce its "
+          + "font size, or give the plot more room with `width`/`height`.",
+      )
+    }
+  }
+
+  let margin = fit.margin
   // `compose(align-panels: true)` forces a shared margin so panels' plot areas
   // line up; overlay the supplied sides, then clamp every side against this
   // panel's own extent so a forced margin can never invert the plot rect. Each
   // bound keeps at least 0.5cm of plot opposite it, matching `max-right-margin`.
   if ctx.margin-override != none {
     margin = margin + ctx.margin-override
-    margin.right = calc.min(margin.right, max-right-margin)
+    margin.right = calc.min(margin.right, fit.max-right-margin)
     margin.left = calc.min(margin.left, calc.max(
       0.0,
       width-units - margin.right - 0.5,
@@ -290,9 +446,11 @@
     y-extents: y-extents,
     x-sec-extents: x-sec-extents,
     y-sec-extents: y-sec-extents,
-    sec-x-extent: sec-x-extent,
-    sec-y-extent: sec-y-extent,
-    x-title-extents: x-title-extents,
-    y-title-extents: y-title-extents,
+    sec-x-extent: fit.sec-x-extent,
+    sec-y-extent: fit.sec-y-extent,
+    x-title-extents: fit.ext.xb,
+    y-title-extents: fit.ext.yl,
+    x-sec-title-extents: fit.ext.xt,
+    y-sec-title-extents: fit.ext.yr,
   )
 }

@@ -17,7 +17,7 @@
 )
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _axis-label-extents, _secondary-label-extents,
-  _text-margin-cm, _title-angle, _title-extent-cm, _x-label-depth,
+  _text-margin-cm, _title-angle, _title-body, _title-extent-cm, _x-label-depth,
   _y-label-width,
 )
 #import "facet.typ": _draw-strip, _strip-band, _strip-texts
@@ -104,10 +104,7 @@
         margin.left + grid-w / 2,
         margin.bottom - _tick-len.xb - 0.1 - _xlbl-depth - _xt-gap - _xt-cm,
       ),
-      text(.._text-args(_ax-title.xb))[#resolve-prose(
-        x-title,
-        eval-strings: _ax-title.xb.typst,
-      )],
+      _title-body(x-title, _ax-title.xb, ctx.x-title-extents),
       anchor: "south",
       angle: _title-angle(_ax-title.xb, 0),
     )
@@ -118,10 +115,7 @@
         margin.left - _tick-len.yl - 0.1 - _ylbl-width - _yt-gap - _yt-cm / 2,
         margin.bottom + grid-h / 2,
       ),
-      text(.._text-args(_ax-title.yl))[#resolve-prose(
-        y-title,
-        eval-strings: _ax-title.yl.typst,
-      )],
+      _title-body(y-title, _ax-title.yl, ctx.y-title-extents),
       angle: _title-angle(_ax-title.yl, 90),
     )
   }
@@ -587,6 +581,8 @@
       y-extents: ctx.y-extents,
       x-title-extents: ctx.x-title-extents,
       y-title-extents: ctx.y-title-extents,
+      x-sec-title-extents: ctx.x-sec-title-extents,
+      y-sec-title-extents: ctx.y-sec-title-extents,
       x-sec-extents: ctx.x-sec-extents,
       y-sec-extents: ctx.y-sec-extents,
       canvas-w: width-units,

@@ -4,7 +4,8 @@
 #import "../utils/margin.typ": resolve-margin-side-cm
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
-#import "../utils/measure.typ": measure-labels-cm
+#import "../theme/theme.typ": _text-args
+#import "../utils/measure.typ": longest-unbreakable-cm, measure-labels-cm
 #import "../utils/palette.typ": spec-attr
 #import "../utils/format.typ": format-break
 #import "../scale/secondary.typ" as secondary-mod
@@ -43,12 +44,56 @@
   style.angle
 } else { default-deg * 1deg }
 
+// The exact box a wrapped axis title is drawn in, shared by the measuring and
+// the drawing side so the two cannot drift. cetz stamps `top-edge:
+// "cap-height"` / `bottom-edge: "baseline"` onto the bodies it lays out and
+// sizes its own frame from a body measured that way, adding a descender
+// allowance when the body does not already carry those edges. Setting them
+// here makes `measure()` on this box predict the cetz frame exactly, which is
+// what lets the canvas stay inside the requested plot size.
+#let _title-boxed(body, along-cm, align-to) = box(
+  width: along-cm * 1cm,
+  align(align-to, text(top-edge: "cap-height", bottom-edge: "baseline", body)),
+)
+
 // Measure an axis title string at its font size, returning `(width, height)`
 // in cm. Zero extents when no title renders. Caller must already be inside a
 // `context { ... }` block, since `measure` requires it.
-#let _axis-title-extents(title, size, typst-eval: false) = {
-  if title == none { return (width: 0.0, height: 0.0) }
-  measure-labels-cm((resolve-prose(title, eval-strings: typst-eval),), size)
+//
+// `along-cm` bounds the title's reading direction, which is what the panel
+// constrains: cetz lays a title out before rotating it, so a y title's
+// pre-rotation width becomes its extent up the panel. Pass the available
+// reading length and a longer title wraps instead of growing the canvas past
+// the requested plot size; the record then carries `along` (the box the draw
+// side must reproduce) and `min-width` (the widest unbreakable run, for the
+// caller's overrun guard). Leave it `none` to measure a single unbounded line.
+//
+// Only the wrapped branch measures through the full text style; the unwrapped
+// one keeps the size-only measurement every existing layout is calibrated to.
+// The reservation still matches the drawing either way, because both sides go
+// through `_title-boxed`.
+#let _axis-title-extents(title, style, along-cm: none) = {
+  if title == none { return (width: 0.0, height: 0.0, along: none) }
+  let resolved = resolve-prose(title, eval-strings: style.typst)
+  let natural = measure-labels-cm((resolved,), style.size)
+  // A title that already fits needs no box: measuring and drawing it exactly
+  // as before keeps every existing layout bit-identical.
+  if along-cm == none or natural.width <= along-cm {
+    return natural + (along: none)
+  }
+  let boxed = measure(_title-boxed(
+    text(.._text-args(style))[#resolved],
+    along-cm,
+    center,
+  ))
+  (
+    // A box reports the width it was given, not the ink inside it. That is the
+    // honest figure here: the drawn title occupies exactly this box.
+    width: along-cm,
+    height: boxed.height / 1cm,
+    min-width: longest-unbreakable-cm(resolved, style.size),
+    along: along-cm,
+  )
 }
 
 // Resolve a margin side on a text-style record to a cm float, falling back to
@@ -169,22 +214,183 @@
   label-w-cm * calc.cos(a) + label-h-cm * calc.sin(a) + (n-dodge - 1) * 0.5
 }
 
+// The box width `_axis-title-extents` settled on, or `none` when the title
+// fitted on one line and is measured and drawn unboxed as it always was.
+#let _ext-along(ext) = if ext == none { none } else {
+  ext.at("along", default: none)
+}
+
+// Thickness (cm) of the title's own box across its reading direction: one line
+// unless `_axis-title-extents` had to wrap it onto more, in which case its
+// measured height wins and the single-line case stays untouched.
+#let _title-thickness-cm(style, ext) = {
+  let line-h = _ax-text-cm(style.size)
+  if _ext-along(ext) == none { return line-h }
+  calc.max(line-h, ext.height)
+}
+
 // Perpendicular extent (cm) reserved for an axis title rotated by its resolved
 // angle. `axis` picks both the rotated-bbox formula and the natural default
 // angle: `"x"` titles read horizontally (0deg) and occupy a depth below the
 // panel, `"y"` titles read bottom-to-top (90deg) and a width beside it. The
 // along-reading dimension is the measured title width (`ext.width`, `0` when
-// unmeasured); the perpendicular thickness stays one line height, so a title
-// at its natural angle reserves exactly `_ax-text-cm(size)` as before.
+// unmeasured), the perpendicular one its thickness, so a title at its natural
+// angle on one line reserves exactly `_ax-text-cm(size)` as before.
 #let _title-extent-cm(style, ext, axis) = {
   let title-w = if ext != none { ext.width } else { 0.0 }
-  let line-h = _ax-text-cm(style.size)
+  let thickness = _title-thickness-cm(style, ext)
   let a = _title-angle(style, if axis == "x" { 0 } else { 90 }).deg()
   if axis == "x" {
-    _x-label-depth(a, 1, title-w, line-h)
+    _x-label-depth(a, 1, title-w, thickness)
   } else {
-    _y-label-width(a, 1, title-w, line-h)
+    _y-label-width(a, 1, title-w, thickness)
   }
+}
+
+// Extent (cm) a title box actually spans along the panel's own axis: the other
+// half of the rotated bounding box from `_title-extent-cm`, which reserves the
+// perpendicular half. An x title is bounded by this against the panel width, a
+// y title against the panel height.
+#let _title-span-cm(style, ext, axis) = {
+  let along = _ext-along(ext)
+  if along == none { return 0.0 }
+  let thickness = _title-thickness-cm(style, ext)
+  let a = _title-angle(style, if axis == "x" { 0 } else { 90 }).deg()
+  if axis == "x" {
+    _y-label-width(a, 1, along, thickness)
+  } else {
+    _x-label-depth(a, 1, along, thickness)
+  }
+}
+
+// Smallest panel worth wrapping an axis title against, matching the 0.5 cm
+// panel floor `render-plot` and `max-right-margin` already enforce.
+#let _MIN-TITLE-PANEL = 0.5
+
+// How much of a rotated title box's reading length (`along`) and thickness
+// (`across`) project onto the panel axis that bounds it. Both the estimate and
+// the bisection below solve against these, so they read them from one place.
+#let _title-shares(style, axis) = {
+  let default-deg = if axis == "x" { 0 } else { 90 }
+  let a = calc.abs(_title-angle(style, default-deg).deg()) * 1deg
+  if axis == "x" {
+    (along: calc.cos(a), across: calc.sin(a))
+  } else {
+    (along: calc.sin(a), across: calc.cos(a))
+  }
+}
+
+// The reading length whose span is the smallest any box of this title can
+// reach: below it, narrowing the box thickens it faster than it shortens it.
+#let _min-span-along-cm(style, shares, natural-cm) = calc.sqrt(
+  natural-cm * _ax-text-cm(style.size) * shares.across / shares.along,
+)
+
+// Reading length (cm) to box an axis title at so it spans no more than
+// `panel-cm` along the panel's own axis. Rotated by `a`, a `len` x `thickness`
+// box spans `len * cos(a) + thickness * sin(a)` horizontally and
+// `len * sin(a) + thickness * cos(a)` vertically; an x title is bounded by the
+// first against the panel width, a y title by the second against the panel
+// height. `natural-cm` is the title's unwrapped single-line width.
+//
+// At the natural angles the thickness lies across the constrained span and
+// costs nothing, so the bound is the panel extent divided by the projection.
+// Off them both terms count, and shortening the box thickens it: wrapping
+// `natural-cm` into a box of width `len` takes about `natural-cm / len` lines,
+// so `thickness ~ natural-cm * line / len` and the span becomes
+// `len * s + natural-cm * line * c / len`. That is a quadratic in `len`, so
+// take its larger root and the title wraps as little as it can while still
+// fitting. A span has a floor of `2 * sqrt(natural-cm * line * s * c)`, so when
+// the panel is under it no box fits: hand back the length that comes closest
+// and let the caller's span check report it.
+//
+// When the reading direction contributes nothing to the constrained span the
+// title reads across its axis rather than along it (a vertical x title, a
+// horizontal y title): its length is then reserved as perpendicular depth
+// instead, so nothing bounds it and `none` means unbounded.
+#let _title-along-cm(style, axis, panel-cm, natural-cm) = {
+  // Below the panel minimum the whole layout is already degenerate, and the
+  // canvas-minimum guard in `render-plot` is what speaks to that. Bounding a
+  // title to a few millimetres there would turn plots that used to render,
+  // however cramped, into failures. Leave them exactly as they were.
+  if panel-cm < _MIN-TITLE-PANEL { return none }
+  let shares = _title-shares(style, axis)
+  if shares.along <= 1e-6 { return none }
+  if shares.across <= 1e-6 { return panel-cm / shares.along }
+  let bulk = natural-cm * _ax-text-cm(style.size) * shares.across
+  let discriminant = panel-cm * panel-cm - 4 * shares.along * bulk
+  if discriminant <= 0 {
+    return _min-span-along-cm(style, shares, natural-cm)
+  }
+  (panel-cm + calc.sqrt(discriminant)) / (2 * shares.along)
+}
+
+// Bisection steps spent narrowing an oblique title's box onto the panel. The
+// estimate above assumes lines pack perfectly; real ones are ragged and round
+// up to whole lines, so the estimate can still overrun by a line's projection.
+// Five halvings take that to a thirty-second of the starting bracket.
+#let _TITLE-FIT-STEPS = 5
+
+// The largest reading length whose *measured* span fits `panel-cm`, and the
+// extents that go with it. At the natural angles the estimate is exact and
+// this is a single measurement. Off them it brackets: the estimate is the
+// widest box worth trying, and `sqrt(bulk / along-share)` is the box that
+// minimises the span, so if anything fits it lies between the two. Bisect
+// towards the wider end, keeping the widest box measured to fit, because a
+// wider box is a title on fewer lines.
+#let _fit-title-extents(title, style, axis, panel-cm, natural-cm) = {
+  let along = _title-along-cm(style, axis, panel-cm, natural-cm)
+  let ext = _axis-title-extents(title, style, along-cm: along)
+  let fits = ext => _title-span-cm(style, ext, axis) <= panel-cm + 1e-6
+  if along == none or fits(ext) { return (along: along, ext: ext) }
+  let shares = _title-shares(style, axis)
+  if shares.across <= 1e-6 { return (along: along, ext: ext) }
+  let floor = _min-span-along-cm(style, shares, natural-cm)
+  // Nothing between the two fits, so settle on the span minimum and let the
+  // caller report a title this panel cannot hold at this angle.
+  let best = (
+    along: floor,
+    ext: _axis-title-extents(title, style, along-cm: floor),
+  )
+  let (lo, hi) = (calc.min(floor, along), calc.max(floor, along))
+  for _ in range(_TITLE-FIT-STEPS) {
+    let mid = (lo + hi) / 2
+    let probe = _axis-title-extents(title, style, along-cm: mid)
+    if fits(probe) {
+      best = (along: mid, ext: probe)
+      lo = mid
+    } else { hi = mid }
+  }
+  best
+}
+
+// The drawable body for an axis title: the same box `_axis-title-extents`
+// measured, so what the canvas reserves and what cetz lays out agree. A title
+// that fitted on one line carries no `along` and is drawn bare, exactly as
+// before.
+//
+// Once it wraps, the lines take the theme's `align`, the same field
+// `_x-title-place` / `_y-title-place` read to pin the block as a whole, so a
+// ragged edge falls on the side the title is already pushed to. Unset means
+// centred on both axes, which is what those two produce as well.
+#let _title-body(title, style, ext) = {
+  let body = text(.._text-args(style))[#resolve-prose(
+    title,
+    eval-strings: style.typst,
+  )]
+  let along = _ext-along(ext)
+  if along == none { return body }
+  let align-to = if style.align != none { style.align } else { center }
+  _title-boxed(body, along, align-to)
+}
+
+// How far (cm) a title still overruns its box once wrapped: the widest run the
+// layout cannot break, less the box. Zero when it fits, and zero for content
+// titles, whose break opportunities `longest-unbreakable-cm` cannot see.
+#let _title-overrun-cm(ext) = {
+  let along = _ext-along(ext)
+  if along == none { return 0.0 }
+  calc.max(0.0, ext.at("min-width", default: 0.0) - along)
 }
 
 // Inter-row gap between dodged labels on the x and y axes (cm). The depth
@@ -224,7 +430,16 @@
 // axis ticks, labels, and title. `axis` selects orientation: `"y"` (right
 // edge, label width) or `"x"` (top edge, label depth). Matches the primary
 // formula so the title-to-label gap stays symmetric on opposing edges.
-#let _sec-extent(sec, tick-len, sec-extents, ax-title, axis) = {
+// `title-ext` carries the secondary title's measured extents when it had to
+// wrap, so the reserved thickness follows its line count like the primary's.
+#let _sec-extent(
+  sec,
+  tick-len,
+  sec-extents,
+  ax-title,
+  axis,
+  title-ext: none,
+) = {
   if sec == none { return 0.0 }
   let label-extent = if axis == "y" {
     _y-label-width(0, 1, sec-extents.width, sec-extents.height)
@@ -232,7 +447,7 @@
     _x-label-depth(0, 1, sec-extents.width, sec-extents.height)
   }
   let title-cm = if sec.at("name", default: none) != none {
-    _ax-text-cm(ax-title.size)
+    _title-extent-cm(ax-title, title-ext, axis)
   } else { 0.0 }
   let gap-side = if axis == "y" { "left" } else { "bottom" }
   let gap = _text-margin-cm(ax-title, gap-side, _AX-TITLE-LABEL-GAP)

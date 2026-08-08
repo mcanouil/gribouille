@@ -65,6 +65,8 @@ Run the survey command at the bottom before extending the table.
 | `pair`    | adjacent-row tuple        | `(prev, cur)` window over sorted rows.                                                |
 | `cap`     | cap length / cap mode     | end-cap of a stroke or arc (radial axis arc).                                         |
 | `tick`    | axis tick                 | tick mark (`axis-ticks`, `element-tick`); the label is `axis-text`.                   |
+| `ext`     | measured extents          | `(width, height)` cm record from `measure-labels-cm`; an axis title's also carries `along` and `min-width`. |
+| `along`   | along-panel reading length | cm an axis title may read before its projection overruns the panel; the box it wraps in (`_title-along-cm`, `_title-boxed`). |
 | `cm`      | centimetres               | Typst length unit; used in numeric helpers (`length-to-cm`).                          |
 | `pt`      | points (typographic)      | Typst length unit.                                                                    |
 
