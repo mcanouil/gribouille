@@ -138,6 +138,11 @@
   show-y-title: true,
   show-x-sec: true,
   show-y-sec: true,
+  // Facet builders draw one secondary title for the whole grid, the way they
+  // already do for the primary pair, so their panels keep the secondary ticks
+  // and labels but drop the title.
+  show-x-sec-title: true,
+  show-y-sec-title: true,
   flipped: false,
   axis-breaks: none,
   x-extents: none,
@@ -501,7 +506,7 @@
     if _ax-line.xt != none {
       line((px-lo, py-hi), (px-hi, py-hi), stroke: _ax-line.xt)
     }
-    if _x-sec.name != none and _ax-title.xt.size > 0pt {
+    if show-x-sec-title and _x-sec.name != none and _ax-title.xt.size > 0pt {
       let _x-sec-ext = _resolve-extents(x-sec-extents, _ax-text.xt.size)
       let x-sec-depth = _x-label-depth(
         0,
@@ -563,7 +568,7 @@
     if _ax-line.yr != none {
       line((px-hi, py-lo), (px-hi, py-hi), stroke: _ax-line.yr)
     }
-    if _y-sec.name != none and _ax-title.yr.size > 0pt {
+    if show-y-sec-title and _y-sec.name != none and _ax-title.yr.size > 0pt {
       let _y-sec-ext = _resolve-extents(y-sec-extents, _ax-text.yr.size)
       let y-sec-width = _y-label-width(
         0,

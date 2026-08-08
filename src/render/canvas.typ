@@ -15,6 +15,7 @@
   _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
   _apply-labels, _fixed-inner-size, _is-flipped, _post-train,
 )
+#import "../utils/radial.typ": is-radial
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _axis-label-extents, _secondary-label-extents,
   _text-margin-cm, _title-angle, _title-body, _title-extent-cm, _x-label-depth,
@@ -117,6 +118,59 @@
       ),
       _title-body(y-title, _ax-title.yl, ctx.y-title-extents),
       angle: _title-angle(_ax-title.yl, 90),
+    )
+  }
+
+  // The secondary titles hang off the far edge of the grid rather than the
+  // panel edge a single plot uses, so the strip bands sit between the axis and
+  // its title. `_chrome-margins` reserved the same extent on that side, and the
+  // extents carried here are the ones it fitted, so a long title arrives
+  // already wrapped. Radial panels draw no secondary axis at all.
+  let _x-sec = if is-radial(ctx.coord) { none } else { _sec-spec(x-trained) }
+  let _y-sec = if is-radial(ctx.coord) { none } else { _sec-spec(y-trained) }
+  if _x-sec != none and _x-sec.name != none and _ax-title.xt.size > 0pt {
+    let _x-sec-ext = ctx.x-sec-extents
+    let _x-sec-depth = _x-label-depth(0, 1, _x-sec-ext.width, _x-sec-ext.height)
+    let _x-sec-gap = _text-margin-cm(
+      _ax-title.xt,
+      "bottom",
+      _AX-TITLE-LABEL-GAP,
+    )
+    cetz.draw.content(
+      (
+        margin.left + grid-w / 2,
+        margin.bottom
+          + grid-h
+          + top-strip
+          + _tick-len.xt
+          + 0.1
+          + _x-sec-depth
+          + _x-sec-gap,
+      ),
+      _title-body(_x-sec.name, _ax-title.xt, ctx.x-sec-title-extents),
+      anchor: "south",
+      angle: _title-angle(_ax-title.xt, 0),
+    )
+  }
+  if _y-sec != none and _y-sec.name != none and _ax-title.yr.size > 0pt {
+    let _y-sec-ext = ctx.y-sec-extents
+    let _y-sec-width = _y-label-width(0, 1, _y-sec-ext.width, _y-sec-ext.height)
+    let _y-sec-gap = _text-margin-cm(_ax-title.yr, "left", _AX-TITLE-LABEL-GAP)
+    let _y-sec-cm = _title-extent-cm(_ax-title.yr, ctx.y-sec-title-extents, "y")
+    cetz.draw.content(
+      (
+        margin.left
+          + grid-w
+          + right-strip
+          + _tick-len.yr
+          + 0.1
+          + _y-sec-width
+          + _y-sec-gap
+          + _y-sec-cm / 2,
+        margin.bottom + grid-h / 2,
+      ),
+      _title-body(_y-sec.name, _ax-title.yr, ctx.y-sec-title-extents),
+      angle: _title-angle(_ax-title.yr, 90),
     )
   }
 
@@ -380,6 +434,8 @@
         show-y-title: false,
         show-x-sec: free-x or all-x or row == 0,
         show-y-sec: free-y or all-y or col == ncol - 1,
+        show-x-sec-title: false,
+        show-y-sec-title: false,
         flipped: _is-flipped(coord),
         axis-breaks: shared-breaks,
         x-extents: _pe.x,
@@ -488,6 +544,8 @@
           show-y-title: false,
           show-x-sec: r == 0,
           show-y-sec: c == n-cols - 1,
+          show-x-sec-title: false,
+          show-y-sec-title: false,
           flipped: _is-flipped(coord),
           axis-breaks: shared-breaks,
           x-extents: x-extents,

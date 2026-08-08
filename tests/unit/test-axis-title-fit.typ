@@ -172,6 +172,59 @@
   )
 }
 
+// A faceted plot draws its secondary titles once for the whole grid, boxed to
+// the same fitted extents, so neither the wrap nor the grid builder can grow
+// the canvas the way an unbounded per-panel title did.
+#let facet-d = (
+  a: (1, 2, 3, 4, 5, 6),
+  b: (2, 4, 3, 5, 1, 6),
+  g: ("u", "u", "v", "v", "w", "w"),
+)
+
+#context {
+  let m = measure(plot(
+    data: facet-d,
+    mapping: aes(x: "a", y: "b"),
+    layers: (geom-point(),),
+    scales: scales(y: scale-continuous(
+      name: "y",
+      secondary: sec-axis(transform: v => v * 2, name: LONG-Y),
+    )),
+    facet: facet-wrap("g", ncolumn: 3),
+    width: 12cm,
+    height: 5cm,
+  ))
+  assert(
+    m.height <= 5cm + SLACK and m.width <= 12cm + SLACK,
+    message: "a long secondary y title grew the facet-wrap plot to "
+      + repr(m.width)
+      + " x "
+      + repr(m.height),
+  )
+}
+
+#context {
+  let m = measure(plot(
+    data: facet-d,
+    mapping: aes(x: "a", y: "b"),
+    layers: (geom-point(),),
+    scales: scales(x: scale-continuous(
+      name: "x",
+      secondary: sec-axis(transform: v => v * 2, name: LONG-X),
+    )),
+    facet: facet-grid(columns: "g"),
+    width: 12cm,
+    height: 5cm,
+  ))
+  assert(
+    m.height <= 5cm + SLACK and m.width <= 12cm + SLACK,
+    message: "a long secondary x title grew the facet-grid plot to "
+      + repr(m.width)
+      + " x "
+      + repr(m.height),
+  )
+}
+
 // `theme-void` drops the titles entirely; the wrapping path must not resurrect
 // a reservation for ink that never draws.
 #context {
