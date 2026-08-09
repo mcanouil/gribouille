@@ -8,6 +8,8 @@
 - fix: a faceted plot names its secondary axes once for the whole panel grid, the way it already does for the primary axes, and wraps those titles to the room the plot leaves them. A long secondary title used to be drawn unwrapped by every panel carrying that axis, so the copies overprinted each other and stretched the canvas past the requested `width`/`height`. (#235)
 - fix: the axis titles a faceted plot draws once for the whole grid follow the themed `axis-title` `align`, pinning to the ends of the panel grid rather than staying centred over it. (#235)
 - fix: an inside-panel legend background keeps its painted `inset` inside the panel at an edge-flush alignment, and `legend-background`'s `outset` now spaces the backdrop off the panel edge instead of being silently ignored. (#232)
+- fix: a `coord-radial()` plot whose scale carries a `secondary:` spec keeps the panel area the secondary axis used to be given. A radial panel draws no secondary axis, but the chrome still reserved its ticks, labels, gap, and title, leaving an empty margin at the top or right with the panel shrunk to match. A long secondary title could even fail the compile there, over room for an axis that was never going to be drawn. (#236)
+- docs: `sec-axis` and `dup-axis` say that a secondary axis degrades to a no-op under `coord-radial`, which has no opposite panel edge to draw one on, and the feature matrix lists it alongside `geom-rug` among the combinations that do not translate to polar. (#236)
 - docs: tighten prose and apply consistent British spelling across the README, contributor docs, docs site guides, and the AI-assistant skill. (ba666502)
 
 ## 0.6.0 (2026-07-28)

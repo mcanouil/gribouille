@@ -4,11 +4,15 @@
 ///! panel, optionally derived from the primary axis through a transformation
 ///! function. Pass the result of `dup-axis` or `sec-axis` to the `secondary:`
 ///! parameter of `scale-continuous` or `scale-continuous`.
+///!
+///! A panel has no opposite edge to draw on under `coord-radial`, so a
+///! secondary axis degrades to a no-op there.
 
 /// Duplicate the primary axis on the opposite side of the panel.
 ///
 /// Draws the same ticks as the primary axis but on the top edge for x or
-/// the right edge for y, optionally with a different title.
+/// the right edge for y, optionally with a different title. Degrades to a
+/// no-op under `coord-radial`, which has no opposite edge to draw on.
 ///
 /// \@category Scales
 /// \@subcategory Secondary axes
@@ -75,6 +79,8 @@
 /// `transform` is a function mapping a primary-axis value to its
 /// secondary-axis value. Use `"identity"` to mirror the primary axis exactly,
 /// or pass any callable, e.g., `x => x * 9 / 5 + 32` for Celsius to Fahrenheit.
+/// Degrades to a no-op under `coord-radial`, which has no opposite edge to
+/// draw on.
 ///
 /// \@category Scales
 /// \@subcategory Secondary axes

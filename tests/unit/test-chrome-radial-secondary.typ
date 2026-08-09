@@ -17,15 +17,13 @@
   spec: (secondary: secondary),
 )
 
-// Both axes carry a named secondary, so a reservation on either side shows up
-// as a non-zero extent and a fattened margin.
-#let chrome-of(coord, secondary: true) = {
-  let sec-x = if secondary { sec-axis(name: "Secondary x") } else { none }
-  let sec-y = if secondary { sec-axis(name: "Secondary y") } else { none }
+// `secondary` binds to both axes, so a reservation on either side shows up as
+// a non-zero extent and a fattened margin.
+#let chrome-of(coord, secondary: none) = {
   _chrome-margins((
     spec: (mapping: none, guides: (:), coord: coord),
     theme: merge-theme(none),
-    trained: (x: trained-axis(sec-x), y: trained-axis(sec-y)),
+    trained: (x: trained-axis(secondary), y: trained-axis(secondary)),
     coord: coord,
     guides: (),
     extents: (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0, inside: ()),
@@ -42,11 +40,13 @@
   ))
 }
 
+#let named = sec-axis(name: "Secondary")
+
 // Label measurement needs a known context, so every chrome call runs inside
 // one.
 #context {
   // Cartesian is the control: the secondary chrome is both drawn and reserved.
-  let cartesian = chrome-of(none)
+  let cartesian = chrome-of(none, secondary: named)
   assert(
     cartesian.sec-x-extent > 0,
     message: "cartesian secondary x reserves no chrome",
@@ -57,13 +57,13 @@
   )
 
   // Radial reserves nothing, because it draws nothing.
-  let radial = chrome-of(coord-radial())
+  let radial = chrome-of(coord-radial(), secondary: named)
   assert.eq(radial.sec-x-extent, 0.0)
   assert.eq(radial.sec-y-extent, 0.0)
 
   // And the margin is the one a radial plot without any secondary spec gets:
   // the panel keeps every millimetre the undrawn axis would have taken.
-  let radial-plain = chrome-of(coord-radial(), secondary: false)
+  let radial-plain = chrome-of(coord-radial())
   for side in ("top", "right", "bottom", "left") {
     assert(
       approx-eq(radial.margin.at(side), radial-plain.margin.at(side)),
@@ -77,6 +77,25 @@
       ),
     )
   }
+}
+
+// A titleless secondary still reserves tick and label depth on a cartesian
+// panel, so the radial gate has to drop that depth too rather than only the
+// title extent.
+#context {
+  let cartesian = chrome-of(none, secondary: sec-axis())
+  assert(
+    cartesian.sec-x-extent > 0,
+    message: "titleless cartesian secondary x reserves no chrome",
+  )
+  assert(
+    cartesian.sec-y-extent > 0,
+    message: "titleless cartesian secondary y reserves no chrome",
+  )
+
+  let radial = chrome-of(coord-radial(), secondary: sec-axis())
+  assert.eq(radial.sec-x-extent, 0.0)
+  assert.eq(radial.sec-y-extent, 0.0)
 }
 
 Chrome radial secondary tests passed.
