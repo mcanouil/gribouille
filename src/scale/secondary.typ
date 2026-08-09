@@ -3,7 +3,7 @@
 ///! A secondary axis draws an extra set of ticks on the opposite side of the
 ///! panel, optionally derived from the primary axis through a transformation
 ///! function. Pass the result of `dup-axis` or `sec-axis` to the `secondary:`
-///! parameter of `scale-continuous` or `scale-continuous`.
+///! parameter of `scale-continuous`.
 ///!
 ///! A panel has no opposite edge to draw on under `coord-radial`, so a
 ///! secondary axis degrades to a no-op there.
@@ -28,7 +28,7 @@
 /// \@param labels Array of labels aligned with `breaks`, a function of the
 ///   break value, or `auto` to format each break.
 ///
-/// \@returns Secondary axis dictionary consumed by \@scale-continuous and \@scale-continuous.
+/// \@returns Secondary axis dictionary consumed by \@scale-continuous.
 ///
 /// \@examples Mirror the x axis on top with a different title.
 /// ```
@@ -98,7 +98,7 @@
 /// \@param labels Array of labels aligned with `breaks`, a function of the
 ///   transformed break value, or `auto` to format each break.
 ///
-/// \@returns Secondary axis dictionary consumed by \@scale-continuous and \@scale-continuous.
+/// \@returns Secondary axis dictionary consumed by \@scale-continuous.
 ///
 /// \@examples Celsius primary axis with a Fahrenheit secondary derived
 /// through a callable.
@@ -140,7 +140,7 @@
 /// )
 /// ```
 ///
-/// \@see \@dup-axis, \@scale-continuous, \@scale-continuous
+/// \@see \@dup-axis, \@scale-continuous
 #let sec-axis(
   transform: "identity",
   name: none,

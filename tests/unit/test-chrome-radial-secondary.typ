@@ -56,13 +56,11 @@
     message: "cartesian secondary y reserves no chrome",
   )
 
-  // Radial reserves nothing, because it draws nothing.
+  // Radial reserves nothing, because it draws nothing: its margin is the one
+  // a radial plot carrying no secondary spec gets, so the panel keeps every
+  // millimetre the undrawn axis would have taken. Assert the margin first, so
+  // a regression reports the side it lands on rather than a bare extent.
   let radial = chrome-of(coord-radial(), secondary: named)
-  assert.eq(radial.sec-x-extent, 0.0)
-  assert.eq(radial.sec-y-extent, 0.0)
-
-  // And the margin is the one a radial plot without any secondary spec gets:
-  // the panel keeps every millimetre the undrawn axis would have taken.
   let radial-plain = chrome-of(coord-radial())
   for side in ("top", "right", "bottom", "left") {
     assert(
@@ -77,6 +75,8 @@
       ),
     )
   }
+  assert.eq(radial.sec-x-extent, 0.0)
+  assert.eq(radial.sec-y-extent, 0.0)
 }
 
 // A titleless secondary still reserves tick and label depth on a cartesian
