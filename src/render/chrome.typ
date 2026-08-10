@@ -9,14 +9,14 @@
 #import "../utils/radial.typ": is-radial
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec
-#import "guides.typ": _axis-text-angle, _read-axis-guide
+#import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
 #import "domain.typ": _is-flipped
 #import "../utils/errors.typ": fail
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _axis-label-extents, _axis-title-extents,
   _fit-title-extents, _sec-extent, _secondary-label-extents, _text-margin-cm,
-  _title-angle, _title-extent-cm, _title-overrun-cm, _title-span-cm,
-  _x-label-depth-stack, _y-label-width-stack,
+  _theta-label-margins, _title-angle, _title-extent-cm, _title-overrun-cm,
+  _title-span-cm, _x-label-depth-stack, _y-label-width-stack,
 )
 
 // Passes allowed when settling axis-title wrapping against the panel size, and
@@ -137,6 +137,28 @@
   let y-label-width = if ax-text.yl.size > 0pt and not y-guide.suppress {
     _y-label-width-stack(y-guide, y-extents.width, y-extents.height)
   } else { 0.0 }
+  // Theta tick labels ring the circle instead of sitting under one edge, so a
+  // radial panel owes every margin the band they land in. The angular axis is
+  // x unless the coord says otherwise, and `guides(theta: ...)` carries their
+  // rotation and their suppress marker, exactly as the draw site reads them.
+  let theta-margins = if not _radial {
+    (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0)
+  } else {
+    let theta-guide = _read-theta-guide(spec)
+    let cat-is-theta = coord.at("theta", default: "x") == "x"
+    let theta-text = if cat-is-theta { ax-text.xb } else { ax-text.yl }
+    let theta-extents = if cat-is-theta { x-extents } else { y-extents }
+    if (
+      theta-text.size > 0pt
+        and not (theta-guide != none and theta-guide.suppress)
+    ) {
+      _theta-label-margins(
+        theta-extents,
+        if theta-guide == none { 0 } else { theta-guide.angle },
+      )
+    } else { (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0) }
+  }
+
   // A suppressed (`labels(x: none)`) or nameless axis title reserves no extent;
   // mirror the draw-side gate so the panel reclaims the freed depth.
   let _flipped = _is-flipped(coord)
@@ -293,11 +315,13 @@
     let y-title-cm = if y-title != none {
       _title-extent-cm(ax-title.yl, ext.yl, "y")
     } else { 0.0 }
-    let bottom-extent = (
-      x-tick-cm + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05
+    let bottom-extent = calc.max(
+      x-tick-cm + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05,
+      theta-margins.bottom,
     )
-    let left-extent = (
-      y-tick-cm + 0.1 + y-label-width + left-gap + y-title-cm
+    let left-extent = calc.max(
+      y-tick-cm + 0.1 + y-label-width + left-gap + y-title-cm,
+      theta-margins.left,
     )
     // Cap the right margin so the legend can never push panel width below the
     // single-tick minimum. Without the cap, `px-hi - px-lo` goes negative and
@@ -307,9 +331,15 @@
       margin: (
         left: left-extent + _side-gap("left") + _surface-out("left"),
         bottom: bottom-extent + _side-gap("bottom") + _surface-out("bottom"),
-        top: sec-x-extent + _side-gap("top") + _surface-out("top"),
+        top: (
+          calc.max(sec-x-extent, theta-margins.top)
+            + _side-gap("top")
+            + _surface-out("top")
+        ),
         right: calc.min(
-          sec-y-extent + _side-gap("right") + _surface-out("right"),
+          calc.max(sec-y-extent, theta-margins.right)
+            + _side-gap("right")
+            + _surface-out("right"),
           max-right-margin,
         ),
       ),

@@ -10,6 +10,11 @@
   coord != none and coord.at("name", default: none) == "radial"
 )
 
+// Gap (cm) between the outer theta arc and the tick labels ringing it. The
+// draw site offsets the labels by it and the chrome stage reserves the band
+// they land in, so the two cannot drift apart.
+#let THETA-LABEL-PAD = 0.2
+
 // "y" when theta is "x" (rose/radar) and "x" when theta is "y" (pie).
 // Returns `none` for non-radial coords. Used during scale expansion, which
 // runs before trained scales exist and so cannot route through `radial-ctx`.

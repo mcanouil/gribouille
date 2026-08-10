@@ -7,6 +7,7 @@
 #import "../theme/theme.typ": _text-args
 #import "../utils/measure.typ": longest-unbreakable-cm, measure-labels-cm
 #import "../utils/palette.typ": spec-attr
+#import "../utils/radial.typ": THETA-LABEL-PAD
 #import "../utils/format.typ": format-break
 #import "../scale/secondary.typ" as secondary-mod
 #import "axis-format.typ": _axis-breaks, _axis-label, _secondary-breaks
@@ -212,6 +213,25 @@
 #let _y-label-width(angle, n-dodge, label-w-cm, label-h-cm) = {
   let a = calc.abs(angle) * 1deg
   label-w-cm * calc.cos(a) + label-h-cm * calc.sin(a) + (n-dodge - 1) * 0.5
+}
+
+// Depth (cm) each margin owes a radial panel's theta tick labels. They ring
+// the circle at `r-max + THETA-LABEL-PAD`, centred on that point, so the one
+// at the top of the sweep overhangs the panel by the pad plus half its own
+// height and the one at the side by the pad plus half its width. Reserve that
+// on all four margins rather than the cartesian bottom and left: a circle
+// touches every edge of the square it is inscribed in, and the labels have
+// nowhere else to fall. A panel wider than it is tall keeps the surplus as
+// slack, so the reservation over-reserves there rather than clipping.
+#let _theta-label-margins(extents, angle) = {
+  let depth = _x-label-depth(angle, 1, extents.width, extents.height) / 2
+  let width = _y-label-width(angle, 1, extents.width, extents.height) / 2
+  (
+    top: THETA-LABEL-PAD + depth,
+    bottom: THETA-LABEL-PAD + depth,
+    left: THETA-LABEL-PAD + width,
+    right: THETA-LABEL-PAD + width,
+  )
 }
 
 // The box width `_axis-title-extents` settled on, or `none` when the title
