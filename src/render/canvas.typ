@@ -18,8 +18,7 @@
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _axis-label-extents, _sec-band-cm, _sec-title-offset-cm,
   _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
-  _title-extent-cm, _x-label-depth, _x-title-place, _y-label-width,
-  _y-title-place,
+  _title-extent-cm, _x-title-place, _y-title-place,
 )
 #import "facet.typ": _draw-strip, _strip-band, _strip-texts
 #import "panel-draw.typ": _draw-axis-and-layers
@@ -81,8 +80,6 @@
   let trained = ctx.trained
   let margin = ctx.margin
   let _ax-title = ctx.style.ax-title
-  let x-extents = ctx.x-extents
-  let y-extents = ctx.y-extents
 
   let x-trained = trained.at("x", default: none)
   let y-trained = trained.at("y", default: none)
@@ -93,8 +90,12 @@
   let y-title = _axis-title(y-trained, _map-name("y"))
   let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
   let _tick-len = _per-side(_len-side, "axis-ticks")
-  let _xlbl-depth = _x-label-depth(0, 1, x-extents.width, x-extents.height)
-  let _ylbl-width = _y-label-width(0, 1, y-extents.width, y-extents.height)
+  // The band between the panel grid and its title is the one `_chrome-margins`
+  // reserved, carried here rather than recomputed: a suppressed axis draws no
+  // ticks or labels and a radial panel draws neither band outside its edges, so
+  // recomputing it means remembering both gates in a second place, and a title
+  // offset by a band nothing drew lands outside its own margin, growing the
+  // canvas past the requested size.
   let _xt-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   let _yt-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   let _xt-cm = _title-extent-cm(_ax-title.xb, ctx.x-title-extents, "x")
@@ -108,7 +109,7 @@
     cetz.draw.content(
       (
         cx,
-        margin.bottom - _tick-len.xb - 0.1 - _xlbl-depth - _xt-gap - _xt-cm,
+        margin.bottom - ctx.x-label-band - 0.1 - _xt-gap - _xt-cm,
       ),
       _title-body(x-title, _ax-title.xb, ctx.x-title-extents),
       anchor: x-anchor,
@@ -119,7 +120,7 @@
     let (cy, y-anchor) = _y-title-place(_ax-title.yl.align, .._y-span)
     cetz.draw.content(
       (
-        margin.left - _tick-len.yl - 0.1 - _ylbl-width - _yt-gap - _yt-cm / 2,
+        margin.left - ctx.y-label-band - 0.1 - _yt-gap - _yt-cm / 2,
         cy,
       ),
       _title-body(y-title, _ax-title.yl, ctx.y-title-extents),
@@ -341,10 +342,22 @@
       let ys = _sec-spec(yt, coord: coord)
       (
         x: if free-x {
-          _axis-label-extents(xt, ax-text.xb.size, typst-eval: ax-text.xb.typst)
+          _axis-label-extents(
+            xt,
+            ax-text.xb.size,
+            "x",
+            coord,
+            typst-eval: ax-text.xb.typst,
+          )
         } else { x-extents },
         y: if free-y {
-          _axis-label-extents(yt, ax-text.yl.size, typst-eval: ax-text.yl.typst)
+          _axis-label-extents(
+            yt,
+            ax-text.yl.size,
+            "y",
+            coord,
+            typst-eval: ax-text.yl.typst,
+          )
         } else { y-extents },
         x-sec: if free-x {
           _secondary-label-extents(

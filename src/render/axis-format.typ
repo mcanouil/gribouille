@@ -8,6 +8,7 @@
 #import "../utils/extended.typ": extended
 #import "../utils/format.typ": format-break
 #import "../utils/radial.typ": is-radial
+#import "../utils/aes-resolve.typ": resolve-label
 
 // Axis title fallback: a `labels(x: none)` suppression (`spec.blank`) wins and
 // yields no title; otherwise the trained scale's `spec.name`, else the bare
@@ -214,6 +215,46 @@
     )
   }
   format-break(n)
+}
+
+// The values an axis puts ticks at: the levels of a discrete scale, the
+// computed breaks of a continuous one, nothing for anything else.
+#let _axis-tick-values(trained) = if trained == none {
+  ()
+} else if trained.type == "discrete" {
+  trained.domain
+} else if trained.type == "continuous" {
+  _axis-breaks(trained)
+} else { () }
+
+// What a tick label reads when the user supplied no `labels` callback: the
+// level itself on a discrete scale, the formatted break on a continuous one.
+#let _tick-label-fallback(trained, value) = if trained.type == "continuous" {
+  _axis-label(trained, value)
+} else { value }
+
+// One theta tick label as a radial panel draws it: the breaks sharing a canvas
+// angle, resolved one by one, the `none`s dropped so a callback can hide a
+// wrap-side break, and the rest joined in reverse break order, which on the
+// usual ascending `breaks` reads highest first ("24/0", not "0/24"). `none`
+// when the whole group resolves away and nothing is drawn.
+//
+// Shared by the panel draw and the chrome stage that reserves the band the
+// draw lands in: a full sweep merges two breaks into one label roughly twice
+// as wide as either, so a side keeping its own copy of this reserves the wrong
+// band as soon as the two drift.
+#let _theta-group-label(trained, labels-cb, typst-mark, group) = {
+  let labels = group
+    .map(rec => resolve-label(
+      labels-cb,
+      rec.b,
+      rec.idx,
+      _tick-label-fallback(trained, rec.b),
+      typst-mark: typst-mark,
+    ))
+    .filter(l => l != none)
+  if labels.len() == 0 { return none }
+  labels.rev().join([/])
 }
 
 // The secondary-axis spec a trained scale carries, or `none` where there is

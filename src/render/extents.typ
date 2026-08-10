@@ -7,10 +7,16 @@
 #import "../theme/theme.typ": _text-args
 #import "../utils/measure.typ": longest-unbreakable-cm, measure-labels-cm
 #import "../utils/palette.typ": spec-attr
-#import "../utils/radial.typ": THETA-LABEL-PAD
+#import "../utils/radial.typ": (
+  THETA-LABEL-PAD, group-theta-breaks, theta-axis-of, theta-range-of,
+)
+#import "../scale/train.typ": map-break
 #import "../utils/format.typ": format-break
 #import "../scale/secondary.typ" as secondary-mod
-#import "axis-format.typ": _axis-breaks, _axis-label, _secondary-breaks
+#import "axis-format.typ": (
+  _axis-breaks, _axis-tick-values, _secondary-breaks, _theta-group-label,
+  _tick-label-fallback,
+)
 
 // Convert the axis-text font size in pt to cm. Used as a fallback ink-height
 // when no actual labels are measured (e.g., an axis with no breaks).
@@ -142,20 +148,32 @@
 // Caller must already be inside a `context { ... }` block.
 // `typst-eval` mirrors the axis-text style's `typst` flag so typst-marked
 // labels measure at their rendered width.
-#let _axis-label-extents(trained, size, typst-eval: false) = {
+//
+// `axis` and `coord` are both required, because together they are what tells
+// this apart from the angular axis of a `coord-radial`: there the breaks are
+// grouped by canvas angle and each group measured as the single merged label
+// the draw emits. Defaulting either would silently hand a radial plot the
+// per-break measurement, which reserves about half the band a merged label
+// needs.
+#let _axis-label-extents(trained, size, axis, coord, typst-eval: false) = {
   if trained == none { return _empty-extents(size) }
+  let values = _axis-tick-values(trained)
+  // Only an axis with no breaks at all takes the single-line fallback. Breaks
+  // whose labels all resolve away draw nothing and owe nothing, which is what
+  // `measure-labels-cm` answers for the empty list they leave behind.
+  if values.len() == 0 { return _empty-extents(size) }
   let labels-cb = _trained-labels-cb(trained)
   let typst-mark = trained.at("typst-mark", default: false)
-  let labels = ()
-  if trained.type == "discrete" {
-    labels = trained
-      .domain
-      .enumerate()
-      .map(((idx, level)) => (
-        _resolve-tick(labels-cb, typst-mark, idx, level, level, typst-eval)
-      ))
-  } else if trained.type == "continuous" {
-    labels = _axis-breaks(trained)
+  // `theta-axis-of` is `none` off a radial coord and `axis` never is, so this
+  // is false for every cartesian axis without a guard of its own.
+  let labels = if theta-axis-of(coord) == axis {
+    let theta-range = theta-range-of(coord)
+    group-theta-breaks(values, b => map-break(trained, b, theta-range))
+      .map(group => _theta-group-label(trained, labels-cb, typst-mark, group))
+      .filter(l => l != none)
+      .map(l => resolve-prose(l, eval-strings: typst-eval))
+  } else {
+    values
       .enumerate()
       .map(((idx, b)) => (
         _resolve-tick(
@@ -163,12 +181,11 @@
           typst-mark,
           idx,
           b,
-          _axis-label(trained, b),
+          _tick-label-fallback(trained, b),
           typst-eval,
         )
       ))
   }
-  if labels.len() == 0 { return _empty-extents(size) }
   measure-labels-cm(labels, size)
 }
 

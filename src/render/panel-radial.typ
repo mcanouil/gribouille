@@ -4,14 +4,16 @@
 // lines, and points cannot mask them.
 
 #import "../deps.typ": cetz
-#import "../scale/train.typ": map-axis-data, map-position
+#import "../scale/train.typ": map-axis-data, map-break
 #import "../theme/theme.typ": _text-args
 #import "../utils/radial.typ": (
   THETA-LABEL-PAD, group-theta-breaks, polar-canvas, radial-arc,
 )
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
-#import "axis-format.typ": _axis-breaks, _axis-label
+#import "axis-format.typ": (
+  _axis-breaks, _axis-label, _axis-tick-values, _theta-group-label,
+)
 #import "guides.typ": (
   _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _THETA-MINOR-TICK-FRAC, _read-r-guide,
   _read-theta-guide,
@@ -48,12 +50,6 @@
     (y-trained, x-trained, _y-disp, _ax-text.yl)
   }
 
-  let _radial-theta-of(trained, value) = if trained.type == "continuous" {
-    map-axis-data(trained, value, theta-range)
-  } else {
-    map-position(trained, value, theta-range)
-  }
-
   if _grid-radial != none and r-trained != none {
     if r-trained.type == "continuous" {
       for b in _axis-breaks(r-trained) {
@@ -65,18 +61,14 @@
     }
   }
 
-  let theta-breaks = if theta-trained == none { () } else if (
-    theta-trained.type == "continuous"
-  ) {
-    _axis-breaks(theta-trained)
-  } else { theta-trained.domain }
+  let theta-breaks = _axis-tick-values(theta-trained)
 
   // Full-sweep domain endpoints can land on the same canvas angle (e.g., 0
   // and 24 on a 24-hour clock both sit at 12 o'clock); group them so we
   // draw one spoke and one merged "end/start" label per shared angle.
   let theta-groups = group-theta-breaks(
     theta-breaks,
-    b => _radial-theta-of(theta-trained, b),
+    b => map-break(theta-trained, b, theta-range),
   )
 
   if _grid-radial != none and theta-trained != none {
@@ -131,25 +123,17 @@
       and not theta-suppress
   ) {
     for group in theta-groups {
-      // `labels` callbacks may return `none` to drop a wrap-side break from
-      // the merged label (e.g., hide "6" so a 0..6 radar shows "0", not "6/0").
-      let labels = group
-        .map(rec => {
-          let raw = if theta-trained.type == "continuous" {
-            _axis-label(theta-trained, rec.b)
-          } else { rec.b }
-          resolve-label(
-            theta-disp.labels,
-            rec.b,
-            rec.idx,
-            raw,
-            typst-mark: theta-disp.typst-mark,
-          )
-        })
-        .filter(l => l != none)
-      if labels.len() == 0 { continue }
-      // Higher-domain break first: "24/0", not "0/24".
-      let label-text = labels.rev().join([/])
+      // Shared with the chrome stage, which reserves the band this lands in.
+      // A `labels` callback may return `none` to drop a wrap-side break from
+      // the merged label (e.g., hide "6" so a 0..6 radar shows "0", not "6/0"),
+      // and a group that resolves away entirely draws nothing.
+      let label-text = _theta-group-label(
+        theta-trained,
+        theta-disp.labels,
+        theta-disp.typst-mark,
+        group,
+      )
+      if label-text == none { continue }
       let theta = group.first().theta
       let lr = r-max + THETA-LABEL-PAD
       content(

@@ -5,13 +5,13 @@
 #import "../deps.typ": cetz
 #import "../utils/errors.typ": fail
 #import "../scale/train.typ": (
-  map-axis-data, map-position, mapping-display-name, transform-inv,
+  map-axis-data, map-break, mapping-display-name, transform-inv,
 )
 #import "../theme/defaults.typ": resolve-colour
 #import "../theme/theme.typ": (
   _line-stroke, _rect-style, _text-args, _text-style, _tick-length,
 )
-#import "../utils/radial.typ": radial-axis-of, radial-ctx
+#import "../utils/radial.typ": radial-ctx, theta-axis-of
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "../utils/format.typ": format-break
@@ -24,8 +24,8 @@
 #import "colour.typ": _make-resolve-colour
 #import "panel-radial.typ": _draw-radial-panel, _draw-radial-r-labels
 #import "axis-format.typ": (
-  _axis-breaks, _axis-label, _axis-minor-breaks, _axis-title,
-  _log10-minor-positions, _sec-spec, _secondary-breaks,
+  _axis-breaks, _axis-minor-breaks, _axis-tick-values, _axis-title,
+  _log10-minor-positions, _sec-spec, _secondary-breaks, _tick-label-fallback,
 )
 #import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
 #import "extents.typ": (
@@ -223,20 +223,22 @@
   // requested `width`/`height`. Gate the band on the same conditions the draw
   // does, so a suppressed or blank theta axis gives it back.
   let _theta-guide = _read-theta-guide(spec)
-  let _theta-key = if radial-axis-of(coord) == "y" { "x" } else { "y" }
-  let _theta-text = if _theta-key == "x" { _ax-text.xb } else { _ax-text.yl }
-  let _label-inset = if (
-    _theta-text.size > 0pt
-      and not (_theta-guide != none and _theta-guide.suppress)
-  ) {
-    _theta-label-inset(
-      _resolve-extents(
-        if _theta-key == "x" { x-extents } else { y-extents },
-        _theta-text.size,
-      ),
-      if _theta-guide == none { 0 } else { _theta-guide.angle },
-    )
-  } else { (x: 0.0, y: 0.0) }
+  let _theta-key = theta-axis-of(coord)
+  let _label-inset = if _theta-key == none { (x: 0.0, y: 0.0) } else {
+    let _theta-text = if _theta-key == "x" { _ax-text.xb } else { _ax-text.yl }
+    if (
+      _theta-text.size > 0pt
+        and not (_theta-guide != none and _theta-guide.suppress)
+    ) {
+      _theta-label-inset(
+        _resolve-extents(
+          if _theta-key == "x" { x-extents } else { y-extents },
+          _theta-text.size,
+        ),
+        if _theta-guide == none { 0 } else { _theta-guide.angle },
+      )
+    } else { (x: 0.0, y: 0.0) }
+  }
   let outer-radial = radial-ctx(
     coord,
     x-trained,
@@ -393,11 +395,12 @@
     let range = if axis == "x" { px-range } else { py-range }
     let major-stroke = if axis == "x" { _grid-major.x } else { _grid-major.y }
     let minor-stroke = if axis == "x" { _grid-minor.x } else { _grid-minor.y }
-    let breaks = if is-continuous {
-      if axis-breaks != none and axis-breaks.at(axis, default: none) != none {
-        axis-breaks.at(axis)
-      } else { _axis-breaks(trained) }
-    } else { trained.domain }
+    let cached = if axis-breaks == none { none } else {
+      axis-breaks.at(axis, default: none)
+    }
+    let breaks = if is-continuous and cached != none {
+      cached
+    } else { _axis-tick-values(trained) }
     // Minor gridlines sit under the majors, so draw them first.
     if is-continuous and minor-stroke != none {
       for mb in _axis-minor-breaks(trained, breaks) {
@@ -410,9 +413,7 @@
       }
     }
     for (idx, b) in breaks.enumerate() {
-      let c = if is-continuous {
-        map-axis-data(trained, b, range)
-      } else { map-position(trained, b, range) }
+      let c = map-break(trained, b, range)
       if is-continuous and major-stroke != none {
         if axis == "x" {
           line((c, py-lo), (c, py-hi), stroke: major-stroke)
@@ -428,7 +429,7 @@
         }
       }
       if not suppress {
-        let fallback = if is-continuous { _axis-label(trained, b) } else { b }
+        let fallback = _tick-label-fallback(trained, b)
         draw-label(
           c,
           resolve-prose(

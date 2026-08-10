@@ -15,12 +15,33 @@
 // they land in, so the two cannot drift apart.
 #let THETA-LABEL-PAD = 0.2
 
-// "y" when theta is "x" (rose/radar) and "x" when theta is "y" (pie).
-// Returns `none` for non-radial coords. Used during scale expansion, which
-// runs before trained scales exist and so cannot route through `radial-ctx`.
-#let radial-axis-of(coord) = if is-radial(coord) {
-  if coord.at("theta", default: "x") == "x" { "y" } else { "x" }
+// The axis the sweep runs along. `none` off a radial coord, so callers can
+// compare an axis key against it unguarded.
+#let theta-axis-of(coord) = if is-radial(coord) {
+  coord.at("theta", default: "x")
 } else { none }
+
+// Its complement, the axis the radius runs along: "y" when theta is "x"
+// (rose/radar) and "x" when theta is "y" (pie). Used during scale expansion,
+// which runs before trained scales exist and so cannot route through
+// `radial-ctx`.
+#let radial-axis-of(coord) = {
+  let theta = theta-axis-of(coord)
+  if theta == none { none } else if theta == "x" { "y" } else { "x" }
+}
+
+// The `(theta-lo, theta-hi)` sweep in canvas radians. It falls out of the
+// coord alone, with no panel rect in sight, which is what lets the chrome
+// stage project theta breaks before the panel it will draw them in exists.
+// Unlike `theta-axis-of` it reads a radial coord's own keys, so callers
+// establish they have one first.
+#let theta-range-of(coord) = {
+  let start = coord.at("start", default: 0)
+  let direction = coord.at("direction", default: 1)
+  let end = coord.at("end", default: none)
+  let end-eff = if end == none { start + direction * 2 * calc.pi } else { end }
+  (calc.pi / 2 - start, calc.pi / 2 - end-eff)
+}
 
 // `start = 0` plus `direction = 1` reproduce the conventional layout: the
 // first slice opens at 12 o'clock and the sweep advances clockwise. Encoding the
@@ -50,13 +71,8 @@
       (py-hi - py-lo) / 2 - label-inset.y,
     ),
   )
-  let start = coord.at("start", default: 0)
-  let direction = coord.at("direction", default: 1)
-  let end = coord.at("end", default: none)
-  let end-eff = if end == none { start + direction * 2 * calc.pi } else { end }
-  let theta-axis = coord.at("theta", default: "x")
-  let theta-lo = calc.pi / 2 - start
-  let theta-hi = calc.pi / 2 - end-eff
+  let theta-axis = theta-axis-of(coord)
+  let (theta-lo, theta-hi) = theta-range-of(coord)
   (
     coord: "radial",
     centre: centre,
