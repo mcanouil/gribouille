@@ -6,7 +6,9 @@
 #import "../deps.typ": cetz
 #import "../scale/train.typ": map-axis-data, map-position
 #import "../theme/theme.typ": _text-args
-#import "../utils/radial.typ": group-theta-breaks, polar-canvas, radial-arc
+#import "../utils/radial.typ": (
+  THETA-LABEL-PAD, group-theta-breaks, polar-canvas, radial-arc,
+)
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "axis-format.typ": _axis-breaks, _axis-label
@@ -128,7 +130,6 @@
       and theta-trained != none
       and not theta-suppress
   ) {
-    let pad = 0.2
     for group in theta-groups {
       // `labels` callbacks may return `none` to drop a wrap-side break from
       // the merged label (e.g., hide "6" so a 0..6 radar shows "0", not "6/0").
@@ -150,7 +151,7 @@
       // Higher-domain break first: "24/0", not "0/24".
       let label-text = labels.rev().join([/])
       let theta = group.first().theta
-      let lr = r-max + pad
+      let lr = r-max + THETA-LABEL-PAD
       content(
         (cx + lr * calc.cos(theta), cy + lr * calc.sin(theta)),
         text(.._text-args(theta-text))[#resolve-prose(

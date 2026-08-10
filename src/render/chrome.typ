@@ -131,10 +131,20 @@
   // `element-blank()`) draws no labels, so it reserves no perpendicular depth
   // for them; otherwise the chrome margin reserves space for ink that never
   // draws, inverting the panel rect on small plot sizes.
-  let x-label-depth = if ax-text.xb.size > 0pt and not x-guide.suppress {
+  // A radial panel draws neither band under its edges: the angular labels ring
+  // the circle inside the panel (`radial-ctx` insets `r-max` to make room) and
+  // the radial ones sit along a spoke, also inside. Reserving a cartesian
+  // label band there would take the room those labels need out of the panel
+  // they are drawn in, so both drop to zero, exactly as the cartesian tick and
+  // axis draw does under radial.
+  let x-label-depth = if (
+    not _radial and ax-text.xb.size > 0pt and not x-guide.suppress
+  ) {
     _x-label-depth-stack(x-guide, x-extents.width, x-extents.height)
   } else { 0.0 }
-  let y-label-width = if ax-text.yl.size > 0pt and not y-guide.suppress {
+  let y-label-width = if (
+    not _radial and ax-text.yl.size > 0pt and not y-guide.suppress
+  ) {
     _y-label-width-stack(y-guide, y-extents.width, y-extents.height)
   } else { 0.0 }
   // A suppressed (`labels(x: none)`) or nameless axis title reserves no extent;
@@ -190,9 +200,10 @@
     _text-margin-cm(ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   } else { 0.0 }
   // A suppressed axis (`guides(x: none)`) draws no ticks or labels, so it
-  // reserves no tick depth either; the axis line and title still render.
-  let x-tick-cm = if x-guide.suppress { 0.0 } else { tick-len.xb }
-  let y-tick-cm = if y-guide.suppress { 0.0 } else { tick-len.yl }
+  // reserves no tick depth either; the axis line and title still render. A
+  // radial panel draws no cartesian tick marks at all, so it reserves none.
+  let x-tick-cm = if _radial or x-guide.suppress { 0.0 } else { tick-len.xb }
+  let y-tick-cm = if _radial or y-guide.suppress { 0.0 } else { tick-len.yl }
   let _side-gap = side => (
     extents.at(side) + (if extents.at(side) > 0 { legend-gap } else { 0.0 })
   )

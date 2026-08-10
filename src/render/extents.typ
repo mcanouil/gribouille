@@ -7,6 +7,7 @@
 #import "../theme/theme.typ": _text-args
 #import "../utils/measure.typ": longest-unbreakable-cm, measure-labels-cm
 #import "../utils/palette.typ": spec-attr
+#import "../utils/radial.typ": THETA-LABEL-PAD
 #import "../utils/format.typ": format-break
 #import "../scale/secondary.typ" as secondary-mod
 #import "axis-format.typ": _axis-breaks, _axis-label, _secondary-breaks
@@ -212,6 +213,24 @@
 #let _y-label-width(angle, n-dodge, label-w-cm, label-h-cm) = {
   let a = calc.abs(angle) * 1deg
   label-w-cm * calc.cos(a) + label-h-cm * calc.sin(a) + (n-dodge - 1) * 0.5
+}
+
+// Band (cm) a radial panel's theta tick labels need outside the circle: `x`
+// at the sides, `y` at the top and bottom. They are drawn centred on a point
+// `THETA-LABEL-PAD` beyond `r-max`, so each reaches the pad plus half its own
+// rotated extent past the circle. `radial-ctx` takes this out of `r-max`, so
+// the labels ring the circle inside the panel instead of spilling out of it.
+//
+// Both trigonometric terms are taken absolute, so a rotation past the first
+// quadrant grows the box as it should instead of folding it back to nothing.
+#let _theta-label-inset(extents, angle) = {
+  let a = angle * 1deg
+  let cos-a = calc.abs(calc.cos(a))
+  let sin-a = calc.abs(calc.sin(a))
+  (
+    x: THETA-LABEL-PAD + (extents.width * cos-a + extents.height * sin-a) / 2,
+    y: THETA-LABEL-PAD + (extents.width * sin-a + extents.height * cos-a) / 2,
+  )
 }
 
 // The box width `_axis-title-extents` settled on, or `none` when the title
