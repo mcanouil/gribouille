@@ -161,9 +161,10 @@
   if trained == none { return _empty-extents(size) }
   let labels-cb = _trained-labels-cb(trained)
   let typst-mark = trained.at("typst-mark", default: false)
-  let theta-axis = theta-axis-of(coord)
   let values = _axis-tick-values(trained)
-  let labels = if theta-axis != none and theta-axis == axis {
+  // `theta-axis-of` is `none` off a radial coord and `axis` never is, so this
+  // is false for every cartesian axis without a guard of its own.
+  let labels = if theta-axis-of(coord) == axis {
     group-theta-breaks(
       values,
       b => theta-break-angle(trained, b, theta-range-of(coord)),

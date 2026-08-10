@@ -235,8 +235,9 @@
 
 // One theta tick label as a radial panel draws it: the breaks sharing a canvas
 // angle, resolved one by one, the `none`s dropped so a callback can hide a
-// wrap-side break, and the rest joined higher-domain first ("24/0", not
-// "0/24"). `none` when the whole group resolves away and nothing is drawn.
+// wrap-side break, and the rest joined in reverse break order, which on the
+// usual ascending `breaks` reads highest first ("24/0", not "0/24"). `none`
+// when the whole group resolves away and nothing is drawn.
 //
 // Shared by the panel draw and the chrome stage that reserves the band the
 // draw lands in: a full sweep merges two breaks into one label roughly twice
