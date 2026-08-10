@@ -142,8 +142,11 @@
 
 // The band reserved for the merged label is only right if the chrome stage
 // measures the merged string, so assert that directly rather than only through
-// the figure size. `axis: "y"` names the radial axis of the same coord, which
-// keeps the per-break measurement.
+// the figure size.
+//
+// Only `expand: false` puts two breaks on one angle: the default expansion
+// pushes the view out to (-1.2, 25.2), where the sweep endpoints no longer
+// coincide. The record carries no `view-transform` for that reason.
 #let wrap-trained(labels: v => "Hour-" + str(v)) = (
   type: "continuous",
   domain: (0, 24),
@@ -155,10 +158,17 @@
   let theta = _axis-label-extents(
     wrap-trained(),
     size,
+    "x",
     coord: coord-radial(),
-    axis: "x",
   )
-  let per-break = _axis-label-extents(wrap-trained(), size, axis: "y")
+  // Same coord, radial axis: the grouping must be gated on the angular axis
+  // alone, or the r labels would be merged too and reserve twice their band.
+  let per-break = _axis-label-extents(
+    wrap-trained(),
+    size,
+    "y",
+    coord: coord-radial(),
+  )
   assert(
     theta.width > per-break.width,
     message: (
@@ -189,8 +199,8 @@
   let hidden = _axis-label-extents(
     wrap-trained(labels: v => if v == 24 { none } else { "Hour-" + str(v) }),
     size,
+    "x",
     coord: coord-radial(),
-    axis: "x",
   )
   let single = measure-labels-cm(([Hour-20],), size)
   assert(
@@ -201,6 +211,26 @@
         + " cm against "
         + repr(single.width)
         + " cm for the widest label left"
+    ),
+  )
+}
+
+// Hiding every theta label draws nothing, so it owes nothing: the band has to
+// collapse rather than fall back to the single-line height an axis with no
+// breaks at all is given.
+#context {
+  let hidden-all = _axis-label-extents(
+    wrap-trained(labels: v => none),
+    8pt,
+    "x",
+    coord: coord-radial(),
+  )
+  assert(
+    hidden-all.width == 0.0 and hidden-all.height == 0.0,
+    message: (
+      "a theta axis with every label hidden reserves "
+        + repr(hidden-all)
+        + " cm, and should reserve nothing"
     ),
   )
 }

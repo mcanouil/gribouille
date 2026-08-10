@@ -31,6 +31,10 @@
 // The `(theta-lo, theta-hi)` sweep in canvas radians. It falls out of the
 // coord alone, with no panel rect in sight, which is what lets the chrome
 // stage project theta breaks before the panel it will draw them in exists.
+//
+// Unlike `theta-axis-of`, this reads a radial coord's own keys and so wants
+// one: callers establish that first, through `is-radial` or by finding a
+// non-`none` `theta-axis-of`.
 #let theta-range-of(coord) = {
   let start = coord.at("start", default: 0)
   let direction = coord.at("direction", default: 1)

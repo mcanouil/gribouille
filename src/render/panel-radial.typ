@@ -12,8 +12,9 @@
 )
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
-#import "axis-format.typ": _axis-breaks, _axis-label
-#import "extents.typ": _theta-group-label
+#import "axis-format.typ": (
+  _axis-breaks, _axis-label, _axis-tick-values, _theta-group-label,
+)
 #import "guides.typ": (
   _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _THETA-MINOR-TICK-FRAC, _read-r-guide,
   _read-theta-guide,
@@ -61,11 +62,7 @@
     }
   }
 
-  let theta-breaks = if theta-trained == none { () } else if (
-    theta-trained.type == "continuous"
-  ) {
-    _axis-breaks(theta-trained)
-  } else { theta-trained.domain }
+  let theta-breaks = _axis-tick-values(theta-trained)
 
   // Full-sweep domain endpoints can land on the same canvas angle (e.g., 0
   // and 24 on a 24-hour clock both sit at 12 o'clock); group them so we

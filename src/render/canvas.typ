@@ -344,18 +344,18 @@
           _axis-label-extents(
             xt,
             ax-text.xb.size,
+            "x",
             typst-eval: ax-text.xb.typst,
             coord: coord,
-            axis: "x",
           )
         } else { x-extents },
         y: if free-y {
           _axis-label-extents(
             yt,
             ax-text.yl.size,
+            "y",
             typst-eval: ax-text.yl.typst,
             coord: coord,
-            axis: "y",
           )
         } else { y-extents },
         x-sec: if free-x {
