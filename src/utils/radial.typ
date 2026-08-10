@@ -1,7 +1,7 @@
 ///! Joint `(x, y) → (cx, cy)` projection helpers for `coord-radial`.
 
 #import "../scale/train.typ": (
-  discrete-slot-width, level-position, map-axis, map-axis-data, map-position,
+  discrete-slot-width, level-position, map-axis, map-position,
 )
 #import "types.typ": parse-number
 
@@ -15,26 +15,26 @@
 // they land in, so the two cannot drift apart.
 #let THETA-LABEL-PAD = 0.2
 
-// "y" when theta is "x" (rose/radar) and "x" when theta is "y" (pie).
-// Returns `none` for non-radial coords. Used during scale expansion, which
-// runs before trained scales exist and so cannot route through `radial-ctx`.
-#let radial-axis-of(coord) = if is-radial(coord) {
-  if coord.at("theta", default: "x") == "x" { "y" } else { "x" }
-} else { none }
-
-// The other half of the pair: the axis the sweep runs along. `none` off a
-// radial coord, so callers can compare an axis key against it unguarded.
+// The axis the sweep runs along. `none` off a radial coord, so callers can
+// compare an axis key against it unguarded.
 #let theta-axis-of(coord) = if is-radial(coord) {
   coord.at("theta", default: "x")
 } else { none }
 
+// Its complement, the axis the radius runs along: "y" when theta is "x"
+// (rose/radar) and "x" when theta is "y" (pie). Used during scale expansion,
+// which runs before trained scales exist and so cannot route through
+// `radial-ctx`.
+#let radial-axis-of(coord) = {
+  let theta = theta-axis-of(coord)
+  if theta == none { none } else if theta == "x" { "y" } else { "x" }
+}
+
 // The `(theta-lo, theta-hi)` sweep in canvas radians. It falls out of the
 // coord alone, with no panel rect in sight, which is what lets the chrome
 // stage project theta breaks before the panel it will draw them in exists.
-//
-// Unlike `theta-axis-of`, this reads a radial coord's own keys and so wants
-// one: callers establish that first, through `is-radial` or by finding a
-// non-`none` `theta-axis-of`.
+// Unlike `theta-axis-of` it reads a radial coord's own keys, so callers
+// establish they have one first.
 #let theta-range-of(coord) = {
   let start = coord.at("start", default: 0)
   let direction = coord.at("direction", default: 1)
@@ -153,19 +153,6 @@
 
 // Add a canvas-cm `(dx, dy)` offset to a projected `(cx, cy)` point.
 #let shift-point(p, delta) = (p.at(0) + delta.at(0), p.at(1) + delta.at(1))
-
-// Canvas angle of one theta *break*. Breaks arrive in the scale's own space,
-// so a continuous one goes through `map-axis-data`, which honours a
-// pre-transformed scale, and a discrete one through the level lookup. The
-// chrome stage and the panel draw both project through here, or the band one
-// measures would not be the band the other draws.
-#let theta-break-angle(trained, value, theta-range) = if (
-  trained.type == "continuous"
-) {
-  map-axis-data(trained, value, theta-range)
-} else {
-  map-position(trained, value, theta-range)
-}
 
 // Group break values by canvas angle modulo a full turn. `project` maps a
 // break to canvas radians (or `none` to skip). Returns an array of groups,

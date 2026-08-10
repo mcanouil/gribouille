@@ -4,11 +4,10 @@
 // lines, and points cannot mask them.
 
 #import "../deps.typ": cetz
-#import "../scale/train.typ": map-axis-data
+#import "../scale/train.typ": map-axis-data, map-break
 #import "../theme/theme.typ": _text-args
 #import "../utils/radial.typ": (
   THETA-LABEL-PAD, group-theta-breaks, polar-canvas, radial-arc,
-  theta-break-angle,
 )
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
@@ -69,7 +68,7 @@
   // draw one spoke and one merged "end/start" label per shared angle.
   let theta-groups = group-theta-breaks(
     theta-breaks,
-    b => theta-break-angle(theta-trained, b, theta-range),
+    b => map-break(theta-trained, b, theta-range),
   )
 
   if _grid-radial != none and theta-trained != none {

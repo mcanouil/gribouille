@@ -103,11 +103,21 @@
   )
 }
 
+// The labels the wrap cases read, short enough that only the merged pair is
+// wide enough to spill.
+#let HOUR = v => "Hour-" + str(v)
+
+// Two extents in cm are the same band when they agree to within float noise.
+#let same-width(got, want, what) = assert(
+  calc.abs(got - want) < 1e-9,
+  message: what + " measures " + repr(got) + " cm against " + repr(want) + " cm",
+)
+
 // A full sweep puts its first and last break on one angle, and the draw merges
 // them into a single "24/0" label. That merged label is about twice as wide as
 // either break alone, so measuring the breaks one by one reserves too small a
 // band and the label spills wherever the sweep happens to wrap.
-#let wrap-clock(coord: coord-radial(), labels: v => "Hour-" + str(v)) = plot(
+#let wrap-clock(coord: coord-radial()) = plot(
   data: (h: range(0, 25), v: range(0, 25).map(i => 10 + calc.rem(i * 7, 13))),
   mapping: aes(x: "h", y: "v"),
   layers: (geom-point(),),
@@ -117,7 +127,7 @@
       limits: (0, 24),
       breaks: (0, 4, 8, 12, 16, 20, 24),
       expand: false,
-      labels: labels,
+      labels: HOUR,
     ),
   ),
   width: 5cm,
@@ -147,7 +157,7 @@
 // Only `expand: false` puts two breaks on one angle: the default expansion
 // pushes the view out to (-1.2, 25.2), where the sweep endpoints no longer
 // coincide. The record carries no `view-transform` for that reason.
-#let wrap-trained(labels: v => "Hour-" + str(v)) = (
+#let wrap-trained(labels: HOUR) = (
   type: "continuous",
   domain: (0, 24),
   spec: (breaks: (0, 4, 8, 12, 16, 20, 24), labels: labels),
@@ -179,16 +189,10 @@
         + " cm per break; it should be the wider of the two"
     ),
   )
-  let joined = measure-labels-cm(([Hour-24/Hour-0],), size)
-  assert(
-    calc.abs(theta.width - joined.width) < 1e-9,
-    message: (
-      "the merged theta label measures "
-        + repr(theta.width)
-        + " cm against "
-        + repr(joined.width)
-        + " cm for the string the draw emits"
-    ),
+  same-width(
+    theta.width,
+    measure-labels-cm(([Hour-24/Hour-0],), size).width,
+    "the merged theta label",
   )
 }
 
@@ -202,16 +206,10 @@
     "x",
     coord-radial(),
   )
-  let single = measure-labels-cm(([Hour-20],), size)
-  assert(
-    calc.abs(hidden.width - single.width) < 1e-9,
-    message: (
-      "a hidden wrap-side break reserves "
-        + repr(hidden.width)
-        + " cm against "
-        + repr(single.width)
-        + " cm for the widest label left"
-    ),
+  same-width(
+    hidden.width,
+    measure-labels-cm(([Hour-20],), size).width,
+    "a hidden wrap-side break",
   )
 }
 

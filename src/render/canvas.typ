@@ -8,7 +8,6 @@
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/palette.typ": default-discrete
 #import "../utils/gutter.typ": resolve-gutter
-#import "../utils/radial.typ": is-radial
 #import "legend.typ" as legend-mod
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec, _shared-axis-breaks
@@ -19,8 +18,7 @@
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _axis-label-extents, _sec-band-cm, _sec-title-offset-cm,
   _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
-  _title-extent-cm, _x-label-depth, _x-title-place, _y-label-width,
-  _y-title-place,
+  _title-extent-cm, _x-title-place, _y-title-place,
 )
 #import "facet.typ": _draw-strip, _strip-band, _strip-texts
 #import "panel-draw.typ": _draw-axis-and-layers
@@ -82,8 +80,6 @@
   let trained = ctx.trained
   let margin = ctx.margin
   let _ax-title = ctx.style.ax-title
-  let x-extents = ctx.x-extents
-  let y-extents = ctx.y-extents
 
   let x-trained = trained.at("x", default: none)
   let y-trained = trained.at("y", default: none)
@@ -94,21 +90,12 @@
   let y-title = _axis-title(y-trained, _map-name("y"))
   let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
   let _tick-len = _per-side(_len-side, "axis-ticks")
-  // A radial panel draws no tick or label band outside its edges: the angular
-  // labels ring the circle inside the panel and the radial ones sit along a
-  // spoke. The chrome reserved nothing for either (`_chrome-margins` zeroes
-  // both under radial), so the shared titles sit against the panel grid, the
-  // way the single-panel titles do. Offsetting them by a band nothing drew
-  // would push them off the canvas, which is bounded by the ink on it.
-  let _radial = is-radial(ctx.coord)
-  let _xtick-cm = if _radial { 0.0 } else { _tick-len.xb }
-  let _ytick-cm = if _radial { 0.0 } else { _tick-len.yl }
-  let _xlbl-depth = if _radial { 0.0 } else {
-    _x-label-depth(0, 1, x-extents.width, x-extents.height)
-  }
-  let _ylbl-width = if _radial { 0.0 } else {
-    _y-label-width(0, 1, y-extents.width, y-extents.height)
-  }
+  // The band between the panel grid and its title is the one `_chrome-margins`
+  // reserved, carried here rather than recomputed: a suppressed axis draws no
+  // ticks or labels and a radial panel draws neither band outside its edges, so
+  // recomputing it means remembering both gates in a second place, and a title
+  // offset by a band nothing drew lands outside its own margin, growing the
+  // canvas past the requested size.
   let _xt-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   let _yt-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   let _xt-cm = _title-extent-cm(_ax-title.xb, ctx.x-title-extents, "x")
@@ -122,7 +109,7 @@
     cetz.draw.content(
       (
         cx,
-        margin.bottom - _xtick-cm - 0.1 - _xlbl-depth - _xt-gap - _xt-cm,
+        margin.bottom - ctx.x-label-band - 0.1 - _xt-gap - _xt-cm,
       ),
       _title-body(x-title, _ax-title.xb, ctx.x-title-extents),
       anchor: x-anchor,
@@ -133,7 +120,7 @@
     let (cy, y-anchor) = _y-title-place(_ax-title.yl.align, .._y-span)
     cetz.draw.content(
       (
-        margin.left - _ytick-cm - 0.1 - _ylbl-width - _yt-gap - _yt-cm / 2,
+        margin.left - ctx.y-label-band - 0.1 - _yt-gap - _yt-cm / 2,
         cy,
       ),
       _title-body(y-title, _ax-title.yl, ctx.y-title-extents),

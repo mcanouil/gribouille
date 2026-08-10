@@ -210,6 +210,12 @@
   // radial panel draws no cartesian tick marks at all, so it reserves none.
   let x-tick-cm = if _radial or x-guide.suppress { 0.0 } else { tick-len.xb }
   let y-tick-cm = if _radial or y-guide.suppress { 0.0 } else { tick-len.yl }
+  // The whole band between the panel edge and its axis title: what the two
+  // extents below reserve, and what the draw sites offset the title by. The
+  // faceted builder places one title for the grid and reads these rather than
+  // recomputing them, so a title cannot come to sit outside its own margin.
+  let x-label-band = x-tick-cm + x-label-depth
+  let y-label-band = y-tick-cm + y-label-width
   let _side-gap = side => (
     extents.at(side) + (if extents.at(side) > 0 { legend-gap } else { 0.0 })
   )
@@ -310,12 +316,8 @@
     let y-title-cm = if y-title != none {
       _title-extent-cm(ax-title.yl, ext.yl, "y")
     } else { 0.0 }
-    let bottom-extent = (
-      x-tick-cm + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05
-    )
-    let left-extent = (
-      y-tick-cm + 0.1 + y-label-width + left-gap + y-title-cm
-    )
+    let bottom-extent = x-label-band + 0.1 + bottom-gap + x-title-cm + 0.05
+    let left-extent = y-label-band + 0.1 + left-gap + y-title-cm
     // Cap the right margin so the legend can never push panel width below the
     // single-tick minimum. Without the cap, `px-hi - px-lo` goes negative and
     // axis labels render reversed (panel becomes mirror-imaged into the legend).
@@ -468,6 +470,8 @@
     ax-text: ax-text,
     x-extents: x-extents,
     y-extents: y-extents,
+    x-label-band: x-label-band,
+    y-label-band: y-label-band,
     x-sec-extents: x-sec-extents,
     y-sec-extents: y-sec-extents,
     sec-x-extent: fit.sec-x-extent,

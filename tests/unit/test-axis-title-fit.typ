@@ -424,3 +424,33 @@
 // leaves it"; a long y title at 45deg on the same plot reports "the y-axis
 // title spans 3.11 cm along a panel of 2.69 cm, and no wrapping of it at
 // 45deg spans less".
+
+// A faceted plot places one title for the whole grid, offset by the band
+// between the panel edge and the title. That band is the one the chrome
+// reserved, so a suppressed axis, which draws no ticks or labels, must not be
+// offset by a label band anyway: the title would land outside its own margin
+// and stretch the canvas the way a long one used to.
+#context {
+  let m = measure(plot(
+    data: (
+      g: ("a",) * 4 + ("b",) * 4,
+      s: (1, 2, 3, 4) * 2,
+      v: (1, 4, 9, 16) * 2,
+    ),
+    mapping: aes(x: "s", y: "v"),
+    layers: (geom-point(),),
+    scales: scales(
+      y: scale-continuous(labels: v => "Very-long-label-" + str(v)),
+    ),
+    guides: guides(y: none),
+    facet: facet-wrap("g"),
+    width: 10cm,
+    height: 6cm,
+  ))
+  assert(
+    m.width <= 10cm + SLACK,
+    message: (
+      "a suppressed y axis under facets grew the plot to " + repr(m.width)
+    ),
+  )
+}

@@ -8,9 +8,9 @@
 #import "../utils/measure.typ": longest-unbreakable-cm, measure-labels-cm
 #import "../utils/palette.typ": spec-attr
 #import "../utils/radial.typ": (
-  THETA-LABEL-PAD, group-theta-breaks, theta-axis-of, theta-break-angle,
-  theta-range-of,
+  THETA-LABEL-PAD, group-theta-breaks, theta-axis-of, theta-range-of,
 )
+#import "../scale/train.typ": map-break
 #import "../utils/format.typ": format-break
 #import "../scale/secondary.typ" as secondary-mod
 #import "axis-format.typ": (
@@ -154,21 +154,21 @@
 // grouped by canvas angle and each group measured as the single merged label
 // the draw emits. Defaulting either would silently hand a radial plot the
 // per-break measurement, which reserves about half the band a merged label
-// needs. The grouping wants only the sweep, which `theta-range-of` reads off
-// the coord, so it works here even though the panel rect does not exist yet.
-// Every other axis keeps the per-break measurement untouched.
+// needs.
 #let _axis-label-extents(trained, size, axis, coord, typst-eval: false) = {
   if trained == none { return _empty-extents(size) }
+  let values = _axis-tick-values(trained)
+  // Only an axis with no breaks at all takes the single-line fallback. Breaks
+  // whose labels all resolve away draw nothing and owe nothing, which is what
+  // `measure-labels-cm` answers for the empty list they leave behind.
+  if values.len() == 0 { return _empty-extents(size) }
   let labels-cb = _trained-labels-cb(trained)
   let typst-mark = trained.at("typst-mark", default: false)
-  let values = _axis-tick-values(trained)
   // `theta-axis-of` is `none` off a radial coord and `axis` never is, so this
   // is false for every cartesian axis without a guard of its own.
   let labels = if theta-axis-of(coord) == axis {
-    group-theta-breaks(
-      values,
-      b => theta-break-angle(trained, b, theta-range-of(coord)),
-    )
+    let theta-range = theta-range-of(coord)
+    group-theta-breaks(values, b => map-break(trained, b, theta-range))
       .map(group => _theta-group-label(trained, labels-cb, typst-mark, group))
       .filter(l => l != none)
       .map(l => resolve-prose(l, eval-strings: typst-eval))
@@ -185,15 +185,6 @@
           typst-eval,
         )
       ))
-  }
-  // Breaks that all resolve away draw nothing and so owe nothing: a theta axis
-  // whose `labels` callback hides every group must not be handed the
-  // single-line fallback, which would inset the circle for ink there is none
-  // of. An axis with no breaks at all keeps that fallback.
-  if labels.len() == 0 {
-    return if values.len() == 0 { _empty-extents(size) } else {
-      (width: 0.0, height: 0.0)
-    }
   }
   measure-labels-cm(labels, size)
 }

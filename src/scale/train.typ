@@ -845,3 +845,14 @@
   } else { value }
   _map-transform(trained, v, range)
 }
+
+// Where one axis break falls in `range`. A continuous break is a data value,
+// so it goes through `map-axis-data`, which honours a pre-transformed scale; a
+// discrete one is a level, so it goes through the level lookup. Every side that
+// places ticks, gridlines, spokes, or the labels beside them projects through
+// here, or the position one reserves for is not the position the other draws.
+#let map-break(trained, value, range) = if trained.type == "continuous" {
+  map-axis-data(trained, value, range)
+} else {
+  map-position(trained, value, range)
+}
