@@ -6,6 +6,7 @@
 #import "../scale/train.typ": mapping-display-name
 #import "../theme/theme.typ": _rect-outset-cm, _text-style, _tick-length
 #import "../utils/margin.typ": opposite-side, perpendicular-sides
+#import "../utils/radial.typ": is-radial
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec
 #import "guides.typ": _axis-text-angle, _read-axis-guide
@@ -43,8 +44,14 @@
 
   let x-trained-top = trained.at("x", default: none)
   let y-trained-top = trained.at("y", default: none)
-  let x-sec = _sec-spec(x-trained-top)
-  let y-sec = _sec-spec(y-trained-top)
+  // A radial panel draws no secondary axis at all (`_draw-axis-and-layers`
+  // gates the whole secondary block on `not is-radial`), so reserving its
+  // ticks, labels, gap, and title would donate panel area to a margin nothing
+  // draws in. Drop the spec here and every downstream measurement, extent, and
+  // title side falls away with it, mirroring the draw-side gate.
+  let _radial = is-radial(coord)
+  let x-sec = if _radial { none } else { _sec-spec(x-trained-top) }
+  let y-sec = if _radial { none } else { _sec-spec(y-trained-top) }
   let _surface-style = (p, s, _) => _text-style(theme, p + "-" + s)
   let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
   let tick-len = _per-side(_len-side, "axis-ticks")
