@@ -11,7 +11,7 @@
 #import "../theme/theme.typ": (
   _line-stroke, _rect-style, _text-args, _text-style, _tick-length,
 )
-#import "../utils/radial.typ": radial-ctx
+#import "../utils/radial.typ": radial-axis-of, radial-ctx
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "../utils/format.typ": format-break
@@ -27,12 +27,12 @@
   _axis-breaks, _axis-label, _axis-minor-breaks, _axis-title,
   _log10-minor-positions, _sec-spec, _secondary-breaks,
 )
-#import "guides.typ": _axis-text-angle, _read-axis-guide
+#import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP, _axis-guide-rows,
-  _resolve-extents, _sec-title-offset-cm, _text-margin-cm, _title-angle,
-  _title-body, _title-extent-cm, _x-label-depth-stack, _x-title-place,
-  _y-label-width-stack, _y-title-place,
+  _resolve-extents, _sec-title-offset-cm, _text-margin-cm, _theta-label-inset,
+  _title-angle, _title-body, _title-extent-cm, _x-label-depth-stack,
+  _x-title-place, _y-label-width-stack, _y-title-place,
 )
 
 #import "../geom/point.typ" as point-geom
@@ -217,7 +217,34 @@
   let y-trained = trained.at("y", default: none)
 
   let coord = spec.at("coord", default: none)
-  let outer-radial = radial-ctx(coord, x-trained, y-trained, px-range, py-range)
+  // The theta tick labels ring the circle just outside it, so the circle has
+  // to leave them room inside the panel: the panel is all the room the chrome
+  // granted, and a label past its edge grows the whole figure past the
+  // requested `width`/`height`. Gate the band on the same conditions the draw
+  // does, so a suppressed or blank theta axis gives it back.
+  let _theta-guide = _read-theta-guide(spec)
+  let _theta-key = if radial-axis-of(coord) == "y" { "x" } else { "y" }
+  let _theta-text = if _theta-key == "x" { _ax-text.xb } else { _ax-text.yl }
+  let _label-inset = if (
+    _theta-text.size > 0pt
+      and not (_theta-guide != none and _theta-guide.suppress)
+  ) {
+    _theta-label-inset(
+      _resolve-extents(
+        if _theta-key == "x" { x-extents } else { y-extents },
+        _theta-text.size,
+      ),
+      if _theta-guide == none { 0 } else { _theta-guide.angle },
+    )
+  } else { (x: 0.0, y: 0.0) }
+  let outer-radial = radial-ctx(
+    coord,
+    x-trained,
+    y-trained,
+    px-range,
+    py-range,
+    label-inset: _label-inset,
+  )
   let is-radial = outer-radial != none
 
   let _panel = _rect-style(
@@ -626,6 +653,7 @@
     y-trained,
     inner-ctx.px-range,
     inner-ctx.py-range,
+    label-inset: _label-inset,
   )
   inner-ctx.radial = inner-radial
   if inner-radial != none {
@@ -707,15 +735,17 @@
   let _x-ext = _resolve-extents(x-extents, _ax-text.xb.size)
   let _y-ext = _resolve-extents(y-extents, _ax-text.yl.size)
   // A suppressed axis (`guides(x: none)`) reserves no tick or label depth, so
-  // the title slides up to the panel edge.
-  let x-label-depth = if x-guide.suppress { 0.0 } else {
+  // the title slides up to the panel edge. A radial panel draws neither band
+  // outside the panel either, so its titles sit against the panel edge too,
+  // matching what the chrome reserved for them.
+  let x-label-depth = if is-radial or x-guide.suppress { 0.0 } else {
     _x-label-depth-stack(x-guide, _x-ext.width, _x-ext.height)
   }
-  let y-label-width = if y-guide.suppress { 0.0 } else {
+  let y-label-width = if is-radial or y-guide.suppress { 0.0 } else {
     _y-label-width-stack(y-guide, _y-ext.width, _y-ext.height)
   }
-  let x-tick-cm = if x-guide.suppress { 0.0 } else { _tick-len.xb }
-  let y-tick-cm = if y-guide.suppress { 0.0 } else { _tick-len.yl }
+  let x-tick-cm = if is-radial or x-guide.suppress { 0.0 } else { _tick-len.xb }
+  let y-tick-cm = if is-radial or y-guide.suppress { 0.0 } else { _tick-len.yl }
   let x-title-cm = _title-extent-cm(_ax-title.xb, x-title-extents, "x")
   let y-title-cm = _title-extent-cm(_ax-title.yl, y-title-extents, "y")
   let x-title-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)

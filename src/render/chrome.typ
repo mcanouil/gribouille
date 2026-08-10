@@ -9,14 +9,14 @@
 #import "../utils/radial.typ": is-radial
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec
-#import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
+#import "guides.typ": _axis-text-angle, _read-axis-guide
 #import "domain.typ": _is-flipped
 #import "../utils/errors.typ": fail
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _axis-label-extents, _axis-title-extents,
   _fit-title-extents, _sec-extent, _secondary-label-extents, _text-margin-cm,
-  _theta-label-margins, _title-angle, _title-extent-cm, _title-overrun-cm,
-  _title-span-cm, _x-label-depth-stack, _y-label-width-stack,
+  _title-angle, _title-extent-cm, _title-overrun-cm, _title-span-cm,
+  _x-label-depth-stack, _y-label-width-stack,
 )
 
 // Passes allowed when settling axis-title wrapping against the panel size, and
@@ -131,34 +131,22 @@
   // `element-blank()`) draws no labels, so it reserves no perpendicular depth
   // for them; otherwise the chrome margin reserves space for ink that never
   // draws, inverting the panel rect on small plot sizes.
-  let x-label-depth = if ax-text.xb.size > 0pt and not x-guide.suppress {
+  // A radial panel draws neither band under its edges: the angular labels ring
+  // the circle inside the panel (`radial-ctx` insets `r-max` to make room) and
+  // the radial ones sit along a spoke, also inside. Reserving a cartesian
+  // label band there would take the room those labels need out of the panel
+  // they are drawn in, so both drop to zero, exactly as the cartesian tick and
+  // axis draw does under radial.
+  let x-label-depth = if (
+    not _radial and ax-text.xb.size > 0pt and not x-guide.suppress
+  ) {
     _x-label-depth-stack(x-guide, x-extents.width, x-extents.height)
   } else { 0.0 }
-  let y-label-width = if ax-text.yl.size > 0pt and not y-guide.suppress {
+  let y-label-width = if (
+    not _radial and ax-text.yl.size > 0pt and not y-guide.suppress
+  ) {
     _y-label-width-stack(y-guide, y-extents.width, y-extents.height)
   } else { 0.0 }
-  // Theta tick labels ring the circle instead of sitting under one edge, so a
-  // radial panel owes every margin the band they land in. The angular axis is
-  // x unless the coord says otherwise, and `guides(theta: ...)` carries their
-  // rotation and their suppress marker, exactly as the draw site reads them.
-  let theta-margins = if not _radial {
-    (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0)
-  } else {
-    let theta-guide = _read-theta-guide(spec)
-    let cat-is-theta = coord.at("theta", default: "x") == "x"
-    let theta-text = if cat-is-theta { ax-text.xb } else { ax-text.yl }
-    let theta-extents = if cat-is-theta { x-extents } else { y-extents }
-    if (
-      theta-text.size > 0pt
-        and not (theta-guide != none and theta-guide.suppress)
-    ) {
-      _theta-label-margins(
-        theta-extents,
-        if theta-guide == none { 0 } else { theta-guide.angle },
-      )
-    } else { (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0) }
-  }
-
   // A suppressed (`labels(x: none)`) or nameless axis title reserves no extent;
   // mirror the draw-side gate so the panel reclaims the freed depth.
   let _flipped = _is-flipped(coord)
@@ -212,9 +200,10 @@
     _text-margin-cm(ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   } else { 0.0 }
   // A suppressed axis (`guides(x: none)`) draws no ticks or labels, so it
-  // reserves no tick depth either; the axis line and title still render.
-  let x-tick-cm = if x-guide.suppress { 0.0 } else { tick-len.xb }
-  let y-tick-cm = if y-guide.suppress { 0.0 } else { tick-len.yl }
+  // reserves no tick depth either; the axis line and title still render. A
+  // radial panel draws no cartesian tick marks at all, so it reserves none.
+  let x-tick-cm = if _radial or x-guide.suppress { 0.0 } else { tick-len.xb }
+  let y-tick-cm = if _radial or y-guide.suppress { 0.0 } else { tick-len.yl }
   let _side-gap = side => (
     extents.at(side) + (if extents.at(side) > 0 { legend-gap } else { 0.0 })
   )
@@ -315,13 +304,11 @@
     let y-title-cm = if y-title != none {
       _title-extent-cm(ax-title.yl, ext.yl, "y")
     } else { 0.0 }
-    let bottom-extent = calc.max(
-      x-tick-cm + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05,
-      theta-margins.bottom,
+    let bottom-extent = (
+      x-tick-cm + 0.1 + x-label-depth + bottom-gap + x-title-cm + 0.05
     )
-    let left-extent = calc.max(
-      y-tick-cm + 0.1 + y-label-width + left-gap + y-title-cm,
-      theta-margins.left,
+    let left-extent = (
+      y-tick-cm + 0.1 + y-label-width + left-gap + y-title-cm
     )
     // Cap the right margin so the legend can never push panel width below the
     // single-tick minimum. Without the cap, `px-hi - px-lo` goes negative and
@@ -331,15 +318,9 @@
       margin: (
         left: left-extent + _side-gap("left") + _surface-out("left"),
         bottom: bottom-extent + _side-gap("bottom") + _surface-out("bottom"),
-        top: (
-          calc.max(sec-x-extent, theta-margins.top)
-            + _side-gap("top")
-            + _surface-out("top")
-        ),
+        top: sec-x-extent + _side-gap("top") + _surface-out("top"),
         right: calc.min(
-          calc.max(sec-y-extent, theta-margins.right)
-            + _side-gap("right")
-            + _surface-out("right"),
+          sec-y-extent + _side-gap("right") + _surface-out("right"),
           max-right-margin,
         ),
       ),

@@ -215,22 +215,21 @@
   label-w-cm * calc.cos(a) + label-h-cm * calc.sin(a) + (n-dodge - 1) * 0.5
 }
 
-// Depth (cm) each margin owes a radial panel's theta tick labels. They ring
-// the circle at `r-max + THETA-LABEL-PAD`, centred on that point, so the one
-// at the top of the sweep overhangs the panel by the pad plus half its own
-// height and the one at the side by the pad plus half its width. Reserve that
-// on all four margins rather than the cartesian bottom and left: a circle
-// touches every edge of the square it is inscribed in, and the labels have
-// nowhere else to fall. A panel wider than it is tall keeps the surplus as
-// slack, so the reservation over-reserves there rather than clipping.
-#let _theta-label-margins(extents, angle) = {
-  let depth = _x-label-depth(angle, 1, extents.width, extents.height) / 2
-  let width = _y-label-width(angle, 1, extents.width, extents.height) / 2
+// Band (cm) a radial panel's theta tick labels need outside the circle: `x`
+// at the sides, `y` at the top and bottom. They are drawn centred on a point
+// `THETA-LABEL-PAD` beyond `r-max`, so each reaches the pad plus half its own
+// rotated extent past the circle. `radial-ctx` takes this out of `r-max`, so
+// the labels ring the circle inside the panel instead of spilling out of it.
+//
+// Both trigonometric terms are taken absolute, so a rotation past the first
+// quadrant grows the box as it should instead of folding it back to nothing.
+#let _theta-label-inset(extents, angle) = {
+  let a = angle * 1deg
+  let cos-a = calc.abs(calc.cos(a))
+  let sin-a = calc.abs(calc.sin(a))
   (
-    top: THETA-LABEL-PAD + depth,
-    bottom: THETA-LABEL-PAD + depth,
-    left: THETA-LABEL-PAD + width,
-    right: THETA-LABEL-PAD + width,
+    x: THETA-LABEL-PAD + (extents.width * cos-a + extents.height * sin-a) / 2,
+    y: THETA-LABEL-PAD + (extents.width * sin-a + extents.height * cos-a) / 2,
   )
 }
 

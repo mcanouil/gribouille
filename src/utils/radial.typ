@@ -26,14 +26,29 @@
 // first slice opens at 12 o'clock and the sweep advances clockwise. Encoding the
 // sweep as a `(theta-lo, theta-hi)` pair lets `map-position` produce angles
 // directly through the existing scale-mapping routines.
-#let radial-ctx(coord, x-trained, y-trained, px-range, py-range) = {
+// `label-inset` is the band the theta tick labels need outside the circle,
+// `x` cm at the sides and `y` cm at the top and bottom. Taking it out of
+// `r-max` keeps those labels inside the panel, where they belong: the panel
+// is the room the chrome already granted this plot, and growing past it would
+// push the whole figure past the `width`/`height` it was asked for.
+#let radial-ctx(
+  coord,
+  x-trained,
+  y-trained,
+  px-range,
+  py-range,
+  label-inset: (x: 0.0, y: 0.0),
+) = {
   if not is-radial(coord) { return none }
   let (px-lo, px-hi) = px-range
   let (py-lo, py-hi) = py-range
   let centre = ((px-lo + px-hi) / 2, (py-lo + py-hi) / 2)
   let r-max = calc.max(
     0,
-    calc.min((px-hi - px-lo) / 2, (py-hi - py-lo) / 2),
+    calc.min(
+      (px-hi - px-lo) / 2 - label-inset.x,
+      (py-hi - py-lo) / 2 - label-inset.y,
+    ),
   )
   let start = coord.at("start", default: 0)
   let direction = coord.at("direction", default: 1)
