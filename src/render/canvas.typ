@@ -17,7 +17,7 @@
 )
 #import "../utils/radial.typ": is-radial
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _axis-label-extents, _sec-title-offset-cm,
+  _AX-TITLE-LABEL-GAP, _axis-label-extents, _sec-band-cm, _sec-title-offset-cm,
   _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
   _title-extent-cm, _x-label-depth, _x-title-place, _y-label-width,
   _y-title-place,
@@ -284,6 +284,32 @@
   scope: scope,
 )
 
+// Depth (cm) a facet cell owes the secondary axis on `axis`: zero unless the
+// trained scale carries a `secondary:` spec that the panels actually draw.
+// Under free scales each panel measures its own labels, so the widest wins
+// and every cell keeps the same geometry.
+#let _facet-sec-band(ctx, panel-extents, axis) = {
+  let coord = ctx.coord
+  if is-radial(coord) { return 0.0 }
+  let trained = ctx.trained.at(axis, default: none)
+  if _sec-spec(trained) == none { return 0.0 }
+  let style = if axis == "x" { ctx.ax-text.xt } else { ctx.ax-text.yr }
+  if style.size <= 0pt { return 0.0 }
+  let key = axis + "-sec"
+  let base = if axis == "x" { ctx.x-sec-extents } else { ctx.y-sec-extents }
+  let ext = if panel-extents == none { base } else {
+    panel-extents.fold(base, (m, pe) => {
+      let e = pe.at(key, default: base)
+      (
+        width: calc.max(m.width, e.width),
+        height: calc.max(m.height, e.height),
+      )
+    })
+  }
+  let side = if axis == "x" { "axis-ticks-xt" } else { "axis-ticks-yr" }
+  _sec-band-cm(_tick-length(ctx.theme, side) / 1cm, ext, axis)
+}
+
 #let _render-canvas-wrap(ctx) = {
   let spec = ctx.spec
   let theme = ctx.theme
@@ -363,15 +389,34 @@
   let gutters = _facet-gutter(spec.facet, theme, "facet-wrap")
   let gutter-x = gutters.x
   let gutter-y = gutters.y
-  let grid-w = width-units - margin.left - margin.right
-  let grid-h = height-units - margin.bottom - margin.top
-  let panel-w = (grid-w - gutter-x * (ncol - 1)) / ncol
-  let panel-h = (grid-h - gutter-y * (nrow - 1) - strip-h * nrow) / nrow
-
-  let shared-breaks = _facet-shared-breaks(trained, free-x, free-y)
 
   let all-x = ("all_x", "all").contains(spec.facet.axes)
   let all-y = ("all_y", "all").contains(spec.facet.axes)
+
+  // A panel's secondary x axis is drawn at its top edge, which is exactly
+  // where the strip band above it is painted, so the cell reserves the axis
+  // depth between the two. Only the rows that draw one pay for it: with fixed
+  // scales that is the top row alone, and every panel keeps the same size
+  // either way because the band is inserted inside the cell.
+  let sec-band = _facet-sec-band(ctx, panel-extents, "x")
+  let rows-with-sec = if sec-band <= 0 { 0 } else if free-x or all-x {
+    nrow
+  } else { 1 }
+  let _sec-band-of = row => if sec-band > 0 and (free-x or all-x or row == 0) {
+    sec-band
+  } else { 0.0 }
+
+  let grid-w = width-units - margin.left - margin.right
+  let grid-h = height-units - margin.bottom - margin.top
+  let panel-w = (grid-w - gutter-x * (ncol - 1)) / ncol
+  let panel-h = (
+    (
+      grid-h - gutter-y * (nrow - 1) - strip-h * nrow - sec-band * rows-with-sec
+    )
+      / nrow
+  )
+
+  let shared-breaks = _facet-shared-breaks(trained, free-x, free-y)
 
   cetz.canvas(length: 1cm, {
     import cetz.draw: *
@@ -380,14 +425,21 @@
       let col = calc.rem(i, ncol)
       let row = int(i / ncol)
       let x0 = margin.left + col * (panel-w + gutter-x)
+      // Rows below this one each contribute a cell plus a gutter, and a cell
+      // is the panel, its own secondary band, and its strip.
       let y0 = (
-        margin.bottom + (nrow - 1 - row) * (panel-h + gutter-y + strip-h)
+        margin.bottom
+          + range(row + 1, nrow).fold(
+            0.0,
+            (acc, r) => acc + panel-h + _sec-band-of(r) + strip-h + gutter-y,
+          )
       )
       let panel-layers = panels.at(i).layers
       let strip-text = strip-texts.at(i)
+      let strip-y = y0 + panel-h + _sec-band-of(row)
       _draw-strip(
-        (x0, y0 + panel-h),
-        (x0 + panel-w, y0 + panel-h + strip-h),
+        (x0, strip-y),
+        (x0 + panel-w, strip-y + strip-h),
         strip-text,
         style,
         theme,
@@ -499,9 +551,21 @@
   let gutter-y = gutters.y
   let top-strip = if col-var != none { strip-h } else { 0.0 }
   let right-strip = if row-var != none { strip-w } else { 0.0 }
-  let inner-right = margin.right + right-strip
+  // The top row draws its secondary x axis at the grid's top edge, under the
+  // column strips, which are painted after every panel and would cover it.
+  // Reserve the axis depth between the two. The right column's secondary y
+  // does the same against the row strips.
+  let sec-band-x = if col-var == none { 0.0 } else {
+    _facet-sec-band(ctx, none, "x")
+  }
+  let sec-band-y = if row-var == none { 0.0 } else {
+    _facet-sec-band(ctx, none, "y")
+  }
+  let inner-right = margin.right + right-strip + sec-band-y
   let grid-w = width-units - margin.left - inner-right
-  let grid-h = height-units - margin.bottom - margin.top - top-strip
+  let grid-h = (
+    height-units - margin.bottom - margin.top - top-strip - sec-band-x
+  )
   let panel-w = (grid-w - gutter-x * (n-cols - 1)) / n-cols
   let panel-h = (grid-h - gutter-y * (n-rows - 1)) / n-rows
 
@@ -553,7 +617,7 @@
     }
 
     if col-var != none {
-      let strip-y = margin.bottom + grid-h
+      let strip-y = margin.bottom + grid-h + sec-band-x
       for c in range(col-levels.len()) {
         let x0 = margin.left + c * (panel-w + gutter-x)
         _draw-strip(
@@ -567,7 +631,7 @@
     }
 
     if row-var != none {
-      let strip-x = margin.left + grid-w
+      let strip-x = margin.left + grid-w + sec-band-y
       for r in range(row-levels.len()) {
         let y0 = margin.bottom + (n-rows - 1 - r) * (panel-h + gutter-y)
         _draw-strip(
@@ -585,8 +649,8 @@
       ctx,
       grid-w,
       grid-h,
-      right-strip: right-strip,
-      top-strip: top-strip,
+      right-strip: right-strip + sec-band-y,
+      top-strip: top-strip + sec-band-x,
     )
   })
 }

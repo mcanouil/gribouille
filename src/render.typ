@@ -357,6 +357,7 @@
       y-sec-title-extents: y-sec-title-extents,
       x-sec-extents: x-sec-extents,
       y-sec-extents: y-sec-extents,
+      ax-text: ax-text,
     ))
   } else {
     _render-canvas-single((

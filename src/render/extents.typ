@@ -473,6 +473,19 @@
   tick-len + 0.1 + label-extent + gap
 }
 
+// Depth (cm) of the secondary axis ink alone, tick mark plus gap plus label
+// band, with no title. A facet cell reserves this between the panel edge and
+// the strip band that would otherwise be painted over it; the grid draws the
+// secondary title once at its outer edge, where the chrome margin holds it.
+#let _sec-band-cm(tick-len, sec-extents, axis) = {
+  let label-extent = if axis == "y" {
+    _y-label-width(0, 1, sec-extents.width, sec-extents.height)
+  } else {
+    _x-label-depth(0, 1, sec-extents.width, sec-extents.height)
+  }
+  tick-len + 0.1 + label-extent
+}
+
 // Reserved extent between the panel and the canvas edge for the secondary
 // axis ticks, labels, and title. Matches the primary formula so the
 // title-to-label gap stays symmetric on opposing edges. `title-ext` carries
