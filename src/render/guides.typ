@@ -3,7 +3,7 @@
 
 #import "../utils/margin.typ": length-to-cm
 #import "../theme/theme.typ": _text-style
-#import "../utils/errors.typ": fail, fail-enum
+#import "../utils/errors.typ": fail, fail-enum, fail-range
 
 // Normalise a single `guide-axis*` spec to the flat shape consumers expect.
 // Always carries a `stack` flag so callers can branch on the same field
@@ -11,10 +11,33 @@
 // `default-angle` (degrees, from the axis-text theme element) applies when the
 // guide leaves `angle` at its `0` default, so `guide-axis(angle:)` overrides
 // the theme but the theme still drives rotation on its own.
+// Tick labels hang off the axis they label, and the anchor that hangs them
+// there, plus the depth reserved for them, are both quarter-turn geometry.
+// Past a quarter turn the text also reads upside down, so the rotation is
+// bounded rather than silently mis-hung.
+#let _check-axis-angle(angle) = {
+  if angle < -90 or angle > 90 {
+    fail-range(
+      "guide-axis",
+      "angle",
+      angle,
+      -90,
+      90,
+      lo-open: false,
+      hi-open: false,
+      hint: (
+        "tick labels read upside down past a quarter turn; the same bound "
+          + "applies to the `angle` of an `axis-text` theme element"
+      ),
+    )
+  }
+  angle
+}
+
 #let _normalise-axis-guide(g, default-angle) = {
   let angle = g.at("angle", default: 0)
   (
-    angle: if angle != 0 { angle } else { default-angle },
+    angle: _check-axis-angle(if angle != 0 { angle } else { default-angle }),
     n-dodge: calc.max(1, g.at("n-dodge", default: 1)),
     logticks: g.at("logticks", default: false),
     stack: false,
@@ -27,7 +50,12 @@
 // callers (label-anchor, log-minors) still see a sensible single-row view.
 #let _read-axis-guide(spec, aes, default-angle: 0) = {
   let g = spec.at("guides", default: (:)).at(aes, default: none)
-  let flat = (angle: default-angle, n-dodge: 1, logticks: false, stack: false)
+  let flat = (
+    angle: _check-axis-angle(default-angle),
+    n-dodge: 1,
+    logticks: false,
+    stack: false,
+  )
   if g == none {
     return (..flat, suppress: false)
   }

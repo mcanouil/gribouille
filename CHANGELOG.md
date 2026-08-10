@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- feat!: `guide-axis(angle:)`, `guide-axis-logticks(angle:)`, and the `angle` of an `axis-text` theme element are bounded to -90 to 90 degrees and fail outside it. Past a quarter turn the tick labels read upside down and hang off the wrong side of the axis, and the margin reserved for them shrank rather than grew, so they ran off the canvas: a bar chart with labels at 270 degrees rendered 0.19cm taller than the `height` it was asked for. (#238)
+
 ### Changes
 
 - fix: an axis title longer than the panel it labels wraps onto further lines instead of stretching the canvas past the requested `width`/`height`, which used to shift the whole figure and push the caption off the bottom edge. A title that still cannot fit now fails with the room it needs, either because its longest word is wider than the panel or because the theme rotated it off its axis, where no wrapping gets under the span. (#234)
