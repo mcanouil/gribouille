@@ -7,6 +7,7 @@
 #import "../utils/pretty.typ": pretty-log10, pretty-sqrt
 #import "../utils/extended.typ": extended
 #import "../utils/format.typ": format-break
+#import "../utils/radial.typ": is-radial
 
 // Axis title fallback: a `labels(x: none)` suppression (`spec.blank`) wins and
 // yields no title; otherwise the trained scale's `spec.name`, else the bare
@@ -215,7 +216,16 @@
   format-break(n)
 }
 
-#let _sec-spec(scale) = if scale != none and scale.type == "continuous" {
+// The secondary-axis spec a trained scale carries, or `none` where there is
+// none to draw. A radial panel is one such place: it has no opposite panel edge
+// to put a secondary axis on, so `_draw-axis-and-layers` draws none there.
+// Answering `none` for its coord is what keeps every downstream measurement,
+// extent, break set, and reserved margin from being spent on an axis that is
+// never going to appear. Callers with a coord in scope pass it; the rest keep
+// the cartesian answer, since `is-radial(none)` is false.
+#let _sec-spec(scale, coord: none) = if is-radial(coord) {
+  none
+} else if scale != none and scale.type == "continuous" {
   spec-attr(scale, "secondary")
 } else { none }
 
@@ -235,7 +245,7 @@
 // Callers that share `trained` across panels (e.g., grid facets without free
 // scales) build this once and pass it down so per-panel renders skip the
 // redundant `_axis-breaks` calls.
-#let _shared-axis-breaks(trained) = {
+#let _shared-axis-breaks(trained, coord: none) = {
   let xt = trained.at("x", default: none)
   let yt = trained.at("y", default: none)
   let x-breaks = if xt != none and xt.type == "continuous" {
@@ -244,7 +254,15 @@
   let y-breaks = if yt != none and yt.type == "continuous" {
     _axis-breaks(yt)
   } else { none }
-  let x-sec-breaks = _secondary-breaks(xt, _sec-spec(xt), x-breaks)
-  let y-sec-breaks = _secondary-breaks(yt, _sec-spec(yt), y-breaks)
+  let x-sec-breaks = _secondary-breaks(
+    xt,
+    _sec-spec(xt, coord: coord),
+    x-breaks,
+  )
+  let y-sec-breaks = _secondary-breaks(
+    yt,
+    _sec-spec(yt, coord: coord),
+    y-breaks,
+  )
   (x: x-breaks, y: y-breaks, x-sec: x-sec-breaks, y-sec: y-sec-breaks)
 }

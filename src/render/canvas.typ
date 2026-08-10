@@ -15,7 +15,6 @@
   _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
   _apply-labels, _fixed-inner-size, _is-flipped, _post-train,
 )
-#import "../utils/radial.typ": is-radial
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _axis-label-extents, _sec-band-cm, _sec-title-offset-cm,
   _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
@@ -54,8 +53,8 @@
 // `none` so `_draw-cartesian-axis` falls back to per-panel computation (the
 // per-panel scale is what differs); the fixed axis still benefits from the
 // cached breaks even when the other axis is free.
-#let _facet-shared-breaks(trained, free-x, free-y) = {
-  let s = _shared-axis-breaks(trained)
+#let _facet-shared-breaks(trained, free-x, free-y, coord: none) = {
+  let s = _shared-axis-breaks(trained, coord: coord)
   if free-x {
     s.insert("x", none)
     s.insert("x-sec", none)
@@ -133,9 +132,9 @@
   // panel edge a single plot uses, so the strip bands sit between the axis and
   // its title. `_chrome-margins` reserved the same extent on that side, and the
   // extents carried here are the ones it fitted, so a long title arrives
-  // already wrapped. Radial panels draw no secondary axis at all.
-  let _x-sec = if is-radial(ctx.coord) { none } else { _sec-spec(x-trained) }
-  let _y-sec = if is-radial(ctx.coord) { none } else { _sec-spec(y-trained) }
+  // already wrapped.
+  let _x-sec = _sec-spec(x-trained, coord: ctx.coord)
+  let _y-sec = _sec-spec(y-trained, coord: ctx.coord)
   if _x-sec != none and _x-sec.name != none and _ax-title.xt.size > 0pt {
     let _x-sec-offset = _sec-title-offset-cm(
       _tick-len.xt,
@@ -289,10 +288,8 @@
 // Under free scales each panel measures its own labels, so the widest wins
 // and every cell keeps the same geometry.
 #let _facet-sec-band(ctx, panel-extents, axis) = {
-  let coord = ctx.coord
-  if is-radial(coord) { return 0.0 }
   let trained = ctx.trained.at(axis, default: none)
-  if _sec-spec(trained) == none { return 0.0 }
+  if _sec-spec(trained, coord: ctx.coord) == none { return 0.0 }
   let style = if axis == "x" { ctx.ax-text.xt } else { ctx.ax-text.yr }
   if style.size <= 0pt { return 0.0 }
   let key = axis + "-sec"
@@ -340,8 +337,8 @@
     panel-trained-list.map(pt => {
       let xt = pt.at("x", default: none)
       let yt = pt.at("y", default: none)
-      let xs = _sec-spec(xt)
-      let ys = _sec-spec(yt)
+      let xs = _sec-spec(xt, coord: coord)
+      let ys = _sec-spec(yt, coord: coord)
       (
         x: if free-x {
           _axis-label-extents(xt, ax-text.xb.size, typst-eval: ax-text.xb.typst)
@@ -416,7 +413,12 @@
       / nrow
   )
 
-  let shared-breaks = _facet-shared-breaks(trained, free-x, free-y)
+  let shared-breaks = _facet-shared-breaks(
+    trained,
+    free-x,
+    free-y,
+    coord: coord,
+  )
 
   cetz.canvas(length: 1cm, {
     import cetz.draw: *
@@ -569,7 +571,12 @@
   let panel-w = (grid-w - gutter-x * (n-cols - 1)) / n-cols
   let panel-h = (grid-h - gutter-y * (n-rows - 1)) / n-rows
 
-  let shared-breaks = _facet-shared-breaks(trained, free-x, free-y)
+  let shared-breaks = _facet-shared-breaks(
+    trained,
+    free-x,
+    free-y,
+    coord: coord,
+  )
 
   cetz.canvas(length: 1cm, {
     import cetz.draw: *

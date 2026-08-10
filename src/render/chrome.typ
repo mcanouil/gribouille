@@ -44,14 +44,12 @@
 
   let x-trained-top = trained.at("x", default: none)
   let y-trained-top = trained.at("y", default: none)
-  // A radial panel draws no secondary axis at all (`_draw-axis-and-layers`
-  // gates the whole secondary block on `not is-radial`), so reserving its
-  // ticks, labels, gap, and title would donate panel area to a margin nothing
-  // draws in. Drop the spec here and every downstream measurement, extent, and
-  // title side falls away with it, mirroring the draw-side gate.
+  // `_sec-spec` answers `none` for a radial coord, so a radial panel reserves
+  // no tick, label, gap, or title depth for an axis it never draws; every
+  // extent, margin, and title side below falls away with the spec.
   let _radial = is-radial(coord)
-  let x-sec = if _radial { none } else { _sec-spec(x-trained-top) }
-  let y-sec = if _radial { none } else { _sec-spec(y-trained-top) }
+  let x-sec = _sec-spec(x-trained-top, coord: coord)
+  let y-sec = _sec-spec(y-trained-top, coord: coord)
   let _surface-style = (p, s, _) => _text-style(theme, p + "-" + s)
   let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
   let tick-len = _per-side(_len-side, "axis-ticks")

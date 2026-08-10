@@ -500,8 +500,8 @@
   // Secondary x-axis: draw on top edge if the trained x scale carries a
   // secondary spec. Breaks are its own when set, else the primary axis grid;
   // their labels go through the user's transformation function.
-  let _x-sec = _sec-spec(x-trained)
-  if not is-radial and _x-sec != none and show-x-sec {
+  let _x-sec = _sec-spec(x-trained, coord: coord)
+  if _x-sec != none and show-x-sec {
     let breaks = if axis-breaks != none and axis-breaks.x-sec != none {
       axis-breaks.x-sec
     } else {
@@ -556,8 +556,8 @@
 
   // Secondary y-axis: draw on right edge if the trained y scale carries a
   // secondary spec.
-  let _y-sec = _sec-spec(y-trained)
-  if not is-radial and _y-sec != none and show-y-sec {
+  let _y-sec = _sec-spec(y-trained, coord: coord)
+  if _y-sec != none and show-y-sec {
     let breaks = if axis-breaks != none and axis-breaks.y-sec != none {
       axis-breaks.y-sec
     } else {
