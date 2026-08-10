@@ -1,7 +1,7 @@
 ///! Joint `(x, y) → (cx, cy)` projection helpers for `coord-radial`.
 
 #import "../scale/train.typ": (
-  discrete-slot-width, level-position, map-axis, map-position,
+  discrete-slot-width, level-position, map-axis, map-axis-data, map-position,
 )
 #import "types.typ": parse-number
 
@@ -21,6 +21,23 @@
 #let radial-axis-of(coord) = if is-radial(coord) {
   if coord.at("theta", default: "x") == "x" { "y" } else { "x" }
 } else { none }
+
+// The other half of the pair: the axis the sweep runs along. `none` off a
+// radial coord, so callers can compare an axis key against it unguarded.
+#let theta-axis-of(coord) = if is-radial(coord) {
+  coord.at("theta", default: "x")
+} else { none }
+
+// The `(theta-lo, theta-hi)` sweep in canvas radians. It falls out of the
+// coord alone, with no panel rect in sight, which is what lets the chrome
+// stage project theta breaks before the panel it will draw them in exists.
+#let theta-range-of(coord) = {
+  let start = coord.at("start", default: 0)
+  let direction = coord.at("direction", default: 1)
+  let end = coord.at("end", default: none)
+  let end-eff = if end == none { start + direction * 2 * calc.pi } else { end }
+  (calc.pi / 2 - start, calc.pi / 2 - end-eff)
+}
 
 // `start = 0` plus `direction = 1` reproduce the conventional layout: the
 // first slice opens at 12 o'clock and the sweep advances clockwise. Encoding the
@@ -50,13 +67,8 @@
       (py-hi - py-lo) / 2 - label-inset.y,
     ),
   )
-  let start = coord.at("start", default: 0)
-  let direction = coord.at("direction", default: 1)
-  let end = coord.at("end", default: none)
-  let end-eff = if end == none { start + direction * 2 * calc.pi } else { end }
-  let theta-axis = coord.at("theta", default: "x")
-  let theta-lo = calc.pi / 2 - start
-  let theta-hi = calc.pi / 2 - end-eff
+  let theta-axis = theta-axis-of(coord)
+  let (theta-lo, theta-hi) = theta-range-of(coord)
   (
     coord: "radial",
     centre: centre,
@@ -137,6 +149,19 @@
 
 // Add a canvas-cm `(dx, dy)` offset to a projected `(cx, cy)` point.
 #let shift-point(p, delta) = (p.at(0) + delta.at(0), p.at(1) + delta.at(1))
+
+// Canvas angle of one theta *break*. Breaks arrive in the scale's own space,
+// so a continuous one goes through `map-axis-data`, which honours a
+// pre-transformed scale, and a discrete one through the level lookup. The
+// chrome stage and the panel draw both project through here, or the band one
+// measures would not be the band the other draws.
+#let theta-break-angle(trained, value, theta-range) = if (
+  trained.type == "continuous"
+) {
+  map-axis-data(trained, value, theta-range)
+} else {
+  map-position(trained, value, theta-range)
+}
 
 // Group break values by canvas angle modulo a full turn. `project` maps a
 // break to canvas radians (or `none` to skip). Returns an array of groups,

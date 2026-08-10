@@ -4,6 +4,8 @@
 // everything drawn, stretch the figure past the requested `width`/`height`.
 
 #import "../../lib.typ": *
+#import "../../src/render/extents.typ": _axis-label-extents
+#import "../../src/utils/measure.typ": measure-labels-cm
 
 // Rounding in the chrome arithmetic is sub-point; anything larger is overflow.
 #let SLACK = 0.5pt
@@ -97,6 +99,108 @@
         + " wide against "
         + repr(blanked.width)
         + " for a blank one"
+    ),
+  )
+}
+
+// A full sweep puts its first and last break on one angle, and the draw merges
+// them into a single "24/0" label. That merged label is about twice as wide as
+// either break alone, so measuring the breaks one by one reserves too small a
+// band and the label spills wherever the sweep happens to wrap.
+#let wrap-clock(coord: coord-radial(), labels: v => "Hour-" + str(v)) = plot(
+  data: (h: range(0, 25), v: range(0, 25).map(i => 10 + calc.rem(i * 7, 13))),
+  mapping: aes(x: "h", y: "v"),
+  layers: (geom-point(),),
+  coord: coord,
+  scales: scales(
+    x: scale-continuous(
+      limits: (0, 24),
+      breaks: (0, 4, 8, 12, 16, 20, 24),
+      expand: false,
+      labels: labels,
+    ),
+  ),
+  width: 5cm,
+  height: 9cm,
+)
+
+// The wrap sits at 9 o'clock here and at 3 o'clock there. Either way it is the
+// horizontal extreme, where a panel this narrow leaves no slack.
+#context fits(
+  wrap-clock(coord: coord-radial(start: -calc.pi / 2)),
+  5cm,
+  9cm,
+  "radial plot wrapping at 9 o'clock",
+)
+
+#context fits(
+  wrap-clock(coord: coord-radial(start: calc.pi / 2, direction: -1)),
+  5cm,
+  9cm,
+  "radial plot wrapping at 3 o'clock",
+)
+
+// The band reserved for the merged label is only right if the chrome stage
+// measures the merged string, so assert that directly rather than only through
+// the figure size. `axis: "y"` names the radial axis of the same coord, which
+// keeps the per-break measurement.
+#let wrap-trained(labels: v => "Hour-" + str(v)) = (
+  type: "continuous",
+  domain: (0, 24),
+  spec: (breaks: (0, 4, 8, 12, 16, 20, 24), labels: labels),
+)
+
+#context {
+  let size = 8pt
+  let theta = _axis-label-extents(
+    wrap-trained(),
+    size,
+    coord: coord-radial(),
+    axis: "x",
+  )
+  let per-break = _axis-label-extents(wrap-trained(), size, axis: "y")
+  assert(
+    theta.width > per-break.width,
+    message: (
+      "the merged theta label measures "
+        + repr(theta.width)
+        + " cm against "
+        + repr(per-break.width)
+        + " cm per break; it should be the wider of the two"
+    ),
+  )
+  let joined = measure-labels-cm(([Hour-24/Hour-0],), size)
+  assert(
+    calc.abs(theta.width - joined.width) < 1e-9,
+    message: (
+      "the merged theta label measures "
+        + repr(theta.width)
+        + " cm against "
+        + repr(joined.width)
+        + " cm for the string the draw emits"
+    ),
+  )
+}
+
+// A `labels` callback that returns `none` for the wrap-side break leaves one
+// label at that angle, so the band owed is the single one, not the joined one.
+#context {
+  let size = 8pt
+  let hidden = _axis-label-extents(
+    wrap-trained(labels: v => if v == 24 { none } else { "Hour-" + str(v) }),
+    size,
+    coord: coord-radial(),
+    axis: "x",
+  )
+  let single = measure-labels-cm(([Hour-20],), size)
+  assert(
+    calc.abs(hidden.width - single.width) < 1e-9,
+    message: (
+      "a hidden wrap-side break reserves "
+        + repr(hidden.width)
+        + " cm against "
+        + repr(single.width)
+        + " cm for the widest label left"
     ),
   )
 }

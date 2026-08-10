@@ -7,7 +7,10 @@
 #import "../theme/theme.typ": _text-args
 #import "../utils/measure.typ": longest-unbreakable-cm, measure-labels-cm
 #import "../utils/palette.typ": spec-attr
-#import "../utils/radial.typ": THETA-LABEL-PAD
+#import "../utils/radial.typ": (
+  THETA-LABEL-PAD, group-theta-breaks, theta-axis-of, theta-break-angle,
+  theta-range-of,
+)
 #import "../utils/format.typ": format-break
 #import "../scale/secondary.typ" as secondary-mod
 #import "axis-format.typ": _axis-breaks, _axis-label, _secondary-breaks
@@ -137,25 +140,77 @@
   fallback: auto,
 )
 
+// The values an axis puts ticks at: the levels of a discrete scale, the
+// computed breaks of a continuous one, nothing for anything else.
+#let _axis-tick-values(trained) = if trained.type == "discrete" {
+  trained.domain
+} else if trained.type == "continuous" {
+  _axis-breaks(trained)
+} else { () }
+
+// What a tick reads when the user supplied no `labels` callback: the level
+// itself on a discrete scale, the formatted break on a continuous one.
+#let _tick-fallback(trained, value) = if trained.type == "continuous" {
+  _axis-label(trained, value)
+} else { value }
+
+// One theta tick label as a radial panel draws it: the breaks sharing a canvas
+// angle, resolved one by one, the `none`s dropped so a callback can hide a
+// wrap-side break, and the rest joined higher-domain first ("24/0", not
+// "0/24"). `none` when the whole group resolves away and nothing is drawn.
+//
+// Shared with `panel-radial.typ`, in the same spirit as `_title-boxed` above:
+// a full sweep merges two breaks into one label roughly twice as wide as
+// either, so a measuring side with its own copy of this reserves the wrong
+// band as soon as the two drift.
+#let _theta-group-label(trained, labels-cb, typst-mark, group) = {
+  let labels = group
+    .map(rec => resolve-label(
+      labels-cb,
+      rec.b,
+      rec.idx,
+      _tick-fallback(trained, rec.b),
+      typst-mark: typst-mark,
+    ))
+    .filter(l => l != none)
+  if labels.len() == 0 { return none }
+  labels.rev().join([/])
+}
+
 // Collect the formatted tick labels for the trained scale and measure them
 // via Typst. Returns `(width, height)` in cm of the longest label's ink box.
 // Caller must already be inside a `context { ... }` block.
 // `typst-eval` mirrors the axis-text style's `typst` flag so typst-marked
 // labels measure at their rendered width.
-#let _axis-label-extents(trained, size, typst-eval: false) = {
+//
+// `coord` and `axis` name the scale being measured: when it is the angular
+// axis of a `coord-radial`, the breaks are grouped by canvas angle and each
+// group measured as the single merged label the draw emits. The grouping needs
+// only the sweep, which `theta-range-of` reads off the coord, so it works here
+// even though the panel rect does not exist yet. Every other axis keeps the
+// per-break measurement untouched.
+#let _axis-label-extents(
+  trained,
+  size,
+  typst-eval: false,
+  coord: none,
+  axis: none,
+) = {
   if trained == none { return _empty-extents(size) }
   let labels-cb = _trained-labels-cb(trained)
   let typst-mark = trained.at("typst-mark", default: false)
-  let labels = ()
-  if trained.type == "discrete" {
-    labels = trained
-      .domain
-      .enumerate()
-      .map(((idx, level)) => (
-        _resolve-tick(labels-cb, typst-mark, idx, level, level, typst-eval)
-      ))
-  } else if trained.type == "continuous" {
-    labels = _axis-breaks(trained)
+  let theta-axis = theta-axis-of(coord)
+  let values = _axis-tick-values(trained)
+  let labels = if theta-axis != none and theta-axis == axis {
+    group-theta-breaks(
+      values,
+      b => theta-break-angle(trained, b, theta-range-of(coord)),
+    )
+      .map(group => _theta-group-label(trained, labels-cb, typst-mark, group))
+      .filter(l => l != none)
+      .map(l => resolve-prose(l, eval-strings: typst-eval))
+  } else {
+    values
       .enumerate()
       .map(((idx, b)) => (
         _resolve-tick(
@@ -163,7 +218,7 @@
           typst-mark,
           idx,
           b,
-          _axis-label(trained, b),
+          _tick-fallback(trained, b),
           typst-eval,
         )
       ))

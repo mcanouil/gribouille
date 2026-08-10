@@ -341,10 +341,22 @@
       let ys = _sec-spec(yt, coord: coord)
       (
         x: if free-x {
-          _axis-label-extents(xt, ax-text.xb.size, typst-eval: ax-text.xb.typst)
+          _axis-label-extents(
+            xt,
+            ax-text.xb.size,
+            typst-eval: ax-text.xb.typst,
+            coord: coord,
+            axis: "x",
+          )
         } else { x-extents },
         y: if free-y {
-          _axis-label-extents(yt, ax-text.yl.size, typst-eval: ax-text.yl.typst)
+          _axis-label-extents(
+            yt,
+            ax-text.yl.size,
+            typst-eval: ax-text.yl.typst,
+            coord: coord,
+            axis: "y",
+          )
         } else { y-extents },
         x-sec: if free-x {
           _secondary-label-extents(

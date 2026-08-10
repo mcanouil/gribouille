@@ -11,7 +11,7 @@
 #import "../theme/theme.typ": (
   _line-stroke, _rect-style, _text-args, _text-style, _tick-length,
 )
-#import "../utils/radial.typ": radial-axis-of, radial-ctx
+#import "../utils/radial.typ": radial-ctx, theta-axis-of
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "../utils/format.typ": format-break
@@ -223,7 +223,7 @@
   // requested `width`/`height`. Gate the band on the same conditions the draw
   // does, so a suppressed or blank theta axis gives it back.
   let _theta-guide = _read-theta-guide(spec)
-  let _theta-key = if radial-axis-of(coord) == "y" { "x" } else { "y" }
+  let _theta-key = theta-axis-of(coord)
   let _theta-text = if _theta-key == "x" { _ax-text.xb } else { _ax-text.yl }
   let _label-inset = if (
     _theta-text.size > 0pt
