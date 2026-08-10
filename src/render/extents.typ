@@ -201,18 +201,29 @@
 
 // Perpendicular extent of x-axis tick labels (cm). Inputs are the measured
 // ink-bbox width and height of the longest label; rotating composes them
-// trigonometrically, and `n-dodge > 1` adds the staggered rows.
+// trigonometrically, and `n-dodge > 1` adds the staggered rows. Both terms are
+// taken absolute: a box turned past a quarter turn is as deep as its mirror in
+// the first quadrant, and signed terms would shrink the extent instead, even
+// to a negative, letting the labels run off the canvas.
 #let _x-label-depth(angle, n-dodge, label-w-cm, label-h-cm) = {
-  let a = calc.abs(angle) * 1deg
-  label-w-cm * calc.sin(a) + label-h-cm * calc.cos(a) + (n-dodge - 1) * 0.35
+  let a = angle * 1deg
+  (
+    label-w-cm * calc.abs(calc.sin(a))
+      + label-h-cm * calc.abs(calc.cos(a))
+      + (n-dodge - 1) * 0.35
+  )
 }
 
 // Perpendicular extent of y-axis tick labels (cm). At angle 0 the labels
 // extend leftward by their full measured width; rotating swaps the extents
 // according to the rotated bounding box, and `n-dodge > 1` adds dodge cols.
 #let _y-label-width(angle, n-dodge, label-w-cm, label-h-cm) = {
-  let a = calc.abs(angle) * 1deg
-  label-w-cm * calc.cos(a) + label-h-cm * calc.sin(a) + (n-dodge - 1) * 0.5
+  let a = angle * 1deg
+  (
+    label-w-cm * calc.abs(calc.cos(a))
+      + label-h-cm * calc.abs(calc.sin(a))
+      + (n-dodge - 1) * 0.5
+  )
 }
 
 // Band (cm) a radial panel's theta tick labels need outside the circle: `x`

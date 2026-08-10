@@ -17,7 +17,7 @@
 /// \@stability stable
 /// \@since 0.0.1
 ///
-/// \@param angle Tick-label rotation in degrees: 0 horizontal, 45 readable diagonal, 90 vertical.
+/// \@param angle Tick-label rotation in degrees, from -90 to 90: 0 horizontal, 45 readable diagonal, 90 vertical. Past a quarter turn the labels read upside down and hang off the wrong side of the axis, so a larger rotation fails.
 ///
 /// \@param n-dodge Number of rows (x-axis) or columns (y-axis) across which to stagger tick labels; 1 keeps them on a single row/column.
 ///
@@ -93,7 +93,7 @@
 /// \@stability stable
 /// \@since 0.4.0
 ///
-/// \@param angle Tick-label rotation in degrees.
+/// \@param angle Tick-label rotation in degrees, from -90 to 90.
 ///
 /// \@param n-dodge Number of rows/columns across which to stagger labels.
 ///
