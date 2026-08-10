@@ -149,22 +149,15 @@
 // `typst-eval` mirrors the axis-text style's `typst` flag so typst-marked
 // labels measure at their rendered width.
 //
-// `axis` names the scale being measured and is required, because paired with
-// `coord` it is what tells this apart from the angular axis of a
-// `coord-radial`: there the breaks are grouped by canvas angle and each group
-// measured as the single merged label the draw emits. Leaving it to a default
-// would silently hand a radial plot the per-break measurement, which reserves
-// about half the band a merged label needs. The grouping wants only the sweep,
-// which `theta-range-of` reads off the coord, so it works here even though the
-// panel rect does not exist yet. Every other axis keeps the per-break
-// measurement untouched.
-#let _axis-label-extents(
-  trained,
-  size,
-  axis,
-  typst-eval: false,
-  coord: none,
-) = {
+// `axis` and `coord` are both required, because together they are what tells
+// this apart from the angular axis of a `coord-radial`: there the breaks are
+// grouped by canvas angle and each group measured as the single merged label
+// the draw emits. Defaulting either would silently hand a radial plot the
+// per-break measurement, which reserves about half the band a merged label
+// needs. The grouping wants only the sweep, which `theta-range-of` reads off
+// the coord, so it works here even though the panel rect does not exist yet.
+// Every other axis keeps the per-break measurement untouched.
+#let _axis-label-extents(trained, size, axis, coord, typst-eval: false) = {
   if trained == none { return _empty-extents(size) }
   let labels-cb = _trained-labels-cb(trained)
   let typst-mark = trained.at("typst-mark", default: false)

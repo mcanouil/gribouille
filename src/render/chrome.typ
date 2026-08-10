@@ -60,15 +60,15 @@
     x-trained-top,
     ax-text.xb.size,
     "x",
+    coord,
     typst-eval: ax-text.xb.typst,
-    coord: coord,
   )
   let y-extents = _axis-label-extents(
     y-trained-top,
     ax-text.yl.size,
     "y",
+    coord,
     typst-eval: ax-text.yl.typst,
-    coord: coord,
   )
   // Under facet-grid free scales the bottom row shows a different x per column
   // and the left column a different y per row, so the single bottom/left margin
@@ -87,8 +87,8 @@
         ),
       ax-text.xb.size,
       "x",
+      coord,
       typst-eval: ax-text.xb.typst,
-      coord: coord,
     ))
     (
       width: exts.fold(x-extents.width, (m, e) => calc.max(m, e.width)),
@@ -102,8 +102,8 @@
       panel-trained-list.at(r * ctx.grid-n-cols).at("y", default: none),
       ax-text.yl.size,
       "y",
+      coord,
       typst-eval: ax-text.yl.typst,
-      coord: coord,
     ))
     (
       width: exts.fold(y-extents.width, (m, e) => calc.max(m, e.width)),

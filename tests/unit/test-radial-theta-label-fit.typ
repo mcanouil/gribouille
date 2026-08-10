@@ -159,7 +159,7 @@
     wrap-trained(),
     size,
     "x",
-    coord: coord-radial(),
+    coord-radial(),
   )
   // Same coord, radial axis: the grouping must be gated on the angular axis
   // alone, or the r labels would be merged too and reserve twice their band.
@@ -167,7 +167,7 @@
     wrap-trained(),
     size,
     "y",
-    coord: coord-radial(),
+    coord-radial(),
   )
   assert(
     theta.width > per-break.width,
@@ -200,7 +200,7 @@
     wrap-trained(labels: v => if v == 24 { none } else { "Hour-" + str(v) }),
     size,
     "x",
-    coord: coord-radial(),
+    coord-radial(),
   )
   let single = measure-labels-cm(([Hour-20],), size)
   assert(
@@ -223,7 +223,7 @@
     wrap-trained(labels: v => none),
     8pt,
     "x",
-    coord: coord-radial(),
+    coord-radial(),
   )
   assert(
     hidden-all.width == 0.0 and hidden-all.height == 0.0,
@@ -234,5 +234,36 @@
     ),
   )
 }
+
+// A faceted radial plot owes the same fit. Its shared axis titles are placed
+// once for the whole grid, and they have to sit where the chrome reserved for
+// them: against the panel edge, since a radial panel draws no tick or label
+// band outside it, exactly as the single-panel titles do.
+#context fits(
+  plot(
+    data: (
+      g: ("a",) * 5 + ("b",) * 5,
+      s: ("x", "y", "z", "w", "v") * 2,
+      v: (0, 0.25, 0.5, 0.75, 1.0) * 2,
+    ),
+    mapping: aes(x: "s", y: "v"),
+    layers: (geom-point(),),
+    coord: coord-radial(theta: "y"),
+    scales: scales(
+      y: scale-continuous(
+        limits: (0, 1),
+        breaks: (0, 0.25, 0.5, 0.75, 1),
+        expand: false,
+        labels: v => "Level-" + str(v),
+      ),
+    ),
+    facet: facet-wrap("g"),
+    width: 10cm,
+    height: 6cm,
+  ),
+  10cm,
+  6cm,
+  "faceted radial plot",
+)
 
 Radial theta label fit tests passed.
