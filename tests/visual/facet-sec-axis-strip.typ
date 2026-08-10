@@ -4,8 +4,9 @@
 // strip band above it is painted, and its secondary y at the right edge,
 // where facet-grid paints the row strip. The cell reserves the axis depth
 // between the two, so:
-//   1. facet-wrap: the top row's secondary ticks and labels sit under the
-//      strip text rather than running into it.
+//   1. facet-wrap: the top row's secondary x ticks and labels sit under the
+//      strip text rather than running into it, and the last column's
+//      secondary y has no strip to clear.
 //   2. facet-grid: the top row's secondary x survives the column strips,
 //      which are painted after every panel, and the right column's
 //      secondary y survives the row strips.
@@ -30,7 +31,10 @@
     mapping: aes(x: "x", y: "y"),
     layers: (geom-point(),),
     facet: facet-wrap("g", ncolumn: 2),
-    scales: scales(x: scale-continuous(secondary: sec-axis(name: "Sec x"))),
+    scales: scales(
+      x: scale-continuous(secondary: sec-axis(name: "Sec x")),
+      y: scale-continuous(secondary: sec-axis(name: "Sec y")),
+    ),
     width: 12cm,
     height: 5cm,
   ),

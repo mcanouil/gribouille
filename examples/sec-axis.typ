@@ -30,23 +30,26 @@
     width: 12cm,
     height: 9cm,
   ),
-  // Under facets the secondary axis is drawn between each panel and its
-  // strip, and its title once at the edge of the panel grid.
+  // Under facets each secondary axis is drawn between the panel grid and the
+  // strip band on that side, with its title once at the edge of the grid.
   plot(
     data: mpg,
     mapping: aes(x: "displ", y: "hwy"),
     layers: (geom-point(size: 2pt, alpha: 0.8),),
-    facet: facet-wrap("drv", ncolumn: 3),
+    facet: facet-grid(rows: "drv", columns: "cyl"),
     scales: scales(
       x: scale-continuous(
         name: "Engine displacement (L)",
         secondary: dup-axis(name: "Displacement (L)"),
       ),
-      y: scale-continuous(name: "Highway mpg"),
+      y: scale-continuous(
+        name: "Highway mpg",
+        secondary: sec-axis(transform: v => v * 0.4251, name: "Highway km/L"),
+      ),
     ),
-    labels: labels(title: "Faceted, with the secondary axis under the strips"),
+    labels: labels(title: "Faceted, with both secondary axes under the strips"),
     theme: theme-minimal(),
     width: 12cm,
-    height: 6cm,
+    height: 8cm,
   ),
 )
