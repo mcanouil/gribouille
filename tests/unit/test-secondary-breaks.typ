@@ -5,6 +5,7 @@
 #import "../../lib.typ": (
   aes, breaks-width, dup-axis, geom-point, scale-continuous, scales, sec-axis,
 )
+#import "../../src/coord/radial.typ": coord-radial
 #import "../../src/scale/train.typ": train
 #import "../../src/render/axis-format.typ": (
   _axis-breaks, _sec-spec, _secondary-breaks, _shared-axis-breaks,
@@ -66,3 +67,23 @@
 )
 #assert.eq(closured.y.spec.secondary.breaks, (0, 20, 40))
 #assert.eq(_shared-axis-breaks(closured).y-sec, (0, 20, 40))
+
+// --- a radial coord reports no secondary spec, and so no secondary breaks ---
+
+// A radial panel has no opposite edge to draw a secondary axis on, so the spec
+// stops at `_sec-spec` and nothing downstream measures, reserves, or breaks for
+// it. An absent coord is the cartesian answer, not the radial one.
+#assert.eq(_sec-spec(pinned.x, coord: coord-radial()), none)
+#assert.eq(_sec-spec(pinned.x, coord: none), _sec-spec(pinned.x))
+#assert(_sec-spec(pinned.x) != none)
+
+#assert.eq(_shared-axis-breaks(pinned, coord: coord-radial()).x-sec, none)
+// The primary grid is untouched by the gate: only the secondary falls away.
+#assert.eq(
+  _shared-axis-breaks(pinned, coord: coord-radial()).x,
+  _axis-breaks(pinned.x),
+)
+#assert.eq(
+  _shared-axis-breaks(closured, coord: coord-radial(theta: "y")).y-sec,
+  none,
+)
