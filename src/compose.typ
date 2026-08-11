@@ -127,19 +127,6 @@
 
 #let _TAG-CORNERS = ("top-left", "top-right", "bottom-left", "bottom-right")
 
-#let _legend-canvas-size(guides, side) = {
-  let extents = legend-mod.estimate-extents(guides)
-  if side == "right" or side == "left" {
-    let height = 0.0
-    for g in guides { height += g.at("height", default: 0.0) + 0.2 }
-    (width: extents.at(side), height: height)
-  } else {
-    let width = 0.0
-    for g in guides { width += g.at("width", default: 0.0) + 0.15 }
-    (width: width, height: extents.at(side))
-  }
-}
-
 // Split `total` cm into `count` track lengths separated by `gutter` cm gaps,
 // distributed by `ratios` (relative weights) or equally when `ratios` is
 // `none`. Returns an array of cm floats summing to `total - gutter * (count -
@@ -394,8 +381,7 @@
     trained,
     theme,
     legend-side,
-    legend-size.width,
-    legend-size.height,
+    legend-size,
   )
   let right-gap = right-gap-cm * 1cm
   if legend-side == "right" {
@@ -583,7 +569,13 @@
   } else { (top: 0.0, bottom: 0.0, left: 0.0, right: 0.0) }
 
   let legend-size = if hoisted-guides.len() > 0 {
-    _legend-canvas-size(hoisted-guides, legend-side)
+    legend-mod.standalone-size(
+      hoisted-guides,
+      legend-side,
+      theme,
+      resolved-width / 1cm,
+      resolved-height / 1cm,
+    )
   } else { (width: 0.0, height: 0.0) }
   let right-gap-cm = if legend-side == "right" {
     legend-mod.legend-gap(theme)
