@@ -1928,52 +1928,107 @@
   }
 }
 
-// Render a free-standing legend canvas containing `guides`, all on `side`.
-// Used by `compose()` to draw the shared, hoisted legend outside any plot
-// panel. `panel-rect` and `margin` are tuned per side so `_draw-side`'s cursor
-// math lands inside the canvas bounds:
-//   right/left → cursor starts at the canvas top, advances downward.
-//   top        → labels grow downward from `max-h`; baseline at 0.
-//   bottom     → margin.bottom: 0.4 cancels `_draw-side`'s bottom offset.
+// Size a free-standing legend canvas holding `guides`, all on `side`. Used by
+// `compose()` both to reserve the hoisted legend's band off the panel area and
+// to size the canvas `standalone` draws into, so the two can never disagree.
 //
-// `width-cm` and `height-cm` size the canvas; the `set-viewport` call shrinks
-// the cetz coordinate window to those bounds without leaving cetz's auto-pad
-// margin around content (which would show up as visible whitespace).
-#let standalone(guides, trained, theme, side, width-cm, height-cm) = {
+// The content box repeats `_draw-side`'s own arithmetic (`_guide-render-height`
+// stacked by `_side-stack-gap`) rather than approximating it, with a zero
+// `legend-gap`: `compose()` supplies the panel-to-legend gap itself.
+//
+// `edge` is the per-side cm the `legend-background` claims outside that content
+// box -- the painted `inset` plus the reserved `outset` -- so a themed backdrop
+// is sized in instead of being cut off by `standalone`'s `clip: true`.
+//
+// `canvas-w`/`canvas-h` are the enclosing composition canvas in cm, mirroring
+// the renderer's own legend ctx, so `%` outsets resolve against the canvas the
+// legend sits on.
+#let standalone-size(guides, side, theme, canvas-w, canvas-h) = {
+  let ctx = (canvas-w: canvas-w, canvas-h: canvas-h)
+  let content-w = 0.0
+  let content-h = 0.0
+  if side == "right" or side == "left" {
+    for g in guides {
+      let w = g.at("width", default: 0.0)
+      if w > content-w { content-w = w }
+    }
+    content-h = side-stacked-height(side, guides, ctx, theme, 0.0)
+  } else {
+    let title-h = _legend-title-h(theme)
+    let size-pt = _text-style(theme, "legend-text").size / 1pt
+    for g in guides {
+      content-w += g.at("width", default: 0.0)
+      let h = _guide-render-height(g, title-h, size-pt)
+      if h > content-h { content-h = h }
+    }
+    if guides.len() > 1 {
+      content-w += _side-stack-gap(side, ctx, theme, 0.0) * (guides.len() - 1)
+    }
+  }
+  let bg = _bg-metrics(theme, ctx, content-w, content-h)
+  let edge = _bg-edge-cm(bg)
+  (
+    width: content-w + edge.left + edge.right,
+    height: content-h + edge.top + edge.bottom,
+    content-w: content-w,
+    content-h: content-h,
+    pad: bg.pad,
+    edge: edge,
+    canvas-w: canvas-w,
+    canvas-h: canvas-h,
+  )
+}
+
+// Render a free-standing legend canvas containing `guides`, all on `side`,
+// sized by `size` from `standalone-size`. Used by `compose()` to draw the
+// shared, hoisted legend outside any plot panel.
+//
+// `panel-rect` carries the *content* box, not the canvas: `_draw-side`'s
+// centring terms then cancel and the guide stack starts exactly at
+// `(panel-rect.x, panel-rect.y)`. That origin is offset so the whole
+// `legend-background` -- content grown by `pad`, then the reserved `gap` --
+// lands inside the canvas, which `clip: true` would otherwise cut:
+//   right → `_draw-side` already adds the panel-facing `gap.left` to its
+//            cursor, so the origin only owes `pad.left`.
+//   top   → likewise already adds `gap.bottom`, so the origin owes `pad.bottom`.
+//   left/bottom → no such term, so the origin owes the full `edge`.
+// `margin.left: 0.05` cancels `_draw-side`'s own left-side nudge, and
+// `margin.bottom: 0.4` cancels its bottom offset.
+#let standalone(guides, trained, theme, side, size) = {
   let ctx = (
     trained: trained,
     palette: default-discrete,
     theme: theme,
-    canvas-w: width-cm,
-    canvas-h: height-cm,
+    canvas-w: size.canvas-w,
+    canvas-h: size.canvas-h,
   )
-  let panel-h = if side == "right" or side == "left" { height-cm } else { 0.0 }
-  // Top/bottom guides centre horizontally over the panel width via
-  // `_draw-side`'s `px + (chrome-w - total-w) / 2`. With a zero-width panel
-  // that origin is negative and `clip: true` cuts the first swatch, so hand
-  // the canvas width in as the panel width: the row then centres at
-  // `(width-cm - total-w) / 2 >= 0`.
-  let panel-w = if side == "top" or side == "bottom" { width-cm } else { 0.0 }
+  let vertical = side == "right" or side == "left"
+  let panel-rect = (
+    x: if side == "right" { size.pad.left } else { size.edge.left },
+    y: if side == "top" { size.pad.bottom } else { size.edge.bottom },
+    w: if vertical { 0.0 } else { size.content-w },
+    h: if vertical { size.content-h } else { 0.0 },
+  )
   let margin = (
-    left: 0.0,
+    left: if side == "left" { 0.05 } else { 0.0 },
     right: 0.0,
     top: 0.0,
     bottom: if side == "bottom" { 0.4 } else { 0.0 },
   )
   block(
-    width: width-cm * 1cm,
-    height: height-cm * 1cm,
+    width: size.width * 1cm,
+    height: size.height * 1cm,
     above: 0pt,
     below: 0pt,
     breakable: false,
     clip: true,
     cetz.canvas(length: 1cm, padding: 0, {
       import cetz.draw: hide, rect
-      hide(rect((0, 0), (width-cm, height-cm)), bounds: true)
+      hide(rect((0, 0), (size.width, size.height)), bounds: true)
       draw(
         guides,
         ctx,
-        panel-rect: (x: 0.0, y: 0.0, w: panel-w, h: panel-h),
+        panel-rect: panel-rect,
         margin: margin,
         theme: theme,
       )
