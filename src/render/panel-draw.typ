@@ -30,7 +30,7 @@
 #import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP, _axis-guide-rows,
-  _resolve-extents, _sec-title-offset-cm, _text-margin-cm, _theta-label-inset,
+  _resolve-extents, _sec-title-offset-cm, _text-margin-cm, _theta-label-bounds,
   _title-angle, _title-body, _title-extent-cm, _x-label-depth-stack,
   _x-title-place, _y-label-width-stack, _y-title-place,
 )
@@ -224,20 +224,20 @@
   // does, so a suppressed or blank theta axis gives it back.
   let _theta-guide = _read-theta-guide(spec)
   let _theta-key = theta-axis-of(coord)
-  let _label-inset = if _theta-key == none { (x: 0.0, y: 0.0) } else {
+  let _label-bounds = if _theta-key == none { () } else {
     let _theta-text = if _theta-key == "x" { _ax-text.xb } else { _ax-text.yl }
     if (
       _theta-text.size > 0pt
         and not (_theta-guide != none and _theta-guide.suppress)
     ) {
-      _theta-label-inset(
+      _theta-label-bounds(
         _resolve-extents(
           if _theta-key == "x" { x-extents } else { y-extents },
           _theta-text.size,
-        ),
+        ).at("groups", default: ()),
         if _theta-guide == none { 0 } else { _theta-guide.angle },
       )
-    } else { (x: 0.0, y: 0.0) }
+    } else { () }
   }
   let outer-radial = radial-ctx(
     coord,
@@ -245,7 +245,7 @@
     y-trained,
     px-range,
     py-range,
-    label-inset: _label-inset,
+    label-bounds: _label-bounds,
   )
   let is-radial = outer-radial != none
 
@@ -654,7 +654,7 @@
     y-trained,
     inner-ctx.px-range,
     inner-ctx.py-range,
-    label-inset: _label-inset,
+    label-bounds: _label-bounds,
   )
   inner-ctx.radial = inner-radial
   if inner-radial != none {

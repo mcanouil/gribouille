@@ -5,7 +5,9 @@
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "../theme/theme.typ": _text-args
-#import "../utils/measure.typ": longest-unbreakable-cm, measure-labels-cm
+#import "../utils/measure.typ": (
+  longest-unbreakable-cm, measure-labels-cm, measure-text-cm,
+)
 #import "../utils/palette.typ": spec-attr
 #import "../utils/radial.typ": (
   THETA-LABEL-PAD, group-theta-breaks, theta-axis-of, theta-range-of,
@@ -166,26 +168,44 @@
   let typst-mark = trained.at("typst-mark", default: false)
   // `theta-axis-of` is `none` off a radial coord and `axis` never is, so this
   // is false for every cartesian axis without a guard of its own.
-  let labels = if theta-axis-of(coord) == axis {
+  if theta-axis-of(coord) == axis {
     let theta-range = theta-range-of(coord)
-    group-theta-breaks(values, b => map-break(trained, b, theta-range))
-      .map(group => _theta-group-label(trained, labels-cb, typst-mark, group))
-      .filter(l => l != none)
-      .map(l => resolve-prose(l, eval-strings: typst-eval))
-  } else {
-    values
-      .enumerate()
-      .map(((idx, b)) => (
-        _resolve-tick(
-          labels-cb,
-          typst-mark,
-          idx,
-          b,
-          _tick-label-fallback(trained, b),
-          typst-eval,
-        )
+    // Each group is measured on its own and keeps the canvas angle it is drawn
+    // at, so the reservation can be solved per angle rather than as one max
+    // over the circle. The max stays on the record for the callers that only
+    // need a band.
+    let groups = group-theta-breaks(
+      values,
+      b => map-break(trained, b, theta-range),
+    )
+      .map(group => (
+        theta: group.first().theta,
+        label: _theta-group-label(trained, labels-cb, typst-mark, group),
       ))
+      .filter(g => g.label != none)
+      .map(g => {
+        let m = measure-text-cm(
+          resolve-prose(g.label, eval-strings: typst-eval),
+          size,
+        )
+        (theta: g.theta, width: m.width, height: m.height)
+      })
+    let widest = groups.fold(0.0, (m, g) => calc.max(m, g.width))
+    let tallest = groups.fold(0.0, (m, g) => calc.max(m, g.height))
+    return (width: widest, height: tallest, groups: groups)
   }
+  let labels = values
+    .enumerate()
+    .map(((idx, b)) => (
+      _resolve-tick(
+        labels-cb,
+        typst-mark,
+        idx,
+        b,
+        _tick-label-fallback(trained, b),
+        typst-eval,
+      )
+    ))
   measure-labels-cm(labels, size)
 }
 
@@ -243,22 +263,24 @@
   )
 }
 
-// Band (cm) a radial panel's theta tick labels need outside the circle: `x`
-// at the sides, `y` at the top and bottom. They are drawn centred on a point
-// `THETA-LABEL-PAD` beyond `r-max`, so each reaches the pad plus half its own
-// rotated extent past the circle. `radial-ctx` takes this out of `r-max`, so
-// the labels ring the circle inside the panel instead of spilling out of it.
+// Half-extents (cm) each radial theta label reaches from the point it is drawn
+// on, one record per label group: `hw` to either side, `hh` above and below,
+// carrying the canvas angle `theta` the group sits at. The labels are drawn
+// centred `THETA-LABEL-PAD` beyond `r-max`, so `radial-ctx` solves each of
+// these against the panel half-spans and keeps the whole ring inside the panel
+// rather than spilling out of it.
 //
 // Both trigonometric terms are taken absolute, so a rotation past the first
 // quadrant grows the box as it should instead of folding it back to nothing.
-#let _theta-label-inset(extents, angle) = {
+#let _theta-label-bounds(groups, angle) = {
   let a = angle * 1deg
   let cos-a = calc.abs(calc.cos(a))
   let sin-a = calc.abs(calc.sin(a))
-  (
-    x: THETA-LABEL-PAD + (extents.width * cos-a + extents.height * sin-a) / 2,
-    y: THETA-LABEL-PAD + (extents.width * sin-a + extents.height * cos-a) / 2,
-  )
+  groups.map(g => (
+    theta: g.theta,
+    hw: (g.width * cos-a + g.height * sin-a) / 2,
+    hh: (g.width * sin-a + g.height * cos-a) / 2,
+  ))
 }
 
 // The box width `_axis-title-extents` settled on, or `none` when the title

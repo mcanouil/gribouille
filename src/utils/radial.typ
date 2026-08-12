@@ -47,30 +47,49 @@
 // first slice opens at 12 o'clock and the sweep advances clockwise. Encoding the
 // sweep as a `(theta-lo, theta-hi)` pair lets `map-position` produce angles
 // directly through the existing scale-mapping routines.
-// `label-inset` is the band the theta tick labels need outside the circle,
-// `x` cm at the sides and `y` cm at the top and bottom. Taking it out of
-// `r-max` keeps those labels inside the panel, where they belong: the panel
-// is the room the chrome already granted this plot, and growing past it would
-// push the whole figure past the `width`/`height` it was asked for.
+// Below this the angle is flat enough against an axis that the label reaches
+// nothing along it, and the bound it would give divides by nearly zero.
+#let _TRIG-EPS = 1e-9
+
+// `label-bounds` carries one record per theta tick label: the canvas angle
+// `theta` it is drawn at and the half-extents `hw` / `hh` it reaches from
+// there. Each label is centred `THETA-LABEL-PAD` beyond `r-max`, so it stays
+// inside the panel while
+//
+//   (r-max + THETA-LABEL-PAD) * |cos theta| + hw <= half-width
+//   (r-max + THETA-LABEL-PAD) * |sin theta| + hh <= half-height
+//
+// and `r-max` is the tightest radius those two bounds leave across every
+// label. Solving per label rather than insetting all four sides by the widest
+// one means a label only costs the circle the direction it is drawn in: the
+// panel is the room the chrome already granted this plot, and growing past it
+// would push the whole figure past the `width`/`height` it was asked for.
 #let radial-ctx(
   coord,
   x-trained,
   y-trained,
   px-range,
   py-range,
-  label-inset: (x: 0.0, y: 0.0),
+  label-bounds: (),
 ) = {
   if not is-radial(coord) { return none }
   let (px-lo, px-hi) = px-range
   let (py-lo, py-hi) = py-range
   let centre = ((px-lo + px-hi) / 2, (py-lo + py-hi) / 2)
-  let r-max = calc.max(
-    0,
-    calc.min(
-      (px-hi - px-lo) / 2 - label-inset.x,
-      (py-hi - py-lo) / 2 - label-inset.y,
-    ),
-  )
+  let half-w = (px-hi - px-lo) / 2
+  let half-h = (py-hi - py-lo) / 2
+  let r-max = calc.min(half-w, half-h)
+  for b in label-bounds {
+    let cos-t = calc.abs(calc.cos(b.theta))
+    let sin-t = calc.abs(calc.sin(b.theta))
+    if cos-t > _TRIG-EPS {
+      r-max = calc.min(r-max, (half-w - b.hw) / cos-t - THETA-LABEL-PAD)
+    }
+    if sin-t > _TRIG-EPS {
+      r-max = calc.min(r-max, (half-h - b.hh) / sin-t - THETA-LABEL-PAD)
+    }
+  }
+  r-max = calc.max(0, r-max)
   let theta-axis = theta-axis-of(coord)
   let (theta-lo, theta-hi) = theta-range-of(coord)
   (
