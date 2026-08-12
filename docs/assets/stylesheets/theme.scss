@@ -966,6 +966,20 @@ body .page-footer, body .nav-footer {
   padding: 1.5rem 0;
 }
 
+// Quarto emits its own `.nav-footer a` colour, which outranks the bare `a`
+// element rule, so the footer links stayed muted grey against the muted
+// footer text. The `body ` prefix lifts these past it onto the ink token.
+body .page-footer a, body .nav-footer a {
+  color: var(--gb-ink);
+  text-decoration-color: var(--gb-hairline);
+}
+
+body .page-footer a:hover, body .page-footer a:focus-visible,
+body .nav-footer a:hover, body .nav-footer a:focus-visible {
+  color: var(--gb-primary);
+  text-decoration-color: var(--gb-primary);
+}
+
 // --- Tooltips. -----------------------------------------------------------
 // Tippy.js (loaded by Quarto in tippy.umd.min.js) styled with the gribouille
 // palette. Bound by assets/scripts/tooltips.html on navbar/footer surfaces.
