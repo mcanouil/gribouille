@@ -451,30 +451,53 @@
 #let _swatch-lead-cm(diam, size-pt) = diam + _font-cm(size-pt) * 0.5
 #let _ladder-lead-cm(size-pt) = _GLYPH-DIAMETER-CM + _font-cm(size-pt) * 0.8
 
-// Label width in cm at the given font size. Strings use a font-size-aware
-// char-count heuristic (~0.55em per char) so the helper works outside a
-// `context` block (unit tests). Non-string content (typst-markup labels)
-// goes through Typst's `measure()`, which requires a context. Empty /
-// `none` labels report `0`. The full label width is reserved so a long
-// label widens its column instead of overflowing into the next swatch.
-#let _label-width(label, size-pt) = {
-  if label == none { return 0.0 }
-  if type(label) == str {
-    if label == "" { return 0.0 }
-    return label.len() * _font-cm(size-pt) * 0.55 + 0.05
-  }
-  let m = measure(text(size: size-pt * 1pt)[#label])
-  m.width / 1cm + 0.05
+// Slack past the measured ink so a label never sits flush against whatever
+// the layout puts next to it.
+#let _LABEL-SLACK-CM = 0.05
+
+// Ink box (cm) of a label as the legend draws it: measured through the whole
+// resolved surface, so the weight, the font, and a plain string evaluated as
+// markup under an `element-typst` surface all reach the reservation the way
+// they reach `cetz.draw.content`. `measure()` needs a `context`, which every
+// caller is already inside. Empty / `none` labels report zero.
+#let _label-extents(label, style) = {
+  if label == none or label == "" { return (width: 0.0, height: 0.0) }
+  let m = measure(
+    text(.._text-args(style))[#resolve-prose(label, eval-strings: style.typst)],
+  )
+  (width: m.width / 1cm, height: m.height / 1cm)
 }
 
-// Resolve the label a guide actually draws, for measurement. `_guide-width` is
-// theme-less, so `eval-strings: false`; a `typst-mark`
-// label is already converted to content by `resolve-label`. A plain string
-// label under a `legend-text` typst-eval theme is drawn as markup but measured
-// as a string, the one case where measurement can lag the drawn glyph.
-#let _display-label(labels, value, i, fallback, typst-mark) = resolve-prose(
-  resolve-label(labels, value, i, fallback, typst-mark: typst-mark),
-  eval-strings: false,
+// Label width in cm on the given surface. The full label width is reserved so
+// a long label widens its column instead of overflowing into the next swatch.
+#let _label-width(label, style) = {
+  let e = _label-extents(label, style)
+  if e.width == 0.0 { 0.0 } else { e.width + _LABEL-SLACK-CM }
+}
+
+// Bounding box (cm) of an ink box turned by `angle`. Both trigonometric terms
+// are absolute, so a rotation past a quarter turn grows the box rather than
+// folding it back to nothing, as `_x-label-depth` and `_y-label-width` in
+// extents.typ do for the axis labels.
+#let _rotated-box(extents, angle) = {
+  let cos-a = calc.abs(calc.cos(angle))
+  let sin-a = calc.abs(calc.sin(angle))
+  (
+    width: extents.width * cos-a + extents.height * sin-a,
+    height: extents.width * sin-a + extents.height * cos-a,
+  )
+}
+
+// Resolve the label a guide actually draws, for measurement. A `typst-mark`
+// label is already converted to content by `resolve-label`; a plain string is
+// left as one here and evaluated against its own surface in `_label-extents`,
+// so measurement and draw agree on what the markup renders to.
+#let _display-label(labels, value, i, fallback, typst-mark) = resolve-label(
+  labels,
+  value,
+  i,
+  fallback,
+  typst-mark: typst-mark,
 )
 
 // The label a size-ladder / colourbar break draws (custom `labels:` resolved
@@ -487,13 +510,13 @@
   g.at("typst-mark", default: false),
 )
 
-// Widest break label (cm) across `breaks` at the supplied font size. Shared by
+// Widest break label (cm) across `breaks` on the entry-label surface. Shared by
 // the ladder / colourbar width estimate and their draw passes so reserved and
 // drawn label slots agree.
-#let _max-break-label-width(g, breaks, size-pt) = {
+#let _max-break-label-width(g, breaks, style) = {
   let label-w = 0.0
   for (i, b) in breaks.enumerate() {
-    let w = _label-width(_break-label(g, b, i), size-pt)
+    let w = _label-width(_break-label(g, b, i), style)
     if w > label-w { label-w = w }
   }
   label-w
@@ -506,24 +529,40 @@
   "legend-title",
 )
 
-// Vertical gap between the legend title and the first guide entry, resolved
-// against the `legend-title` surface so em values track its font size. Pure
-// arithmetic, so both the sizing pass and the draw can call it.
-#let _legend-title-h(theme) = {
+// The `legend-text` surface the entry labels are measured and drawn on, with
+// the same theme-less fallback.
+#let _legend-text-style(theme) = _text-style(
+  if theme == none { default-theme } else { theme },
+  "legend-text",
+)
+
+// Box (cm) the title occupies, turned by the surface `angle` the draw applies.
+// A quarter-turned title presents its height to the guide width and its width
+// to the title band, so both axes are composed rather than the upright one.
+#let _title-box(g, style) = {
+  let e = _label-extents(g.at("title", default: none), style)
+  if e.width == 0.0 and e.height == 0.0 { return (width: 0.0, height: 0.0) }
+  let turned = _rotated-box(
+    e,
+    if style.angle != none { style.angle } else { 0deg },
+  )
+  (width: turned.width + _LABEL-SLACK-CM, height: turned.height)
+}
+
+// Vertical band the legend title occupies: the `legend-title` bottom margin,
+// which is the gap the draw lays the first entry out below, grown to the drawn
+// title's own height whenever the surface turns it past that gap.
+#let _legend-title-h(theme, g) = {
   let s = _legend-title-style(theme)
-  resolve-margin-side-cm(
-    s.margin.bottom,
-    1.6em,
-    size-pt: s.size / 1pt,
+  calc.max(
+    resolve-margin-side-cm(s.margin.bottom, 1.6em, size-pt: s.size / 1pt),
+    _title-box(g, s).height,
   )
 }
 
-// Title width in cm. `title-pt` is the `legend-title` font size, the surface
-// `_draw-title` paints with, not the `legend-text` size the entry labels use.
-#let _title-width(g, title-pt) = _label-width(
-  g.at("title", default: none),
-  title-pt,
-)
+// Title width in cm on the `legend-title` surface `_draw-title` paints with,
+// not the `legend-text` surface the entry labels use.
+#let _title-width(g, style) = _title-box(g, style).width
 
 // Index of the level at (row, col). Column-major (`byrow: false`) numbers
 // items down each column; row-major (`byrow: true`) numbers items across
@@ -557,18 +596,18 @@
 #let _SWATCH-COL-GAP-RATIO = 0.1
 
 // Per-column widths, gap, cumulative left-offsets, and total grid width.
-// Each column sizes to its own widest label (measured at the supplied
-// font size) so a single oversized level doesn't pad every other column
+// Each column sizes to its own widest label (measured on the entry-label
+// surface) so a single oversized level doesn't pad every other column
 // unnecessarily. Widths come from the resolved display labels, so a custom
 // `labels:` wider than its level still gets the column space it draws into.
-#let _swatch-layout(guide, shape, byrow, size-pt) = {
-  let lead = _swatch-lead-cm(guide.key-diam-cm, size-pt)
+#let _swatch-layout(guide, shape, byrow, style) = {
+  let lead = _swatch-lead-cm(guide.key-diam-cm, style.size / 1pt)
   let widths = range(shape.cols).map(col => {
     let max-w = 0.0
     for row in range(shape.rows) {
       let i = _swatch-index(row, col, shape, byrow)
       if i >= guide.levels.len() { continue }
-      let w = _label-width(_swatch-label(guide, i), size-pt)
+      let w = _label-width(_swatch-label(guide, i), style)
       if w > max-w { max-w = w }
     }
     lead + max-w
@@ -647,14 +686,18 @@
   if type(key-size) == length { length-to-cm(key-size, 0) } else { base-cm }
 }
 
-// Number of rendered lines in a label. Strings stay on one line; content is
-// measured against a single-line sample and rounded, so a `\`-broken two-line
-// label reports two. At least one line so every item reserves a row.
-#let _label-lines(label, size-pt) = {
-  if label == none or label == "" or type(label) == str { return 1 }
-  let one = measure(text(size: size-pt * 1pt)[x]).height
+// Number of rendered lines in a label, resolved on its own surface first so an
+// `element-typst` string is counted as the markup it renders to. A plain string
+// stays on one line; content is measured against a single-line sample and
+// rounded, so a `\`-broken two-line label reports two. At least one line so
+// every item reserves a row.
+#let _label-lines(label, style) = {
+  let resolved = resolve-prose(label, eval-strings: style.typst)
+  if resolved == none or resolved == "" or type(resolved) == str { return 1 }
+  let args = _text-args(style)
+  let one = measure(text(..args)[x]).height
   if one == 0pt { return 1 }
-  let h = measure(text(size: size-pt * 1pt)[#label]).height
+  let h = measure(text(..args)[#resolved]).height
   calc.max(1, calc.round(h / one))
 }
 
@@ -662,8 +705,8 @@
 // row stride per extra line, so multi-line rows keep the same inter-row gap as
 // single-line ones. Zero for every string / single-line label, so single-line
 // legends keep their geometry.
-#let _label-overflow(label, line-h, size-pt) = (
-  (_label-lines(label, size-pt) - 1) * line-h
+#let _label-overflow(label, line-h, style) = (
+  (_label-lines(label, style) - 1) * line-h
 )
 
 // Turn a per-row label-overflow list into stacking data: `extra` per row, the
@@ -683,11 +726,11 @@
 // Tallest multi-line overflow across a break list, measured against a single
 // line. Grows a horizontal ladder / colourbar label band beyond its single-line
 // default; zero when every label fits one line.
-#let _breaks-overflow(g, breaks, size-pt) = {
-  let line-h = _swatch-line-h-cm(size-pt)
+#let _breaks-overflow(g, breaks, style) = {
+  let line-h = _swatch-line-h-cm(style.size / 1pt)
   let max-e = 0.0
   for (i, b) in breaks.enumerate() {
-    let e = _label-overflow(_break-label(g, b, i), line-h, size-pt)
+    let e = _label-overflow(_break-label(g, b, i), line-h, style)
     if e > max-e { max-e = e }
   }
   max-e
@@ -697,13 +740,13 @@
 // multi-line overflow across its columns. `label-of(i)` returns the i-th cell's
 // label; `count` bounds the populated cells. Shared by the swatch grid and the
 // grid size-ladder.
-#let _grid-row-overflows(count, label-of, shape, byrow, line-h, size-pt) = {
+#let _grid-row-overflows(count, label-of, shape, byrow, line-h, style) = {
   let overflows = range(shape.rows).map(row => {
     let max-e = 0.0
     for col in range(shape.cols) {
       let i = _swatch-index(row, col, shape, byrow)
       if i >= count { continue }
-      let e = _label-overflow(label-of(i), line-h, size-pt)
+      let e = _label-overflow(label-of(i), line-h, style)
       if e > max-e { max-e = e }
     }
     max-e
@@ -711,13 +754,13 @@
   _stack-offsets(overflows)
 }
 
-#let _swatch-rows(guide, shape, byrow, size-pt) = _grid-row-overflows(
+#let _swatch-rows(guide, shape, byrow, style) = _grid-row-overflows(
   guide.levels.len(),
   i => _swatch-label(guide, i),
   shape,
   byrow,
-  _swatch-stride-cm(guide.key-diam-cm, size-pt),
-  size-pt,
+  _swatch-stride-cm(guide.key-diam-cm, style.size / 1pt),
+  style,
 )
 
 #let _LADDER-H-COL-H = 0.32
@@ -773,61 +816,62 @@
 // Vertical stride (cm) between rows of a horizontal size-ladder grid: the glyph
 // band, the label row, and any multi-line label overflow. Uniform across rows
 // so a wrapped horizontal legend keeps even rows.
-#let _ladder-h-row-stride(guide, size-pt) = (
+#let _ladder-h-row-stride(guide, style) = (
   _ladder-h-band(guide)
     + _LADDER-H-LABEL-H
-    + _breaks-overflow(guide, guide.breaks, size-pt)
+    + _breaks-overflow(guide, guide.breaks, style)
 )
 
 // Per-row stacking offsets for a vertical size-ladder grid (the break analogue
 // of `_swatch-rows`).
-#let _ladder-rows(guide, shape, byrow, line-h, size-pt) = _grid-row-overflows(
+#let _ladder-rows(guide, shape, byrow, line-h, style) = _grid-row-overflows(
   guide.breaks.len(),
   i => _break-label(guide, guide.breaks.at(i), i),
   shape,
   byrow,
   line-h,
-  size-pt,
+  style,
 )
 
 // Per-guide width estimate. Stored on each guide so `estimate-width` is
-// O(1). `size-pt` is the legend-text font size, which the entry labels are
-// measured against; `title-pt` is the legend-title size the title uses.
-#let _guide-width(g, size-pt, title-pt) = {
+// O(1). `style` is the legend-text surface the entry labels are measured on;
+// `title-style` is the legend-title surface the title uses.
+#let _guide-width(g, style, title-style) = {
+  let size-pt = style.size / 1pt
   if g.kind == "swatch" {
     let shape = _guide-shape(g, g.levels.len())
-    let layout = _swatch-layout(g, shape, g.placement.byrow, size-pt)
-    return calc.max(_title-width(g, title-pt), layout.total)
+    let layout = _swatch-layout(g, shape, g.placement.byrow, style)
+    return calc.max(_title-width(g, title-style), layout.total)
   }
   if g.kind == "size-ladder" {
-    let label-w = _max-break-label-width(g, g.breaks, size-pt)
+    let label-w = _max-break-label-width(g, g.breaks, style)
     let shape = _guide-shape(g, g.breaks.len())
     if g.placement.direction == "horizontal" {
       let col-w = _ladder-h-col-w(g, label-w, size-pt)
-      return calc.max(_title-width(g, title-pt), col-w * shape.cols)
+      return calc.max(_title-width(g, title-style), col-w * shape.cols)
     }
     let col-w = _ladder-lead-cm(size-pt) + label-w
     let grid-w = shape.cols * col-w + (shape.cols - 1) * _SWATCH-COL-GAP-MIN
-    return calc.max(_title-width(g, title-pt), grid-w)
+    return calc.max(_title-width(g, title-style), grid-w)
   }
   if g.kind == "colourbar" {
     let breaks = _colourbar-breaks(g)
-    let label-w = _max-break-label-width(g, breaks, size-pt)
+    let label-w = _max-break-label-width(g, breaks, style)
     if g.placement.direction == "horizontal" {
       return calc.max(
-        _title-width(g, title-pt),
+        _title-width(g, title-style),
         _COLOURBAR-H-W + label-w,
       )
     }
     return calc.max(
-      _title-width(g, title-pt),
+      _title-width(g, title-style),
       _COLOURBAR-V-W + _COLOURBAR-V-LABEL-GAP + label-w,
     )
   }
   // A custom guide draws its own title above the block, so the box has to
   // clear a title wider than the requested width.
   if g.kind == "custom" {
-    return calc.max(_title-width(g, title-pt), g.cm-width)
+    return calc.max(_title-width(g, title-style), g.cm-width)
   }
   fail("legend._guide-width", "unknown guide kind " + repr(g.kind))
 }
@@ -861,8 +905,9 @@
   (n-rows - 1) * line-h + diam + _glyph-bottom-slack(size-pt)
 )
 
-#let _swatch-height(guide, title-h, size-pt) = {
+#let _swatch-height(guide, title-h, style) = {
   let shape = _guide-shape(guide, guide.levels.len())
+  let size-pt = style.size / 1pt
   (
     _title-prefix(guide, title-h)
       + _row-stack-height(
@@ -871,15 +916,16 @@
         size-pt,
         guide.key-diam-cm,
       )
-      + _swatch-rows(guide, shape, guide.placement.byrow, size-pt).total
+      + _swatch-rows(guide, shape, guide.placement.byrow, style).total
   )
 }
 
-#let _size-ladder-height(guide, title-h, size-pt) = {
+#let _size-ladder-height(guide, title-h, style) = {
   let prefix = _title-prefix(guide, title-h)
   let shape = _guide-shape(guide, guide.breaks.len())
+  let size-pt = style.size / 1pt
   if guide.placement.direction == "horizontal" {
-    prefix + shape.rows * _ladder-h-row-stride(guide, size-pt)
+    prefix + shape.rows * _ladder-h-row-stride(guide, style)
   } else {
     let m = _ladder-vmetrics(guide, size-pt)
     let rows = _ladder-rows(
@@ -887,7 +933,7 @@
       shape,
       guide.placement.byrow,
       m.line-h,
-      size-pt,
+      style,
     )
     (
       prefix
@@ -899,7 +945,7 @@
   }
 }
 
-#let _colourbar-height(guide, title-h, size-pt) = {
+#let _colourbar-height(guide, title-h, style) = {
   let prefix = _title-prefix(guide, title-h)
   if guide.placement.direction == "horizontal" {
     let breaks = _colourbar-breaks(guide)
@@ -907,7 +953,7 @@
       prefix
         + _COLOURBAR-H-H
         + _COLOURBAR-H-LABEL-H
-        + _breaks-overflow(guide, breaks, size-pt)
+        + _breaks-overflow(guide, breaks, style)
     )
   } else {
     prefix + _COLOURBAR-V-H + _COLOURBAR-PAD-V
@@ -918,15 +964,15 @@
   _title-prefix(guide, title-h) + guide.cm-height + 0.2
 }
 
-// Total height (cm) of a guide box. `title-h` is the resolved `legend-title`
-// band from `_legend-title-h`, so the space reserved by the sizing pass is the
-// same space the draw consumes.
-#let _guide-render-height(g, title-h, size-pt) = {
-  if g.kind == "swatch" { return _swatch-height(g, title-h, size-pt) }
+// Total height (cm) of a guide box. `title-h` is the guide's resolved
+// `legend-title` band from `_legend-title-h`, so the space reserved by the
+// sizing pass is the same space the draw consumes.
+#let _guide-render-height(g, title-h, style) = {
+  if g.kind == "swatch" { return _swatch-height(g, title-h, style) }
   if g.kind == "size-ladder" {
-    return _size-ladder-height(g, title-h, size-pt)
+    return _size-ladder-height(g, title-h, style)
   }
-  if g.kind == "colourbar" { return _colourbar-height(g, title-h, size-pt) }
+  if g.kind == "colourbar" { return _colourbar-height(g, title-h, style) }
   if g.kind == "custom" { return _custom-height(g, title-h) }
   fail("legend._guide-render-height", "unknown guide kind " + repr(g.kind))
 }
@@ -934,16 +980,14 @@
 #let guides-for(
   spec,
   trained,
-  size-pt: 9,
   key-diam-cm: _GLYPH-DIAMETER-CM,
   theme: none,
 ) = {
   let overrides = spec.at("guides", default: (:))
-  // Resolved once: every stamped `height` reserves the same title band the
-  // draw lays out from, and every stamped `width` measures the title at the
-  // size it is drawn with.
-  let title-h = _legend-title-h(theme)
-  let title-pt = _legend-title-style(theme).size / 1pt
+  // Resolved once: every stamped `width` and `height` is measured on the same
+  // surfaces the draw paints with, so reserve tracks draw.
+  let text-style = _legend-text-style(theme)
+  let title-style = _legend-title-style(theme)
 
   let candidates = ()
   for aes-name in _aesthetic-order {
@@ -1063,8 +1107,11 @@
     }
     g.insert("placement", first.placement)
     g.insert("align", first.align)
-    g.insert("width", _guide-width(g, size-pt, title-pt))
-    g.insert("height", _guide-render-height(g, title-h, size-pt))
+    g.insert("width", _guide-width(g, text-style, title-style))
+    g.insert(
+      "height",
+      _guide-render-height(g, _legend-title-h(theme, g), text-style),
+    )
     guides.push(g)
   }
 
@@ -1087,8 +1134,11 @@
       title: g.title,
       placement: placement,
     )
-    custom.insert("width", _guide-width(custom, size-pt, title-pt))
-    custom.insert("height", _guide-render-height(custom, title-h, size-pt))
+    custom.insert("width", _guide-width(custom, text-style, title-style))
+    custom.insert(
+      "height",
+      _guide-render-height(custom, _legend-title-h(theme, custom), text-style),
+    )
     guides.push(custom)
   }
 
@@ -1246,7 +1296,7 @@
   )
 }
 
-#let _draw-swatch(guide, ctx, ox, cursor, theme, title-h) = {
+#let _draw-swatch(guide, ctx, ox, cursor, theme) = {
   let ink = resolve-colour(theme, "ink")
   let glyph-font = resolve-geom-defaults(theme).font
   let _legend-text = _text-style(theme, "legend-text")
@@ -1262,11 +1312,11 @@
   if guide.title != none {
     _draw-title(guide, ox, cursor, theme)
   }
-  let top = cursor - _title-prefix(guide, title-h)
+  let top = cursor - _title-prefix(guide, _legend-title-h(theme, guide))
   let byrow = guide.placement.byrow
   let shape = _guide-shape(guide, guide.levels.len())
-  let layout = _swatch-layout(guide, shape, byrow, size-pt)
-  let rows = _swatch-rows(guide, shape, byrow, size-pt)
+  let layout = _swatch-layout(guide, shape, byrow, _legend-text)
+  let rows = _swatch-rows(guide, shape, byrow, _legend-text)
   let key-kind = guide.at("key", default: "rect")
   let labels = guide.at("labels", default: auto)
   let align = _label-align(guide, _legend-text.align)
@@ -1323,7 +1373,7 @@
   }
 }
 
-#let _draw-size-ladder(guide, ctx, ox, cursor, theme, title-h) = {
+#let _draw-size-ladder(guide, ctx, ox, cursor, theme) = {
   let ink = resolve-colour(theme, "ink")
   let glyph-font = resolve-geom-defaults(theme).font
   let _legend-text = _text-style(theme, "legend-text")
@@ -1343,9 +1393,9 @@
   if guide.title != none {
     _draw-title(guide, ox, cursor, theme)
   }
-  let top = cursor - _title-prefix(guide, title-h)
+  let top = cursor - _title-prefix(guide, _legend-title-h(theme, guide))
 
-  let label-w = _max-break-label-width(guide, guide.breaks, size-pt)
+  let label-w = _max-break-label-width(guide, guide.breaks, _legend-text)
   let shape = _guide-shape(guide, guide.breaks.len())
   let byrow = guide.placement.byrow
   let break-text-of = (value, i) => resolve-prose(
@@ -1369,7 +1419,7 @@
     let band = _ladder-h-band(guide)
     let hoff = if grows { band / 2 } else { glyph-size }
     let col-w = _ladder-h-col-w(guide, label-w, size-pt)
-    let row-stride = _ladder-h-row-stride(guide, size-pt)
+    let row-stride = _ladder-h-row-stride(guide, _legend-text)
     // Centre / right-justify the glyph band under the title.
     let bx = (
       ox
@@ -1403,7 +1453,7 @@
     let m = _ladder-vmetrics(guide, size-pt)
     let line-h = m.line-h
     let off = m.off
-    let rows = _ladder-rows(guide, shape, byrow, line-h, size-pt)
+    let rows = _ladder-rows(guide, shape, byrow, line-h, _legend-text)
     let col-w = _ladder-lead-cm(size-pt) + label-w + _SWATCH-COL-GAP-MIN
     for (i, value) in guide.breaks.enumerate() {
       // Same row-stacking as the swatch: push each row down by the overflow
@@ -1452,7 +1502,7 @@
   pal
 }
 
-#let _draw-colourbar(guide, ctx, ox, cursor, theme, title-h) = {
+#let _draw-colourbar(guide, ctx, ox, cursor, theme) = {
   let horizontal = guide.placement.direction == "horizontal"
   let bar-w = if horizontal { _COLOURBAR-H-W } else { _COLOURBAR-V-W }
   let bar-h = if horizontal { _COLOURBAR-H-H } else { _COLOURBAR-V-H }
@@ -1475,7 +1525,7 @@
   if guide.title != none {
     _draw-title(guide, ox, cursor, theme)
   }
-  let bar-top = cursor - _title-prefix(guide, title-h)
+  let bar-top = cursor - _title-prefix(guide, _legend-title-h(theme, guide))
   let bar-bottom = bar-top - bar-h
   // Horizontal bars centre / right-justify under the title; vertical bars stay
   // at the left edge with their labels to the right.
@@ -1576,7 +1626,7 @@
   let labels = guide.at("labels", default: auto)
   let typst-mark = guide.at("typst-mark", default: false)
   let align = _label-align(guide, _legend-text.align)
-  let label-w = _max-break-label-width(guide, breaks, size-pt)
+  let label-w = _max-break-label-width(guide, breaks, _legend-text)
   for (i, b) in breaks.enumerate() {
     if hi == lo { continue }
     let t = (b - lo) / (hi - lo)
@@ -1626,12 +1676,14 @@
   }
 }
 
-#let _draw-custom(guide, ox, cursor, theme, title-h) = {
+#let _draw-custom(guide, ox, cursor, theme) = {
   let has-title = guide.title != none
   if has-title {
     _draw-title(guide, ox, cursor, theme)
   }
-  let top = cursor - if has-title { title-h } else { 0.0 }
+  let top = cursor - if has-title { _legend-title-h(theme, guide) } else {
+    0.0
+  }
   cetz.draw.content(
     (ox, top),
     box(
@@ -1643,15 +1695,15 @@
   )
 }
 
-#let _draw-guide-body(g, ctx, ox, cursor, theme, title-h) = {
+#let _draw-guide-body(g, ctx, ox, cursor, theme) = {
   if g.kind == "swatch" {
-    _draw-swatch(g, ctx, ox, cursor, theme, title-h)
+    _draw-swatch(g, ctx, ox, cursor, theme)
   } else if g.kind == "size-ladder" {
-    _draw-size-ladder(g, ctx, ox, cursor, theme, title-h)
+    _draw-size-ladder(g, ctx, ox, cursor, theme)
   } else if g.kind == "colourbar" {
-    _draw-colourbar(g, ctx, ox, cursor, theme, title-h)
+    _draw-colourbar(g, ctx, ox, cursor, theme)
   } else if g.kind == "custom" {
-    _draw-custom(g, ox, cursor, theme, title-h)
+    _draw-custom(g, ox, cursor, theme)
   } else {
     fail("legend.draw", "unknown guide kind " + repr(g.kind))
   }
@@ -1674,11 +1726,10 @@
 // background) and the renderer's fit check so the two never disagree.
 #let side-stacked-height(side, side-guides, ctx, theme, legend-gap) = {
   if side-guides.len() == 0 { return 0.0 }
-  let title-h = _legend-title-h(theme)
-  let size-pt = _text-style(theme, "legend-text").size / 1pt
+  let text-style = _legend-text-style(theme)
   let total = 0.0
   for g in side-guides {
-    total += _guide-render-height(g, title-h, size-pt)
+    total += _guide-render-height(g, _legend-title-h(theme, g), text-style)
   }
   (
     total
@@ -1703,13 +1754,12 @@
       h: side-stacked-height(side, side-guides, ctx, theme, legend-gap),
     )
   }
-  let title-h = _legend-title-h(theme)
-  let size-pt = _text-style(theme, "legend-text").size / 1pt
+  let text-style = _legend-text-style(theme)
   let w = 0.0
   let h = 0.0
   for g in side-guides {
     w += g.at("width", default: 0.0)
-    let gh = _guide-render-height(g, title-h, size-pt)
+    let gh = _guide-render-height(g, _legend-title-h(theme, g), text-style)
     if gh > h { h = gh }
   }
   if side-guides.len() > 1 {
@@ -1827,9 +1877,7 @@
   theme,
 ) = {
   if side-guides.len() == 0 { return }
-  let title-h = _legend-title-h(theme)
   let _legend-text = _text-style(theme, "legend-text")
-  let size-pt = _legend-text.size / 1pt
   // Panel-to-legend gap plus the `legend-background.outset` on the panel-facing
   // side, so users can dial the spacing from the theme. The same value separates
   // the panel from the legend and stacks the guides within it.
@@ -1869,8 +1917,11 @@
 
     let cursor = cursor-top
     for g in side-guides {
-      _draw-guide-body(g, ctx, ox, cursor, theme, title-h)
-      cursor -= _guide-render-height(g, title-h, size-pt) + stack-gap
+      _draw-guide-body(g, ctx, ox, cursor, theme)
+      cursor -= (
+        _guide-render-height(g, _legend-title-h(theme, g), _legend-text)
+          + stack-gap
+      )
     }
   } else {
     let anchor-y = if side == "top" {
@@ -1892,7 +1943,7 @@
       cursor-y,
     )
     for g in side-guides {
-      _draw-guide-body(g, ctx, cursor-x, cursor-y, theme, title-h)
+      _draw-guide-body(g, ctx, cursor-x, cursor-y, theme)
       cursor-x += g.width + stack-gap
     }
   }
@@ -1934,7 +1985,6 @@
 }
 
 #let _draw-inside(g, ctx, panel-rect, theme) = {
-  let title-h = _legend-title-h(theme)
   let align = g.placement.align
   let h-align = if align == none { left } else {
     let a = align.x
@@ -1958,7 +2008,7 @@
   let oy-top = anchor.top - _resolve-offset(g.placement.dy, panel-rect.h)
 
   _paint-bg(bg, ox, oy-top - g.height, ox + g.width, oy-top)
-  _draw-guide-body(g, ctx, ox, oy-top, theme, title-h)
+  _draw-guide-body(g, ctx, ox, oy-top, theme)
 }
 
 #let draw(

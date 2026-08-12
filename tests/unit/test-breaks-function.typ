@@ -163,6 +163,10 @@
   mapping: heat-spec.mapping,
   data: heat-spec.data,
 )
-#let bar = guides-for(heat-spec, heat-trained).at(0)
-#assert.eq(bar.kind, "colourbar")
-#assert.eq(bar.breaks, (0, 25, 50, 75, 100))
+// `guides-for` measures its labels, so the call and its assertions share a
+// `context` block.
+#context {
+  let bar = guides-for(heat-spec, heat-trained).at(0)
+  assert.eq(bar.kind, "colourbar")
+  assert.eq(bar.breaks, (0, 25, 50, 75, 100))
+}
