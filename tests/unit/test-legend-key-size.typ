@@ -28,22 +28,31 @@
   guides: g,
 )
 
+// `guides-for` measures its labels, so every call sits inside a `context`
+// block with the assertions that read it.
+
 // Default: the guide takes the themed base diameter (0.24cm fallback).
-#let g-default = guides-for(spec((:)), trained)
-#assert.eq(g-default.at(0).kind, "swatch")
-#assert.eq(g-default.at(0).key-diam-cm, 0.24)
+#context {
+  let g-default = guides-for(spec((:)), trained)
+  assert.eq(g-default.at(0).kind, "swatch")
+  assert.eq(g-default.at(0).key-diam-cm, 0.24)
+}
 
 // A themed base (passed as `key-diam-cm`) flows through when `key-size` is unset.
-#let g-theme = guides-for(spec((:)), trained, key-diam-cm: 0.4)
-#assert.eq(g-theme.at(0).key-diam-cm, 0.4)
+#context {
+  let g-theme = guides-for(spec((:)), trained, key-diam-cm: 0.4)
+  assert.eq(g-theme.at(0).key-diam-cm, 0.4)
+}
 
 // A per-legend `key-size` wins over the themed base.
-#let g-key = guides-for(
-  spec((colour: guide-legend(key-size: 0.5cm))),
-  trained,
-  key-diam-cm: 0.4,
-)
-#assert.eq(g-key.at(0).key-diam-cm, 0.5)
+#context {
+  let g-key = guides-for(
+    spec((colour: guide-legend(key-size: 0.5cm))),
+    trained,
+    key-diam-cm: 0.4,
+  )
+  assert.eq(g-key.at(0).key-diam-cm, 0.5)
+}
 
 // Reserve tracks draw: a wider glyph widens the lead and the row stack.
 #assert(_swatch-lead-cm(0.5, 9) > _swatch-lead-cm(0.24, 9))
@@ -73,12 +82,14 @@
 #let ladder-trained = (
   size: (type: "continuous", domain: (1.0, 5.0), spec: (range: (2pt, 4pt))),
 )
-#let ladder = guides-for(
-  ladder-spec((size: guide-legend(key-size: 0.5cm))),
-  ladder-trained,
-)
-#let ladder-plain = guides-for(ladder-spec((:)), ladder-trained)
-#assert.eq(ladder.at(0).kind, "size-ladder")
-#assert.eq(ladder.at(0).key-diam-cm, ladder-plain.at(0).key-diam-cm)
+#context {
+  let ladder = guides-for(
+    ladder-spec((size: guide-legend(key-size: 0.5cm))),
+    ladder-trained,
+  )
+  let ladder-plain = guides-for(ladder-spec((:)), ladder-trained)
+  assert.eq(ladder.at(0).kind, "size-ladder")
+  assert.eq(ladder.at(0).key-diam-cm, ladder-plain.at(0).key-diam-cm)
+}
 
 #text("Legend key-size tests passed.")

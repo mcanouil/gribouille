@@ -193,17 +193,15 @@
     )
   }
 
-  // Legend-text font size drives every label-width / line-height
-  // measurement done inside `guides-for`.
-  let _legend-size-pt = _text-style(theme, "legend-text").size / 1pt
   // Base swatch key glyph diameter, overridable per legend by `key-size`.
   let _legend-key-cm = theme.at("legend-key", default: 0.24cm) / 1cm
-  // Custom guides lack `aesthetics`; default keeps them unsuppressed.
+  // Custom guides lack `aesthetics`; default keeps them unsuppressed. The
+  // `legend-text` and `legend-title` surfaces `guides-for` measures against
+  // are resolved from the theme it is handed.
   let guides = legend-mod
     .guides-for(
       spec,
       trained,
-      size-pt: _legend-size-pt,
       key-diam-cm: _legend-key-cm,
       theme: theme,
     )

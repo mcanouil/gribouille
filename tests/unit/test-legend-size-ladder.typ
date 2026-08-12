@@ -3,7 +3,7 @@
 
 #import "../../src/render/legend.typ": (
   _GLYPH-DIAMETER-CM, _guide-shape, _ladder-key-diam-cm, _ladder-vmetrics,
-  _size-ladder-height,
+  _legend-text-style, _size-ladder-height,
 )
 
 // A size-ladder's grid shape uses its break count under nrow/ncolumn.
@@ -80,14 +80,20 @@
 )
 
 // A two-column vertical ladder reserves less height than the single column it
-// wraps from; a two-row horizontal ladder reserves more than one row.
-#assert(
-  _size-ladder-height(_ladder("vertical", (1, 2, 3, 4), ncolumn: 2), 0, 9)
-    < _size-ladder-height(_ladder("vertical", (1, 2, 3, 4)), 0, 9),
-)
-#assert(
-  _size-ladder-height(_ladder("horizontal", (1, 2, 3, 4), nrow: 2), 0, 9)
-    > _size-ladder-height(_ladder("horizontal", (1, 2, 3, 4)), 0, 9),
-)
+// wraps from; a two-row horizontal ladder reserves more than one row. The
+// height measures its break labels on the `legend-text` surface, so the calls
+// run inside a `context` block.
+#context {
+  let style = _legend-text-style(none)
+  let height-of(guide) = _size-ladder-height(guide, 0, style)
+  assert(
+    height-of(_ladder("vertical", (1, 2, 3, 4), ncolumn: 2))
+      < height-of(_ladder("vertical", (1, 2, 3, 4))),
+  )
+  assert(
+    height-of(_ladder("horizontal", (1, 2, 3, 4), nrow: 2))
+      > height-of(_ladder("horizontal", (1, 2, 3, 4))),
+  )
+}
 
 Size-ladder sizing tests passed.

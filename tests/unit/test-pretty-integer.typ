@@ -97,6 +97,8 @@
   params: (colour: auto, fill: auto, shape: auto),
 )
 
+// `guides-for` measures its labels, so the helper and every assertion reading
+// it run inside a `context` block.
 #let guide-breaks(aesthetic, trained-entry) = {
   let g = guides-for(
     (
@@ -110,7 +112,7 @@
 }
 
 // A colourbar over whole-numbered data ticks whole values.
-#assert.eq(
+#context assert.eq(
   guide-breaks(
     "fill",
     (type: "continuous", domain: (1, 4), spec: (:), integer: true),
@@ -121,14 +123,14 @@
 // The size ladder shares the rule; fractional data keeps the fine ticks.
 // Over 1 to 4 the automatic search lands on whole ticks either way, so the
 // contrast needs a range narrow enough that splitting the unit wins.
-#assert.eq(
+#context assert.eq(
   guide-breaks(
     "size",
     (type: "continuous", domain: (1, 2), spec: (:), integer: true),
   ),
   (1.0, 2.0),
 )
-#assert(
+#context assert(
   guide-breaks(
     "size",
     (type: "continuous", domain: (1, 2), spec: (:)),

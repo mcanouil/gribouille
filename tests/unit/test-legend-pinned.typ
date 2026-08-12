@@ -36,19 +36,23 @@
 // and title; the two candidate guides merge into a single swatch carrying
 // both aesthetics. Key kind is `point` (highest geom priority among the
 // contributors).
-#let g1 = guides-for(mk-spec((layer-point(),)), trained)
-#assert.eq(g1.len(), 1)
-#assert.eq(g1.at(0).aesthetics, ("colour", "fill"))
-#assert.eq(g1.at(0).key, "point")
+#context {
+  let g1 = guides-for(mk-spec((layer-point(),)), trained)
+  assert.eq(g1.len(), 1)
+  assert.eq(g1.at(0).aesthetics, ("colour", "fill"))
+  assert.eq(g1.at(0).key, "point")
+}
 
 // 2. Single layer pins `colour`: only the fill candidate is built, so the
 // merged group has just one member.
-#let g2 = guides-for(
-  mk-spec((layer-point(colour: rgb("#ffffff")),)),
-  trained,
-)
-#assert.eq(g2.len(), 1)
-#assert.eq(g2.at(0).aesthetics, ("fill",))
+#context {
+  let g2 = guides-for(
+    mk-spec((layer-point(colour: rgb("#ffffff")),)),
+    trained,
+  )
+  assert.eq(g2.len(), 1)
+  assert.eq(g2.at(0).aesthetics, ("fill",))
+}
 
 // 3. Mixed pinned/unpinned: pinned point + unpinned line. The colour
 // candidate's only contributor is the line layer; the fill candidate's
@@ -56,20 +60,24 @@
 // merge predicate still holds (same column, domain, title) so the two
 // merge into one guide whose key kind is `point` (highest geom priority
 // across the union of contributors).
-#let g3 = guides-for(
-  mk-spec((layer-point(colour: rgb("#ffffff")), layer-line())),
-  trained,
-)
-#assert.eq(g3.len(), 1)
-#assert.eq(g3.at(0).aesthetics, ("colour", "fill"))
-#assert.eq(g3.at(0).key, "point")
+#context {
+  let g3 = guides-for(
+    mk-spec((layer-point(colour: rgb("#ffffff")), layer-line())),
+    trained,
+  )
+  assert.eq(g3.len(), 1)
+  assert.eq(g3.at(0).aesthetics, ("colour", "fill"))
+  assert.eq(g3.at(0).key, "point")
+}
 
 // 4. Both colour and fill pinned on the only layer: both candidates rejected,
 // no guide.
-#let g4 = guides-for(
-  mk-spec((layer-point(colour: rgb("#000000"), fill: rgb("#ffffff")),)),
-  trained,
-)
-#assert.eq(g4.len(), 0)
+#context {
+  let g4 = guides-for(
+    mk-spec((layer-point(colour: rgb("#000000"), fill: rgb("#ffffff")),)),
+    trained,
+  )
+  assert.eq(g4.len(), 0)
+}
 
 Pinned-layer legend tests passed.

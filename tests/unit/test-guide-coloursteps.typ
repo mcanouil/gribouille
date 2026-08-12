@@ -20,20 +20,23 @@
   ),
 )
 
-#let g = guides-for(
-  (
-    mapping: (fill: "z"),
-    layers: (layer-point(),),
-    guides: (:),
-  ),
-  trained-stepped,
-)
-
-#assert.eq(g.len(), 1)
-#assert.eq(g.at(0).kind, "colourbar")
-#assert.eq(g.at(0).binned, true)
-#assert.eq(g.at(0).n-breaks, 5)
-#assert.eq(g.at(0).breaks, (0, 5, 10, 15, 20, 25))
+// `guides-for` measures its labels, so each call sits inside a `context`
+// block along with the assertions reading its result.
+#context {
+  let g = guides-for(
+    (
+      mapping: (fill: "z"),
+      layers: (layer-point(),),
+      guides: (:),
+    ),
+    trained-stepped,
+  )
+  assert.eq(g.len(), 1)
+  assert.eq(g.at(0).kind, "colourbar")
+  assert.eq(g.at(0).binned, true)
+  assert.eq(g.at(0).n-breaks, 5)
+  assert.eq(g.at(0).breaks, (0, 5, 10, 15, 20, 25))
+}
 
 // Smooth scale: binned defaults to false, breaks fall back to pretty().
 #let trained-smooth = (
@@ -43,10 +46,12 @@
     spec: (binned: false),
   ),
 )
-#let g2 = guides-for(
-  (mapping: (fill: "z"), layers: (layer-point(),), guides: (:)),
-  trained-smooth,
-)
-#assert.eq(g2.at(0).binned, false)
+#context {
+  let g2 = guides-for(
+    (mapping: (fill: "z"), layers: (layer-point(),), guides: (:)),
+    trained-smooth,
+  )
+  assert.eq(g2.at(0).binned, false)
+}
 
 Guide-coloursteps tests passed.
