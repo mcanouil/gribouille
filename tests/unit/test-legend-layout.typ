@@ -4,8 +4,8 @@
 // horizontal so a top/bottom legend lays out as a single line of entries.
 
 #import "../../src/render/legend.typ": (
-  _grid-shape, _guide-title, _swatch-index, _swatch-rc, _title-prefix,
-  guides-for,
+  _LABEL-SLACK-CM, _grid-shape, _guide-title, _legend-title-style,
+  _swatch-index, _swatch-rc, _title-prefix, _title-width, guides-for,
 )
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../lib.typ": element-text, guide-custom, theme
@@ -96,15 +96,17 @@
   )
   guides.at(0).height
 }
-#let _title-delta = _titled-height(16pt) - _titled-height(8pt)
-#assert(
-  calc.abs(_title-delta - 1.6 * 8 * (1pt / 1cm)) < 1e-9,
-  message: "title band delta was " + repr(_title-delta),
-)
+#context {
+  let delta = _titled-height(16pt) - _titled-height(8pt)
+  assert(
+    calc.abs(delta - 1.6 * 8 * (1pt / 1cm)) < 1e-9,
+    message: "title band delta was " + repr(delta),
+  )
+}
 
 // The reserved guide width tracks the same surface: a title wider than the key
-// column drives the box, so scaling `legend-title` from 8pt to 16pt widens it
-// by the title's own em scaling (`0.55em` per character).
+// column drives the box, and the title is measured, so doubling the
+// `legend-title` size doubles the ink it reserves past the layout slack.
 #let _wide = "a-legend-title-wider-than-its-keys"
 #let _wide-spec = (
   mapping: (colour: _wide),
@@ -119,32 +121,42 @@
   )
   guides.at(0).width
 }
-#let _width-delta = _titled-width(16pt) - _titled-width(8pt)
-#assert(
-  calc.abs(_width-delta - _wide.len() * 0.0353 * 0.55 * 8) < 1e-9,
-  message: "title width delta was " + repr(_width-delta),
-)
+#context {
+  let narrow = _titled-width(8pt)
+  let delta = _titled-width(16pt) - narrow
+  assert(
+    calc.abs(delta - (narrow - _LABEL-SLACK-CM)) < 1e-6,
+    message: "title width delta was "
+      + repr(delta)
+      + " against a 8pt width of "
+      + repr(narrow),
+  )
+}
 
 // A custom guide reserves room for the title it draws: a title wider than the
-// requested block width widens the box rather than overhanging it.
+// requested block width widens the box rather than overhanging it, at the
+// width the `legend-title` surface actually advances to.
 #let _custom-title = "Notes wider than the block"
-#let _custom-guides = guides-for(
-  (
-    mapping: (:),
-    layers: (),
-    guides: (notes: guide-custom([Block], width: 1cm, title: _custom-title)),
-  ),
-  (:),
-  theme: merge-theme(theme()),
-)
-#assert.eq(_custom-guides.len(), 1)
-#assert(
-  calc.abs(
-    _custom-guides.at(0).width
-      - (_custom-title.len() * 0.0353 * 8 * 0.55 + 0.05),
+#context {
+  let guides = guides-for(
+    (
+      mapping: (:),
+      layers: (),
+      guides: (notes: guide-custom([Block], width: 1cm, title: _custom-title)),
+    ),
+    (:),
+    theme: merge-theme(theme()),
   )
-    < 1e-9,
-  message: "custom guide width was " + repr(_custom-guides.at(0).width),
-)
+  assert.eq(guides.len(), 1)
+  let expected = _title-width(
+    (title: _custom-title),
+    _legend-title-style(merge-theme(theme())),
+  )
+  assert(expected > 1.0, message: "the title has to beat the 1cm block")
+  assert(
+    calc.abs(guides.at(0).width - expected) < 1e-9,
+    message: "custom guide width was " + repr(guides.at(0).width),
+  )
+}
 
 Legend-layout tests passed.
