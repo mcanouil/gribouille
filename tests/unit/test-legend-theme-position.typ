@@ -5,6 +5,7 @@
 
 #import "../../src/render/legend.typ": guides-for
 #import "../../src/theme/theme.typ": theme
+#import "../../src/theme/defaults.typ": merge-theme
 #import "../../src/guide/legend.typ": guide-legend
 
 #let layer-point() = (
@@ -29,7 +30,7 @@
 #let g1 = guides-for(
   spec((:)),
   trained,
-  theme: theme(legend-position: "bottom"),
+  theme: merge-theme(theme(legend-position: "bottom")),
 )
 #assert.eq(g1.len(), 2)
 #assert.eq(g1.at(0).placement.side, "bottom")
@@ -42,14 +43,14 @@
 #assert.eq(g2.at(0).placement.direction, "vertical")
 
 // 3. An empty theme (legend-position unset / `auto`) is a no-op.
-#let g3 = guides-for(spec((:)), trained, theme: theme())
+#let g3 = guides-for(spec((:)), trained, theme: merge-theme(theme()))
 #assert.eq(g3.at(0).placement.side, "right")
 
 // 4. guides(default:) overrides the theme value.
 #let g4 = guides-for(
   spec((default: guide-legend(position: "top"))),
   trained,
-  theme: theme(legend-position: "bottom"),
+  theme: merge-theme(theme(legend-position: "bottom")),
 )
 #assert.eq(g4.at(0).placement.side, "top")
 #assert.eq(g4.at(1).placement.side, "top")
@@ -59,7 +60,7 @@
 #let g5 = guides-for(
   spec((colour: guide-legend(position: "left"))),
   trained,
-  theme: theme(legend-position: "bottom"),
+  theme: merge-theme(theme(legend-position: "bottom")),
 )
 #let _by-aes = (:)
 #for g in g5 { _by-aes.insert(g.aesthetics.first(), g.placement.side) }

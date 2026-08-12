@@ -17,7 +17,7 @@
 #import "../utils/palette.typ": default-discrete, spec-attr, spec-palette
 #import "../utils/level-resolve.typ": resolve-level
 #import "../utils/errors.typ": fail, fail-type
-#import "../theme/defaults.typ": resolve-colour
+#import "../theme/defaults.typ": default-theme, resolve-colour
 #import "../theme/theme.typ": (
   _line-stroke, _rect-outset-cm, _rect-style, _text-args, _text-style,
   _zero-margin-cm, resolve-geom-defaults,
@@ -467,8 +467,8 @@
   m.width / 1cm + 0.05
 }
 
-// Resolve the label a guide actually draws, for measurement. `_guide-width` /
-// `_guide-height` are theme-less, so `eval-strings: false`; a `typst-mark`
+// Resolve the label a guide actually draws, for measurement. `_guide-width` is
+// theme-less, so `eval-strings: false`; a `typst-mark`
 // label is already converted to content by `resolve-label`. A plain string
 // label under a `legend-text` typst-eval theme is drawn as markup but measured
 // as a string, the one case where measurement can lag the drawn glyph.
@@ -807,11 +807,21 @@
   fail("legend._guide-width", "unknown guide kind " + repr(g.kind))
 }
 
-// Approximate title-h used only by `_guide-height` for margin sizing. The
-// renderer uses the exact value via `_legend-title-h`.
-#let _estimated-title-h(g, size-pt) = if g.title == none {
-  0.0
-} else { _font-cm(size-pt) * 1.8 }
+// Vertical gap between the legend title and the first guide entry, resolved
+// against the `legend-title` surface so em values track its font size. Pure
+// arithmetic, so both the sizing pass and the draw can call it. A theme-less
+// caller (unit tests) resolves against the merged defaults.
+#let _legend-title-h(theme) = {
+  let s = _text-style(
+    if theme == none { default-theme } else { theme },
+    "legend-title",
+  )
+  resolve-margin-side-cm(
+    s.margin.bottom,
+    1.6em,
+    size-pt: s.size / 1pt,
+  )
+}
 
 // A titleless guide (`labels(... : none)`) reserves no title height; otherwise
 // the resolved `title-h` applies.
@@ -899,15 +909,17 @@
   _title-prefix(guide, title-h) + guide.cm-height + 0.2
 }
 
-#let _guide-height(g, size-pt) = {
-  let title-h = _estimated-title-h(g, size-pt)
+// Total height (cm) of a guide box. `title-h` is the resolved `legend-title`
+// band from `_legend-title-h`, so the space reserved by the sizing pass is the
+// same space the draw consumes.
+#let _guide-render-height(g, title-h, size-pt) = {
   if g.kind == "swatch" { return _swatch-height(g, title-h, size-pt) }
   if g.kind == "size-ladder" {
     return _size-ladder-height(g, title-h, size-pt)
   }
   if g.kind == "colourbar" { return _colourbar-height(g, title-h, size-pt) }
   if g.kind == "custom" { return _custom-height(g, title-h) }
-  fail("legend._guide-height", "unknown guide kind " + repr(g.kind))
+  fail("legend._guide-render-height", "unknown guide kind " + repr(g.kind))
 }
 
 #let guides-for(
@@ -918,6 +930,9 @@
   theme: none,
 ) = {
   let overrides = spec.at("guides", default: (:))
+  // Resolved once: every stamped `height` reserves the same title band the
+  // draw lays out from.
+  let title-h = _legend-title-h(theme)
 
   let candidates = ()
   for aes-name in _aesthetic-order {
@@ -1038,7 +1053,7 @@
     g.insert("placement", first.placement)
     g.insert("align", first.align)
     g.insert("width", _guide-width(g, size-pt))
-    g.insert("height", _guide-height(g, size-pt))
+    g.insert("height", _guide-render-height(g, title-h, size-pt))
     guides.push(g)
   }
 
@@ -1062,7 +1077,7 @@
       placement: placement,
     )
     custom.insert("width", _guide-width(custom, size-pt))
-    custom.insert("height", _guide-height(custom, size-pt))
+    custom.insert("height", _guide-render-height(custom, title-h, size-pt))
     guides.push(custom)
   }
 
@@ -1117,17 +1132,6 @@
     }
   }
   extents
-}
-
-// Vertical gap between the legend title and the first guide entry, resolved
-// against the `legend-title` surface so em values track its font size.
-#let _legend-title-h(theme) = {
-  let s = _text-style(theme, "legend-title")
-  resolve-margin-side-cm(
-    s.margin.bottom,
-    1.6em,
-    size-pt: s.size / 1pt,
-  )
 }
 
 // Gap (cm) `render-plot` inserts between a plot panel and its side legend.
@@ -1640,19 +1644,6 @@
   } else {
     fail("legend.draw", "unknown guide kind " + repr(g.kind))
   }
-}
-
-// `_guide-render-height` is intentionally the same as `_guide-height` but
-// takes the resolved (renderer-measured) title-h so the rendered legend
-// uses real font metrics rather than the margin-sizing estimate.
-#let _guide-render-height(g, title-h, size-pt) = {
-  if g.kind == "swatch" { return _swatch-height(g, title-h, size-pt) }
-  if g.kind == "size-ladder" {
-    return _size-ladder-height(g, title-h, size-pt)
-  }
-  if g.kind == "colourbar" { return _colourbar-height(g, title-h, size-pt) }
-  if g.kind == "custom" { return _custom-height(g, title-h) }
-  fail("legend", "unknown guide kind " + repr(g.kind))
 }
 
 // Vertical gap between stacked guides on a side: the panel-to-legend gap plus
