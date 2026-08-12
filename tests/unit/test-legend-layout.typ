@@ -5,7 +5,10 @@
 
 #import "../../src/render/legend.typ": (
   _grid-shape, _guide-title, _swatch-index, _swatch-rc, _title-prefix,
+  guides-for,
 )
+#import "../../src/theme/defaults.typ": merge-theme
+#import "../../lib.typ": element-text, theme
 
 // Default vertical layout: single column.
 #let s-vert = _grid-shape(4, none, none, "vertical")
@@ -68,5 +71,35 @@
 )
 #assert.eq(_title-prefix((title: none), 0.5), 0.0)
 #assert.eq(_title-prefix((title: "X"), 0.5), 0.5)
+
+// The reserved guide height tracks the resolved `legend-title` surface: the
+// title band is `1.6em` of that surface, so scaling it from the default 8pt to
+// 16pt grows every titled guide by exactly `1.6 * 8pt` in cm.
+#let _title-spec = (
+  mapping: (colour: "g"),
+  layers: (
+    (
+      name: "point",
+      mapping: none,
+      inherit-aes: true,
+      params: (colour: auto, fill: auto, shape: auto),
+    ),
+  ),
+  guides: (:),
+)
+#let _title-trained = (colour: (type: "discrete", domain: ("a", "b")))
+#let _titled-height(title-pt) = {
+  let guides = guides-for(
+    _title-spec,
+    _title-trained,
+    theme: merge-theme(theme(legend-title: element-text(size: title-pt))),
+  )
+  guides.at(0).height
+}
+#let _title-delta = _titled-height(16pt) - _titled-height(8pt)
+#assert(
+  calc.abs(_title-delta - 1.6 * 8 * (1pt / 1cm)) < 1e-9,
+  message: "title band delta was " + repr(_title-delta),
+)
 
 Legend-layout tests passed.
