@@ -8,7 +8,7 @@
   guides-for,
 )
 #import "../../src/theme/defaults.typ": merge-theme
-#import "../../lib.typ": element-text, theme
+#import "../../lib.typ": element-text, guide-custom, theme
 
 // Default vertical layout: single column.
 #let s-vert = _grid-shape(4, none, none, "vertical")
@@ -100,6 +100,51 @@
 #assert(
   calc.abs(_title-delta - 1.6 * 8 * (1pt / 1cm)) < 1e-9,
   message: "title band delta was " + repr(_title-delta),
+)
+
+// The reserved guide width tracks the same surface: a title wider than the key
+// column drives the box, so scaling `legend-title` from 8pt to 16pt widens it
+// by the title's own em scaling (`0.55em` per character).
+#let _wide = "a-legend-title-wider-than-its-keys"
+#let _wide-spec = (
+  mapping: (colour: _wide),
+  layers: _title-spec.layers,
+  guides: (:),
+)
+#let _titled-width(title-pt) = {
+  let guides = guides-for(
+    _wide-spec,
+    _title-trained,
+    theme: merge-theme(theme(legend-title: element-text(size: title-pt))),
+  )
+  guides.at(0).width
+}
+#let _width-delta = _titled-width(16pt) - _titled-width(8pt)
+#assert(
+  calc.abs(_width-delta - _wide.len() * 0.0353 * 0.55 * 8) < 1e-9,
+  message: "title width delta was " + repr(_width-delta),
+)
+
+// A custom guide reserves room for the title it draws: a title wider than the
+// requested block width widens the box rather than overhanging it.
+#let _custom-title = "Notes wider than the block"
+#let _custom-guides = guides-for(
+  (
+    mapping: (:),
+    layers: (),
+    guides: (notes: guide-custom([Block], width: 1cm, title: _custom-title)),
+  ),
+  (:),
+  theme: merge-theme(theme()),
+)
+#assert.eq(_custom-guides.len(), 1)
+#assert(
+  calc.abs(
+    _custom-guides.at(0).width
+      - (_custom-title.len() * 0.0353 * 8 * 0.55 + 0.05),
+  )
+    < 1e-9,
+  message: "custom guide width was " + repr(_custom-guides.at(0).width),
 )
 
 Legend-layout tests passed.

@@ -499,9 +499,30 @@
   label-w
 }
 
-#let _title-width(g, size-pt) = _label-width(
+// The `legend-title` surface every title metric resolves against. A theme-less
+// caller (unit tests) falls back to the merged defaults.
+#let _legend-title-style(theme) = _text-style(
+  if theme == none { default-theme } else { theme },
+  "legend-title",
+)
+
+// Vertical gap between the legend title and the first guide entry, resolved
+// against the `legend-title` surface so em values track its font size. Pure
+// arithmetic, so both the sizing pass and the draw can call it.
+#let _legend-title-h(theme) = {
+  let s = _legend-title-style(theme)
+  resolve-margin-side-cm(
+    s.margin.bottom,
+    1.6em,
+    size-pt: s.size / 1pt,
+  )
+}
+
+// Title width in cm. `title-pt` is the `legend-title` font size, the surface
+// `_draw-title` paints with, not the `legend-text` size the entry labels use.
+#let _title-width(g, title-pt) = _label-width(
   g.at("title", default: none),
-  size-pt,
+  title-pt,
 )
 
 // Index of the level at (row, col). Column-major (`byrow: false`) numbers
@@ -770,57 +791,45 @@
 )
 
 // Per-guide width estimate. Stored on each guide so `estimate-width` is
-// O(1). `size-pt` is the legend-text font size; label widths are
-// measured against it.
-#let _guide-width(g, size-pt) = {
+// O(1). `size-pt` is the legend-text font size, which the entry labels are
+// measured against; `title-pt` is the legend-title size the title uses.
+#let _guide-width(g, size-pt, title-pt) = {
   if g.kind == "swatch" {
     let shape = _guide-shape(g, g.levels.len())
     let layout = _swatch-layout(g, shape, g.placement.byrow, size-pt)
-    return calc.max(_title-width(g, size-pt), layout.total)
+    return calc.max(_title-width(g, title-pt), layout.total)
   }
   if g.kind == "size-ladder" {
     let label-w = _max-break-label-width(g, g.breaks, size-pt)
     let shape = _guide-shape(g, g.breaks.len())
     if g.placement.direction == "horizontal" {
       let col-w = _ladder-h-col-w(g, label-w, size-pt)
-      return calc.max(_title-width(g, size-pt), col-w * shape.cols)
+      return calc.max(_title-width(g, title-pt), col-w * shape.cols)
     }
     let col-w = _ladder-lead-cm(size-pt) + label-w
     let grid-w = shape.cols * col-w + (shape.cols - 1) * _SWATCH-COL-GAP-MIN
-    return calc.max(_title-width(g, size-pt), grid-w)
+    return calc.max(_title-width(g, title-pt), grid-w)
   }
   if g.kind == "colourbar" {
     let breaks = _colourbar-breaks(g)
     let label-w = _max-break-label-width(g, breaks, size-pt)
     if g.placement.direction == "horizontal" {
       return calc.max(
-        _title-width(g, size-pt),
+        _title-width(g, title-pt),
         _COLOURBAR-H-W + label-w,
       )
     }
     return calc.max(
-      _title-width(g, size-pt),
+      _title-width(g, title-pt),
       _COLOURBAR-V-W + _COLOURBAR-V-LABEL-GAP + label-w,
     )
   }
-  if g.kind == "custom" { return g.cm-width }
+  // A custom guide draws its own title above the block, so the box has to
+  // clear a title wider than the requested width.
+  if g.kind == "custom" {
+    return calc.max(_title-width(g, title-pt), g.cm-width)
+  }
   fail("legend._guide-width", "unknown guide kind " + repr(g.kind))
-}
-
-// Vertical gap between the legend title and the first guide entry, resolved
-// against the `legend-title` surface so em values track its font size. Pure
-// arithmetic, so both the sizing pass and the draw can call it. A theme-less
-// caller (unit tests) resolves against the merged defaults.
-#let _legend-title-h(theme) = {
-  let s = _text-style(
-    if theme == none { default-theme } else { theme },
-    "legend-title",
-  )
-  resolve-margin-side-cm(
-    s.margin.bottom,
-    1.6em,
-    size-pt: s.size / 1pt,
-  )
 }
 
 // A titleless guide (`labels(... : none)`) reserves no title height; otherwise
@@ -931,8 +940,10 @@
 ) = {
   let overrides = spec.at("guides", default: (:))
   // Resolved once: every stamped `height` reserves the same title band the
-  // draw lays out from.
+  // draw lays out from, and every stamped `width` measures the title at the
+  // size it is drawn with.
   let title-h = _legend-title-h(theme)
+  let title-pt = _legend-title-style(theme).size / 1pt
 
   let candidates = ()
   for aes-name in _aesthetic-order {
@@ -1052,7 +1063,7 @@
     }
     g.insert("placement", first.placement)
     g.insert("align", first.align)
-    g.insert("width", _guide-width(g, size-pt))
+    g.insert("width", _guide-width(g, size-pt, title-pt))
     g.insert("height", _guide-render-height(g, title-h, size-pt))
     guides.push(g)
   }
@@ -1076,7 +1087,7 @@
       title: g.title,
       placement: placement,
     )
-    custom.insert("width", _guide-width(custom, size-pt))
+    custom.insert("width", _guide-width(custom, size-pt, title-pt))
     custom.insert("height", _guide-render-height(custom, title-h, size-pt))
     guides.push(custom)
   }
@@ -1138,7 +1149,7 @@
 // Exposed so `compose()` can match the same offset when the panel-margin
 // override leaves no intrinsic cetz padding (right-side default placement).
 #let legend-gap(theme) = {
-  let s = _text-style(theme, "legend-title")
+  let s = _legend-title-style(theme)
   resolve-margin-side-cm(s.margin.left, 1.6em, size-pt: s.size / 1pt)
 }
 
