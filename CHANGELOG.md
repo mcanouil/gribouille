@@ -23,6 +23,7 @@
 - fix: a faceted plot draws its secondary axis ticks and labels where they can be read. A facet cell now reserves the axis depth between the panel and its strip band, which used to be painted over the top row's secondary x labels under `facet-grid`, hiding them entirely, and printed through them under `facet-wrap`. The same applies to the secondary y against a `facet-grid` row strip. (#239)
 - docs: `sec-axis` and `dup-axis` say that a secondary axis degrades to a no-op under `coord-radial`, which has no opposite panel edge to draw one on, and the feature matrix lists it alongside `geom-rug` among the combinations that do not translate to polar. (#236)
 - docs: tighten prose and apply consistent British spelling across the README, contributor docs, docs site guides, and the AI-assistant skill. (ba666502)
+- docs: docs site footer links read as ink rather than the muted grey Quarto paints them, and pick up the site-wide hover colour. (#246)
 
 ## 0.6.0 (2026-07-28)
 
