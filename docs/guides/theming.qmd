@@ -209,6 +209,7 @@ Each takes a [`margin`](../reference/themes/margin.qmd) with any subset of `top`
 `inset` grows the painted rectangle outward to wrap its content; only `plot-background` and `legend-background` honour it.
 `outset` reserves outer whitespace.
 On `panel-background`, `legend-background`, and `legend-bar`, the reservation widens the surrounding cetz chrome slot and shrinks the panel canvas.
+A legend placed on a plot side widens that slot by its `inset` as well, so the painted backdrop stays inside the requested `width` and `height`.
 On `plot-background`, `outset` wraps the rendered block in `pad()`.
 `strip-background` ignores both fields: the facet band has no surrounding slot to grow or reserve into.
 Facet column and row gutters come from `panel-spacing`, which defaults to `0.5cm`.

@@ -415,7 +415,9 @@
 /// On `legend-background`, `inset` only grows a rect that actually paints
 /// (a fill or a stroke is set); an inside-panel guide additionally keeps
 /// its painted rect, plus any `outset`, within the panel rather than
-/// letting it overflow past an edge-flush alignment.
+/// letting it overflow past an edge-flush alignment. A guide on a plot
+/// side reserves that growth in its chrome slot, so the backdrop stays
+/// inside the requested `width` / `height` there too.
 ///
 /// Pass the result to \@theme under keys like `panel-background`.
 ///

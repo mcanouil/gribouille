@@ -10,6 +10,7 @@
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec
 #import "guides.typ": _axis-text-angle, _read-axis-guide
+#import "legend.typ": side-bg-edges
 #import "domain.typ": _is-flipped
 #import "../utils/errors.typ": fail
 #import "extents.typ": (
@@ -223,11 +224,14 @@
   // the chrome slot on each side; the panel canvas absorbs the diff.
   // `strip-background` is the facet decoration band itself, so its `inset`
   // and `outset` are ignored (no chrome reservation, no rect growth).
-  // For every legend on side S, all four `outset` sides feed chrome
-  // reservation: slot-axis sides (S and its opposite) inflate `margin.S`
-  // -- the opposite side (panel-facing) is also mirrored into
-  // `legend-gap` so the visible gap between panel and legend grows;
-  // perpendicular sides inflate the matching `margin.{perpendicular}`.
+  // For every legend on side S, all four sides of the `legend-background`
+  // edge -- the `inset` it paints outside the guide bbox plus the `outset`
+  // it reserves -- feed chrome reservation: slot-axis sides (S and its
+  // opposite) inflate `margin.S`, the opposite side (panel-facing) is also
+  // mirrored into `legend-gap` so the visible gap between panel and legend
+  // grows; perpendicular sides inflate the matching `margin.{perpendicular}`.
+  // `panel-background` and `legend-bar` ignore `inset`, so they reserve
+  // their `outset` alone.
   let any-bar = guides.any(g => g.kind == "colourbar")
   let panel-out = _rect-outset-cm(
     theme,
@@ -235,11 +239,11 @@
     ref-w: width-units,
     ref-h: height-units,
   )
-  let legend-out = _rect-outset-cm(
+  let legend-edges = side-bg-edges(
+    guides,
+    (canvas-w: width-units, canvas-h: height-units),
     theme,
-    "legend-background",
-    ref-w: width-units,
-    ref-h: height-units,
+    legend-gap,
   )
   let bar-out = if any-bar {
     _rect-outset-cm(
@@ -249,14 +253,18 @@
       ref-h: height-units,
     )
   } else { (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0) }
-  // For every active legend on side `leg-side`, the slot-axis outset
-  // sides (leg-side + its opposite) sum into `margin.{leg-side}`; the
+  // For every active legend on side `leg-side`, the slot-axis sides
+  // (leg-side + its opposite) sum into `margin.{leg-side}`; the
   // perpendicular sides feed `margin.{perpendicular}`. Fold once into a
-  // four-side dict so `_surface-out` is a flat read.
-  let _by-margin-side(out) = {
+  // four-side dict so `_surface-out` is a flat read. `claimed` reads the
+  // four-side dict a legend on `leg-side` claims: per side for the
+  // background (a `%` inset resolves against that side's own bbox), one
+  // shared dict for the colour bar.
+  let _by-margin-side(claimed) = {
     let acc = (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0)
     for leg-side in ("top", "right", "bottom", "left") {
       if extents.at(leg-side) <= 0 { continue }
+      let out = claimed(leg-side)
       acc.insert(
         leg-side,
         acc.at(leg-side)
@@ -269,8 +277,8 @@
     }
     acc
   }
-  let legend-by-side = _by-margin-side(legend-out)
-  let bar-by-side = _by-margin-side(bar-out)
+  let legend-by-side = _by-margin-side(leg-side => legend-edges.at(leg-side))
+  let bar-by-side = _by-margin-side(_ => bar-out)
   let _surface-out(side) = (
     panel-out.at(side) + legend-by-side.at(side) + bar-by-side.at(side)
   )

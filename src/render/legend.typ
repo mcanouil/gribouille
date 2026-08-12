@@ -1684,10 +1684,42 @@
   )
 }
 
+// Bounding box (cm) of the guides stacked on one side, repeating `_draw-side`'s
+// own arithmetic so the box the background is sized against is the box the draw
+// pass walks. A vertical side stacks heights under the widest guide; a
+// horizontal side lays widths out beside the tallest one.
+#let _side-content-box(side, side-guides, ctx, theme, legend-gap) = {
+  if side-guides.len() == 0 { return (w: 0.0, h: 0.0) }
+  if side == "right" or side == "left" {
+    let w = 0.0
+    for g in side-guides {
+      let gw = g.at("width", default: 0.0)
+      if gw > w { w = gw }
+    }
+    return (
+      w: w,
+      h: side-stacked-height(side, side-guides, ctx, theme, legend-gap),
+    )
+  }
+  let title-h = _legend-title-h(theme)
+  let size-pt = _text-style(theme, "legend-text").size / 1pt
+  let w = 0.0
+  let h = 0.0
+  for g in side-guides {
+    w += g.at("width", default: 0.0)
+    let gh = _guide-render-height(g, title-h, size-pt)
+    if gh > h { h = gh }
+  }
+  if side-guides.len() > 1 {
+    w += _side-stack-gap(side, ctx, theme, legend-gap) * (side-guides.len() - 1)
+  }
+  (w: w, h: h)
+}
+
 // Resolve the legend-background geometry for a guide-stack bbox of size
 // `w` by `h`, once, so both the painted rect and the space reserved for it
-// come from a single `_rect-style` call. `painted` mirrors the condition
-// `_draw-bg` used to gate drawing on; `pad` is the `inset` the painted rect
+// come from a single `_rect-style` call. `painted` gates the rect on it
+// having a fill or a stroke; `pad` is the `inset` the painted rect
 // grows outward by, zeroed when nothing paints (an absent rect has no
 // padding to give); `gap` is the `outset`, resolved whether or not the
 // rect paints, matching `_rect-outset-cm` in chrome.typ so `outset`
@@ -1722,6 +1754,48 @@
   left: bg.pad.left + bg.gap.left,
 )
 
+// Per-side cm the `legend-background` claims outside the guide bbox of each
+// plot side, keyed by side, `_zero-margin-cm` where no guide sits. Read by
+// `_chrome-margins` so the slot it reserves holds the whole painted rect, not
+// just the outset around it. Each side is measured against its own bbox, so a
+// `%` inset resolves against the stack it actually wraps.
+#let side-bg-edges(guides, ctx, theme, legend-gap) = {
+  let edges = (:)
+  for side in ("top", "right", "bottom", "left") {
+    let side-guides = guides.filter(g => g.placement.side == side)
+    if side-guides.len() == 0 {
+      edges.insert(side, _zero-margin-cm)
+      continue
+    }
+    let content-box = _side-content-box(
+      side,
+      side-guides,
+      ctx,
+      theme,
+      legend-gap,
+    )
+    edges.insert(
+      side,
+      _bg-edge-cm(_bg-metrics(theme, ctx, content-box.w, content-box.h)),
+    )
+  }
+  edges
+}
+
+// Cm the guide-stack origin moves along the slot axis so the painted rect lands
+// inside the slot `_chrome-margins` reserved rather than overflowing it.
+// `right` and `top` anchor off the panel and already carry the panel-facing
+// `outset` in their cursor (`_side-stack-gap`), so they owe only the `inset`;
+// `left` and `bottom` anchor off the canvas edge and owe the whole edge.
+#let _side-origin-shift(side, bg) = {
+  let edge = _bg-edge-cm(bg)
+  if side == "right" { (dx: bg.pad.left, dy: 0.0) } else if side == "left" {
+    (dx: edge.left, dy: 0.0)
+  } else if side == "top" { (dx: 0.0, dy: bg.pad.bottom) } else {
+    (dx: 0.0, dy: edge.bottom)
+  }
+}
+
 // Paint the legend-background rect resolved by `_bg-metrics`, grown
 // outward from the bbox corners `(x0, y0)`-`(x1, y1)` by `pad`. Stays
 // silent when nothing paints, so plots without a themed legend backdrop
@@ -1735,10 +1809,6 @@
     fill: bg.fill,
     stroke: bg.stroke,
   )
-}
-
-#let _draw-bg(theme, ctx, x0, y0, x1, y1) = {
-  _paint-bg(_bg-metrics(theme, ctx, x1 - x0, y1 - y0), x0, y0, x1, y1)
 }
 
 #let _draw-side(
@@ -1767,25 +1837,33 @@
   let py = panel-rect.y
   let pw = panel-rect.w
   let ph = panel-rect.h
+  // Size the background against the stack it wraps, then move the origin by
+  // what the rect paints outside that box, so it lands in the slot
+  // `_chrome-margins` reserved instead of growing the canvas past it.
+  let content-box = _side-content-box(side, side-guides, ctx, theme, legend-gap)
+  let bg = _bg-metrics(theme, ctx, content-box.w, content-box.h)
+  let shift = _side-origin-shift(side, bg)
 
   if side == "right" or side == "left" {
-    let ox = if side == "right" {
+    let anchor-x = if side == "right" {
       px + pw + sec-y-extent + right-strip + gap
     } else {
       px - margin.left + 0.05
     }
-    let total-h = side-stacked-height(side, side-guides, ctx, theme, legend-gap)
-    let max-w = 0.0
-    for g in side-guides {
-      if g.width > max-w { max-w = g.width }
-    }
+    let ox = anchor-x + shift.dx
     // Centre the stack vertically over the panel + col-strip chrome.
     // `top-strip` (facet-grid only) extends the chrome upward; wrap
     // folds the strip into `ph`, single plot leaves both at panel
     // height.
     let chrome-h = ph + top-strip
-    let cursor-top = py + (chrome-h + total-h) / 2
-    _draw-bg(theme, ctx, ox, cursor-top - total-h, ox + max-w, cursor-top)
+    let cursor-top = py + (chrome-h + content-box.h) / 2
+    _paint-bg(
+      bg,
+      ox,
+      cursor-top - content-box.h,
+      ox + content-box.w,
+      cursor-top,
+    )
 
     let cursor = cursor-top
     for g in side-guides {
@@ -1793,32 +1871,22 @@
       cursor -= _guide-render-height(g, title-h, size-pt) + stack-gap
     }
   } else {
-    let max-h = 0.0
-    let total-w = 0.0
-    for g in side-guides {
-      let h = _guide-render-height(g, title-h, size-pt)
-      if h > max-h { max-h = h }
-      total-w += g.width
-    }
-    if side-guides.len() > 1 {
-      total-w += stack-gap * (side-guides.len() - 1)
-    }
-    let cursor-y = if side == "top" {
-      py + ph + sec-x-extent + gap + max-h
+    let anchor-y = if side == "top" {
+      py + ph + sec-x-extent + gap
     } else {
-      py - margin.bottom + 0.4 + max-h
+      py - margin.bottom + 0.4
     }
+    let cursor-y = anchor-y + shift.dy + content-box.h
     // Centre the row of guides horizontally over the panel + row-strip
     // chrome. `right-strip` (facet-grid row facets) extends the chrome
     // rightward; otherwise it's zero and the legend centres over `pw`.
     let chrome-w = pw + right-strip
-    let cursor-x = px + (chrome-w - total-w) / 2
-    _draw-bg(
-      theme,
-      ctx,
+    let cursor-x = px + (chrome-w - content-box.w) / 2
+    _paint-bg(
+      bg,
       cursor-x,
-      cursor-y - max-h,
-      cursor-x + total-w,
+      cursor-y - content-box.h,
+      cursor-x + content-box.w,
       cursor-y,
     )
     for g in side-guides {
@@ -1945,34 +2013,15 @@
 // legend sits on.
 #let standalone-size(guides, side, theme, canvas-w, canvas-h) = {
   let ctx = (canvas-w: canvas-w, canvas-h: canvas-h)
-  let content-w = 0.0
-  let content-h = 0.0
-  if side == "right" or side == "left" {
-    for g in guides {
-      let w = g.at("width", default: 0.0)
-      if w > content-w { content-w = w }
-    }
-    content-h = side-stacked-height(side, guides, ctx, theme, 0.0)
-  } else {
-    let title-h = _legend-title-h(theme)
-    let size-pt = _text-style(theme, "legend-text").size / 1pt
-    for g in guides {
-      content-w += g.at("width", default: 0.0)
-      let h = _guide-render-height(g, title-h, size-pt)
-      if h > content-h { content-h = h }
-    }
-    if guides.len() > 1 {
-      content-w += _side-stack-gap(side, ctx, theme, 0.0) * (guides.len() - 1)
-    }
-  }
-  let bg = _bg-metrics(theme, ctx, content-w, content-h)
-  let edge = _bg-edge-cm(bg)
+  let content-box = _side-content-box(side, guides, ctx, theme, 0.0)
+  let edge = _bg-edge-cm(
+    _bg-metrics(theme, ctx, content-box.w, content-box.h),
+  )
   (
-    width: content-w + edge.left + edge.right,
-    height: content-h + edge.top + edge.bottom,
-    content-w: content-w,
-    content-h: content-h,
-    pad: bg.pad,
+    width: content-box.w + edge.left + edge.right,
+    height: content-box.h + edge.top + edge.bottom,
+    content-w: content-box.w,
+    content-h: content-box.h,
     edge: edge,
     canvas-w: canvas-w,
     canvas-h: canvas-h,
@@ -1984,14 +2033,11 @@
 // shared, hoisted legend outside any plot panel.
 //
 // `panel-rect` carries the *content* box, not the canvas: `_draw-side`'s
-// centring terms then cancel and the guide stack starts exactly at
-// `(panel-rect.x, panel-rect.y)`. That origin is offset so the whole
-// `legend-background` -- content grown by `pad`, then the reserved `gap` --
-// lands inside the canvas, which `clip: true` would otherwise cut:
-//   right → `_draw-side` already adds the panel-facing `gap.left` to its
-//            cursor, so the origin only owes `pad.left`.
-//   top   → likewise already adds `gap.bottom`, so the origin owes `pad.bottom`.
-//   left/bottom → no such term, so the origin owes the full `edge`.
+// centring terms then cancel and the guide stack starts at its origin. Along
+// the slot axis that origin is the canvas edge, since `_draw-side` offsets it
+// itself by the `legend-background` edge; across the slot it owes that edge
+// here, so the whole background -- content grown by `pad`, then the reserved
+// `gap` -- lands inside the canvas that `clip: true` would otherwise cut.
 // `margin.left: 0.05` cancels `_draw-side`'s own left-side nudge, and
 // `margin.bottom: 0.4` cancels its bottom offset.
 #let standalone(guides, trained, theme, side, size) = {
@@ -2004,8 +2050,8 @@
   )
   let vertical = side == "right" or side == "left"
   let panel-rect = (
-    x: if side == "right" { size.pad.left } else { size.edge.left },
-    y: if side == "top" { size.pad.bottom } else { size.edge.bottom },
+    x: if vertical { 0.0 } else { size.edge.left },
+    y: if vertical { size.edge.bottom } else { 0.0 },
     w: if vertical { 0.0 } else { size.content-w },
     h: if vertical { size.content-h } else { 0.0 },
   )
