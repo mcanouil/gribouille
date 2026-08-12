@@ -4,8 +4,9 @@
 // everything drawn, stretch the figure past the requested `width`/`height`.
 
 #import "../../lib.typ": *
-#import "../../src/render/extents.typ": _axis-label-extents
+#import "../../src/render/extents.typ": _axis-label-extents, _theta-label-bounds
 #import "../../src/utils/measure.typ": measure-labels-cm
+#import "../../src/utils/radial.typ": THETA-LABEL-PAD, radial-ctx
 
 // Rounding in the chrome arithmetic is sub-point; anything larger is overflow.
 #let SLACK = 0.5pt
@@ -263,5 +264,54 @@
   6cm,
   "faceted radial plot",
 )
+
+// The band is owed per angle, not everywhere: a label at 12 o'clock costs the
+// circle nothing at 3 o'clock, where nothing of it is drawn. `radial-ctx`
+// solves each label group against the two panel half-spans, so the widest
+// label only binds the direction it sits in.
+#context {
+  let panel = (px: (0.0, 6.0), py: (0.0, 5.0))
+  // Half-spans 3 by 2.5 cm; one wide label centred at the top of the sweep.
+  let top-label = ((theta: calc.pi / 2, hw: 1.2, hh: 0.16),)
+  let side-label = ((theta: 0.0, hw: 1.2, hh: 0.16),)
+  let r-of(bounds) = radial-ctx(
+    coord-radial(),
+    (type: "continuous", domain: (0, 1)),
+    (type: "continuous", domain: (0, 1)),
+    panel.px,
+    panel.py,
+    label-bounds: bounds,
+  ).r-max
+  // At the top only the vertical span binds: 2.5 - 0.16 - the pad.
+  let top = r-of(top-label)
+  assert(
+    calc.abs(top - (2.5 - 0.16 - THETA-LABEL-PAD)) < 1e-9,
+    message: "a label at 12 o'clock left r-max at " + repr(top),
+  )
+  // At 3 o'clock the same label binds horizontally instead, and costs more.
+  let side = r-of(side-label)
+  assert(
+    calc.abs(side - (3.0 - 1.2 - THETA-LABEL-PAD)) < 1e-9,
+    message: "a label at 3 o'clock left r-max at " + repr(side),
+  )
+  assert(
+    top > side,
+    message: "the top label should cost the circle less than the side one",
+  )
+}
+
+// The bounds fed to `radial-ctx` are half the label's rotated ink box, so a
+// turned label presents a different half-extent to each axis.
+#context {
+  let groups = ((theta: 0.0, width: 2.0, height: 0.4),)
+  let upright = _theta-label-bounds(groups, 0).first()
+  let turned = _theta-label-bounds(groups, 90).first()
+  assert.eq(upright.hw, 1.0)
+  assert.eq(upright.hh, 0.2)
+  assert(
+    calc.abs(turned.hw - 0.2) < 1e-9 and calc.abs(turned.hh - 1.0) < 1e-9,
+    message: "a quarter-turned label bounds to " + repr(turned),
+  )
+}
 
 Radial theta label fit tests passed.
