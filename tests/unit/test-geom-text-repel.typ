@@ -8,6 +8,7 @@
 #import "../../src/geom/label.typ": geom-label
 #import "../../src/geom/typst.typ": geom-typst
 #import "../../src/plot.typ": plot
+#import "../../src/utils/arrow.typ": arrow
 
 // Constructor wiring on each of the three geoms.
 #let t = geom-text(repel: true)
@@ -46,7 +47,7 @@
 #plot(
   data: d,
   mapping: aes(x: "x", y: "y", label: "lab"),
-  layers: (geom-label(repel: true, segment: true, arrow: true),),
+  layers: (geom-label(repel: true, segment: true, arrow: arrow()),),
   width: 10cm,
   height: 6cm,
 )

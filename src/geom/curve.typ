@@ -9,6 +9,7 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/errors.typ": fail-range
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/arrow.typ": assert-arrow, draw-arrow-heads
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/radial.typ": project-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -46,6 +47,8 @@
 /// \@param alpha Line opacity in `[0, 1]`.
 ///
 /// \@param linetype Dash keyword (e.g., `"solid"`, `"dashed"`). `auto` honours the linetype scale.
+///
+/// \@param arrow Arrowhead spec built with \@arrow, marking the direction of each curve. The head is tangent to the sampled bezier. `none` draws no head.
 ///
 /// \@param stat Statistical transform name. Usually `"identity"`.
 ///
@@ -106,7 +109,27 @@
 /// )
 /// ```
 ///
-/// \@see \@geom-segment, \@geom-line
+/// \@examples A connected scatter read in time order: an \@arrow head on each
+/// hop carries the direction whatever the hop is long enough to show.
+/// ```
+/// //| alt: "Four curved connectors chaining five points in time order, each ending in an arrowhead so the direction of travel is readable on the short hops as well as the long ones."
+/// #let stops = ((1, 1), (4, 3), (4.3, 3.2), (2, 4), (5, 1.5))
+/// #let d = range(0, stops.len() - 1).map(i => (
+///   x: stops.at(i).at(0), y: stops.at(i).at(1),
+///   xend: stops.at(i + 1).at(0), yend: stops.at(i + 1).at(1),
+/// ))
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y", xend: "xend", yend: "yend"),
+///   layers: (
+///     geom-curve(curvature: 0.2, stroke: 1pt, arrow: arrow(length: 7pt)),
+///   ),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@see \@geom-segment, \@geom-line, \@arrow
 #let geom-curve(
   mapping: none,
   data: none,
@@ -117,12 +140,14 @@
   colour: auto,
   alpha: auto,
   linetype: auto,
+  arrow: none,
   stat: "identity",
   position: "identity",
   key: auto,
   inherit-aes: true,
   ..args,
 ) = {
+  assert-arrow("geom-curve", arrow)
   if curvature < -1 or curvature > 1 {
     fail-range(
       "geom-curve",
@@ -146,6 +171,7 @@
       colour: colour,
       alpha: alpha,
       linetype: linetype,
+      arrow: arrow,
     )
       + split-aes-params("geom-curve", args),
     stat: stat,
@@ -204,6 +230,7 @@
   let curvature = layer.params.curvature
   let cos-angle = calc.cos(layer.params.angle)
   let n = layer.params.n
+  let arrow-spec = layer.params.at("arrow", default: none)
 
   for row in data {
     let x0 = row.at(x-col, default: none)
@@ -244,5 +271,6 @@
         dash: resolve-linetype(layer, mapping, ctx, row),
       ),
     )
+    draw-arrow-heads(pts, arrow-spec, final-colour, thickness)
   }
 }

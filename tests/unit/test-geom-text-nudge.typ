@@ -8,25 +8,25 @@
 #import "../../src/geom/label.typ": geom-label
 #import "../../src/geom/typst.typ": geom-typst
 #import "../../src/plot.typ": plot
+#import "../../src/utils/arrow.typ": arrow
 
 // Constructor wires the new params through to `layer.params` with the same
 // defaults across text/label/typst so users see a uniform surface.
-#let t = geom-text(segment: true, arrow: true)
+#let t = geom-text(segment: true, arrow: arrow())
 #assert.eq(t.params.segment, true)
-#assert.eq(t.params.arrow, true)
+#assert.eq(t.params.arrow, arrow())
 #assert.eq(t.params.segment-stroke, 0.4pt)
 #assert.eq(t.params.min-segment-length, 0.05)
-#assert.eq(t.params.arrow-length, 4pt)
 #assert.eq(t.params.box-padding, 0.05)
 
 #let l = geom-label(segment: true)
 #assert.eq(l.params.segment, true)
-#assert.eq(l.params.arrow, false)
+#assert.eq(l.params.arrow, none)
 #assert.eq(l.params.box-padding, 0.05)
 
-#let g = geom-typst(segment: true, arrow: true, arrow-length: 6pt)
+#let g = geom-typst(segment: true, arrow: arrow(length: 6pt))
 #assert.eq(g.params.segment, true)
-#assert.eq(g.params.arrow-length, 6pt)
+#assert.eq(g.params.arrow.length, 6pt)
 
 // Nudge may be pinned as a constant param, not only mapped via `aes()`. A
 // number is a data-unit offset, a length a canvas-unit offset.
@@ -65,7 +65,7 @@
     nudge-x: "nx",
     nudge-y: "ny",
   ),
-  layers: (geom-label(segment: true, arrow: true),),
+  layers: (geom-label(segment: true, arrow: arrow()),),
   width: 10cm,
   height: 6cm,
 )

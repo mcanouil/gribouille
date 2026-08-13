@@ -5,6 +5,7 @@
 ///! out-of-order timestamps, and any path where order is meaningful.
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/arrow.typ": assert-arrow
 #import "grouped-path.typ": draw-grouped-paths, rows-to-points
 
 /// Path layer connecting observations in row order, one path per group.
@@ -28,6 +29,8 @@
 /// \@param alpha Line opacity in `[0, 1]`.
 ///
 /// \@param linetype Dash keyword (e.g., `"solid"`, `"dashed"`). `auto` honours the linetype scale.
+///
+/// \@param arrow Arrowhead spec built with \@arrow, marking which way each group's path runs. The head sits at the end of the whole path, not at every join. `none` draws no head.
 ///
 /// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
 ///
@@ -78,22 +81,32 @@
   colour: auto,
   alpha: auto,
   linetype: auto,
+  arrow: none,
   key: auto,
   stat: "identity",
   position: "identity",
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "path",
-  mapping: mapping,
-  data: data,
-  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
-    + split-aes-params("geom-path", args),
-  key: key,
-  stat: stat,
-  position: position,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-arrow("geom-path", arrow)
+  make-layer(
+    "path",
+    mapping: mapping,
+    data: data,
+    params: (
+      stroke: stroke,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
+      arrow: arrow,
+    )
+      + split-aes-params("geom-path", args),
+    key: key,
+    stat: stat,
+    position: position,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let _build-pts(rows, layer, mapping, x-trained, ctx) = (
   rows-to-points(rows, layer, mapping, ctx)

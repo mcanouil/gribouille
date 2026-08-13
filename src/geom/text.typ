@@ -5,6 +5,7 @@
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/arrow.typ": assert-arrow
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "label-draw.typ": draw-segment, prepare-draw, row-centre
 #import "../utils/typst-markup.typ": eval-as-markup
@@ -50,9 +51,7 @@
 ///
 /// \@param min-segment-length Connectors shorter than this distance (canvas units, 1 = 1cm) are suppressed to avoid tiny stubs.
 ///
-/// \@param arrow Draw a small V-mark at the anchor end of the connector.
-///
-/// \@param arrow-length Arrow stroke length (a Typst length).
+/// \@param arrow Arrowhead spec built with \@arrow, drawn on the connector. `ends: "last"` (the default) marks the anchor end, `ends: "first"` the label end. `none` draws a plain connector.
 ///
 /// \@param box-padding Extra cm padding added around each measured label box when routing connectors and clipping to the label edge.
 ///
@@ -137,8 +136,7 @@
   segment-colour: auto,
   segment-stroke: 0.4pt,
   min-segment-length: 0.05,
-  arrow: false,
-  arrow-length: 4pt,
+  arrow: none,
   box-padding: 0.05,
   repel: false,
   point-padding: 0.05,
@@ -152,38 +150,40 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "text",
-  mapping: mapping,
-  data: data,
-  params: (
-    size: size,
-    colour: colour,
-    font: font,
-    alpha: alpha,
-    anchor: anchor,
-    angle: angle,
-    segment: segment,
-    segment-colour: segment-colour,
-    segment-stroke: segment-stroke,
-    min-segment-length: min-segment-length,
-    arrow: arrow,
-    arrow-length: arrow-length,
-    box-padding: box-padding,
-    repel: repel,
-    point-padding: point-padding,
-    max-iter: max-iter,
-    force-pull: force-pull,
-    force-push: force-push,
-    force-segment: force-segment,
-    seed: seed,
+) = {
+  assert-arrow("geom-text", arrow)
+  make-layer(
+    "text",
+    mapping: mapping,
+    data: data,
+    params: (
+      size: size,
+      colour: colour,
+      font: font,
+      alpha: alpha,
+      anchor: anchor,
+      angle: angle,
+      segment: segment,
+      segment-colour: segment-colour,
+      segment-stroke: segment-stroke,
+      min-segment-length: min-segment-length,
+      arrow: arrow,
+      box-padding: box-padding,
+      repel: repel,
+      point-padding: point-padding,
+      max-iter: max-iter,
+      force-pull: force-pull,
+      force-push: force-push,
+      force-segment: force-segment,
+      seed: seed,
+    )
+      + split-aes-params("geom-text", args),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-text", args),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
