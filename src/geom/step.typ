@@ -5,6 +5,7 @@
 ///! default) or vertical then horizontal (`direction: "vh"`).
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/arrow.typ": assert-arrow
 #import "../utils/errors.typ": fail-enum
 #import "../utils/stair.typ": stair
 #import "grouped-path.typ": draw-grouped-paths, rows-to-points, sort-rows-by-x
@@ -32,6 +33,8 @@
 /// \@param alpha Line opacity in `[0, 1]`.
 ///
 /// \@param linetype Dash keyword (e.g., `"solid"`, `"dashed"`). `auto` honours the linetype scale.
+///
+/// \@param arrow Arrowhead spec built with \@arrow, marking the direction of each group's staircase. The head sits at the end of the whole path, not at every tread. `none` draws no head.
 ///
 /// \@param stat Statistical transform name. Usually `"identity"`.
 ///
@@ -79,12 +82,14 @@
   colour: auto,
   alpha: auto,
   linetype: auto,
+  arrow: none,
   stat: "identity",
   position: "identity",
   key: auto,
   inherit-aes: true,
   ..args,
 ) = {
+  assert-arrow("geom-step", arrow)
   if direction != "hv" and direction != "vh" {
     fail-enum("geom-step", "direction", direction, ("hv", "vh"))
   }
@@ -98,6 +103,7 @@
       colour: colour,
       alpha: alpha,
       linetype: linetype,
+      arrow: arrow,
     )
       + split-aes-params("geom-step", args),
     stat: stat,

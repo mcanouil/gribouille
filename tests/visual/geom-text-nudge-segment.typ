@@ -2,7 +2,7 @@
 // Bottom layer overlays geom-label to confirm box-edge clipping. A deliberate
 // crowd in the middle exercises the L-bend router.
 
-#import "../../lib.typ": aes, geom-label, geom-point, geom-text, plot
+#import "../../lib.typ": aes, arrow, geom-label, geom-point, geom-text, plot
 
 #let d = (
   (x: 1, y: 1, lab: "alpha", nx: 0.5, ny: 0.6),
@@ -16,7 +16,7 @@
   mapping: aes(x: "x", y: "y", label: "lab", nudge-x: "nx", nudge-y: "ny"),
   layers: (
     geom-point(size: 3pt),
-    geom-text(segment: true, arrow: true),
+    geom-text(segment: true, arrow: arrow()),
   ),
   width: 10cm,
   height: 6cm,

@@ -3,7 +3,7 @@
 // label visually tied to its anchor point. Final connectors should not
 // cross any other label box (eyeball check vs. ggrepel).
 
-#import "../../lib.typ": aes, geom-label, geom-point, geom-text, plot
+#import "../../lib.typ": aes, arrow, geom-label, geom-point, geom-text, plot
 
 #let d = (
   (x: 1.0, y: 1.0, lab: "alpha"),
@@ -20,7 +20,7 @@
   mapping: aes(x: "x", y: "y", label: "lab"),
   layers: (
     geom-point(size: 3pt),
-    geom-text(repel: true, segment: true, arrow: true, seed: 1),
+    geom-text(repel: true, segment: true, arrow: arrow(), seed: 1),
   ),
   width: 10cm,
   height: 6cm,

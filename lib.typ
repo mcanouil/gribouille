@@ -117,6 +117,7 @@
 
 // Helpers.
 #import "src/plot.typ": get-alt-text
+#import "src/utils/arrow.typ": arrow
 #import "src/utils/format.typ": (
   format-comma, format-currency, format-lower, format-number, format-percent,
   format-scientific, format-title, format-upper, format-wrap,

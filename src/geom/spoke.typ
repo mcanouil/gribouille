@@ -7,6 +7,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/arrow.typ": assert-arrow, draw-arrow-heads
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point
@@ -39,6 +40,8 @@
 ///
 /// \@param linetype Dash keyword (e.g., `"solid"`, `"dashed"`). `auto` honours the linetype scale.
 ///
+/// \@param arrow Arrowhead spec built with \@arrow, marking the direction each spoke points in. `none` draws no head.
+///
 /// \@param stat Statistical transform name. Usually `"identity"`.
 ///
 /// \@param position Position adjustment name. Usually `"identity"`.
@@ -65,7 +68,28 @@
 /// )
 /// ```
 ///
-/// \@see \@geom-segment, \@geom-curve
+/// \@examples A vector field: an \@arrow head turns each spoke into the
+/// directed segment the geom is named for. The limits leave room past the
+/// tips, since a head at the panel edge is clipped with its line.
+/// ```
+/// //| alt: "Grid of nine short line spokes, each ending in an arrowhead, with directions rotating across the grid to form a vector field."
+/// #let d = range(0, 3).map(i => range(0, 3).map(j => (
+///   x: i, y: j, angle: (i + j) * calc.pi / 5, r: 0.6,
+/// ))).flatten()
+/// #plot(
+///   data: d,
+///   mapping: aes(x: "x", y: "y", angle: "angle", radius: "r"),
+///   layers: (geom-spoke(stroke: 1pt, arrow: arrow(length: 6pt)),),
+///   scales: scales(
+///     x: scale-continuous(limits: (-1, 3)),
+///     y: scale-continuous(limits: (-1, 3)),
+///   ),
+///   width: 8cm,
+///   height: 8cm,
+/// )
+/// ```
+///
+/// \@see \@geom-segment, \@geom-curve, \@arrow
 #let geom-spoke(
   mapping: none,
   data: none,
@@ -75,29 +99,34 @@
   colour: auto,
   alpha: auto,
   linetype: auto,
+  arrow: none,
   stat: "identity",
   position: "identity",
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "spoke",
-  mapping: mapping,
-  data: data,
-  params: (
-    angle: angle,
-    radius: radius,
-    stroke: stroke,
-    colour: colour,
-    alpha: alpha,
-    linetype: linetype,
+) = {
+  assert-arrow("geom-spoke", arrow)
+  make-layer(
+    "spoke",
+    mapping: mapping,
+    data: data,
+    params: (
+      angle: angle,
+      radius: radius,
+      stroke: stroke,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
+      arrow: arrow,
+    )
+      + split-aes-params("geom-spoke", args),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-spoke", args),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let _to-angle(v) = if type(v) == angle { v } else { v * 1rad }
 
@@ -135,6 +164,7 @@
   let sin-fb = calc.sin(angle-fallback)
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
+  let arrow-spec = layer.params.at("arrow", default: none)
 
   for row in data {
     let x0 = parse-number(row.at(x-col, default: none))
@@ -179,6 +209,12 @@
         thickness: thickness,
         dash: resolve-linetype(layer, mapping, ctx, row),
       ),
+    )
+    draw-arrow-heads(
+      ((cx0, cy0), (cx1, cy1)),
+      arrow-spec,
+      final-colour,
+      thickness,
     )
   }
 }

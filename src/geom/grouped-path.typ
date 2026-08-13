@@ -4,6 +4,7 @@
 
 #import "../deps.typ": cetz
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/arrow.typ": draw-arrow-heads
 #import "../utils/level-resolve.typ": discrete-index
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
@@ -57,6 +58,8 @@
   // resolve-channel("linewidth", ...) folds the auto/theme/per-geom-default
   // cascade for stroke thickness.
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
+  // One head per group, at the ends of the whole path rather than each join.
+  let arrow-spec = layer.params.at("arrow", default: none)
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     let rows = g.data
@@ -85,5 +88,6 @@
       ..pts,
       stroke: (paint: final-colour, thickness: thickness, dash: dash),
     )
+    draw-arrow-heads(pts, arrow-spec, final-colour, thickness)
   }
 }

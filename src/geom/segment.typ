@@ -3,6 +3,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/arrow.typ": assert-arrow, draw-arrow-heads
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/radial.typ": project-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -28,6 +29,8 @@
 /// \@param alpha Line opacity in `[0, 1]`.
 ///
 /// \@param linetype Dash keyword (e.g., `"solid"`, `"dashed"`). `auto` honours the linetype scale.
+///
+/// \@param arrow Arrowhead spec built with \@arrow, marking the direction of each segment. `none` draws no head.
 ///
 /// \@param stat Statistical transform name. Usually `"identity"`.
 ///
@@ -101,22 +104,32 @@
   colour: auto,
   alpha: auto,
   linetype: auto,
+  arrow: none,
   stat: "identity",
   position: "identity",
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "segment",
-  mapping: mapping,
-  data: data,
-  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
-    + split-aes-params("geom-segment", args),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-arrow("geom-segment", arrow)
+  make-layer(
+    "segment",
+    mapping: mapping,
+    data: data,
+    params: (
+      stroke: stroke,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
+      arrow: arrow,
+    )
+      + split-aes-params("geom-segment", args),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -134,6 +147,7 @@
   if x-trained == none or y-trained == none { return }
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
+  let arrow-spec = layer.params.at("arrow", default: none)
 
   for row in data {
     let x0 = row.at(x-col, default: none)
@@ -172,6 +186,12 @@
         thickness: thickness,
         dash: resolve-linetype(layer, mapping, ctx, row),
       ),
+    )
+    draw-arrow-heads(
+      ((cx0, cy0), (cx1, cy1)),
+      arrow-spec,
+      final-colour,
+      thickness,
     )
   }
 }
