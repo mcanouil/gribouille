@@ -30,8 +30,8 @@ extensions:
     widget:
       enabled: true
       extra-links:
-        - text: "Ideas / Feature Requests"
-          href: "/discussions/categories/ideas-feature-requests"
+        - text: "Ideas"
+          href: "/discussions/categories/ideas"
           icon: discussion
         - text: "Q&A"
           href: "/discussions/categories/q-a"
