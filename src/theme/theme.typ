@@ -10,7 +10,8 @@
 
 #import "elements.typ": element-geom
 #import "../utils/colour.typ": colour-mix
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail, fail-type
+#import "../utils/palette.typ": default-discrete
 #import "../utils/margin.typ": (
   resolve-margin-side-cm, resolve-margin-side-rel-cm,
 )
@@ -184,6 +185,33 @@
     }
   }
   g
+}
+
+/// Resolve the theme's default palette for discrete colour / fill scales.
+///
+/// `auto` (and a partial theme missing the key) yields the library default,
+/// Okabe-Ito. An array is used as-is and becomes the render context's fallback,
+/// which a scale's own `palette:` still overrides through \@spec-palette.
+/// A `none` theme means no theme at all, so it takes the library default too;
+/// the per-layer stat paths run themeless.
+///
+/// \@internal
+/// \@param theme Merged theme dictionary, or `none`.
+/// \@returns A non-empty array of colours.
+#let resolve-theme-palette(theme) = {
+  if theme == none { return default-discrete }
+  let p = theme.at("palette", default: auto)
+  if p == auto or p == none { return default-discrete }
+  if type(p) != array or p.len() == 0 {
+    fail-type(
+      "theme",
+      "palette",
+      p,
+      "a non-empty array of colours, or `auto` for the library default",
+      hint: "Pass e.g. theme(palette: (rgb(\"#e94c3d\"), rgb(\"#1f7a8c\"))).",
+    )
+  }
+  p
 }
 
 /// Resolve a text geom's font from its per-layer value and the theme default.

@@ -4,9 +4,8 @@
 
 #import "../deps.typ": cetz
 #import "../scale/train.typ": mapping-display-name, positional-aesthetics, train
-#import "../theme/theme.typ": _text-args, _tick-length
+#import "../theme/theme.typ": _text-args, _tick-length, resolve-theme-palette
 #import "../utils/typst-markup.typ": resolve-prose
-#import "../utils/palette.typ": default-discrete
 #import "../utils/gutter.typ": resolve-gutter
 #import "legend.typ" as legend-mod
 #import "common.typ": _per-side
@@ -171,7 +170,7 @@
   if ctx.guides.len() > 0 {
     let lctx = (
       trained: trained,
-      palette: default-discrete,
+      palette: resolve-theme-palette(theme),
       theme: theme,
       canvas-w: ctx.width-units,
       canvas-h: ctx.height-units,

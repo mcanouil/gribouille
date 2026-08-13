@@ -10,12 +10,13 @@
 #import "../theme/defaults.typ": resolve-colour
 #import "../theme/theme.typ": (
   _line-stroke, _rect-style, _text-args, _text-style, _tick-length,
+  resolve-theme-palette,
 )
 #import "../utils/radial.typ": radial-ctx, theta-axis-of
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "../utils/format.typ": format-break
-#import "../utils/palette.typ": default-discrete, spec-attr
+#import "../utils/palette.typ": spec-attr
 #import "../scale/secondary.typ" as secondary-mod
 #import "legend.typ" as legend-mod
 #import "common.typ": (
@@ -203,7 +204,7 @@
     trained: trained,
     px-range: px-range,
     py-range: py-range,
-    palette: default-discrete,
+    palette: resolve-theme-palette(theme),
     resolve-mapping: layer => _resolve-mapping-flipped(layer),
     resolve-data: layer => _resolve-data(layer, spec.data),
     resolve-colour: _make-resolve-colour(_ink),

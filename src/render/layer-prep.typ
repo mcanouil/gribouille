@@ -14,7 +14,7 @@
 #import "../utils/group.typ": (
   expose-shared-positional, group-aesthetics, group-cols, partition-by-group,
 )
-#import "../utils/palette.typ": default-discrete
+#import "../theme/theme.typ": resolve-theme-palette
 #import "../utils/typst-markup.typ": is-typst-markup, typst
 #import "../data.typ": _mapping-ref
 #import "common.typ": _resolve-data, _strip-mapping-refs, _typst-marks-of
@@ -181,7 +181,7 @@
   // (position, train, geom draw) only sees real column names.
   let after-ctx = (
     theme: theme,
-    palette: default-discrete,
+    palette: resolve-theme-palette(theme),
     stat-name: stat-name,
     stat-info: stat-info(stat-name),
   )

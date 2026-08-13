@@ -32,6 +32,12 @@
   paper: _tr-paper,
   accent: rgb("#3366FF"),
 
+  // Default palette for discrete colour / fill scales. `auto` uses the library
+  // default (Okabe-Ito). An array of colours becomes the fallback every
+  // discrete colour / fill scale draws from unless it declares its own
+  // `palette:`. Continuous scales are unaffected; they keep viridis.
+  palette: auto,
+
   // Inherited base records (cascade parents for descendant surfaces)
   text: element-text(size: 9pt, weight: "regular"),
   line: element-line(stroke: default-stroke-thickness),
