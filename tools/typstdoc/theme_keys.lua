@@ -62,7 +62,7 @@ local GROUP_ORDER = {
   { name = "legend", keys = { "legend-title", "legend-text", "legend-ticks", "legend-background", "legend-bar", "legend-key", "legend-position" } },
   { name = "strip", keys = { "strip-text", "strip-background" } },
   { name = "geom", keys = { "geom" } },
-  { name = "colours", keys = { "ink", "paper", "accent" } },
+  { name = "colours", keys = { "ink", "paper", "accent", "palette" } },
 }
 
 local function strip_line_comment(line)
@@ -202,6 +202,8 @@ local function type_for(key, parents, defaults)
   end
   -- Global legend placement: same value set as @guide-legend's `position`.
   if key == "legend-position" then return "side, alignment, or dict" end
+  -- Default palette for discrete colour / fill scales.
+  if key == "palette" then return "array of colours or `auto`" end
   return "—"
 end
 

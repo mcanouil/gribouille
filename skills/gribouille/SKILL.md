@@ -99,7 +99,7 @@ Arguments, defaults, and types still come from each symbol's `.llms.md` referenc
 - **Coord**: `coord-cartesian`, `coord-fixed`, `coord-flip`, `coord-radial`, `coord-transform`.
 - **Positions**: `position-stack`, `position-dodge`, `position-fill`, `position-identity`, `position-jitter`, `position-jitterdodge`, `position-beeswarm`, `position-nudge`.
 - **Facets**: `facet-wrap`, `facet-grid`, `label-both`, `label-context`, `label-value`, `label-wrap`, `labeller`.
-- **Themes**: `theme-grey`, `theme-minimal`, `theme-classic`, `theme-void`, `theme-bw`, `theme-linedraw`, `theme-light`, `theme-dark`, `theme`, `element-blank`, `element-geom`, `element-line`, `element-rect`, `element-text`, `element-tick`, `element-typst`, `margin`, `theme-sub-axis`, `theme-sub-axis-bottom`, `theme-sub-axis-left`, `theme-sub-axis-right`, `theme-sub-axis-top`, `theme-sub-axis-x`, `theme-sub-axis-y`, `theme-sub-legend`, `theme-sub-panel`, `theme-sub-plot`, `theme-sub-strip`, `theme-get`, `theme-set`.
+- **Themes**: `theme-grey`, `theme-minimal`, `theme-classic`, `theme-void`, `theme-bw`, `theme-linedraw`, `theme-light`, `theme-dark`, `theme-brand`, `theme`, `element-blank`, `element-geom`, `element-line`, `element-rect`, `element-text`, `element-tick`, `element-typst`, `margin`, `theme-sub-axis`, `theme-sub-axis-bottom`, `theme-sub-axis-left`, `theme-sub-axis-right`, `theme-sub-axis-top`, `theme-sub-axis-x`, `theme-sub-axis-y`, `theme-sub-legend`, `theme-sub-panel`, `theme-sub-plot`, `theme-sub-strip`, `theme-get`, `theme-set`.
 
 <!-- inventory:end -->
 

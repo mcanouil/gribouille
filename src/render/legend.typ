@@ -14,13 +14,13 @@
 #import "../utils/colour.typ": (
   bin-edges, edge-midpoints, resolve-continuous-colour,
 )
-#import "../utils/palette.typ": default-discrete, spec-attr, spec-palette
+#import "../utils/palette.typ": spec-attr, spec-palette
 #import "../utils/level-resolve.typ": resolve-level
 #import "../utils/errors.typ": fail, fail-type
 #import "../theme/defaults.typ": default-theme, resolve-colour
 #import "../theme/theme.typ": (
   _line-stroke, _rect-outset-cm, _rect-style, _text-args, _text-style,
-  _zero-margin-cm, resolve-geom-defaults,
+  _zero-margin-cm, resolve-geom-defaults, resolve-theme-palette,
 )
 #import "../guide/draw-key.typ": default-key-for, draw-glyph
 #import "../guide/legend.typ": _normalise-position
@@ -1681,9 +1681,12 @@
   if has-title {
     _draw-title(guide, ox, cursor, theme)
   }
-  let top = cursor - if has-title { _legend-title-h(theme, guide) } else {
-    0.0
-  }
+  let top = (
+    cursor
+      - if has-title { _legend-title-h(theme, guide) } else {
+        0.0
+      }
+  )
   cetz.draw.content(
     (ox, top),
     box(
@@ -2095,7 +2098,7 @@
 #let standalone(guides, trained, theme, side, size) = {
   let ctx = (
     trained: trained,
-    palette: default-discrete,
+    palette: resolve-theme-palette(theme),
     theme: theme,
     canvas-w: size.canvas-w,
     canvas-h: size.canvas-h,

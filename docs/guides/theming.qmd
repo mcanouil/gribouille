@@ -52,6 +52,7 @@ Minor gridlines default to half the major weight in the same colour, and a blank
 | Continuous colour bar (chrome reuses `legend-background` / `legend-title` / `legend-text`).  | `legend-bar`, `legend-ticks`.                                                                                                     | [`element-rect`](../reference/themes/element-rect.qmd), [`element-line`](../reference/themes/element-line.qmd). |
 | Shared cascade parents (fields inherit down to every descendant surface unset on the child). | `text`, `line`, `rect`.                                                                                                           | Element constructors.                                                                                           |
 | Base colour roles (drive geom colour resolution and theme mixing).                           | `ink`, `paper`, `accent`.                                                                                                         | Colour.                                                                                                         |
+| Default palette for discrete colour and fill scales (`auto` uses Okabe-Ito).                 | `palette`.                                                                                                                        | Array of colours.                                                                                               |
 | Layer aesthetic defaults.                                                                    | `geom`.                                                                                                                           | [`element-geom`](../reference/themes/element-geom.qmd).                                                         |
 
 You can hide any key with [`element-blank`](../reference/themes/element-blank.qmd) in place of its normal element.
@@ -223,7 +224,7 @@ Gaps around any other text surface use the per-element `margin` field on its [`e
 [`theme()`](../reference/themes/theme.qmd) is the full base: it populates every surface listed in the [reference table](#region-to-theme-key-reference).
 Use it when you want to start from scratch and define each region yourself.
 
-The library ships eight curated overrides on top of that base.
+The library ships nine curated overrides on top of that base.
 Each one is a thin function that returns a theme with a handful of fields replaced.
 Everything else cascades from [`theme()`](../reference/themes/theme.qmd).
 
@@ -237,6 +238,7 @@ Everything else cascades from [`theme()`](../reference/themes/theme.qmd).
 | [`theme-dark`](../reference/themes/theme-dark.qmd).         | Dark frame and grid on a dark panel.                                                |
 | [`theme-linedraw`](../reference/themes/theme-linedraw.qmd). | Black frame, dark grid, white panel.                                                |
 | [`theme-void`](../reference/themes/theme-void.qmd).         | Everything removable removed; useful for inset thumbnails.                          |
+| [`theme-brand`](../reference/themes/theme-brand.qmd).       | Colours, fonts, and palette taken from a parsed Quarto `_brand.yml`.                |
 
 The `theme-sub-*` helpers go one level finer: they bundle the keys that move together for a single region.
 For example, [`theme-sub-axis`](../reference/themes/theme-sub-axis.qmd) accepts `line`, `ticks`, `text`, `title`, and rewrites the four corresponding [`theme()`](../reference/themes/theme.qmd) keys for you.

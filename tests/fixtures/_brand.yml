@@ -1,0 +1,75 @@
+# Realistic Quarto _brand.yml, read by tests/unit/test-brand-file.typ through a
+# root-absolute path. Exercises the shapes a hand-written brand file uses:
+# palette aliases, light/dark variants, a flat colour, a role aliasing another,
+# and the blocks theme-brand deliberately ignores.
+meta:
+  name:
+    full: Fixture Corporation
+    short: Fixture
+  link:
+    home: https://example.com
+
+logo:
+  small: logos/icon.svg
+  medium:
+    light: logos/logo.svg
+    dark: logos/logo-dark.svg
+
+color:
+  palette:
+    cream: "#FFFAF0"
+    charcoal: "#1A1A1A"
+    parchment: "#F4EDDF"
+    slate: "#161B1E"
+    signal: "#E94C3D"
+    # Alias of another palette entry, resolved by walking the chain.
+    house-red: signal
+    lagoon: "#1F7A8C"
+    amber: "#F4B740"
+    sage: "#7FC8A9"
+  foreground:
+    light: charcoal
+    dark: parchment
+  background:
+    light: cream
+    dark: slate
+  primary:
+    light: house-red
+    dark: "#FF6F60"
+  secondary: lagoon
+  tertiary: amber
+  success: sage
+  # Duplicates secondary, so the derived palette drops it.
+  info: lagoon
+  danger: "#B23A2B"
+  # Bootstrap roles with no plot analogue; ignored.
+  light: cream
+  dark: charcoal
+
+typography:
+  fonts:
+    - family: Inter
+      source: file
+      files:
+        - path: fonts/inter-regular.woff2
+          weight: 400
+          style: normal
+    - family: Fraunces
+      source: google
+      weight: [400, 600]
+  base:
+    family: Inter
+    size: 1rem
+    line-height: 1.6
+  headings:
+    family: Fraunces
+    weight: 600
+  monospace: JetBrains Mono
+  link:
+    color: primary
+    weight: 500
+
+defaults:
+  bootstrap:
+    defaults:
+      navbar-bg: $brand-signal

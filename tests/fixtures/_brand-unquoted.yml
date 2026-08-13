@@ -1,0 +1,5 @@
+# Hex colours must be quoted. YAML reads an unquoted `#` as a comment, so the
+# value below parses to nothing at all rather than to a colour. Fixture for the
+# assertion in tests/unit/test-brand-file.typ that pins that behaviour.
+color:
+  primary: #E94C3D
