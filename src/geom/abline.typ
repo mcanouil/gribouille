@@ -25,7 +25,6 @@
 /// \@category Geoms
 /// \@subcategory Reference lines
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param mapping Aesthetic mapping built with \@aes. Bind `slope` and/or `intercept` to columns to draw a data-driven line per row.
 ///

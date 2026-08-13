@@ -16,7 +16,6 @@
 ///
 /// \@category Helpers
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric and `none` entries are dropped.
 ///

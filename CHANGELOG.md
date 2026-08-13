@@ -30,6 +30,7 @@
 - docs: `sec-axis` and `dup-axis` say that a secondary axis degrades to a no-op under `coord-radial`, which has no opposite panel edge to draw one on, and the feature matrix lists it alongside `geom-rug` among the combinations that do not translate to polar. (#236)
 - docs: tighten prose and apply consistent British spelling across the README, contributor docs, docs site guides, and the AI-assistant skill. (ba666502)
 - docs: docs site footer links read as ink rather than the muted grey Quarto paints them, and pick up the site-wide hover colour. (#246)
+- docs: a reference page no longer opens with the release that introduced the function. The version was typed by hand in the docstring and tied to nothing that checks it, so it drifted: `stat-waffle` and `stat-difference` both claimed a release three ahead of the one they shipped in. The changelog already records when a function landed, and the stable site is rendered wholly from the release tag, so a page never documents API the reader cannot use. (#251)
 
 ## 0.6.0 (2026-07-28)
 

@@ -84,7 +84,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param title Override the legend title; `none` keeps the default from labels or scale.
 ///

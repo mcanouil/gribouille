@@ -16,7 +16,6 @@
 /// \@category Geoms
 /// \@subcategory Distributions
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x` and `y`.
 ///

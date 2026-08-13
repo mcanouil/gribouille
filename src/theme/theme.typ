@@ -626,7 +626,6 @@
 /// \@category Themes
 /// \@subcategory Modify a theme
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param ..fields Named per-element overrides; see the description above for the full catalogue of structured and flat keys.
 ///

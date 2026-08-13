@@ -11,7 +11,6 @@
 /// \@category Themes
 /// \@subcategory Complete themes
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param ink Foreground colour (axis lines, text). Default: `black`.
 ///

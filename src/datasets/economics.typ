@@ -36,7 +36,6 @@
 ///
 /// \@category Datasets
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@examples Preview all 24 entries.
 /// ```

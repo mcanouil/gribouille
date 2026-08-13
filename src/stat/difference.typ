@@ -43,7 +43,6 @@
 /// \@category Stats
 /// \@subcategory Distributions and summaries
 /// \@stability stable
-/// \@since 0.8.0
 ///
 /// \@param levels Pair of level names written to `_sign`: first where
 ///   `ymax` is above `ymin`, second where it is below. Exact-tie points

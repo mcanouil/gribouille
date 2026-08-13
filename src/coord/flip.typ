@@ -17,7 +17,6 @@
 ///
 /// \@category Coord
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Coordinate dictionary consumed by \@plot.
 ///

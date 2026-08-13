@@ -25,7 +25,6 @@
 /// \@category Stats
 /// \@subcategory Distributions
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param bw Kernel bandwidth. `auto` applies Silverman's rule of thumb
 /// (R's `bw.nrd0`); pass a positive number to fix it.

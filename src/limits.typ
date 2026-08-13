@@ -15,7 +15,6 @@
 ///
 /// \@category Scales
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param x Single value or array of values the x-axis must include, or `none`.
 ///

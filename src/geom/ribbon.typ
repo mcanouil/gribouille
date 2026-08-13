@@ -30,7 +30,6 @@
 /// \@category Geoms
 /// \@subcategory Areas and ribbons
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x`, `ymin`, `ymax`.
 ///

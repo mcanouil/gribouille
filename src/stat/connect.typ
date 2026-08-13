@@ -41,7 +41,6 @@
 /// \@category Stats
 /// \@subcategory Functions and helpers
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param connection Connection mode (`"hv"` / `"vh"` / `"mid"` / `"sigmoid"` / `"linear"`).
 ///

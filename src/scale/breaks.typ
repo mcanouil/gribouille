@@ -34,7 +34,6 @@
 /// \@category Scales
 /// \@subcategory Breaks
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param width Distance between consecutive breaks; must be positive.
 ///
@@ -90,7 +89,6 @@
 /// \@category Scales
 /// \@subcategory Breaks
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param n Target number of intervals; the tick count lands near `n + 1`.
 ///
@@ -134,7 +132,6 @@
 /// \@category Scales
 /// \@subcategory Breaks
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param n Target number of ticks; the search trades it off against the
 ///   other criteria, so the result may hold one or two more or fewer.
@@ -179,7 +176,6 @@
 /// \@category Scales
 /// \@subcategory Breaks
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param probs Array of probabilities in `[0, 1]`.
 ///

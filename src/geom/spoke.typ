@@ -22,7 +22,6 @@
 /// \@category Geoms
 /// \@subcategory Lines and paths
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x`, `y`. `angle` and `radius` may be mapped or left to the layer-level fallbacks.
 ///

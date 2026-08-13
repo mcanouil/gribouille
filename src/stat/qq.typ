@@ -22,7 +22,6 @@
 /// \@category Stats
 /// \@subcategory Distributions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Statistic object with `name: "qq"`, consumed by geom layers.
 ///

@@ -11,7 +11,6 @@
 ///
 /// \@category Coord
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param x-limits Pair `(lo, hi)` clipping the drawn x range, or `none`.
 ///

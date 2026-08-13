@@ -22,7 +22,6 @@
 /// \@category Geoms
 /// \@subcategory Polygons and shapes
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x0`, `y0`. `a`, `b`, and `angle` may be mapped or left to the layer-level fallbacks.
 ///

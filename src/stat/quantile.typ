@@ -19,7 +19,6 @@
 /// \@category Stats
 /// \@subcategory Smoothing and regression
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param quantiles Array of τ values in `(0, 1)` to fit, e.g., `(0.25, 0.5, 0.75)`.
 ///

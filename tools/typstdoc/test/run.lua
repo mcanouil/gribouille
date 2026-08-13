@@ -128,6 +128,16 @@ describe("parser: doc block basics", function()
     assert_throws(function() parser.parse_file(f) end, "unknown tag")
   end)
 
+  it("rejects the retired version-introduced tag", function()
+    local f = tmpfile("retired_since", [[
+/// Summary.
+///
+/// @since 0.6.0
+#let foo() = none
+]])
+    assert_throws(function() parser.parse_file(f) end, "unknown tag")
+  end)
+
   it("unescapes \\@ to @ in /// and ///! comment lines", function()
     local f = tmpfile("escaped_at", [[
 ///! Module summary mentioning \@aes and \@plot.
@@ -1298,20 +1308,6 @@ describe("render: @subcategory grouping", function()
     assert_true(not body:find("subcategory:", 1, true),
       "classification reaches the reader through the sidebar, not the frontmatter")
   end)
-
-  it("renders @since as a line on the function page", function()
-    local fns = parsed_functions([[
-/// A point.
-///
-/// @category Geoms
-/// @since 0.6.0
-#let geom-point() = none
-]])
-    local index = resolve.build_index(fns)
-    local body = render.render_function(fns[1], index, { strict = false })
-    assert_contains(body, "*Since 0.6.0.*")
-    assert_true(not body:find("since:", 1, true), "no inert frontmatter copy")
-  end)
 end)
 
 -- -----------------------------------------------------------------------
@@ -1559,7 +1555,6 @@ describe("tidydoc: tinymist docstring emitter", function()
 /// Bind a thing.
 ///
 /// @category Core
-/// @since 0.0.1
 /// @param name Legend title.
 /// @returns A scale.
 #let foo(name: auto) = none

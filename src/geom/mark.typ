@@ -138,7 +138,6 @@
 /// \@category Geoms
 /// \@subcategory Polygons and shapes
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x`, `y`. Use `colour`, `fill`, or `group` to split rows into separate marks.
 ///

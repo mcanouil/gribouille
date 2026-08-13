@@ -22,7 +22,6 @@
 /// \@category Stats
 /// \@subcategory Distributions and summaries
 /// \@stability stable
-/// \@since 0.8.0
 ///
 /// \@param rows Grid height in cells (a positive integer). Columns grow as
 ///   needed to hold the total count.

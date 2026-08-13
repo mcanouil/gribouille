@@ -10,7 +10,6 @@
 /// \@category Themes
 /// \@subcategory Modify a theme
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param theme Theme dictionary from \@theme-grey, \@theme-minimal, \@theme-classic, \@theme-void, or \@theme.
 ///
@@ -40,7 +39,6 @@
 /// \@category Themes
 /// \@subcategory Modify a theme
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@returns The current global theme dictionary, or `none`.
 ///

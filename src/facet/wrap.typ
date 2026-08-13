@@ -13,7 +13,6 @@
 ///
 /// \@category Facets
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param variable Name of the discrete column whose levels drive the panels.
 ///

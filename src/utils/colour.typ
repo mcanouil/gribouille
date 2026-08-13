@@ -5,7 +5,6 @@
 ///
 /// \@category Scales
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param colour1 Base colour.
 ///

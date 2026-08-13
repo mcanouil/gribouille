@@ -9,7 +9,6 @@
 ///
 /// \@category Facets
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Labeller dictionary consumed by \@facet-wrap and \@facet-grid.
 ///
@@ -44,7 +43,6 @@
 ///
 /// \@category Facets
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param separator Separator between the variable name and the level.
 ///
@@ -103,7 +101,6 @@
 ///
 /// \@category Facets
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Labeller dictionary consumed by \@facet-wrap and \@facet-grid.
 ///
@@ -140,7 +137,6 @@
 ///
 /// \@category Facets
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param width Maximum number of characters per line.
 ///
@@ -201,7 +197,6 @@
 ///
 /// \@category Facets
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param rules Dict mapping facet variable names to labellers.
 ///

@@ -25,7 +25,6 @@
 /// \@category Scales
 /// \@subcategory Generic scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the bound scale.
 ///
@@ -110,7 +109,6 @@
 /// \@category Scales
 /// \@subcategory Generic scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the bound scale.
 ///
@@ -168,7 +166,6 @@
 /// \@category Scales
 /// \@subcategory Generic scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the bound scale.
 ///
@@ -233,7 +230,6 @@
 /// \@category Scales
 /// \@subcategory Generic scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the bound scale.
 ///
@@ -353,7 +349,6 @@
 /// \@category Scales
 /// \@subcategory Generic scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the bound scale.
 ///
@@ -394,7 +389,6 @@
 /// \@category Scales
 /// \@subcategory Position scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the axis scale.
 ///
@@ -452,7 +446,6 @@
 /// \@category Scales
 /// \@subcategory Position scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the axis scale.
 ///
@@ -510,7 +503,6 @@
 /// \@category Scales
 /// \@subcategory Position scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the axis scale.
 ///
@@ -569,7 +561,6 @@
 /// \@category Scales
 /// \@subcategory Position scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the axis scale.
 ///
@@ -625,7 +616,6 @@
 /// \@category Scales
 /// \@subcategory Position scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the axis scale.
 ///
@@ -681,7 +671,6 @@
 /// \@category Scales
 /// \@subcategory Position scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the axis scale.
 ///
@@ -742,7 +731,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -789,7 +777,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -840,7 +827,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -896,7 +882,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -943,7 +928,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -989,7 +973,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1043,7 +1026,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1101,7 +1083,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1157,7 +1138,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1206,7 +1186,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1257,7 +1236,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1311,7 +1289,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1366,7 +1343,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1425,7 +1401,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1483,7 +1458,6 @@
 /// \@category Scales
 /// \@subcategory Colour and fill scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
@@ -1544,7 +1518,6 @@
 /// \@category Scales
 /// \@subcategory Size scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the size scale.
 ///
@@ -1594,7 +1567,6 @@
 /// \@category Scales
 /// \@subcategory Size scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the size scale.
 ///
@@ -1650,7 +1622,6 @@
 /// \@category Scales
 /// \@subcategory Size scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named arguments forwarded to the size scale.
 ///

@@ -140,7 +140,6 @@
 /// \@category Helpers
 /// \@subcategory Summary functions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
@@ -164,7 +163,6 @@
 /// \@category Helpers
 /// \@subcategory Summary functions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
@@ -191,7 +189,6 @@
 /// \@category Helpers
 /// \@subcategory Summary functions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
@@ -223,7 +220,6 @@
 /// \@category Helpers
 /// \@subcategory Summary functions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
@@ -270,7 +266,6 @@
 /// \@category Helpers
 /// \@subcategory Summary functions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
@@ -304,7 +299,6 @@
 /// \@category Helpers
 /// \@subcategory Summary functions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
@@ -337,7 +331,6 @@
 /// \@category Helpers
 /// \@subcategory Summary functions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
@@ -369,7 +362,6 @@
 /// \@category Helpers
 /// \@subcategory Summary functions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
@@ -421,7 +413,6 @@
 /// \@category Helpers
 /// \@subcategory Summary functions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///

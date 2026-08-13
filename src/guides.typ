@@ -18,7 +18,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param args Named guide specs keyed by aesthetic name.
 /// \@named-keys colour fill size alpha linewidth shape linetype stroke x y theta r default

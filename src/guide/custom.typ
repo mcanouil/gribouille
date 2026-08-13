@@ -15,7 +15,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param content Typst content block (markup, image, table, ...).
 ///

@@ -79,7 +79,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param data Row-store (array of dicts) or column-store (dict of arrays).
 ///
@@ -110,7 +109,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param data Row-store (array of dicts) or column-store (dict of arrays).
 ///
@@ -187,7 +185,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param data Row-store (array of dicts) or column-store (dict of arrays).
 ///
@@ -254,7 +251,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param data Row-store (array of dicts) or column-store (dict of arrays).
 ///
@@ -287,7 +283,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param data Row-store (array of dicts) or column-store (dict of arrays).
 ///
@@ -352,7 +347,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param data Row-store (array of dicts) or column-store (dict of arrays).
 ///
@@ -382,7 +376,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param data Row-store (array of dicts) or column-store (dict of arrays).
 ///

@@ -74,7 +74,6 @@
 /// \@category Stats
 /// \@subcategory Functions and helpers
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@returns Statistic object with `name: "align"`, consumed by geom layers.
 ///

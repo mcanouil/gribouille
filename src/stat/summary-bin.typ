@@ -21,7 +21,6 @@
 /// \@category Stats
 /// \@subcategory Summaries
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param fun Name of the summary helper to apply to each bin's y values.
 ///

@@ -16,7 +16,6 @@
 ///
 /// \@category Labels
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param title Plot title drawn above the panel.
 ///

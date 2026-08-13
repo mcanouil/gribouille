@@ -14,7 +14,6 @@
 /// \@category Geoms
 /// \@subcategory Contours
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x`, `y`, and `z`.
 ///

@@ -11,7 +11,6 @@
 /// \@category Geoms
 /// \@subcategory Points
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Falls back to the plot mapping when `none`.
 ///

@@ -12,7 +12,6 @@
 /// \@category Stats
 /// \@subcategory Functions and helpers
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param fun Closure `data => data` taking the row array and returning the
 ///   transformed array. Defaults to identity.

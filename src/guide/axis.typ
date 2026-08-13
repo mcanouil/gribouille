@@ -15,7 +15,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param angle Tick-label rotation in degrees, from -90 to 90: 0 horizontal, 45 readable diagonal, 90 vertical. Past a quarter turn the labels read upside down and hang off the wrong side of the axis, so a larger rotation fails.
 ///
@@ -91,7 +90,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param angle Tick-label rotation in degrees, from -90 to 90.
 ///

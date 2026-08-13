@@ -10,7 +10,6 @@
 /// \@category Stats
 /// \@subcategory Functions and helpers
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Statistic object with `name: "identity"`, consumed by geom layers.
 ///

@@ -19,7 +19,7 @@ local VALID_CATEGORIES = {
 local VALID_STABILITY = { stable = true, experimental = true, deprecated = true }
 
 local KNOWN_TAGS = {
-  ["@category"] = true, ["@subcategory"] = true, ["@stability"] = true, ["@since"] = true,
+  ["@category"] = true, ["@subcategory"] = true, ["@stability"] = true,
   ["@param"] = true, ["@arity"] = true, ["@returns"] = true,
   ["@examples"] = true, ["@examples-static"] = true, ["@see"] = true,
   ["@internal"] = true, ["@advanced"] = true,
@@ -339,8 +339,6 @@ local function parse_doc_block(doc_lines, file, start_line, opts)
           error_at(file, start_line + i - 1, "invalid @stability: " .. st)
         end
         doc.stability = st
-      elseif tag == "@since" then
-        doc.since = util.trim(rest)
       elseif tag == "@internal" then
         doc.is_internal = true
       elseif tag == "@advanced" then

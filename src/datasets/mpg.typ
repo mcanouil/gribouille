@@ -29,7 +29,6 @@
 ///
 /// \@category Datasets
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@examples Preview the first ten entries (out of 30).
 /// ```

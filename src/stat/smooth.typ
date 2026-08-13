@@ -24,7 +24,6 @@
 /// \@category Stats
 /// \@subcategory Smoothing and regression
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param method Smoother method: `"lm"` (weighted least squares line) or `"loess"` (tricube-weighted local polynomials).
 ///

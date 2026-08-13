@@ -17,7 +17,6 @@
 /// \@category Scales
 /// \@subcategory Secondary axes
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param name Title shown above or beside the secondary axis, or `none`.
 ///
@@ -85,7 +84,6 @@
 /// \@category Scales
 /// \@subcategory Secondary axes
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param transform Function or `"identity"` mapping primary values to secondary values.
 ///

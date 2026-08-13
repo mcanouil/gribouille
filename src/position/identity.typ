@@ -10,7 +10,6 @@
 ///
 /// \@category Positions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Position dictionary with `name: "identity"`, consumed by \@plot.
 ///

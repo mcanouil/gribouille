@@ -14,7 +14,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param angle Tick-label rotation in degrees: 0 horizontal, 45 readable diagonal, 90 vertical.
 ///

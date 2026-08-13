@@ -18,7 +18,6 @@
 /// \@category Geoms
 /// \@subcategory Reference lines
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param mapping Aesthetic mapping built with \@aes. Bind `xintercept` to a column to draw a data-driven line per row.
 ///

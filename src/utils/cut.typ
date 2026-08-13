@@ -83,7 +83,6 @@
 /// \@category Helpers
 /// \@subcategory Binning helpers
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric or `none` entries map to `none`.
 ///
@@ -143,7 +142,6 @@
 /// \@category Helpers
 /// \@subcategory Binning helpers
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric or `none` entries map to `none`.
 ///
@@ -203,7 +201,6 @@
 /// \@category Helpers
 /// \@subcategory Binning helpers
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param values Array of numbers; non-numeric or `none` entries map to `none`.
 ///

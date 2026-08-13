@@ -21,7 +21,6 @@
 /// \@category Geoms
 /// \@subcategory Lines and paths
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param fun Callable taking a numeric x and returning a numeric y, or `none` to skip.
 ///

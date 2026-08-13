@@ -15,7 +15,6 @@
 /// \@category Stats
 /// \@subcategory Distributions
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param bins Target band count when `breaks` and `binwidth` are unset.
 ///

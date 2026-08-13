@@ -28,7 +28,6 @@
 /// \@category Geoms
 /// \@subcategory Text and annotations
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x`, `y`, and `label`. May map `nudge-x` and `nudge-y` for per-row offsets, in data units on a continuous scale and in level units on a discrete one.
 ///

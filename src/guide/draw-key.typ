@@ -14,7 +14,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Draw-key dictionary consumed by the legend renderer.
 ///
@@ -60,7 +59,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Draw-key dictionary consumed by the legend renderer.
 ///
@@ -108,7 +106,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Draw-key dictionary consumed by the legend renderer.
 ///
@@ -155,7 +152,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Draw-key dictionary consumed by the legend renderer.
 ///
@@ -203,7 +199,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Draw-key dictionary consumed by the legend renderer.
 ///

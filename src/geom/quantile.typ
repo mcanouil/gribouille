@@ -17,7 +17,6 @@
 /// \@category Geoms
 /// \@subcategory Distributions
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Falls back to the plot mapping when `none`.
 ///
