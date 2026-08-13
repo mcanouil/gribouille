@@ -20,7 +20,6 @@
 /// \@category Stats
 /// \@subcategory Distributions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param coefficient Whisker length as a multiple of the inter-quartile range.
 ///

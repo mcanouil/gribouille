@@ -16,7 +16,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param x Column name for the x position.
 ///

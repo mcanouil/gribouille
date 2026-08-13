@@ -19,7 +19,6 @@
 ///
 /// \@category Scales
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param args Named scale specs keyed by aesthetic name.
 /// \@named-keys x y colour fill size alpha linewidth stroke shape linetype

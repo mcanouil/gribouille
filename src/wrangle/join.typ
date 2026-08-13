@@ -170,7 +170,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param x Left dataset (row-store or column-store).
 ///
@@ -198,7 +197,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param x Left dataset (row-store or column-store).
 ///
@@ -221,7 +219,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param x Left dataset (row-store or column-store).
 ///
@@ -245,7 +242,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param x Dataset to filter (row-store or column-store).
 ///
@@ -267,7 +263,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param x Dataset to filter (row-store or column-store).
 ///
@@ -292,7 +287,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param datasets Datasets to stack, as positional row/column stores.
 ///
@@ -348,7 +342,6 @@
 /// \@category Helpers
 /// \@subcategory Data wrangling
 /// \@stability experimental
-/// \@since 0.6.0
 ///
 /// \@param datasets Datasets to glue, as positional row/column stores.
 ///

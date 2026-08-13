@@ -14,7 +14,6 @@
 /// \@category Stats
 /// \@subcategory Summaries
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param fun Reduction. String keyword (`"mean"`, `"median"`, `"sum"`, `"min"`, `"max"`) or callable.
 ///

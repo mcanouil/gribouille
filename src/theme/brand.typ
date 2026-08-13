@@ -42,7 +42,6 @@
 /// \@category Themes
 /// \@subcategory Complete themes
 /// \@stability stable
-/// \@since 0.7.0
 ///
 /// \@param brand Dictionary parsed from a Quarto `_brand.yml`, e.g. `yaml("_brand.yml")`. An empty dictionary yields the \@theme-minimal defaults.
 ///

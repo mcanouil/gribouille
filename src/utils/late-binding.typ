@@ -89,7 +89,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param path Dotted string or array of keys naming a theme entry.
 /// \@returns Late-binding marker consumed by \@aes.
@@ -123,7 +122,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param expr Column-name string or `(row, ctx) => any` closure.
 /// \@returns Late-binding marker consumed by \@aes.
@@ -159,7 +157,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param expr Function `(value, ctx) => any`.
 /// \@returns Late-binding marker consumed by \@aes.
@@ -202,7 +199,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param start Column name used for initial training, or `none`.
 ///

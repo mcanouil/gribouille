@@ -110,7 +110,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param ..args Either `(data, col)` or `(col)`. See arities.
 ///
@@ -204,7 +203,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param ..args Either `(data, col)` or `(col)`. See arities.
 ///

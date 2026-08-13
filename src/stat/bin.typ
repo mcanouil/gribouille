@@ -14,7 +14,6 @@
 /// \@category Stats
 /// \@subcategory Binning
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param bins Target number of bins when `binwidth` is `none`.
 ///

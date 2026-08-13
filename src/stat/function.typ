@@ -18,7 +18,6 @@
 /// \@category Stats
 /// \@subcategory Functions and helpers
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param fun Callable taking a numeric x and returning a numeric y.
 ///

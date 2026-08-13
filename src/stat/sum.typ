@@ -15,7 +15,6 @@
 /// \@category Stats
 /// \@subcategory Summaries
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Statistic object with `name: "sum"`, consumed by geom layers.
 ///

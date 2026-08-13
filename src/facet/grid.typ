@@ -14,7 +14,6 @@
 ///
 /// \@category Facets
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param rows Name of the discrete column driving panel rows, or `none`.
 ///

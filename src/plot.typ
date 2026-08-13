@@ -47,7 +47,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param data Either an array of row dictionaries (one row per observation, e.g., `((x: 1, y: 2), (x: 3, y: 4))`) or a dictionary of equal-length column arrays (e.g., `(x: (1, 3), y: (2, 4))`). Column-store input is normalised to row-store internally.
 ///
@@ -209,7 +208,6 @@
 ///
 /// \@category Helpers
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param plot Plot spec dictionary (the dict \@plot builds internally).
 ///

@@ -12,7 +12,6 @@
 /// \@category Geoms
 /// \@subcategory Bars and histograms
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x`.
 ///

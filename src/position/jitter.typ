@@ -18,7 +18,6 @@
 ///
 /// \@category Positions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param width Maximum absolute jitter applied to the x position.
 ///

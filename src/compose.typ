@@ -757,7 +757,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param ..panels-positional Two or more deferred panels built with \@defer
 ///   (`defer(plot, ...)`, or `defer(compose, ...)` to nest a composition). Order
@@ -1104,7 +1103,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.3.0
 ///
 /// \@param renderer The renderer to defer: the \@plot or \@compose function.
 ///

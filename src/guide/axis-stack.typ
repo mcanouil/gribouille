@@ -14,7 +14,6 @@
 ///
 /// \@category Guides
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param guides Array of \@guide-axis or \@guide-axis-logticks specs to render in order from the axis outward.
 ///

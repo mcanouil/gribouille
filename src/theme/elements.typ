@@ -16,7 +16,6 @@
 /// \@category Themes
 /// \@subcategory Theme elements
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param size Text size. Either an absolute Typst length (e.g., `12pt`), a
 ///   ratio (e.g., `80%`) scaling the parent surface size, or `none` to inherit
@@ -163,7 +162,6 @@
 /// \@category Themes
 /// \@subcategory Theme elements
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param size Text size. Either an absolute Typst length (e.g., `12pt`), a
 ///   ratio (e.g., `80%`) scaling the parent surface size, or `none` to inherit
@@ -262,7 +260,6 @@
 /// \@category Themes
 /// \@subcategory Theme elements
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param colour Line colour, or `none` to inherit.
 ///
@@ -331,7 +328,6 @@
 /// \@category Themes
 /// \@subcategory Theme elements
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param colour Tick colour, or `none` to inherit.
 ///
@@ -424,7 +420,6 @@
 /// \@category Themes
 /// \@subcategory Theme elements
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param fill Rectangle fill colour, or `none` to inherit.
 ///
@@ -544,7 +539,6 @@
 /// \@category Themes
 /// \@subcategory Theme elements
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@returns Element dictionary consumed by \@theme.
 ///
@@ -615,7 +609,6 @@
 /// \@category Themes
 /// \@subcategory Theme elements
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param top Top margin (Typst length or `auto`).
 ///
@@ -703,7 +696,6 @@
 /// \@category Themes
 /// \@subcategory Theme elements
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param fill Global override for every filled geom's default fill colour.
 ///

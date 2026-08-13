@@ -11,7 +11,6 @@
 /// \@category Stats
 /// \@subcategory Binning
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param bins Scalar or `(x, y)` pair — target bin counts.
 ///

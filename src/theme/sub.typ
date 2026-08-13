@@ -21,7 +21,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param title \@element-text or \@element-typst for `axis-title`.
 ///
@@ -65,7 +64,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param title \@element-text or \@element-typst for `axis-title-x`.
 ///
@@ -108,7 +106,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param title \@element-text or \@element-typst for `axis-title-y`.
 ///
@@ -151,7 +148,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param title Element override for the bottom x axis title.
 ///
@@ -197,7 +193,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param title Element override for the top x axis title.
 ///
@@ -243,7 +238,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param title Element override for the left y axis title.
 ///
@@ -289,7 +283,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param title Element override for the right y axis title.
 ///
@@ -335,7 +328,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param text \@element-text or \@element-typst for `legend-text`.
 ///
@@ -373,7 +365,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param grid \@element-line or \@element-blank for `panel-grid`.
 ///
@@ -409,7 +400,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param title \@element-text or \@element-typst for `plot-title`.
 ///
@@ -457,7 +447,6 @@
 /// \@category Themes
 /// \@subcategory Sub-theme accessors
 /// \@stability stable
-/// \@since 0.6.0
 ///
 /// \@param text \@element-text or \@element-typst for `strip-text`.
 ///

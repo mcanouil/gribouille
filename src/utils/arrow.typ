@@ -57,7 +57,6 @@
 ///
 /// \@category Helpers
 /// \@stability stable
-/// \@since 0.7.0
 ///
 /// \@param length Head length along each wing (a Typst length).
 ///

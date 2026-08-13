@@ -31,7 +31,6 @@
 /// \@category Stats
 /// \@subcategory Summaries
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param fun Summary helper name or callable returning `(y, ymin, ymax)`.
 ///

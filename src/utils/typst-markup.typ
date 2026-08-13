@@ -33,7 +33,6 @@
 ///
 /// \@category Core
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param source A markup string, a column name, or another tagged
 ///   aesthetic value.

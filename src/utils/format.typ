@@ -64,7 +64,6 @@
 /// \@category Helpers
 /// \@subcategory Formatters
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param big-mark Thousands separator (e.g., `","` for English).
 ///
@@ -112,7 +111,6 @@
 /// \@category Helpers
 /// \@subcategory Formatters
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param digits Decimal digits to keep, or `auto` to drop trailing zeros.
 ///
@@ -153,7 +151,6 @@
 /// \@category Helpers
 /// \@subcategory Formatters
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param scale Multiplier applied before formatting.
 ///
@@ -209,7 +206,6 @@
 /// \@category Helpers
 /// \@subcategory Formatters
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param symbol Currency symbol prepended to the value.
 ///
@@ -261,7 +257,6 @@
 /// \@category Helpers
 /// \@subcategory Formatters
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param digits Significant decimal digits in the mantissa.
 ///
@@ -334,7 +329,6 @@
 /// \@category Helpers
 /// \@subcategory Formatters
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@returns A closure `value => string`.
 ///
@@ -373,7 +367,6 @@
 /// \@category Helpers
 /// \@subcategory Formatters
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@returns A closure `value => string`.
 ///
@@ -402,7 +395,6 @@
 /// \@category Helpers
 /// \@subcategory Formatters
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@returns A closure `value => string`.
 ///
@@ -431,7 +423,6 @@
 /// \@category Helpers
 /// \@subcategory Formatters
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param width Maximum line width in characters.
 ///

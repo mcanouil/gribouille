@@ -81,7 +81,6 @@
 /// \@category Geoms
 /// \@subcategory Text and annotations
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param geom Geom name to dispatch to. One of `"text"`, `"point"`,
 ///   `"label"`, `"segment"`, `"rect"`, `"vline"`, `"hline"`, `"abline"`.

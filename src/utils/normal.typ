@@ -16,7 +16,6 @@
 ///
 /// \@category Helpers
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param p Probability in the open interval `(0, 1)`.
 ///

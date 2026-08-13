@@ -11,7 +11,6 @@
 ///
 /// \@category Coord
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param ratio Number of y data units per x data unit (default `1`).
 ///

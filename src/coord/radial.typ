@@ -8,7 +8,6 @@
 ///
 /// \@category Coord
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param theta Which axis is angular: `"x"` (default) or `"y"`. The radial
 ///   axis (the other one) automatically drops its lo-side expansion to zero

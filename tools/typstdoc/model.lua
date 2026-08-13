@@ -49,7 +49,6 @@ function M.new_doc_block()
     category = nil,
     subcategory = nil,
     stability = "stable",
-    since = nil,
     params = {},
     arities = {},
     named_keys = {},

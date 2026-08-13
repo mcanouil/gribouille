@@ -16,7 +16,6 @@
 /// \@category Scales
 /// \@subcategory Palettes
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@examples Pass the palette to a manual scale to opt into Okabe-Ito on a
 /// per-aesthetic basis (the same colours are also the library default).
@@ -361,7 +360,6 @@
 /// \@category Scales
 /// \@subcategory Palettes
 /// \@stability stable
-/// \@since 0.1.0
 ///
 /// \@param name Palette name, e.g., `"Set1"`, `"Spectral"`, `"Blues"`.
 /// \@returns Array of `color` values.

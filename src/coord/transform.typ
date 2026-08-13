@@ -11,7 +11,6 @@
 ///
 /// \@category Coord
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param x Transformation keyword for the x axis.
 ///

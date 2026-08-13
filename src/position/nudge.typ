@@ -9,7 +9,6 @@
 ///
 /// \@category Positions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param x Offset added to the x value of each row, in data units on a continuous scale and in level units on a discrete one.
 ///

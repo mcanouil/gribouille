@@ -44,7 +44,6 @@
 /// \@category Stats
 /// \@subcategory Distributions
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param bw Kernel standard deviation per axis. `auto` derives it per axis
 /// from R's `bw.nrd / 4` (the seed MASS `kde2d` uses); pass a number for

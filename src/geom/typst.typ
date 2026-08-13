@@ -13,7 +13,6 @@
 /// \@category Geoms
 /// \@subcategory Text and annotations
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x` and `y`. Map `label` to a column when each row carries its own label, or pass `label:` directly to use a single constant value for every row.
 ///

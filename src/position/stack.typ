@@ -31,7 +31,6 @@
 ///
 /// \@category Positions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param offset Baseline offset per x bucket. `"none"` (default) stacks
 ///   from zero. `"silhouette"` centres each stack on zero (ThemeRiver).

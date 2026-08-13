@@ -23,7 +23,6 @@
 ///
 /// \@category Positions
 /// \@stability stable
-/// \@since 0.5.0
 ///
 /// \@param width Maximum absolute offset applied to the x position, in x data units.
 ///

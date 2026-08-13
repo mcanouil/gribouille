@@ -26,7 +26,6 @@
 /// \@category Stats
 /// \@subcategory Distributions
 /// \@stability stable
-/// \@since 0.4.0
 ///
 /// \@param level Coverage probability for the confidence ellipse, in `(0, 1)`.
 ///

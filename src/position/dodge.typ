@@ -23,7 +23,6 @@
 ///
 /// \@category Positions
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param width Total width reserved for the dodged group, as a fraction of the category width.
 ///

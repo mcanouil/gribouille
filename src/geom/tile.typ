@@ -23,7 +23,6 @@
 /// \@category Geoms
 /// \@subcategory Rectangles and bins
 /// \@stability stable
-/// \@since 0.0.1
 ///
 /// \@param mapping Layer-specific aesthetic mapping built with \@aes. Must map `x`, `y`.
 ///
