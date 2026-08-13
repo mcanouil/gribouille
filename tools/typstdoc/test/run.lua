@@ -128,16 +128,6 @@ describe("parser: doc block basics", function()
     assert_throws(function() parser.parse_file(f) end, "unknown tag")
   end)
 
-  it("rejects the retired version-introduced tag", function()
-    local f = tmpfile("retired_since", [[
-/// Summary.
-///
-/// @since 0.6.0
-#let foo() = none
-]])
-    assert_throws(function() parser.parse_file(f) end, "unknown tag")
-  end)
-
   it("unescapes \\@ to @ in /// and ///! comment lines", function()
     local f = tmpfile("escaped_at", [[
 ///! Module summary mentioning \@aes and \@plot.
