@@ -31,10 +31,9 @@
 #import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP,
-  _axis-guide-rows, _band-gap-cm, _resolve-extents, _sec-title-offset-cm,
-  _text-margin-cm, _theta-label-bounds, _title-angle, _title-body,
-  _title-extent-cm, _x-label-depth-stack, _x-title-place, _y-label-width-stack,
-  _y-title-place,
+  _axis-guide-rows, _resolve-extents, _sec-title-offset-cm, _text-margin-cm,
+  _theta-label-bounds, _title-angle, _title-body, _title-extent-cm,
+  _x-title-place, _y-title-place,
 )
 
 #import "../geom/point.typ" as point-geom
@@ -155,6 +154,12 @@
   y-sec-title-extents: none,
   x-sec-extents: none,
   y-sec-extents: none,
+  // Band between the panel edge and its axis title, gap included, as
+  // `_chrome-margins` reserved it. Carried rather than recomputed so the title
+  // cannot land outside its own margin. The facet builders draw one title for
+  // the whole grid and pass `show-x-title: false`, so these go unread there.
+  x-edge-band: 0.0,
+  y-edge-band: 0.0,
   canvas-w: 0,
   canvas-h: 0,
 ) = {
@@ -342,7 +347,7 @@
       let cy = (
         py-lo
           - _tick-len.xb
-          - 0.1
+          - _TICK-LABEL-GAP
           - (r.dodge-base + dodge-row) * _X-LABEL-ROW-GAP
           - r.stack-offset
       )
@@ -361,7 +366,7 @@
       let cx = (
         px-lo
           - _tick-len.yl
-          - 0.1
+          - _TICK-LABEL-GAP
           - (r.dodge-base + dodge-col) * _Y-LABEL-COL-GAP
           - r.stack-offset
       )
@@ -737,36 +742,16 @@
   } else { mapping-display-name(spec.mapping.at("y", default: none)) }
   let x-title = _axis-title(x-trained, _mapping-x-name)
   let y-title = _axis-title(y-trained, _mapping-y-name)
-  let _x-ext = _resolve-extents(x-extents, _ax-text.xb.size)
-  let _y-ext = _resolve-extents(y-extents, _ax-text.yl.size)
-  // A suppressed axis (`guides(x: none)`) reserves no tick or label depth, so
-  // the title slides up to the panel edge. A radial panel draws neither band
-  // outside the panel either, so its titles sit against the panel edge too,
-  // matching what the chrome reserved for them.
-  let x-label-depth = if is-radial or x-guide.suppress { 0.0 } else {
-    _x-label-depth-stack(x-guide, _x-ext.width, _x-ext.height)
-  }
-  let y-label-width = if is-radial or y-guide.suppress { 0.0 } else {
-    _y-label-width-stack(y-guide, _y-ext.width, _y-ext.height)
-  }
-  let x-tick-cm = if is-radial or x-guide.suppress { 0.0 } else { _tick-len.xb }
-  let y-tick-cm = if is-radial or y-guide.suppress { 0.0 } else { _tick-len.yl }
   let x-title-cm = _title-extent-cm(_ax-title.xb, x-title-extents, "x")
   let y-title-cm = _title-extent-cm(_ax-title.yl, y-title-extents, "y")
   let x-title-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   let y-title-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
-  let x-edge-offset = (
-    x-tick-cm
-      + _band-gap-cm(x-tick-cm + x-label-depth, radial: is-radial)
-      + x-label-depth
-      + x-title-gap
-  )
-  let y-edge-offset = (
-    y-tick-cm
-      + _band-gap-cm(y-tick-cm + y-label-width, radial: is-radial)
-      + y-label-width
-      + y-title-gap
-  )
+  // A suppressed axis (`guides(x: none)`) draws no ticks or labels and a radial
+  // panel draws neither band outside the panel, so in both cases the title
+  // slides up to the panel edge. Both gates already ran in `_chrome-margins`,
+  // which is why the band arrives rather than being derived a second time.
+  let x-edge-offset = x-edge-band + x-title-gap
+  let y-edge-offset = y-edge-band + y-title-gap
   if show-x-title and x-title != none and _ax-title.xb.size > 0pt {
     let (cx, x-anchor) = _x-title-place(_ax-title.xb.align, px-lo, px-hi)
     content(

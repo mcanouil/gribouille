@@ -84,12 +84,10 @@
   // sizes. Only an explicit `margin(...)` record clears it: `_merge-element`
   // skips `none`, and `_normalise-margin` discards anything that is not a
   // `margin`, so both `inset: none` and `inset: 0pt` leave the default standing.
-  let _no-inset = margin(top: 0pt, right: 0pt, bottom: 0pt, left: 0pt)
-  let _plot-bg = if paper == auto {
-    element-rect(inset: _no-inset)
-  } else {
-    element-rect(fill: _paper, inset: _no-inset)
-  }
+  let _plot-bg = element-rect(
+    fill: if paper == auto { none } else { _paper },
+    inset: margin(top: 0pt, right: 0pt, bottom: 0pt, left: 0pt),
+  )
   _preset(
     "void",
     ink,

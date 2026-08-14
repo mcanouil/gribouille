@@ -386,6 +386,10 @@
       y-sec-title-extents: y-sec-title-extents,
       x-sec-extents: x-sec-extents,
       y-sec-extents: y-sec-extents,
+      x-label-band: chrome.x-label-band,
+      y-label-band: chrome.y-label-band,
+      x-band-gap: chrome.x-band-gap,
+      y-band-gap: chrome.y-band-gap,
     ))
   }
 

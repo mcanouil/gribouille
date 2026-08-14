@@ -303,10 +303,9 @@
   let (y-lo, y-hi) = y-trained.domain
   let dx = x-hi - x-lo
   let dy = y-hi - y-lo
-  if dx <= 0 or dy <= 0 { return (box-w, box-h) }
-  // Chrome can squeeze the panel to nothing on a small plot, and a box with no
-  // extent has no aspect to hold: hand it back rather than divide by it.
-  if box-w <= 0 or box-h <= 0 { return (box-w, box-h) }
+  // A degenerate domain has no ratio to hold, and a box the chrome squeezed to
+  // nothing has none either: hand the box back rather than divide by it.
+  if dx <= 0 or dy <= 0 or box-w <= 0 or box-h <= 0 { return (box-w, box-h) }
   let ratio = coord.at("ratio", default: 1)
   // Pixels-per-x-unit must equal ratio * pixels-per-y-unit.
   let want = (dy * ratio) / dx

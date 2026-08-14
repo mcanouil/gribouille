@@ -421,18 +421,16 @@
   // Gutters and strips are fixed costs the grid pays before the panels get
   // anything, so a small enough plot leaves each panel nothing. Floor at zero:
   // an empty panel is honest, a negative one draws mirrored.
-  let panel-w = calc.max(0.0, (grid-w - gutter-x * (ncol - 1)) / ncol)
-  let panel-h = calc.max(
-    0.0,
-    (
-      (
-        grid-h
-          - gutter-y * (nrow - 1)
-          - strip-h * nrow
-          - sec-band * rows-with-sec
-      )
-        / nrow
-    ),
+  let panel-w = calc.max(0.0, grid-w - gutter-x * (ncol - 1)) / ncol
+  let panel-h = (
+    calc.max(
+      0.0,
+      grid-h
+        - gutter-y * (nrow - 1)
+        - strip-h * nrow
+        - sec-band * rows-with-sec,
+    )
+      / nrow
   )
 
   let shared-breaks = _facet-shared-breaks(
@@ -591,8 +589,8 @@
     height-units - margin.bottom - margin.top - top-strip - sec-band-x
   )
   // Floored at zero for the same reason as the wrap builder above.
-  let panel-w = calc.max(0.0, (grid-w - gutter-x * (n-cols - 1)) / n-cols)
-  let panel-h = calc.max(0.0, (grid-h - gutter-y * (n-rows - 1)) / n-rows)
+  let panel-w = calc.max(0.0, grid-w - gutter-x * (n-cols - 1)) / n-cols
+  let panel-h = calc.max(0.0, grid-h - gutter-y * (n-rows - 1)) / n-rows
 
   let shared-breaks = _facet-shared-breaks(
     trained,
@@ -733,6 +731,8 @@
       y-sec-title-extents: ctx.y-sec-title-extents,
       x-sec-extents: ctx.x-sec-extents,
       y-sec-extents: ctx.y-sec-extents,
+      x-edge-band: ctx.x-label-band + ctx.x-band-gap,
+      y-edge-band: ctx.y-label-band + ctx.y-band-gap,
       canvas-w: width-units,
       canvas-h: height-units,
     )

@@ -14,10 +14,11 @@
 #import "domain.typ": _is-flipped
 #import "../utils/errors.typ": fail
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _TITLE-EDGE-PAD, _axis-label-extents,
+  _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _axis-label-extents,
   _axis-title-extents, _band-gap-cm, _fit-title-extents, _sec-extent,
   _secondary-label-extents, _text-margin-cm, _title-angle, _title-extent-cm,
-  _title-overrun-cm, _title-span-cm, _x-label-depth-stack, _y-label-width-stack,
+  _title-overrun-cm, _title-pad-cm, _title-span-cm, _x-label-depth-stack,
+  _y-label-width-stack,
 )
 
 // Passes allowed when settling axis-title wrapping against the panel size, and
@@ -220,8 +221,14 @@
   // The gap that holds that band off the panel edge travels with it, for the
   // same reason: an axis with nothing to hold off owes no gap, and a builder
   // that re-derived the rule would have to remember the radial case twice.
-  let x-band-gap = _band-gap-cm(x-label-band, radial: _radial)
-  let y-band-gap = _band-gap-cm(y-label-band, radial: _radial)
+  // Radial is that case: it reserves no band, because its theta labels ring the
+  // inside of the panel edge rather than sitting outside it, but that ink is up
+  // against the edge and owes it the gap all the same.
+  let _edge-gap = band => if _radial { _TICK-LABEL-GAP } else {
+    _band-gap-cm(band)
+  }
+  let x-band-gap = _edge-gap(x-label-band)
+  let y-band-gap = _edge-gap(y-label-band)
   let _side-gap = side => (
     extents.at(side) + (if extents.at(side) > 0 { legend-gap } else { 0.0 })
   )
@@ -329,12 +336,14 @@
     let y-title-cm = if y-title != none {
       _title-extent-cm(ax-title.yl, ext.yl, "y")
     } else { 0.0 }
-    // The title-to-edge pad separates two things like the band gap does, so it
-    // goes the same way: no title, no pad. A stripped axis hands both back to
-    // the panel, which is what lets a sub-centimetre canvas hold anything.
-    let x-title-pad = if x-title-cm > 0 { _TITLE-EDGE-PAD } else { 0.0 }
+    // A stripped axis hands the gap and the pad back to the panel, which is
+    // what lets a sub-centimetre canvas hold anything at all.
     let bottom-extent = (
-      x-label-band + x-band-gap + bottom-gap + x-title-cm + x-title-pad
+      x-label-band
+        + x-band-gap
+        + bottom-gap
+        + x-title-cm
+        + _title-pad-cm(x-title-cm)
     )
     let left-extent = y-label-band + y-band-gap + left-gap + y-title-cm
     // Cap the right margin so the legend can never invert the panel. Without the
