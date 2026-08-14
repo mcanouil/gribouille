@@ -4,7 +4,7 @@
 ///! own without an axis frame (e.g., maps, annotated figures).
 
 #import "defaults.typ": _tr-ink
-#import "elements.typ": element-blank, element-rect, element-text
+#import "elements.typ": element-blank, element-rect, element-text, margin
 #import "theme.typ": _preset
 
 /// Void theme: no axes, no grid, no panel background.
@@ -78,10 +78,17 @@
   ..fields,
 ) = {
   let _paper = if paper == auto { rgb(0, 0, 0, 0) } else { paper }
+  // A void theme reserves nothing, padding included: `element-rect` defaults to
+  // a 5pt inset on every side, which is a third of a centimetre off each
+  // dimension and the difference between drawing and failing at sparkline
+  // sizes. Only an explicit `margin(...)` record clears it: `_merge-element`
+  // skips `none`, and `_normalise-margin` discards anything that is not a
+  // `margin`, so both `inset: none` and `inset: 0pt` leave the default standing.
+  let _no-inset = margin(top: 0pt, right: 0pt, bottom: 0pt, left: 0pt)
   let _plot-bg = if paper == auto {
-    element-rect()
+    element-rect(inset: _no-inset)
   } else {
-    element-rect(fill: _paper)
+    element-rect(fill: _paper, inset: _no-inset)
   }
   _preset(
     "void",

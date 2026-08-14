@@ -332,8 +332,9 @@
   }
 }
 
-// Smallest panel worth wrapping an axis title against, matching the 0.5 cm
-// panel floor `render-plot` and `max-right-margin` already enforce.
+// Smallest panel worth wrapping an axis title against. Below it the panel holds
+// no readable title at any width, so bounding one buys nothing; the span check
+// in `chrome.typ` is what reports the title that will not fit.
 #let _MIN-TITLE-PANEL = 0.5
 
 // How much of a rotated title box's reading length (`along`) and thickness
@@ -378,10 +379,10 @@
 // horizontal y title): its length is then reserved as perpendicular depth
 // instead, so nothing bounds it and `none` means unbounded.
 #let _title-along-cm(style, axis, panel-cm, natural-cm) = {
-  // Below the panel minimum the whole layout is already degenerate, and the
-  // canvas-minimum guard in `render-plot` is what speaks to that. Bounding a
+  // Below the panel minimum the whole layout is already degenerate. Bounding a
   // title to a few millimetres there would turn plots that used to render,
-  // however cramped, into failures. Leave them exactly as they were.
+  // however cramped, into failures. Leave them exactly as they were, and let
+  // the caller's span check speak for a title that genuinely cannot fit.
   if panel-cm < _MIN-TITLE-PANEL { return none }
   let shares = _title-shares(style, axis)
   if shares.along <= 1e-6 { return none }
@@ -473,6 +474,23 @@
 // the gap stays stable when users tune the axis-title font size.
 #let _AX-TITLE-LABEL-GAP = 5pt
 
+// Gap (cm) between the panel edge and the tick-and-label band it carries, and
+// pad (cm) between an axis title and the canvas edge beyond it. Every site
+// that reserves either one gates it on the thing it separates actually being
+// drawn, so a stripped axis (`theme-void`, `guides(x: none)`) reserves neither
+// and the panel keeps the room.
+#let _TICK-LABEL-GAP = 0.1
+#let _TITLE-EDGE-PAD = 0.05
+
+// The gap is owed only when there is ink to hold off the panel edge. A radial
+// panel is the exception: it reserves no band outside the panel because its
+// labels ring the inside of the edge, but that ink is up against the edge and
+// owes the gap all the same. Chrome reservation and every draw site read this
+// one helper, so a title cannot come to sit outside the margin reserved for it.
+#let _band-gap-cm(band, radial: false) = if band > 0 or radial {
+  _TICK-LABEL-GAP
+} else { 0.0 }
+
 // One-element tuple for stand-alone guides, so callers can iterate uniformly
 // across stacks and singletons. Shared between x and y; placement on either
 // axis flows through the same rendering path.
@@ -509,7 +527,7 @@
   }
   let gap-side = if axis == "y" { "left" } else { "bottom" }
   let gap = _text-margin-cm(ax-title, gap-side, _AX-TITLE-LABEL-GAP)
-  tick-len + 0.1 + label-extent + gap
+  tick-len + _band-gap-cm(tick-len + label-extent) + label-extent + gap
 }
 
 // Depth (cm) of the secondary axis ink alone, tick mark plus gap plus label
@@ -522,7 +540,7 @@
   } else {
     _x-label-depth(0, 1, sec-extents.width, sec-extents.height)
   }
-  tick-len + 0.1 + label-extent
+  tick-len + _band-gap-cm(tick-len + label-extent) + label-extent
 }
 
 // Reserved extent between the panel and the canvas edge for the secondary
@@ -543,5 +561,5 @@
     _title-extent-cm(ax-title, title-ext, axis)
   } else { 0.0 }
   let offset = _sec-title-offset-cm(tick-len, sec-extents, ax-title, axis)
-  offset + title-cm + 0.05
+  offset + title-cm + (if title-cm > 0 { _TITLE-EDGE-PAD } else { 0.0 })
 }

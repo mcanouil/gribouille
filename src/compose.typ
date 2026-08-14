@@ -597,11 +597,10 @@
     // panels invert or push the legend off the composition. Only the reduced
     // dimension is blamed, so a height shortfall from large labels is left to
     // the per-panel canvas check.
-    let _min-panel = 0.5
     let _legend-overflows = if legend-side == "right" or legend-side == "left" {
-      area-w < _min-panel
+      area-w <= 0
     } else if legend-side == "top" or legend-side == "bottom" {
-      area-h < _min-panel
+      area-h <= 0
     } else { false }
     if hoisted-guides.len() > 0 and _legend-overflows {
       fail(
@@ -612,9 +611,7 @@
           + str(calc.round(area-w, digits: 2))
           + " x "
           + str(calc.round(area-h, digits: 2))
-          + " cm panel area, below the "
-          + str(_min-panel)
-          + " cm minimum",
+          + " cm panel area, with no room left for the panels",
         hint: "Increase the composition `width`/`height`, move the legend to a "
           + "shorter side, or shrink it with `guide-legend(nrow:/ncolumn:)`.",
       )

@@ -177,18 +177,17 @@
 
   let width-units = width-units-early - deco.left - deco.right
   let height-units = height-units-early - deco.top - deco.bottom
-  // Floor matches the single-tick panel minimum used by `max-right-margin`.
-  let _min-canvas = 0.5
-  if width-units < _min-canvas or height-units < _min-canvas {
+  // Any positive canvas draws, however small: a sparkline in a table cell is a
+  // legitimate plot. Only an empty or inverted one fails, since a negative
+  // extent would mirror the panel rather than shrink it.
+  if width-units <= 0 or height-units <= 0 {
     fail(
       "plot",
       "title/subtitle/caption and plot-background padding leave a "
         + str(calc.round(width-units, digits: 2))
         + " x "
         + str(calc.round(height-units, digits: 2))
-        + " cm canvas, below the "
-        + str(_min-canvas)
-        + " cm minimum",
+        + " cm canvas, with no room left to draw",
       hint: "Increase width/height or reduce labels/padding.",
     )
   }
@@ -321,6 +320,8 @@
       y-extents: y-extents,
       x-label-band: chrome.x-label-band,
       y-label-band: chrome.y-label-band,
+      x-band-gap: chrome.x-band-gap,
+      y-band-gap: chrome.y-band-gap,
       x-title-extents: x-title-extents,
       y-title-extents: y-title-extents,
       x-sec-title-extents: x-sec-title-extents,
@@ -353,6 +354,8 @@
       y-extents: y-extents,
       x-label-band: chrome.x-label-band,
       y-label-band: chrome.y-label-band,
+      x-band-gap: chrome.x-band-gap,
+      y-band-gap: chrome.y-band-gap,
       x-title-extents: x-title-extents,
       y-title-extents: y-title-extents,
       x-sec-title-extents: x-sec-title-extents,

@@ -30,10 +30,11 @@
 )
 #import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP, _axis-guide-rows,
-  _resolve-extents, _sec-title-offset-cm, _text-margin-cm, _theta-label-bounds,
-  _title-angle, _title-body, _title-extent-cm, _x-label-depth-stack,
-  _x-title-place, _y-label-width-stack, _y-title-place,
+  _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP,
+  _axis-guide-rows, _band-gap-cm, _resolve-extents, _sec-title-offset-cm,
+  _text-margin-cm, _theta-label-bounds, _title-angle, _title-body,
+  _title-extent-cm, _x-label-depth-stack, _x-title-place, _y-label-width-stack,
+  _y-title-place,
 )
 
 #import "../geom/point.typ" as point-geom
@@ -517,7 +518,7 @@
       if _ax-text.xt.size > 0pt {
         let mapped = secondary-mod.apply-transform(_x-sec, b)
         content(
-          (cx, py-hi + _tick-len.xt + 0.1),
+          (cx, py-hi + _tick-len.xt + _TICK-LABEL-GAP),
           text(.._text-args(_ax-text.xt))[#resolve-prose(
             resolve-label(
               _x-sec.at("labels", default: auto),
@@ -573,7 +574,7 @@
       if _ax-text.yr.size > 0pt {
         let mapped = secondary-mod.apply-transform(_y-sec, b)
         content(
-          (px-hi + _tick-len.yr + 0.1, cy),
+          (px-hi + _tick-len.yr + _TICK-LABEL-GAP, cy),
           text(.._text-args(_ax-text.yr))[#resolve-prose(
             resolve-label(
               _y-sec.at("labels", default: auto),
@@ -644,8 +645,10 @@
   // before placing it back at the panel's south-west corner. cetz 0.5.0 has
   // no native clip primitive, so this nested-canvas hop is the only way to
   // bound geom marks to the panel.
-  let panel-w = px-hi - px-lo
-  let panel-h = py-hi - py-lo
+  // Floored at zero: `box(clip: true, width: panel-w * 1cm, ...)` below is the
+  // one place a negative extent would reach Typst.
+  let panel-w = calc.max(0.0, px-hi - px-lo)
+  let panel-h = calc.max(0.0, py-hi - py-lo)
   let inner-ctx = ctx
   inner-ctx.px-range = (x-pad-lo, panel-w - x-pad-hi)
   inner-ctx.py-range = (y-pad-lo, panel-h - y-pad-hi)
@@ -752,8 +755,18 @@
   let y-title-cm = _title-extent-cm(_ax-title.yl, y-title-extents, "y")
   let x-title-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   let y-title-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
-  let x-edge-offset = x-tick-cm + 0.1 + x-label-depth + x-title-gap
-  let y-edge-offset = y-tick-cm + 0.1 + y-label-width + y-title-gap
+  let x-edge-offset = (
+    x-tick-cm
+      + _band-gap-cm(x-tick-cm + x-label-depth, radial: is-radial)
+      + x-label-depth
+      + x-title-gap
+  )
+  let y-edge-offset = (
+    y-tick-cm
+      + _band-gap-cm(y-tick-cm + y-label-width, radial: is-radial)
+      + y-label-width
+      + y-title-gap
+  )
   if show-x-title and x-title != none and _ax-title.xb.size > 0pt {
     let (cx, x-anchor) = _x-title-place(_ax-title.xb.align, px-lo, px-hi)
     content(
