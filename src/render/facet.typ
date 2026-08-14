@@ -11,6 +11,7 @@
 #import "common.typ": _per-side, _resolve-data
 #import "prestat.typ": _raw-levels-for
 #import "layer-prep.typ": prepare-layers
+#import "extents.typ": _title-boxed
 
 #let _render-style(theme) = (
   strip-text: _text-style(theme, "strip-text"),
@@ -34,6 +35,7 @@
   style,
   theme,
   angle: 0deg,
+  along-cm: none,
 ) = {
   let strip = _rect-style(
     theme,
@@ -70,12 +72,21 @@
   // The orientation angle fixes the band's reading direction; a theme
   // `strip-text` angle spins the glyphs further within the chosen anchor.
   let user-angle = style.strip-text.angle
-  cetz.draw.content(
-    (sx, sy),
-    text(.._text-args(style.strip-text))[#resolve-prose(
+  // A label longer than the band it names is drawn in the box the band was
+  // measured against, so it wraps onto further lines instead of running off
+  // the panel grid. `_strip-band` measures through the same box.
+  let body = {
+    let resolved = text(.._text-args(style.strip-text))[#resolve-prose(
       label-text,
       eval-strings: style.strip-text.typst,
-    )],
+    )]
+    if along-cm == none { resolved } else {
+      _title-boxed(resolved, along-cm, if a == none { center } else { a })
+    }
+  }
+  cetz.draw.content(
+    (sx, sy),
+    body,
     angle: angle + (if user-angle != none { user-angle } else { 0deg }),
     anchor: s-anchor,
   )
@@ -98,13 +109,45 @@
 // old fixed constants gave a single line. For the rotated row-strip the
 // measured height is the band's *width*, which is exactly what the caller
 // wants.
-#let _strip-band(labels, style, base) = {
+//
+// Returns `(band, text, along)`: the band to lay out, the label height alone,
+// which is the floor no budget gets under, and the box the draw side must
+// reproduce (`none` when no label needed one). `budget` is the room the grid
+// can spare for one band: the fixed `base` gives way to it first, since it is
+// breathing room rather than ink, and the label height last. Leave it `none`
+// and the band is measured exactly as it always was. `along-cm` bounds the
+// label's reading direction, the way `_axis-title-extents` bounds a title, so
+// a label wider than its panel wraps instead of running off the canvas.
+#let _strip-band(labels, style, base, budget: none, along-cm: none) = {
   let prose = labels.map(l => resolve-prose(
     l,
     eval-strings: style.strip-text.typst,
   ))
   let pad = 0.16
-  calc.max(base, measure-labels-cm(prose, style.strip-text.size).height + pad)
+  let natural = measure-labels-cm(prose, style.strip-text.size)
+  let fits = along-cm == none or natural.width <= along-cm
+  let text-cm = if fits {
+    natural.height + pad
+  } else {
+    // A label wider than its band is drawn boxed to it, so it is measured
+    // through that same box and the band holds the lines it wraps onto.
+    let boxed = prose.fold(0.0, (h, l) => calc.max(
+      h,
+      measure(_title-boxed(
+        text(.._text-args(style.strip-text))[#l],
+        along-cm,
+        center,
+      )).height
+        / 1cm,
+    ))
+    boxed + pad
+  }
+  let band = if budget == none {
+    calc.max(base, text-cm)
+  } else {
+    calc.max(text-cm, calc.min(calc.max(base, text-cm), budget))
+  }
+  (band: band, text: text-cm, along: if fits { none } else { along-cm })
 }
 
 
