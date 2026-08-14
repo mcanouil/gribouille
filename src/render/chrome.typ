@@ -413,11 +413,13 @@
   }
   // The panel a label is drawn against, given the box the margins leave. A
   // facet builder splits that box into tracks and every outer cell draws the
-  // edge axes, so the cell is what the reach is solved against; the strip and
-  // secondary bands it does not subtract are the very ink that would absorb an
-  // overhang, so leaving them out errs the safe way. `coord-fixed` shrinks a
-  // single panel inside its box and pins it bottom-left, which leaves the
-  // unused canvas as slack on the far sides.
+  // edge axes, so the cell is what the reach is solved against. The strip and
+  // secondary bands are not subtracted, which makes the cell read wider and
+  // taller than it is laid out and so reserves less than the arithmetic alone
+  // would ask for; what covers the difference is that each of those bands sits
+  // between the cell and the canvas edge the label reaches towards, and
+  // absorbs it. `coord-fixed` shrinks a single panel inside its box and pins it
+  // bottom-left, which leaves the unused canvas as slack on the far sides.
   let _panel-of(box-w, box-h) = {
     if ctx.faceted {
       let gutters = _facet-gutter(
@@ -517,11 +519,17 @@
     // panel surface outset. The fit check below compares the legend slot
     // against what this leaves, so it can tell a legend that does not fit from
     // a canvas the axes alone have already filled.
+    // Unfloored on purpose: this is what the axes themselves take, and the
+    // legend check reads it to work out the room a legend has. Folding the
+    // overhang in would make a canvas the labels dominate look full, so the
+    // check would skip the very plot whose legend cannot fit. A legend that
+    // does fit inside the floor shares that margin with the label reaching
+    // into it, which crowds the two but cannot grow the canvas.
     let base = (
-      left: _floor("left", left-extent + panel-out.left),
-      bottom: _floor("bottom", bottom-extent + panel-out.bottom),
-      top: _floor("top", sec-x-extent + panel-out.top),
-      right: _floor("right", sec-y-extent + panel-out.right),
+      left: left-extent + panel-out.left,
+      bottom: bottom-extent + panel-out.bottom,
+      top: sec-x-extent + panel-out.top,
+      right: sec-y-extent + panel-out.right,
     )
     (
       margin: (
