@@ -18,7 +18,9 @@
   _apply-labels, _post-train,
 )
 #import "render/extents.typ": _text-margin-cm
-#import "render/facet.typ": _measure-label-sizes, _render-prepare, _render-style
+#import "render/facet.typ": (
+  _measure-label-sizes, _render-prepare, _render-style, _wrap-tracks,
+)
 #import "render/canvas.typ": (
   _render-canvas-grid, _render-canvas-single, _render-canvas-wrap,
   _train-grid-panels, _train-panels,
@@ -159,6 +161,13 @@
   let free-y = facet-scales == "free" or facet-scales == "free_y"
   let grid-n-rows = calc.max(1, grid-row-levels.len())
   let grid-n-cols = calc.max(1, grid-col-levels.len())
+  // The tracks the panel grid is laid out in, so the chrome can reserve
+  // against the cell an outer axis is drawn along rather than the whole box.
+  let (panel-n-cols, panel-n-rows) = if facet-wrap-mode {
+    _wrap-tracks(spec.facet, wrap-levels.len())
+  } else if facet-grid-mode {
+    (grid-n-cols, grid-n-rows)
+  } else { (1, 1) }
   let panel-trained-list = if facet-grid-mode {
     _train-grid-panels(
       spec,
@@ -233,6 +242,8 @@
     height-units: height-units,
     facet-grid-mode: facet-grid-mode,
     faceted: facet-wrap-mode or facet-grid-mode,
+    panel-n-cols: panel-n-cols,
+    panel-n-rows: panel-n-rows,
     free-x: free-x,
     free-y: free-y,
     grid-n-rows: grid-n-rows,

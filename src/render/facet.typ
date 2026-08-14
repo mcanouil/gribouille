@@ -5,6 +5,7 @@
 #import "../theme/theme.typ": _rect-style, _text-args, _text-style
 #import "../utils/typst-markup.typ": eval-as-markup, resolve-prose
 #import "../utils/measure.typ": measure-labels-cm, measure-text-cm
+#import "../utils/gutter.typ": resolve-gutter
 #import "../geom/label-draw.typ" as label-draw
 #import "../facet/labellers.typ" as labellers
 #import "../data.typ": group-by
@@ -12,6 +13,38 @@
 #import "prestat.typ": _raw-levels-for
 #import "layer-prep.typ": prepare-layers
 #import "extents.typ": _title-boxed
+
+// The gutter a facet spec asks for, resolved against the theme's panel
+// spacing. Lives here rather than in the canvas builder so the chrome can
+// reserve against the same tracks the builder lays out.
+#let _facet-gutter(facet, theme, scope) = resolve-gutter(
+  if facet.at("gutter", default: auto) == auto {
+    theme.at("panel-spacing", default: 0.5cm)
+  } else { facet.gutter },
+  scope: scope,
+)
+
+// The gutter a grid of `count` tracks can afford across `extent` cm.
+// Whitespace between panels is the first thing a small plot gives up, but it
+// never takes more than half the grid: past that the panels it separates have
+// nothing left to separate.
+#let _fit-gutter(gutter, extent, count) = {
+  if count <= 1 { return gutter }
+  calc.min(gutter, calc.max(0.0, extent) / (2 * (count - 1)))
+}
+
+// Column and row counts a `facet-wrap` over `n` levels lays out: an explicit
+// `ncolumn` wins, then `nrow`, then the squarest grid holding the levels.
+#let _wrap-tracks(facet, n) = {
+  let ncol = if facet.ncolumn != none {
+    facet.ncolumn
+  } else if facet.nrow != none {
+    calc.ceil(n / facet.nrow)
+  } else {
+    calc.max(1, int(calc.ceil(calc.sqrt(n))))
+  }
+  (ncol, calc.max(1, int(calc.ceil(n / ncol))))
+}
 
 #let _render-style(theme) = (
   strip-text: _text-style(theme, "strip-text"),

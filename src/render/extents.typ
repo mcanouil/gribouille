@@ -206,7 +206,26 @@
         typst-eval,
       )
     ))
-  measure-labels-cm(labels, size)
+  // Each break keeps its own extent and where it lands, the way the radial
+  // groups above do. A label is centred on its break, so it reaches past the
+  // panel edge the break sits near, and the reservation for that reach can only
+  // be solved per break: the widest label is not always the outermost one.
+  // `map-break` into (0, 1) is affine on both branches and folds `reverse` in,
+  // so the fraction is the canvas position, not the data one.
+  let breaks = values
+    .zip(labels)
+    .map(((b, label)) => {
+      if label == none { return none }
+      let frac = map-break(trained, b, (0.0, 1.0))
+      if frac == none { return none }
+      let m = measure-text-cm(
+        resolve-prose(label, eval-strings: typst-eval),
+        size,
+      )
+      (frac: frac, width: m.width, height: m.height)
+    })
+    .filter(r => r != none)
+  measure-labels-cm(labels, size) + (breaks: breaks)
 }
 
 // Same as `_axis-label-extents` but for the secondary axis: each break is
@@ -221,6 +240,8 @@
   let typst-mark = trained.at("typst-mark", default: false)
   let labels = _secondary-breaks(trained, sec, _axis-breaks(trained))
     .enumerate()
+    // The transformed value is what the draw formats and what the reservation
+    // measures; the untransformed break is what places it on the axis.
     .map(((idx, b)) => {
       let transformed = secondary-mod.apply-transform(sec, b)
       _resolve-tick(
@@ -233,7 +254,21 @@
       )
     })
   if labels.len() == 0 { return (width: 0.0, height: 0.0) }
-  measure-labels-cm(labels, size)
+  let sec-breaks = _secondary-breaks(trained, sec, _axis-breaks(trained))
+  let breaks = sec-breaks
+    .zip(labels)
+    .map(((b, label)) => {
+      if label == none { return none }
+      let frac = map-break(trained, b, (0.0, 1.0))
+      if frac == none { return none }
+      let m = measure-text-cm(
+        resolve-prose(label, eval-strings: typst-eval),
+        size,
+      )
+      (frac: frac, width: m.width, height: m.height)
+    })
+    .filter(r => r != none)
+  measure-labels-cm(labels, size) + (breaks: breaks)
 }
 
 // Perpendicular extent of x-axis tick labels (cm). Inputs are the measured
@@ -263,6 +298,82 @@
   )
 }
 
+// The anchor `_draw-x-label` pins an x tick label at. Kept here, beside the
+// reach arithmetic that reserves room for it, so the side a label is reserved
+// on and the side it is drawn on cannot drift apart.
+#let _x-label-anchor(angle) = {
+  if angle == 0 { "north" } else if angle > 0 { "north-east" } else {
+    "north-west"
+  }
+}
+
+// Where each anchor sits on the unrotated label box, in half-extent units from
+// its centre. Only the anchors the axis draws are listed: `north` and the two
+// corner anchors for x labels, `mid-east` / `mid-west` for y labels, `south`
+// for a secondary x, and `center` for a radial theta label.
+#let _ANCHOR-OFFSET = (
+  center: (0, 0),
+  north: (0, 1),
+  south: (0, -1),
+  "north-east": (1, 1),
+  "north-west": (-1, 1),
+  "mid-east": (1, 0),
+  "mid-west": (-1, 0),
+)
+
+// How far (cm) a label of `w-cm` by `h-cm` drawn at `angle` with `anchor`
+// reaches from the point it is pinned at, per canvas side.
+//
+// cetz names a `content` anchor on the turned rectangle's own corners rather
+// than on the bounding box of the rotation, so a rotated corner-pinned label
+// swings about its pin: a `north-east` label at 45 degrees reaches left by its
+// length and right by its thickness, not to one side alone. Both box axes
+// therefore project onto both canvas axes, and the two extremes are
+// independent along each, so a side takes the larger projection of each axis.
+#let _label-reach(w-cm, h-cm, angle, anchor) = {
+  let (ox, oy) = _ANCHOR-OFFSET.at(anchor)
+  let a = angle * 1deg
+  let (cos-a, sin-a) = (calc.cos(a), calc.sin(a))
+  // Distance from the pin to each edge of the box, along the box's own axes.
+  let (bx-hi, bx-lo) = ((1 - ox) * w-cm / 2, (1 + ox) * w-cm / 2)
+  let (by-hi, by-lo) = ((1 - oy) * h-cm / 2, (1 + oy) * h-cm / 2)
+  let _end = (d-hi, d-lo, proj) => calc.max(d-hi * proj, -d-lo * proj)
+  (
+    right: _end(bx-hi, bx-lo, cos-a) + _end(by-hi, by-lo, -sin-a),
+    left: _end(bx-hi, bx-lo, -cos-a) + _end(by-hi, by-lo, sin-a),
+    up: _end(bx-hi, bx-lo, sin-a) + _end(by-hi, by-lo, cos-a),
+    down: _end(bx-hi, bx-lo, -sin-a) + _end(by-hi, by-lo, -cos-a),
+  )
+}
+
+// The cm a run of tick labels reaches past each end of the panel, given one
+// record per drawn break (`frac`, `width`, `height`), a `reach-of` that turns a
+// record into a `(lo, hi)` pair along this axis, the panel `span`, the
+// `view-pad-cm` the data area is already inset by, and the `slack` the panel
+// leaves unused at each end of its box.
+//
+// Seeded at zero and folded with `calc.max`, so a break far enough inside the
+// panel owes exactly nothing: on a plot with room the expansion gap already
+// covers the reach, and the reservation is the identity. The fold runs over
+// every break rather than the outermost, because a wide label one break in can
+// reach further than a narrow one at the edge.
+#let _label-overhang(recs, reach-of, span, pad, slack) = {
+  let inner = calc.max(0.0, span - pad.at(0) - pad.at(1))
+  let over = (lo: 0.0, hi: 0.0)
+  for r in recs {
+    let reach = reach-of(r)
+    over.lo = calc.max(
+      over.lo,
+      reach.lo - (slack.at(0) + pad.at(0) + r.frac * inner),
+    )
+    over.hi = calc.max(
+      over.hi,
+      reach.hi - (slack.at(1) + pad.at(1) + (1 - r.frac) * inner),
+    )
+  }
+  over
+}
+
 // Half-extents (cm) each radial theta label reaches from the point it is drawn
 // on, one record per label group: `hw` to either side, `hh` above and below,
 // carrying the canvas angle `theta` the group sits at. The labels are drawn
@@ -270,17 +381,15 @@
 // these against the panel half-spans and keeps the whole ring inside the panel
 // rather than spilling out of it.
 //
-// Both trigonometric terms are taken absolute, so a rotation past the first
-// quadrant grows the box as it should instead of folding it back to nothing.
+// A theta label is drawn centred, which is `_label-reach`'s `center` anchor:
+// the halves it answers are term for term the rotated bounding box these
+// records used to compute on their own, so the radial and cartesian
+// reservations solve one geometry rather than two that can drift.
 #let _theta-label-bounds(groups, angle) = {
-  let a = angle * 1deg
-  let cos-a = calc.abs(calc.cos(a))
-  let sin-a = calc.abs(calc.sin(a))
-  groups.map(g => (
-    theta: g.theta,
-    hw: (g.width * cos-a + g.height * sin-a) / 2,
-    hh: (g.width * sin-a + g.height * cos-a) / 2,
-  ))
+  groups.map(g => {
+    let reach = _label-reach(g.width, g.height, angle, "center")
+    (theta: g.theta, hw: reach.left, hh: reach.up)
+  })
 }
 
 // The box width `_axis-title-extents` settled on, or `none` when the title

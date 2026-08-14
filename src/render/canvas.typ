@@ -19,7 +19,10 @@
   _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
   _title-extent-cm, _x-title-place, _y-title-place,
 )
-#import "facet.typ": _draw-strip, _strip-band, _strip-texts
+#import "facet.typ": (
+  _draw-strip, _facet-gutter, _fit-gutter, _strip-band, _strip-texts,
+  _wrap-tracks,
+)
 #import "panel-draw.typ": _draw-axis-and-layers
 #import "../utils/errors.typ": cm-text, fail
 
@@ -50,15 +53,6 @@
       + "levels, or shrink the strip text with "
       + "`theme(strip-text: element-text(size: ...))`.",
   )
-}
-
-// The gutter a grid of `count` tracks can afford across `extent` cm. Whitespace
-// between panels is the first thing a small plot gives up, but it never takes
-// more than half the grid: past that the panels it separates have nothing left
-// to separate.
-#let _fit-gutter(gutter, extent, count) = {
-  if count <= 1 { return gutter }
-  calc.min(gutter, calc.max(0.0, extent) / (2 * (count - 1)))
 }
 
 #let _panel-row-count(panel-layers) = {
@@ -316,13 +310,6 @@
 
 // Resolve a facet's panel gutter to `(x:, y:)` cm floats: the facet's own
 // `gutter:` argument wins, otherwise the theme `panel-spacing` (default 0.5cm).
-#let _facet-gutter(facet, theme, scope) = resolve-gutter(
-  if facet.at("gutter", default: auto) == auto {
-    theme.at("panel-spacing", default: 0.5cm)
-  } else { facet.gutter },
-  scope: scope,
-)
-
 // Depth (cm) a facet cell owes the secondary axis on `axis`: zero unless the
 // trained scale carries a `secondary:` spec that the panels actually draw.
 // Under free scales each panel measures its own labels, so the widest wins
@@ -420,14 +407,7 @@
 
   let levels = wrap-levels
   let n = levels.len()
-  let ncol = if spec.facet.ncolumn != none {
-    spec.facet.ncolumn
-  } else if spec.facet.nrow != none {
-    calc.ceil(n / spec.facet.nrow)
-  } else {
-    calc.max(1, int(calc.ceil(calc.sqrt(n))))
-  }
-  let nrow = calc.max(1, int(calc.ceil(n / ncol)))
+  let (ncol, nrow) = _wrap-tracks(spec.facet, n)
   let strip-texts = _strip-texts(
     spec.facet.at("labeller", default: none),
     spec.facet.variable,

@@ -67,6 +67,9 @@ Run the survey command at the bottom before extending the table.
 | `tick`    | axis tick                 | tick mark (`axis-ticks`, `element-tick`); the label is `axis-text`.                   |
 | `ext`     | measured extents          | `(width, height)` cm record from `measure-labels-cm`; an axis title's also carries `along` and `min-width`. |
 | `along`   | along-panel reading length | cm an axis title may read before its projection overruns the panel; the box it wraps in (`_title-along-cm`, `_title-boxed`). |
+| `reach`   | reach from a pin          | cm a label spreads from the point it is anchored at, per canvas side (`_label-reach`). |
+| `overhang` | overhang past an edge    | cm a label's reach exceeds its distance from the panel edge; a floor on the chrome margin (`_label-overhang`). |
+| `frac`    | fractional position       | a break's place inside the data area, 0 at one end and 1 at the other (`map-break` into `(0, 1)`). |
 | `cm`      | centimetres               | Typst length unit; used in numeric helpers (`length-to-cm`).                          |
 | `pt`      | points (typographic)      | Typst length unit.                                                                    |
 

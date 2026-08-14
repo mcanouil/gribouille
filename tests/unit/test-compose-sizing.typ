@@ -83,4 +83,31 @@
 // A 3cm by 1.5cm composition with a hoisted right legend reports "the hoisted
 // right legend stands 1.54 cm tall beside a panel area of 1.5 cm".
 
+// Panels carved out of a small composition put their outermost tick labels
+// close to the canvas edge, where the label reaching past the panel used to
+// grow the whole stack. `align-panels` forces a shared margin over the one each
+// panel solved for itself, so the reach is re-floored against it.
+#context {
+  let small = defer(
+    plot,
+    data: (x: (1, 2, 3), y: (2, 3, 1)),
+    mapping: aes(x: "x", y: "y"),
+    layers: (geom-point(),),
+  )
+  for aligned in (false, true) {
+    let m = measure(compose(
+      small,
+      small,
+      columns: 2,
+      align-panels: aligned,
+      width: 30mm,
+      height: 15mm,
+    ))
+    assert(
+      m.width <= 30mm + 0.5pt and m.height <= 15mm + 0.5pt,
+      message: "a small composition measured " + repr(m),
+    )
+  }
+}
+
 Compose sizing test passed.

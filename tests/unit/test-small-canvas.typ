@@ -31,6 +31,8 @@
   height-units: 8.0,
   facet-grid-mode: false,
   faceted: false,
+  panel-n-cols: 1,
+  panel-n-rows: 1,
   free-x: false,
   free-y: false,
   grid-n-rows: 1,
@@ -72,10 +74,35 @@
     )
   }
 
+  // A stripped theme draws no tick labels, so none of them reaches past a panel
+  // edge and the overhang floor is exactly nothing. The sparkline cases below
+  // rest on that: a floor that fired here would take panel back from a canvas
+  // that has none to spare.
+  for side in ("top", "right", "bottom", "left") {
+    assert.eq(void-chrome.overhang.at(side), 0.0)
+  }
+  // The floor is spent before it is reserved on the two sides that already
+  // hold a band: an x label reaching left lands in the y-axis margin.
+  let recorded = chrome-of()
+  for side in ("bottom", "left") {
+    assert(
+      recorded.margin.at(side) > recorded.overhang.at(side),
+      message: "the "
+        + side
+        + " band should already cover the reach, got "
+        + repr(recorded.overhang.at(side))
+        + " against "
+        + repr(recorded.margin.at(side)),
+    )
+  }
+
   // A radial panel is the one exception. It reserves no band, because its theta
   // labels ring the inside of the panel edge rather than sitting outside it,
   // but that ink is up against the edge and still owes it the gap.
   let radial-chrome = chrome-of(coord: coord-radial())
+  for side in ("top", "right", "bottom", "left") {
+    assert.eq(radial-chrome.overhang.at(side), 0.0)
+  }
   for side in ("bottom", "left") {
     assert(
       radial-chrome.margin.at(side) >= _TICK-LABEL-GAP,
