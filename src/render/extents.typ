@@ -332,8 +332,9 @@
   }
 }
 
-// Smallest panel worth wrapping an axis title against, matching the 0.5 cm
-// panel floor `render-plot` and `max-right-margin` already enforce.
+// Smallest panel worth wrapping an axis title against. Below it the panel holds
+// no readable title at any width, so bounding one buys nothing; the span check
+// in `chrome.typ` is what reports the title that will not fit.
 #let _MIN-TITLE-PANEL = 0.5
 
 // How much of a rotated title box's reading length (`along`) and thickness
@@ -378,10 +379,10 @@
 // horizontal y title): its length is then reserved as perpendicular depth
 // instead, so nothing bounds it and `none` means unbounded.
 #let _title-along-cm(style, axis, panel-cm, natural-cm) = {
-  // Below the panel minimum the whole layout is already degenerate, and the
-  // canvas-minimum guard in `render-plot` is what speaks to that. Bounding a
+  // Below the panel minimum the whole layout is already degenerate. Bounding a
   // title to a few millimetres there would turn plots that used to render,
-  // however cramped, into failures. Leave them exactly as they were.
+  // however cramped, into failures. Leave them exactly as they were, and let
+  // the caller's span check speak for a title that genuinely cannot fit.
   if panel-cm < _MIN-TITLE-PANEL { return none }
   let shares = _title-shares(style, axis)
   if shares.along <= 1e-6 { return none }
@@ -473,6 +474,20 @@
 // the gap stays stable when users tune the axis-title font size.
 #let _AX-TITLE-LABEL-GAP = 5pt
 
+// Gap (cm) between the panel edge and the tick-and-label band it carries, and
+// pad (cm) between an axis title and the canvas edge beyond it. Every site
+// that reserves either one gates it on the thing it separates actually being
+// drawn, so a stripped axis (`theme-void`, `guides(x: none)`) reserves neither
+// and the panel keeps the room.
+#let _TICK-LABEL-GAP = 0.1
+#let _TITLE-EDGE-PAD = 0.05
+
+// Each is owed only when there is something to separate: no band, no gap; no
+// title, no pad. Chrome reservation and every draw site read these, so a title
+// cannot come to sit outside the margin reserved for it.
+#let _band-gap-cm(band) = if band > 0 { _TICK-LABEL-GAP } else { 0.0 }
+#let _title-pad-cm(title-cm) = if title-cm > 0 { _TITLE-EDGE-PAD } else { 0.0 }
+
 // One-element tuple for stand-alone guides, so callers can iterate uniformly
 // across stacks and singletons. Shared between x and y; placement on either
 // axis flows through the same rendering path.
@@ -495,34 +510,36 @@
   s => _y-label-width(s.angle, s.n-dodge, w, h),
 )
 
-// Distance (cm) from the panel edge a secondary axis sits on to the near edge
-// of its title: the tick marks, the label band, and the title-to-label gap.
-// `axis` selects orientation: `"y"` (right edge, label width) or `"x"` (top
-// edge, label depth). The reservation below and both draw sites (the single
-// panel, and the facet builders' one title per grid) measure the title from
-// here, so a change to the stack cannot move one without the others.
-#let _sec-title-offset-cm(tick-len, sec-extents, ax-title, axis) = {
-  let label-extent = if axis == "y" {
-    _y-label-width(0, 1, sec-extents.width, sec-extents.height)
-  } else {
-    _x-label-depth(0, 1, sec-extents.width, sec-extents.height)
-  }
-  let gap-side = if axis == "y" { "left" } else { "bottom" }
-  let gap = _text-margin-cm(ax-title, gap-side, _AX-TITLE-LABEL-GAP)
-  tick-len + 0.1 + label-extent + gap
-}
-
 // Depth (cm) of the secondary axis ink alone, tick mark plus gap plus label
 // band, with no title. A facet cell reserves this between the panel edge and
 // the strip band that would otherwise be painted over it; the grid draws the
 // secondary title once at its outer edge, where the chrome margin holds it.
+// `axis` selects orientation: `"y"` (right edge, label width) or `"x"` (top
+// edge, label depth).
 #let _sec-band-cm(tick-len, sec-extents, axis) = {
   let label-extent = if axis == "y" {
     _y-label-width(0, 1, sec-extents.width, sec-extents.height)
   } else {
     _x-label-depth(0, 1, sec-extents.width, sec-extents.height)
   }
-  tick-len + 0.1 + label-extent
+  tick-len + _band-gap-cm(tick-len + label-extent) + label-extent
+}
+
+// Distance (cm) from the panel edge a secondary axis sits on to the near edge
+// of its title: the band above, plus the title-to-label gap. The reservation
+// below and both draw sites (the single panel, and the facet builders' one
+// title per grid) measure the title from here, so a change to the stack cannot
+// move one without the others.
+#let _sec-title-offset-cm(tick-len, sec-extents, ax-title, axis) = {
+  let gap-side = if axis == "y" { "left" } else { "bottom" }
+  (
+    _sec-band-cm(tick-len, sec-extents, axis)
+      + _text-margin-cm(
+        ax-title,
+        gap-side,
+        _AX-TITLE-LABEL-GAP,
+      )
+  )
 }
 
 // Reserved extent between the panel and the canvas edge for the secondary
@@ -543,5 +560,5 @@
     _title-extent-cm(ax-title, title-ext, axis)
   } else { 0.0 }
   let offset = _sec-title-offset-cm(tick-len, sec-extents, ax-title, axis)
-  offset + title-cm + 0.05
+  offset + title-cm + _title-pad-cm(title-cm)
 }

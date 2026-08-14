@@ -89,12 +89,13 @@
   let y-title = _axis-title(y-trained, _map-name("y"))
   let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
   let _tick-len = _per-side(_len-side, "axis-ticks")
-  // The band between the panel grid and its title is the one `_chrome-margins`
-  // reserved, carried here rather than recomputed: a suppressed axis draws no
-  // ticks or labels and a radial panel draws neither band outside its edges, so
-  // recomputing it means remembering both gates in a second place, and a title
-  // offset by a band nothing drew lands outside its own margin, growing the
-  // canvas past the requested size.
+  // The band between the panel grid and its title, and the gap that holds it
+  // off the panel edge, are the ones `_chrome-margins` reserved, carried here
+  // rather than recomputed: a suppressed axis draws no ticks or labels and a
+  // radial panel draws neither band outside its edges, so recomputing them
+  // means remembering both gates in a second place, and a title offset by a
+  // band nothing drew lands outside its own margin, growing the canvas past
+  // the requested size.
   let _xt-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   let _yt-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   let _xt-cm = _title-extent-cm(_ax-title.xb, ctx.x-title-extents, "x")
@@ -108,7 +109,7 @@
     cetz.draw.content(
       (
         cx,
-        margin.bottom - ctx.x-label-band - 0.1 - _xt-gap - _xt-cm,
+        margin.bottom - ctx.x-label-band - ctx.x-band-gap - _xt-gap - _xt-cm,
       ),
       _title-body(x-title, _ax-title.xb, ctx.x-title-extents),
       anchor: x-anchor,
@@ -119,7 +120,7 @@
     let (cy, y-anchor) = _y-title-place(_ax-title.yl.align, .._y-span)
     cetz.draw.content(
       (
-        margin.left - ctx.y-label-band - 0.1 - _yt-gap - _yt-cm / 2,
+        margin.left - ctx.y-label-band - ctx.y-band-gap - _yt-gap - _yt-cm / 2,
         cy,
       ),
       _title-body(y-title, _ax-title.yl, ctx.y-title-extents),
@@ -417,10 +418,17 @@
 
   let grid-w = width-units - margin.left - margin.right
   let grid-h = height-units - margin.bottom - margin.top
-  let panel-w = (grid-w - gutter-x * (ncol - 1)) / ncol
+  // Gutters and strips are fixed costs the grid pays before the panels get
+  // anything, so a small enough plot leaves each panel nothing. Floor at zero:
+  // an empty panel is honest, a negative one draws mirrored.
+  let panel-w = calc.max(0.0, grid-w - gutter-x * (ncol - 1)) / ncol
   let panel-h = (
-    (
-      grid-h - gutter-y * (nrow - 1) - strip-h * nrow - sec-band * rows-with-sec
+    calc.max(
+      0.0,
+      grid-h
+        - gutter-y * (nrow - 1)
+        - strip-h * nrow
+        - sec-band * rows-with-sec,
     )
       / nrow
   )
@@ -580,8 +588,9 @@
   let grid-h = (
     height-units - margin.bottom - margin.top - top-strip - sec-band-x
   )
-  let panel-w = (grid-w - gutter-x * (n-cols - 1)) / n-cols
-  let panel-h = (grid-h - gutter-y * (n-rows - 1)) / n-rows
+  // Floored at zero for the same reason as the wrap builder above.
+  let panel-w = calc.max(0.0, grid-w - gutter-x * (n-cols - 1)) / n-cols
+  let panel-h = calc.max(0.0, grid-h - gutter-y * (n-rows - 1)) / n-rows
 
   let shared-breaks = _facet-shared-breaks(
     trained,
@@ -688,8 +697,10 @@
   let py-lo = margin.bottom
   let py-hi = height-units - margin.top
 
-  let box-w = px-hi - px-lo
-  let box-h = py-hi - py-lo
+  // Chrome can consume the whole canvas on a very small plot; floor the panel at
+  // zero so it draws empty rather than inverting into a mirrored rect.
+  let box-w = calc.max(0.0, px-hi - px-lo)
+  let box-h = calc.max(0.0, py-hi - py-lo)
   let (inner-w, inner-h) = _fixed-inner-size(coord, trained, box-w, box-h)
 
   cetz.canvas(length: 1cm, {
@@ -720,6 +731,8 @@
       y-sec-title-extents: ctx.y-sec-title-extents,
       x-sec-extents: ctx.x-sec-extents,
       y-sec-extents: ctx.y-sec-extents,
+      x-edge-band: ctx.x-label-band + ctx.x-band-gap,
+      y-edge-band: ctx.y-label-band + ctx.y-band-gap,
       canvas-w: width-units,
       canvas-h: height-units,
     )
