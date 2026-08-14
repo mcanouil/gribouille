@@ -204,7 +204,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labels: labels(title: "Mean $bar(x)$ over Time"),
+///   labels: labels(title: "Mean $macron(x)$ over Time"),
 ///   theme: theme(plot-title: element-typst(size: 14pt, weight: "bold")),
 ///   width: 10cm,
 ///   height: 6cm,
@@ -219,7 +219,7 @@
 ///   data: d,
 ///   mapping: aes(x: "x", y: "y"),
 ///   layers: (geom-point(size: 2pt),),
-///   labels: labels(title: "Mean $bar(x)$", x: "Time (s)"),
+///   labels: labels(title: "Mean $macron(x)$", x: "Time (s)"),
 ///   theme: theme(
 ///     plot-title: element-typst(),
 ///     axis-title: element-text(),
