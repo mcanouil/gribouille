@@ -14,10 +14,11 @@
 #import "domain.typ": _is-flipped
 #import "../utils/errors.typ": fail
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _axis-label-extents, _axis-title-extents,
-  _fit-title-extents, _sec-extent, _secondary-label-extents, _text-margin-cm,
-  _title-angle, _title-extent-cm, _title-overrun-cm, _title-span-cm,
-  _x-label-depth-stack, _y-label-width-stack,
+  _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _axis-label-extents,
+  _axis-title-extents, _band-gap-cm, _fit-title-extents, _sec-extent,
+  _secondary-label-extents, _text-margin-cm, _title-angle, _title-extent-cm,
+  _title-overrun-cm, _title-pad-cm, _title-span-cm, _x-label-depth-stack,
+  _y-label-width-stack,
 )
 
 // Passes allowed when settling axis-title wrapping against the panel size, and
@@ -217,6 +218,17 @@
   // recomputing them, so a title cannot come to sit outside its own margin.
   let x-label-band = x-tick-cm + x-label-depth
   let y-label-band = y-tick-cm + y-label-width
+  // The gap that holds that band off the panel edge travels with it, for the
+  // same reason: an axis with nothing to hold off owes no gap, and a builder
+  // that re-derived the rule would have to remember the radial case twice.
+  // Radial is that case: it reserves no band, because its theta labels ring the
+  // inside of the panel edge rather than sitting outside it, but that ink is up
+  // against the edge and owes it the gap all the same.
+  let _edge-gap = band => if _radial { _TICK-LABEL-GAP } else {
+    _band-gap-cm(band)
+  }
+  let x-band-gap = _edge-gap(x-label-band)
+  let y-band-gap = _edge-gap(y-label-band)
   let _side-gap = side => (
     extents.at(side) + (if extents.at(side) > 0 { legend-gap } else { 0.0 })
   )
@@ -324,12 +336,20 @@
     let y-title-cm = if y-title != none {
       _title-extent-cm(ax-title.yl, ext.yl, "y")
     } else { 0.0 }
-    let bottom-extent = x-label-band + 0.1 + bottom-gap + x-title-cm + 0.05
-    let left-extent = y-label-band + 0.1 + left-gap + y-title-cm
-    // Cap the right margin so the legend can never push panel width below the
-    // single-tick minimum. Without the cap, `px-hi - px-lo` goes negative and
-    // axis labels render reversed (panel becomes mirror-imaged into the legend).
-    let max-right-margin = calc.max(0.0, width-units - left-extent - 0.5)
+    // A stripped axis hands the gap and the pad back to the panel, which is
+    // what lets a sub-centimetre canvas hold anything at all.
+    let bottom-extent = (
+      x-label-band
+        + x-band-gap
+        + bottom-gap
+        + x-title-cm
+        + _title-pad-cm(x-title-cm)
+    )
+    let left-extent = y-label-band + y-band-gap + left-gap + y-title-cm
+    // Cap the right margin so the legend can never invert the panel. Without the
+    // cap, `px-hi - px-lo` goes negative and axis labels render reversed (panel
+    // becomes mirror-imaged into the legend).
+    let max-right-margin = calc.max(0.0, width-units - left-extent)
     (
       margin: (
         left: left-extent + _side-gap("left") + _surface-out("left"),
@@ -367,8 +387,8 @@
   // Each pass can only take panel extent away, never give it back, so the
   // sequence descends and is bounded below by zero: it settles. Stop once the
   // panel holds still AND every title fits the span it was bounded to; the cap
-  // is a backstop for a degenerate plot, where the panel floors in `_fit` and
-  // the canvas-minimum guard in `render-plot` takes over.
+  // is a backstop for a degenerate plot, where the panel floors at zero in
+  // `_fit` and the empty-canvas guard in `render-plot` takes over.
   for _ in range(_TITLE-FIT-PASSES) {
     let next-w = calc.max(0.0, width-units - fit.margin.left - fit.margin.right)
     let next-h = calc.max(
@@ -455,21 +475,23 @@
   // `compose(align-panels: true)` forces a shared margin so panels' plot areas
   // line up; overlay the supplied sides, then clamp every side against this
   // panel's own extent so a forced margin can never invert the plot rect. Each
-  // bound keeps at least 0.5cm of plot opposite it, matching `max-right-margin`.
+  // bound leaves the opposite side no less than zero, matching
+  // `max-right-margin`; a panel that lands at zero draws empty rather than
+  // mirrored.
   if ctx.margin-override != none {
     margin = margin + ctx.margin-override
     margin.right = calc.min(margin.right, fit.max-right-margin)
     margin.left = calc.min(margin.left, calc.max(
       0.0,
-      width-units - margin.right - 0.5,
+      width-units - margin.right,
     ))
     margin.top = calc.min(margin.top, calc.max(
       0.0,
-      height-units - margin.bottom - 0.5,
+      height-units - margin.bottom,
     ))
     margin.bottom = calc.min(margin.bottom, calc.max(
       0.0,
-      height-units - margin.top - 0.5,
+      height-units - margin.top,
     ))
   }
 
@@ -480,6 +502,8 @@
     y-extents: y-extents,
     x-label-band: x-label-band,
     y-label-band: y-label-band,
+    x-band-gap: x-band-gap,
+    y-band-gap: y-band-gap,
     x-sec-extents: x-sec-extents,
     y-sec-extents: y-sec-extents,
     sec-x-extent: fit.sec-x-extent,
