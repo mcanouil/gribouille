@@ -30,6 +30,9 @@
   width-units: 10.0,
   height-units: 8.0,
   facet-grid-mode: false,
+  faceted: false,
+  panel-n-cols: 1,
+  panel-n-rows: 1,
   free-x: false,
   free-y: false,
   grid-n-rows: 1,
@@ -71,10 +74,35 @@
     )
   }
 
+  // A stripped theme draws no tick labels, so none of them reaches past a panel
+  // edge and the overhang floor is exactly nothing. The sparkline cases below
+  // rest on that: a floor that fired here would take panel back from a canvas
+  // that has none to spare.
+  for side in ("top", "right", "bottom", "left") {
+    assert.eq(void-chrome.overhang.at(side), 0.0)
+  }
+  // The floor is spent before it is reserved on the two sides that already
+  // hold a band: an x label reaching left lands in the y-axis margin.
+  let recorded = chrome-of()
+  for side in ("bottom", "left") {
+    assert(
+      recorded.margin.at(side) > recorded.overhang.at(side),
+      message: "the "
+        + side
+        + " band should already cover the reach, got "
+        + repr(recorded.overhang.at(side))
+        + " against "
+        + repr(recorded.margin.at(side)),
+    )
+  }
+
   // A radial panel is the one exception. It reserves no band, because its theta
   // labels ring the inside of the panel edge rather than sitting outside it,
   // but that ink is up against the edge and still owes it the gap.
   let radial-chrome = chrome-of(coord: coord-radial())
+  for side in ("top", "right", "bottom", "left") {
+    assert.eq(radial-chrome.overhang.at(side), 0.0)
+  }
   for side in ("bottom", "left") {
     assert(
       radial-chrome.margin.at(side) >= _TICK-LABEL-GAP,
@@ -191,26 +219,21 @@
 
 // Chrome the panel cannot pay for squeezes it to nothing, and a panel of no
 // width has no aspect ratio to hold: `coord-fixed` has to hand the degenerate
-// box back rather than divide by it. A left legend is the sharp case, because
-// its extent is added to the left margin after the right margin has already
-// been capped, so it is what drives the panel to zero.
+// box back rather than divide by it. Long tick labels are the sharp case: their
+// band is not capped against the canvas, by design, because a plot the axes
+// alone fill draws an empty panel rather than failing.
 #let squeezed(width) = plot(
-  data: (
-    x: (1, 2, 3),
-    y: (1, 2, 3),
-    g: ("alpha-long-level", "beta-long-level", "gamma-long-level"),
-  ),
-  mapping: aes(x: "x", y: "y", colour: "g"),
+  data: (x: (1, 2, 3), y: (1, 2, 3)),
+  mapping: aes(x: "x", y: "y"),
   layers: (geom-point(),),
-  guides: guides(colour: guide-legend(position: left)),
+  scales: scales(y: scale-continuous(labels: v => "Very-long-label-" + str(v))),
   coord: coord-fixed(),
   width: width,
   height: 3cm,
 )
 
-// Only that it draws at all is asserted here. A side legend is not bounded by
-// `width` on any of these, which is a separate matter and holds on wider plots
-// too; what changed is that the panel between the margins can now be nothing.
+// Only that it draws at all is asserted here; what changed is that the panel
+// between the margins can now be nothing.
 #context {
   for width in (1cm, 0.8cm, 0.6cm) {
     let m = measure(squeezed(width))
@@ -226,6 +249,31 @@
       ),
     )
   }
+}
+
+// The same layout with a legend, at a width that holds it: `coord-fixed` and a
+// side legend still meet, and the fit check must not fire on a plot that fits.
+#context {
+  let m = measure(plot(
+    data: (
+      x: (1, 2, 3),
+      y: (1, 2, 3),
+      g: ("alpha-long-level", "beta-long-level", "gamma-long-level"),
+    ),
+    mapping: aes(x: "x", y: "y", colour: "g"),
+    layers: (geom-point(),),
+    guides: guides(colour: guide-legend(position: left)),
+    coord: coord-fixed(),
+    width: 8cm,
+    height: 5cm,
+  ))
+  assert(
+    m.width <= 8cm + SLACK and m.height <= 5cm + SLACK,
+    message: "a coord-fixed plot with a left legend measured "
+      + repr(m.width)
+      + " x "
+      + repr(m.height),
+  )
 }
 
 Small canvas tests passed.

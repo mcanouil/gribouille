@@ -6,7 +6,6 @@
 #import "../scale/train.typ": mapping-display-name, positional-aesthetics, train
 #import "../theme/theme.typ": _text-args, _tick-length, resolve-theme-palette
 #import "../utils/typst-markup.typ": resolve-prose
-#import "../utils/gutter.typ": resolve-gutter
 #import "legend.typ" as legend-mod
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec, _shared-axis-breaks
@@ -19,8 +18,41 @@
   _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
   _title-extent-cm, _x-title-place, _y-title-place,
 )
-#import "facet.typ": _draw-strip, _strip-band, _strip-texts
+#import "facet.typ": (
+  _draw-strip, _facet-gutter, _fit-gutter, _strip-band, _strip-texts,
+  _wrap-tracks,
+)
 #import "panel-draw.typ": _draw-axis-and-layers
+#import "../utils/errors.typ": cm-text, fail
+
+// Passes allowed when settling the two facet-grid strip bands against the
+// panels they leave. Each pass may only thicken a band, so the panels descend
+// and the loop settles; real grids take two, and the cap only bounds a
+// degenerate one. A grid that exhausted it would box its labels to the panel
+// the pass before left, so the cap sits well clear of what any grid needs.
+#let _STRIP-FIT-PASSES = 8
+
+// The strips shrink with the grid, giving up their fixed base band and then
+// the whitespace around them, but a label cannot be shrunk further than the
+// room its own glyphs need. Past that the grid would lay a band outside the
+// canvas, so say what is needed rather than ship a figure that outgrew the
+// size it was asked for, exactly as an oversized axis title does.
+#let _check-strip-fit(needed, available, dim) = {
+  if needed <= available + 1e-6 { return }
+  fail(
+    "plot",
+    "the facet strips need "
+      + cm-text(needed)
+      + " cm of "
+      + dim
+      + " along a panel grid of "
+      + cm-text(calc.max(0.0, available))
+      + " cm, and their labels do not fit in less",
+    hint: "Give the plot more room with `width`/`height`, facet over fewer "
+      + "levels, or shrink the strip text with "
+      + "`theme(strip-text: element-text(size: ...))`.",
+  )
+}
 
 #let _panel-row-count(panel-layers) = {
   let n = 0
@@ -275,15 +307,6 @@
   out
 }
 
-// Resolve a facet's panel gutter to `(x:, y:)` cm floats: the facet's own
-// `gutter:` argument wins, otherwise the theme `panel-spacing` (default 0.5cm).
-#let _facet-gutter(facet, theme, scope) = resolve-gutter(
-  if facet.at("gutter", default: auto) == auto {
-    theme.at("panel-spacing", default: 0.5cm)
-  } else { facet.gutter },
-  scope: scope,
-)
-
 // Depth (cm) a facet cell owes the secondary axis on `axis`: zero unless the
 // trained scale carries a `secondary:` spec that the panels actually draw.
 // Under free scales each panel measures its own labels, so the widest wins
@@ -381,21 +404,13 @@
 
   let levels = wrap-levels
   let n = levels.len()
-  let ncol = if spec.facet.ncolumn != none {
-    spec.facet.ncolumn
-  } else if spec.facet.nrow != none {
-    calc.ceil(n / spec.facet.nrow)
-  } else {
-    calc.max(1, int(calc.ceil(calc.sqrt(n))))
-  }
-  let nrow = calc.max(1, int(calc.ceil(n / ncol)))
+  let (ncol, nrow) = _wrap-tracks(spec.facet, n)
   let strip-texts = _strip-texts(
     spec.facet.at("labeller", default: none),
     spec.facet.variable,
     levels,
     i => _panel-row-count(panels.at(i).layers),
   )
-  let strip-h = _strip-band(strip-texts, style, 0.45)
   let gutters = _facet-gutter(spec.facet, theme, "facet-wrap")
   let gutter-x = gutters.x
   let gutter-y = gutters.y
@@ -419,16 +434,35 @@
   let grid-w = width-units - margin.left - margin.right
   let grid-h = height-units - margin.bottom - margin.top
   // Gutters and strips are fixed costs the grid pays before the panels get
-  // anything, so a small enough plot leaves each panel nothing. Floor at zero:
-  // an empty panel is honest, a negative one draws mirrored.
+  // anything, and nothing used to cap them against the grid, so a small plot
+  // laid its top strip past the canvas edge. Budget them instead: every row
+  // owes a strip, so a band may take at most its share of what the secondary
+  // bands leave, and the whitespace between panels gives way before a label
+  // does. Floor the panel at zero: an empty panel is honest, a negative one
+  // draws mirrored.
+  let sec-total = sec-band * rows-with-sec
+  // The column width owes the strips nothing, so it settles first and is the
+  // reading length the labels are boxed to.
+  let gutter-x = _fit-gutter(gutter-x, grid-w, ncol)
   let panel-w = calc.max(0.0, grid-w - gutter-x * (ncol - 1)) / ncol
+  let strip = _strip-band(
+    strip-texts,
+    style,
+    0.45,
+    budget: calc.max(0.0, grid-h - sec-total) / nrow,
+    along-cm: panel-w,
+  )
+  _check-strip-fit(strip.text * nrow + sec-total, grid-h, "height")
+  let strip-h = strip.band
+  let gutter-y = _fit-gutter(
+    gutter-y,
+    grid-h - sec-total - strip-h * nrow,
+    nrow,
+  )
   let panel-h = (
     calc.max(
       0.0,
-      grid-h
-        - gutter-y * (nrow - 1)
-        - strip-h * nrow
-        - sec-band * rows-with-sec,
+      grid-h - gutter-y * (nrow - 1) - strip-h * nrow - sec-total,
     )
       / nrow
   )
@@ -465,6 +499,7 @@
         strip-text,
         style,
         theme,
+        along-cm: strip.along,
       )
       let panel-trained = if panel-trained-list.len() == 0 {
         trained
@@ -566,13 +601,7 @@
   let row-strip-texts = if row-var == none { () } else {
     _strip-texts(_grid-labeller, row-var, row-levels, _row-count)
   }
-  let strip-h = _strip-band(col-strip-texts, style, 0.45)
-  let strip-w = _strip-band(row-strip-texts, style, 0.55)
   let gutters = _facet-gutter(spec.facet, theme, "facet-grid")
-  let gutter-x = gutters.x
-  let gutter-y = gutters.y
-  let top-strip = if col-var != none { strip-h } else { 0.0 }
-  let right-strip = if row-var != none { strip-w } else { 0.0 }
   // The top row draws its secondary x axis at the grid's top edge, under the
   // column strips, which are painted after every panel and would cover it.
   // Reserve the axis depth between the two. The right column's secondary y
@@ -583,14 +612,67 @@
   let sec-band-y = if row-var == none { 0.0 } else {
     _facet-sec-band(ctx, none, "y")
   }
+  // One band above the whole grid and one beside it, each budgeted against
+  // what the canvas leaves once the margins and the secondary bands are paid.
+  // A row strip is drawn rotated, so the label height it measures is the
+  // band's width and the grid's width is what has to hold it.
+  let v-room = height-units - margin.bottom - margin.top - sec-band-x
+  let h-room = width-units - margin.left - margin.right - sec-band-y
+  // A column band eats the height a row label reads along, and a row band eats
+  // the width a column label reads along, so the two are solved together: box
+  // the labels to the panels the current bands leave, re-measure, and stop once
+  // the panels hold still. A pass can only thicken a band, so the panels
+  // descend and the loop settles; the cap is a backstop for a degenerate grid,
+  // where the panel floors at zero and the labels-only check below takes over.
+  let col-strip = none
+  let row-strip = none
+  let top-strip = 0.0
+  let right-strip = 0.0
+  let grid-w = 0.0
+  let grid-h = 0.0
+  let gutter-x = gutters.x
+  let gutter-y = gutters.y
+  let panel-w = 0.0
+  let panel-h = 0.0
+  let first-pass = true
+  for _ in range(_STRIP-FIT-PASSES) {
+    col-strip = _strip-band(
+      col-strip-texts,
+      style,
+      0.45,
+      budget: v-room,
+      along-cm: if first-pass { none } else { panel-w },
+    )
+    row-strip = _strip-band(
+      row-strip-texts,
+      style,
+      0.55,
+      budget: h-room,
+      along-cm: if first-pass { none } else { panel-h },
+    )
+    top-strip = if col-var != none { col-strip.band } else { 0.0 }
+    right-strip = if row-var != none { row-strip.band } else { 0.0 }
+    grid-w = h-room - right-strip
+    grid-h = v-room - top-strip
+    // The whitespace between panels gives way to what the bands leave, the
+    // same way it does under facet-wrap.
+    gutter-x = _fit-gutter(gutters.x, grid-w, n-cols)
+    gutter-y = _fit-gutter(gutters.y, grid-h, n-rows)
+    let next-w = calc.max(0.0, grid-w - gutter-x * (n-cols - 1)) / n-cols
+    let next-h = calc.max(0.0, grid-h - gutter-y * (n-rows - 1)) / n-rows
+    let settled = (
+      not first-pass
+        and calc.abs(next-w - panel-w) < 1e-6
+        and calc.abs(next-h - panel-h) < 1e-6
+    )
+    panel-w = next-w
+    panel-h = next-h
+    first-pass = false
+    if settled { break }
+  }
+  if col-var != none { _check-strip-fit(col-strip.text, v-room, "height") }
+  if row-var != none { _check-strip-fit(row-strip.text, h-room, "width") }
   let inner-right = margin.right + right-strip + sec-band-y
-  let grid-w = width-units - margin.left - inner-right
-  let grid-h = (
-    height-units - margin.bottom - margin.top - top-strip - sec-band-x
-  )
-  // Floored at zero for the same reason as the wrap builder above.
-  let panel-w = calc.max(0.0, grid-w - gutter-x * (n-cols - 1)) / n-cols
-  let panel-h = calc.max(0.0, grid-h - gutter-y * (n-rows - 1)) / n-rows
 
   let shared-breaks = _facet-shared-breaks(
     trained,
@@ -654,6 +736,7 @@
           col-strip-texts.at(c),
           style,
           theme,
+          along-cm: col-strip.along,
         )
       }
     }
@@ -669,6 +752,7 @@
           style,
           theme,
           angle: -90deg,
+          along-cm: row-strip.along,
         )
       }
     }

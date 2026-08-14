@@ -33,7 +33,7 @@
   _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP,
   _axis-guide-rows, _resolve-extents, _sec-title-offset-cm, _text-margin-cm,
   _theta-label-bounds, _title-angle, _title-body, _title-extent-cm,
-  _x-title-place, _y-title-place,
+  _x-label-anchor, _x-title-place, _y-title-place,
 )
 
 #import "../geom/point.typ" as point-geom
@@ -318,11 +318,6 @@
     theme,
     "y",
   ))
-  let _x-label-anchor(angle) = {
-    if angle == 0 { "north" } else if angle > 0 { "north-east" } else {
-      "north-west"
-    }
-  }
   // Pre-compute row metadata for each axis: the sub-guide, the cumulative
   // dodge offset (in row units) up to this sub-guide, and the inter-row gap
   // offset (in cm). Lifted out of the per-break draw loops so flat plots

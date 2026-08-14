@@ -24,7 +24,7 @@
     layers: (geom-point(),),
     labels: labels(title: "default order: colour before size"),
     width: 12cm,
-    height: 5cm,
+    height: 6.5cm,
   ),
   plot(
     data: d,
@@ -36,7 +36,7 @@
     ),
     labels: labels(title: "order swap: size before colour"),
     width: 12cm,
-    height: 5cm,
+    height: 6.5cm,
   ),
   plot(
     data: d,
@@ -49,6 +49,6 @@
     )),
     labels: labels(title: "direction: \"horizontal\", ncolumn: 2, byrow: true"),
     width: 12cm,
-    height: 5cm,
+    height: 6.5cm,
   ),
 )

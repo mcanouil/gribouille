@@ -225,6 +225,27 @@
   )
 }
 
+// The tick-label overhang floors the margin, which leaves the panel a shorter
+// reading length than it used to have. A title that fits with little to spare
+// on a small plot still has to render rather than newly failing.
+#context {
+  let m = measure(plot(
+    data: d,
+    mapping: aes(x: "a", y: "b"),
+    layers: (geom-point(),),
+    scales: scales(y: scale-continuous(name: "a fairly long y title")),
+    width: 5cm,
+    height: 3cm,
+  ))
+  assert(
+    m.width <= 5cm + SLACK and m.height <= 3cm + SLACK,
+    message: "a title on a small plot measured "
+      + repr(m.width)
+      + " x "
+      + repr(m.height),
+  )
+}
+
 // `theme-void` drops the titles entirely; the wrapping path must not resurrect
 // a reservation for ink that never draws.
 #context {

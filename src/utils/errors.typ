@@ -17,6 +17,11 @@
 // Render an array of values as a quoted, comma-joined list: "a", "b", "c".
 #let quote-each(values) = values.map(v => "\"" + str(v) + "\"").join(", ")
 
+// A cm figure in a layout message, rounded to the sub-millimetre the reader can
+// act on. Every layout failure quotes room the same way, so the rounding lives
+// here rather than beside each `fail`.
+#let cm-text(value) = str(calc.round(value, digits: 2))
+
 // Append a hint sentence when one is supplied.
 #let _with-hint(text, hint) = if hint == none { text } else {
   text + " " + hint

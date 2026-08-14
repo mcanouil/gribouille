@@ -3,7 +3,7 @@
 // the fail-*/check wrappers panic and cannot be tested in Typst.
 
 #import "../../src/utils/errors.typ": (
-  enum-text, error-text, range-text, type-text, unknown-column-text,
+  cm-text, enum-text, error-text, range-text, type-text, unknown-column-text,
 )
 
 // --- error-text: base grammar, period, optional hint ----------------------
@@ -58,5 +58,12 @@
   unknown-column-text("facet-wrap", "variable", "drv", ("displ", "hwy")),
   "facet-wrap: variable maps to unknown column \"drv\"; available columns: \"displ\", \"hwy\".",
 )
+
+// --- cm-text: the room a layout failure quotes ----------------------------
+// Two digits is the sub-millimetre a reader can act on; a round number keeps
+// its short form rather than growing trailing zeros.
+#assert.eq(cm-text(1.7345), "1.73")
+#assert.eq(cm-text(1.5), "1.5")
+#assert.eq(cm-text(0.0), "0")
 
 #"errors builders ok"
