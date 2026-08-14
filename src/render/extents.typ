@@ -130,6 +130,24 @@
   height: _ax-text-cm(size),
 )
 
+// The cm below which two layout extents count as the same. Every band that
+// settles against the box it shrinks, and every check that reports a band the
+// box cannot hold, reads the same slack rather than open-coding one.
+#let _LAYOUT-TOLERANCE = 1e-6
+
+// Fold a list of extent records onto a base one: the widest and the tallest
+// win, and every record keeps its break list rather than being folded into a
+// single max. A break carries the position it is drawn at as well as its
+// extent, so the reservation compares each label against its own break.
+#let _merge-extents(base, exts) = (
+  width: exts.fold(base.width, (m, e) => calc.max(m, e.width)),
+  height: exts.fold(base.height, (m, e) => calc.max(m, e.height)),
+  breaks: exts.fold(
+    base.at("breaks", default: ()),
+    (acc, e) => acc + e.at("breaks", default: ()),
+  ),
+)
+
 // Either the supplied extents record or `_empty-extents(size)` when caller
 // did not measure any labels (e.g., callers that skip measurement or have no secondary axis).
 #let _resolve-extents(extents, size) = if extents != none {
@@ -530,7 +548,7 @@
     along-cm: along,
     natural: natural,
   )
-  let fits = ext => _title-span-cm(style, ext, axis) <= panel-cm + 1e-6
+  let fits = ext => _title-span-cm(style, ext, axis) <= panel-cm + _LAYOUT-TOLERANCE
   if along == none or fits(ext) { return (along: along, ext: ext) }
   let shares = _title-shares(style, axis)
   if shares.across <= 1e-6 { return (along: along, ext: ext) }

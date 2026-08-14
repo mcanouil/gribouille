@@ -14,9 +14,9 @@
   _apply-labels, _fixed-inner-size, _is-flipped, _post-train,
 )
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _axis-label-extents, _sec-band-cm, _sec-title-offset-cm,
-  _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
-  _title-extent-cm, _x-title-place, _y-title-place,
+  _AX-TITLE-LABEL-GAP, _LAYOUT-TOLERANCE, _axis-label-extents, _merge-extents,
+  _sec-band-cm, _sec-title-offset-cm, _secondary-label-extents, _text-margin-cm,
+  _title-angle, _title-body, _title-extent-cm, _x-title-place, _y-title-place,
 )
 #import "facet.typ": (
   _draw-strip, _facet-gutter, _fit-gutter, _strip-band, _strip-texts,
@@ -38,7 +38,7 @@
 // canvas, so say what is needed rather than ship a figure that outgrew the
 // size it was asked for, exactly as an oversized axis title does.
 #let _check-strip-fit(needed, available, dim) = {
-  if needed <= available + 1e-6 { return }
+  if needed <= available + _LAYOUT-TOLERANCE { return }
   fail(
     "plot",
     "the facet strips need "
@@ -319,13 +319,7 @@
   let key = axis + "-sec"
   let base = if axis == "x" { ctx.x-sec-extents } else { ctx.y-sec-extents }
   let ext = if panel-extents == none { base } else {
-    panel-extents.fold(base, (m, pe) => {
-      let e = pe.at(key, default: base)
-      (
-        width: calc.max(m.width, e.width),
-        height: calc.max(m.height, e.height),
-      )
-    })
+    _merge-extents(base, panel-extents.map(pe => pe.at(key, default: base)))
   }
   let side = if axis == "x" { "axis-ticks-xt" } else { "axis-ticks-yr" }
   _sec-band-cm(_tick-length(ctx.theme, side) / 1cm, ext, axis)
@@ -658,8 +652,8 @@
     let next-h = calc.max(0.0, grid-h - gutter-y * (n-rows - 1)) / n-rows
     let settled = (
       panel-w != none
-        and calc.abs(next-w - panel-w) < 1e-6
-        and calc.abs(next-h - panel-h) < 1e-6
+        and calc.abs(next-w - panel-w) < _LAYOUT-TOLERANCE
+        and calc.abs(next-h - panel-h) < _LAYOUT-TOLERANCE
     )
     panel-w = next-w
     panel-h = next-h

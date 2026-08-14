@@ -1,6 +1,7 @@
 #import "render.typ": (
   _decorate-extents, _decorate-parts, _render-decorate, render-plot-deferred,
 )
+#import "render/extents.typ": _LAYOUT-TOLERANCE
 #import "render/legend.typ" as legend-mod
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
@@ -637,7 +638,7 @@
     if (
       hoisted-guides.len() > 0
         and across != none
-        and across.needs > across.room + 1e-6
+        and across.needs > across.room + _LAYOUT-TOLERANCE
     ) {
       fail(
         "compose",
