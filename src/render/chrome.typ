@@ -532,8 +532,15 @@
     ) {
       continue
     }
-    for side in axis.sides {
-      if legend-slot.at(side) <= 0 { continue }
+    // Blame a side that actually carries a legend. A legend claims room on the
+    // two sides across from it as well, since its background is painted around
+    // the whole stack, so a slot alone does not mean a legend sits there, and
+    // naming that side would send the reader to move a legend that is not
+    // there. Only the backdrop reaches across, and the block it belongs to is
+    // measured whole by the centring check below, which names the right side.
+    let carrying = axis.sides.filter(s => extents.at(s) > 0)
+    if carrying.len() == 0 { continue }
+    for side in carrying {
       fail(
         "plot",
         "the "
