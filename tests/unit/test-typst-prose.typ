@@ -16,7 +16,7 @@
   mapping: aes(x: "x", y: "y", colour: "sp"),
   layers: (geom-point(size: 3pt),),
   labels: labels(
-    title: typst("Mean $bar(x)$ over time"),
+    title: typst("Mean $macron(x)$ over time"),
     subtitle: typst("$p < 0.001$"),
     caption: typst("Source: $italic(\"made up\")$"),
     x: typst("Distance ($mu$m)"),
