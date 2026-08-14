@@ -32,7 +32,7 @@
 // `extents` (legend side extents), `legend-gap`, `width-units`,
 // `height-units`, `facet-grid-mode`, `faceted` (either facet mode: the legend
 // is centred on the whole panel grid there), `free-x`, `free-y`,
-// `grid-n-rows`, `grid-n-cols`, `panel-trained-list`, `margin-override`.
+// `panel-trained-list`, `margin-override`.
 #let _chrome-margins(ctx) = {
   let spec = ctx.spec
   let theme = ctx.theme
@@ -94,8 +94,8 @@
       x-extents,
       "x",
       ax-text.xb,
-      ctx.grid-n-cols,
-      c => (ctx.grid-n-rows - 1) * ctx.grid-n-cols + c,
+      ctx.panel-n-cols,
+      c => (ctx.panel-n-rows - 1) * ctx.panel-n-cols + c,
     )
   } else { x-extents }
   let y-extents = if _free-edge and ctx.free-y {
@@ -103,8 +103,8 @@
       y-extents,
       "y",
       ax-text.yl,
-      ctx.grid-n-rows,
-      r => r * ctx.grid-n-cols,
+      ctx.panel-n-rows,
+      r => r * ctx.panel-n-cols,
     )
   } else { y-extents }
   let x-sec-extents = _secondary-label-extents(
@@ -212,23 +212,20 @@
   // radial panel draws no cartesian tick marks at all, so it reserves none.
   let x-tick-cm = if _radial or x-guide.suppress { 0.0 } else { tick-len.xb }
   let y-tick-cm = if _radial or y-guide.suppress { 0.0 } else { tick-len.yl }
-  // The whole band between the panel edge and its axis title: what the two
-  // extents below reserve, and what the draw sites offset the title by. The
-  // faceted builder places one title for the grid and reads these rather than
-  // recomputing them, so a title cannot come to sit outside its own margin.
-  let x-label-band = x-tick-cm + x-label-depth
-  let y-label-band = y-tick-cm + y-label-width
-  // The gap that holds that band off the panel edge travels with it, for the
-  // same reason: an axis with nothing to hold off owes no gap, and a builder
-  // that re-derived the rule would have to remember the radial case twice.
-  // Radial is that case: it reserves no band, because its theta labels ring the
-  // inside of the panel edge rather than sitting outside it, but that ink is up
-  // against the edge and owes it the gap all the same.
+  // The whole band between the panel edge and its axis title: the ticks and
+  // their labels, plus the gap that holds them off the edge. It is what the two
+  // extents below reserve and what the draw sites offset the title by, and it
+  // travels as one figure because no reader of it wants a part: a builder that
+  // re-derived the rule would have to remember the radial case twice. Radial is
+  // that case. It reserves no band, because its theta labels ring the inside of
+  // the panel edge rather than sitting outside it, but that ink is up against
+  // the edge and owes it the gap all the same.
   let _edge-gap = band => if _radial { _TICK-LABEL-GAP } else {
     _band-gap-cm(band)
   }
-  let x-band-gap = _edge-gap(x-label-band)
-  let y-band-gap = _edge-gap(y-label-band)
+  let _edge-band = band => band + _edge-gap(band)
+  let x-edge-band = _edge-band(x-tick-cm + x-label-depth)
+  let y-edge-band = _edge-band(y-tick-cm + y-label-width)
   let _side-gap = side => (
     extents.at(side) + (if extents.at(side) > 0 { legend-gap } else { 0.0 })
   )
@@ -497,13 +494,9 @@
     // A stripped axis hands the gap and the pad back to the panel, which is
     // what lets a sub-centimetre canvas hold anything at all.
     let bottom-extent = (
-      x-label-band
-        + x-band-gap
-        + bottom-gap
-        + x-title-cm
-        + _title-pad-cm(x-title-cm)
+      x-edge-band + bottom-gap + x-title-cm + _title-pad-cm(x-title-cm)
     )
-    let left-extent = y-label-band + y-band-gap + left-gap + y-title-cm
+    let left-extent = y-edge-band + left-gap + y-title-cm
     // Cap the right margin so the legend can never invert the panel. Without the
     // cap, `px-hi - px-lo` goes negative and axis labels render reversed (panel
     // becomes mirror-imaged into the legend).
@@ -923,10 +916,8 @@
     ax-text: ax-text,
     x-extents: x-extents,
     y-extents: y-extents,
-    x-label-band: x-label-band,
-    y-label-band: y-label-band,
-    x-band-gap: x-band-gap,
-    y-band-gap: y-band-gap,
+    x-edge-band: x-edge-band,
+    y-edge-band: y-edge-band,
     x-sec-extents: x-sec-extents,
     y-sec-extents: y-sec-extents,
     sec-x-extent: fit.sec-x-extent,

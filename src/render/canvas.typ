@@ -121,13 +121,12 @@
   let y-title = _axis-title(y-trained, _map-name("y"))
   let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
   let _tick-len = _per-side(_len-side, "axis-ticks")
-  // The band between the panel grid and its title, and the gap that holds it
-  // off the panel edge, are the ones `_chrome-margins` reserved, carried here
-  // rather than recomputed: a suppressed axis draws no ticks or labels and a
-  // radial panel draws neither band outside its edges, so recomputing them
-  // means remembering both gates in a second place, and a title offset by a
-  // band nothing drew lands outside its own margin, growing the canvas past
-  // the requested size.
+  // The band between the panel grid and its title is the one `_chrome-margins`
+  // reserved, carried here rather than recomputed: a suppressed axis draws no
+  // ticks or labels and a radial panel draws neither band outside its edges, so
+  // recomputing it means remembering both gates in a second place, and a title
+  // offset by a band nothing drew lands outside its own margin, growing the
+  // canvas past the requested size.
   let _xt-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   let _yt-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   let _xt-cm = _title-extent-cm(_ax-title.xb, ctx.x-title-extents, "x")
@@ -141,7 +140,7 @@
     cetz.draw.content(
       (
         cx,
-        margin.bottom - ctx.x-label-band - ctx.x-band-gap - _xt-gap - _xt-cm,
+        margin.bottom - ctx.x-edge-band - _xt-gap - _xt-cm,
       ),
       _title-body(x-title, _ax-title.xb, ctx.x-title-extents),
       anchor: x-anchor,
@@ -152,7 +151,7 @@
     let (cy, y-anchor) = _y-title-place(_ax-title.yl.align, .._y-span)
     cetz.draw.content(
       (
-        margin.left - ctx.y-label-band - ctx.y-band-gap - _yt-gap - _yt-cm / 2,
+        margin.left - ctx.y-edge-band - _yt-gap - _yt-cm / 2,
         cy,
       ),
       _title-body(y-title, _ax-title.yl, ctx.y-title-extents),
@@ -804,8 +803,8 @@
       y-sec-title-extents: ctx.y-sec-title-extents,
       x-sec-extents: ctx.x-sec-extents,
       y-sec-extents: ctx.y-sec-extents,
-      x-edge-band: ctx.x-label-band + ctx.x-band-gap,
-      y-edge-band: ctx.y-label-band + ctx.y-band-gap,
+      x-edge-band: ctx.x-edge-band,
+      y-edge-band: ctx.y-edge-band,
       canvas-w: width-units,
       canvas-h: height-units,
     )
