@@ -24,6 +24,7 @@
 )
 #import "../guide/draw-key.typ": default-key-for, draw-glyph
 #import "../guide/legend.typ": _normalise-position
+#import "extents.typ": _rotated-extent
 #import "../scale/train.typ": mapping-display-name
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/margin.typ": length-to-cm, opposite-side
@@ -478,19 +479,6 @@
   if e.width == 0.0 { 0.0 } else { e.width + _LABEL-SLACK-CM }
 }
 
-// Bounding box (cm) of an ink box turned by `angle`. Both trigonometric terms
-// are absolute, so a rotation past a quarter turn grows the box rather than
-// folding it back to nothing, as `_x-label-depth` and `_y-label-width` in
-// extents.typ do for the axis labels.
-#let _rotated-box(extents, angle) = {
-  let cos-a = calc.abs(calc.cos(angle))
-  let sin-a = calc.abs(calc.sin(angle))
-  (
-    width: extents.width * cos-a + extents.height * sin-a,
-    height: extents.width * sin-a + extents.height * cos-a,
-  )
-}
-
 // The label a size-ladder / colourbar break draws (custom `labels:` resolved
 // against the break value, falling back to its formatted number).
 #let _break-label(g, value, i) = resolve-label(
@@ -530,12 +518,15 @@
 // Box (cm) the title occupies, turned by the surface `angle` the draw applies.
 // A quarter-turned title presents its height to the guide width and its width
 // to the title band, so both axes are composed rather than the upright one.
+// The turn is the one the axis labels take, solved by `_rotated-extent`, which
+// takes its angle in degrees.
 #let _title-box(g, style) = {
   let e = _label-extents(g.at("title", default: none), style)
   if e.width == 0.0 and e.height == 0.0 { return (width: 0.0, height: 0.0) }
-  let turned = _rotated-box(
-    e,
-    if style.angle != none { style.angle } else { 0deg },
+  let turned = _rotated-extent(
+    e.width,
+    e.height,
+    if style.angle != none { style.angle / 1deg } else { 0 },
   )
   (width: turned.width + _LABEL-SLACK-CM, height: turned.height)
 }

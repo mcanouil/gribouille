@@ -325,28 +325,43 @@
       },
     )
   }
-  let _x-reach = rec => {
-    let r = _rows-reach(x-guide, sub => _x-label-anchor(sub.angle), rec)
-    (lo: r.left, hi: r.right)
-  }
-  let _y-reach = rec => {
-    let r = _rows-reach(y-guide, _ => "mid-east", rec)
-    (lo: r.down, hi: r.up)
-  }
-  let _x-sec-reach = rec => {
-    let r = _label-reach(rec.width, rec.height, 0, "south")
-    (lo: r.left, hi: r.right)
-  }
-  let _y-sec-reach = rec => {
-    let r = _label-reach(rec.width, rec.height, 0, "mid-west")
-    (lo: r.down, hi: r.up)
-  }
   let x-sec-recs = if not _radial and x-sec != none and ax-text.xt.size > 0pt {
     x-sec-extents.at("breaks", default: ())
   } else { () }
   let y-sec-recs = if not _radial and y-sec != none and ax-text.yr.size > 0pt {
     y-sec-extents.at("breaks", default: ())
   } else { () }
+  // The four bands take identical treatment and differ only in which records
+  // they carry, which panel dimension they run along, and how far one of their
+  // labels reaches from the break it is centred on. `axis` names the direction
+  // the band runs, which is what maps `_label-reach`'s four sides onto the two
+  // ends of the span and onto the two canvas sides the reach is floored on.
+  let reach-bands = (
+    (
+      axis: "x",
+      recs: x-recs,
+      reach: rec => _rows-reach(
+        x-guide,
+        sub => _x-label-anchor(sub.angle),
+        rec,
+      ),
+    ),
+    (
+      axis: "x",
+      recs: x-sec-recs,
+      reach: rec => _label-reach(rec.width, rec.height, 0, "south"),
+    ),
+    (
+      axis: "y",
+      recs: y-recs,
+      reach: rec => _rows-reach(y-guide, _ => "mid-east", rec),
+    ),
+    (
+      axis: "y",
+      recs: y-sec-recs,
+      reach: rec => _label-reach(rec.width, rec.height, 0, "mid-west"),
+    ),
+  )
   // The cm the data area is already inset by inside the panel: expansion that
   // was asked for in canvas units rather than as a fraction of the domain.
   let _read-pad = t => if t == none { (0.0, 0.0) } else {
@@ -359,28 +374,28 @@
   // the outermost break far enough inside; the margin below takes it as a
   // floor, so a zero leaves every existing layout untouched.
   let _overhang(panel-w, panel-h, slack-x, slack-y) = {
-    let x-over = _label-overhang(x-recs, _x-reach, panel-w, x-pad, slack-x)
-    let y-over = _label-overhang(y-recs, _y-reach, panel-h, y-pad, slack-y)
-    let xs-over = _label-overhang(
-      x-sec-recs,
-      _x-sec-reach,
-      panel-w,
-      x-pad,
-      slack-x,
-    )
-    let ys-over = _label-overhang(
-      y-sec-recs,
-      _y-sec-reach,
-      panel-h,
-      y-pad,
-      slack-y,
-    )
-    (
-      left: calc.max(x-over.lo, xs-over.lo),
-      right: calc.max(x-over.hi, xs-over.hi),
-      bottom: calc.max(y-over.lo, ys-over.lo),
-      top: calc.max(y-over.hi, ys-over.hi),
-    )
+    let out = (left: 0.0, right: 0.0, bottom: 0.0, top: 0.0)
+    for band in reach-bands {
+      let along-x = band.axis == "x"
+      let (lo-side, hi-side) = if along-x { ("left", "right") } else {
+        ("bottom", "top")
+      }
+      let over = _label-overhang(
+        band.recs,
+        rec => {
+          let r = (band.reach)(rec)
+          if along-x { (lo: r.left, hi: r.right) } else {
+            (lo: r.down, hi: r.up)
+          }
+        },
+        if along-x { panel-w } else { panel-h },
+        if along-x { x-pad } else { y-pad },
+        if along-x { slack-x } else { slack-y },
+      )
+      out.insert(lo-side, calc.max(out.at(lo-side), over.lo))
+      out.insert(hi-side, calc.max(out.at(hi-side), over.hi))
+    }
+    out
   }
   // The panel a label is drawn against, given the box the margins leave. A
   // facet builder splits that box into tracks and every outer cell draws the

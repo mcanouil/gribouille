@@ -293,33 +293,6 @@
   _break-records(trained, sec-breaks, labels, size)
 }
 
-// Perpendicular extent of x-axis tick labels (cm). Inputs are the measured
-// ink-bbox width and height of the longest label; rotating composes them
-// trigonometrically, and `n-dodge > 1` adds the staggered rows. Both terms are
-// taken absolute: a box turned past a quarter turn is as deep as its mirror in
-// the first quadrant, and signed terms would shrink the extent instead, even
-// to a negative, letting the labels run off the canvas.
-#let _x-label-depth(angle, n-dodge, label-w-cm, label-h-cm) = {
-  let a = angle * 1deg
-  (
-    label-w-cm * calc.abs(calc.sin(a))
-      + label-h-cm * calc.abs(calc.cos(a))
-      + (n-dodge - 1) * 0.35
-  )
-}
-
-// Perpendicular extent of y-axis tick labels (cm). At angle 0 the labels
-// extend leftward by their full measured width; rotating swaps the extents
-// according to the rotated bounding box, and `n-dodge > 1` adds dodge cols.
-#let _y-label-width(angle, n-dodge, label-w-cm, label-h-cm) = {
-  let a = angle * 1deg
-  (
-    label-w-cm * calc.abs(calc.cos(a))
-      + label-h-cm * calc.abs(calc.sin(a))
-      + (n-dodge - 1) * 0.5
-  )
-}
-
 // The anchor `_draw-x-label` pins an x tick label at. Kept here, beside the
 // reach arithmetic that reserves room for it, so the side a label is reserved
 // on and the side it is drawn on cannot drift apart.
@@ -367,6 +340,30 @@
     down: _end(bx-hi, bx-lo, -sin-a) + _end(by-hi, by-lo, -cos-a),
   )
 }
+
+// Bounding box (cm) of an ink box of `w-cm` by `h-cm` turned by `angle`
+// degrees: how far it reaches either way from its own centre, which is
+// `_label-reach` at the `center` anchor. Both trigonometric terms come out
+// absolute there, so a box turned past a quarter turn is as big as its mirror
+// in the first quadrant rather than folding back towards nothing.
+#let _rotated-extent(w-cm, h-cm, angle) = {
+  let r = _label-reach(w-cm, h-cm, angle, "center")
+  (width: r.left + r.right, height: r.up + r.down)
+}
+
+// Perpendicular extent of x-axis tick labels (cm). Inputs are the measured
+// ink-bbox width and height of the longest label; rotating composes them
+// trigonometrically, and `n-dodge > 1` adds the staggered rows.
+#let _x-label-depth(angle, n-dodge, label-w-cm, label-h-cm) = (
+  _rotated-extent(label-w-cm, label-h-cm, angle).height + (n-dodge - 1) * 0.35
+)
+
+// Perpendicular extent of y-axis tick labels (cm). At angle 0 the labels
+// extend leftward by their full measured width; rotating swaps the extents
+// according to the rotated bounding box, and `n-dodge > 1` adds dodge cols.
+#let _y-label-width(angle, n-dodge, label-w-cm, label-h-cm) = (
+  _rotated-extent(label-w-cm, label-h-cm, angle).width + (n-dodge - 1) * 0.5
+)
 
 // The cm a run of tick labels reaches past each end of the panel, given one
 // record per drawn break (`frac`, `width`, `height`), a `reach-of` that turns a
@@ -548,7 +545,9 @@
     along-cm: along,
     natural: natural,
   )
-  let fits = ext => _title-span-cm(style, ext, axis) <= panel-cm + _LAYOUT-TOLERANCE
+  let fits = ext => (
+    _title-span-cm(style, ext, axis) <= panel-cm + _LAYOUT-TOLERANCE
+  )
   if along == none or fits(ext) { return (along: along, ext: ext) }
   let shares = _title-shares(style, axis)
   if shares.across <= 1e-6 { return (along: along, ext: ext) }
