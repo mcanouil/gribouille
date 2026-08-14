@@ -31,10 +31,16 @@
 )
 
 
+// `layout-only` stops after the chrome pass and returns everything but the
+// drawn canvas. `compose()` probes each panel for its guides and its margin,
+// once to hoist a shared legend and again per pass to settle a shared margin,
+// and reads no content from those probes, so it does not pay to build and draw
+// a canvas it throws away.
 #let render-plot-deferred(
   spec,
   suppress-aesthetics: (),
   margin-override: none,
+  layout-only: false,
 ) = {
   let user-theme = if spec.theme != none { spec.theme } else {
     _theme-state.get()
@@ -252,6 +258,9 @@
     margin-override: margin-override,
   ))
   let margin = chrome.margin
+  if layout-only {
+    return (guides: guides, trained: trained, margin: margin)
+  }
   let ax-text = chrome.ax-text
   let x-extents = chrome.x-extents
   let y-extents = chrome.y-extents

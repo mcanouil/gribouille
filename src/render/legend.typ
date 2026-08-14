@@ -955,10 +955,11 @@
   _title-prefix(guide, title-h) + guide.cm-height + 0.2
 }
 
-// Total height (cm) of a guide box. `title-h` is the guide's resolved
-// `legend-title` band from `_legend-title-h`, so the space reserved by the
-// sizing pass is the same space the draw consumes.
-#let _guide-render-height(g, title-h, style) = {
+// Total height (cm) of a guide box, read off the `legend-title` band
+// `guides-for` stamped on the guide, so the space reserved by the sizing pass
+// is the same space the draw consumes.
+#let _guide-render-height(g, style) = {
+  let title-h = g.title-h
   if g.kind == "swatch" { return _swatch-height(g, title-h, style) }
   if g.kind == "size-ladder" {
     return _size-ladder-height(g, title-h, style)
@@ -1099,10 +1100,8 @@
     g.insert("placement", first.placement)
     g.insert("align", first.align)
     g.insert("width", _guide-width(g, text-style, title-style))
-    g.insert(
-      "height",
-      _guide-render-height(g, _legend-title-h(theme, g), text-style),
-    )
+    g.insert("title-h", _legend-title-h(theme, g))
+    g.insert("height", _guide-render-height(g, text-style))
     guides.push(g)
   }
 
@@ -1126,10 +1125,8 @@
       placement: placement,
     )
     custom.insert("width", _guide-width(custom, text-style, title-style))
-    custom.insert(
-      "height",
-      _guide-render-height(custom, _legend-title-h(theme, custom), text-style),
-    )
+    custom.insert("title-h", _legend-title-h(theme, custom))
+    custom.insert("height", _guide-render-height(custom, text-style))
     guides.push(custom)
   }
 
@@ -1303,7 +1300,7 @@
   if guide.title != none {
     _draw-title(guide, ox, cursor, theme)
   }
-  let top = cursor - _title-prefix(guide, _legend-title-h(theme, guide))
+  let top = cursor - _title-prefix(guide, guide.title-h)
   let byrow = guide.placement.byrow
   let shape = _guide-shape(guide, guide.levels.len())
   let layout = _swatch-layout(guide, shape, byrow, _legend-text)
@@ -1384,7 +1381,7 @@
   if guide.title != none {
     _draw-title(guide, ox, cursor, theme)
   }
-  let top = cursor - _title-prefix(guide, _legend-title-h(theme, guide))
+  let top = cursor - _title-prefix(guide, guide.title-h)
 
   let label-w = _max-break-label-width(guide, guide.breaks, _legend-text)
   let shape = _guide-shape(guide, guide.breaks.len())
@@ -1516,7 +1513,7 @@
   if guide.title != none {
     _draw-title(guide, ox, cursor, theme)
   }
-  let bar-top = cursor - _title-prefix(guide, _legend-title-h(theme, guide))
+  let bar-top = cursor - _title-prefix(guide, guide.title-h)
   let bar-bottom = bar-top - bar-h
   // Horizontal bars centre / right-justify under the title; vertical bars stay
   // at the left edge with their labels to the right.
@@ -1672,12 +1669,7 @@
   if has-title {
     _draw-title(guide, ox, cursor, theme)
   }
-  let top = (
-    cursor
-      - if has-title { _legend-title-h(theme, guide) } else {
-        0.0
-      }
-  )
+  let top = cursor - if has-title { guide.title-h } else { 0.0 }
   cetz.draw.content(
     (ox, top),
     box(
@@ -1720,11 +1712,7 @@
 // background) and the renderer's fit check so the two never disagree.
 #let side-stacked-height(side, side-guides, ctx, theme, legend-gap) = {
   if side-guides.len() == 0 { return 0.0 }
-  let text-style = _legend-text-style(theme)
-  let total = 0.0
-  for g in side-guides {
-    total += _guide-render-height(g, _legend-title-h(theme, g), text-style)
-  }
+  let total = side-guides.map(g => g.height).sum(default: 0.0)
   (
     total
       + _side-stack-gap(side, ctx, theme, legend-gap) * (side-guides.len() - 1)
@@ -1748,13 +1736,11 @@
       h: side-stacked-height(side, side-guides, ctx, theme, legend-gap),
     )
   }
-  let text-style = _legend-text-style(theme)
   let w = 0.0
   let h = 0.0
   for g in side-guides {
     w += g.at("width", default: 0.0)
-    let gh = _guide-render-height(g, _legend-title-h(theme, g), text-style)
-    if gh > h { h = gh }
+    if g.height > h { h = g.height }
   }
   if side-guides.len() > 1 {
     w += _side-stack-gap(side, ctx, theme, legend-gap) * (side-guides.len() - 1)
@@ -1930,10 +1916,7 @@
     let cursor = cursor-top
     for g in side-guides {
       _draw-guide-body(g, ctx, ox, cursor, theme)
-      cursor -= (
-        _guide-render-height(g, _legend-title-h(theme, g), _legend-text)
-          + stack-gap
-      )
+      cursor -= g.height + stack-gap
     }
   } else {
     let anchor-y = if side == "top" {
@@ -2064,8 +2047,8 @@
 // `compose()` both to reserve the hoisted legend's band off the panel area and
 // to size the canvas `standalone` draws into, so the two can never disagree.
 //
-// The content box repeats `_draw-side`'s own arithmetic (`_guide-render-height`
-// stacked by `_side-stack-gap`) rather than approximating it, with a zero
+// The content box repeats `_draw-side`'s own arithmetic (the stamped guide
+// heights stacked by `_side-stack-gap`) rather than approximating it, with a zero
 // `legend-gap`: `compose()` supplies the panel-to-legend gap itself.
 //
 // `edge` is the per-side cm the `legend-background` claims outside that content

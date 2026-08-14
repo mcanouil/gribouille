@@ -425,7 +425,7 @@
     ),
     font: none,
   )
-  let natural = _axis-title-extents(LONG-Y, style).width
+  let natural = _axis-title-extents(LONG-Y, style)
   let best = _fit-title-extents(LONG-Y, style, "y", 2.0, natural)
   assert(
     _title-span-cm(style, best.ext, "y") > 2.0,

@@ -183,14 +183,17 @@
 // Guide-hoisting stage: probe each plot panel's would-be guides, keep the
 // aesthetics whose guides are identical across every panel, and settle the
 // shared legend side. Returns `(probes, hoisted, hoisted-guides,
-// legend-side)`; `probes` holds each plot panel's deferred render (or `none`
-// for a nested compose).
+// legend-side)`; `probes` holds each plot panel's layout (or `none` for a
+// nested compose), which is its guides, its trained scales, and its margin.
 #let _hoist-guides(panels, guides, collect) = {
   // Probe only plot panels with compose-level `guides` merged in; a nested
   // compose collects its own guides internally (guide collection is per level),
   // so it contributes none here and never hoists.
   let probes = panels.map(p => if _is-plot-spec(p) {
-    render-plot-deferred((..p, guides: _merge-guides(p.guides, guides)))
+    render-plot-deferred(
+      (..p, guides: _merge-guides(p.guides, guides)),
+      layout-only: true,
+    )
   } else { none })
   let per-panel = probes.map(p => if p == none { (:) } else {
     _index-by-aesthetic(p.guides)
@@ -704,6 +707,7 @@
               bottom: shared.bottom.at(row),
             )
           },
+          layout-only: true,
         ).margin
         col-left.at(col) = calc.max(col-left.at(col), m.left)
         col-right.at(col) = calc.max(col-right.at(col), m.right)

@@ -81,10 +81,16 @@
 // one keeps the size-only measurement every existing layout is calibrated to.
 // The reservation still matches the drawing either way, because both sides go
 // through `_title-boxed`.
-#let _axis-title-extents(title, style, along-cm: none) = {
+//
+// The unbounded extents do not move as the panel does, so a caller that fits a
+// title over several passes measures them once and hands them back on `natural`
+// rather than paying for them per pass.
+#let _axis-title-extents(title, style, along-cm: none, natural: none) = {
   if title == none { return (width: 0.0, height: 0.0, along: none) }
   let resolved = resolve-prose(title, eval-strings: style.typst)
-  let natural = measure-labels-cm((resolved,), style.size)
+  let natural = if natural != none { natural } else {
+    measure-labels-cm((resolved,), style.size)
+  }
   // A title that already fits needs no box: measuring and drawing it exactly
   // as before keeps every existing layout bit-identical.
   if along-cm == none or natural.width <= along-cm {
@@ -515,9 +521,15 @@
 // minimises the span, so if anything fits it lies between the two. Bisect
 // towards the wider end, keeping the widest box measured to fit, because a
 // wider box is a title on fewer lines.
-#let _fit-title-extents(title, style, axis, panel-cm, natural-cm) = {
+#let _fit-title-extents(title, style, axis, panel-cm, natural) = {
+  let natural-cm = natural.width
   let along = _title-along-cm(style, axis, panel-cm, natural-cm)
-  let ext = _axis-title-extents(title, style, along-cm: along)
+  let ext = _axis-title-extents(
+    title,
+    style,
+    along-cm: along,
+    natural: natural,
+  )
   let fits = ext => _title-span-cm(style, ext, axis) <= panel-cm + 1e-6
   if along == none or fits(ext) { return (along: along, ext: ext) }
   let shares = _title-shares(style, axis)
@@ -527,12 +539,22 @@
   // caller report a title this panel cannot hold at this angle.
   let best = (
     along: floor,
-    ext: _axis-title-extents(title, style, along-cm: floor),
+    ext: _axis-title-extents(
+      title,
+      style,
+      along-cm: floor,
+      natural: natural,
+    ),
   )
   let (lo, hi) = (calc.min(floor, along), calc.max(floor, along))
   for _ in range(_TITLE-FIT-STEPS) {
     let mid = (lo + hi) / 2
-    let probe = _axis-title-extents(title, style, along-cm: mid)
+    let probe = _axis-title-extents(
+      title,
+      style,
+      along-cm: mid,
+      natural: natural,
+    )
     if fits(probe) {
       best = (along: mid, ext: probe)
       lo = mid

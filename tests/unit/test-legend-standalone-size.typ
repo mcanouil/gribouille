@@ -23,12 +23,15 @@
 
 // Custom guides reserve `cm-height + 0.2` each (no title prefix here) and carry
 // their width verbatim, so the arithmetic is independent of font measurement.
+// `height` and `title-h` are the fields `guides-for` stamps.
 #let cg(w, h) = (
   kind: "custom",
   cm-width: w,
   cm-height: h,
   width: w,
   title: none,
+  title-h: 0.0,
+  height: h + 0.2,
 )
 
 #let grey = theme-grey()

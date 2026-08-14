@@ -16,9 +16,18 @@
 #let th = merge-theme(theme-grey())
 #let ctx = (canvas-w: 10.0, canvas-h: 8.0)
 
-// Custom guides reserve `cm-height + 0.2` each (no title prefix here), so the
-// arithmetic is independent of font measurement.
-#let cg(h) = (kind: "custom", cm-height: h, cm-width: 2.0, width: 2.0, title: none)
+// Custom guides reserve `cm-height + 0.2` each (no title prefix here), which is
+// the `height` `guides-for` stamps on them, so the arithmetic is independent of
+// font measurement.
+#let cg(h) = (
+  kind: "custom",
+  cm-height: h,
+  cm-width: 2.0,
+  width: 2.0,
+  title: none,
+  title-h: 0.0,
+  height: h + 0.2,
+)
 
 // No guides on the side -> zero height.
 #assert.eq(side-stacked-height("right", (), ctx, th, 0.3), 0.0)

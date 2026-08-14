@@ -452,6 +452,15 @@
     _overhang(p.w, p.h, p.slack-x, p.slack-y)
   }
 
+  // The bound each pass solves is read off the title's unwrapped extents, which
+  // do not move as the panel does, so measure them once here rather than once
+  // per pass. Every later measurement reads them back rather than repeating
+  // them.
+  let natural = (:)
+  for side in title-sides {
+    natural.insert(side.key, _axis-title-extents(side.title, side.style))
+  }
+
   // Everything above is independent of how the axis titles wrap. The margin is
   // not: a title is boxed to the reading length the panel leaves it, a wrapped
   // title is thicker than one line, a thicker title takes more margin, and a
@@ -460,16 +469,22 @@
   // `along-cm: none` there reproduces the pre-wrapping measurement exactly, so
   // a plot whose titles all fit re-measures to the same extents on the second
   // pass, settles against them, and keeps its former layout to the bit.
-  let _fit(along, over) = {
+  let _fit(along, over, known: (:)) = {
     // Measure the title ink so its rotated bounding box reserves the right
     // perpendicular extent at any angle, mirroring the tick-label measurement.
+    // A side whose box the pass above already measured hands it over on
+    // `known`, since re-measuring the same box returns the same record.
     let ext = (:)
     for side in title-sides {
-      ext.insert(side.key, _axis-title-extents(
-        side.title,
-        side.style,
-        along-cm: along.at(side.key),
-      ))
+      let seen = known.at(side.key, default: none)
+      ext.insert(side.key, if seen != none { seen } else {
+        _axis-title-extents(
+          side.title,
+          side.style,
+          along-cm: along.at(side.key),
+          natural: natural.at(side.key),
+        )
+      })
     }
     let sec-x-extent = _sec-extent(
       x-sec,
@@ -567,13 +582,6 @@
     prev
   } else if prev == none { next } else { calc.min(prev, next) }
 
-  // The bound is solved from the title's unwrapped width, which does not move
-  // as the panel does, so measure it once rather than once per pass.
-  let natural = (:)
-  for side in title-sides {
-    natural.insert(side.key, _axis-title-extents(side.title, side.style).width)
-  }
-
   // The overhang runs the other way: a bigger margin is a smaller panel, a
   // smaller panel puts its outermost break closer to the edge, and a closer
   // break reaches further past it. So a pass may only raise this floor, which
@@ -614,20 +622,25 @@
     panel-w = next-w
     panel-h = next-h
     over = _loosen(over, _overhang-of(next-w, next-h))
+    // The fitted extents travel with the box they were measured at, so `_fit`
+    // re-measures only a side whose earlier, tighter box the fit did not keep.
+    let fitted-ext = (:)
     for side in title-sides {
       let panel-cm = if side.axis == "x" { panel-w } else { panel-h }
-      along.insert(side.key, _tighten(
-        along.at(side.key),
-        _fit-title-extents(
-          side.title,
-          side.style,
-          side.axis,
-          panel-cm,
-          natural.at(side.key),
-        ).along,
-      ))
+      let solved = _fit-title-extents(
+        side.title,
+        side.style,
+        side.axis,
+        panel-cm,
+        natural.at(side.key),
+      )
+      let kept = _tighten(along.at(side.key), solved.along)
+      along.insert(side.key, kept)
+      fitted-ext.insert(side.key, if kept == solved.along { solved.ext } else {
+        none
+      })
     }
-    fit = _fit(along, over)
+    fit = _fit(along, over, known: fitted-ext)
   }
 
   // Two ways wrapping can fail to rescue a title, both of which would push the
