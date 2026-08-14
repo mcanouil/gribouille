@@ -23,6 +23,13 @@
 #import "panel-draw.typ": _draw-axis-and-layers
 #import "../utils/errors.typ": cm-text, fail
 
+// Passes allowed when settling the two facet-grid strip bands against the
+// panels they leave. Each pass may only thicken a band, so the panels descend
+// and the loop settles; real grids take two, and the cap only bounds a
+// degenerate one. A grid that exhausted it would box its labels to the panel
+// the pass before left, so the cap sits well clear of what any grid needs.
+#let _STRIP-FIT-PASSES = 8
+
 // The strips shrink with the grid, giving up their fixed base band and then
 // the whitespace around them, but a label cannot be shrunk further than the
 // room its own glyphs need. Past that the grid would lay a band outside the
@@ -618,8 +625,6 @@
     _strip-texts(_grid-labeller, row-var, row-levels, _row-count)
   }
   let gutters = _facet-gutter(spec.facet, theme, "facet-grid")
-  let gutter-x = gutters.x
-  let gutter-y = gutters.y
   // The top row draws its secondary x axis at the grid's top edge, under the
   // column strips, which are painted after every panel and would cover it.
   // Reserve the axis depth between the two. The right column's secondary y
@@ -653,7 +658,7 @@
   let panel-w = 0.0
   let panel-h = 0.0
   let first-pass = true
-  for _ in range(4) {
+  for _ in range(_STRIP-FIT-PASSES) {
     col-strip = _strip-band(
       col-strip-texts,
       style,
