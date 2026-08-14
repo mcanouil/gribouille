@@ -189,4 +189,43 @@
   )
 }
 
+// Chrome the panel cannot pay for squeezes it to nothing, and a panel of no
+// width has no aspect ratio to hold: `coord-fixed` has to hand the degenerate
+// box back rather than divide by it. A left legend is the sharp case, because
+// its extent is added to the left margin after the right margin has already
+// been capped, so it is what drives the panel to zero.
+#let squeezed(width) = plot(
+  data: (
+    x: (1, 2, 3),
+    y: (1, 2, 3),
+    g: ("alpha-long-level", "beta-long-level", "gamma-long-level"),
+  ),
+  mapping: aes(x: "x", y: "y", colour: "g"),
+  layers: (geom-point(),),
+  guides: guides(colour: guide-legend(position: left)),
+  coord: coord-fixed(),
+  width: width,
+  height: 3cm,
+)
+
+// Only that it draws at all is asserted here. A side legend is not bounded by
+// `width` on any of these, which is a separate matter and holds on wider plots
+// too; what changed is that the panel between the margins can now be nothing.
+#context {
+  for width in (1cm, 0.8cm, 0.6cm) {
+    let m = measure(squeezed(width))
+    assert(
+      m.width > 0pt and m.height > 0pt,
+      message: (
+        "a squeezed coord-fixed plot "
+          + repr(width)
+          + " wide measured "
+          + repr(m.width)
+          + " x "
+          + repr(m.height)
+      ),
+    )
+  }
+}
+
 Small canvas tests passed.
