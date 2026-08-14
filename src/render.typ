@@ -3,7 +3,7 @@
 // this file wires them together and exposes `render-plot` / `render-plot-deferred`.
 
 #import "scale/train.typ": train
-#import "utils/errors.typ": check, fail
+#import "utils/errors.typ": check, cm-text, fail
 #import "scale/oob.typ": filter-oob
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
@@ -193,9 +193,9 @@
     fail(
       "plot",
       "title/subtitle/caption and plot-background padding leave a "
-        + str(calc.round(width-units, digits: 2))
+        + cm-text(width-units)
         + " x "
-        + str(calc.round(height-units, digits: 2))
+        + cm-text(height-units)
         + " cm canvas, with no room left to draw",
       hint: "Increase width/height or reduce labels/padding.",
     )

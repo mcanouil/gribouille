@@ -145,6 +145,36 @@
   fallback: auto,
 )
 
+// Measure a set of resolved tick labels in one walk, for the primary axis and
+// the secondary alike. Returns the widest and tallest ink box (cm) and, per
+// break, that box with where the break lands.
+//
+// Each break keeps its own extent and where it lands, the way the radial groups
+// in `_axis-label-extents` do. A label is centred on its break, so it reaches
+// past the panel edge the break sits near, and the reservation for that reach
+// can only be solved per break: the widest label is not always the outermost
+// one. `map-break` into (0, 1) is affine on both branches and folds `reverse`
+// in, so the fraction is the canvas position, not the data one.
+//
+// A label that lands nowhere still counts toward the band the axis reserves,
+// but carries no reach, so it folds into the maximum without reaching `breaks`.
+// `labels` arrive resolved from `_resolve-tick`, so they measure as they draw.
+#let _break-records(trained, values, labels, size) = {
+  let max-w = 0.0
+  let max-h = 0.0
+  let breaks = ()
+  for (b, label) in values.zip(labels) {
+    let m = measure-text-cm(label, size)
+    if m.width > max-w { max-w = m.width }
+    if m.height > max-h { max-h = m.height }
+    if label == none { continue }
+    let frac = map-break(trained, b, (0.0, 1.0))
+    if frac == none { continue }
+    breaks.push((frac: frac, width: m.width, height: m.height))
+  }
+  (width: max-w, height: max-h, breaks: breaks)
+}
+
 // Collect the formatted tick labels for the trained scale and measure them
 // via Typst. Returns `(width, height)` in cm of the longest label's ink box.
 // Caller must already be inside a `context { ... }` block.
@@ -162,7 +192,7 @@
   let values = _axis-tick-values(trained)
   // Only an axis with no breaks at all takes the single-line fallback. Breaks
   // whose labels all resolve away draw nothing and owe nothing, which is what
-  // `measure-labels-cm` answers for the empty list they leave behind.
+  // `_break-records` answers for the empty boxes they leave behind.
   if values.len() == 0 { return _empty-extents(size) }
   let labels-cb = _trained-labels-cb(trained)
   let typst-mark = trained.at("typst-mark", default: false)
@@ -206,26 +236,7 @@
         typst-eval,
       )
     ))
-  // Each break keeps its own extent and where it lands, the way the radial
-  // groups above do. A label is centred on its break, so it reaches past the
-  // panel edge the break sits near, and the reservation for that reach can only
-  // be solved per break: the widest label is not always the outermost one.
-  // `map-break` into (0, 1) is affine on both branches and folds `reverse` in,
-  // so the fraction is the canvas position, not the data one.
-  let breaks = values
-    .zip(labels)
-    .map(((b, label)) => {
-      if label == none { return none }
-      let frac = map-break(trained, b, (0.0, 1.0))
-      if frac == none { return none }
-      let m = measure-text-cm(
-        resolve-prose(label, eval-strings: typst-eval),
-        size,
-      )
-      (frac: frac, width: m.width, height: m.height)
-    })
-    .filter(r => r != none)
-  measure-labels-cm(labels, size) + (breaks: breaks)
+  _break-records(trained, values, labels, size)
 }
 
 // Same as `_axis-label-extents` but for the secondary axis: each break is
@@ -238,7 +249,8 @@
   if trained.type != "continuous" { return (width: 0.0, height: 0.0) }
   let labels-cb = sec.at("labels", default: auto)
   let typst-mark = trained.at("typst-mark", default: false)
-  let labels = _secondary-breaks(trained, sec, _axis-breaks(trained))
+  let sec-breaks = _secondary-breaks(trained, sec, _axis-breaks(trained))
+  let labels = sec-breaks
     .enumerate()
     // The transformed value is what the draw formats and what the reservation
     // measures; the untransformed break is what places it on the axis.
@@ -254,21 +266,7 @@
       )
     })
   if labels.len() == 0 { return (width: 0.0, height: 0.0) }
-  let sec-breaks = _secondary-breaks(trained, sec, _axis-breaks(trained))
-  let breaks = sec-breaks
-    .zip(labels)
-    .map(((b, label)) => {
-      if label == none { return none }
-      let frac = map-break(trained, b, (0.0, 1.0))
-      if frac == none { return none }
-      let m = measure-text-cm(
-        resolve-prose(label, eval-strings: typst-eval),
-        size,
-      )
-      (frac: frac, width: m.width, height: m.height)
-    })
-    .filter(r => r != none)
-  measure-labels-cm(labels, size) + (breaks: breaks)
+  _break-records(trained, sec-breaks, labels, size)
 }
 
 // Perpendicular extent of x-axis tick labels (cm). Inputs are the measured

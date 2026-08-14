@@ -459,7 +459,10 @@
 // resolved surface, so the weight, the font, and a plain string evaluated as
 // markup under an `element-typst` surface all reach the reservation the way
 // they reach `cetz.draw.content`. `measure()` needs a `context`, which every
-// caller is already inside. Empty / `none` labels report zero.
+// caller is already inside. Empty / `none` labels report zero. A `typst-mark`
+// label reaches here as content, already converted by `resolve-label`; a plain
+// string reaches here as a string and is evaluated against its own surface, so
+// measurement and draw agree on what the markup renders to.
 #let _label-extents(label, style) = {
   if label == none or label == "" { return (width: 0.0, height: 0.0) }
   let m = measure(
@@ -488,26 +491,14 @@
   )
 }
 
-// Resolve the label a guide actually draws, for measurement. A `typst-mark`
-// label is already converted to content by `resolve-label`; a plain string is
-// left as one here and evaluated against its own surface in `_label-extents`,
-// so measurement and draw agree on what the markup renders to.
-#let _display-label(labels, value, i, fallback, typst-mark) = resolve-label(
-  labels,
-  value,
-  i,
-  fallback,
-  typst-mark: typst-mark,
-)
-
 // The label a size-ladder / colourbar break draws (custom `labels:` resolved
 // against the break value, falling back to its formatted number).
-#let _break-label(g, value, i) = _display-label(
+#let _break-label(g, value, i) = resolve-label(
   g.at("labels", default: auto),
   value,
   i,
   format-break(value),
-  g.at("typst-mark", default: false),
+  typst-mark: g.at("typst-mark", default: false),
 )
 
 // Widest break label (cm) across `breaks` on the entry-label surface. Shared by
@@ -582,12 +573,12 @@
 
 // The label a swatch cell draws (custom `labels:` resolved against the level,
 // falling back to the level itself), as measured for sizing.
-#let _swatch-label(guide, i) = _display-label(
+#let _swatch-label(guide, i) = resolve-label(
   guide.at("labels", default: auto),
   guide.levels.at(i),
   i,
   guide.levels.at(i),
-  guide.at("typst-mark", default: false),
+  typst-mark: guide.at("typst-mark", default: false),
 )
 
 // Swatch column gap: at least `MIN` cm, growing with the widest column by
@@ -833,7 +824,7 @@
   style,
 )
 
-// Per-guide width estimate. Stored on each guide so `estimate-width` is
+// Per-guide width estimate. Stored on each guide so `estimate-extents` is
 // O(1). `style` is the legend-text surface the entry labels are measured on;
 // `title-style` is the legend-title surface the title uses.
 #let _guide-width(g, style, title-style) = {

@@ -412,8 +412,6 @@
     i => _panel-row-count(panels.at(i).layers),
   )
   let gutters = _facet-gutter(spec.facet, theme, "facet-wrap")
-  let gutter-x = gutters.x
-  let gutter-y = gutters.y
 
   let all-x = ("all_x", "all").contains(spec.facet.axes)
   let all-y = ("all_y", "all").contains(spec.facet.axes)
@@ -424,9 +422,6 @@
   // scales that is the top row alone, and every panel keeps the same size
   // either way because the band is inserted inside the cell.
   let sec-band = _facet-sec-band(ctx, panel-extents, "x")
-  let rows-with-sec = if sec-band <= 0 { 0 } else if free-x or all-x {
-    nrow
-  } else { 1 }
   let _sec-band-of = row => if sec-band > 0 and (free-x or all-x or row == 0) {
     sec-band
   } else { 0.0 }
@@ -440,10 +435,10 @@
   // bands leave, and the whitespace between panels gives way before a label
   // does. Floor the panel at zero: an empty panel is honest, a negative one
   // draws mirrored.
-  let sec-total = sec-band * rows-with-sec
+  let sec-total = range(nrow).map(_sec-band-of).sum(default: 0.0)
   // The column width owes the strips nothing, so it settles first and is the
   // reading length the labels are boxed to.
-  let gutter-x = _fit-gutter(gutter-x, grid-w, ncol)
+  let gutter-x = _fit-gutter(gutters.x, grid-w, ncol)
   let panel-w = calc.max(0.0, grid-w - gutter-x * (ncol - 1)) / ncol
   let strip = _strip-band(
     strip-texts,
@@ -455,7 +450,7 @@
   _check-strip-fit(strip.text * nrow + sec-total, grid-h, "height")
   let strip-h = strip.band
   let gutter-y = _fit-gutter(
-    gutter-y,
+    gutters.y,
     grid-h - sec-total - strip-h * nrow,
     nrow,
   )
@@ -632,23 +627,24 @@
   let grid-h = 0.0
   let gutter-x = gutters.x
   let gutter-y = gutters.y
-  let panel-w = 0.0
-  let panel-h = 0.0
-  let first-pass = true
+  // `none` until a pass has sized them: the first measurement boxes the labels
+  // to nothing at all, and every later one to the panels the last pass left.
+  let panel-w = none
+  let panel-h = none
   for _ in range(_STRIP-FIT-PASSES) {
     col-strip = _strip-band(
       col-strip-texts,
       style,
       0.45,
       budget: v-room,
-      along-cm: if first-pass { none } else { panel-w },
+      along-cm: panel-w,
     )
     row-strip = _strip-band(
       row-strip-texts,
       style,
       0.55,
       budget: h-room,
-      along-cm: if first-pass { none } else { panel-h },
+      along-cm: panel-h,
     )
     top-strip = if col-var != none { col-strip.band } else { 0.0 }
     right-strip = if row-var != none { row-strip.band } else { 0.0 }
@@ -661,13 +657,12 @@
     let next-w = calc.max(0.0, grid-w - gutter-x * (n-cols - 1)) / n-cols
     let next-h = calc.max(0.0, grid-h - gutter-y * (n-rows - 1)) / n-rows
     let settled = (
-      not first-pass
+      panel-w != none
         and calc.abs(next-w - panel-w) < 1e-6
         and calc.abs(next-h - panel-h) < 1e-6
     )
     panel-w = next-w
     panel-h = next-h
-    first-pass = false
     if settled { break }
   }
   if col-var != none { _check-strip-fit(col-strip.text, v-room, "height") }

@@ -633,7 +633,6 @@
   // Two ways wrapping can fail to rescue a title, both of which would push the
   // canvas past the requested size. Say so rather than ship a figure that
   // silently outgrows the box it was given.
-  let _cm = v => str(calc.round(v, digits: 2))
   for side in title-sides {
     let ext = fit.ext.at(side.key)
     let panel-cm = if side.axis == "x" { panel-w } else { panel-h }
@@ -644,9 +643,9 @@
         "the "
           + side.name
           + " title has a "
-          + _cm(ext.min-width)
+          + cm-text(ext.min-width)
           + " cm word that cannot wrap into the "
-          + _cm(ext.along)
+          + cm-text(ext.along)
           + " cm the panel leaves it",
         hint: "Shorten the title, break it with `\\`, or give the plot more "
           + "room with `width`/`height`.",
@@ -663,9 +662,9 @@
         "the "
           + side.name
           + " title spans "
-          + _cm(span)
+          + cm-text(span)
           + " cm along a panel of "
-          + _cm(panel-cm)
+          + cm-text(panel-cm)
           + " cm, and no wrapping of it at "
           + str(calc.round(
             _title-angle(side.style, default-deg).deg(),
