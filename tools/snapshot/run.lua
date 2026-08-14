@@ -21,6 +21,7 @@ Usage: tools/snapshot/run.lua [--check | --update] [options]
 Modes:
   --check         Compile and diff against tests/visual/golden/ (default).
   --update        Compile and overwrite goldens in tests/visual/golden/.
+                  CI only: run the `Refresh visual snapshots` workflow.
 
 Options:
   --root <dir>    Repository root (default: two levels above this script).
@@ -127,9 +128,47 @@ local function diff_images(golden, current, diff_png, fuzz)
   return code, ae, out
 end
 
+-- Goldens are minted by CI and nowhere else. A local `--update` bakes the
+-- contributor's own toolchain into the repository: a Typst release older or
+-- newer than the pinned `compiler` renders the same source differently, so the
+-- goldens pass on the machine that wrote them and fail for everyone else.
+-- `--check` stays available locally; only the write path is gated.
+local function assert_ci_update()
+  if os.getenv("GITHUB_ACTIONS") == "true" then return end
+  io.stderr:write(
+    "snapshot: --update writes goldens and only runs in CI.\n"
+      .. "  Dispatch the `Refresh visual snapshots` workflow on your branch:\n"
+      .. "    gh workflow run snapshot-refresh.yml --ref <branch> -f direct=true\n"
+      .. "  Use --check locally to see which snapshots your change moves.\n"
+  )
+  os.exit(2)
+end
+
+-- The pinned compiler is what CI installs and what minted every golden, so a
+-- local `--check` on a different release reports diffs that say nothing about
+-- the change under test. Warn rather than fail: the mismatch matters for
+-- reading the result, not for running it.
+local function warn_compiler_mismatch(root)
+  local pinned = util.read_file(root .. "/typst.toml")
+  if not pinned then return end
+  pinned = pinned:match('compiler%s*=%s*"([^"]+)"')
+  if not pinned then return end
+  local code, out = util.popen_capture("typst --version 2>/dev/null")
+  if code ~= 0 then return end
+  local local_version = out:match("typst%s+([%d%.]+)")
+  if not local_version or local_version == pinned then return end
+  io.stderr:write(string.format(
+    "snapshot: warning: typst %s is installed, typst.toml pins %s.\n"
+      .. "  Goldens were minted on %s; diffs below may be version artefacts.\n",
+    local_version, pinned, pinned
+  ))
+end
+
 local function main()
   local opts = parse_args(arg or {})
   opts.root = abs(opts.root)
+  if opts.update then assert_ci_update() end
+  warn_compiler_mismatch(opts.root)
   local build_root = opts.root .. "/build/snapshot"
   local golden_root = opts.root .. "/tests/visual/golden"
 

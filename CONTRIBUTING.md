@@ -52,6 +52,20 @@ Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `
 Consult that glossary before you introduce new short identifiers.
 [`ARCHITECTURE.md`](ARCHITECTURE.md) maps the rendering pipeline, module boundaries, and where to add a geom, stat, scale, or position.
 
+### Visual snapshots
+
+Figures under [`tests/visual/golden/`](tests/visual/golden) are minted by CI and never committed from a working copy.
+Install the compiler [`typst.toml`](typst.toml) pins before you read a snapshot result, because a different Typst release renders the same source differently and reports diffs that have nothing to do with your change.
+
+Run `lua tools/snapshot/run.lua --check` locally to see which snapshots your change moves.
+When a change is meant to move them, dispatch the `Refresh visual snapshots` workflow on your branch and let CI write the goldens:
+
+```sh
+gh workflow run snapshot-refresh.yml --ref <branch> -f direct=true
+```
+
+The harness refuses `--update` outside CI, so there is nothing to remember beyond running the workflow.
+
 ### Documenting unreleased API
 
 The project publishes two sites.
