@@ -31,6 +31,7 @@
     width-units: 10.0,
     height-units: 8.0,
     facet-grid-mode: false,
+    faceted: false,
     free-x: false,
     free-y: false,
     grid-n-rows: 1,

@@ -1809,6 +1809,24 @@
   left: bg.pad.left + bg.gap.left,
 )
 
+// The whole block a side's legend occupies: the guide-stack content box plus
+// the `legend-background` edge painted and reserved around it. This is what the
+// draw pass puts on the canvas, so it is what the chrome fit check and
+// `compose()` both have to measure against the canvas.
+#let side-block-cm(side, side-guides, ctx, theme, legend-gap) = {
+  let content-box = _side-content-box(side, side-guides, ctx, theme, legend-gap)
+  let edge = _bg-edge-cm(
+    _bg-metrics(theme, ctx, content-box.w, content-box.h),
+  )
+  (
+    width: content-box.w + edge.left + edge.right,
+    height: content-box.h + edge.top + edge.bottom,
+    content-w: content-box.w,
+    content-h: content-box.h,
+    edge: edge,
+  )
+}
+
 // Per-side cm the `legend-background` claims outside the guide bbox of each
 // plot side, keyed by side, `_zero-margin-cm` where no guide sits. Read by
 // `_chrome-margins` so the slot it reserves holds the whole painted rect, not
@@ -2067,20 +2085,14 @@
 // the renderer's own legend ctx, so `%` outsets resolve against the canvas the
 // legend sits on.
 #let standalone-size(guides, side, theme, canvas-w, canvas-h) = {
-  let ctx = (canvas-w: canvas-w, canvas-h: canvas-h)
-  let content-box = _side-content-box(side, guides, ctx, theme, 0.0)
-  let edge = _bg-edge-cm(
-    _bg-metrics(theme, ctx, content-box.w, content-box.h),
+  let block = side-block-cm(
+    side,
+    guides,
+    (canvas-w: canvas-w, canvas-h: canvas-h),
+    theme,
+    0.0,
   )
-  (
-    width: content-box.w + edge.left + edge.right,
-    height: content-box.h + edge.top + edge.bottom,
-    content-w: content-box.w,
-    content-h: content-box.h,
-    edge: edge,
-    canvas-w: canvas-w,
-    canvas-h: canvas-h,
-  )
+  block + (canvas-w: canvas-w, canvas-h: canvas-h)
 }
 
 // Render a free-standing legend canvas containing `guides`, all on `side`,

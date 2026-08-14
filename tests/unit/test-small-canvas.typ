@@ -30,6 +30,7 @@
   width-units: 10.0,
   height-units: 8.0,
   facet-grid-mode: false,
+  faceted: false,
   free-x: false,
   free-y: false,
   grid-n-rows: 1,
@@ -191,26 +192,21 @@
 
 // Chrome the panel cannot pay for squeezes it to nothing, and a panel of no
 // width has no aspect ratio to hold: `coord-fixed` has to hand the degenerate
-// box back rather than divide by it. A left legend is the sharp case, because
-// its extent is added to the left margin after the right margin has already
-// been capped, so it is what drives the panel to zero.
+// box back rather than divide by it. Long tick labels are the sharp case: their
+// band is not capped against the canvas, by design, because a plot the axes
+// alone fill draws an empty panel rather than failing.
 #let squeezed(width) = plot(
-  data: (
-    x: (1, 2, 3),
-    y: (1, 2, 3),
-    g: ("alpha-long-level", "beta-long-level", "gamma-long-level"),
-  ),
-  mapping: aes(x: "x", y: "y", colour: "g"),
+  data: (x: (1, 2, 3), y: (1, 2, 3)),
+  mapping: aes(x: "x", y: "y"),
   layers: (geom-point(),),
-  guides: guides(colour: guide-legend(position: left)),
+  scales: scales(y: scale-continuous(labels: v => "Very-long-label-" + str(v))),
   coord: coord-fixed(),
   width: width,
   height: 3cm,
 )
 
-// Only that it draws at all is asserted here. A side legend is not bounded by
-// `width` on any of these, which is a separate matter and holds on wider plots
-// too; what changed is that the panel between the margins can now be nothing.
+// Only that it draws at all is asserted here; what changed is that the panel
+// between the margins can now be nothing.
 #context {
   for width in (1cm, 0.8cm, 0.6cm) {
     let m = measure(squeezed(width))
@@ -226,6 +222,31 @@
       ),
     )
   }
+}
+
+// The same layout with a legend, at a width that holds it: `coord-fixed` and a
+// side legend still meet, and the fit check must not fire on a plot that fits.
+#context {
+  let m = measure(plot(
+    data: (
+      x: (1, 2, 3),
+      y: (1, 2, 3),
+      g: ("alpha-long-level", "beta-long-level", "gamma-long-level"),
+    ),
+    mapping: aes(x: "x", y: "y", colour: "g"),
+    layers: (geom-point(),),
+    guides: guides(colour: guide-legend(position: left)),
+    coord: coord-fixed(),
+    width: 8cm,
+    height: 5cm,
+  ))
+  assert(
+    m.width <= 8cm + SLACK and m.height <= 5cm + SLACK,
+    message: "a coord-fixed plot with a left legend measured "
+      + repr(m.width)
+      + " x "
+      + repr(m.height),
+  )
 }
 
 Small canvas tests passed.

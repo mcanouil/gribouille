@@ -10,9 +10,9 @@
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec
 #import "guides.typ": _axis-text-angle, _read-axis-guide
-#import "legend.typ": side-bg-edges
-#import "domain.typ": _is-flipped
-#import "../utils/errors.typ": fail
+#import "legend.typ": side-bg-edges, side-block-cm
+#import "domain.typ": _fixed-inner-size, _is-flipped
+#import "../utils/errors.typ": cm-text, fail
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _axis-label-extents,
   _axis-title-extents, _band-gap-cm, _fit-title-extents, _sec-extent,
@@ -30,8 +30,9 @@
 // Compute the chrome margin and every measured extent the canvas builders
 // need. `ctx` carries: `spec`, `theme`, `trained`, `coord`, `guides`,
 // `extents` (legend side extents), `legend-gap`, `width-units`,
-// `height-units`, `facet-grid-mode`, `free-x`, `free-y`, `grid-n-rows`,
-// `grid-n-cols`, `panel-trained-list`, `margin-override`.
+// `height-units`, `facet-grid-mode`, `faceted` (either facet mode: the legend
+// is centred on the whole panel grid there), `free-x`, `free-y`,
+// `grid-n-rows`, `grid-n-cols`, `panel-trained-list`, `margin-override`.
 #let _chrome-margins(ctx) = {
   let spec = ctx.spec
   let theme = ctx.theme
@@ -294,6 +295,17 @@
   let _surface-out(side) = (
     panel-out.at(side) + legend-by-side.at(side) + bar-by-side.at(side)
   )
+  // What a side's legend claims of the canvas: the guide stack, the gap holding
+  // it off the panel, and the background painted and reserved around it. None
+  // of it moves as the titles wrap, so it is resolved once and read by the fit
+  // check below, which needs the legend's share of the margin on its own.
+  let legend-slot = (:)
+  for side in ("top", "right", "bottom", "left") {
+    legend-slot.insert(
+      side,
+      _side-gap(side) + legend-by-side.at(side) + bar-by-side.at(side),
+    )
+  }
 
   // Everything above is independent of how the axis titles wrap. The margin is
   // not: a title is boxed to the reading length the panel leaves it, a wrapped
@@ -350,6 +362,16 @@
     // cap, `px-hi - px-lo` goes negative and axis labels render reversed (panel
     // becomes mirror-imaged into the legend).
     let max-right-margin = calc.max(0.0, width-units - left-extent)
+    // What each side owes before any legend: the axis band, its title, and the
+    // panel surface outset. The fit check below compares the legend slot
+    // against what this leaves, so it can tell a legend that does not fit from
+    // a canvas the axes alone have already filled.
+    let base = (
+      left: left-extent + panel-out.left,
+      bottom: bottom-extent + panel-out.bottom,
+      top: sec-x-extent + panel-out.top,
+      right: sec-y-extent + panel-out.right,
+    )
     (
       margin: (
         left: left-extent + _side-gap("left") + _surface-out("left"),
@@ -360,6 +382,7 @@
           max-right-margin,
         ),
       ),
+      base: base,
       max-right-margin: max-right-margin,
       sec-x-extent: sec-x-extent,
       sec-y-extent: sec-y-extent,
@@ -467,6 +490,122 @@
           + "deg spans less",
         hint: "Shorten the title, return it to its natural angle, reduce its "
           + "font size, or give the plot more room with `width`/`height`.",
+      )
+    }
+  }
+
+  // A legend is the one chrome band that can neither wrap nor shrink: it draws
+  // the stack it measured, wherever the margin puts it, so an unbounded one
+  // grows the figure past the requested `width`/`height`. Cap it here rather
+  // than inside `_fit`, whose passes may only tighten, and before the
+  // `margin-override` overlay, so a shared `compose()` margin cannot fail a
+  // plot that fits on its own.
+  //
+  // First across the slot's own axis: the two margins have to leave the panel
+  // no less than nothing.
+  for axis in (
+    (
+      dim: "width",
+      sides: ("left", "right"),
+      extent: width-units,
+      hint: "Increase `width`, move the legend to `top`/`bottom`, or shrink "
+        + "its footprint with `guide-legend(nrow:/ncolumn:)`.",
+    ),
+    (
+      dim: "height",
+      sides: ("bottom", "top"),
+      extent: height-units,
+      hint: "Increase `height`, move the legend to `left`/`right`, or shrink "
+        + "its footprint with `guide-legend(nrow:/ncolumn:)`.",
+    ),
+  ) {
+    let base-total = axis.sides.map(s => fit.base.at(s)).sum()
+    // The axes alone can fill a small canvas, which draws an empty panel rather
+    // than failing; a legend is not to blame for the room they took.
+    if base-total > axis.extent + _TITLE-FIT-TOLERANCE { continue }
+    let room = axis.extent - base-total
+    if (
+      axis.sides.map(s => legend-slot.at(s)).sum()
+        <= (
+          room + _TITLE-FIT-TOLERANCE
+        )
+    ) {
+      continue
+    }
+    for side in axis.sides {
+      if legend-slot.at(side) <= 0 { continue }
+      fail(
+        "plot",
+        "the "
+          + side
+          + " legend needs "
+          + cm-text(legend-slot.at(side))
+          + " cm of "
+          + axis.dim
+          + " and the plot leaves it "
+          + cm-text(calc.max(
+            0.0,
+            room - legend-slot.at(opposite-side.at(side)),
+          ))
+          + " cm",
+        hint: axis.hint,
+      )
+    }
+  }
+
+  // Then across the other axis, where the stack is centred on the panel and
+  // reaches half its extent either way. A facet builder hands the legend the
+  // whole panel grid; a single panel shrinks inside its box, which is what
+  // `coord-fixed` does and why the centre it is measured from moves.
+  let box-w = calc.max(0.0, width-units - fit.margin.left - fit.margin.right)
+  let box-h = calc.max(0.0, height-units - fit.margin.top - fit.margin.bottom)
+  let (panel-cw, panel-ch) = if ctx.faceted { (box-w, box-h) } else {
+    _fixed-inner-size(coord, trained, box-w, box-h)
+  }
+  for side in ("top", "right", "bottom", "left") {
+    let side-guides = guides.filter(g => g.placement.side == side)
+    if side-guides.len() == 0 { continue }
+    let block = side-block-cm(
+      side,
+      side-guides,
+      (canvas-w: width-units, canvas-h: height-units),
+      theme,
+      legend-gap,
+    )
+    let vertical = side == "left" or side == "right"
+    let centre = if vertical {
+      fit.margin.bottom + panel-ch / 2
+    } else { fit.margin.left + panel-cw / 2 }
+    let half = if vertical { block.content-h / 2 } else { block.content-w / 2 }
+    let near = if vertical { block.edge.bottom } else { block.edge.left }
+    let far = if vertical { block.edge.top } else { block.edge.right }
+    let extent = if vertical { height-units } else { width-units }
+    let over = calc.max(half + near - centre, centre + half + far - extent)
+    if over > _TITLE-FIT-TOLERANCE {
+      let stands = if vertical { block.height } else { block.width }
+      let reading = if vertical { "tall" } else { "wide" }
+      fail(
+        "plot",
+        "the "
+          + side
+          + " legend stands "
+          + cm-text(stands)
+          + " cm "
+          + reading
+          + " centred on the panel and overruns the plot by "
+          + cm-text(over)
+          + " cm",
+        hint: if vertical {
+          (
+            "Increase `height`, move the legend to `top`/`bottom`, or give it "
+              + "fewer rows with `guide-legend(nrow:/ncolumn:)`."
+          )
+        } else {
+          (
+            "Increase `width`, move the legend to `left`/`right`, or give it "
+              + "fewer columns with `guide-legend(nrow:/ncolumn:)`."
+          )
+        },
       )
     }
   }

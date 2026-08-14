@@ -232,6 +232,7 @@
     width-units: width-units,
     height-units: height-units,
     facet-grid-mode: facet-grid-mode,
+    faceted: facet-wrap-mode or facet-grid-mode,
     free-x: free-x,
     free-y: free-y,
     grid-n-rows: grid-n-rows,
@@ -251,51 +252,6 @@
   let y-title-extents = chrome.y-title-extents
   let x-sec-title-extents = chrome.x-sec-title-extents
   let y-sec-title-extents = chrome.y-sec-title-extents
-
-  // A left/right legend is centred over the panel and extends symmetrically. It
-  // may spill past the panel into a bare margin harmlessly, but when it reaches
-  // below the panel band into a rendered caption it overprints that text (the
-  // reported "legend pushes the caption off" failure). Detect that overrun and
-  // fail loudly with layout hints. A bare plot-background pad is not a caption,
-  // so gate on the caption block actually existing.
-  let _legend-ctx = (canvas-w: width-units, canvas-h: height-units)
-  // Mirrors `_draw-side`'s `py + ph / 2` centring. Restricted to the single-plot
-  // layout: facet modes centre over the panel grid plus strips, a geometry this
-  // simple prediction would misjudge.
-  let _panel-h = height-units - margin.top - margin.bottom
-  let _panel-centre = margin.bottom + _panel-h / 2
-  let _eps = 0.01
-  if (
-    not facet-wrap-mode
-      and not facet-grid-mode
-      and deco-parts.caption-block != none
-  ) {
-    for _legend-side in ("left", "right") {
-      let side-guides = guides.filter(g => g.placement.side == _legend-side)
-      if side-guides.len() == 0 { continue }
-      let stacked = legend-mod.side-stacked-height(
-        _legend-side,
-        side-guides,
-        _legend-ctx,
-        theme,
-        legend-gap,
-      )
-      if _panel-centre - stacked / 2 < -_eps {
-        fail(
-          "plot",
-          "the "
-            + _legend-side
-            + " legend needs "
-            + str(calc.round(stacked, digits: 2))
-            + " cm and overruns the caption (the panel leaves only "
-            + str(calc.round(2 * _panel-centre, digits: 2))
-            + " cm above it)",
-          hint: "Increase `height`, move the legend to `top`/`bottom`, or shrink "
-            + "its footprint with `guide-legend(nrow:/ncolumn:)`.",
-        )
-      }
-    }
-  }
 
   let canvas = if facet-wrap-mode {
     _render-canvas-wrap((
