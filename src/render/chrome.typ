@@ -678,6 +678,77 @@
     }
   }
 
+  // The overhang is a floor on the margin, and two opposite reaches that
+  // together outrun the canvas cannot both be floored: `max-right-margin` caps
+  // the right margin against the left, and the top against the bottom band, so
+  // the panel floors at zero rather than inverting and the ink draws past the
+  // canvas edge anyway. A tick label can neither wrap nor shrink, so say what it
+  // needs rather than ship a figure that outgrew the size it was asked for,
+  // exactly as an oversized axis title does. The margins the caps do not touch
+  // are floored outright and read here as the invariant they satisfy.
+  //
+  // `_overhang` reads the x labels' reach onto the left and right sides and the
+  // y labels' onto the bottom and top, so each axis owns the two sides its own
+  // labels can spill across, and is named by them.
+  //
+  // Nothing here fires under `margin-override`: a shared `compose()` margin may
+  // not fail a plot that fits on its own, and `_probe-margins` solves every
+  // panel unshared at its cell size first, so an oversized label fails there.
+  let overhang-axes = if ctx.margin-override != none { () } else {
+    (
+      (
+        dim: "width",
+        key: "x",
+        sides: ("left", "right"),
+        extent: width-units,
+        turn: "rotate the labels with `guides(x: guide-axis(angle: 45))`, ",
+      ),
+      (
+        dim: "height",
+        key: "y",
+        sides: ("bottom", "top"),
+        extent: height-units,
+        // Turning a y label trades the thickness it reaches by for its length,
+        // which is the wrong way round, so the advice is shorten or shrink.
+        turn: "",
+      ),
+    )
+  }
+  for axis in overhang-axes {
+    // The axes alone can fill a small canvas, which draws an empty panel rather
+    // than failing: the label band is deliberately uncapped, as the sparkline
+    // cases rest on. A reach of a fraction of a millimetre is not to blame for
+    // the room that band took, and naming it would send the reader after the
+    // wrong label. Same reading as the legend check below.
+    let base-total = axis.sides.map(s => fit.base.at(s)).sum()
+    if base-total > axis.extent + _TITLE-FIT-TOLERANCE { continue }
+    for side in axis.sides {
+      if over.at(side) <= fit.margin.at(side) + _TITLE-FIT-TOLERANCE {
+        continue
+      }
+      fail(
+        "plot",
+        "the "
+          + axis.key
+          + "-axis tick labels reach "
+          + cm-text(over.at(side))
+          + " cm past the panel on the "
+          + side
+          + " and the plot leaves them "
+          + cm-text(fit.margin.at(side))
+          + " cm",
+        hint: "Increase `"
+          + axis.dim
+          + "`, "
+          + axis.turn
+          + "shorten the labels with a `labels:` function on the "
+          + axis.key
+          + " scale, or shrink them with "
+          + "`theme(axis-text: element-text(size: ...))`.",
+      )
+    }
+  }
+
   // A legend is the one chrome band that can neither wrap nor shrink: it draws
   // the stack it measured, wherever the margin puts it, so an unbounded one
   // grows the figure past the requested `width`/`height`. Cap it here rather

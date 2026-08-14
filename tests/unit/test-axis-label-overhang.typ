@@ -343,4 +343,43 @@
   )
 }
 
+// Past a point the reservation cannot be honoured at all: the two reaches
+// together outrun the canvas, the right margin is capped against the left so
+// the panel rect cannot invert, and the ink spilled anyway. That now fails, so
+// every width that still renders has to fit exactly, right down to the one the
+// failure sits under.
+#let names = (
+  a: (
+    "alpha-level-name-aaaaaaaa",
+    "beta-level-name-bbbbbbbb",
+    "gamma-level-name-cccccccc",
+  ),
+  b: (2, 4, 3),
+  g: ("u", "v", "w"),
+)
+
+#context {
+  for width in (40mm, 45mm, 60mm) {
+    fits(
+      plot(
+        data: names,
+        mapping: aes(x: "a", y: "b", fill: "g"),
+        layers: (geom-col(),),
+        guides: guides(y: none),
+        labels: labels(y: none),
+        width: width,
+        height: 3cm,
+      ),
+      width,
+      3cm,
+      "25-character level names at " + repr(width),
+    )
+  }
+}
+
+// Typst cannot catch panics in-process, so the `fail` the regime above feeds is
+// verified manually. The same plot at `width: 3cm` reports "the x-axis tick
+// labels reach 1.63 cm past the panel on the right and the plot leaves them
+// 1.01 cm", and used to measure 102.58pt against the 85.04pt it asked for.
+
 Axis label overhang tests passed.
