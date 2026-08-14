@@ -6,7 +6,6 @@
 #import "../scale/train.typ": mapping-display-name, positional-aesthetics, train
 #import "../theme/theme.typ": _text-args, _tick-length, resolve-theme-palette
 #import "../utils/typst-markup.typ": resolve-prose
-#import "../utils/gutter.typ": resolve-gutter
 #import "legend.typ" as legend-mod
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec, _shared-axis-breaks
@@ -308,8 +307,6 @@
   out
 }
 
-// Resolve a facet's panel gutter to `(x:, y:)` cm floats: the facet's own
-// `gutter:` argument wins, otherwise the theme `panel-spacing` (default 0.5cm).
 // Depth (cm) a facet cell owes the secondary axis on `axis`: zero unless the
 // trained scale carries a `secondary:` spec that the panels actually draw.
 // Under free scales each panel measures its own labels, so the widest wins

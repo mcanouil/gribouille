@@ -20,6 +20,11 @@
 #let _DEFAULT-WIDTH = 16cm
 #let _DEFAULT-HEIGHT = 12cm
 
+// Passes allowed when settling a shared `align-panels` margin against the
+// panels it shrinks. Real compositions settle in one; the cap only bounds a
+// degenerate one.
+#let _ALIGN-MARGIN-PASSES = 4
+
 #let _is-plot-spec(x) = (
   type(x) == dictionary
     and "layers" in x
@@ -668,7 +673,14 @@
     // occupy, then share margins grid-wise so plot areas line up: left/right per
     // column, top/bottom per row (patchwork/cowplot). Nested composes grid-align
     // internally and are skipped.
-    let align-margins = if align-panels {
+    // A shared margin makes each panel smaller than it solved for on its own,
+    // and a smaller panel can ask for more margin than it did: its outermost
+    // tick label then sits closer to the panel edge and reaches further past
+    // it. So the share is probed again under the margin it just settled on,
+    // until no panel asks for more and every plot area lines up with the
+    // margin actually used. A pass may only widen a side, so the sequence
+    // rises, is bounded by the cell, and settles; the cap is a backstop.
+    let _probe-margins = shared => {
       let col-left = (0.0,) * cols
       let col-right = (0.0,) * cols
       let row-top = (0.0,) * rows
@@ -684,18 +696,30 @@
             height: cell-content-h(i, row-tracks.at(row)) * 1cm,
           ),
           suppress-aesthetics: hoisted,
+          margin-override: if shared == none { none } else {
+            (
+              left: shared.left.at(col),
+              right: shared.right.at(col),
+              top: shared.top.at(row),
+              bottom: shared.bottom.at(row),
+            )
+          },
         ).margin
         col-left.at(col) = calc.max(col-left.at(col), m.left)
         col-right.at(col) = calc.max(col-right.at(col), m.right)
         row-top.at(row) = calc.max(row-top.at(row), m.top)
         row-bottom.at(row) = calc.max(row-bottom.at(row), m.bottom)
       }
-      (
-        left: col-left,
-        right: col-right,
-        top: row-top,
-        bottom: row-bottom,
-      )
+      (left: col-left, right: col-right, top: row-top, bottom: row-bottom)
+    }
+    let align-margins = if align-panels {
+      let shared = _probe-margins(none)
+      for _ in range(_ALIGN-MARGIN-PASSES) {
+        let next = _probe-margins(shared)
+        if next == shared { break }
+        shared = next
+      }
+      shared
     } else { none }
 
     let cells = ()
