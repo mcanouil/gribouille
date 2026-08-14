@@ -10,7 +10,7 @@
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec
 #import "guides.typ": _axis-text-angle, _read-axis-guide
-#import "legend.typ": side-bg-edges, side-block-cm
+#import "legend.typ": side-block-cm
 #import "facet.typ": _facet-gutter, _fit-gutter
 #import "domain.typ": _fixed-inner-size, _is-flipped
 #import "../utils/errors.typ": cm-text, fail
@@ -248,12 +248,28 @@
     ref-w: width-units,
     ref-h: height-units,
   )
-  let legend-edges = side-bg-edges(
-    guides,
-    (canvas-w: width-units, canvas-h: height-units),
-    theme,
-    legend-gap,
-  )
+  // The block each side's legend puts on the canvas: the guide stack it draws
+  // and the `legend-background` edge around it. It is measured once here and
+  // read twice, by the reservation below and by the centring check at the end,
+  // so the room kept for a legend and the room it is reported to need are the
+  // same figure rather than two that have to agree.
+  let _no-edge = (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0)
+  let legend-blocks = (:)
+  let legend-edges = (:)
+  for side in ("top", "right", "bottom", "left") {
+    let side-guides = guides.filter(g => g.placement.side == side)
+    let block = if side-guides.len() == 0 { none } else {
+      side-block-cm(
+        side,
+        side-guides,
+        (canvas-w: width-units, canvas-h: height-units),
+        theme,
+        legend-gap,
+      )
+    }
+    legend-blocks.insert(side, block)
+    legend-edges.insert(side, if block == none { _no-edge } else { block.edge })
+  }
   let bar-out = if any-bar {
     _rect-outset-cm(
       theme,
@@ -816,15 +832,8 @@
     _fixed-inner-size(coord, trained, box-w, box-h)
   }
   for side in ("top", "right", "bottom", "left") {
-    let side-guides = guides.filter(g => g.placement.side == side)
-    if side-guides.len() == 0 { continue }
-    let block = side-block-cm(
-      side,
-      side-guides,
-      (canvas-w: width-units, canvas-h: height-units),
-      theme,
-      legend-gap,
-    )
+    let block = legend-blocks.at(side)
+    if block == none { continue }
     let vertical = side == "left" or side == "right"
     let centre = if vertical {
       fit.margin.bottom + panel-ch / 2

@@ -1795,34 +1795,6 @@
   )
 }
 
-// Per-side cm the `legend-background` claims outside the guide bbox of each
-// plot side, keyed by side, `_zero-margin-cm` where no guide sits. Read by
-// `_chrome-margins` so the slot it reserves holds the whole painted rect, not
-// just the outset around it. Each side is measured against its own bbox, so a
-// `%` inset resolves against the stack it actually wraps.
-#let side-bg-edges(guides, ctx, theme, legend-gap) = {
-  let edges = (:)
-  for side in ("top", "right", "bottom", "left") {
-    let side-guides = guides.filter(g => g.placement.side == side)
-    if side-guides.len() == 0 {
-      edges.insert(side, _zero-margin-cm)
-      continue
-    }
-    let content-box = _side-content-box(
-      side,
-      side-guides,
-      ctx,
-      theme,
-      legend-gap,
-    )
-    edges.insert(
-      side,
-      _bg-edge-cm(_bg-metrics(theme, ctx, content-box.w, content-box.h)),
-    )
-  }
-  edges
-}
-
 // Cm the guide-stack origin moves along the slot axis so the painted rect lands
 // inside the slot `_chrome-margins` reserved rather than overflowing it.
 // `right` and `top` anchor off the panel and already carry the panel-facing

@@ -1,4 +1,4 @@
-// Side-placed legend background: `side-bg-edges` measures, per plot side, the
+// Side-placed legend background: `side-block-cm` measures, per plot side, the
 // cm the `legend-background` claims outside the guide-stack bbox -- the painted
 // `inset` plus the reserved `outset` -- so `_chrome-margins` reserves the whole
 // painted rect rather than only its outset. `_side-origin-shift` is the matching
@@ -6,7 +6,7 @@
 // rect cannot disagree.
 
 #import "../../src/render/legend.typ": (
-  _bg-metrics, _side-origin-shift, side-bg-edges, side-stacked-height,
+  _bg-metrics, _side-origin-shift, side-block-cm, side-stacked-height,
 )
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../src/theme/grey.typ": theme-grey
@@ -38,11 +38,24 @@
   placement: (side: side),
 )
 
+// `_chrome-margins` measures one block per side and reads its `edge`. Mirror
+// that read here so every assertion below stays per side.
+#let bg-edges(guides, ctx, theme, gap) = {
+  let out = (:)
+  for side in ("top", "right", "bottom", "left") {
+    let side-guides = guides.filter(g => g.placement.side == side)
+    out.insert(side, if side-guides.len() == 0 { zero-edge } else {
+      side-block-cm(side, side-guides, ctx, theme, gap).edge
+    })
+  }
+  out
+}
+
 #let grey = theme-grey()
 
 // theme-grey paints no legend background and sets no outset: every side keeps
 // today's reservation and every draw origin stays put.
-#let bare = side-bg-edges(
+#let bare = bg-edges(
   ("top", "right", "bottom", "left").map(s => cg(2.0, 1.0, s)),
   ctx,
   grey,
@@ -57,7 +70,7 @@
 
 // A side with no guides claims nothing, so an empty side never inflates the
 // margin of the side opposite it.
-#let one-side = side-bg-edges((cg(2.0, 1.0, "right"),), ctx, grey, legend-gap)
+#let one-side = bg-edges((cg(2.0, 1.0, "right"),), ctx, grey, legend-gap)
 #for side in ("top", "bottom", "left") {
   assert.eq(one-side.at(side), zero-edge, message: "empty edge on " + side)
 }
@@ -72,7 +85,7 @@
 
 // The edge is the painted inset plus the reserved outset, per side, on every
 // side that carries guides.
-#let boxed = side-bg-edges(
+#let boxed = bg-edges(
   ("top", "right", "bottom", "left").map(s => cg(2.0, 1.0, s)),
   ctx,
   themed,
@@ -106,7 +119,7 @@
 )))
 #let two-v = (cg(2.0, 1.0, "right"), cg(3.0, 2.0, "right"))
 #let two-h = (cg(2.0, 1.0, "top"), cg(3.0, 2.0, "top"))
-#let pct-edges = side-bg-edges(two-v + two-h, ctx, pct, legend-gap)
+#let pct-edges = bg-edges(two-v + two-h, ctx, pct, legend-gap)
 // Vertical: content is the widest guide by the stacked height.
 #let stacked = side-stacked-height("right", two-v, ctx, pct, legend-gap)
 #approx-eq(pct-edges.right.left, 0.1 * 3.0)
@@ -121,7 +134,7 @@
   inset: margin(top: 0.4cm, right: 0.4cm, bottom: 0.4cm, left: 0.4cm),
   outset: margin(right: 0.6cm),
 )))
-#let plain = side-bg-edges((cg(2.0, 1.0, "right"),), ctx, unpainted, legend-gap)
+#let plain = bg-edges((cg(2.0, 1.0, "right"),), ctx, unpainted, legend-gap)
 #approx-eq(plain.right.right, 0.6)
 #approx-eq(plain.right.left, 0.0)
 #approx-eq(
@@ -142,7 +155,7 @@
         placement: (side: side),
       )
   ))
-  let edge = side-bg-edges(side-guides, ctx, themed, legend-gap).at(side)
+  let edge = bg-edges(side-guides, ctx, themed, legend-gap).at(side)
   let stacked = side-stacked-height(side, two-v, ctx, themed, legend-gap)
   let bg = _bg-metrics(
     themed,
