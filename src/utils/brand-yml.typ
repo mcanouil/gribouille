@@ -231,15 +231,15 @@
   )
 }
 
-// Derive a discrete palette from the brand's data-ink roles.
+// Derive a discrete palette from the brand's data-ink roles, over a colour
+// block `brand-colours` has already resolved.
 //
 // De-duplication is load-bearing: brands routinely alias `info` to `secondary`
 // and `warning` to `tertiary`, and a duplicate would paint two factor levels
 // identically. Below two distinct colours the result is `none`, because
 // `palette-at` wraps modulo, so a one-colour palette paints every level the
 // same and is strictly worse than the library default.
-#let brand-palette(brand, mode) = {
-  let cols = brand-colours(brand, mode)
+#let brand-palette-from(cols) = {
   let out = ()
   for role in _PALETTE-ROLES {
     if role not in cols { continue }

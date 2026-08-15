@@ -3,7 +3,7 @@
 ///! Maps a brand's semantic colour roles and font families onto a theme, and
 ///! derives a discrete palette from its data-ink roles.
 
-#import "../utils/brand-yml.typ": brand-colours, brand-font, brand-palette
+#import "../utils/brand-yml.typ": brand-colours, brand-font, brand-palette-from
 #import "defaults.typ": _tr-ink, _tr-paper, default-theme, minimal-surfaces
 #import "elements.typ": element-rect
 #import "theme.typ": _preset
@@ -151,7 +151,7 @@
   let ink = colours.at("foreground", default: _tr-ink)
   let paper = colours.at("background", default: _tr-paper)
   let accent = colours.at("primary", default: rgb("#3366FF"))
-  let derived = if palette == auto { brand-palette(brand, mode) } else {
+  let derived = if palette == auto { brand-palette-from(colours) } else {
     palette
   }
   _preset(

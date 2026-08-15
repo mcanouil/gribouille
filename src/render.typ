@@ -3,7 +3,7 @@
 // this file wires them together and exposes `render-plot` / `render-plot-deferred`.
 
 #import "scale/train.typ": train
-#import "utils/errors.typ": check, fail
+#import "utils/errors.typ": check, cm-text, fail
 #import "scale/oob.typ": filter-oob
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
@@ -31,10 +31,16 @@
 )
 
 
+// `layout-only` stops after the chrome pass and returns everything but the
+// drawn canvas. `compose()` probes each panel for its guides and its margin,
+// once to hoist a shared legend and again per pass to settle a shared margin,
+// and reads no content from those probes, so it does not pay to build and draw
+// a canvas it throws away.
 #let render-plot-deferred(
   spec,
   suppress-aesthetics: (),
   margin-override: none,
+  layout-only: false,
 ) = {
   let user-theme = if spec.theme != none { spec.theme } else {
     _theme-state.get()
@@ -193,9 +199,9 @@
     fail(
       "plot",
       "title/subtitle/caption and plot-background padding leave a "
-        + str(calc.round(width-units, digits: 2))
+        + cm-text(width-units)
         + " x "
-        + str(calc.round(height-units, digits: 2))
+        + cm-text(height-units)
         + " cm canvas, with no room left to draw",
       hint: "Increase width/height or reduce labels/padding.",
     )
@@ -246,12 +252,13 @@
     panel-n-rows: panel-n-rows,
     free-x: free-x,
     free-y: free-y,
-    grid-n-rows: grid-n-rows,
-    grid-n-cols: grid-n-cols,
     panel-trained-list: panel-trained-list,
     margin-override: margin-override,
   ))
   let margin = chrome.margin
+  if layout-only {
+    return (guides: guides, trained: trained, margin: margin)
+  }
   let ax-text = chrome.ax-text
   let x-extents = chrome.x-extents
   let y-extents = chrome.y-extents
@@ -285,10 +292,8 @@
       style: style,
       x-extents: x-extents,
       y-extents: y-extents,
-      x-label-band: chrome.x-label-band,
-      y-label-band: chrome.y-label-band,
-      x-band-gap: chrome.x-band-gap,
-      y-band-gap: chrome.y-band-gap,
+      x-edge-band: chrome.x-edge-band,
+      y-edge-band: chrome.y-edge-band,
       x-title-extents: x-title-extents,
       y-title-extents: y-title-extents,
       x-sec-title-extents: x-sec-title-extents,
@@ -319,10 +324,8 @@
       style: style,
       x-extents: x-extents,
       y-extents: y-extents,
-      x-label-band: chrome.x-label-band,
-      y-label-band: chrome.y-label-band,
-      x-band-gap: chrome.x-band-gap,
-      y-band-gap: chrome.y-band-gap,
+      x-edge-band: chrome.x-edge-band,
+      y-edge-band: chrome.y-edge-band,
       x-title-extents: x-title-extents,
       y-title-extents: y-title-extents,
       x-sec-title-extents: x-sec-title-extents,
@@ -353,10 +356,8 @@
       y-sec-title-extents: y-sec-title-extents,
       x-sec-extents: x-sec-extents,
       y-sec-extents: y-sec-extents,
-      x-label-band: chrome.x-label-band,
-      y-label-band: chrome.y-label-band,
-      x-band-gap: chrome.x-band-gap,
-      y-band-gap: chrome.y-band-gap,
+      x-edge-band: chrome.x-edge-band,
+      y-edge-band: chrome.y-edge-band,
     ))
   }
 

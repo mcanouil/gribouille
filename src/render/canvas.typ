@@ -14,9 +14,9 @@
   _apply-labels, _fixed-inner-size, _is-flipped, _post-train,
 )
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _axis-label-extents, _sec-band-cm, _sec-title-offset-cm,
-  _secondary-label-extents, _text-margin-cm, _title-angle, _title-body,
-  _title-extent-cm, _x-title-place, _y-title-place,
+  _AX-TITLE-LABEL-GAP, _LAYOUT-TOLERANCE, _axis-label-extents, _merge-extents,
+  _sec-band-cm, _sec-title-offset-cm, _secondary-label-extents, _text-margin-cm,
+  _title-angle, _title-body, _title-extent-cm, _x-title-place, _y-title-place,
 )
 #import "facet.typ": (
   _draw-strip, _facet-gutter, _fit-gutter, _strip-band, _strip-texts,
@@ -38,7 +38,7 @@
 // canvas, so say what is needed rather than ship a figure that outgrew the
 // size it was asked for, exactly as an oversized axis title does.
 #let _check-strip-fit(needed, available, dim) = {
-  if needed <= available + 1e-6 { return }
+  if needed <= available + _LAYOUT-TOLERANCE { return }
   fail(
     "plot",
     "the facet strips need "
@@ -121,13 +121,12 @@
   let y-title = _axis-title(y-trained, _map-name("y"))
   let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
   let _tick-len = _per-side(_len-side, "axis-ticks")
-  // The band between the panel grid and its title, and the gap that holds it
-  // off the panel edge, are the ones `_chrome-margins` reserved, carried here
-  // rather than recomputed: a suppressed axis draws no ticks or labels and a
-  // radial panel draws neither band outside its edges, so recomputing them
-  // means remembering both gates in a second place, and a title offset by a
-  // band nothing drew lands outside its own margin, growing the canvas past
-  // the requested size.
+  // The band between the panel grid and its title is the one `_chrome-margins`
+  // reserved, carried here rather than recomputed: a suppressed axis draws no
+  // ticks or labels and a radial panel draws neither band outside its edges, so
+  // recomputing it means remembering both gates in a second place, and a title
+  // offset by a band nothing drew lands outside its own margin, growing the
+  // canvas past the requested size.
   let _xt-gap = _text-margin-cm(_ax-title.xb, "top", _AX-TITLE-LABEL-GAP)
   let _yt-gap = _text-margin-cm(_ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   let _xt-cm = _title-extent-cm(_ax-title.xb, ctx.x-title-extents, "x")
@@ -141,7 +140,7 @@
     cetz.draw.content(
       (
         cx,
-        margin.bottom - ctx.x-label-band - ctx.x-band-gap - _xt-gap - _xt-cm,
+        margin.bottom - ctx.x-edge-band - _xt-gap - _xt-cm,
       ),
       _title-body(x-title, _ax-title.xb, ctx.x-title-extents),
       anchor: x-anchor,
@@ -152,7 +151,7 @@
     let (cy, y-anchor) = _y-title-place(_ax-title.yl.align, .._y-span)
     cetz.draw.content(
       (
-        margin.left - ctx.y-label-band - ctx.y-band-gap - _yt-gap - _yt-cm / 2,
+        margin.left - ctx.y-edge-band - _yt-gap - _yt-cm / 2,
         cy,
       ),
       _title-body(y-title, _ax-title.yl, ctx.y-title-extents),
@@ -319,13 +318,7 @@
   let key = axis + "-sec"
   let base = if axis == "x" { ctx.x-sec-extents } else { ctx.y-sec-extents }
   let ext = if panel-extents == none { base } else {
-    panel-extents.fold(base, (m, pe) => {
-      let e = pe.at(key, default: base)
-      (
-        width: calc.max(m.width, e.width),
-        height: calc.max(m.height, e.height),
-      )
-    })
+    _merge-extents(base, panel-extents.map(pe => pe.at(key, default: base)))
   }
   let side = if axis == "x" { "axis-ticks-xt" } else { "axis-ticks-yr" }
   _sec-band-cm(_tick-length(ctx.theme, side) / 1cm, ext, axis)
@@ -412,8 +405,6 @@
     i => _panel-row-count(panels.at(i).layers),
   )
   let gutters = _facet-gutter(spec.facet, theme, "facet-wrap")
-  let gutter-x = gutters.x
-  let gutter-y = gutters.y
 
   let all-x = ("all_x", "all").contains(spec.facet.axes)
   let all-y = ("all_y", "all").contains(spec.facet.axes)
@@ -424,9 +415,6 @@
   // scales that is the top row alone, and every panel keeps the same size
   // either way because the band is inserted inside the cell.
   let sec-band = _facet-sec-band(ctx, panel-extents, "x")
-  let rows-with-sec = if sec-band <= 0 { 0 } else if free-x or all-x {
-    nrow
-  } else { 1 }
   let _sec-band-of = row => if sec-band > 0 and (free-x or all-x or row == 0) {
     sec-band
   } else { 0.0 }
@@ -440,10 +428,10 @@
   // bands leave, and the whitespace between panels gives way before a label
   // does. Floor the panel at zero: an empty panel is honest, a negative one
   // draws mirrored.
-  let sec-total = sec-band * rows-with-sec
+  let sec-total = range(nrow).map(_sec-band-of).sum(default: 0.0)
   // The column width owes the strips nothing, so it settles first and is the
   // reading length the labels are boxed to.
-  let gutter-x = _fit-gutter(gutter-x, grid-w, ncol)
+  let gutter-x = _fit-gutter(gutters.x, grid-w, ncol)
   let panel-w = calc.max(0.0, grid-w - gutter-x * (ncol - 1)) / ncol
   let strip = _strip-band(
     strip-texts,
@@ -455,7 +443,7 @@
   _check-strip-fit(strip.text * nrow + sec-total, grid-h, "height")
   let strip-h = strip.band
   let gutter-y = _fit-gutter(
-    gutter-y,
+    gutters.y,
     grid-h - sec-total - strip-h * nrow,
     nrow,
   )
@@ -632,23 +620,24 @@
   let grid-h = 0.0
   let gutter-x = gutters.x
   let gutter-y = gutters.y
-  let panel-w = 0.0
-  let panel-h = 0.0
-  let first-pass = true
+  // `none` until a pass has sized them: the first measurement boxes the labels
+  // to nothing at all, and every later one to the panels the last pass left.
+  let panel-w = none
+  let panel-h = none
   for _ in range(_STRIP-FIT-PASSES) {
     col-strip = _strip-band(
       col-strip-texts,
       style,
       0.45,
       budget: v-room,
-      along-cm: if first-pass { none } else { panel-w },
+      along-cm: panel-w,
     )
     row-strip = _strip-band(
       row-strip-texts,
       style,
       0.55,
       budget: h-room,
-      along-cm: if first-pass { none } else { panel-h },
+      along-cm: panel-h,
     )
     top-strip = if col-var != none { col-strip.band } else { 0.0 }
     right-strip = if row-var != none { row-strip.band } else { 0.0 }
@@ -661,13 +650,12 @@
     let next-w = calc.max(0.0, grid-w - gutter-x * (n-cols - 1)) / n-cols
     let next-h = calc.max(0.0, grid-h - gutter-y * (n-rows - 1)) / n-rows
     let settled = (
-      not first-pass
-        and calc.abs(next-w - panel-w) < 1e-6
-        and calc.abs(next-h - panel-h) < 1e-6
+      panel-w != none
+        and calc.abs(next-w - panel-w) < _LAYOUT-TOLERANCE
+        and calc.abs(next-h - panel-h) < _LAYOUT-TOLERANCE
     )
     panel-w = next-w
     panel-h = next-h
-    first-pass = false
     if settled { break }
   }
   if col-var != none { _check-strip-fit(col-strip.text, v-room, "height") }
@@ -815,8 +803,8 @@
       y-sec-title-extents: ctx.y-sec-title-extents,
       x-sec-extents: ctx.x-sec-extents,
       y-sec-extents: ctx.y-sec-extents,
-      x-edge-band: ctx.x-label-band + ctx.x-band-gap,
-      y-edge-band: ctx.y-label-band + ctx.y-band-gap,
+      x-edge-band: ctx.x-edge-band,
+      y-edge-band: ctx.y-edge-band,
       canvas-w: width-units,
       canvas-h: height-units,
     )

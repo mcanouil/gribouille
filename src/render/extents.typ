@@ -81,10 +81,16 @@
 // one keeps the size-only measurement every existing layout is calibrated to.
 // The reservation still matches the drawing either way, because both sides go
 // through `_title-boxed`.
-#let _axis-title-extents(title, style, along-cm: none) = {
+//
+// The unbounded extents do not move as the panel does, so a caller that fits a
+// title over several passes measures them once and hands them back on `natural`
+// rather than paying for them per pass.
+#let _axis-title-extents(title, style, along-cm: none, natural: none) = {
   if title == none { return (width: 0.0, height: 0.0, along: none) }
   let resolved = resolve-prose(title, eval-strings: style.typst)
-  let natural = measure-labels-cm((resolved,), style.size)
+  let natural = if natural != none { natural } else {
+    measure-labels-cm((resolved,), style.size)
+  }
   // A title that already fits needs no box: measuring and drawing it exactly
   // as before keeps every existing layout bit-identical.
   if along-cm == none or natural.width <= along-cm {
@@ -124,6 +130,24 @@
   height: _ax-text-cm(size),
 )
 
+// The cm below which two layout extents count as the same. Every band that
+// settles against the box it shrinks, and every check that reports a band the
+// box cannot hold, reads the same slack rather than open-coding one.
+#let _LAYOUT-TOLERANCE = 1e-6
+
+// Fold a list of extent records onto a base one: the widest and the tallest
+// win, and every record keeps its break list rather than being folded into a
+// single max. A break carries the position it is drawn at as well as its
+// extent, so the reservation compares each label against its own break.
+#let _merge-extents(base, exts) = (
+  width: exts.fold(base.width, (m, e) => calc.max(m, e.width)),
+  height: exts.fold(base.height, (m, e) => calc.max(m, e.height)),
+  breaks: exts.fold(
+    base.at("breaks", default: ()),
+    (acc, e) => acc + e.at("breaks", default: ()),
+  ),
+)
+
 // Either the supplied extents record or `_empty-extents(size)` when caller
 // did not measure any labels (e.g., callers that skip measurement or have no secondary axis).
 #let _resolve-extents(extents, size) = if extents != none {
@@ -145,6 +169,36 @@
   fallback: auto,
 )
 
+// Measure a set of resolved tick labels in one walk, for the primary axis and
+// the secondary alike. Returns the widest and tallest ink box (cm) and, per
+// break, that box with where the break lands.
+//
+// Each break keeps its own extent and where it lands, the way the radial groups
+// in `_axis-label-extents` do. A label is centred on its break, so it reaches
+// past the panel edge the break sits near, and the reservation for that reach
+// can only be solved per break: the widest label is not always the outermost
+// one. `map-break` into (0, 1) is affine on both branches and folds `reverse`
+// in, so the fraction is the canvas position, not the data one.
+//
+// A label that lands nowhere still counts toward the band the axis reserves,
+// but carries no reach, so it folds into the maximum without reaching `breaks`.
+// `labels` arrive resolved from `_resolve-tick`, so they measure as they draw.
+#let _break-records(trained, values, labels, size) = {
+  let max-w = 0.0
+  let max-h = 0.0
+  let breaks = ()
+  for (b, label) in values.zip(labels) {
+    let m = measure-text-cm(label, size)
+    if m.width > max-w { max-w = m.width }
+    if m.height > max-h { max-h = m.height }
+    if label == none { continue }
+    let frac = map-break(trained, b, (0.0, 1.0))
+    if frac == none { continue }
+    breaks.push((frac: frac, width: m.width, height: m.height))
+  }
+  (width: max-w, height: max-h, breaks: breaks)
+}
+
 // Collect the formatted tick labels for the trained scale and measure them
 // via Typst. Returns `(width, height)` in cm of the longest label's ink box.
 // Caller must already be inside a `context { ... }` block.
@@ -162,7 +216,7 @@
   let values = _axis-tick-values(trained)
   // Only an axis with no breaks at all takes the single-line fallback. Breaks
   // whose labels all resolve away draw nothing and owe nothing, which is what
-  // `measure-labels-cm` answers for the empty list they leave behind.
+  // `_break-records` answers for the empty boxes they leave behind.
   if values.len() == 0 { return _empty-extents(size) }
   let labels-cb = _trained-labels-cb(trained)
   let typst-mark = trained.at("typst-mark", default: false)
@@ -206,26 +260,7 @@
         typst-eval,
       )
     ))
-  // Each break keeps its own extent and where it lands, the way the radial
-  // groups above do. A label is centred on its break, so it reaches past the
-  // panel edge the break sits near, and the reservation for that reach can only
-  // be solved per break: the widest label is not always the outermost one.
-  // `map-break` into (0, 1) is affine on both branches and folds `reverse` in,
-  // so the fraction is the canvas position, not the data one.
-  let breaks = values
-    .zip(labels)
-    .map(((b, label)) => {
-      if label == none { return none }
-      let frac = map-break(trained, b, (0.0, 1.0))
-      if frac == none { return none }
-      let m = measure-text-cm(
-        resolve-prose(label, eval-strings: typst-eval),
-        size,
-      )
-      (frac: frac, width: m.width, height: m.height)
-    })
-    .filter(r => r != none)
-  measure-labels-cm(labels, size) + (breaks: breaks)
+  _break-records(trained, values, labels, size)
 }
 
 // Same as `_axis-label-extents` but for the secondary axis: each break is
@@ -238,7 +273,8 @@
   if trained.type != "continuous" { return (width: 0.0, height: 0.0) }
   let labels-cb = sec.at("labels", default: auto)
   let typst-mark = trained.at("typst-mark", default: false)
-  let labels = _secondary-breaks(trained, sec, _axis-breaks(trained))
+  let sec-breaks = _secondary-breaks(trained, sec, _axis-breaks(trained))
+  let labels = sec-breaks
     .enumerate()
     // The transformed value is what the draw formats and what the reservation
     // measures; the untransformed break is what places it on the axis.
@@ -254,48 +290,7 @@
       )
     })
   if labels.len() == 0 { return (width: 0.0, height: 0.0) }
-  let sec-breaks = _secondary-breaks(trained, sec, _axis-breaks(trained))
-  let breaks = sec-breaks
-    .zip(labels)
-    .map(((b, label)) => {
-      if label == none { return none }
-      let frac = map-break(trained, b, (0.0, 1.0))
-      if frac == none { return none }
-      let m = measure-text-cm(
-        resolve-prose(label, eval-strings: typst-eval),
-        size,
-      )
-      (frac: frac, width: m.width, height: m.height)
-    })
-    .filter(r => r != none)
-  measure-labels-cm(labels, size) + (breaks: breaks)
-}
-
-// Perpendicular extent of x-axis tick labels (cm). Inputs are the measured
-// ink-bbox width and height of the longest label; rotating composes them
-// trigonometrically, and `n-dodge > 1` adds the staggered rows. Both terms are
-// taken absolute: a box turned past a quarter turn is as deep as its mirror in
-// the first quadrant, and signed terms would shrink the extent instead, even
-// to a negative, letting the labels run off the canvas.
-#let _x-label-depth(angle, n-dodge, label-w-cm, label-h-cm) = {
-  let a = angle * 1deg
-  (
-    label-w-cm * calc.abs(calc.sin(a))
-      + label-h-cm * calc.abs(calc.cos(a))
-      + (n-dodge - 1) * 0.35
-  )
-}
-
-// Perpendicular extent of y-axis tick labels (cm). At angle 0 the labels
-// extend leftward by their full measured width; rotating swaps the extents
-// according to the rotated bounding box, and `n-dodge > 1` adds dodge cols.
-#let _y-label-width(angle, n-dodge, label-w-cm, label-h-cm) = {
-  let a = angle * 1deg
-  (
-    label-w-cm * calc.abs(calc.cos(a))
-      + label-h-cm * calc.abs(calc.sin(a))
-      + (n-dodge - 1) * 0.5
-  )
+  _break-records(trained, sec-breaks, labels, size)
 }
 
 // The anchor `_draw-x-label` pins an x tick label at. Kept here, beside the
@@ -345,6 +340,30 @@
     down: _end(bx-hi, bx-lo, -sin-a) + _end(by-hi, by-lo, -cos-a),
   )
 }
+
+// Bounding box (cm) of an ink box of `w-cm` by `h-cm` turned by `angle`
+// degrees: how far it reaches either way from its own centre, which is
+// `_label-reach` at the `center` anchor. Both trigonometric terms come out
+// absolute there, so a box turned past a quarter turn is as big as its mirror
+// in the first quadrant rather than folding back towards nothing.
+#let _rotated-extent(w-cm, h-cm, angle) = {
+  let r = _label-reach(w-cm, h-cm, angle, "center")
+  (width: r.left + r.right, height: r.up + r.down)
+}
+
+// Perpendicular extent of x-axis tick labels (cm). Inputs are the measured
+// ink-bbox width and height of the longest label; rotating composes them
+// trigonometrically, and `n-dodge > 1` adds the staggered rows.
+#let _x-label-depth(angle, n-dodge, label-w-cm, label-h-cm) = (
+  _rotated-extent(label-w-cm, label-h-cm, angle).height + (n-dodge - 1) * 0.35
+)
+
+// Perpendicular extent of y-axis tick labels (cm). At angle 0 the labels
+// extend leftward by their full measured width; rotating swaps the extents
+// according to the rotated bounding box, and `n-dodge > 1` adds dodge cols.
+#let _y-label-width(angle, n-dodge, label-w-cm, label-h-cm) = (
+  _rotated-extent(label-w-cm, label-h-cm, angle).width + (n-dodge - 1) * 0.5
+)
 
 // The cm a run of tick labels reaches past each end of the panel, given one
 // record per drawn break (`frac`, `width`, `height`), a `reach-of` that turns a
@@ -517,10 +536,18 @@
 // minimises the span, so if anything fits it lies between the two. Bisect
 // towards the wider end, keeping the widest box measured to fit, because a
 // wider box is a title on fewer lines.
-#let _fit-title-extents(title, style, axis, panel-cm, natural-cm) = {
+#let _fit-title-extents(title, style, axis, panel-cm, natural) = {
+  let natural-cm = natural.width
   let along = _title-along-cm(style, axis, panel-cm, natural-cm)
-  let ext = _axis-title-extents(title, style, along-cm: along)
-  let fits = ext => _title-span-cm(style, ext, axis) <= panel-cm + 1e-6
+  let ext = _axis-title-extents(
+    title,
+    style,
+    along-cm: along,
+    natural: natural,
+  )
+  let fits = ext => (
+    _title-span-cm(style, ext, axis) <= panel-cm + _LAYOUT-TOLERANCE
+  )
   if along == none or fits(ext) { return (along: along, ext: ext) }
   let shares = _title-shares(style, axis)
   if shares.across <= 1e-6 { return (along: along, ext: ext) }
@@ -529,12 +556,22 @@
   // caller report a title this panel cannot hold at this angle.
   let best = (
     along: floor,
-    ext: _axis-title-extents(title, style, along-cm: floor),
+    ext: _axis-title-extents(
+      title,
+      style,
+      along-cm: floor,
+      natural: natural,
+    ),
   )
   let (lo, hi) = (calc.min(floor, along), calc.max(floor, along))
   for _ in range(_TITLE-FIT-STEPS) {
     let mid = (lo + hi) / 2
-    let probe = _axis-title-extents(title, style, along-cm: mid)
+    let probe = _axis-title-extents(
+      title,
+      style,
+      along-cm: mid,
+      natural: natural,
+    )
     if fits(probe) {
       best = (along: mid, ext: probe)
       lo = mid

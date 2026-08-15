@@ -10,30 +10,29 @@
 #import "common.typ": _per-side
 #import "axis-format.typ": _axis-title, _sec-spec
 #import "guides.typ": _axis-text-angle, _read-axis-guide
-#import "legend.typ": side-bg-edges, side-block-cm
+#import "legend.typ": side-block-cm
 #import "facet.typ": _facet-gutter, _fit-gutter
 #import "domain.typ": _fixed-inner-size, _is-flipped
 #import "../utils/errors.typ": cm-text, fail
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _axis-guide-rows, _axis-label-extents,
-  _axis-title-extents, _band-gap-cm, _fit-title-extents, _label-overhang,
-  _label-reach, _sec-extent, _secondary-label-extents, _text-margin-cm,
-  _title-angle, _title-extent-cm, _title-overrun-cm, _title-pad-cm,
-  _title-span-cm, _x-label-anchor, _x-label-depth-stack, _y-label-width-stack,
+  _AX-TITLE-LABEL-GAP, _LAYOUT-TOLERANCE, _TICK-LABEL-GAP, _axis-guide-rows,
+  _axis-label-extents, _axis-title-extents, _band-gap-cm, _fit-title-extents,
+  _label-overhang, _label-reach, _merge-extents, _sec-extent,
+  _secondary-label-extents, _text-margin-cm, _title-angle, _title-extent-cm,
+  _title-overrun-cm, _title-pad-cm, _title-span-cm, _x-label-anchor,
+  _x-label-depth-stack, _y-label-width-stack,
 )
 
-// Passes allowed when settling axis-title wrapping against the panel size, and
-// the cm below which two panel extents count as the same. Real plots settle in
-// two or three; the cap only bounds a degenerate one.
+// Passes allowed when settling axis-title wrapping against the panel size.
+// Real plots settle in two or three; the cap only bounds a degenerate one.
 #let _TITLE-FIT-PASSES = 8
-#let _TITLE-FIT-TOLERANCE = 1e-6
 
 // Compute the chrome margin and every measured extent the canvas builders
 // need. `ctx` carries: `spec`, `theme`, `trained`, `coord`, `guides`,
 // `extents` (legend side extents), `legend-gap`, `width-units`,
 // `height-units`, `facet-grid-mode`, `faceted` (either facet mode: the legend
 // is centred on the whole panel grid there), `free-x`, `free-y`,
-// `grid-n-rows`, `grid-n-cols`, `panel-trained-list`, `margin-override`.
+// `panel-trained-list`, `margin-override`.
 #let _chrome-margins(ctx) = {
   let spec = ctx.spec
   let theme = ctx.theme
@@ -79,50 +78,33 @@
   // must reserve the widest group's labels. Take the per-group maxima from the
   // panels that actually draw the edge axes (bottom row for x, left column for
   // y) using the same trained entries the draw will use.
-  let x-extents = if (
-    ctx.facet-grid-mode and ctx.free-x and panel-trained-list.len() > 0
-  ) {
-    let exts = range(ctx.grid-n-cols).map(c => _axis-label-extents(
-      panel-trained-list
-        .at((ctx.grid-n-rows - 1) * ctx.grid-n-cols + c)
-        .at(
-          "x",
-          default: none,
-        ),
-      ax-text.xb.size,
-      "x",
+  let _edge-extents = (base, axis, style, tracks, panel-at) => {
+    let exts = range(tracks).map(i => _axis-label-extents(
+      panel-trained-list.at(panel-at(i)).at(axis, default: none),
+      style.size,
+      axis,
       coord,
-      typst-eval: ax-text.xb.typst,
+      typst-eval: style.typst,
     ))
-    // Each column keeps its own break records rather than being folded into a
-    // single max: a record carries the position it is drawn at as well as its
-    // extent, so the reservation compares every label against its own break.
-    (
-      width: exts.fold(x-extents.width, (m, e) => calc.max(m, e.width)),
-      height: exts.fold(x-extents.height, (m, e) => calc.max(m, e.height)),
-      breaks: exts.fold(
-        x-extents.at("breaks", default: ()),
-        (acc, e) => acc + e.at("breaks", default: ()),
-      ),
+    _merge-extents(base, exts)
+  }
+  let _free-edge = ctx.facet-grid-mode and panel-trained-list.len() > 0
+  let x-extents = if _free-edge and ctx.free-x {
+    _edge-extents(
+      x-extents,
+      "x",
+      ax-text.xb,
+      ctx.panel-n-cols,
+      c => (ctx.panel-n-rows - 1) * ctx.panel-n-cols + c,
     )
   } else { x-extents }
-  let y-extents = if (
-    ctx.facet-grid-mode and ctx.free-y and panel-trained-list.len() > 0
-  ) {
-    let exts = range(ctx.grid-n-rows).map(r => _axis-label-extents(
-      panel-trained-list.at(r * ctx.grid-n-cols).at("y", default: none),
-      ax-text.yl.size,
+  let y-extents = if _free-edge and ctx.free-y {
+    _edge-extents(
+      y-extents,
       "y",
-      coord,
-      typst-eval: ax-text.yl.typst,
-    ))
-    (
-      width: exts.fold(y-extents.width, (m, e) => calc.max(m, e.width)),
-      height: exts.fold(y-extents.height, (m, e) => calc.max(m, e.height)),
-      breaks: exts.fold(
-        y-extents.at("breaks", default: ()),
-        (acc, e) => acc + e.at("breaks", default: ()),
-      ),
+      ax-text.yl,
+      ctx.panel-n-rows,
+      r => r * ctx.panel-n-cols,
     )
   } else { y-extents }
   let x-sec-extents = _secondary-label-extents(
@@ -158,32 +140,21 @@
   // label band there would take the room those labels need out of the panel
   // they are drawn in, so both drop to zero, exactly as the cartesian tick and
   // axis draw does under radial.
-  let x-label-depth = if (
-    not _radial and ax-text.xb.size > 0pt and not x-guide.suppress
-  ) {
+  let x-drawn = not _radial and ax-text.xb.size > 0pt and not x-guide.suppress
+  let y-drawn = not _radial and ax-text.yl.size > 0pt and not y-guide.suppress
+  let x-label-depth = if x-drawn {
     _x-label-depth-stack(x-guide, x-extents.width, x-extents.height)
   } else { 0.0 }
-  let y-label-width = if (
-    not _radial and ax-text.yl.size > 0pt and not y-guide.suppress
-  ) {
+  let y-label-width = if y-drawn {
     _y-label-width-stack(y-guide, y-extents.width, y-extents.height)
   } else { 0.0 }
   // A tick label is centred on its break, so the break nearest a panel edge
   // reaches past it, and nothing used to reserve that reach: the label band is
-  // perpendicular to its own axis. Collect the per-break records behind the
-  // same three gates the band uses, so a stripped or radial axis has none at
-  // all and reserves nothing rather than nearly nothing.
-  let _label-recs = (drawn, ext) => if drawn {
-    ext.at("breaks", default: ())
-  } else { () }
-  let x-recs = _label-recs(
-    not _radial and ax-text.xb.size > 0pt and not x-guide.suppress,
-    x-extents,
-  )
-  let y-recs = _label-recs(
-    not _radial and ax-text.yl.size > 0pt and not y-guide.suppress,
-    y-extents,
-  )
+  // perpendicular to its own axis. The per-break records sit behind the same
+  // gate the band does, so a stripped or radial axis has none at all and
+  // reserves nothing rather than nearly nothing.
+  let x-recs = if x-drawn { x-extents.at("breaks", default: ()) } else { () }
+  let y-recs = if y-drawn { y-extents.at("breaks", default: ()) } else { () }
   // A suppressed (`labels(x: none)`) or nameless axis title reserves no extent;
   // mirror the draw-side gate so the panel reclaims the freed depth.
   let _flipped = _is-flipped(coord)
@@ -241,23 +212,20 @@
   // radial panel draws no cartesian tick marks at all, so it reserves none.
   let x-tick-cm = if _radial or x-guide.suppress { 0.0 } else { tick-len.xb }
   let y-tick-cm = if _radial or y-guide.suppress { 0.0 } else { tick-len.yl }
-  // The whole band between the panel edge and its axis title: what the two
-  // extents below reserve, and what the draw sites offset the title by. The
-  // faceted builder places one title for the grid and reads these rather than
-  // recomputing them, so a title cannot come to sit outside its own margin.
-  let x-label-band = x-tick-cm + x-label-depth
-  let y-label-band = y-tick-cm + y-label-width
-  // The gap that holds that band off the panel edge travels with it, for the
-  // same reason: an axis with nothing to hold off owes no gap, and a builder
-  // that re-derived the rule would have to remember the radial case twice.
-  // Radial is that case: it reserves no band, because its theta labels ring the
-  // inside of the panel edge rather than sitting outside it, but that ink is up
-  // against the edge and owes it the gap all the same.
+  // The whole band between the panel edge and its axis title: the ticks and
+  // their labels, plus the gap that holds them off the edge. It is what the two
+  // extents below reserve and what the draw sites offset the title by, and it
+  // travels as one figure because no reader of it wants a part: a builder that
+  // re-derived the rule would have to remember the radial case twice. Radial is
+  // that case. It reserves no band, because its theta labels ring the inside of
+  // the panel edge rather than sitting outside it, but that ink is up against
+  // the edge and owes it the gap all the same.
   let _edge-gap = band => if _radial { _TICK-LABEL-GAP } else {
     _band-gap-cm(band)
   }
-  let x-band-gap = _edge-gap(x-label-band)
-  let y-band-gap = _edge-gap(y-label-band)
+  let _edge-band = band => band + _edge-gap(band)
+  let x-edge-band = _edge-band(x-tick-cm + x-label-depth)
+  let y-edge-band = _edge-band(y-tick-cm + y-label-width)
   let _side-gap = side => (
     extents.at(side) + (if extents.at(side) > 0 { legend-gap } else { 0.0 })
   )
@@ -280,12 +248,28 @@
     ref-w: width-units,
     ref-h: height-units,
   )
-  let legend-edges = side-bg-edges(
-    guides,
-    (canvas-w: width-units, canvas-h: height-units),
-    theme,
-    legend-gap,
-  )
+  // The block each side's legend puts on the canvas: the guide stack it draws
+  // and the `legend-background` edge around it. It is measured once here and
+  // read twice, by the reservation below and by the centring check at the end,
+  // so the room kept for a legend and the room it is reported to need are the
+  // same figure rather than two that have to agree.
+  let _no-edge = (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0)
+  let legend-blocks = (:)
+  let legend-edges = (:)
+  for side in ("top", "right", "bottom", "left") {
+    let side-guides = guides.filter(g => g.placement.side == side)
+    let block = if side-guides.len() == 0 { none } else {
+      side-block-cm(
+        side,
+        side-guides,
+        (canvas-w: width-units, canvas-h: height-units),
+        theme,
+        legend-gap,
+      )
+    }
+    legend-blocks.insert(side, block)
+    legend-edges.insert(side, if block == none { _no-edge } else { block.edge })
+  }
   let bar-out = if any-bar {
     _rect-outset-cm(
       theme,
@@ -354,28 +338,43 @@
       },
     )
   }
-  let _x-reach = rec => {
-    let r = _rows-reach(x-guide, sub => _x-label-anchor(sub.angle), rec)
-    (lo: r.left, hi: r.right)
-  }
-  let _y-reach = rec => {
-    let r = _rows-reach(y-guide, _ => "mid-east", rec)
-    (lo: r.down, hi: r.up)
-  }
-  let _x-sec-reach = rec => {
-    let r = _label-reach(rec.width, rec.height, 0, "south")
-    (lo: r.left, hi: r.right)
-  }
-  let _y-sec-reach = rec => {
-    let r = _label-reach(rec.width, rec.height, 0, "mid-west")
-    (lo: r.down, hi: r.up)
-  }
   let x-sec-recs = if not _radial and x-sec != none and ax-text.xt.size > 0pt {
     x-sec-extents.at("breaks", default: ())
   } else { () }
   let y-sec-recs = if not _radial and y-sec != none and ax-text.yr.size > 0pt {
     y-sec-extents.at("breaks", default: ())
   } else { () }
+  // The four bands take identical treatment and differ only in which records
+  // they carry, which panel dimension they run along, and how far one of their
+  // labels reaches from the break it is centred on. `axis` names the direction
+  // the band runs, which is what maps `_label-reach`'s four sides onto the two
+  // ends of the span and onto the two canvas sides the reach is floored on.
+  let reach-bands = (
+    (
+      axis: "x",
+      recs: x-recs,
+      reach: rec => _rows-reach(
+        x-guide,
+        sub => _x-label-anchor(sub.angle),
+        rec,
+      ),
+    ),
+    (
+      axis: "x",
+      recs: x-sec-recs,
+      reach: rec => _label-reach(rec.width, rec.height, 0, "south"),
+    ),
+    (
+      axis: "y",
+      recs: y-recs,
+      reach: rec => _rows-reach(y-guide, _ => "mid-east", rec),
+    ),
+    (
+      axis: "y",
+      recs: y-sec-recs,
+      reach: rec => _label-reach(rec.width, rec.height, 0, "mid-west"),
+    ),
+  )
   // The cm the data area is already inset by inside the panel: expansion that
   // was asked for in canvas units rather than as a fraction of the domain.
   let _read-pad = t => if t == none { (0.0, 0.0) } else {
@@ -388,28 +387,28 @@
   // the outermost break far enough inside; the margin below takes it as a
   // floor, so a zero leaves every existing layout untouched.
   let _overhang(panel-w, panel-h, slack-x, slack-y) = {
-    let x-over = _label-overhang(x-recs, _x-reach, panel-w, x-pad, slack-x)
-    let y-over = _label-overhang(y-recs, _y-reach, panel-h, y-pad, slack-y)
-    let xs-over = _label-overhang(
-      x-sec-recs,
-      _x-sec-reach,
-      panel-w,
-      x-pad,
-      slack-x,
-    )
-    let ys-over = _label-overhang(
-      y-sec-recs,
-      _y-sec-reach,
-      panel-h,
-      y-pad,
-      slack-y,
-    )
-    (
-      left: calc.max(x-over.lo, xs-over.lo),
-      right: calc.max(x-over.hi, xs-over.hi),
-      bottom: calc.max(y-over.lo, ys-over.lo),
-      top: calc.max(y-over.hi, ys-over.hi),
-    )
+    let out = (left: 0.0, right: 0.0, bottom: 0.0, top: 0.0)
+    for band in reach-bands {
+      let along-x = band.axis == "x"
+      let (lo-side, hi-side) = if along-x { ("left", "right") } else {
+        ("bottom", "top")
+      }
+      let over = _label-overhang(
+        band.recs,
+        rec => {
+          let r = (band.reach)(rec)
+          if along-x { (lo: r.left, hi: r.right) } else {
+            (lo: r.down, hi: r.up)
+          }
+        },
+        if along-x { panel-w } else { panel-h },
+        if along-x { x-pad } else { y-pad },
+        if along-x { slack-x } else { slack-y },
+      )
+      out.insert(lo-side, calc.max(out.at(lo-side), over.lo))
+      out.insert(hi-side, calc.max(out.at(hi-side), over.hi))
+    }
+    out
   }
   // The panel a label is drawn against, given the box the margins leave. A
   // facet builder splits that box into tracks and every outer cell draws the
@@ -452,6 +451,15 @@
     _overhang(p.w, p.h, p.slack-x, p.slack-y)
   }
 
+  // The bound each pass solves is read off the title's unwrapped extents, which
+  // do not move as the panel does, so measure them once here rather than once
+  // per pass. Every later measurement reads them back rather than repeating
+  // them.
+  let natural = (:)
+  for side in title-sides {
+    natural.insert(side.key, _axis-title-extents(side.title, side.style))
+  }
+
   // Everything above is independent of how the axis titles wrap. The margin is
   // not: a title is boxed to the reading length the panel leaves it, a wrapped
   // title is thicker than one line, a thicker title takes more margin, and a
@@ -460,16 +468,22 @@
   // `along-cm: none` there reproduces the pre-wrapping measurement exactly, so
   // a plot whose titles all fit re-measures to the same extents on the second
   // pass, settles against them, and keeps its former layout to the bit.
-  let _fit(along, over) = {
+  let _fit(along, over, known: (:)) = {
     // Measure the title ink so its rotated bounding box reserves the right
     // perpendicular extent at any angle, mirroring the tick-label measurement.
+    // A side whose box the pass above already measured hands it over on
+    // `known`, since re-measuring the same box returns the same record.
     let ext = (:)
     for side in title-sides {
-      ext.insert(side.key, _axis-title-extents(
-        side.title,
-        side.style,
-        along-cm: along.at(side.key),
-      ))
+      let seen = known.at(side.key, default: none)
+      ext.insert(side.key, if seen != none { seen } else {
+        _axis-title-extents(
+          side.title,
+          side.style,
+          along-cm: along.at(side.key),
+          natural: natural.at(side.key),
+        )
+      })
     }
     let sec-x-extent = _sec-extent(
       x-sec,
@@ -496,13 +510,9 @@
     // A stripped axis hands the gap and the pad back to the panel, which is
     // what lets a sub-centimetre canvas hold anything at all.
     let bottom-extent = (
-      x-label-band
-        + x-band-gap
-        + bottom-gap
-        + x-title-cm
-        + _title-pad-cm(x-title-cm)
+      x-edge-band + bottom-gap + x-title-cm + _title-pad-cm(x-title-cm)
     )
-    let left-extent = y-label-band + y-band-gap + left-gap + y-title-cm
+    let left-extent = y-edge-band + left-gap + y-title-cm
     // Cap the right margin so the legend can never invert the panel. Without the
     // cap, `px-hi - px-lo` goes negative and axis labels render reversed (panel
     // becomes mirror-imaged into the legend).
@@ -567,13 +577,6 @@
     prev
   } else if prev == none { next } else { calc.min(prev, next) }
 
-  // The bound is solved from the title's unwrapped width, which does not move
-  // as the panel does, so measure it once rather than once per pass.
-  let natural = (:)
-  for side in title-sides {
-    natural.insert(side.key, _axis-title-extents(side.title, side.style).width)
-  }
-
   // The overhang runs the other way: a bigger margin is a smaller panel, a
   // smaller panel puts its outermost break closer to the edge, and a closer
   // break reaches further past it. So a pass may only raise this floor, which
@@ -602,51 +605,55 @@
       height-units - fit.margin.top - fit.margin.bottom,
     )
     let settled = (
-      calc.abs(next-w - panel-w) < _TITLE-FIT-TOLERANCE
-        and calc.abs(next-h - panel-h) < _TITLE-FIT-TOLERANCE
+      calc.abs(next-w - panel-w) < _LAYOUT-TOLERANCE
+        and calc.abs(next-h - panel-h) < _LAYOUT-TOLERANCE
     )
     let fitted = title-sides.all(side => {
       let panel-cm = if side.axis == "x" { next-w } else { next-h }
       let span = _title-span-cm(side.style, fit.ext.at(side.key), side.axis)
-      span <= panel-cm + _TITLE-FIT-TOLERANCE
+      span <= panel-cm + _LAYOUT-TOLERANCE
     })
     if settled and fitted { break }
     panel-w = next-w
     panel-h = next-h
     over = _loosen(over, _overhang-of(next-w, next-h))
+    // The fitted extents travel with the box they were measured at, so `_fit`
+    // re-measures only a side whose earlier, tighter box the fit did not keep.
+    let fitted-ext = (:)
     for side in title-sides {
       let panel-cm = if side.axis == "x" { panel-w } else { panel-h }
-      along.insert(side.key, _tighten(
-        along.at(side.key),
-        _fit-title-extents(
-          side.title,
-          side.style,
-          side.axis,
-          panel-cm,
-          natural.at(side.key),
-        ).along,
-      ))
+      let solved = _fit-title-extents(
+        side.title,
+        side.style,
+        side.axis,
+        panel-cm,
+        natural.at(side.key),
+      )
+      let kept = _tighten(along.at(side.key), solved.along)
+      along.insert(side.key, kept)
+      fitted-ext.insert(side.key, if kept == solved.along { solved.ext } else {
+        none
+      })
     }
-    fit = _fit(along, over)
+    fit = _fit(along, over, known: fitted-ext)
   }
 
   // Two ways wrapping can fail to rescue a title, both of which would push the
   // canvas past the requested size. Say so rather than ship a figure that
   // silently outgrows the box it was given.
-  let _cm = v => str(calc.round(v, digits: 2))
   for side in title-sides {
     let ext = fit.ext.at(side.key)
     let panel-cm = if side.axis == "x" { panel-w } else { panel-h }
     // A word wider than the box it wraps in.
-    if _title-overrun-cm(ext) > _TITLE-FIT-TOLERANCE {
+    if _title-overrun-cm(ext) > _LAYOUT-TOLERANCE {
       fail(
         "plot",
         "the "
           + side.name
           + " title has a "
-          + _cm(ext.min-width)
+          + cm-text(ext.min-width)
           + " cm word that cannot wrap into the "
-          + _cm(ext.along)
+          + cm-text(ext.along)
           + " cm the panel leaves it",
         hint: "Shorten the title, break it with `\\`, or give the plot more "
           + "room with `width`/`height`.",
@@ -656,16 +663,16 @@
     // its thickness, and narrowing the box trades one for the other. Past a
     // point that trade stops paying and no box fits at all.
     let span = _title-span-cm(side.style, ext, side.axis)
-    if span > panel-cm + _TITLE-FIT-TOLERANCE {
+    if span > panel-cm + _LAYOUT-TOLERANCE {
       let default-deg = if side.axis == "x" { 0 } else { 90 }
       fail(
         "plot",
         "the "
           + side.name
           + " title spans "
-          + _cm(span)
+          + cm-text(span)
           + " cm along a panel of "
-          + _cm(panel-cm)
+          + cm-text(panel-cm)
           + " cm, and no wrapping of it at "
           + str(calc.round(
             _title-angle(side.style, default-deg).deg(),
@@ -721,9 +728,9 @@
     // the room that band took, and naming it would send the reader after the
     // wrong label. Same reading as the legend check below.
     let base-total = axis.sides.map(s => fit.base.at(s)).sum()
-    if base-total > axis.extent + _TITLE-FIT-TOLERANCE { continue }
+    if base-total > axis.extent + _LAYOUT-TOLERANCE { continue }
     for side in axis.sides {
-      if over.at(side) <= fit.margin.at(side) + _TITLE-FIT-TOLERANCE {
+      if over.at(side) <= fit.margin.at(side) + _LAYOUT-TOLERANCE {
         continue
       }
       fail(
@@ -777,12 +784,12 @@
     let base-total = axis.sides.map(s => fit.base.at(s)).sum()
     // The axes alone can fill a small canvas, which draws an empty panel rather
     // than failing; a legend is not to blame for the room they took.
-    if base-total > axis.extent + _TITLE-FIT-TOLERANCE { continue }
+    if base-total > axis.extent + _LAYOUT-TOLERANCE { continue }
     let room = axis.extent - base-total
     if (
       axis.sides.map(s => legend-slot.at(s)).sum()
         <= (
-          room + _TITLE-FIT-TOLERANCE
+          room + _LAYOUT-TOLERANCE
         )
     ) {
       continue
@@ -825,15 +832,8 @@
     _fixed-inner-size(coord, trained, box-w, box-h)
   }
   for side in ("top", "right", "bottom", "left") {
-    let side-guides = guides.filter(g => g.placement.side == side)
-    if side-guides.len() == 0 { continue }
-    let block = side-block-cm(
-      side,
-      side-guides,
-      (canvas-w: width-units, canvas-h: height-units),
-      theme,
-      legend-gap,
-    )
+    let block = legend-blocks.at(side)
+    if block == none { continue }
     let vertical = side == "left" or side == "right"
     let centre = if vertical {
       fit.margin.bottom + panel-ch / 2
@@ -843,7 +843,7 @@
     let far = if vertical { block.edge.top } else { block.edge.right }
     let extent = if vertical { height-units } else { width-units }
     let over = calc.max(half + near - centre, centre + half + far - extent)
-    if over > _TITLE-FIT-TOLERANCE {
+    if over > _LAYOUT-TOLERANCE {
       let stands = if vertical { block.height } else { block.width }
       let reading = if vertical { "tall" } else { "wide" }
       fail(
@@ -925,10 +925,8 @@
     ax-text: ax-text,
     x-extents: x-extents,
     y-extents: y-extents,
-    x-label-band: x-label-band,
-    y-label-band: y-label-band,
-    x-band-gap: x-band-gap,
-    y-band-gap: y-band-gap,
+    x-edge-band: x-edge-band,
+    y-edge-band: y-edge-band,
     x-sec-extents: x-sec-extents,
     y-sec-extents: y-sec-extents,
     sec-x-extent: fit.sec-x-extent,

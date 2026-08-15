@@ -7,7 +7,7 @@
 // from this file, which is what lets a test read a fixture at all.
 
 #import "../../src/utils/brand-yml.typ": (
-  brand-colours, brand-font, brand-palette,
+  brand-colours, brand-font, brand-palette-from,
 )
 #import "../../src/theme/brand.typ": theme-brand
 #import "../../src/theme/defaults.typ": merge-theme
@@ -41,7 +41,7 @@
 
 // `info` duplicates `secondary`, so the derived palette holds five colours.
 #assert.eq(
-  brand-palette(brand, "light"),
+  brand-palette-from(light),
   (
     rgb("#E94C3D"),
     rgb("#1F7A8C"),

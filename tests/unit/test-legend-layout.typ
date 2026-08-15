@@ -5,7 +5,7 @@
 
 #import "../../src/render/legend.typ": (
   _LABEL-SLACK-CM, _grid-shape, _guide-title, _legend-title-style,
-  _swatch-index, _swatch-rc, _title-prefix, _title-width, guides-for,
+  _swatch-index, _swatch-rc, _title-box, _title-prefix, guides-for,
 )
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../lib.typ": element-text, guide-custom, theme
@@ -148,10 +148,10 @@
     theme: merge-theme(theme()),
   )
   assert.eq(guides.len(), 1)
-  let expected = _title-width(
+  let expected = _title-box(
     (title: _custom-title),
     _legend-title-style(merge-theme(theme())),
-  )
+  ).width
   assert(expected > 1.0, message: "the title has to beat the 1cm block")
   assert(
     calc.abs(guides.at(0).width - expected) < 1e-9,

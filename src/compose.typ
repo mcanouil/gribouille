@@ -1,6 +1,7 @@
 #import "render.typ": (
   _decorate-extents, _decorate-parts, _render-decorate, render-plot-deferred,
 )
+#import "render/extents.typ": _LAYOUT-TOLERANCE
 #import "render/legend.typ" as legend-mod
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
@@ -183,14 +184,17 @@
 // Guide-hoisting stage: probe each plot panel's would-be guides, keep the
 // aesthetics whose guides are identical across every panel, and settle the
 // shared legend side. Returns `(probes, hoisted, hoisted-guides,
-// legend-side)`; `probes` holds each plot panel's deferred render (or `none`
-// for a nested compose).
+// legend-side)`; `probes` holds each plot panel's layout (or `none` for a
+// nested compose), which is its guides, its trained scales, and its margin.
 #let _hoist-guides(panels, guides, collect) = {
   // Probe only plot panels with compose-level `guides` merged in; a nested
   // compose collects its own guides internally (guide collection is per level),
   // so it contributes none here and never hoists.
   let probes = panels.map(p => if _is-plot-spec(p) {
-    render-plot-deferred((..p, guides: _merge-guides(p.guides, guides)))
+    render-plot-deferred(
+      (..p, guides: _merge-guides(p.guides, guides)),
+      layout-only: true,
+    )
   } else { none })
   let per-panel = probes.map(p => if p == none { (:) } else {
     _index-by-aesthetic(p.guides)
@@ -373,7 +377,6 @@
 // Attach the hoisted legend canvas on its side of the panel block.
 #let _attach-legend(
   panel-block,
-  hoisted-guides,
   probes,
   theme,
   legend-side,
@@ -382,7 +385,6 @@
 ) = {
   let trained = probes.find(p => p != none).trained
   let legend-canvas = legend-mod.standalone(
-    hoisted-guides,
     trained,
     theme,
     legend-side,
@@ -634,7 +636,7 @@
     if (
       hoisted-guides.len() > 0
         and across != none
-        and across.needs > across.room + 1e-6
+        and across.needs > across.room + _LAYOUT-TOLERANCE
     ) {
       fail(
         "compose",
@@ -704,6 +706,7 @@
               bottom: shared.bottom.at(row),
             )
           },
+          layout-only: true,
         ).margin
         col-left.at(col) = calc.max(col-left.at(col), m.left)
         col-right.at(col) = calc.max(col-right.at(col), m.right)
@@ -763,7 +766,6 @@
   } else {
     _attach-legend(
       panel-block,
-      hoisted-guides,
       probes,
       theme,
       legend-side,

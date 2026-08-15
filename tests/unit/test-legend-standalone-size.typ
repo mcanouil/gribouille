@@ -23,12 +23,15 @@
 
 // Custom guides reserve `cm-height + 0.2` each (no title prefix here) and carry
 // their width verbatim, so the arithmetic is independent of font measurement.
+// `height` and `title-h` are the fields `guides-for` stamps.
 #let cg(w, h) = (
   kind: "custom",
   cm-width: w,
   cm-height: h,
   width: w,
   title: none,
+  title-h: 0.0,
+  height: h + 0.2,
 )
 
 #let grey = theme-grey()
@@ -129,6 +132,22 @@
   assert(y0 - pad.bottom >= -1e-9, message: "bottom overflow on " + side)
   assert(x1 + pad.right <= s.width + 1e-9, message: "right overflow on " + side)
   assert(y1 + pad.top <= s.height + 1e-9, message: "top overflow on " + side)
+}
+
+// A `compose()` hoists a guide out of a panel that may carry a theme of its own
+// and draws it under the composition's. The size reported must follow the theme
+// it is handed, not the surfaces the guide happens to arrive stamped for, or the
+// title band reserved and the title painted disagree.
+#let titled = cg(2.0, 1.0) + (title: "grp")
+#let mis-stamped = titled + (title-h: 5.0, height: 6.0)
+#context {
+  for side in ("right", "left", "top", "bottom") {
+    assert.eq(
+      standalone-size((mis-stamped,), side, grey, canvas-w, canvas-h),
+      standalone-size((titled,), side, grey, canvas-w, canvas-h),
+      message: "stale stamps reached the reported size on " + side,
+    )
+  }
 }
 
 Legend standalone-size tests passed.
