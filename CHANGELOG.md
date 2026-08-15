@@ -11,7 +11,7 @@
 
 ### Changes
 
-- perf: a plot lays its chrome out faster. Each axis title, tick label, and legend title is measured once per pass, and a `compose()` panel is probed for its guides and its shared margin without drawing a canvas that is then thrown away.
+- perf: a plot lays its chrome out faster. Each axis title, tick label, and legend title is measured once per pass, and a `compose()` panel is probed for its guides and its shared margin without drawing a canvas that is then thrown away. (#260)
 - fix: a plot fits the `width`/`height` it was asked for when its outermost tick label reaches past the panel edge. The panel shrinks by the reach, most visibly under `expand: false`, where a break sits flush on the panel edge. (#258)
 - fix: a faceted plot fits the `width`/`height` it was asked for. Strip bands are budgeted against the panel grid, a label too wide for the panel it names wraps into it, and labels that cannot fit at all fail with the room they need. (#256)
 - feat: `theme-brand()` builds a theme from a parsed Quarto `_brand.yml`, so a document's plots follow the same brand as its prose. It takes the dictionary `yaml()` produces rather than a path, maps `foreground`, `background`, and `primary` onto `ink`, `paper`, and `accent`, and turns the remaining data-ink roles into a discrete palette, with `mode: "light"` or `mode: "dark"` choosing the variant. (#250)
