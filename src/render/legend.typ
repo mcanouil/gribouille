@@ -960,6 +960,27 @@
   fail("legend._guide-render-height", "unknown guide kind " + repr(g.kind))
 }
 
+// Stamp the cm a guide occupies on the surfaces `theme` paints it with: its
+// width, the `legend-title` band above its first key, and the height of the
+// whole box. Every consumer reads these back rather than measuring again, so a
+// guide is stamped wherever the theme it is drawn under is settled.
+//
+// `_guide-render-height` reads the title band, so the band is stamped first.
+#let _stamp-sizes(g, theme) = {
+  let text-style = _legend-text-style(theme)
+  let out = g
+  out.insert("width", _guide-width(out, text-style, _legend-title-style(theme)))
+  out.insert("title-h", _legend-title-h(theme, out))
+  out.insert("height", _guide-render-height(out, text-style))
+  out
+}
+
+// Stamp a set of guides again for the theme they are about to be drawn under.
+// `compose()` hoists a shared legend out of panels that may carry themes of
+// their own, and draws it under the composition's, so the stamps it arrives
+// with are not the ones the draw pass reads.
+#let restamp(guides, theme) = guides.map(g => _stamp-sizes(g, theme))
+
 #let guides-for(
   spec,
   trained,
@@ -1090,10 +1111,7 @@
     }
     g.insert("placement", first.placement)
     g.insert("align", first.align)
-    g.insert("width", _guide-width(g, text-style, title-style))
-    g.insert("title-h", _legend-title-h(theme, g))
-    g.insert("height", _guide-render-height(g, text-style))
-    guides.push(g)
+    guides.push(_stamp-sizes(g, theme))
   }
 
   // Free-form `guide-custom` slots have no scale, so the merge loop above
@@ -1115,10 +1133,7 @@
       title: g.title,
       placement: placement,
     )
-    custom.insert("width", _guide-width(custom, text-style, title-style))
-    custom.insert("title-h", _legend-title-h(theme, custom))
-    custom.insert("height", _guide-render-height(custom, text-style))
-    guides.push(custom)
+    guides.push(_stamp-sizes(custom, theme))
   }
 
   // Stable sort: ties (no `order`, or equal `order`) preserve insertion order,
@@ -2024,7 +2039,7 @@
 #let standalone-size(guides, side, theme, canvas-w, canvas-h) = {
   let block = side-block-cm(
     side,
-    guides,
+    restamp(guides, theme),
     (canvas-w: canvas-w, canvas-h: canvas-h),
     theme,
     0.0,
@@ -2045,6 +2060,7 @@
 // `margin.left: 0.05` cancels `_draw-side`'s own left-side nudge, and
 // `margin.bottom: 0.4` cancels its bottom offset.
 #let standalone(guides, trained, theme, side, size) = {
+  let guides = restamp(guides, theme)
   let ctx = (
     trained: trained,
     palette: resolve-theme-palette(theme),

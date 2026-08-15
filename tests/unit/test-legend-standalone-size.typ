@@ -134,4 +134,20 @@
   assert(y1 + pad.top <= s.height + 1e-9, message: "top overflow on " + side)
 }
 
+// A `compose()` hoists a guide out of a panel that may carry a theme of its own
+// and draws it under the composition's. The size reported must follow the theme
+// it is handed, not the surfaces the guide happens to arrive stamped for, or the
+// title band reserved and the title painted disagree.
+#let titled = cg(2.0, 1.0) + (title: "grp")
+#let mis-stamped = titled + (title-h: 5.0, height: 6.0)
+#context {
+  for side in ("right", "left", "top", "bottom") {
+    assert.eq(
+      standalone-size((mis-stamped,), side, grey, canvas-w, canvas-h),
+      standalone-size((titled,), side, grey, canvas-w, canvas-h),
+      message: "stale stamps reached the reported size on " + side,
+    )
+  }
+}
+
 Legend standalone-size tests passed.

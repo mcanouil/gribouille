@@ -231,9 +231,8 @@
   )
 }
 
-// Derive a discrete palette from the brand's data-ink roles. `brand-palette`
-// resolves the colour block first; a caller that holds a resolved block already
-// calls `brand-palette-from` and does not pay for a second walk.
+// Derive a discrete palette from the brand's data-ink roles, over a colour
+// block `brand-colours` has already resolved.
 //
 // De-duplication is load-bearing: brands routinely alias `info` to `secondary`
 // and `warning` to `tertiary`, and a duplicate would paint two factor levels
@@ -250,5 +249,3 @@
   }
   if out.len() < 2 { none } else { out }
 }
-
-#let brand-palette(brand, mode) = brand-palette-from(brand-colours(brand, mode))

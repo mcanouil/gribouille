@@ -2,7 +2,7 @@
 // font families, and the derived discrete palette.
 
 #import "../../src/utils/brand-yml.typ": (
-  _pick-variant, _walk-alias, brand-colours, brand-font, brand-palette,
+  _pick-variant, _walk-alias, brand-colours, brand-font, brand-palette-from,
 )
 
 // Mirrors docs/_brand.yml: light/dark variants, `info` aliasing `secondary`,
@@ -105,7 +105,7 @@
 #assert.eq(brand-font((typography: (base: (weight: 600))), "base"), none)
 
 // The derived palette drops the duplicates `info` and `warning` introduce.
-#let pal = brand-palette(BRAND, "light")
+#let pal = brand-palette-from(brand-colours(BRAND, "light"))
 #assert.eq(pal.len(), 5)
 #assert.eq(pal.at(0), rgb("#E94C3D"))
 #assert.eq(pal.dedup().len(), pal.len())
@@ -119,12 +119,12 @@
     rgb("#B23A2B"),
   ),
 )
-#assert.eq(brand-palette(BRAND, "dark").len(), 5)
+#assert.eq(brand-palette-from(brand-colours(BRAND, "dark")).len(), 5)
 
 // Below two distinct colours the brand has no usable palette.
-#assert.eq(brand-palette((color: (primary: "#111111")), "light"), none)
-#assert.eq(brand-palette((:), "light"), none)
+#assert.eq(brand-palette-from(brand-colours((color: (primary: "#111111")), "light")), none)
+#assert.eq(brand-palette-from(brand-colours((:), "light")), none)
 #assert.eq(
-  brand-palette((color: (primary: "#111111", info: "#111111")), "light"),
+  brand-palette-from(brand-colours((color: (primary: "#111111", info: "#111111")), "light")),
   none,
 )
