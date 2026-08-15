@@ -11,6 +11,7 @@
 
 ### Changes
 
+- fix: a legend that `compose()` hoists out of a panel carrying its own theme is measured on the surfaces the composition draws it with, rather than on the panel's. A panel whose `legend-title` or `legend-text` differed from the composition's used to size the shared legend, which was then painted at another size. (#260)
 - perf: a plot lays its chrome out faster. Each axis title, tick label, and legend title is measured once per pass, and a `compose()` panel is probed for its guides and its shared margin without drawing a canvas that is then thrown away. (#260)
 - fix: a plot fits the `width`/`height` it was asked for when its outermost tick label reaches past the panel edge. The panel shrinks by the reach, most visibly under `expand: false`, where a break sits flush on the panel edge. (#258)
 - fix: a faceted plot fits the `width`/`height` it was asked for. Strip bands are budgeted against the panel grid, a label too wide for the panel it names wraps into it, and labels that cannot fit at all fail with the room they need. (#256)
