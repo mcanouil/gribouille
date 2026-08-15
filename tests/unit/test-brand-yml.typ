@@ -105,7 +105,8 @@
 #assert.eq(brand-font((typography: (base: (weight: 600))), "base"), none)
 
 // The derived palette drops the duplicates `info` and `warning` introduce.
-#let pal = brand-palette-from(brand-colours(BRAND, "light"))
+#let palette-of(brand, mode) = brand-palette-from(brand-colours(brand, mode))
+#let pal = palette-of(BRAND, "light")
 #assert.eq(pal.len(), 5)
 #assert.eq(pal.at(0), rgb("#E94C3D"))
 #assert.eq(pal.dedup().len(), pal.len())
@@ -119,12 +120,12 @@
     rgb("#B23A2B"),
   ),
 )
-#assert.eq(brand-palette-from(brand-colours(BRAND, "dark")).len(), 5)
+#assert.eq(palette-of(BRAND, "dark").len(), 5)
 
 // Below two distinct colours the brand has no usable palette.
-#assert.eq(brand-palette-from(brand-colours((color: (primary: "#111111")), "light")), none)
-#assert.eq(brand-palette-from(brand-colours((:), "light")), none)
+#assert.eq(palette-of((color: (primary: "#111111")), "light"), none)
+#assert.eq(palette-of((:), "light"), none)
 #assert.eq(
-  brand-palette-from(brand-colours((color: (primary: "#111111", info: "#111111")), "light")),
+  palette-of((color: (primary: "#111111", info: "#111111")), "light"),
   none,
 )

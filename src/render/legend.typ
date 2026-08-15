@@ -533,18 +533,17 @@
 
 // Vertical band the legend title occupies: the `legend-title` bottom margin,
 // which is the gap the draw lays the first entry out below, grown to the drawn
-// title's own height whenever the surface turns it past that gap.
-#let _legend-title-h(theme, g) = {
-  let s = _legend-title-style(theme)
-  calc.max(
-    resolve-margin-side-cm(s.margin.bottom, 1.6em, size-pt: s.size / 1pt),
-    _title-box(g, s).height,
-  )
-}
-
-// Title width in cm on the `legend-title` surface `_draw-title` paints with,
-// not the `legend-text` surface the entry labels use.
-#let _title-width(g, style) = _title-box(g, style).width
+// title's own height whenever the surface turns it past that gap. `title-h` is
+// the measured box from `_title-box`, which the caller also spends on the guide
+// width, so the title is measured once for the two of them.
+#let _legend-title-h(style, title-h) = calc.max(
+  resolve-margin-side-cm(
+    style.margin.bottom,
+    1.6em,
+    size-pt: style.size / 1pt,
+  ),
+  title-h,
+)
 
 // Index of the level at (row, col). Column-major (`byrow: false`) numbers
 // items down each column; row-major (`byrow: true`) numbers items across
@@ -817,43 +816,44 @@
 
 // Per-guide width estimate. Stored on each guide so `estimate-extents` is
 // O(1). `style` is the legend-text surface the entry labels are measured on;
-// `title-style` is the legend-title surface the title uses.
-#let _guide-width(g, style, title-style) = {
+// `title-w` is the width of the title box the caller measured on the
+// legend-title surface, which the title band above the first key also spends.
+#let _guide-width(g, style, title-w) = {
   let size-pt = style.size / 1pt
   if g.kind == "swatch" {
     let shape = _guide-shape(g, g.levels.len())
     let layout = _swatch-layout(g, shape, g.placement.byrow, style)
-    return calc.max(_title-width(g, title-style), layout.total)
+    return calc.max(title-w, layout.total)
   }
   if g.kind == "size-ladder" {
     let label-w = _max-break-label-width(g, g.breaks, style)
     let shape = _guide-shape(g, g.breaks.len())
     if g.placement.direction == "horizontal" {
       let col-w = _ladder-h-col-w(g, label-w, size-pt)
-      return calc.max(_title-width(g, title-style), col-w * shape.cols)
+      return calc.max(title-w, col-w * shape.cols)
     }
     let col-w = _ladder-lead-cm(size-pt) + label-w
     let grid-w = shape.cols * col-w + (shape.cols - 1) * _SWATCH-COL-GAP-MIN
-    return calc.max(_title-width(g, title-style), grid-w)
+    return calc.max(title-w, grid-w)
   }
   if g.kind == "colourbar" {
     let breaks = _colourbar-breaks(g)
     let label-w = _max-break-label-width(g, breaks, style)
     if g.placement.direction == "horizontal" {
       return calc.max(
-        _title-width(g, title-style),
+        title-w,
         _COLOURBAR-H-W + label-w,
       )
     }
     return calc.max(
-      _title-width(g, title-style),
+      title-w,
       _COLOURBAR-V-W + _COLOURBAR-V-LABEL-GAP + label-w,
     )
   }
   // A custom guide draws its own title above the block, so the box has to
   // clear a title wider than the requested width.
   if g.kind == "custom" {
-    return calc.max(_title-width(g, title-style), g.cm-width)
+    return calc.max(title-w, g.cm-width)
   }
   fail("legend._guide-width", "unknown guide kind " + repr(g.kind))
 }
@@ -968,18 +968,16 @@
 // `_guide-render-height` reads the title band, so the band is stamped first.
 #let _stamp-sizes(g, theme) = {
   let text-style = _legend-text-style(theme)
+  let title-style = _legend-title-style(theme)
+  // The guide width has to clear the title, and the band above the first key is
+  // the title's own height, so the one box serves both and is measured once.
+  let title = _title-box(g, title-style)
   let out = g
-  out.insert("width", _guide-width(out, text-style, _legend-title-style(theme)))
-  out.insert("title-h", _legend-title-h(theme, out))
+  out.insert("width", _guide-width(out, text-style, title.width))
+  out.insert("title-h", _legend-title-h(title-style, title.height))
   out.insert("height", _guide-render-height(out, text-style))
   out
 }
-
-// Stamp a set of guides again for the theme they are about to be drawn under.
-// `compose()` hoists a shared legend out of panels that may carry themes of
-// their own, and draws it under the composition's, so the stamps it arrives
-// with are not the ones the draw pass reads.
-#let restamp(guides, theme) = guides.map(g => _stamp-sizes(g, theme))
 
 #let guides-for(
   spec,
@@ -988,10 +986,6 @@
   theme: none,
 ) = {
   let overrides = spec.at("guides", default: (:))
-  // Resolved once: every stamped `width` and `height` is measured on the same
-  // surfaces the draw paints with, so reserve tracks draw.
-  let text-style = _legend-text-style(theme)
-  let title-style = _legend-title-style(theme)
 
   let candidates = ()
   for aes-name in _aesthetic-order {
@@ -2036,20 +2030,27 @@
 // `canvas-w`/`canvas-h` are the enclosing composition canvas in cm, mirroring
 // the renderer's own legend ctx, so `%` outsets resolve against the canvas the
 // legend sits on.
+//
+// `guides` come stamped for the panel they were hoisted out of, which is not
+// necessarily the theme the composition draws them under, so they are stamped
+// again here and travel back out on `guides` for `standalone` to draw. The
+// sizing and the draw then read one set of measurements rather than agreeing by
+// running the same pass twice.
 #let standalone-size(guides, side, theme, canvas-w, canvas-h) = {
+  let stamped = guides.map(g => _stamp-sizes(g, theme))
   let block = side-block-cm(
     side,
-    restamp(guides, theme),
+    stamped,
     (canvas-w: canvas-w, canvas-h: canvas-h),
     theme,
     0.0,
   )
-  block + (canvas-w: canvas-w, canvas-h: canvas-h)
+  block + (canvas-w: canvas-w, canvas-h: canvas-h, guides: stamped)
 }
 
-// Render a free-standing legend canvas containing `guides`, all on `side`,
-// sized by `size` from `standalone-size`. Used by `compose()` to draw the
-// shared, hoisted legend outside any plot panel.
+// Render a free-standing legend canvas, sized by `size` from `standalone-size`,
+// which also carries the guides stamped for `theme` on `size.guides`. Used by
+// `compose()` to draw the shared, hoisted legend outside any plot panel.
 //
 // `panel-rect` carries the *content* box, not the canvas: `_draw-side`'s
 // centring terms then cancel and the guide stack starts at its origin. Along
@@ -2059,8 +2060,8 @@
 // `gap` -- lands inside the canvas that `clip: true` would otherwise cut.
 // `margin.left: 0.05` cancels `_draw-side`'s own left-side nudge, and
 // `margin.bottom: 0.4` cancels its bottom offset.
-#let standalone(guides, trained, theme, side, size) = {
-  let guides = restamp(guides, theme)
+#let standalone(trained, theme, side, size) = {
+  let guides = size.guides
   let ctx = (
     trained: trained,
     palette: resolve-theme-palette(theme),

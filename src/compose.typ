@@ -377,7 +377,6 @@
 // Attach the hoisted legend canvas on its side of the panel block.
 #let _attach-legend(
   panel-block,
-  hoisted-guides,
   probes,
   theme,
   legend-side,
@@ -386,7 +385,6 @@
 ) = {
   let trained = probes.find(p => p != none).trained
   let legend-canvas = legend-mod.standalone(
-    hoisted-guides,
     trained,
     theme,
     legend-side,
@@ -768,7 +766,6 @@
   } else {
     _attach-legend(
       panel-block,
-      hoisted-guides,
       probes,
       theme,
       legend-side,

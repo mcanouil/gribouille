@@ -41,7 +41,7 @@
 
 // `info` duplicates `secondary`, so the derived palette holds five colours.
 #assert.eq(
-  brand-palette-from(brand-colours(brand, "light")),
+  brand-palette-from(light),
   (
     rgb("#E94C3D"),
     rgb("#1F7A8C"),
