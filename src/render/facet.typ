@@ -4,7 +4,7 @@
 #import "../deps.typ": cetz
 #import "../theme/theme.typ": _rect-style, _text-args, _text-style
 #import "../utils/typst-markup.typ": eval-as-markup, resolve-prose
-#import "../utils/measure.typ": measure-labels-cm, measure-text-cm
+#import "../utils/measure.typ": longest-unbreakable-cm, measure-text-cm
 #import "../utils/gutter.typ": resolve-gutter
 #import "../geom/label-draw.typ" as label-draw
 #import "../facet/labellers.typ" as labellers
@@ -143,44 +143,50 @@
 // measured height is the band's *width*, which is exactly what the caller
 // wants.
 //
-// Returns `(band, text, along)`: the band to lay out, the label height alone,
-// which is the floor no budget gets under, and the box the draw side must
-// reproduce (`none` when no label needed one). `budget` is the room the grid
-// can spare for one band: the fixed `base` gives way to it first, since it is
-// breathing room rather than ink, and the label height last. Leave it `none`
-// and the band is measured exactly as it always was. `along-cm` bounds the
-// label's reading direction, the way `_axis-title-extents` bounds a title, so
-// a label wider than its panel wraps instead of running off the canvas.
+// Returns `(band, text, alongs, min-width)`: the band to lay out, the label
+// height alone, which is the floor no budget gets under, the box the draw side
+// must reproduce for each label (`none` for a label that needed none), and the
+// widest unbreakable run among the labels that took a box. `budget` is the room
+// the grid can spare for one band: the fixed `base` gives way to it first,
+// since it is breathing room rather than ink, and the label height last. Leave
+// it `none` and the band is measured exactly as it always was. `along-cm`
+// bounds the label's reading direction, the way `_axis-title-extents` bounds a
+// title, so a label wider than its panel wraps instead of running off the
+// canvas. The decision is per label: a label that fits is left alone even when
+// the one beside it wraps.
 #let _strip-band(labels, style, base, budget: none, along-cm: none) = {
-  let prose = labels.map(l => resolve-prose(
-    l,
-    eval-strings: style.strip-text.typst,
-  ))
+  let size = style.strip-text.size
   let pad = 0.16
-  let natural = measure-labels-cm(prose, style.strip-text.size)
-  let fits = along-cm == none or natural.width <= along-cm
-  let text-cm = if fits {
-    natural.height + pad
-  } else {
+  let text-cm = 0.0
+  let alongs = ()
+  let min-width = 0.0
+  for label in labels {
+    let prose = resolve-prose(label, eval-strings: style.strip-text.typst)
+    let natural = measure-text-cm(prose, size)
+    if along-cm == none or natural.width <= along-cm {
+      text-cm = calc.max(text-cm, natural.height)
+      alongs.push(none)
+      continue
+    }
     // A label wider than its band is drawn boxed to it, so it is measured
-    // through that same box and the band holds the lines it wraps onto.
-    let boxed = prose.fold(0.0, (h, l) => calc.max(
-      h,
-      measure(_title-boxed(
-        text(.._text-args(style.strip-text))[#l],
-        along-cm,
-        center,
-      )).height
-        / 1cm,
+    // through that same box and the band holds the lines it wraps onto. A word
+    // wider than the box cannot wrap into it, which `min-width` reports.
+    let boxed = measure(_title-boxed(
+      text(.._text-args(style.strip-text))[#prose],
+      along-cm,
+      center,
     ))
-    boxed + pad
+    text-cm = calc.max(text-cm, boxed.height / 1cm)
+    alongs.push(along-cm)
+    min-width = calc.max(min-width, longest-unbreakable-cm(prose, size))
   }
+  text-cm += pad
   let band = if budget == none {
     calc.max(base, text-cm)
   } else {
     calc.max(text-cm, calc.min(calc.max(base, text-cm), budget))
   }
-  (band: band, text: text-cm, along: if fits { none } else { along-cm })
+  (band: band, text: text-cm, alongs: alongs, min-width: min-width)
 }
 
 

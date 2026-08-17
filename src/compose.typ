@@ -177,24 +177,32 @@
   (theme: source, panels: out-panels)
 }
 
-// Render a compose spec into content at `container` size; `container.width` /
-// `.height` are always concrete lengths (`float.inf` for an unbounded page),
-// never `auto`. Recurses for nested compose panels. Split out from `compose` so
-// a deferred compose spec can be rendered as a panel of another composition.
-// Guide-hoisting stage: probe each plot panel's would-be guides, keep the
-// aesthetics whose guides are identical across every panel, and settle the
-// shared legend side. Returns `(probes, hoisted, hoisted-guides,
-// legend-side)`; `probes` holds each plot panel's layout (or `none` for a
-// nested compose), which is its guides, its trained scales, and its margin.
-#let _hoist-guides(panels, guides, collect) = {
-  // Probe only plot panels with compose-level `guides` merged in; a nested
-  // compose collects its own guides internally (guide collection is per level),
-  // so it contributes none here and never hoists.
+// Do two theme sources resolve to the same theme? `merge-theme` is a pure
+// function of its argument, so equal sources give equal themes; `none` means
+// the global state, which is what a spec without a theme falls back to. Two
+// sources that differ but merge equal answer `false`, which costs one probe and
+// never changes what is drawn. Must run inside `context` to read the state.
+#let _theme-source-eq(a, b) = {
+  if a == b { return true }
+  let global = _theme-state.get()
+  let lhs = if a == none { global } else { a }
+  let rhs = if b == none { global } else { b }
+  lhs == rhs
+}
+
+// Guide-hoisting stage: probe each plot panel's would-be guides to decide which
+// aesthetics hoist, then derive the shared guides and the trained scales under
+// the composition's theme, since that is the theme they are drawn under. A
+// panel theme styles its own panel alone. Returns `(hoisted, hoisted-guides,
+// trained, legend-side)`.
+#let _hoist-guides(panels, guides, collect, theme-source) = {
+  // Compose-level `guides` belong to the probe alone: the real panel render
+  // keeps the panel's own. Probe only plot panels; a nested compose collects
+  // its guides internally (guide collection is per level), so it contributes
+  // none here and never hoists.
+  let probe-spec = p => (..p, guides: _merge-guides(p.guides, guides))
   let probes = panels.map(p => if _is-plot-spec(p) {
-    render-plot-deferred(
-      (..p, guides: _merge-guides(p.guides, guides)),
-      layout-only: true,
-    )
+    render-plot-deferred(probe-spec(p), layout-only: true)
   } else { none })
   let per-panel = probes.map(p => if p == none { (:) } else {
     _index-by-aesthetic(p.guides)
@@ -218,13 +226,44 @@
     collect
   }
 
-  let hoisted = ()
+  let hoisted = candidates.filter(a => _all-mergeable(per-panel, a))
+  let source = panels.position(_is-plot-spec)
+  if hoisted.len() == 0 or source == none {
+    return (
+      hoisted: (),
+      hoisted-guides: (),
+      trained: none,
+      legend-side: none,
+    )
+  }
+
+  // `_all-mergeable` needs every panel to carry the aesthetic, so the first plot
+  // panel carries all of them. Build its guides again under the composition's
+  // theme when its own theme differs, so the key glyph, the side, and the
+  // trained scales behind the glyphs come from the theme the legend is drawn
+  // under. A per-legend `guide-legend(key-size:)` comes from the spec, so
+  // building again keeps it.
+  let src = panels.at(source)
+  let derived = if _theme-source-eq(
+    src.at("theme", default: none),
+    theme-source,
+  ) {
+    probes.at(source)
+  } else {
+    render-plot-deferred(
+      (..probe-spec(src), theme: theme-source),
+      layout-only: true,
+    )
+  }
+  let derived-index = _index-by-aesthetic(derived.guides)
+
   let hoisted-guides = ()
   let seen-aesthetics = (:)
-  for a in candidates {
-    if not _all-mergeable(per-panel, a) { continue }
-    hoisted.push(a)
-    let g = per-panel.first().at(a)
+  for a in hoisted {
+    // A composition theme that hides the legend leaves the aesthetic hoisted,
+    // so the panels go on suppressing it, and draws nothing for it.
+    let g = derived-index.at(a, default: none)
+    if g == none { continue }
     let key = repr(g.aesthetics)
     if key not in seen-aesthetics {
       seen-aesthetics.insert(key, true)
@@ -263,9 +302,9 @@
     )
   }
   (
-    probes: probes,
     hoisted: hoisted,
     hoisted-guides: hoisted-guides,
+    trained: derived.trained,
     legend-side: legend-side,
   )
 }
@@ -374,17 +413,20 @@
   )
 }
 
-// Attach the hoisted legend canvas on its side of the panel block.
+// Attach the hoisted legend canvas on its side of the panel block. The guides
+// and the trained scales come from `_hoist-guides`, which built both under
+// `theme`, the theme this draws them under.
 #let _attach-legend(
   panel-block,
-  probes,
+  hoisted-guides,
+  trained,
   theme,
   legend-side,
   legend-size,
   right-gap-cm,
 ) = {
-  let trained = probes.find(p => p != none).trained
   let legend-canvas = legend-mod.standalone(
+    hoisted-guides,
     trained,
     theme,
     legend-side,
@@ -411,6 +453,10 @@
   }
 }
 
+// Render a compose spec into content at `container` size; `container.width` /
+// `.height` are always concrete lengths (`float.inf` for an unbounded page),
+// never `auto`. Recurses for nested compose panels. Split out from `compose` so
+// a deferred compose spec can be rendered as a panel of another composition.
 #let _render-compose(spec, container) = {
   // Panels arrive as deferred thunks (`defer(plot, ...)` / `defer(compose,
   // ...)`); materialise each to its spec dict here. No dimensions are injected:
@@ -449,10 +495,10 @@
   let panels = resolved.panels
   let theme = merge-theme(resolved.theme)
 
-  let hoist = _hoist-guides(panels, guides, collect)
-  let probes = hoist.probes
+  let hoist = _hoist-guides(panels, guides, collect, resolved.theme)
   let hoisted = hoist.hoisted
   let hoisted-guides = hoist.hoisted-guides
+  let legend-trained = hoist.trained
   let legend-side = hoist.legend-side
 
   let tags = _tag-params(spec, tag-ctx)
@@ -766,7 +812,8 @@
   } else {
     _attach-legend(
       panel-block,
-      probes,
+      hoisted-guides,
+      legend-trained,
       theme,
       legend-side,
       legend-size,
@@ -855,9 +902,10 @@
 ///     hoisting to the listed aesthetics. Listed aesthetics that aren't
 ///     mergeable across panels still stay per-plot; non-listed aesthetics
 ///     are never hoisted regardless of agreement.
-///   The merge predicate ignores per-panel placement and grid shape (`nrow` /
-///   `ncol`); compose forces a single shared side and grid layout for the
-///   hoisted block. Custom guides (`guide-custom`) never hoist.
+///   The merge predicate ignores per-panel placement, grid shape (`nrow` /
+///   `ncol`), and legend styling; compose forces a single shared side and grid
+///   layout for the hoisted block, and builds it under the composition's theme.
+///   Custom guides (`guide-custom`) never hoist.
 ///
 /// \@param guides Per-aesthetic guide overrides applied to the collected
 ///   legend, built with \@guides, exactly as for \@plot. The collected legend's
@@ -877,7 +925,9 @@
 ///   into panels that declare no theme of their own (a panel with its own theme
 ///   keeps it, and a nested composition inherits it recursively); otherwise the
 ///   theme shared by every panel is used, falling back to the global theme set
-///   with \@theme-set, else the default.
+///   with \@theme-set, else the default. The hoisted legend is built under this
+///   theme, so its key size, its side, and its text all follow the composition.
+///   A panel theme styles that panel alone.
 ///
 /// \@param tag-levels Per-panel tag numbering. A single code numbers this
 ///   composition's panels in layout order; an array of codes assigns one code
