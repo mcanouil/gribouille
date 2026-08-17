@@ -2,7 +2,7 @@
 // theme, else the global theme state.
 
 #import "../../src/compose.typ": (
-  _is-compose-spec, _resolve-compose-theme, compose, defer,
+  _is-compose-spec, _resolve-compose-theme, _theme-source-eq, compose, defer,
 )
 #import "../../src/plot.typ": plot
 #import "../../src/theme/current.typ": theme-set
@@ -46,6 +46,11 @@
     _resolve-compose-theme(((theme: ta), (theme: tb)), none).theme,
     none,
   )
+  // `none` is the global state, so it matches it and nothing else.
+  assert(_theme-source-eq(ta, ta))
+  assert(not _theme-source-eq(ta, tb))
+  assert(_theme-source-eq(none, none))
+  assert(not _theme-source-eq(none, ta))
 }
 
 // Once a global theme is set, mixed panels resolve to it.
@@ -57,6 +62,10 @@
     _resolve-compose-theme(((theme: none), (theme: none)), none).theme,
     tg,
   )
+  // A panel that sets no theme draws under the global one, so a composition
+  // under that same theme needs no second probe.
+  assert(_theme-source-eq(none, tg))
+  assert(not _theme-source-eq(none, ta))
 }
 
 // The `theme` argument is stored on the compose spec and forwarded by `defer`.

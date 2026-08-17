@@ -2031,26 +2031,23 @@
 // the renderer's own legend ctx, so `%` outsets resolve against the canvas the
 // legend sits on.
 //
-// `guides` come stamped for the panel they were hoisted out of, which is not
-// necessarily the theme the composition draws them under, so they are stamped
-// again here and travel back out on `guides` for `standalone` to draw. The
-// sizing and the draw then read one set of measurements rather than agreeing by
-// running the same pass twice.
+// `guides` arrive stamped for `theme`, because `guides-for` built them under
+// it, so this reports the size that is drawn rather than patching a stamp that
+// belongs to another theme.
 #let standalone-size(guides, side, theme, canvas-w, canvas-h) = {
-  let stamped = guides.map(g => _stamp-sizes(g, theme))
   let block = side-block-cm(
     side,
-    stamped,
+    guides,
     (canvas-w: canvas-w, canvas-h: canvas-h),
     theme,
     0.0,
   )
-  block + (canvas-w: canvas-w, canvas-h: canvas-h, guides: stamped)
+  block + (canvas-w: canvas-w, canvas-h: canvas-h)
 }
 
-// Render a free-standing legend canvas, sized by `size` from `standalone-size`,
-// which also carries the guides stamped for `theme` on `size.guides`. Used by
-// `compose()` to draw the shared, hoisted legend outside any plot panel.
+// Render a free-standing legend canvas, sized by `size` from `standalone-size`
+// over the same `guides`. Used by `compose()` to draw the shared, hoisted
+// legend outside any plot panel.
 //
 // `panel-rect` carries the *content* box, not the canvas: `_draw-side`'s
 // centring terms then cancel and the guide stack starts at its origin. Along
@@ -2060,8 +2057,7 @@
 // `gap` -- lands inside the canvas that `clip: true` would otherwise cut.
 // `margin.left: 0.05` cancels `_draw-side`'s own left-side nudge, and
 // `margin.bottom: 0.4` cancels its bottom offset.
-#let standalone(trained, theme, side, size) = {
-  let guides = size.guides
+#let standalone(guides, trained, theme, side, size) = {
   let ctx = (
     trained: trained,
     palette: resolve-theme-palette(theme),
