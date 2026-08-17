@@ -97,13 +97,27 @@
 /// Translucent fills keep their `none` stroke, as the fill/stroke overlap
 /// would darken their rims.
 ///
+/// The seal only pays for itself where marks touch. Elsewhere it eats the
+/// whitespace the geom left on purpose: a `geom-tile` grid drawn at
+/// `width: 0.9` loses more than half its gap. Callers pass `abutting: false`
+/// for marks that cannot touch, such as a tile below its full slot, a bar
+/// that neither stacks nor fills, and an unstacked ribbon.
+///
+/// One case stays unsealed whichever way it is drawn: a stacked bar abuts
+/// on the value axis but not on the category axis, and a stroke cannot be
+/// applied to one side of a rectangle, so its category gap keeps losing the
+/// seal width.
+///
 /// \@internal
 /// \@param stroke-spec The resolved stroke (from `resolve-stroke-spec`) or `none`.
 ///
 /// \@param fill The resolved fill colour or `none`.
+///
+/// \@param abutting Whether this mark can share an edge with another. `false` suppresses the seal.
 /// \@returns The stroke to draw with: the input when set, a fill-paint hairline when sealing applies, `none` otherwise.
-#let seal-seam(stroke-spec, fill) = {
+#let seal-seam(stroke-spec, fill, abutting: true) = {
   if stroke-spec != none { return stroke-spec }
+  if not abutting { return none }
   if not is-opaque(fill) { return none }
   build-stroke(seam-seal-thickness, fill)
 }

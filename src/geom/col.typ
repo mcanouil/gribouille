@@ -6,7 +6,7 @@
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../position/apply.typ": layer-position-name
+#import "../position/apply.typ": layer-marks-abut, layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../scale/train.typ": discrete-slot-width, map-axis, map-position
@@ -134,6 +134,9 @@
   let cat-col = mapping.x
   let value-col = mapping.y
   let position = layer-position-name(layer)
+  // Only stacked segments share an edge; a bar that stands on its own would
+  // lose part of its category gap to the seal.
+  let abutting = layer-marks-abut(layer)
   let vmin-col = mapping.at("ymin", default: none)
   let vmax-col = mapping.at("ymax", default: none)
   let use-minmax = (
@@ -217,7 +220,7 @@
       ..pts,
       close: true,
       fill: final-fill,
-      stroke: seal-seam(stroke-spec, final-fill),
+      stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
     )
   }
 }
@@ -249,6 +252,9 @@
   if value-trained.type != "continuous" { return }
 
   let position = layer-position-name(layer)
+  // Only stacked segments share an edge; a bar that stands on its own would
+  // lose part of its category gap to the seal.
+  let abutting = layer-marks-abut(layer)
   let vmin-col = mapping.at(
     if flipped { "xmin" } else { "ymin" },
     default: none,
@@ -368,7 +374,7 @@
       a,
       b,
       fill: final-fill,
-      stroke: seal-seam(stroke-spec, final-fill),
+      stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
     )
   }
 }

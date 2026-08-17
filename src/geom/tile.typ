@@ -10,6 +10,7 @@
 #import "../utils/radial.typ": radial-wedge
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../utils/band.typ": axis-band
+#import "../utils/resolution.typ": resolution
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
   resolve-geom-linewidth,
@@ -122,6 +123,25 @@
   inherit-aes: inherit-aes,
 )
 
+/// Spacing between neighbouring tile centres on one axis, or `none` when the
+/// axis holds a single centre and so has no neighbour to abut.
+///
+/// One slot on a discrete axis, the smallest gap between distinct values on
+/// a continuous one, matching the units `axis-band` reads a half-width in.
+///
+/// \@internal
+/// \@param trained Trained scale dict for the axis.
+///
+/// \@param values Tile centres on that axis, one per row.
+#let _axis-pitch(trained, values) = {
+  let distinct = values.filter(v => v != none).dedup()
+  if distinct.len() < 2 { return none }
+  if trained.type == "discrete" { return 1 }
+  let nums = distinct.map(parse-number).filter(v => v != none)
+  if nums.len() < 2 { return none }
+  resolution(nums, zero: false)
+}
+
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
@@ -144,6 +164,19 @@
     resolve-geom-fill(g-defaults, role: "tint"),
   )
 
+  // A tile shares an edge only when it fills its slot on both axes. Below
+  // that the grid carries deliberate whitespace, which a seam seal would
+  // eat, so the seal is suppressed even though it leaves the seams on an
+  // axis that does fill its slot.
+  let x-pitch = _axis-pitch(x-trained, data.map(r => r.at(
+    x-col,
+    default: none,
+  )))
+  let y-pitch = _axis-pitch(y-trained, data.map(r => r.at(
+    y-col,
+    default: none,
+  )))
+
   // `axis-band` is axis-agnostic despite its name: it builds a centred (lo, hi)
   // pair from a half-width given in data units (continuous) or slot fractions
   // (discrete). Reused here for both x and y.
@@ -159,6 +192,12 @@
       parse-number(row.at(height-col, default: none))
     } else { layer.params.height }
     if w == none or h == none { continue }
+    let abutting = (
+      x-pitch != none
+        and y-pitch != none
+        and w >= x-pitch - 1e-9
+        and h >= y-pitch - 1e-9
+    )
 
     let final-fill = resolve-channel(
       "fill",
@@ -198,7 +237,7 @@
         ..pts,
         close: true,
         fill: final-fill,
-        stroke: seal-seam(stroke-spec, final-fill),
+        stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
       )
     } else {
       let xe = axis-band(x-trained, x, w / 2, ctx.px-range)
@@ -210,7 +249,7 @@
         (cx0, cy0),
         (cx1, cy1),
         fill: final-fill,
-        stroke: seal-seam(stroke-spec, final-fill),
+        stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
       )
     }
   }
