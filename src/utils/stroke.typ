@@ -79,11 +79,13 @@
 ///
 /// A centred stroke paints half this width outside the shape, so an
 /// abutting neighbour drawn later covers that much of the shape before it.
-/// Keep the width at the smallest value that still hides the seam: measured
-/// against a white background, `0.6pt` seals the seam from 150 ppi upwards
-/// and leaves a residual of 4/255 at 96 ppi, which no reader can see.
+/// Halving the width to `0.6pt` reopens a faint lattice in dense cell grids
+/// at 96 ppi: `geom-bin-2d`, `geom-contour-filled`, and `stat-summary-2d`
+/// each show hairlines up to 15/255 lighter than the cells they part.
+/// Marks that must not touch, such as dodged bars, take a gap from their
+/// position adjustment instead of a thinner seal.
 /// \@internal
-#let seam-seal-thickness = 0.6pt
+#let seam-seal-thickness = 1.2pt
 
 /// Seal the antialiasing seams between abutting filled shapes.
 ///
