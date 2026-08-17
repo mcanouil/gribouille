@@ -1086,12 +1086,13 @@ blockquote {
   margin-top: 2.5rem;
 }
 
-// Intent gallery: showcase cards span two columns on wide screens.
-.gallery-item--showcase {
-  grid-column: span 2;
+// Intent gallery: the showcase grid runs two cards a row, whatever the track
+// count the auto-fill above would pick, and one a row when narrow.
+.gallery--showcase {
+  grid-template-columns: repeat(2, 1fr);
 
   @media (max-width: 700px) {
-    grid-column: auto;
+    grid-template-columns: 1fr;
   }
 }
 

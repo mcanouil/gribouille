@@ -6,20 +6,20 @@
 const showcase = items.filter((item) => item.showcase);
 const rest = items.filter((item) => !item.showcase);
 const sections = [
-  { key: "showcase", heading: "Showcase", entries: showcase, extraClass: " gallery-item--showcase" },
-  { key: "feature-demos", heading: "Feature demos", entries: rest, extraClass: "" }
+  { key: "showcase", heading: "Showcase", entries: showcase, gridClass: " gallery--showcase" },
+  { key: "feature-demos", heading: "Feature demos", entries: rest, gridClass: "" }
 ];
 %>
-<% for (const { key, heading, entries, extraClass } of sections) { %>
+<% for (const { key, heading, entries, gridClass } of sections) { %>
 <% if (entries.length > 0) { %>
 ```{=html}
 <section class="gallery-section">
 <h2 id="<%= key %>"><%= heading %></h2>
-<div class="gallery">
+<div class="gallery<%= gridClass %>">
 ```
 <% for (const item of entries) { %>
 ```{=html}
-<article class="gallery-item<%= extraClass %>">
+<article class="gallery-item">
 <div class="light-content"><img class="lightbox" data-gallery="gallery-light" src="../assets/typst-render/gallery/<%= item.slug %>-light.svg" alt="<%= item.alt %>" loading="lazy"></div>
 <div class="dark-content"><img class="lightbox" data-gallery="gallery-dark" src="../assets/typst-render/gallery/<%= item.slug %>-dark.svg" alt="<%= item.alt %>" loading="lazy"></div>
 <h3 id="<%= item.slug %>"><%= item.title %></h3>
