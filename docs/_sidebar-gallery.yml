@@ -5,33 +5,33 @@ website:
       collapse-level: 3
       contents:
         - section: "Gallery"
-          href: /gallery/index.qmd
+          href: gallery/index.qmd
           contents:
             - section: "By intent"
               contents:
                 - text: "Comparison and ranking"
-                  href: /gallery/comparison.qmd
+                  href: gallery/comparison.qmd
                 - text: "Distribution"
-                  href: /gallery/distribution.qmd
+                  href: gallery/distribution.qmd
                 - text: "Evolution and time"
-                  href: /gallery/evolution.qmd
+                  href: gallery/evolution.qmd
                 - text: "Relationships"
-                  href: /gallery/correlation.qmd
+                  href: gallery/correlation.qmd
                 - text: "Part-to-whole and cyclical"
-                  href: /gallery/part-to-whole.qmd
+                  href: gallery/part-to-whole.qmd
                 - text: "Uncertainty and error"
-                  href: /gallery/uncertainty.qmd
+                  href: gallery/uncertainty.qmd
             - section: "By feature"
               contents:
                 - text: "Annotation and storytelling"
-                  href: /gallery/annotation.qmd
+                  href: gallery/annotation.qmd
                 - text: "Colour and encodings"
-                  href: /gallery/colour-scales.qmd
+                  href: gallery/colour-scales.qmd
                 - text: "Axes, legends, and guides"
-                  href: /gallery/axes-legends.qmd
+                  href: gallery/axes-legends.qmd
                 - text: "Facets, coordinates, and composition"
-                  href: /gallery/layout.qmd
+                  href: gallery/layout.qmd
                 - text: "Themes and styling"
-                  href: /gallery/themes.qmd
+                  href: gallery/themes.qmd
                 - text: "Advanced techniques"
-                  href: /gallery/techniques.qmd
+                  href: gallery/techniques.qmd
