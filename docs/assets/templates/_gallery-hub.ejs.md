@@ -21,7 +21,7 @@ const groups = [
 <article class="intent-card">
 <div class="light-content"><img src="../assets/typst-render/gallery/hero-<%= card.hero %>-light.svg" alt="<%= card.alt %>" loading="lazy"></div>
 <div class="dark-content"><img src="../assets/typst-render/gallery/hero-<%= card.hero %>-dark.svg" alt="<%= card.alt %>" loading="lazy"></div>
-<h3><a href="<%= card.href %>"><%= card.title %></a></h3>
+<h3 class="no-anchor"><a class="intent-card-link" href="<%= card.href %>"><%= card.title %></a></h3>
 <p><%= card.blurb %></p>
 </article>
 ```

@@ -1169,7 +1169,9 @@ blockquote {
     text-decoration: none;
   }
 
-  h3 a {
+  // The title link covers the whole card. Scoped to its own class so that a
+  // link placed in the heading later cannot take the click off it.
+  .intent-card-link {
     color: var(--gb-ink);
 
     &::after {
