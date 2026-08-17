@@ -3,8 +3,7 @@
 # and modal source blocks for the matching page).
 # One entry per `.typ` file in `examples/` (project root), except the hero/landing
 # assets `gribouille` and `showcase`, which are embedded directly in the site.
-# This invariant is enforced by `tools/typstdoc/main.lua` (see EXAMPLE_GALLERY_EXCLUDE);
-# a slug present in either this file or `docs/examples/gallery.yml` satisfies it.
+# This invariant is enforced by `tools/typstdoc/main.lua` (see examples.EXCLUDE).
 # All values MUST be single-line scalars (the Lua filter uses a flat parser).
 #
 # Fields:

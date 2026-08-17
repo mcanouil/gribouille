@@ -143,11 +143,10 @@ local function read_gallery_pages(gallery_dir)
   return page_intents, page_includes
 end
 
--- Every `examples/*.typ` must have a gallery slug (in either the examples or
--- the intent gallery) or be excluded (see examples.EXCLUDE), otherwise it
--- never renders in the slug-driven galleries. Intent gallery entries must
--- also carry a valid intent (see examples.INTENTS), and that taxonomy must
--- match the pages rendering it, or entries land on no page.
+-- Every `examples/*.typ` must have a gallery slug or be excluded (see
+-- examples.EXCLUDE), otherwise it never renders in the slug-driven gallery.
+-- Every entry must also carry a valid intent (see examples.INTENTS), and that
+-- taxonomy must match the pages rendering it, or entries land on no page.
 local function enforce_examples_gallery(opts)
   if not util.dir_exists(opts.examples) then return end
   local function report(msg)
@@ -158,42 +157,36 @@ local function enforce_examples_gallery(opts)
     end
   end
 
-  local gallery_path = opts.docs .. "/examples/gallery.yml"
+  local gallery_path = opts.docs .. "/gallery/gallery.yml"
   if not util.file_exists(gallery_path) then
     util.die("gallery file not found: " .. gallery_path)
   end
   local content, err = util.read_file(gallery_path)
   if not content then util.die("could not read gallery: " .. gallery_path .. ": " .. tostring(err)) end
-  local slugs = examples.parse_slugs(content)
 
-  local intent_path = opts.docs .. "/gallery/gallery.yml"
-  if util.file_exists(intent_path) then
-    local intent_content, intent_err = util.read_file(intent_path)
-    if not intent_content then
-      util.die("could not read gallery: " .. intent_path .. ": " .. tostring(intent_err))
-    end
-    local entries = examples.parse_entries(intent_content)
-    for _, entry in ipairs(entries) do slugs[entry.slug] = true end
-    local bad = examples.bad_intents(entries)
-    if #bad > 0 then
-      report(string.format(
-        "%d gallery entr%s with a missing or unknown intent in %s: %s",
-        #bad, #bad == 1 and "y" or "ies", intent_path, table.concat(bad, ", ")))
-    end
+  local entries = examples.parse_entries(content)
+  local slugs = {}
+  for _, entry in ipairs(entries) do slugs[entry.slug] = true end
 
-    local page_intents, page_includes = read_gallery_pages(opts.docs .. "/gallery")
-    local drift = examples.intent_drift(page_intents, nil, page_includes)
-    if #drift > 0 then
-      report(string.format(
-        "%d intent taxonomy drift(s) between examples.INTENTS and docs/gallery: %s",
-        #drift, table.concat(drift, "; ")))
-    end
+  local bad = examples.bad_intents(entries)
+  if #bad > 0 then
+    report(string.format(
+      "%d gallery entr%s with a missing or unknown intent in %s: %s",
+      #bad, #bad == 1 and "y" or "ies", gallery_path, table.concat(bad, ", ")))
+  end
+
+  local page_intents, page_includes = read_gallery_pages(opts.docs .. "/gallery")
+  local drift = examples.intent_drift(page_intents, nil, page_includes)
+  if #drift > 0 then
+    report(string.format(
+      "%d intent taxonomy drift(s) between examples.INTENTS and docs/gallery: %s",
+      #drift, table.concat(drift, "; ")))
   end
 
   local orphans = examples.orphans(util.list_dir_files(opts.examples), slugs)
   if #orphans == 0 then return end
   report(string.format(
-    "%d example(s) missing an entry in either gallery.yml (add one, or extend examples.EXCLUDE): %s",
+    "%d example(s) missing a gallery.yml entry (add one, or extend examples.EXCLUDE): %s",
     #orphans, table.concat(orphans, ", ")))
 end
 

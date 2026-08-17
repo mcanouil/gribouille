@@ -252,6 +252,6 @@ Finally, [`theme-set`](../reference/themes/theme-set.qmd) installs a theme as th
 
 ## Where to go next
 
-- Browse the [themes gallery](../examples/index.qmd#themes-gallery) for side-by-side renders of every built-in theme, alongside the other [theme examples](../examples/index.qmd#themes).
-- See [`theme-sub-*` in action](../examples/index.qmd#theme-sub) for compact ways to retouch one region at a time.
+- Browse the [themes gallery](../gallery/themes.qmd#themes-gallery) for side-by-side renders of every built-in theme, alongside the other [theme examples](../gallery/themes.qmd).
+- See [`theme-sub-*` in action](../gallery/themes.qmd#theme-sub) for compact ways to retouch one region at a time.
 - The full [themes reference](../reference/themes/index.qmd) lists every element constructor and every cascade rule.

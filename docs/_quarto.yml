@@ -74,12 +74,9 @@ website:
       - text: "{{< iconify octicon:code-16 aria-hidden='true' >}} Reference"
         href: reference/index.qmd
         aria-label: "Reference"
-      - text: "{{< iconify octicon:apps-16 aria-hidden='true' >}} Gallery"
+      - text: "{{< iconify octicon:image-16 aria-hidden='true' >}} Gallery"
         href: gallery/index.qmd
         aria-label: "Gallery"
-      - text: "{{< iconify octicon:image-16 aria-hidden='true' >}} Examples"
-        href: examples/index.qmd
-        aria-label: "Examples"
       - text: "{{< iconify octicon:megaphone-16 aria-hidden='true' >}} News"
         href: news/index.qmd
         aria-label: "News"
@@ -150,5 +147,4 @@ metadata-files:
   - _extensions-metadata.yml
   - _sidebar-reference.yml
   - _sidebar-get-started.yml
-  - _sidebar-examples.yml
   - _sidebar-gallery.yml

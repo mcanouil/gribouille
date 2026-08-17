@@ -1429,34 +1429,37 @@ describe("examples: gallery consistency", function()
   local gallery = [[
 # header comment
 - slug: minimal
-  section: basics
+  intent: techniques
 - slug: scale-okabe-ito
-  section: scales
+  intent: colour-scales
 ]]
 
+  local function slug_set(content)
+    local slugs = {}
+    for _, entry in ipairs(examples.parse_entries(content)) do slugs[entry.slug] = true end
+    return slugs
+  end
+
   it("parses every slug from a gallery body", function()
-    local slugs = examples.parse_slugs(gallery)
+    local slugs = slug_set(gallery)
     assert_true(slugs["minimal"], "minimal slug parsed")
     assert_true(slugs["scale-okabe-ito"], "kebab-case slug parsed")
     assert_eq(slugs["header"], nil, "comment line is not a slug")
   end)
 
   it("reports an example with no slug as an orphan", function()
-    local slugs = examples.parse_slugs(gallery)
-    local orphans = examples.orphans({ "minimal.typ", "missing.typ" }, slugs, {})
+    local orphans = examples.orphans({ "minimal.typ", "missing.typ" }, slug_set(gallery), {})
     assert_eq(#orphans, 1)
     assert_eq(orphans[1], "missing")
   end)
 
   it("excludes hero assets even without a slug", function()
-    local slugs = examples.parse_slugs(gallery)
-    local orphans = examples.orphans({ "gribouille.typ", "showcase.typ" }, slugs)
+    local orphans = examples.orphans({ "gribouille.typ", "showcase.typ" }, slug_set(gallery))
     assert_eq(#orphans, 0, "default EXCLUDE covers the hero assets")
   end)
 
   it("ignores non-typ files and sorts orphans", function()
-    local slugs = examples.parse_slugs(gallery)
-    local orphans = examples.orphans({ "zeta.typ", "alpha.typ", "notes.md" }, slugs, {})
+    local orphans = examples.orphans({ "zeta.typ", "alpha.typ", "notes.md" }, slug_set(gallery), {})
     assert_eq(#orphans, 2)
     assert_eq(orphans[1], "alpha")
     assert_eq(orphans[2], "zeta")

@@ -5,7 +5,7 @@
 
 const groups = [
   { key: "story", heading: "What do you want to show?", extraClass: "" },
-  { key: "craft", heading: "Craft", extraClass: " intent-cards--craft" }
+  { key: "craft", heading: "By feature", extraClass: " intent-cards--craft" }
 ];
 %>
 <% for (const { key, heading, extraClass } of groups) { %>
