@@ -16,7 +16,7 @@
     geom-col(fill: accent),
     geom-text(
       mapping: aes(label: "n"),
-      nudge-y: 0.3cm,
+      nudge-x: 0.25cm,
       size: 9pt,
     ),
   ),
