@@ -3,10 +3,11 @@
 ///! Shifts grouped marks side by side at each x. Partitions rows by the
 ///! composite group key (all discrete grouping aesthetics in canonical
 ///! order) and writes per-row dodge offsets consumed by the rendering
-///! geom. When every mark at a given x has the same width, output matches
-///! the simple uniform layout. When widths differ, slots are packed
-///! side-by-side using each mark's own width, with `padding` between
-///! adjacent slots, scaled to fit the bucket.
+///! geom. When every mark at a given x has the same width, the slots split
+///! the bucket evenly and `padding` shrinks each mark around its own
+///! centre. When widths differ, slots are packed side-by-side using each
+///! mark's own width, with `padding` between adjacent slots, scaled to fit
+///! the bucket.
 
 #import "../utils/group.typ": group-key
 #import "../utils/types.typ": parse-number
@@ -16,17 +17,18 @@
 ///
 /// Typically set on a layer as `position: "dodge"` rather than constructed
 /// directly; the constructor exists for symmetry with the other positions.
-/// When all marks at a given x share the same width, the result matches a
-/// simple uniform dodge. When widths differ (per-row `width` column), each
-/// mark uses its own width as its slot, with `padding` between slots and a
-/// shrink-to-fit if total slot use would exceed the bucket.
+/// When all marks at a given x share the same width, they split the bucket
+/// into equal slots and `padding` sets the gap between them. When widths
+/// differ (per-row `width` column), each mark uses its own width as its
+/// slot, with `padding` between slots and a shrink-to-fit if total slot use
+/// would exceed the bucket.
 ///
 /// \@category Positions
 /// \@stability stable
 ///
 /// \@param width Total width reserved for the dodged group, as a fraction of the category width.
 ///
-/// \@param padding Gap between adjacent dodge slots in mixed-width mode, as a fraction of the bucket.
+/// \@param padding Gap between adjacent dodge slots. With uniform widths it is a fraction of one slot; with mixed widths it is a fraction of the bucket.
 ///
 /// \@returns Position dictionary with `name: "dodge"`, consumed by \@plot.
 ///
@@ -179,6 +181,7 @@
 
   let bar-frac = params.at("width", default: 0.9)
   let padding = params.at("padding", default: 0.1)
+  let clamped-padding = calc.max(0.0, calc.min(padding, 0.9))
 
   // Alphabetic levels so slot order matches the trained discrete domain
   // and the legend. Dedup is dict-keyed for O(n) instead of array-scan
@@ -222,12 +225,16 @@
     let uniform = entries.all(e => e.w == first-w)
 
     if uniform {
+      // Slot centres split the bucket evenly; padding shrinks each mark
+      // around its own centre, so marks placed by `dodge-delta` stay
+      // centred over the bar while neighbouring slots stop touching.
+      let shrink = n-levels / (1 - clamped-padding)
       for entry in entries {
         let idx = level-index.at(entry.key, default: none)
         if idx == none { continue }
         let off = (idx + 0.5) / n-levels - 0.5
         offsets.at(entry.i) = off
-        n-slots.at(entry.i) = n-levels
+        n-slots.at(entry.i) = shrink
       }
     } else {
       // Mixed-width path walks slots left-to-right via cursor, so entries
@@ -235,10 +242,10 @@
       let sorted-entries = entries.sorted(key: e => e.key)
       let n = sorted-entries.len()
       let widths-sum = sorted-entries.fold(0.0, (acc, e) => acc + e.w)
-      let padding-sum = if n > 1 { (n - 1) * padding } else { 0 }
+      let padding-sum = if n > 1 { (n - 1) * clamped-padding } else { 0 }
       let total = widths-sum + padding-sum
       let scale = if total > 1 { 1.0 / total } else { 1.0 }
-      let eff-pad = padding * scale
+      let eff-pad = clamped-padding * scale
       let cursor = -0.5
       for entry in sorted-entries {
         let w = entry.w * scale
