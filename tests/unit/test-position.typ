@@ -72,11 +72,34 @@
 #assert.eq(filled-radial.data.at(2).ymax, 30.0 / 40.0)
 #assert.eq(filled-radial.data.at(3).ymax, 1.0)
 
-// dodge: uniform widths match the legacy slot layout exactly.
+// dodge: uniform widths share the bucket evenly, with the default padding
+// shrinking each mark so neighbouring slots no longer touch.
 #let dodged = apply-position("dodge", df, mapping)
-#assert.eq(dodged.data.at(0)._dodge-n, 2)
+#assert-close(dodged.data.at(0)._dodge-n, 2 / 0.9)
 #assert.eq(dodged.data.at(0)._dodge-offset, -0.25)
 #assert.eq(dodged.data.at(1)._dodge-offset, 0.25)
+
+// dodge: padding shrinks the mark and leaves the slot centres alone, so marks
+// placed through dodge-delta stay centred over their bar.
+#let padded = apply-position(
+  "dodge",
+  df,
+  mapping,
+  params: (width: 0.9, padding: 0.5),
+)
+#assert.eq(padded.data.at(0)._dodge-offset, dodged.data.at(0)._dodge-offset)
+#assert.eq(padded.data.at(1)._dodge-offset, dodged.data.at(1)._dodge-offset)
+#assert(padded.data.at(0)._dodge-n > dodged.data.at(0)._dodge-n)
+
+// dodge: padding 0 keeps the slots abutting, as position-jitterdodge expects.
+#let unpadded = apply-position(
+  "dodge",
+  df,
+  mapping,
+  params: (width: 0.9, padding: 0),
+)
+#assert.eq(unpadded.data.at(0)._dodge-n, 2)
+#assert.eq(unpadded.data.at(0)._dodge-offset, -0.25)
 
 // dodge: mixed per-row widths pack side-by-side without exceeding the bucket.
 #let mixed-df = (

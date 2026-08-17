@@ -14,6 +14,7 @@
 #import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/band.typ": band-polygon
+#import "../position/apply.typ": layer-marks-abut
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -153,6 +154,9 @@
     resolve-geom-colour(g-defaults, role: none),
     resolve-geom-fill(g-defaults, role: "tint"),
   )
+  // Only stacked bands share an edge; a lone ribbon would just be painted
+  // wider than the envelope it was given.
+  let abutting = layer-marks-abut(layer)
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     let rows = g.data
@@ -192,7 +196,7 @@
       ..pts,
       close: true,
       fill: final-fill,
-      stroke: seal-seam(stroke-spec, final-fill),
+      stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
     )
   }
 }

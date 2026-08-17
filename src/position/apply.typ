@@ -54,3 +54,17 @@
 #let layer-position-name(layer) = position-name-of(
   layer.at("position", default: "identity"),
 )
+
+/// Whether a layer's position piles its marks against each other.
+///
+/// `stack` and `fill` are the only adjustments that put one mark's edge on
+/// the next, which is what seam sealing needs to know: everywhere else the
+/// marks stand apart and a seal would only eat the gap between them.
+///
+/// \@internal
+/// \@param layer Layer dictionary as produced by `make-layer`.
+/// \@returns `true` under `stack` or `fill`, `false` otherwise.
+#let layer-marks-abut(layer) = {
+  let name = layer-position-name(layer)
+  name == "stack" or name == "fill"
+}
