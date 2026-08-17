@@ -6,6 +6,7 @@
 #import "../../src/compose.typ": compose, defer
 #import "../../src/aes.typ": aes
 #import "../../src/geom/point.typ": geom-point
+#import "../../src/guide/legend.typ": guide-legend
 #import "../../src/guides.typ": guides
 #import "../../src/labels.typ": labels
 
@@ -47,7 +48,7 @@
   )
 }
 
-// A hoisted legend stands beside the panel block at the size it was measured
+// A hoisted legend stands outside the panel block at the size it was measured
 // at, so the axis its band does not eat has to hold it too: a composition that
 // gives it room totals exactly the box it was asked for, and one that does not
 // fails rather than growing (verified manually, see the message below).
@@ -66,7 +67,7 @@
       coloured,
       coloured,
       columns: 2,
-      legend: side,
+      guides: guides(default: guide-legend(position: side)),
       width: 12cm,
       height: 6cm,
     ))
