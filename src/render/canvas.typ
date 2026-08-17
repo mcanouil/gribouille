@@ -54,6 +54,28 @@
   )
 }
 
+// A strip label wraps into the panel it names, but a single word cannot be
+// broken, so a word wider than the panel runs past it however the label wraps.
+// Report the room that word needs, the way an oversized axis title does, rather
+// than draw a label over its neighbours. `name` says which band: a facet-wrap
+// strip, or a facet-grid column or row band.
+#let _check-strip-overrun(min-width, along, name) = {
+  if min-width <= along + _LAYOUT-TOLERANCE { return }
+  fail(
+    "plot",
+    "the "
+      + name
+      + " have a "
+      + cm-text(min-width)
+      + " cm word that cannot wrap into the "
+      + cm-text(calc.max(0.0, along))
+      + " cm the panel leaves it",
+    hint: "Shorten the level names with a `labeller`, break them with `\\`, "
+      + "give the plot more room with `width`/`height`, or shrink the strip "
+      + "text with `theme(strip-text: element-text(size: ...))`.",
+  )
+}
+
 #let _panel-row-count(panel-layers) = {
   let n = 0
   for layer in panel-layers { n += layer.data.len() }
@@ -441,6 +463,7 @@
     along-cm: panel-w,
   )
   _check-strip-fit(strip.text * nrow + sec-total, grid-h, "height")
+  _check-strip-overrun(strip.min-width, panel-w, "facet strips")
   let strip-h = strip.band
   let gutter-y = _fit-gutter(
     gutters.y,
@@ -487,7 +510,7 @@
         strip-text,
         style,
         theme,
-        along-cm: strip.along,
+        along-cm: strip.alongs.at(i),
       )
       let panel-trained = if panel-trained-list.len() == 0 {
         trained
@@ -658,8 +681,14 @@
     panel-h = next-h
     if settled { break }
   }
-  if col-var != none { _check-strip-fit(col-strip.text, v-room, "height") }
-  if row-var != none { _check-strip-fit(row-strip.text, h-room, "width") }
+  if col-var != none {
+    _check-strip-fit(col-strip.text, v-room, "height")
+    _check-strip-overrun(col-strip.min-width, panel-w, "facet column strips")
+  }
+  if row-var != none {
+    _check-strip-fit(row-strip.text, h-room, "width")
+    _check-strip-overrun(row-strip.min-width, panel-h, "facet row strips")
+  }
   let inner-right = margin.right + right-strip + sec-band-y
 
   let shared-breaks = _facet-shared-breaks(
@@ -724,7 +753,7 @@
           col-strip-texts.at(c),
           style,
           theme,
-          along-cm: col-strip.along,
+          along-cm: col-strip.alongs.at(c),
         )
       }
     }
@@ -740,7 +769,7 @@
           style,
           theme,
           angle: -90deg,
-          along-cm: row-strip.along,
+          along-cm: row-strip.alongs.at(r),
         )
       }
     }

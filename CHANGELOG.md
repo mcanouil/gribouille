@@ -6,6 +6,7 @@
 
 - feat!: `geom-text`, `geom-label`, and `geom-typst` take an `arrow()` specification on `arrow` in place of a boolean, and their `arrow-length` parameter is gone. `arrow: true` becomes `arrow: arrow()`, and `arrow-length: 6pt` becomes `arrow: arrow(length: 6pt)`. (#249)
 - feat!: `guide-axis(angle:)`, `guide-axis-logticks(angle:)`, and the `angle` of an `axis-text` theme element are bounded to -90 to 90 degrees and fail outside it. Past a quarter turn the tick labels read upside down and ran off the canvas. (#238)
+- fix!: a faceted plot whose strip label holds a word wider than its panel now fails with the room that word needs. Shorten the level names with a `labeller`, break the word with `\`, or give the plot more room with `width`/`height`. (#262)
 - fix!: a plot whose tick labels cannot fit the canvas fails with the room they need instead of drawing past its edge. Give the plot more room, rotate the labels with `guides(x: guide-axis(angle: 45))`, shorten them with a `labels:` function on the scale, or shrink them with `theme(axis-text: element-text(size: ...))`. (#259)
 - fix!: a legend placed on a plot side, or one `compose()` hoists out of its panels, fits the `width`/`height` it was asked for, and fails with the room it needs when it cannot. Give the plot more room, move the legend to a shorter side, or shrink it with `guide-legend(nrow:/ncolumn:)`. (#255)
 

@@ -25,7 +25,7 @@
 #let long = (
   a: (1, 2, 3, 4, 5, 6),
   b: (2, 4, 3, 5, 1, 6),
-  g: ("alpha", "beta", "gamma") * 2,
+  g: ("alpha beta", "gamma delta", "epsilon eta") * 2,
 )
 
 #let fits(body, side, what) = {
@@ -58,9 +58,11 @@
 }
 
 // Level names wider than the panel they name: the band holds the lines they
-// wrap onto rather than the label running off the side of the grid.
+// wrap onto rather than the label running off the side of the grid. Every word
+// of these fits the panel, so they wrap; a word that does not fit is reported
+// instead (see the foot of this file).
 #context {
-  for side in (1.5cm, 1cm) {
+  for side in (4cm, 3cm) {
     fits(
       plot(
         data: long,
@@ -81,7 +83,7 @@
 // facet-grid draws one band above the grid and one rotated beside it, so the
 // budgets run on different axes and the row strip is bounded by the width.
 #context {
-  for side in (1.5cm, 1cm) {
+  for side in (4cm, 3cm) {
     fits(
       plot(
         data: short,
@@ -162,7 +164,8 @@
   let natural = _strip-band(labels, style, 0.45)
   // No budget reproduces the old band: the fixed base, or the label if taller.
   assert.eq(natural.band, calc.max(0.45, natural.text))
-  assert.eq(natural.along, none)
+  assert.eq(natural.alongs, (none, none, none))
+  assert.eq(natural.min-width, 0.0)
   // A budget under the base but over the label buys the base back.
   let squeezed = _strip-band(labels, style, 0.45, budget: 0.4)
   assert.eq(squeezed.band, 0.4)
@@ -182,16 +185,46 @@
     0.45,
     along-cm: 1.0,
   )
-  assert.eq(wrapped.along, 1.0)
+  assert.eq(wrapped.alongs, (1.0,))
   assert(
     wrapped.text > natural.text,
     message: "expected a wrapped label to reserve more than a single line",
   )
+  // Every word of it fits the box, so it wraps into the panel and the caller's
+  // check passes.
+  assert(
+    wrapped.min-width < 1.0,
+    message: "expected every word to fit a 1 cm box",
+  )
+  // One word wider than the box cannot wrap into it however the label breaks,
+  // so the room that word needs is reported instead.
+  let unbreakable = _strip-band(
+    ("alevelnamefarwiderthanitspanel",),
+    style,
+    0.45,
+    along-cm: 1.0,
+  )
+  assert(
+    unbreakable.min-width > 1.0,
+    message: "expected an unbreakable word to overrun a 1 cm box",
+  )
+  // The decision is per label: a label that fits keeps its own natural width
+  // even when the one beside it wraps.
+  let mixed = _strip-band(
+    ("u", "a level name far wider than its panel"),
+    style,
+    0.45,
+    along-cm: 1.0,
+  )
+  assert.eq(mixed.alongs, (none, 1.0))
 }
 
 // Typst cannot catch panics in-process, so the `fail` this feeds is verified
 // manually. A 3cm by 0.4cm plot with `facet-wrap("g", ncolumn: 1)` over three
 // levels reports "the facet strips need 1.04 cm of height along a panel grid
-// of 0.4 cm, and their labels do not fit in less".
+// of 0 cm, and their labels do not fit in less". A 4cm square plot with
+// `facet-wrap("g", ncolumn: 3)` over a level named
+// "alevelnamefarwiderthanitspanel" reports "the facet strips have a 3.71 cm
+// word that cannot wrap into the 0.63 cm the panel leaves it".
 
 Facet strip fit tests passed.
