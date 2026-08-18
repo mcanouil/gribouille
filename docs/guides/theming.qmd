@@ -36,6 +36,7 @@ Minor gridlines default to half the major weight in the same colour, and a blank
 A discrete axis draws no gridlines from `panel-grid` alone, because its ticks already mark every level.
 To get them, set the grid on `panel-grid-major` or on one axis with `panel-grid-major-x` or `panel-grid-major-y`.
 A discrete axis draws no minor gridlines at all, because a gap between two levels has no subdivision.
+A [`coord-radial()`](../reference/coord/coord-radial.qmd) panel draws one grid weight for both its circles and its spokes, so its circles read `panel-grid-major` only, and a discrete radial axis draws them without tick labels.
 
 | Region                                                                                       | Key(s)                                                                                                                            | Element type                                                                                                    |
 | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
