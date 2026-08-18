@@ -4,7 +4,7 @@ subtitle: "Show how a numeric variable spreads, alone or across groups."
 gallery-intent: distribution
 toc: true
 toc-depth: 3
-body-classes: examples-page
+body-classes: gallery-page
 engine: markdown
 listing:
   - id: gallery

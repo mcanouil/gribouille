@@ -4,7 +4,7 @@ subtitle: "Map data to colour, size, shape, opacity, and line style."
 gallery-intent: colour-scales
 toc: true
 toc-depth: 3
-body-classes: examples-page
+body-classes: gallery-page
 engine: markdown
 listing:
   - id: gallery

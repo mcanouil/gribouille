@@ -4,7 +4,7 @@ subtitle: "Show how values change over time or along an ordered sequence."
 gallery-intent: evolution
 toc: true
 toc-depth: 3
-body-classes: examples-page
+body-classes: gallery-page
 engine: markdown
 listing:
   - id: gallery

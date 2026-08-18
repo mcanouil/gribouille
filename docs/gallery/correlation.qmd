@@ -4,7 +4,7 @@ subtitle: "Show how two or more variables move together."
 gallery-intent: correlation
 toc: true
 toc-depth: 3
-body-classes: examples-page
+body-classes: gallery-page
 engine: markdown
 listing:
   - id: gallery

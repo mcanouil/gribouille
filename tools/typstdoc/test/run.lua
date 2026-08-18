@@ -1562,6 +1562,152 @@ listing:
     pages[examples.HUB_INTENT] = "index.qmd"
     assert_eq(#examples.intent_drift(pages), 0)
   end)
+
+  it("ignores an indented intent line outside the front matter", function()
+    local decl = examples.parse_page_intent(
+      '---\ngallery-intent: themes\n---\n\n```yaml\n  intent: distribution\n```\n')
+    assert_eq(decl.declared, "themes")
+    assert_eq(decl.include, nil)
+  end)
+
+  it("flags two pages claiming the same intent", function()
+    local _, _, duplicates = examples.fold_page_intents({
+      { page = "themes.qmd", declared = "themes" },
+      { page = "styling.qmd", declared = "themes" },
+    })
+    assert_eq(#duplicates, 1)
+    assert_contains(duplicates[1], "themes.qmd")
+    assert_contains(duplicates[1], "styling.qmd")
+  end)
+
+  it("keeps the first claimant and both listing filters when an intent collides", function()
+    local page_intents, page_includes = examples.fold_page_intents({
+      { page = "themes.qmd", declared = "themes", include = "themes" },
+      { page = "styling.qmd", declared = "themes", include = "styling" },
+    })
+    assert_eq(page_intents.themes, "themes.qmd")
+    assert_eq(page_includes["styling.qmd"], "styling")
+  end)
+end)
+
+-- -----------------------------------------------------------------------
+describe("examples: gallery navigation surfaces", function()
+  local examples = require("examples")
+
+  local hub = [[
+# Gallery hub cards.
+- group: story
+  title: "Comparison and ranking"
+  hero: class-economy-dotplot
+  href: comparison.qmd
+
+- group: craft
+  title: "Themes and styling"
+  hero: themes-gallery
+  href: themes.qmd
+]]
+
+  local sidebar = [[
+website:
+  sidebar:
+    - id: gallery
+      contents:
+        - section: "Gallery"
+          href: gallery/index.qmd
+          contents:
+            - text: "Comparison and ranking"
+              href: gallery/comparison.qmd
+            - text: "Themes and styling"
+              href: gallery/themes.qmd
+]]
+
+  it("parses hub cards as flat mappings", function()
+    local cards = examples.parse_cards(hub)
+    assert_eq(#cards, 2)
+    assert_eq(cards[1].group, "story")
+    assert_eq(cards[1].hero, "class-economy-dotplot")
+    assert_eq(cards[1].href, "comparison.qmd")
+    assert_eq(cards[2].title, "Themes and styling")
+  end)
+
+  it("parses the gallery pages the sidebar links to", function()
+    local pages = examples.parse_sidebar_pages(sidebar)
+    assert_eq(#pages, 3)
+    assert_eq(pages[1], "index.qmd")
+    assert_eq(pages[3], "themes.qmd")
+  end)
+
+  it("passes when both surfaces reach every page exactly once", function()
+    local drift = examples.nav_drift(
+      { "comparison.qmd", "themes.qmd" },
+      { "comparison.qmd", "themes.qmd" },
+      { "comparison.qmd", "themes.qmd" })
+    assert_eq(#drift, 0)
+  end)
+
+  it("flags a page that no hub card and no sidebar entry reaches", function()
+    local drift = examples.nav_drift({ "comparison.qmd", "layout.qmd" }, { "comparison.qmd" }, { "comparison.qmd" })
+    assert_eq(#drift, 2)
+    assert_contains(drift[1], "layout.qmd")
+    assert_contains(drift[2], "layout.qmd")
+  end)
+
+  it("flags a card pointing at a page that does not exist", function()
+    local drift = examples.nav_drift({ "comparison.qmd" }, { "comparison.qmd", "typo.qmd" }, { "comparison.qmd" })
+    assert_eq(#drift, 1)
+    assert_contains(drift[1], "typo.qmd")
+    assert_contains(drift[1], "missing page")
+  end)
+
+  it("flags a page reached twice by the same surface", function()
+    local drift = examples.nav_drift(
+      { "comparison.qmd" }, { "comparison.qmd", "comparison.qmd" }, { "comparison.qmd" })
+    assert_eq(#drift, 1)
+    assert_contains(drift[1], "2 hub.yml cards")
+  end)
+
+  it("flags a hero that names no slug", function()
+    local bad = examples.bad_heroes(examples.parse_cards(hub), { ["themes-gallery"] = true })
+    assert_eq(#bad, 1)
+    assert_contains(bad[1], "class-economy-dotplot")
+    assert_contains(bad[1], "comparison.qmd")
+  end)
+
+  it("flags a card with no hero at all", function()
+    local bad = examples.bad_heroes({ { href = "layout.qmd" } }, {})
+    assert_eq(#bad, 1)
+    assert_contains(bad[1], "missing")
+    assert_contains(bad[1], "layout.qmd")
+  end)
+
+  it("flags a showcase entry sitting on a craft page", function()
+    local entries = {
+      { slug = "sorted-dots", intent = "comparison", showcase = true },
+      { slug = "theme-grid", intent = "themes", showcase = true },
+      { slug = "theme-parts", intent = "themes" },
+    }
+    local bad = examples.craft_showcases(entries, { themes = true })
+    assert_eq(#bad, 1)
+    assert_contains(bad[1], "theme-grid")
+  end)
+
+  it("reads the showcase flag from a gallery entry", function()
+    local entries = examples.parse_entries(
+      '- slug: sorted-dots\n  intent: comparison\n  showcase: true\n- slug: plain\n  intent: themes\n')
+    assert_eq(entries[1].showcase, true)
+    assert_eq(entries[2].showcase, nil)
+  end)
+
+  it("flags a block or folded scalar in a flat-parser file", function()
+    local lines = examples.block_scalars('- slug: one\n  description: |\n    long text\n  alt: >-\n    folded\n')
+    assert_eq(#lines, 2)
+    assert_eq(lines[1], 2)
+    assert_eq(lines[2], 4)
+  end)
+
+  it("accepts single-line scalars, quotes and colons included", function()
+    assert_eq(#examples.block_scalars(hub), 0)
+  end)
 end)
 
 -- -----------------------------------------------------------------------

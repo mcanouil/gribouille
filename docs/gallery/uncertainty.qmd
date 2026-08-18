@@ -4,7 +4,7 @@ subtitle: "Show intervals, ranges, and confidence around estimates."
 gallery-intent: uncertainty
 toc: true
 toc-depth: 3
-body-classes: examples-page
+body-classes: gallery-page
 engine: markdown
 listing:
   - id: gallery

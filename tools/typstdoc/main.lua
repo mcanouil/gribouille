@@ -125,28 +125,59 @@ local EXAMPLE_SKIP_EXT = { pdf = true, png = true, jpg = true, jpeg = true, gif 
 
 -- Scan the intent gallery's pages for the two intent values each declares:
 -- the `gallery-intent` the Lua filter renders from, and the listing `include`
--- Quarto filters cards with.
+-- Quarto filters cards with. Returns an ordered list of { page, declared,
+-- include } so a duplicate declaration survives to be reported.
 local function read_gallery_pages(gallery_dir)
-  local page_intents, page_includes = {}, {}
-  if not util.dir_exists(gallery_dir) then return page_intents, page_includes end
+  local decls = {}
+  if not util.dir_exists(gallery_dir) then return decls end
   for _, name in ipairs(util.list_dir_files(gallery_dir)) do
     if name:match("%.qmd$") then
       local content, err = util.read_file(gallery_dir .. "/" .. name)
       if not content then util.die("could not read page: " .. name .. ": " .. tostring(err)) end
       local decl = examples.parse_page_intent(content)
       if decl.declared then
-        page_intents[decl.declared] = name
-        page_includes[name] = decl.include
+        decls[#decls + 1] = { page = name, declared = decl.declared, include = decl.include }
       end
     end
   end
-  return page_intents, page_includes
+  return decls
+end
+
+-- File name of every intent page under `docs/gallery`, hub page excluded, from
+-- the declarations `read_gallery_pages` collected.
+local function intent_page_names(decls)
+  local out = {}
+  for _, decl in ipairs(decls) do
+    if decl.declared ~= examples.HUB_INTENT then out[#out + 1] = decl.page end
+  end
+  table.sort(out)
+  return out
+end
+
+-- Read a file the caller has already required to exist.
+local function read_required(path, what)
+  if not util.file_exists(path) then util.die(what .. " not found: " .. path) end
+  local content, err = util.read_file(path)
+  if not content then util.die("could not read " .. what .. ": " .. path .. ": " .. tostring(err)) end
+  return content
+end
+
+-- Drop the hub page from a list of page file names, so the intent pages alone
+-- are compared against the navigation surfaces.
+local function without_hub(names, hub_page)
+  local out = {}
+  for _, name in ipairs(names) do
+    if name ~= hub_page then out[#out + 1] = name end
+  end
+  return out
 end
 
 -- Every `examples/*.typ` must have a gallery slug or be excluded (see
 -- examples.EXCLUDE), otherwise it never renders in the slug-driven gallery.
 -- Every entry must also carry a valid intent (see examples.INTENTS), and that
 -- taxonomy must match the pages rendering it, or entries land on no page.
+-- The taxonomy also has to match the two navigation surfaces, `hub.yml` and
+-- `_sidebar-gallery.yml`, or a page renders that nothing links to.
 local function enforce_examples_gallery(opts)
   if not util.dir_exists(opts.examples) then return end
   local function report(msg)
@@ -157,12 +188,14 @@ local function enforce_examples_gallery(opts)
     end
   end
 
-  local gallery_path = opts.docs .. "/gallery/gallery.yml"
-  if not util.file_exists(gallery_path) then
-    util.die("gallery file not found: " .. gallery_path)
-  end
-  local content, err = util.read_file(gallery_path)
-  if not content then util.die("could not read gallery: " .. gallery_path .. ": " .. tostring(err)) end
+  local gallery_dir = opts.docs .. "/gallery"
+  local gallery_path = gallery_dir .. "/gallery.yml"
+  local hub_path = gallery_dir .. "/hub.yml"
+  local sidebar_path = opts.docs .. "/_sidebar-gallery.yml"
+
+  local content = read_required(gallery_path, "gallery file")
+  local hub_content = read_required(hub_path, "gallery hub file")
+  local sidebar_content = read_required(sidebar_path, "gallery sidebar file")
 
   local entries = examples.parse_entries(content)
   local slugs = {}
@@ -175,12 +208,61 @@ local function enforce_examples_gallery(opts)
       #bad, #bad == 1 and "y" or "ies", gallery_path, table.concat(bad, ", ")))
   end
 
-  local page_intents, page_includes = read_gallery_pages(opts.docs .. "/gallery")
+  for _, pair in ipairs({ { gallery_path, content }, { hub_path, hub_content } }) do
+    local lines = examples.block_scalars(pair[2])
+    if #lines > 0 then
+      report(string.format(
+        "%s uses a block or folded scalar on line(s) %s; the Lua filters read one line per key",
+        pair[1], table.concat(lines, ", ")))
+    end
+  end
+
+  local decls = read_gallery_pages(gallery_dir)
+  local page_intents, page_includes, duplicates = examples.fold_page_intents(decls)
+  if #duplicates > 0 then
+    report(string.format("%d duplicate intent declaration(s) in %s: %s",
+      #duplicates, gallery_dir, table.concat(duplicates, "; ")))
+  end
+
   local drift = examples.intent_drift(page_intents, nil, page_includes)
   if #drift > 0 then
     report(string.format(
       "%d intent taxonomy drift(s) between examples.INTENTS and docs/gallery: %s",
       #drift, table.concat(drift, "; ")))
+  end
+
+  local cards = examples.parse_cards(hub_content)
+  local hub_page = page_intents[examples.HUB_INTENT]
+  local card_pages, craft_intents = {}, {}
+  for _, card in ipairs(cards) do
+    if card.href then
+      card_pages[#card_pages + 1] = card.href
+      if card.group == "craft" then
+        craft_intents[card.href:gsub("%.qmd$", "")] = true
+      end
+    end
+  end
+
+  local nav = examples.nav_drift(
+    intent_page_names(decls),
+    card_pages,
+    without_hub(examples.parse_sidebar_pages(sidebar_content), hub_page))
+  if #nav > 0 then
+    report(string.format("%d gallery navigation drift(s) across %s and %s: %s",
+      #nav, hub_path, sidebar_path, table.concat(nav, "; ")))
+  end
+
+  local heroes = examples.bad_heroes(cards, slugs)
+  if #heroes > 0 then
+    report(string.format("%d hub card hero(es) with no gallery.yml slug in %s: %s",
+      #heroes, hub_path, table.concat(heroes, ", ")))
+  end
+
+  local showcases = examples.craft_showcases(entries, craft_intents)
+  if #showcases > 0 then
+    report(string.format(
+      "%d showcase entr%s on a craft page in %s, which renders feature demos only: %s",
+      #showcases, #showcases == 1 and "y" or "ies", gallery_path, table.concat(showcases, ", ")))
   end
 
   local orphans = examples.orphans(util.list_dir_files(opts.examples), slugs)

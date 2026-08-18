@@ -39,6 +39,7 @@
 - fix: an axis title longer than the panel it labels wraps onto further lines instead of stretching the canvas past the requested `width`/`height`. A title that still cannot fit fails with the room it needs. (#234)
 - fix: an inside-panel legend background keeps its painted `inset` inside the panel at an edge-flush alignment, and `legend-background`'s `outset` now spaces the backdrop off the panel edge instead of being silently ignored. (#232)
 - perf: a plot lays its chrome out faster. Each axis title, tick label, and legend title is measured once per pass, and a `compose()` panel is probed for its guides and its shared margin without drawing a canvas that is then thrown away. (#260)
+- docs: the gallery hub cards show a focus ring for keyboard users, and their text can be selected under the whole-card link. The hub also states that the per-example anchors of the old `/examples/` page are gone, and sends readers to the intent pages instead. (#269)
 - docs: the Typst-markup examples on `typst()` and `element-typst()` write a mean as `$macron(x)$`. They used `$bar(x)$`, the vertical-bar symbol rather than the overbar their alt text described. (#253)
 - docs: a reference page no longer opens with the release that introduced the function. The version was typed by hand and drifted, and the changelog already records when a function landed. (#251)
 - docs: docs site footer links read as ink rather than the muted grey Quarto paints them, and pick up the site-wide hover colour. (#246)
