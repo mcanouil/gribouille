@@ -122,26 +122,6 @@
   merged
 }
 
-/// Report whether the theme sets a record on `surface` itself or on any surface between it and `until`, exclusive.
-///
-/// Tells a deliberate override apart from a value the surface only inherits from a shared ancestor, so a renderer can treat the two differently.
-///
-/// \@internal
-/// \@param theme Merged theme dictionary.
-///
-/// \@param surface Leaf surface key, e.g., `"panel-grid-major-y"`.
-///
-/// \@param until Ancestor key the walk stops before, e.g., `"panel-grid"`.
-/// \@returns Boolean.
-#let surface-set-below(theme, surface, until) = {
-  let cur = surface
-  while cur != none and cur != until {
-    if theme.at(cur, default: none) != none { return true }
-    cur = _surface-parent.at(cur, default: none)
-  }
-  false
-}
-
 // Empty layer-default record reused whenever the theme has no `geom` slot
 // or carries a non-element-geom record (theme drift, partial user theme).
 // Hoisted to module scope so per-render lookups don't re-allocate it.

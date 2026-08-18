@@ -10,7 +10,7 @@
 #import "../theme/defaults.typ": resolve-colour
 #import "../theme/theme.typ": (
   _line-stroke, _rect-style, _text-args, _text-style, _tick-length,
-  resolve-theme-palette, surface-set-below,
+  resolve-theme-palette,
 )
 #import "../utils/radial.typ": radial-ctx, theta-axis-of
 #import "../utils/typst-markup.typ": resolve-prose
@@ -297,21 +297,9 @@
     x: _grid-stroke("panel-grid-minor-x"),
     y: _grid-stroke("panel-grid-minor-y"),
   )
-  // A discrete axis draws no gridlines by default, since its ticks already mark
-  // every level. A grid element set on the major weight or on one axis is a
-  // deliberate request, so it wins; an inherited `panel-grid` is not.
-  let _grid-discrete = (
-    x: surface-set-below(theme, "panel-grid-major-x", "panel-grid"),
-    y: surface-set-below(theme, "panel-grid-major-y", "panel-grid"),
-  )
   // Radial panels draw one grid weight for both circles and spokes; the
   // per-axis split and minor lines apply to cartesian panels only.
   let _grid-radial = _grid-stroke("panel-grid-major")
-  let _grid-radial-discrete = surface-set-below(
-    theme,
-    "panel-grid-major",
-    "panel-grid",
-  )
   let _stroke-side = (p, s, _) => _line-stroke(
     theme,
     p + "-" + s,
@@ -397,9 +385,8 @@
 
   // Draw the cartesian axis ticks, gridlines, and labels for one axis.
   // Continuous and discrete axes share everything except how `cx`/`cy` is
-  // mapped, where the labels come from, and which gridlines are drawn. A
-  // discrete axis draws majors only when the theme asks for them per weight or
-  // per axis, and never draws minors: a gap between levels has no subdivision.
+  // mapped, where the labels come from, and whether gridlines are drawn
+  // (continuous only, since discrete ticks already mark every level).
   let _draw-cartesian-axis(axis, trained, disp, ax-text-typst, draw-label) = {
     if is-radial or trained == none { return }
     let is-continuous = trained.type == "continuous"
@@ -410,9 +397,6 @@
     let range = if axis == "x" { px-range } else { py-range }
     let major-stroke = if axis == "x" { _grid-major.x } else { _grid-major.y }
     let minor-stroke = if axis == "x" { _grid-minor.x } else { _grid-minor.y }
-    let major-discrete = if axis == "x" {
-      _grid-discrete.x
-    } else { _grid-discrete.y }
     let cached = if axis-breaks == none { none } else {
       axis-breaks.at(axis, default: none)
     }
@@ -432,7 +416,7 @@
     }
     for (idx, b) in breaks.enumerate() {
       let c = map-break(trained, b, range)
-      if major-stroke != none and (is-continuous or major-discrete) {
+      if is-continuous and major-stroke != none {
         if axis == "x" {
           line((c, py-lo), (c, py-hi), stroke: major-stroke)
         } else {
@@ -651,7 +635,6 @@
       y-disp: _y-disp,
       ax-text: _ax-text,
       grid-radial: _grid-radial,
-      grid-radial-discrete: _grid-radial-discrete,
       ax-line: _ax-line,
       show-x-labels: show-x-labels,
     ))
