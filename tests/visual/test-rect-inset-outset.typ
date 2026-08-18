@@ -31,7 +31,9 @@
   labels: labels(title: label),
   theme: t,
   width: 7cm,
-  height: 4cm,
+  // Tall enough for the right legend: an outset on `legend-background` adds to
+  // its height, and a legend that cannot fit the panel now fails the plot.
+  height: 5.5cm,
 )
 
 #let panel-outset-theme = theme(panel-background: element-rect(

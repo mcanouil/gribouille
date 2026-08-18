@@ -70,6 +70,7 @@ fi
 
 compile_glob "unit"     "tests/unit/*.typ"
 compile_glob "examples" "examples/*.typ"
+compile_glob "visual"   "tests/visual/*.typ"
 
 if [[ -n "${snapshot_mode}" ]]; then
   printf '\nsnapshots:\n'

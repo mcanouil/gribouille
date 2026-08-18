@@ -20,15 +20,27 @@
   _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _read-r-guide, _read-theta-guide,
 )
 
+// Two canvas angles are the same direction when they differ by a whole number
+// of turns: a full sweep puts its first and last break on one ray.
+#let _FULL-TURN-EPS = 1e-6
+
+#let _same-angle(a, b) = {
+  let turn = 2 * calc.pi
+  let d = calc.rem(calc.abs(a - b), turn)
+  calc.min(d, turn - d) < _FULL-TURN-EPS
+}
+
 // The theta tick marks a radial panel will draw, resolved once so the layout
 // and the draw site cannot disagree. `theta-axis` is the axis the sweep runs
 // along, "x" on a rose or radar and "y" on a pie, and the surfaces are read
 // off it rather than off `x`: a pie's angular ticks belong to its `y` scale.
 // `reach` is how far past `r-max` the longest weight that actually draws
 // reaches, which is what `radial-ctx` keeps back; a blank surface, an axis
-// `guides(theta: none)` suppressed, and minors nobody asked for all reach
-// nothing, so none of them costs the circle any radius.
-#let _theta-tick-marks(theme, theta-axis, theta-guide) = {
+// `guides(theta: none)` suppressed, an untrained sweep, and minors nobody
+// asked for all reach nothing, so none of them costs the circle any radius.
+// Every condition the draw site checks is checked here, or the circle gives up
+// radius for ink that never appears.
+#let _theta-tick-marks(theme, theta-axis, theta-guide, theta-trained) = {
   let nothing = (
     major: none,
     major-len: 0.0,
@@ -36,7 +48,7 @@
     minor-len: 0.0,
     reach: 0.0,
   )
-  if theta-axis == none { return nothing }
+  if theta-axis == none or theta-trained == none { return nothing }
   if theta-guide != none and theta-guide.suppress { return nothing }
 
   let ink = resolve-colour(theme, "ink")
@@ -162,32 +174,47 @@
   }
 
   // Tick marks, drawn outward from the circle into the band `radial-ctx` kept
-  // back for them. Majors sit on the breaks, like a cartesian axis and unlike
-  // the arc they need no guide to appear; minors sit at the half-steps between
-  // them and are opt-in through `guide-axis-theta(minor-ticks: true)`.
-  if not theta-suppress and theta-trained != none {
-    if _theta-ticks.major != none {
-      for group in theta-groups {
-        let theta = group.first().theta
-        line(
-          polar-canvas(outer-radial, theta, r-max),
-          polar-canvas(outer-radial, theta, r-max + _theta-ticks.major-len),
-          stroke: _theta-ticks.major,
-        )
-      }
+  // back for them. `_theta-tick-marks` has already folded in every reason not
+  // to draw, so a `none` weight here means the band it would have needed was
+  // never taken off the radius either.
+  let tick(theta, len, stroke) = line(
+    polar-canvas(outer-radial, theta, r-max),
+    polar-canvas(outer-radial, theta, r-max + len),
+    stroke: stroke,
+  )
+  let sweep = theta-range.at(1) - theta-range.at(0)
+
+  // Majors sit on the breaks, and unlike the arc they need no guide to appear.
+  // A capped end is the exception: `cap` fades the arc out short of the end
+  // angle, so a tick there would float in the gap the cap just opened.
+  if _theta-ticks.major != none {
+    let capping = if theta-guide == none { "none" } else { theta-guide.cap }
+    let ends = ()
+    if capping == "lower" or capping == "both" {
+      ends.push(theta-range.at(0))
     }
-    if _theta-ticks.minor != none and theta-groups.len() >= 2 {
-      let prev = theta-groups.first().first().theta
-      for i in range(1, theta-groups.len()) {
-        let cur = theta-groups.at(i).first().theta
-        let mid = (prev + cur) / 2
-        line(
-          polar-canvas(outer-radial, mid, r-max),
-          polar-canvas(outer-radial, mid, r-max + _theta-ticks.minor-len),
-          stroke: _theta-ticks.minor,
-        )
-        prev = cur
-      }
+    if capping == "upper" or capping == "both" {
+      ends.push(theta-range.at(1))
+    }
+    for group in theta-groups {
+      let theta = group.first().theta
+      if ends.any(end => _same-angle(theta, end)) { continue }
+      tick(theta, _theta-ticks.major-len, _theta-ticks.major)
+    }
+  }
+
+  // Minors bisect each gap between majors, and are opt-in through
+  // `guide-axis-theta(minor-ticks: true)`. A full turn closes the ring: its
+  // last group and its first sit a gap apart like any other pair, so bisect
+  // that one too rather than leaving the wrap gap bare.
+  if _theta-ticks.minor != none and theta-groups.len() >= 2 {
+    let angles = theta-groups.map(g => g.first().theta)
+    if calc.abs(calc.abs(sweep) - 2 * calc.pi) < _FULL-TURN-EPS {
+      angles.push(angles.first() + sweep)
+    }
+    for i in range(1, angles.len()) {
+      let mid = (angles.at(i - 1) + angles.at(i)) / 2
+      tick(mid, _theta-ticks.minor-len, _theta-ticks.minor)
     }
   }
 

@@ -251,7 +251,12 @@
   // The theta ticks sit between the circle and those labels, so they are
   // resolved here rather than with the cartesian sides below: the radius owes
   // them their length before either can be placed.
-  let _theta-ticks = _theta-tick-marks(theme, _theta-key, _theta-guide)
+  let _theta-ticks = _theta-tick-marks(
+    theme,
+    _theta-key,
+    _theta-guide,
+    if _theta-key == "x" { x-trained } else { y-trained },
+  )
   let outer-radial = radial-ctx(
     coord,
     x-trained,

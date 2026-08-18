@@ -11,6 +11,10 @@
 
 #let PANEL = (px: (0.0, 6.0), py: (0.0, 5.0))
 
+// Stand-in for the trained sweep scale: the marks resolve off the theme, but
+// an axis that never trained draws nothing and so reserves nothing.
+#let TRAINED = (type: "continuous", domain: (0, 1))
+
 #let r-of(bounds: (), tick-cm: 0.0) = {
   radial-ctx(
     coord-radial(),
@@ -43,7 +47,7 @@
   let ticked = r-of(bounds: top, tick-cm: 0.3)
   assert(
     calc.abs(bare - (2.5 - 0.16 - THETA-LABEL-PAD)) < 1e-9,
-    message: "an untickled label left r-max at " + repr(bare),
+    message: "an unticked label left r-max at " + repr(bare),
   )
   assert(
     calc.abs(ticked - (bare - 0.3)) < 1e-9,
@@ -67,14 +71,15 @@
   let ticked-y = merge-theme(theme(
     axis-ticks-y: element-tick(colour: black, stroke: 0.5pt, length: 0.4cm),
   ))
-  let sweep-on-y = _theta-tick-marks(ticked-y, "y", none)
+  let sweep-on-y = _theta-tick-marks(ticked-y, "y", none, TRAINED)
   assert(
     calc.abs(sweep-on-y.reach - 0.4) < 1e-9,
     message: "a pie read its theta ticks as " + repr(sweep-on-y.reach),
   )
   // `x` keeps the inherited base length, so it cannot have read the `y` one.
   assert(
-    calc.abs(_theta-tick-marks(ticked-y, "x", none).reach - 0.1) < 1e-9,
+    calc.abs(_theta-tick-marks(ticked-y, "x", none, TRAINED).reach - 0.1)
+      < 1e-9,
     message: "a rose read the y-axis tick surface",
   )
 }
@@ -82,9 +87,17 @@
 // A blank surface draws nothing, so it must not hold radius back either. This
 // is the shipped default: `theme-minimal` blanks `axis-ticks`.
 #{
-  let marks = _theta-tick-marks(merge-theme(none), "x", none)
+  let marks = _theta-tick-marks(merge-theme(none), "x", none, TRAINED)
   assert.eq(marks.reach, 0.0)
   assert.eq(marks.major, none)
+}
+
+// An untrained sweep draws no tick, so it must not reserve one either.
+#{
+  let ticked = merge-theme(theme(
+    axis-ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.4cm),
+  ))
+  assert.eq(_theta-tick-marks(ticked, "x", none, none).reach, 0.0)
 }
 
 // `_read-theta-guide` reads a plot spec, so a bare `guides()` call needs
@@ -97,7 +110,7 @@
     axis-ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.4cm),
   ))
   let suppressed = theta-guide-of(guides(theta: none))
-  assert.eq(_theta-tick-marks(ticked, "x", suppressed).reach, 0.0)
+  assert.eq(_theta-tick-marks(ticked, "x", suppressed, TRAINED).reach, 0.0)
 }
 
 // Minor ticks are opt-in through the guide and read the `axis-ticks-minor`
@@ -111,11 +124,11 @@
     theta: guide-axis-theta(minor-ticks: true),
   ))
 
-  let off = _theta-tick-marks(ticked, "x", theta-guide-of(guides()))
+  let off = _theta-tick-marks(ticked, "x", theta-guide-of(guides()), TRAINED)
   assert.eq(off.minor, none)
   assert(calc.abs(off.reach - 0.4) < 1e-9, message: repr(off.reach))
 
-  let on = _theta-tick-marks(ticked, "x", minors-on)
+  let on = _theta-tick-marks(ticked, "x", minors-on, TRAINED)
   assert(on.minor != none, message: "minor-ticks: true drew no minor stroke")
   assert(
     calc.abs(on.minor-len - 0.2) < 1e-9,
@@ -128,7 +141,7 @@
     axis-ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.1cm),
     axis-ticks-minor: element-tick(length: 0.5cm),
   ))
-  let both = _theta-tick-marks(long-minor, "x", minors-on)
+  let both = _theta-tick-marks(long-minor, "x", minors-on, TRAINED)
   assert(calc.abs(both.reach - 0.5) < 1e-9, message: repr(both.reach))
 }
 
@@ -136,7 +149,13 @@
 // asked for. The band only works if the draw site and `radial-ctx` agree.
 #let SLACK = 0.5pt
 
-#let ticked-plot(theta: "x", width: 6cm, height: 5cm, guides: guides()) = plot(
+#let ticked-plot(
+  theta: "x",
+  width: 6cm,
+  height: 5cm,
+  guides: guides(),
+  ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.5cm),
+) = plot(
   data: (h: range(0, 12), v: range(0, 12).map(i => 10 + calc.rem(i * 7, 13))),
   mapping: aes(x: "h", y: "v"),
   layers: (geom-point(),),
@@ -144,7 +163,7 @@
   guides: guides,
   theme: theme(
     axis-line: element-line(colour: black, stroke: 0.5pt),
-    axis-ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.5cm),
+    axis-ticks: ticks,
   ),
   width: width,
   height: height,
@@ -179,5 +198,11 @@
   5cm,
   "ticked radial plot with minor ticks",
 )
+
+// Where the marks actually land is a question these assertions cannot answer:
+// a plot is content, and two plots built from different specs compare unequal
+// whether or not the difference reached the page. The angles and radii are
+// covered by the `guide-axis-theta` golden and by the eyeball plot in
+// `tests/visual/coord-radial-theta-ticks.typ`.
 
 Radial theta tick tests passed.
