@@ -1,0 +1,27 @@
+---
+title: "Gallery"
+subtitle: "Find the right chart for your data, with the full source a click away."
+gallery-intent: hub
+toc: false
+engine: markdown
+aliases:
+  - /examples/
+  - /examples/index.html
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-hub.ejs.md
+    contents: hub.yml
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+Start from the question your figure should answer, not from a chart name.
+Each page below opens with curated, real-data showcases that follow data visualisation best practices, followed by focused feature demos.
+The **By feature** pages cover the finishing work that turns a correct chart into a clear one: annotation, colour, guides, layout, and theming.
+Every example lives in the [`examples/`](https://github.com/mcanouil/gribouille/tree/main/examples) directory of the repository, and its source can be copied from the page.
+
+::: {#gallery}
+:::

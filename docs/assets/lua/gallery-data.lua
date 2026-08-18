@@ -2,10 +2,18 @@
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
 --
--- Reads `gallery.yml` adjacent to `examples/index.qmd`, prepends one hidden
--- `{typst}` chunk per item so `typst-render` writes the SVGs to disk, and
--- appends a `#modal-<slug>` div per item carrying the rewritten `.typ` source
--- for the `modal` extension to wrap as a Bootstrap modal.
+-- Powers the intent-driven gallery under `gallery/`. Reads the page's
+-- `gallery-intent` metadata: `hub` injects one hidden `{typst}` chunk per
+-- `hub.yml` hero so `typst-render` writes `hero-<slug>` SVGs; any other value
+-- filters `gallery.yml` to that intent, prepending one hidden `{typst}` chunk
+-- per item and appending a `#modal-<slug>` div carrying the rewritten `.typ`
+-- source for the `modal` extension to wrap as a Bootstrap modal.
+--
+-- The hub renders its heroes under a `hero-` prefix rather than reusing the
+-- intent pages' SVGs. That costs 12 extra Typst compilations per build and buys
+-- build-order independence: `quarto render gallery/index.qmd` alone yields a
+-- complete hub instead of one wired to artefacts a sibling page may not have
+-- produced yet.
 
 local function read_file(path)
   local f = io.open(path, 'rb')
@@ -73,16 +81,18 @@ local function parse_yaml_list(text)
   return items
 end
 
-local function build_typst_block(slug, alt)
+local function build_typst_block(slug, alt, output_name)
   local quoted_alt = "'" .. (alt or ''):gsub("'", "''") .. "'"
   local text = table.concat({
-    "//| output-filename: '" .. slug .. ".svg'",
+    "//| output-filename: '" .. (output_name or slug) .. ".svg'",
     '//| alt: ' .. quoted_alt,
     "//| file: '/assets/examples/" .. slug .. ".typ'",
   }, '\n')
   return pandoc.CodeBlock(text, pandoc.Attr('', { '{typst}' }, {}))
 end
 
+-- No `description` attribute: the modal extension treats it as an
+-- `aria-describedby` id reference, and the header already labels the dialog.
 local function build_modal(slug, source)
   return pandoc.Div(
     {
@@ -93,26 +103,38 @@ local function build_modal(slug, source)
   )
 end
 
-function Pandoc(doc)
-  local input = quarto.doc.input_file or ''
-  if not input:match('examples/index%.qmd$') then return nil end
-  local input_dir = input:match('^(.*)/[^/]+$')
-  if not input_dir then return nil end
-
-  local yml_path = input_dir .. '/gallery.yml'
+local function read_items(input_dir, name)
+  local yml_path = input_dir .. '/' .. name
   local yml_text = read_file(yml_path)
   if not yml_text then
-    quarto.log.warning('examples-data: cannot read ' .. yml_path)
+    quarto.log.warning('gallery-data: cannot read ' .. yml_path)
     return nil
   end
+  return parse_yaml_list(yml_text)
+end
 
-  local project_dir = quarto.project.directory or input_dir
-  local items = parse_yaml_list(yml_text)
+local function hub_blocks(input_dir)
+  local cards = read_items(input_dir, 'hub.yml')
+  if not cards then return nil end
+
+  local typst_blocks = {}
+  for _, card in ipairs(cards) do
+    local hero = card.hero
+    if hero and hero ~= '' then
+      table.insert(typst_blocks, build_typst_block(hero, card.alt, 'hero-' .. hero))
+    end
+  end
+  return typst_blocks, {}
+end
+
+local function intent_blocks(input_dir, project_dir, intent)
+  local items = read_items(input_dir, 'gallery.yml')
+  if not items then return nil end
 
   local typst_blocks, modal_blocks = {}, {}
   for _, it in ipairs(items) do
     local slug = it.slug
-    if slug and slug ~= '' then
+    if slug and slug ~= '' and it.intent == intent then
       table.insert(typst_blocks, build_typst_block(slug, it.alt))
 
       local typ_path = project_dir .. '/assets/examples/' .. slug .. '.typ'
@@ -120,14 +142,34 @@ function Pandoc(doc)
       if source then
         source = rewrite_lib_import(source):gsub('\n+$', '')
       else
-        quarto.log.warning('examples-data: cannot read ' .. typ_path)
+        quarto.log.warning('gallery-data: cannot read ' .. typ_path)
         source = '// File not found: ' .. typ_path
       end
       table.insert(modal_blocks, build_modal(slug, source))
     end
   end
+  return typst_blocks, modal_blocks
+end
 
-  local hidden = pandoc.Div(typst_blocks, pandoc.Attr('examples-typst-render', {}, { style = 'display:none' }))
+function Pandoc(doc)
+  local input = quarto.doc.input_file or ''
+  if not input:match('/gallery/[^/]+%.qmd$') then return nil end
+  local intent = doc.meta['gallery-intent'] and pandoc.utils.stringify(doc.meta['gallery-intent']) or nil
+  if not intent or intent == '' then return nil end
+  local input_dir = input:match('^(.*)/[^/]+$')
+  if not input_dir then return nil end
+
+  local project_dir = quarto.project.directory or input_dir
+
+  local typst_blocks, modal_blocks
+  if intent == 'hub' then
+    typst_blocks, modal_blocks = hub_blocks(input_dir)
+  else
+    typst_blocks, modal_blocks = intent_blocks(input_dir, project_dir, intent)
+  end
+  if not typst_blocks then return nil end
+
+  local hidden = pandoc.Div(typst_blocks, pandoc.Attr('gallery-typst-render', {}, { style = 'display:none' }))
 
   local new_blocks = pandoc.Blocks({ hidden })
   for _, b in ipairs(doc.blocks) do new_blocks:insert(b) end

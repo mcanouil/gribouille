@@ -1,0 +1,28 @@
+---
+title: "Annotation and storytelling"
+subtitle: "Add reference lines, labels, and marks that guide the reader."
+gallery-intent: annotation
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: annotation
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+A chart tells a story when the annotations do the pointing: a threshold line, a named outlier, a shaded period, a title that states the finding.
+These examples cover reference lines, text and boxed labels, ad-hoc [`annotate`](../reference/geoms/annotate.qmd) layers, cluster marks, and free-form shapes drawn from coordinates.
+Write titles as findings rather than descriptions, and annotate the few points that matter instead of labelling everything.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

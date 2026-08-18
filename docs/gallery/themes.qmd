@@ -1,0 +1,28 @@
+---
+title: "Themes and styling"
+subtitle: "Restyle every non-data element of a plot."
+gallery-intent: themes
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: themes
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+Themes style everything that is not data: panel, grid, text, legend chrome, and layer defaults.
+Start from a preset, override individual elements with [`theme`](../reference/themes/theme.qmd), and install a project-wide default with [`theme-set`](../reference/themes/theme-set.qmd).
+The [theming guide](../guides/theming.qmd) walks through the element model behind these examples.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

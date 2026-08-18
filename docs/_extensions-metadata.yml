@@ -1,8 +1,8 @@
-# Project-wide filter chain. Order matters: examples-data must run before
-# `typst-render` and `modal` so they see the blocks it injects on the examples
-# page.
+# Project-wide filter chain. Order matters: gallery-data must run before
+# `typst-render` and `modal` so they see the blocks it injects on the gallery
+# pages.
 filters:
-  - assets/lua/examples-data.lua
+  - assets/lua/gallery-data.lua
   - typst-render
   - modal
   - at: post-quarto

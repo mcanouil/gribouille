@@ -1,6 +1,7 @@
--- Example/gallery consistency: every `examples/*.typ` must have a `gallery.yml`
--- slug or be explicitly excluded, otherwise it never renders (the gallery
--- listing is slug-driven). Pure helpers; I/O lives in main.lua.
+-- Example/gallery consistency: every `examples/*.typ` must have a
+-- `docs/gallery/gallery.yml` slug or be explicitly excluded, otherwise it never
+-- renders (the gallery listing is slug-driven). Pure helpers; I/O lives in
+-- main.lua.
 local util = require("util")
 
 local M = {}
@@ -9,14 +10,105 @@ local M = {}
 -- deliberately absent from the gallery.
 M.EXCLUDE = { gribouille = true, showcase = true }
 
--- Collect `slug:` values from a `gallery.yml` document body.
-function M.parse_slugs(content)
-  local slugs = {}
+-- `gallery-intent` value of the hub page, which lists the intent cards rather
+-- than filtering `gallery.yml`; it is a page mode, not a member of INTENTS.
+M.HUB_INTENT = "hub"
+
+-- Intent page keys for `docs/gallery/gallery.yml`; every entry must use one,
+-- otherwise it never renders (each intent page filters on this field).
+M.INTENTS = {
+  comparison = true,
+  distribution = true,
+  evolution = true,
+  correlation = true,
+  ["part-to-whole"] = true,
+  uncertainty = true,
+  annotation = true,
+  ["colour-scales"] = true,
+  ["axes-legends"] = true,
+  layout = true,
+  themes = true,
+  techniques = true,
+}
+
+-- Collect ordered { slug, intent } records from a gallery document body.
+function M.parse_entries(content)
+  local entries, current = {}, nil
   for _, line in ipairs(util.split_lines(content)) do
     local slug = line:match('^%s*%-%s*slug:%s*"?([%w%-]+)"?')
-    if slug then slugs[slug] = true end
+    if slug then
+      current = { slug = slug }
+      entries[#entries + 1] = current
+    elseif current then
+      local intent = line:match('^%s+intent:%s*"?([%w%-]+)"?')
+      if intent then current.intent = intent end
+    end
   end
-  return slugs
+  return entries
+end
+
+-- Sorted list of "slug (intent)" strings whose intent is missing or unknown.
+function M.bad_intents(entries, intents)
+  intents = intents or M.INTENTS
+  local out = {}
+  for _, entry in ipairs(entries) do
+    if not intents[entry.intent or ""] then
+      out[#out + 1] = string.format("%s (%s)", entry.slug, entry.intent or "missing")
+    end
+  end
+  table.sort(out)
+  return out
+end
+
+-- Both intent declarations on a gallery page: `declared` is the top-level
+-- `gallery-intent` the Lua filter reads to inject renders, `include` is the
+-- listing filter Quarto reads to pick cards. They must agree, and the hub
+-- carries no `include`.
+function M.parse_page_intent(content)
+  local out = {}
+  for _, line in ipairs(util.split_lines(content)) do
+    local declared = line:match('^gallery%-intent:%s*"?([%w%-]+)"?')
+    if declared then
+      out.declared = declared
+    else
+      local include = line:match('^%s+intent:%s*"?([%w%-]+)"?')
+      if include then out.include = include end
+    end
+  end
+  return out
+end
+
+-- Sorted list of drift between the intent taxonomy and the pages rendering it.
+-- `page_intents` maps a `gallery-intent` value to the page declaring it;
+-- `page_includes` maps a page to its listing `include.intent`. Without this an
+-- intent with no page, a page with an unknown intent, and a page whose two
+-- declarations disagree all build green with a silently empty listing.
+function M.intent_drift(page_intents, intents, page_includes)
+  intents = intents or M.INTENTS
+  page_includes = page_includes or {}
+  local out = {}
+
+  for intent, has in pairs(intents) do
+    if has and not page_intents[intent] then
+      out[#out + 1] = string.format("intent %q has no page", intent)
+    end
+  end
+
+  for intent, page in pairs(page_intents) do
+    if intent ~= M.HUB_INTENT then
+      if not intents[intent] then
+        out[#out + 1] = string.format("page %s declares unknown intent %q", page, intent)
+      end
+      local include = page_includes[page]
+      if include and include ~= intent then
+        out[#out + 1] = string.format(
+          "page %s declares intent %q but its listing filters %q", page, intent, include)
+      end
+    end
+  end
+
+  table.sort(out)
+  return out
 end
 
 -- Sorted list of example basenames that lack a slug and are not excluded.

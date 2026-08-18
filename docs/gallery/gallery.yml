@@ -1,0 +1,1145 @@
+# Gallery data, consumed by the per-intent listings under `docs/gallery/*.qmd`
+# and by `assets/lua/gallery-data.lua` (which injects the typst render blocks
+# and modal source blocks for the matching page).
+# One entry per `.typ` file in `examples/` (project root), except the hero/landing
+# assets `gribouille` and `showcase`, which are embedded directly in the site.
+# This invariant is enforced by `tools/typstdoc/main.lua` (see examples.EXCLUDE).
+# All values MUST be single-line scalars (the Lua filter uses a flat parser).
+#
+# Fields:
+#   slug:        matches the `.typ` basename, the rendered SVG name, and the modal id.
+#   intent:      page key, one of: comparison | distribution | evolution | correlation |
+#                part-to-whole | uncertainty | annotation | colour-scales |
+#                axes-legends | layout | themes | techniques.
+#   data:        optional data-shape badge, one of: "one numeric" |
+#                "one categorical" | "two numerics" | "two categoricals" |
+#                "numeric vs categorical" | "three or more variables" |
+#                "time series" | "coordinates" | "any". Omit where every entry
+#                on the page would carry the same value: a badge that varies
+#                with nothing tells the reader nothing.
+#   chart:       optional chart-type badge, e.g. "grouped bar chart". Omit when
+#                it would merely repeat `title`.
+#   showcase:    optional `true`; showcase entries render first and larger.
+#   title:       card heading.
+#   description: Pandoc markdown.
+#   alt:         image alt text.
+
+# --- Comparison & ranking ---------------------------------------------------
+
+- slug: class-economy-dotplot
+  intent: comparison
+  data: "numeric vs categorical"
+  chart: "dot plot"
+  showcase: true
+  title: "Sorted dot plot"
+  description: 'Median highway economy per class as a Cleveland dot plot: dots over bars for point estimates, categories sorted by value, and no legend. Built with [`summarise`](../reference/helpers/summarise.qmd) and [`geom-point`](../reference/geoms/geom-point.qmd).'
+  alt: "Dot plot of median highway mpg for seven vehicle classes sorted from pickup at about 17 mpg up to midsize at 30 mpg, with one orange dot per class."
+
+- slug: species-counts-bars
+  intent: comparison
+  data: "one categorical"
+  chart: "horizontal bar chart"
+  showcase: true
+  title: "Horizontal bars with value labels"
+  description: 'Counts per category flipped horizontal via [`coord-flip`](../reference/coord/coord-flip.qmd) with the value printed at each bar end by [`geom-text`](../reference/geoms/geom-text.qmd), so no value axis guesswork remains.'
+  alt: "Horizontal bar chart of penguins measured per species: Adelie 152 on top, then Gentoo 124, then Chinstrap 68, each bar labelled with its count."
+
+- slug: city-highway-dodged
+  intent: comparison
+  data: "three or more variables"
+  chart: "grouped bar chart"
+  showcase: true
+  title: "Dodged bars, two conditions"
+  description: 'City and highway means per class reshaped with [`pivot-longer`](../reference/helpers/pivot-longer.qmd) and dodged via [`position-dodge`](../reference/positions/position-dodge.qmd); classes sorted by value and coloured with the Okabe-Ito palette.'
+  alt: "Grouped bar chart of mean city and highway mpg for seven vehicle classes sorted ascending, with highway bars consistently taller than city bars."
+
+- slug: bar-simple
+  intent: comparison
+  data: "one categorical"
+  chart: "bar chart"
+  title: "Simple bars"
+  description: 'Discrete x counted with [`geom-bar`](../reference/geoms/geom-bar.qmd).'
+  alt: "Bar chart of counts per fruit for four categories (apple, banana, cherry, and date), with banana tallest and cherry shortest."
+
+- slug: bar-count
+  intent: comparison
+  data: "one categorical"
+  chart: "bar chart"
+  title: "Category counts"
+  description: '[`geom-bar`](../reference/geoms/geom-bar.qmd) backed by [`stat-count`](../reference/stats/stat-count.qmd) to tally observations per category.'
+  alt: "Bar chart counting observations per category from A to D, with D the tallest and B the shortest."
+
+- slug: bar-dodged
+  intent: comparison
+  data: "two categoricals"
+  chart: "grouped bar chart"
+  title: "Dodged bars"
+  description: 'Side-by-side bars per group via [`position-dodge`](../reference/positions/position-dodge.qmd) on [`geom-col`](../reference/geoms/geom-col.qmd).'
+  alt: "Grouped bar chart of revenue per quarter (Q1 to Q3) with products A, B, and C shown as side-by-side bars within each quarter."
+
+- slug: dodge-mixed
+  intent: comparison
+  data: "two categoricals"
+  chart: "grouped bar chart"
+  title: "Mixed-width dodge"
+  description: 'Per-row `width` column lets [`position-dodge`](../reference/positions/position-dodge.qmd) give one product a wider slot than another.'
+  alt: "Dodged bar chart of revenue per quarter where product A bars are visibly wider than product B bars within each quarter."
+
+- slug: coord-flip
+  intent: comparison
+  data: "numeric vs categorical"
+  chart: "horizontal bar chart"
+  title: "Coordinate flip"
+  description: '[`coord-flip`](../reference/coord/coord-flip.qmd) swaps x and y so vertical bars read horizontally.'
+  alt: "Two stacked bar charts of revenue per quarter, the first with vertical bars and the second flipped to horizontal bars via coord-flip."
+
+# --- Distribution -----------------------------------------------------------
+
+- slug: mass-by-species-density
+  intent: distribution
+  data: "numeric vs categorical"
+  chart: "density plot"
+  showcase: true
+  title: "Overlaid densities, direct labels"
+  description: 'Body-mass distributions per species via [`geom-density`](../reference/geoms/geom-density.qmd): translucent fills keep every curve readable and the coloured subtitle replaces the legend.'
+  alt: "Overlaid density curves of penguin body mass: Adelie and Chinstrap peak near 3,700 grams while Gentoo sits clearly heavier around 5,000 grams."
+
+- slug: economy-by-class-box
+  intent: distribution
+  data: "numeric vs categorical"
+  chart: "boxplot"
+  showcase: true
+  title: "Boxplots over raw data"
+  description: '[`geom-boxplot`](../reference/geoms/geom-boxplot.qmd) with the raw observations jittered behind each box; summaries never hide the data they summarise.'
+  alt: "Boxplots of highway mpg per vehicle class with translucent jittered raw points behind each box, showing wide within-class spread."
+
+- slug: bill-ridgeline
+  intent: distribution
+  data: "numeric vs categorical"
+  chart: "ridgeline"
+  showcase: true
+  title: "Ridgeline of distributions"
+  description: 'Bill-length distributions stacked as ridges via [`geom-density-ridges`](../reference/geoms/geom-density-ridges.qmd): small multiples of the same distribution without a legend.'
+  alt: "Ridgeline plot of bill length per species with Adelie centred near 38 millimetres and Chinstrap and Gentoo overlapping around 47 to 50 millimetres."
+
+- slug: histogram
+  intent: distribution
+  data: "one numeric"
+  title: "Histogram"
+  description: 'Continuous x binned with [`stat-bin`](../reference/stats/stat-bin.qmd) via [`geom-histogram`](../reference/geoms/geom-histogram.qmd).'
+  alt: "Histogram of highway fuel economy across 12 equal-width bins, with most vehicles concentrated between roughly 25 and 30 mpg."
+
+- slug: geom-freqpoly
+  intent: distribution
+  data: "numeric vs categorical"
+  chart: "frequency polygon"
+  title: "Frequency polygons"
+  description: 'Line through binned counts via [`geom-freqpoly`](../reference/geoms/geom-freqpoly.qmd), the line counterpart to a histogram.'
+  alt: "Overlaid frequency-polygon lines of highway mpg distributions split by cylinder count, making the per-group shapes easy to compare."
+
+- slug: boxplot
+  intent: distribution
+  data: "numeric vs categorical"
+  chart: "boxplot"
+  title: "Boxplots per category"
+  description: '[`stat-boxplot`](../reference/stats/stat-boxplot.qmd) reduces each group to a five-number summary; [`geom-boxplot`](../reference/geoms/geom-boxplot.qmd) draws the Tukey box.'
+  alt: "Boxplots of highway mpg per vehicle class, with one filled box per class showing the inter-quartile range, whiskers, and outlier dots."
+
+- slug: jitter
+  intent: distribution
+  data: "numeric vs categorical"
+  chart: "strip plot"
+  title: "Jittered scatter"
+  description: '[`geom-jitter`](../reference/geoms/geom-jitter.qmd) spreads coincident points using [`position-jitter`](../reference/positions/position-jitter.qmd).'
+  alt: "Scatter of highway mpg per vehicle class with horizontal jitter spreading overlapping points so the cluster density per class reads."
+
+- slug: jitterdodge
+  intent: distribution
+  data: "three or more variables"
+  chart: "strip plot"
+  title: "Jitter within dodged groups"
+  description: '[`position-jitterdodge`](../reference/positions/position-jitterdodge.qmd) dodges colour groups apart, then jitters within each.'
+  alt: "Scatter of trial responses across four weeks with three dose arms shown side by side, each arm dodged off the week and jittered inside its column."
+
+- slug: geom-dotplot
+  intent: distribution
+  data: "one numeric"
+  chart: "dot plot"
+  title: "Stacked dotplot"
+  description: 'Stacked dots over a binned x distribution via [`geom-dotplot`](../reference/geoms/geom-dotplot.qmd); tune `bins`, `binwidth`, `dotsize`, and `stackratio`.'
+  alt: "Three stacked dotplot panels of the same distribution: 14 equal-width bins, a wider 0.4 binwidth with 0.9 dotsize, and a 1.4 stackratio leaving gaps between dots."
+
+- slug: qq
+  intent: distribution
+  data: "one numeric"
+  chart: "Q-Q plot"
+  title: "Normal Q-Q plot"
+  description: '[`geom-qq`](../reference/geoms/geom-qq.qmd) with [`geom-qq-line`](../reference/geoms/geom-qq-line.qmd) compares sample quantiles to a theoretical distribution.'
+  alt: "Normal Q-Q plot of 80 simulated samples, with points hugging an IQR-fitted reference line."
+
+- slug: qq-distributions
+  intent: distribution
+  data: "one numeric"
+  chart: "Q-Q plot"
+  title: "Q-Q against alternative distributions"
+  description: 'Pass `distribution:` to [`stat-qq`](../reference/stats/stat-qq.qmd) / [`stat-qq-line`](../reference/stats/stat-qq-line.qmd) to compare against uniform or exponential references.'
+  alt: "Three Q-Q panels comparing samples to normal, uniform, and exponential reference distributions, each with points following an IQR-fitted line."
+
+# --- Evolution & time -------------------------------------------------------
+
+- slug: unemployment-timeline
+  intent: evolution
+  data: "time series"
+  chart: "line chart"
+  showcase: true
+  title: "Annotated timeline"
+  description: 'Unemployment over the 2008-2009 recession with a shaded context period and an in-plot label placed by [`annotate`](../reference/geoms/annotate.qmd); the title states the finding.'
+  alt: "Line chart of US unemployed persons rising from about 7,500 thousand in early 2008 to over 15,000 thousand in late 2009, with the steep surge shaded and labelled post-crash surge."
+
+- slug: savings-small-multiples
+  intent: evolution
+  data: "time series"
+  chart: "small multiples"
+  showcase: true
+  title: "Small multiples over spaghetti"
+  description: 'Three recession series reshaped with [`pivot-longer`](../reference/helpers/pivot-longer.qmd) into [`facet-wrap`](../reference/facets/facet-wrap.qmd) panels with free y scales; separate panels beat overlaid lines when units differ.'
+  alt: "Three side-by-side line panels for savings rate, unemployment duration, and unemployed count over 2008-2009, each with its own y axis and all showing recession stress."
+
+- slug: median-duration-area
+  intent: evolution
+  data: "time series"
+  chart: "area chart"
+  showcase: true
+  title: "Area chart with annotated peak"
+  description: '[`geom-area`](../reference/geoms/geom-area.qmd) keeps its zero baseline while [`annotate`](../reference/geoms/annotate.qmd) names the extremum instead of leaving readers to find it.'
+  alt: "Area chart of median unemployment duration rising from about 9 weeks in early 2008 to a labelled peak of 20.1 weeks in late 2009."
+
+- slug: multilayer
+  intent: evolution
+  data: "time series"
+  chart: "line chart"
+  title: "Multilayer trend"
+  description: 'Lines and points share a discrete colour mapping. [`geom-line`](../reference/geoms/geom-line.qmd) + [`geom-point`](../reference/geoms/geom-point.qmd).'
+  alt: "Line and point chart of monthly sales from month 1 to 6 for three regions (north, south, and east), all trending upwards."
+
+- slug: geom-area
+  intent: evolution
+  data: "time series"
+  title: "Area chart"
+  description: 'Filled polygon from y = 0 to y, drawn by [`geom-area`](../reference/geoms/geom-area.qmd).'
+  alt: "Area and line chart of monthly US unemployment from 2008 to 2009, with the area shaded blue under the rising line."
+
+- slug: geom-step
+  intent: evolution
+  data: "time series"
+  chart: "step chart"
+  title: "Stair-step interpolation"
+  description: 'Discrete jumps between consecutive points via [`geom-step`](../reference/geoms/geom-step.qmd).'
+  alt: "Step chart of active users at each release from 2018 to 2024, with horizontal segments rising at every release year."
+
+- slug: geom-path
+  intent: evolution
+  data: "coordinates"
+  chart: "trajectory"
+  title: "Paths follow row order"
+  description: '[`geom-path`](../reference/geoms/geom-path.qmd) connects rows in input order, useful for trajectories.'
+  alt: "Spiral path traced over a cartesian plane, with colour encoding traversal time from purple at the centre to yellow at the outer edge."
+
+- slug: streamgraph
+  intent: evolution
+  data: "time series"
+  title: "Streamgraph"
+  description: '[`geom-area`](../reference/geoms/geom-area.qmd) on a [`position-stack(offset: "silhouette")`](../reference/positions/position-stack.qmd) baseline centres each stack on zero for the classic ThemeRiver flow.'
+  alt: "Streamgraph of four genre bands (drama, comedy, action, and sci-fi) flowing symmetrically around a central baseline over 24 months, with band thickness encoding titles released per month."
+
+- slug: bump-chart
+  intent: evolution
+  data: "time series"
+  title: "Bump chart"
+  description: '[`stat-connect(connection: "sigmoid")`](../reference/stats/stat-connect.qmd) eases [`geom-line`](../reference/geoms/geom-line.qmd) between ranks with logistic connectors; a reversed y scale puts rank 1 on top.'
+  alt: "Bump chart of four teams' ranks across six rounds, with smooth S-shaped connectors easing each team between rank positions and points at every round, rank 1 at the top."
+
+- slug: diff-forecast
+  intent: evolution
+  data: "time series"
+  chart: "difference chart"
+  title: "Difference band"
+  description: '[`stat-difference`](../reference/stats/stat-difference.qmd) shades the [`geom-ribbon`](../reference/geoms/geom-ribbon.qmd) between forecast and actuals by which series leads, splitting the band cleanly at every crossing via `fill: after-stat("_sign")`.'
+  alt: "Forecast versus actual sales over 12 weeks, with the band between the solid forecast line and dashed actuals line shaded by whether actuals ran above or below forecast, split cleanly at each crossover."
+
+- slug: stat-connect
+  intent: evolution
+  data: "time series"
+  chart: "step chart"
+  title: "stat-connect: hv vs mid"
+  description: 'Insert intermediate vertices between consecutive points via `stat-connect`; two paths overlay the same data with `connection: "hv"` (step) and `connection: "mid"` (midpoint corner).'
+  alt: "Two coloured paths over the same dataset showing the difference between hv-step and mid-corner connection modes."
+
+- slug: stat-align
+  intent: evolution
+  data: "time series"
+  chart: "stacked area chart"
+  title: "stat-align: shared x-grid"
+  description: 'Resample groups onto a shared x-grid via `stat-align` so stacked [`geom-area`](../reference/geoms/geom-area.qmd) layers join cleanly even when the per-group x values are mismatched.'
+  alt: "Two-group stacked area chart with mismatched input x values aligned onto a shared grid via stat-align."
+
+- slug: scale-date
+  intent: evolution
+  data: "time series"
+  chart: "line chart"
+  title: "Date axis"
+  description: 'ISO date strings on x parsed and laid out by [`scale-date`](../reference/scales/scale-date.qmd) with year-month tick labels.'
+  alt: "Line and point chart of the US personal savings rate from 2008 to 2009 with year-month axis labels along the bottom."
+
+# --- Relationships ----------------------------------------------------------
+
+- slug: bill-dimensions-groups
+  intent: correlation
+  data: "three or more variables"
+  chart: "scatter with trend lines"
+  showcase: true
+  title: "Simpson's paradox"
+  description: 'Per-species [`geom-smooth`](../reference/geoms/geom-smooth.qmd) fits slope up while the pooled dashed trend slopes down: fit trends within groups before trusting an aggregate.'
+  alt: "Scatter plot of penguin bill depth against bill length where each species trend line slopes upward but the grey dashed pooled trend slopes downward."
+
+- slug: displacement-economy-outliers
+  intent: correlation
+  data: "two numerics"
+  chart: "scatter with trend line"
+  showcase: true
+  title: "Named outliers"
+  description: 'A linear [`geom-smooth`](../reference/geoms/geom-smooth.qmd) trend with the off-trend two-seater highlighted and labelled via a filtered [`geom-text`](../reference/geoms/geom-text.qmd) layer; name the points that defy your trend.'
+  alt: "Scatter plot of highway mpg against engine displacement with a falling linear trend and one highlighted point labelled corvette sitting well above the trend."
+
+- slug: class-cylinder-heatmap
+  intent: correlation
+  data: "two categoricals"
+  chart: "heatmap"
+  showcase: true
+  title: "Count heatmap with in-cell values"
+  description: 'Class-by-cylinder counts from [`count`](../reference/helpers/count.qmd) drawn with [`geom-tile`](../reference/geoms/geom-tile.qmd) on a single-hue [`scale-gradient`](../reference/scales/scale-gradient.qmd), with the number printed in every cell.'
+  alt: "Blue heatmap of vehicle counts by class and cylinder count with the count printed in each cell; four-cylinder compacts are darkest with six vehicles, and empty combinations are left blank."
+
+- slug: minimal
+  intent: correlation
+  data: "two numerics"
+  chart: "scatter plot"
+  title: "Minimal scatter"
+  description: 'Inline iris sample plotted with a single [`geom-point`](../reference/geoms/geom-point.qmd) layer and continuous x/y scales.'
+  alt: "Scatter plot of iris sepal width against sepal length with points coloured by species across setosa, versicolor, and virginica."
+
+- slug: penguins
+  intent: correlation
+  data: "two numerics"
+  chart: "scatter plot"
+  title: "Penguins"
+  description: "CSV-loaded dataset: flipper length versus body mass, coloured by species."
+  alt: "Scatter plot of penguin body mass against flipper length, with points coloured by species revealing three separated clusters."
+
+- slug: dataset-mpg
+  intent: correlation
+  data: "two numerics"
+  chart: "scatter plot"
+  title: "Bundled mpg dataset"
+  description: 'Highway mpg against engine displacement, filled by class: a quick look at the bundled [`mpg`](../reference/datasets/mpg.qmd) dataset.'
+  alt: "Scatter plot of highway mpg against engine displacement, with points filled by vehicle class, showing highway mpg falling as displacement rises."
+
+- slug: smooth
+  intent: correlation
+  data: "two numerics"
+  chart: "scatter with trend line"
+  title: "Smoother"
+  description: 'Scatter plus a linear fit with a 95% confidence ribbon from [`geom-smooth`](../reference/geoms/geom-smooth.qmd).'
+  alt: "Scatter of highway mpg against engine displacement overlaid with a linear smoother and its 95% confidence ribbon, showing a clear negative trend as displacement grows."
+
+- slug: stat-function
+  intent: correlation
+  data: "any"
+  chart: "function curve"
+  title: "Analytic curves"
+  description: '[`stat-function`](../reference/stats/stat-function.qmd) samples an analytic function over `xlim` and routes the points to any line geom.'
+  alt: "Two analytic curves, sin(x) in solid blue and cos(x) in dashed red, drawn over a shared x-range from minus pi to pi."
+
+- slug: stat-ellipse
+  intent: correlation
+  data: "two numerics"
+  chart: "scatter with ellipses"
+  title: "Per-group covariance ellipses"
+  description: '[`stat-ellipse`](../reference/stats/stat-ellipse.qmd) draws the 95% covariance ellipse around each colour group.'
+  alt: "Penguins flipper length against body mass coloured by species, with a 95% covariance ellipse drawn around each species cluster."
+
+- slug: geom-quantile
+  intent: correlation
+  data: "two numerics"
+  chart: "quantile regression"
+  title: "Quantile regression lines"
+  description: 'Per-tau quantile regression curves via [`geom-quantile`](../reference/geoms/geom-quantile.qmd).'
+  alt: "Two stacked scatter panels with quantile regression lines: the first showing the default 0.25, 0.5, and 0.75 lines, the second showing 0.1, 0.5, and 0.9 decile bands."
+
+- slug: bin-2d
+  intent: correlation
+  data: "two numerics"
+  chart: "2D bin heatmap"
+  title: "Rectangular 2D binning"
+  description: 'Drop (x, y) samples into a uniform grid via [`geom-bin-2d`](../reference/geoms/geom-bin-2d.qmd); cells colour by count.'
+  alt: "Spiral cloud of 600 points binned into a 25-by-25 grid, with cells coloured by count along the magma palette and empty bins suppressed."
+
+- slug: hex
+  intent: correlation
+  data: "two numerics"
+  chart: "hexbin plot"
+  title: "Hexagonal binning"
+  description: 'Pointy-top hex cells via [`geom-hex`](../reference/geoms/geom-hex.qmd), the hexagonal counterpart to [`geom-bin-2d`](../reference/geoms/geom-bin-2d.qmd).'
+  alt: "Spiral cloud of 800 points binned into pointy-top hexagons, with cells coloured by count along the viridis palette and empty bins suppressed."
+
+- slug: contour
+  intent: correlation
+  data: "three or more variables"
+  chart: "contour plot"
+  title: "Contour lines"
+  description: 'Marching-squares iso-lines on a regular (x, y, z) grid via [`geom-contour`](../reference/geoms/geom-contour.qmd).'
+  alt: "Twelve concentric contour lines tracing a radial wave field on a 60-by-60 grid, coloured by level along the viridis palette."
+
+- slug: contour-filled
+  intent: correlation
+  data: "three or more variables"
+  chart: "filled contour"
+  title: "Filled contour bands"
+  description: 'Closed iso-bands between contour levels via [`geom-contour-filled`](../reference/geoms/geom-contour-filled.qmd).'
+  alt: "Ten filled contour bands tracing a radial wave field on a 50-by-50 grid, coloured by level along the magma palette."
+
+- slug: stat-summary-2d
+  intent: correlation
+  data: "three or more variables"
+  chart: "2D summary heatmap"
+  title: "2D summary reduction"
+  description: '[`stat-summary-2d`](../reference/stats/stat-summary-2d.qmd) reduces a `z` aesthetic over a grid; cells colour by the mean rather than the count.'
+  alt: "Spiral cloud of 600 points reduced over a 25-by-25 grid, with each cell coloured by the mean radius along the viridis palette."
+
+- slug: geom-tile
+  intent: correlation
+  data: "three or more variables"
+  title: "Heatmap"
+  description: '[`geom-tile`](../reference/geoms/geom-tile.qmd) renders an x/y/fill grid as filled rectangles.'
+  alt: "Heatmap of hourly request volume across seven days and six hours of day, with the Viridis palette highlighting weekday midday peaks."
+
+- slug: geom-count
+  intent: correlation
+  data: "two categoricals"
+  chart: "count bubble chart"
+  title: "Counts as marker size"
+  description: '[`geom-count`](../reference/geoms/geom-count.qmd) uses [`stat-sum`](../reference/stats/stat-sum.qmd) to draw one marker per unique (x, y) sized by count.'
+  alt: "Bubble chart of vehicle frequency by cylinder count and class, with marker area scaled to the number of rows in each cell."
+
+- slug: geom-spoke
+  intent: correlation
+  data: "coordinates"
+  title: "Vector field"
+  description: '[`geom-spoke`](../reference/geoms/geom-spoke.qmd) draws short oriented segments from an angle and a radius.'
+  alt: "Seven by seven grid of arrows pointing radially outward, with colour encoding distance from the origin via the Viridis palette."
+
+# --- Part-to-whole & cyclical -----------------------------------------------
+
+- slug: cylinder-share-by-class
+  intent: part-to-whole
+  data: "two categoricals"
+  chart: "proportional bar chart"
+  showcase: true
+  title: "Shares, not counts"
+  description: '[`position-fill`](../reference/positions/position-fill.qmd) normalises every bar to 1 so composition, not volume, is the message; the y axis reads as percentages via [`format-percent`](../reference/helpers/format-percent.qmd).'
+  alt: "Proportional stacked bar chart of cylinder-count shares within each vehicle class, with small cars dominated by four cylinders and pickups and SUVs mostly six and eight."
+
+- slug: species-waffle
+  intent: part-to-whole
+  data: "one categorical"
+  chart: "waffle chart"
+  showcase: true
+  title: "Countable waffle"
+  description: '[`stat-waffle`](../reference/stats/stat-waffle.qmd) turns shares into countable unit squares (one square is four penguins) where a pie would force angle comparison; the coloured subtitle carries the key.'
+  alt: "Waffle chart of penguin species shares in a six-row grid: amber Adelie squares fill nearly half, then green Gentoo, then blue Chinstrap."
+
+- slug: cylinder-pie
+  intent: part-to-whole
+  data: "one categorical"
+  chart: "pie chart"
+  showcase: true
+  title: "A defensible pie"
+  description: 'When a pie is fine: three slices under [`coord-radial`](../reference/coord/coord-radial.qmd), keyed directly in the coloured subtitle, no legend to shuttle between.'
+  alt: "Pie chart of vehicle shares by cylinder count with three slices: four cylinders takes almost half, six and eight cylinders split the rest evenly."
+
+- slug: bar-stacked
+  intent: part-to-whole
+  data: "two categoricals"
+  chart: "stacked bar chart"
+  title: "Stacked bars"
+  description: '[`geom-col`](../reference/geoms/geom-col.qmd) with [`position-stack`](../reference/positions/position-stack.qmd) for cumulative totals per group.'
+  alt: "Stacked bar chart of revenue per quarter (Q1 to Q3), with each bar split into contributions from products A, B, and C."
+
+- slug: bar-filled
+  intent: part-to-whole
+  data: "two categoricals"
+  chart: "proportional bar chart"
+  title: "Filled bars"
+  description: 'Each column normalised to 1 with [`position-fill`](../reference/positions/position-fill.qmd) to compare shares.'
+  alt: "Proportional bar chart where each quarter's total is normalised to 1, showing the share of revenue from products A, B, and C."
+
+- slug: waffle
+  intent: part-to-whole
+  data: "one categorical"
+  title: "Waffle chart"
+  description: '[`stat-waffle`](../reference/stats/stat-waffle.qmd) turns per-group counts into unit [`geom-tile`](../reference/geoms/geom-tile.qmd) cells, filling the grid column by column from the bottom-left.'
+  alt: "Waffle chart of 100 support tickets in a 10-row grid, coloured by status: 58 resolved, 27 in progress, 9 blocked, and 6 new, reading column by column from the left."
+
+- slug: coord-radial-pie
+  intent: part-to-whole
+  data: "one categorical"
+  chart: "pie chart"
+  title: "Pie chart via radial coordinates"
+  description: '`coord-radial(theta: "y")` with stacked [`geom-col`](../reference/geoms/geom-col.qmd) turns one stacked bar into a pie chart of revenue share.'
+  alt: "Pie chart of revenue share split across five regions (EU, US, APAC, LATAM, and Other), produced by stacking columns under coord-radial(theta: y)."
+
+- slug: coord-radial-rose
+  intent: part-to-whole
+  data: "one categorical"
+  title: "Rose chart"
+  description: 'Discrete categories distributed around the circle via `coord-radial(theta: "x")` with [`geom-col`](../reference/geoms/geom-col.qmd); bar height encodes the count.'
+  alt: "Rose chart of wind direction counts across eight compass points (N, NE, E, SE, S, SW, W, and NW), with bar height encoding the count and each bar filled by direction."
+
+- slug: coord-radial-half
+  intent: part-to-whole
+  data: "time series"
+  chart: "radial chart"
+  title: "Half-sweep radial layout"
+  description: 'Pass `end: calc.pi` to `coord-radial` for a partial sweep; the panel becomes a half-circle and domain endpoints land at distinct angles instead of stacking.'
+  alt: "Half-circle radial plot of 13 hourly load samples connected by a line, sweeping from 12 o'clock clockwise to 6 o'clock."
+
+- slug: coord-radial-clock
+  intent: part-to-whole
+  data: "time series"
+  chart: "radial chart"
+  title: "Radial clock layout"
+  description: 'Wrap an hourly series around a circle via `coord-radial(theta: "x")`: hour drives the angle and load the radius.'
+  alt: "Circular clock-face plot of 24 hourly load observations connected by a closed line and points, traced around the perimeter of a radial panel."
+
+- slug: coord-radial-radar
+  intent: part-to-whole
+  data: "three or more variables"
+  title: "Radar chart"
+  description: 'Closed polygon under `coord-radial(theta: "x")` with one vertex per axis, drawn via [`geom-polygon`](../reference/geoms/geom-polygon.qmd).'
+  alt: "Radar chart of a six-axis vehicle profile, showing a translucent blue polygon and points at each axis vertex inside a circular radial panel."
+
+- slug: coord-radial-composite
+  intent: part-to-whole
+  data: "numeric vs categorical"
+  chart: "radial ranges"
+  title: "Composite geoms under coord-radial"
+  description: 'Errorbars, point ranges, line ranges, crossbars, and boxplots all switch to polar wedges, radial spines, and arc caps under [`coord-radial`](../reference/coord/coord-radial.qmd).'
+  alt: "Three radial panels showing errorbar, pointrange and linerange, then crossbar and boxplot composites laid out around a polar coordinate system."
+
+# --- Uncertainty & error ----------------------------------------------------
+
+- slug: class-economy-ci
+  intent: uncertainty
+  data: "numeric vs categorical"
+  chart: "point ranges"
+  showcase: true
+  title: "Intervals over dynamite bars"
+  description: '[`geom-pointrange`](../reference/geoms/geom-pointrange.qmd) with a normal-theory 95% CI from [`stat-summary`](../reference/stats/stat-summary.qmd): the compact, midsize, and subcompact intervals overlap, so the ranking those three means suggest does not survive the uncertainty.'
+  alt: "Point-range chart of mean highway mpg per vehicle class with 95% confidence intervals; the compact, midsize, and subcompact intervals overlap heavily, while the two single-observation classes show a bare dot and no interval."
+
+- slug: forecast-fan
+  intent: uncertainty
+  data: "time series"
+  showcase: true
+  title: "Fan chart"
+  description: 'Graded 50/80/95% ribbons layered with [`geom-ribbon`](../reference/geoms/geom-ribbon.qmd) around a dashed extrapolation, each band labelled in-plot so the shading is never decoration.'
+  alt: "Fan chart of an observed rising series continuing as a dashed forecast wrapped in three nested orange bands labelled 50, 80, and 95 percent."
+
+- slug: smooth-confidence
+  intent: uncertainty
+  data: "two numerics"
+  chart: "scatter with trend line"
+  showcase: true
+  title: "A band that explains itself"
+  description: '[`geom-smooth`](../reference/geoms/geom-smooth.qmd) with its 95% confidence band, and a caption saying exactly what the band covers; an unlabelled band is decoration.'
+  alt: "Scatter plot of highway mpg against displacement with a falling linear fit and a shaded 95 percent confidence band around the line."
+
+- slug: ribbon-bounds
+  intent: uncertainty
+  data: "time series"
+  chart: "line with ribbon"
+  title: "Ribbon bounds"
+  description: 'Explicit `ymin` / `ymax` aesthetics drive [`geom-ribbon`](../reference/geoms/geom-ribbon.qmd) around a fitted line.'
+  alt: "Line and point chart of an upward trend over 20 time steps with a shaded blue ribbon spanning explicit lower and upper bounds around the line."
+
+- slug: stat-summary
+  intent: uncertainty
+  data: "numeric vs categorical"
+  chart: "mean and error bars"
+  title: "Mean ± SE summary"
+  description: 'Per-x summary statistic via [`stat-summary`](../reference/stats/stat-summary.qmd), layered over the raw points.'
+  alt: "Highway mpg per cylinder count showing pale jittered raw points overlaid with a mean point and standard-error error bar at each cylinder level."
+
+- slug: errorbar-family
+  intent: uncertainty
+  data: "numeric vs categorical"
+  chart: "error bars"
+  title: "Errorbar geom family"
+  description: 'Side-by-side comparison of [`geom-errorbar`](../reference/geoms/geom-errorbar.qmd), [`geom-linerange`](../reference/geoms/geom-linerange.qmd), [`geom-crossbar`](../reference/geoms/geom-crossbar.qmd), and [`geom-pointrange`](../reference/geoms/geom-pointrange.qmd).'
+  alt: "Two by two grid of revenue across four quarters rendered with four different range geoms: errorbar with whiskers, linerange, crossbar with a filled box, and pointrange with a centre dot."
+
+- slug: geom-errorbarh
+  intent: uncertainty
+  data: "numeric vs categorical"
+  chart: "forest plot"
+  title: "Horizontal error bars"
+  description: 'Per-category horizontal ranges via [`geom-errorbarh`](../reference/geoms/geom-errorbarh.qmd) with point estimates.'
+  alt: "Forest-plot-style chart of seven vehicle classes with horizontal error bars spanning the 95% confidence interval around each highway mpg mean."
+
+# --- Annotation & storytelling ----------------------------------------------
+
+- slug: labels-title
+  intent: annotation
+  data: "any"
+  title: "Titles and labels"
+  description: 'Title, subtitle, caption, and axis labels set in a single [`labels`](../reference/labels/labels.qmd) call.'
+  alt: "Scatter and line chart of count against month showing a rising trend, framed by a title, subtitle, caption, and axis labels."
+
+- slug: labels-tag
+  intent: annotation
+  data: "any"
+  title: "Figure tag"
+  description: 'A figure tag drawn above the title via [`labels`](../reference/labels/labels.qmd) `tag`, styled by the `plot-tag` theme element.'
+  alt: "Scatter plot of highway fuel economy against engine displacement, marked with a bold 'A' tag above the title and subtitle."
+
+- slug: reference-lines
+  intent: annotation
+  data: "two numerics"
+  title: "Reference lines"
+  description: '[`geom-abline`](../reference/geoms/geom-abline.qmd), [`geom-hline`](../reference/geoms/geom-hline.qmd), and [`geom-vline`](../reference/geoms/geom-vline.qmd) overlaid on a trend.'
+  alt: "Scatter plot of a noisy upward trend over 20 steps crossed by a red diagonal, a green horizontal, and a blue vertical reference line."
+
+- slug: reference-lines-aes
+  intent: annotation
+  data: "two numerics"
+  title: "Data-driven reference lines"
+  description: '[`geom-vline`](../reference/geoms/geom-vline.qmd) and [`geom-hline`](../reference/geoms/geom-hline.qmd) read their intercepts and colour from mapped columns via [`aes`](../reference/core/aes.qmd).'
+  alt: "Scatter plot of a noisy upward trend over 20 steps crossed by three coloured vertical reference lines and two dashed horizontal reference lines, each coloured by an annotation group."
+
+- slug: text-labels
+  intent: annotation
+  data: "two numerics"
+  chart: "labelled scatter"
+  title: "Text and label annotations"
+  description: 'Points annotated with [`geom-text`](../reference/geoms/geom-text.qmd) and boxed [`geom-label`](../reference/geoms/geom-label.qmd).'
+  alt: "Two scatter plots of four points labelled Alpha, Beta, Gamma, and Delta, one with plain text annotations and one with boxed labels."
+
+- slug: annotate
+  intent: annotation
+  data: "any"
+  title: "Ad-hoc annotations"
+  description: '[`annotate`](../reference/geoms/annotate.qmd) places extra layers (text, vline) without joining them to the data table.'
+  alt: "Annotated line and point chart with a red dashed vertical reference line at x equals 5, a peak label above the curve, and a series A label tucked into the upper left."
+
+- slug: annotate-typst
+  intent: annotation
+  data: "any"
+  title: "Typst markup in annotations"
+  description: '`annotate("typst", label: "...")` always evaluates the label as Typst markup; [`typst()`](../reference/core/typst.qmd) forces evaluation inside `annotate("text", ...)`.'
+  alt: "Annotated line and point chart with a bold-italic peak label rendered as Typst markup and a series A label using the typst() forcing tag."
+
+- slug: geom-typst-const
+  intent: annotation
+  data: "any"
+  title: "Constant Typst content labels"
+  description: 'Set a content block on every row via [`geom-typst(label: [...])`](../reference/geoms/geom-typst.qmd); or place a single content label with `annotate("typst", label: [...])`.'
+  alt: "Line and point chart with a star glyph above every observation rendered as Typst content, plus a bold peak alpha label tucked above the curve."
+
+- slug: geom-mark
+  intent: annotation
+  data: "two numerics"
+  chart: "cluster marks"
+  title: "Cluster annotations"
+  description: 'Enclose each cluster with a chosen shape via [`geom-mark`](../reference/geoms/geom-mark.qmd) (hull, ellipse, rect, circle).'
+  alt: "Four scatter plots of penguin flipper length against body mass coloured by species, each surrounded by a different cluster shape (convex hull, ellipse, rectangle, circle)."
+
+- slug: geom-segment
+  intent: annotation
+  data: "coordinates"
+  title: "Straight segments"
+  description: 'Lines from (`x`, `y`) to (`xend`, `yend`) via [`geom-segment`](../reference/geoms/geom-segment.qmd).'
+  alt: "Four segments connecting team headcounts in 2020 to their 2024 values, each labelled by team in a distinct colour."
+
+- slug: geom-curve
+  intent: annotation
+  data: "coordinates"
+  title: "Curved connectors"
+  description: 'Quadratic bezier connectors with mapped colour via [`geom-curve`](../reference/geoms/geom-curve.qmd).'
+  alt: "Two side-by-side panels of the same source-to-sink connections, one with positive curvature bowing upward and the other flipped."
+
+- slug: geom-ellipse
+  intent: annotation
+  data: "coordinates"
+  title: "Parametric ellipses"
+  description: 'Ellipses with mapped centre, semi-axes, and rotation via [`geom-ellipse`](../reference/geoms/geom-ellipse.qmd).'
+  alt: "Four overlapping ellipses sketching catchment regions, each tinted from a Set2 palette and labelled coastal, mountain, plateau, and valley."
+
+- slug: geom-rect
+  intent: annotation
+  data: "coordinates"
+  title: "Rectangles from corners"
+  description: '[`geom-rect`](../reference/geoms/geom-rect.qmd) draws filled boxes from `xmin`/`xmax`/`ymin`/`ymax`.'
+  alt: "Four rectangles laid along a 2018-2024 timeline, each spanning a major version's lifetime with height encoding cumulative releases."
+
+- slug: geom-polygon
+  intent: annotation
+  data: "coordinates"
+  title: "Filled polygons"
+  description: 'Closed filled regions, one per group, drawn by [`geom-polygon`](../reference/geoms/geom-polygon.qmd).'
+  alt: "Three stacked polygons sketching altitude zones (lowlands, hills, peak) in green, orange, and blue."
+
+# --- Colour & encodings -----------------------------------------------------
+
+- slug: aes-promote
+  intent: colour-scales
+  data: "three or more variables"
+  title: "Continuous alpha and linewidth"
+  description: 'Promoted aesthetics: `alpha` and `linewidth` map directly to numeric columns through [`scale-continuous`](../reference/scales/scale-continuous.qmd) and [`scale-continuous`](../reference/scales/scale-continuous.qmd).'
+  alt: "Two stacked panels: a scatter where point opacity scales with a numeric score, and a line chart where stroke thickness scales with a numeric weight per group."
+
+- slug: colour-bar
+  intent: colour-scales
+  data: "three or more variables"
+  title: "Continuous colour guide"
+  description: 'A colourbar appears automatically when colour is trained on a continuous variable via [`scale-continuous`](../reference/scales/scale-continuous.qmd).'
+  alt: "Scatter plot of a cosine wave where point colour encodes a continuous temperature variable shown by a vertical colourbar legend."
+
+- slug: viridis-colour
+  intent: colour-scales
+  data: "three or more variables"
+  title: "Viridis continuous"
+  description: '[`scale-viridis-c`](../reference/scales/scale-viridis-c.qmd) maps a continuous variable through the Viridis palette.'
+  alt: "Scatter plot of a sinusoidal pattern with points coloured along the Viridis continuous palette encoding values from low to high."
+
+- slug: manual-palette
+  intent: colour-scales
+  data: "any"
+  title: "Manual palette"
+  description: 'User-supplied colours passed to [`scale-manual`](../reference/scales/scale-manual.qmd).'
+  alt: "Point and line chart of three groups (apple, berry, and cherry) drawn in a manual palette of red, orange, and teal."
+
+- slug: scale-okabe-ito
+  intent: colour-scales
+  data: "three or more variables"
+  chart: "scatter with fits"
+  title: "Okabe-Ito palette"
+  description: 'The colour-vision-deficiency-safe discrete palette applied through [`scale-okabe-ito`](../reference/scales/scale-okabe-ito.qmd) and [`scale-okabe-ito`](../reference/scales/scale-okabe-ito.qmd).'
+  alt: "Scatter plot of penguin body mass against flipper length with per-species linear fits, coloured and filled by species using the Okabe-Ito palette."
+
+- slug: scale-brewer-gradient
+  intent: colour-scales
+  data: "any"
+  title: "ColorBrewer and gradient fills"
+  description: 'Discrete [`scale-brewer`](../reference/scales/scale-brewer.qmd) palettes alongside continuous [`scale-gradient`](../reference/scales/scale-gradient.qmd) and [`scale-gradient2`](../reference/scales/scale-gradient2.qmd).'
+  alt: "Two by two grid contrasting Set1 and Spectral discrete brewer palettes with two-stop and diverging continuous gradient fills."
+
+- slug: scale-alpha
+  intent: colour-scales
+  data: "any"
+  title: "Alpha scale family"
+  description: 'Continuous, manual per-level, and binned variants via the [`scale-alpha-*`](../reference/scales/scale-continuous.qmd) family.'
+  alt: "Three stacked scatter panels showing the same blue points with point opacity driven by continuous, manual per-level, and binned alpha scales."
+
+- slug: scale-linewidth
+  intent: colour-scales
+  data: "any"
+  title: "Linewidth scale family"
+  description: 'Continuous, manual per-level, and binned variants via the [`scale-linewidth-*`](../reference/scales/scale-continuous.qmd) family.'
+  alt: "Three stacked line panels with stroke thickness driven by continuous, manual per-level, and binned linewidth scales."
+
+- slug: scale-stroke
+  intent: colour-scales
+  data: "any"
+  title: "Stroke scale family"
+  description: 'Marker-outline thickness driven by the `stroke` aesthetic via [`scale-continuous`](../reference/scales/scale-continuous.qmd) or [`scale-manual`](../reference/scales/scale-manual.qmd).'
+  alt: "Two stacked panels of blue circles whose outline thickness is driven by continuous and manual stroke scales."
+
+- slug: scale-size-radius
+  intent: colour-scales
+  data: "any"
+  title: "Size and radius scales"
+  description: '[`scale-radius`](../reference/scales/scale-radius.qmd), [`scale-area`](../reference/scales/scale-area.qmd), and [`scale-manual`](../reference/scales/scale-manual.qmd) compared on the same data.'
+  alt: "Three stacked scatter panels with marker size driven by linear radius, area-preserving square-root, and manual per-level size scales."
+
+- slug: scale-shape-linetype-binned
+  intent: colour-scales
+  data: "any"
+  title: "Binned shape and linetype"
+  description: 'Cut a continuous variable into shape or dash bins with [`scale-binned`](../reference/scales/scale-binned.qmd) keyed to `shape` or `linetype`.'
+  alt: "Three stacked panels: scatters where marker shape is binned by a continuous variable, and a line chart where dash patterns are binned across six groups."
+
+- slug: shape-character
+  intent: colour-scales
+  data: "any"
+  title: "Character symbols as markers"
+  description: 'Map [`scale-manual`](../reference/scales/scale-manual.qmd) to a plain character, a Typst `sym.` symbol, or an emoji; any value outside the built-in keywords renders as a literal glyph.'
+  alt: "Scatter plot of penguin flipper length against body mass where each species is drawn with a different glyph: the letter A, a filled star symbol, and a penguin emoji, instead of built-in marker shapes."
+
+- slug: shape-linetype
+  intent: colour-scales
+  data: "any"
+  title: "Shape and linetype per group"
+  description: 'A single grouping maps to [`scale-discrete`](../reference/scales/scale-discrete.qmd), [`scale-discrete`](../reference/scales/scale-discrete.qmd), and a discrete colour.'
+  alt: "Line and point chart of three groups (A, B, and C) drawn with distinct point shapes, line dash styles, and colours per group."
+
+- slug: scale-binned
+  intent: colour-scales
+  data: "any"
+  title: "Binned colour and size"
+  description: 'Stepped colour gradients and area-preserving size scales via [`scale-steps`](../reference/scales/scale-steps.qmd), [`scale-fermenter`](../reference/scales/scale-fermenter.qmd), and [`scale-area`](../reference/scales/scale-area.qmd).'
+  alt: "Three side-by-side scatter panels comparing a 5-bin stepped fill, a 7-bin Spectral fermenter palette, and a sub-linear size-area scale."
+
+- slug: scale-niche
+  intent: colour-scales
+  data: "any"
+  title: "Grey, hue, and distiller fills"
+  description: 'Niche fill scales: [`scale-grey`](../reference/scales/scale-grey.qmd), [`scale-hue`](../reference/scales/scale-hue.qmd), and [`scale-distiller`](../reference/scales/scale-distiller.qmd).'
+  alt: "Three side-by-side scatter panels rendered with a discrete grey ramp, a discrete hue wheel, and a continuous Spectral distiller palette."
+
+# --- Axes, legends & guides -------------------------------------------------
+
+- slug: guide-axis
+  intent: axes-legends
+  data: "one categorical"
+  title: "Rotating axis tick labels"
+  description: '[`guide-axis`](../reference/guides/guide-axis.qmd) rotates or dodges discrete tick labels so long category names stay readable.'
+  alt: "Three stacked bar charts of vehicle counts per manufacturer: the first overlaps the manufacturer labels, the second rotates them by 30 degrees, the third dodges them onto two rows."
+
+- slug: guide-axis-logticks
+  intent: axes-legends
+  data: "two numerics"
+  title: "Log-scale minor ticks"
+  description: '[`guide-axis-logticks`](../reference/guides/guide-axis-logticks.qmd) draws minor ticks at log-scale subdivisions on a log10-transformed axis.'
+  alt: "Two log-log scatter and line panels of the same seven points, the first showing only decade-aligned ticks and the second adding minor ticks at intermediate log-scale subdivisions."
+
+- slug: guide-axis-stack
+  intent: axes-legends
+  data: "two numerics"
+  title: "Stacked axis guides"
+  description: 'Stack a rotated [`guide-axis`](../reference/guides/guide-axis.qmd) over a [`guide-axis-logticks`](../reference/guides/guide-axis-logticks.qmd) pass via [`guide-axis-stack`](../reference/guides/guide-axis-stack.qmd) on the same x axis.'
+  alt: "Log-log scatter where the x-axis carries two stacked label rows: a 30-degree rotated decade row above the dense log minor-tick row."
+
+- slug: guide-axis-theta
+  intent: axes-legends
+  data: "any"
+  title: "Theta-axis guide"
+  description: '[`guide-axis-theta`](../reference/guides/guide-axis-theta.qmd) rotates radial tick labels, emits half-step minor ticks, and draws an outer axis arc with optional `cap`.'
+  alt: "Three radial radar panels: a default spoke-only layout, one with minor ticks added between spokes, and one with rotated labels and a capped outer arc."
+
+- slug: guide-custom
+  intent: axes-legends
+  data: "any"
+  title: "Custom legend slot"
+  description: '[`guide-custom`](../reference/guides/guide-custom.qmd) drops arbitrary Typst content into the legend area alongside the auto-built colour swatch.'
+  alt: "Scatter with a colour swatch legend on the right and a custom Notes block below it carrying free-form annotation text."
+
+- slug: guide-legend
+  intent: axes-legends
+  data: "any"
+  title: "Customising legends"
+  description: 'Layout knobs on [`guide-legend`](../reference/guides/guide-legend.qmd): `reverse` flips the key order, `ncol` wraps it onto multiple columns.'
+  alt: "Three scatter plots of highway mpg against displacement coloured by vehicle class, contrasting the default legend with a reversed key order and a two-column legend layout."
+
+- slug: guide-legend-align
+  intent: axes-legends
+  data: "any"
+  title: "Aligning legend labels"
+  description: 'Justify legend entry labels with [`guide-legend(align:)`](../reference/guides/guide-legend.qmd) or `theme(legend-text: element-text(align: ...))`; horizontal legends centre labels and vertical legends keep them left by default.'
+  alt: "Three scatter plots of highway mpg against displacement coloured by vehicle class, contrasting the default left-aligned legend labels with right-aligned and centred labels."
+
+- slug: guide-legend-order
+  intent: axes-legends
+  data: "any"
+  title: "Legend order and flow"
+  description: '[`guide-legend`](../reference/guides/guide-legend.qmd) `order` sets stacking priority across aesthetics, while `direction` and `byrow` control the swatch grid flow.'
+  alt: "Three scatter panels showing the colour and size legends in default order, then with size stacked before colour, then a horizontal two-column row-major colour legend."
+
+- slug: guide-legend-position
+  intent: axes-legends
+  data: "any"
+  title: "Legend placement"
+  description: 'Every [`guide-legend`](../reference/guides/guide-legend.qmd) `position` value: the four margin sides, an inside corner via a Typst alignment, and an arbitrary `(x:, y:)` canvas offset.'
+  alt: "Six small scatter panels placing the colour legend at right, top, bottom, left, inside the top-right corner, and at a custom canvas offset."
+
+- slug: axis-lims
+  intent: axes-legends
+  data: "two numerics"
+  title: "Axis limits and tick rotation"
+  description: 'Explicit domains set by [`scale-continuous(limits:)`](../reference/scales/scale-continuous.qmd) alongside tidied tick text from [`guide-axis`](../reference/guides/guide-axis.qmd).'
+  alt: "Three scatter plots of highway mpg against displacement showing the default view, the same view with rotated tick labels, and the view with explicit zero-anchored axis limits."
+
+- slug: sec-axis
+  intent: axes-legends
+  data: "two numerics"
+  title: "Secondary axes"
+  description: 'Add a duplicate axis with [`dup-axis`](../reference/scales/dup-axis.qmd) or a derived axis via `sec-axis` on a continuous scale.'
+  alt: "Scatter plot of highway mpg against displacement coloured by class, with the bottom and top edges sharing the displacement axis and the right edge showing the same scale converted to kilometres per litre."
+
+- slug: scale-log-sqrt-reverse
+  intent: axes-legends
+  data: "two numerics"
+  title: "Log, sqrt, and reverse axes"
+  description: 'Continuous axis transformations via [`scale-log10`](../reference/scales/scale-log10.qmd), [`scale-sqrt`](../reference/scales/scale-sqrt.qmd), and [`scale-reverse`](../reference/scales/scale-reverse.qmd).'
+  alt: "Two by two grid showing the same exponential growth curve under linear, log10, square-root, and reversed y-axis transformations."
+
+- slug: scale-expand
+  intent: axes-legends
+  data: "any"
+  title: "Axis expansion"
+  description: 'Tune axis breathing room via [`scale-*-continuous(expand:)`](../reference/scales/scale-continuous.qmd) or via [`coord-cartesian(expand: false)`](../reference/coord/coord-cartesian.qmd).'
+  alt: "Three side-by-side scatter panels comparing the default 5% expansion, scales with expand set to false, and coord-cartesian with expand set to false."
+
+- slug: scale-limits-oob
+  intent: axes-legends
+  data: "three or more variables"
+  title: "Out-of-range handling"
+  description: 'With a scale `limits` set, `oob: "drop"` removes out-of-range values while `oob: "squish"` clamps them to the nearest endpoint of [`scale-viridis-c`](../reference/scales/scale-viridis-c.qmd).'
+  alt: "Two scatter panels of highway mpg against displacement filled by city mpg, the first dropping out-of-range fills to grey and the second squishing them to the palette endpoints."
+
+# --- Facets, coordinates & composition --------------------------------------
+
+- slug: facets
+  intent: layout
+  data: "three or more variables"
+  chart: "small multiples"
+  title: "Facet wrap"
+  description: 'One panel per level of a discrete variable via [`facet-wrap`](../reference/facets/facet-wrap.qmd).'
+  alt: "Scatter plot of car weight against miles per gallon, split into three facet-wrap panels by cylinder count (4, 6, and 8)."
+
+- slug: facet-grid
+  intent: layout
+  data: "three or more variables"
+  chart: "small multiples"
+  title: "Facet grid"
+  description: 'Panels laid out on a row × column grid with [`facet-grid`](../reference/facets/facet-grid.qmd).'
+  alt: "Scatter plot arranged on a facet grid of two rows (female and male) and three columns (species A, B, and C)."
+
+- slug: facet-grid-free
+  intent: layout
+  data: "three or more variables"
+  chart: "small multiples"
+  title: "Facet grid free scales"
+  description: 'Pass `scales: "free"` to [`facet-grid`](../reference/facets/facet-grid.qmd) so x is freed per column and y per row.'
+  alt: "Two-by-two facet grid where each column (species a, b) has its own x range and each row (sex F, M) its own y range, with tick labels only on the bottom row and left column."
+
+- slug: facet-wrap-free
+  intent: layout
+  data: "time series"
+  chart: "small multiples"
+  title: "Free y per panel"
+  description: 'Pass `scales: "free_y"` to [`facet-wrap`](../reference/facets/facet-wrap.qmd) so each panel trains its own y range.'
+  alt: "Three side-by-side line panels (millis, seconds, minutes) where each panel trains its own y axis to match its very different value range."
+
+- slug: facet-wrap-free-xy
+  intent: layout
+  data: "three or more variables"
+  chart: "small multiples"
+  title: "Free x and y per panel"
+  description: 'Pass `scales: "free"` to [`facet-wrap`](../reference/facets/facet-wrap.qmd) to train both axes per panel.'
+  alt: "Three side-by-side line panels (near, mid, far) where each panel trains its own x and y range to match very different domains."
+
+- slug: facet-labellers
+  intent: layout
+  data: "three or more variables"
+  chart: "small multiples"
+  title: "Strip labellers"
+  description: '[`label-both`](../reference/facets/label-both.qmd) prefixes each strip with the facet variable name (e.g., `cyl: 4`).'
+  alt: "Three facet panels of highway mpg against displacement coloured by class, with strip labels reading cyl colon four, six, and eight."
+
+- slug: facet-smooth
+  intent: layout
+  data: "three or more variables"
+  chart: "small multiples"
+  title: "Per-panel smoother"
+  description: '[`geom-smooth`](../reference/geoms/geom-smooth.qmd) inside [`facet-wrap`](../reference/facets/facet-wrap.qmd) fits each panel only on its own subset.'
+  alt: "Three facet panels of highway mpg against displacement, each with its own linear smoother and 95% confidence ribbon fitted to that panel's rows."
+
+- slug: coord-clip
+  intent: layout
+  data: "two numerics"
+  title: "Cartesian zoom"
+  description: '[`coord-cartesian`](../reference/coord/coord-cartesian.qmd) clips the view via `xlim` and `ylim` without dropping data.'
+  alt: "Line and point chart of a quadratic curve from 0 to 25, clipped via Cartesian limits to show only x between 5 and 15."
+
+- slug: coord-fixed
+  intent: layout
+  data: "two numerics"
+  title: "Fixed aspect ratio"
+  description: '[`coord-fixed`](../reference/coord/coord-fixed.qmd) locks one x unit equal to `ratio` y units regardless of panel size.'
+  alt: "Two stacked line plots of y equals x, the first using the default cartesian ratio and the second locked to a 1:1 ratio via coord-fixed."
+
+- slug: coord-fixed-facet
+  intent: layout
+  data: "two numerics"
+  title: "Fixed ratio with facets"
+  description: '[`coord-fixed`](../reference/coord/coord-fixed.qmd) applies inside every [`facet-wrap`](../reference/facets/facet-wrap.qmd) panel.'
+  alt: "Three facet panels of three parallel lines (y equals x, y equals x plus 1, y equals x minus 1), each panel locked to a 1:1 unit ratio."
+
+- slug: coord-transform
+  intent: layout
+  data: "two numerics"
+  title: "Coordinate-level transforms"
+  description: '[`coord-transform`](../reference/coord/coord-transform.qmd) warps the displayed coordinates without setting `transform` on each scale; overrides any scale-level transform.'
+  alt: "Two stacked panels of the same power-law dataset: the first applies log10 to both axes via coord-transform, the second mixes scale-y sqrt with coord-transform x log10."
+
+- slug: compose
+  intent: layout
+  data: "three or more variables"
+  chart: "composed panels"
+  title: "Composed panels with shared legends"
+  description: '[`compose`](../reference/core/compose.qmd) arranges several deferred plots and hoists legends shared across panels via `collect`, with `guides(default: guide-legend(position: ...))` controlling where the merged legend sits.'
+  alt: "A grid of fuel-economy scatter panels sharing a single cylinder-count colour legend, shown under several legend collection modes and placement settings."
+
+# --- Themes & styling ---------------------------------------------------------
+
+- slug: themed
+  intent: themes
+  title: "Minimal theme"
+  description: 'Per-element overrides with [`theme`](../reference/themes/theme.qmd) on top of [`theme-minimal`](../reference/themes/theme-minimal.qmd).'
+  alt: "Three scatter plots of two groups drawn side by side, each using a different built-in theme: minimal, classic, and void."
+
+- slug: theme-override
+  intent: themes
+  title: "Theme overrides"
+  description: 'Custom text sizes, panel fill, and grid colour passed through [`theme`](../reference/themes/theme.qmd).'
+  alt: "Line and point chart of the curve y equals 0.1 times x squared over 12 steps, rendered with enlarged axis titles and a cream panel background."
+
+- slug: theme-text-align
+  intent: themes
+  title: "Text alignment"
+  description: 'Per-surface horizontal alignment via [`element-text`](../reference/themes/element-text.qmd) `align`: title and subtitle default left, caption right, axis titles centred.'
+  alt: "Line and point chart of the curve y equals 0.1 times x squared with a centred title, a left subtitle, a right caption, and the x-axis title pushed to the right end of the axis."
+
+- slug: theme-set
+  intent: themes
+  title: "Global theme default"
+  description: '[`theme-set`](../reference/themes/theme-set.qmd) installs a global default; explicit `theme:` arguments still take precedence per plot.'
+  alt: "Two stacked penguin scatter plots: the first inherits a globally-installed theme-minimal, the second overrides it with theme-dark."
+
+- slug: themes-gallery
+  intent: themes
+  title: "Theme presets"
+  description: 'Side-by-side gallery of [`theme-bw`](../reference/themes/theme-bw.qmd), [`theme-linedraw`](../reference/themes/theme-linedraw.qmd), [`theme-light`](../reference/themes/theme-light.qmd), [`theme-dark`](../reference/themes/theme-dark.qmd), and [`theme-minimal`](../reference/themes/theme-minimal.qmd).'
+  alt: "Grid of the same two-group scatter rendered with theme-minimal, theme-bw, theme-linedraw, theme-light, and theme-dark."
+
+- slug: theme-element-geom
+  intent: themes
+  title: "theme(geom: element-geom(...))"
+  description: 'Pin layer-default `fill`, `colour`, and `linewidth` across the supporting geoms via [`element-geom`](../reference/themes/element-geom.qmd) on `theme.geom`.'
+  alt: "Two stacked rows of bar and line panels: the first under the default theme, the second after a single theme(geom: element-geom(...)) override re-tints both geoms."
+
+- slug: theme-sub
+  intent: themes
+  title: "Theme shortcut groups"
+  description: 'Compose [`theme`](../reference/themes/theme.qmd) overrides via family-scoped `theme-sub-axis`, `theme-sub-legend`, and `theme-sub-plot` to keep verbose theme blocks readable.'
+  alt: "Dodged bar chart of quarterly revenue by segment styled with theme-sub-axis, theme-sub-legend, and theme-sub-plot shortcuts."
+
+# --- Advanced techniques ------------------------------------------------------
+
+- slug: factor-inline
+  intent: techniques
+  data: "three or more variables"
+  title: "Inline factor coercion"
+  description: '[`as-factor`](../reference/core/as-factor.qmd) forces a numeric column to be treated as discrete for the colour aesthetic.'
+  alt: "Scatter plot of a noisy sinusoidal pattern with points coloured by a three-level cluster factor coerced from a numeric column."
+
+- slug: late-binding-after-stat
+  intent: techniques
+  data: "any"
+  title: "after-stat: bind to a stat output"
+  description: '[`after-stat`](../reference/core/after-stat.qmd) binds an aesthetic to a column produced by the layer''s stat; here y is mapped to the `_count` column emitted by `stat-count`.'
+  alt: "Bar chart of category counts with the y aesthetic bound explicitly via after-stat, matching the implicit y default."
+
+- slug: late-binding-after-scale
+  intent: techniques
+  data: "any"
+  title: "after-scale: transform resolved values"
+  description: '[`after-scale`](../reference/core/after-scale.qmd) mirrors the trained fill palette into the colour channel and darkens it, so each marker outline tracks its own fill.'
+  alt: "Coloured scatter where each marker outline is a darker variant of the same fill palette swatch, computed via after-scale."
+
+- slug: late-binding-after-scale-shape
+  intent: techniques
+  data: "any"
+  title: "after-scale on shape"
+  description: '[`after-scale`](../reference/core/after-scale.qmd) on the shape channel transforms the resolved shape kind per row, flipping between two glyphs based on a per-row predicate.'
+  alt: "Scatter where each row picks one of two marker shapes via a per-row predicate driving the shape channel through after-scale."
+
+- slug: late-binding-from-theme
+  intent: techniques
+  data: "any"
+  title: "from-theme: pull theme colours"
+  description: '[`from-theme`](../reference/core/from-theme.qmd) pins a layer''s stroke to the active theme''s ink and the marker fill to the accent colour, resolved once at layer prepare time.'
+  alt: "Scatter where the marker fill follows the theme accent and the stroke follows the theme ink, both resolved via from-theme."
+
+- slug: late-binding-stage
+  intent: techniques
+  data: "any"
+  title: "stage: combine start, after-stat, after-scale"
+  description: '[`stage`](../reference/core/stage.qmd) trains the colour aesthetic on the same column the fill scale uses, then transparentises the resolved palette swatch as the marker outline.'
+  alt: "Scatter where each marker outline is a translucent variant of the matching fill palette swatch, composed via stage(start, after-scale)."
+
+- slug: identity-scales
+  intent: techniques
+  data: "any"
+  title: "Identity scales"
+  description: '[`scale-identity`](../reference/scales/scale-identity.qmd) and [`scale-identity`](../reference/scales/scale-identity.qmd) pass column values directly to the visual property.'
+  alt: "Scatter of five points where hex colour strings drive marker fill and shape names drive marker glyph directly via identity scales."
+
+- slug: refs-trans
+  intent: techniques
+  data: "two numerics"
+  title: "Reference lines through axis transforms"
+  description: '[`geom-hline`](../reference/geoms/geom-hline.qmd) intercepts route through the active y-axis transform so they land at the correct log positions.'
+  alt: "Line and point chart of an exponential curve on a log10 y axis with three dashed red horizontal reference lines at y equals 10, 100, and 1000."
+
+- slug: scale-log-pre-stat
+  intent: techniques
+  data: "two numerics"
+  title: "Log scale pre-transforms data"
+  description: '[`scale-log10`](../reference/scales/scale-log10.qmd) transforms data before stats run; [`geom-smooth`](../reference/geoms/geom-smooth.qmd) fits the line in log space.'
+  alt: "Two stacked panels of the same power-law dataset with a linear smoother: the linear x panel curves while the log10 x panel produces a straight line."
+
+- slug: weight
+  intent: techniques
+  data: "any"
+  title: "Weight aesthetic"
+  description: 'Per-row weights threaded into counts and smoothers: bars sum the weight column, weighted least squares ignores down-weighted outliers.'
+  alt: "Two stacked panels: a bar chart of regional visitor totals where bar height equals the summed weight column, and a weighted-least-squares scatter where two outliers are ignored thanks to negligible weights."
+
+- slug: stat-manual
+  intent: techniques
+  data: "any"
+  title: "stat-manual: closure escape hatch"
+  description: 'Splice a user closure into the layer pipeline via `stat-manual(fun: ...)`; here the closure decorates each row with a per-row index used as a text label.'
+  alt: "Line and points with a per-row index label drawn next to each marker, generated inside the layer via stat-manual."
+
+- slug: longtail-stats
+  intent: techniques
+  data: "one numeric"
+  title: "ECDF and unique points"
+  description: '[`stat-ecdf`](../reference/stats/stat-ecdf.qmd) draws an empirical CDF; [`stat-unique`](../reference/stats/stat-unique.qmd) collapses repeated rows.'
+  alt: "Two side-by-side panels: an empirical CDF of highway mpg drawn as a step-up curve, and a deduplicated scatter where repeated points have been collapsed into a single marker each."
+
+- slug: longtail-geoms
+  intent: techniques
+  data: "any"
+  title: "Rug, blank, and function"
+  description: '[`geom-rug`](../reference/geoms/geom-rug.qmd) for marginal density, [`geom-blank`](../reference/geoms/geom-blank.qmd) for empty frames, [`geom-function`](../reference/geoms/geom-function.qmd) for analytic curves.'
+  alt: "Three stacked panels: a coloured scatter with marginal rug ticks, a sin(x) curve drawn over an empty frame, and a strip of rug ticks marking highway mpg observations."
+
+- slug: draw-keys
+  intent: techniques
+  data: "time series"
+  title: "Per-geom legend glyphs"
+  description: 'Layer geoms drive different legend glyphs: [`geom-line`](../reference/geoms/geom-line.qmd) renders as a stroke, [`geom-ribbon`](../reference/geoms/geom-ribbon.qmd) as a filled rectangle.'
+  alt: "Forecast line with a confidence ribbon, with the legend showing a stroke glyph for the line series and a filled rectangle glyph for the confidence band."

@@ -23,12 +23,12 @@
 
 #plot(
   data: field,
-  mapping: aes(x: "x", y: "y", angle: "angle", radius: "r", colour: "mag"),
+  mapping: aes(x: "x", y: "y", angle: "angle", radius: "r", colour: "mag", fill: "mag"),
   layers: (
     geom-spoke(stroke: 0.8pt),
     geom-point(size: 1.5pt),
   ),
-  scales: scales(colour: scale-viridis-c()),
+  scales: scales(colour: scale-viridis-c(), fill: scale-viridis-c()),
   coord: coord-fixed(),
   labels: labels(
     title: "Radial Vector Field",
@@ -36,6 +36,7 @@
     x: "X",
     y: "Y",
     colour: "Magnitude",
+    fill: "Magnitude",
   ),
   theme: theme-minimal(),
   width: 12cm,

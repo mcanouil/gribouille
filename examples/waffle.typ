@@ -19,8 +19,8 @@
   labels: labels(
     title: "Support Ticket Backlog",
     subtitle: "Each square is one ticket, columns filled from the bottom-left",
-    x: "",
-    y: "",
+    x: none,
+    y: none,
   ),
   guides: guides(x: none, y: none),
   theme: theme-void(),

@@ -32,7 +32,7 @@
     x: "Category",
     y: "Count",
   ),
-  theme: theme-minimal(),
+  theme: theme-minimal(axis-ticks: element-tick(length: 0.12cm)),
   width: 12cm,
   height: 9cm,
 )

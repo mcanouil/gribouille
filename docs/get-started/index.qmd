@@ -581,5 +581,5 @@ Every plot you build composes the same pieces.
 ## Next steps
 
 - Read the [Reference](../reference/index.qmd) to see every function the library exposes.
-- Browse the [Examples](../examples/index.qmd) gallery for idiomatic usage.
+- Browse the [Gallery](../gallery/index.qmd) for idiomatic usage, by intent or by feature.
 - Check the [Changelog](../changelog.qmd) for recent changes.

@@ -1086,6 +1086,107 @@ blockquote {
   margin-top: 2.5rem;
 }
 
+// Intent gallery: the showcase grid runs two cards a row, whatever the track
+// count the auto-fill above would pick, and one a row when narrow.
+.gallery--showcase {
+  grid-template-columns: repeat(2, 1fr);
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Intent gallery: data-shape and chart-type badges.
+.gallery-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+}
+
+.gallery-badge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--gb-hairline);
+  border-radius: 999px;
+  background: var(--gb-paper);
+  color: var(--gb-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.gallery-badge--data {
+  background: var(--gb-tint-primary);
+  color: var(--gb-ink);
+}
+
+// Gallery hub: intent cards.
+.intent-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.intent-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--gb-surface);
+  border-radius: var(--gb-radius-lg);
+  box-shadow: var(--gb-shadow-soft);
+  padding: 1rem;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--gb-shadow-lift);
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 180px;
+    object-fit: contain;
+    border-radius: var(--gb-radius-md);
+    margin-bottom: 0.75rem;
+    background: var(--gb-paper);
+  }
+
+  h3 {
+    margin: 0.25rem 0 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--gb-muted);
+    font-size: 0.95em;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  // The title link covers the whole card. Scoped to its own class so that a
+  // link placed in the heading later cannot take the click off it.
+  .intent-card-link {
+    color: var(--gb-ink);
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+    }
+  }
+}
+
+.intent-cards--craft .intent-card img {
+  height: 120px;
+}
+
 .gallery-source-btn {
   align-self: center;
   margin-top: auto;

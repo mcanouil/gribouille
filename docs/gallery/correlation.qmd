@@ -1,0 +1,28 @@
+---
+title: "Relationships"
+subtitle: "Show how two or more variables move together."
+gallery-intent: correlation
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: correlation
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+Pick these charts when the question is "do these variables move together?": association, clusters, and surfaces over two dimensions.
+The scatter plot is the workhorse; add a smoother to make the trend explicit, and fit it per group before trusting any aggregate trend.
+When points pile up, switch from raw markers to 2D bins, hexagons, or contours, and name the outliers that would otherwise invite speculation.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

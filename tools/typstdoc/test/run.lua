@@ -1429,37 +1429,138 @@ describe("examples: gallery consistency", function()
   local gallery = [[
 # header comment
 - slug: minimal
-  section: basics
+  intent: techniques
 - slug: scale-okabe-ito
-  section: scales
+  intent: colour-scales
 ]]
 
+  local function slug_set(content)
+    local slugs = {}
+    for _, entry in ipairs(examples.parse_entries(content)) do slugs[entry.slug] = true end
+    return slugs
+  end
+
   it("parses every slug from a gallery body", function()
-    local slugs = examples.parse_slugs(gallery)
+    local slugs = slug_set(gallery)
     assert_true(slugs["minimal"], "minimal slug parsed")
     assert_true(slugs["scale-okabe-ito"], "kebab-case slug parsed")
     assert_eq(slugs["header"], nil, "comment line is not a slug")
   end)
 
   it("reports an example with no slug as an orphan", function()
-    local slugs = examples.parse_slugs(gallery)
-    local orphans = examples.orphans({ "minimal.typ", "missing.typ" }, slugs, {})
+    local orphans = examples.orphans({ "minimal.typ", "missing.typ" }, slug_set(gallery), {})
     assert_eq(#orphans, 1)
     assert_eq(orphans[1], "missing")
   end)
 
   it("excludes hero assets even without a slug", function()
-    local slugs = examples.parse_slugs(gallery)
-    local orphans = examples.orphans({ "gribouille.typ", "showcase.typ" }, slugs)
+    local orphans = examples.orphans({ "gribouille.typ", "showcase.typ" }, slug_set(gallery))
     assert_eq(#orphans, 0, "default EXCLUDE covers the hero assets")
   end)
 
   it("ignores non-typ files and sorts orphans", function()
-    local slugs = examples.parse_slugs(gallery)
-    local orphans = examples.orphans({ "zeta.typ", "alpha.typ", "notes.md" }, slugs, {})
+    local orphans = examples.orphans({ "zeta.typ", "alpha.typ", "notes.md" }, slug_set(gallery), {})
     assert_eq(#orphans, 2)
     assert_eq(orphans[1], "alpha")
     assert_eq(orphans[2], "zeta")
+  end)
+
+  local intent_gallery = [[
+# header comment
+- slug: bar-simple
+  intent: comparison
+- slug: histogram
+  intent: distribution
+- slug: mystery
+  intent: nonsense
+- slug: no-intent
+  title: "No intent field"
+]]
+
+  it("parses ordered slug/intent entries from a gallery body", function()
+    local entries = examples.parse_entries(intent_gallery)
+    assert_eq(#entries, 4)
+    assert_eq(entries[1].slug, "bar-simple")
+    assert_eq(entries[1].intent, "comparison")
+    assert_eq(entries[3].intent, "nonsense")
+    assert_eq(entries[4].intent, nil)
+  end)
+
+  it("flags missing and unknown intents", function()
+    local bad = examples.bad_intents(examples.parse_entries(intent_gallery))
+    assert_eq(#bad, 2)
+    assert_eq(bad[1], "mystery (nonsense)")
+    assert_eq(bad[2], "no-intent (missing)")
+  end)
+
+  it("accepts every documented intent key", function()
+    local entries = {}
+    for intent in pairs(examples.INTENTS) do
+      entries[#entries + 1] = { slug = "x-" .. intent, intent = intent }
+    end
+    assert_eq(#examples.bad_intents(entries), 0)
+  end)
+
+  local page = [[
+---
+title: "Comparison and ranking"
+gallery-intent: comparison
+listing:
+  - id: gallery
+    contents: gallery.yml
+    include:
+      intent: comparison
+---
+]]
+
+  it("reads both intent declarations from a page", function()
+    local decl = examples.parse_page_intent(page)
+    assert_eq(decl.declared, "comparison")
+    assert_eq(decl.include, "comparison")
+  end)
+
+  it("reads a hub page that declares no listing filter", function()
+    local decl = examples.parse_page_intent('---\ngallery-intent: hub\ntoc: false\n---\n')
+    assert_eq(decl.declared, "hub")
+    assert_eq(decl.include, nil)
+  end)
+
+  it("flags an intent with no page", function()
+    local drift = examples.intent_drift({ comparison = "comparison.qmd" }, { comparison = true, themes = true })
+    assert_eq(#drift, 1)
+    assert_contains(drift[1], 'themes')
+    assert_contains(drift[1], "no page")
+  end)
+
+  it("flags a page declaring an unknown intent", function()
+    local drift = examples.intent_drift({ flow = "flow.qmd" }, { flow = false })
+    assert_eq(#drift, 1)
+    assert_contains(drift[1], "flow.qmd")
+    assert_contains(drift[1], "unknown intent")
+  end)
+
+  it("flags a page whose two intent declarations disagree", function()
+    local drift = examples.intent_drift(
+      { comparison = "comparison.qmd" },
+      { comparison = true },
+      { ["comparison.qmd"] = "distribution" }
+    )
+    assert_eq(#drift, 1)
+    assert_contains(drift[1], "comparison.qmd")
+    assert_contains(drift[1], "distribution")
+  end)
+
+  it("ignores the hub page, which filters no intent", function()
+    local drift = examples.intent_drift({ hub = "index.qmd" }, { comparison = true, hub = nil })
+    assert_eq(#drift, 1, "only the page-less comparison intent should be reported")
+    assert_contains(drift[1], "comparison")
+  end)
+
+  it("passes when every intent has a matching page", function()
+    local pages = {}
+    for intent in pairs(examples.INTENTS) do pages[intent] = intent .. ".qmd" end
+    pages[examples.HUB_INTENT] = "index.qmd"
+    assert_eq(#examples.intent_drift(pages), 0)
   end)
 end)
 

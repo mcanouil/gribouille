@@ -1,5 +1,0 @@
-extensions:
-  typst-render:
-    output-directory: "/assets/typst-render/examples"
-
-sidebar: examples

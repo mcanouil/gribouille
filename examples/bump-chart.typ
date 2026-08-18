@@ -20,15 +20,16 @@
 
 #plot(
   data: standings,
-  mapping: aes(x: "round", y: "rank", colour: "team"),
+  mapping: aes(x: "round", y: "rank", colour: "team", fill: "team"),
   layers: (
     geom-line(stat: stat-connect(connection: "sigmoid"), stroke: 2pt),
-    geom-point(size: 4pt),
+    geom-point(size: 4pt,),
   ),
   scales: scales(
     x: scale-continuous(breaks: (1, 2, 3, 4, 5, 6)),
     y: scale-continuous(transform: "reverse", breaks: (1, 2, 3, 4)),
     colour: scale-okabe-ito(name: "Team"),
+    fill: scale-okabe-ito(name: "Team"),
   ),
   labels: labels(
     title: "Season Standings",

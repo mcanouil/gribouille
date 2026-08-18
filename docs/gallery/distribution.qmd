@@ -1,0 +1,28 @@
+---
+title: "Distribution"
+subtitle: "Show how a numeric variable spreads, alone or across groups."
+gallery-intent: distribution
+toc: true
+toc-depth: 3
+body-classes: examples-page
+engine: markdown
+listing:
+  - id: gallery
+    template: ../assets/templates/_gallery-intent.ejs.md
+    contents: gallery.yml
+    include:
+      intent: distribution
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    feed: false
+    page-size: 200
+---
+
+Use these charts to answer "how are the values spread?": centre, spread, skew, modes, and outliers.
+Histograms and density curves describe a single variable; boxplots, strip plots, and ridgelines compare that spread across groups.
+Summaries hide as much as they show, so keep raw points visible behind boxplots when the sample is small, and order groups by their median rather than alphabetically.
+Every example ships its full source: click **View source** to copy it.
+
+::: {#gallery}
+:::

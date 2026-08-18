@@ -21,7 +21,7 @@
       x: 5,
       y: 6.4,
       label: "peak",
-      anchor: "south",
+      anchor: "west",
       nudge-y: 0.3cm,
       size: 10pt,
       colour: alert,

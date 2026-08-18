@@ -1,0 +1,89 @@
+# Gallery hub cards, consumed by the listing in `index.qmd` and by
+# `assets/lua/gallery-data.lua` (which injects the `hero-<slug>` typst render
+# blocks). `hero` must be a slug from `gallery.yml`; `group` is `story` (the
+# six intent pages) or `craft` (the six technique pages).
+# All values MUST be single-line scalars (the Lua filter uses a flat parser).
+
+- group: story
+  title: "Comparison and ranking"
+  blurb: "Which is bigger? Values across categories, sorted and directly labelled."
+  hero: class-economy-dotplot
+  href: comparison.qmd
+  alt: "Dot plot comparing median highway fuel economy across vehicle classes, sorted by value."
+
+- group: story
+  title: "Distribution"
+  blurb: "How do the values spread? Centre, spread, skew, and outliers, alone or across groups."
+  hero: mass-by-species-density
+  href: distribution.qmd
+  alt: "Overlaid density curves of penguin body mass by species with direct curve labels."
+
+- group: story
+  title: "Evolution and time"
+  blurb: "How did it change? Trends, turning points, and rank shifts over an ordered axis."
+  hero: unemployment-timeline
+  href: evolution.qmd
+  alt: "Line chart of US unemployment over time with shaded context periods and a direct end-of-line label."
+
+- group: story
+  title: "Relationships"
+  blurb: "Do these variables move together? Association, clusters, and dense point clouds."
+  hero: bill-dimensions-groups
+  href: correlation.qmd
+  alt: "Scatter plot of penguin bill dimensions with a separate trend line per species."
+
+- group: story
+  title: "Part-to-whole and cyclical"
+  blurb: "How do the parts make the total? Shares, compositions, and circular layouts."
+  hero: species-waffle
+  href: part-to-whole.qmd
+  alt: "Waffle chart of penguin species shares with one labelled cell block per species."
+
+- group: story
+  title: "Uncertainty and error"
+  blurb: "How sure are we? Intervals, ribbons, and confidence around estimates."
+  hero: forecast-fan
+  href: uncertainty.qmd
+  alt: "Fan chart of a forecast with graded 50, 80, and 95 percent uncertainty ribbons."
+
+- group: craft
+  title: "Annotation and storytelling"
+  blurb: "Reference lines, labels, and marks that point the reader at the finding."
+  hero: annotate
+  href: annotation.qmd
+  alt: "Annotated line chart with a dashed vertical reference line and a labelled peak."
+
+- group: craft
+  title: "Colour and encodings"
+  blurb: "Palettes and scales for colour, size, shape, opacity, and line style."
+  hero: scale-okabe-ito
+  href: colour-scales.qmd
+  alt: "Scatter plot with per-group fits coloured by the Okabe-Ito colour-blind-safe palette."
+
+- group: craft
+  title: "Axes, legends, and guides"
+  blurb: "Tick labels, axis transforms, secondary axes, and legend layout."
+  hero: guide-axis-theta
+  href: axes-legends.qmd
+  alt: "Three radial panels showing theta-axis guides with minor ticks and rotated labels."
+
+- group: craft
+  title: "Facets, coordinates, and composition"
+  blurb: "Small multiples, coordinate systems, and multi-panel composition."
+  hero: facet-grid
+  href: layout.qmd
+  alt: "Scatter plot arranged on a facet grid of rows and columns."
+
+- group: craft
+  title: "Themes and styling"
+  blurb: "Presets and per-element overrides for everything that is not data."
+  hero: themes-gallery
+  href: themes.qmd
+  alt: "Grid of the same scatter plot rendered under five built-in themes."
+
+- group: craft
+  title: "Advanced techniques"
+  blurb: "Late-binding aesthetics, identity scales, weights, and pipeline escape hatches."
+  hero: late-binding-stage
+  href: techniques.qmd
+  alt: "Scatter plot where marker outlines derive from the fill palette via staged aesthetics."

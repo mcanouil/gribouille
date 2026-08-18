@@ -294,7 +294,7 @@ Bin, count, identity, and smooth stats.
 
 ::: {.feature}
 
-#### [Composable.](examples/index.qmd) {.no-anchor}
+#### [Composable.](gallery/index.qmd) {.no-anchor}
 
 Everything is data you can `let`, extend, and reuse across a Typst document.
 :::
@@ -306,10 +306,10 @@ Everything is data you can `let`, extend, and reuse across a Typst document.
 ::: {.light-content}
 
 ::: {.gallery-preview}
-[![Multilayer trend](/assets/typst-render/examples/multilayer-light.svg)](examples/index.qmd)
-[![Filled contour bands](/assets/typst-render/examples/contour-filled-light.svg)](examples/index.qmd)
-[![Area chart](/assets/typst-render/examples/geom-area-light.svg)](examples/index.qmd)
-[![Heatmap](/assets/typst-render/examples/geom-tile-light.svg)](examples/index.qmd)
+[![Multilayer trend](/assets/typst-render/gallery/multilayer-light.svg)](gallery/index.qmd)
+[![Filled contour bands](/assets/typst-render/gallery/contour-filled-light.svg)](gallery/index.qmd)
+[![Area chart](/assets/typst-render/gallery/geom-area-light.svg)](gallery/index.qmd)
+[![Heatmap](/assets/typst-render/gallery/geom-tile-light.svg)](gallery/index.qmd)
 :::
 
 :::
@@ -317,15 +317,15 @@ Everything is data you can `let`, extend, and reuse across a Typst document.
 ::: {.dark-content}
 
 ::: {.gallery-preview}
-[![Multilayer trend](/assets/typst-render/examples/multilayer-dark.svg)](examples/index.qmd)
-[![Filled contour bands](/assets/typst-render/examples/contour-filled-dark.svg)](examples/index.qmd)
-[![Area chart](/assets/typst-render/examples/geom-area-dark.svg)](examples/index.qmd)
-[![Heatmap](/assets/typst-render/examples/geom-tile-dark.svg)](examples/index.qmd)
+[![Multilayer trend](/assets/typst-render/gallery/multilayer-dark.svg)](gallery/index.qmd)
+[![Filled contour bands](/assets/typst-render/gallery/contour-filled-dark.svg)](gallery/index.qmd)
+[![Area chart](/assets/typst-render/gallery/geom-area-dark.svg)](gallery/index.qmd)
+[![Heatmap](/assets/typst-render/gallery/geom-tile-dark.svg)](gallery/index.qmd)
 :::
 
 :::
 
-[See all examples](examples/index.qmd){.btn .btn-outline}
+[See the gallery](gallery/index.qmd){.btn .btn-outline}
 
 ::: {.install-band}
 

@@ -1,0 +1,5 @@
+extensions:
+  typst-render:
+    output-directory: "/assets/typst-render/gallery"
+
+sidebar: gallery
