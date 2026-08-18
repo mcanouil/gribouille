@@ -26,7 +26,7 @@
     ),
   ),
   scales: scales(
-    x: scale-date(date-format: "[year]-[month repr:numerical]"),
+    x: scale-date(date-format: "[year]-[month repr:numerical]", expand: (0, 0)),
     y: scale-continuous(limits: (0, 22)),
   ),
   labels: labels(

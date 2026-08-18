@@ -29,8 +29,8 @@
   labels: labels(
     title: "The recession in three series",
     subtitle: "Monthly values, 2008-2009; each panel trains its own y axis",
-    x: "",
-    y: "",
+    x: none,
+    y: none,
     caption: "Source: bundled economics dataset.",
   ),
   theme: theme-minimal(),

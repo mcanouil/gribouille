@@ -29,7 +29,7 @@
     caption: "Source: bundled mpg dataset.",
   ),
   guides: guides(default: none),
-  theme: theme-minimal(),
+  theme: theme-minimal(axis-ticks: element-tick(length: 0.12cm)),
   width: 12cm,
   height: 7.5cm,
 )

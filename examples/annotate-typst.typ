@@ -23,7 +23,7 @@
       x: 5,
       y: 6.5,
       label: "*peak* at $x = 5$",
-      anchor: "south",
+      anchor: "west",
       nudge-y: 0.3cm,
       size: 10pt,
     ),

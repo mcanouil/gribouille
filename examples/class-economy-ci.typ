@@ -33,7 +33,7 @@
     y: "Highway mpg",
     caption: "Interval: normal-theory 95% CI of the mean; classes with a single observation carry no interval. Source: bundled mpg dataset.",
   ),
-  theme: theme-minimal(),
+  theme: theme-minimal(axis-ticks-x: element-tick(length: 0.12cm)),
   width: 12cm,
   height: 8cm,
 )

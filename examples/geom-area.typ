@@ -11,7 +11,7 @@
     geom-area(alpha: 0.35, fill: rgb("#1f77b4")),
     geom-line(stroke: 1pt, colour: rgb("#1f77b4")),
   ),
-  scales: scales(x: scale-date(), y: scale-continuous(labels: format-comma())),
+  scales: scales(x: scale-date(expand: (0, 0)), y: scale-continuous(labels: format-comma())),
   labels: labels(
     title: "Monthly US Unemployment, 2008-2009",
     subtitle: "Area under the curve highlights the climb during the recession",

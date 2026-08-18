@@ -12,6 +12,7 @@
   mapping: aes(x: "class", y: "n", fill: as-factor("cyl")),
   layers: (geom-col(position: "fill"),),
   scales: scales(
+    x: scale-discrete(expand: (0, 0)),
     y: scale-continuous(labels: format-percent(scale: 100)),
     fill: scale-okabe-ito(),
   ),
@@ -23,7 +24,7 @@
     fill: "Cylinders",
     caption: "Source: bundled mpg dataset.",
   ),
-  theme: theme-minimal(),
+  theme: theme-minimal(axis-ticks: element-tick(length: 0.12cm)),
   width: 13cm,
   height: 7.5cm,
 )

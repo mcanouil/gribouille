@@ -43,7 +43,7 @@
     caption: "A pie works with a handful of labelled slices. Source: bundled mpg dataset.",
   ),
   guides: guides(default: none),
-  theme: theme-void(),
+  theme: theme-void(plot-background: element-rect(outset: 0.5cm)),
   width: 12cm,
   height: 8cm,
 )
