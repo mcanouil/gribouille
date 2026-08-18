@@ -6,12 +6,14 @@
 
 - feat!: `geom-text`, `geom-label`, and `geom-typst` take an `arrow()` specification on `arrow` in place of a boolean, and their `arrow-length` parameter is gone. `arrow: true` becomes `arrow: arrow()`, and `arrow-length: 6pt` becomes `arrow: arrow(length: 6pt)`. (#249)
 - feat!: `guide-axis(angle:)`, `guide-axis-logticks(angle:)`, and the `angle` of an `axis-text` theme element are bounded to -90 to 90 degrees and fail outside it. Past a quarter turn the tick labels read upside down and ran off the canvas. (#238)
+- fix!: the theta axis of a `coord-radial()` plot reads its tick marks and its arc off the scale that carries the sweep, `y` on a pie in place of `x`. The minor ticks of `guide-axis-theta(minor-ticks: true)` move from the `axis-line` surface to `axis-ticks-minor`, so a theme that styled the angular axis through `axis-line` alone must now set `axis-ticks` too. (#270)
 - fix!: a faceted plot whose strip label holds a word wider than its panel now fails with the room that word needs. Shorten the level names with a `labeller`, break the word with `\`, or give the plot more room with `width`/`height`. (#262)
 - fix!: a plot whose tick labels cannot fit the canvas fails with the room they need instead of drawing past its edge. Give the plot more room, rotate the labels with `guides(x: guide-axis(angle: 45))`, shorten them with a `labels:` function on the scale, or shrink them with `theme(axis-text: element-text(size: ...))`. (#259)
 - fix!: a legend placed on a plot side, or one `compose()` hoists out of its panels, fits the `width`/`height` it was asked for, and fails with the room it needs when it cannot. Give the plot more room, move the legend to a shorter side, or shrink it with `guide-legend(nrow:/ncolumn:)`. (#255)
 
 ### Changes
 
+- feat: a `coord-radial()` plot draws major tick marks on its angular axis, from the `axis-ticks` theme surface, as a cartesian axis does. The circle gives up the radius they need, so the figure still fits the `width`/`height` it was asked for. (#270)
 - feat: a plot draws at any size that leaves it room to draw, so a figure can be small enough to sit in a table cell or a line of prose. Only an empty or inverted canvas fails now. (#252)
 - feat: `theme-brand()` builds a theme from a parsed Quarto `_brand.yml`, so a document's plots follow the same brand as its prose. It takes the dictionary `yaml()` produces rather than a path, maps `foreground`, `background`, and `primary` onto `ink`, `paper`, and `accent`, and turns the remaining data-ink roles into a discrete palette, with `mode: "light"` or `mode: "dark"` choosing the variant. (#250)
 - feat: a theme carries a `palette` of colours that discrete colour and fill scales fall back to, so a whole document can be recoloured without repeating `scale-colour-manual()` on every plot. A scale's own `palette:` still wins, continuous scales keep viridis, and `auto` uses the Okabe-Ito palette as before. (#250)
