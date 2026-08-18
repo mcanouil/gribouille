@@ -10,22 +10,25 @@
 /// axis when passed through \@guides as `theta: guide-axis-theta(...)`, and
 /// applied by the radial axis renderer. When bound the renderer draws an
 /// outer axis arc spanning the active theta range; without it the radial
-/// axis remains spoke-only.
+/// axis remains spoke-only. The major tick marks need no guide: they follow
+/// the `axis-ticks` theme surface, as they do on a cartesian axis.
 ///
 /// \@category Guides
 /// \@stability stable
 ///
 /// \@param angle Tick-label rotation in degrees: 0 horizontal, 45 readable diagonal, 90 vertical.
 ///
-/// \@param minor-ticks Whether to draw short tick marks at half-step positions between major theta breaks.
+/// \@param minor-ticks Whether to draw short tick marks at half-step positions between major theta breaks, on the `axis-ticks-minor` theme surface.
 ///
 /// \@param cap Where to trim the axis arc: `"none"` (full sweep), `"both"`, `"upper"`, or `"lower"`.
 ///
 /// \@returns Guide dictionary tagged `kind: "guide"`, consumed by \@guides.
 ///
-/// \@examples Rotate theta tick labels on a radar plot.
+/// \@examples Rotate theta tick labels on a radar plot. The arc and the tick
+/// marks read the `axis-line` and `axis-ticks` theme surfaces, which
+/// \@theme-minimal blanks, so this turns them back on.
 /// ```
-/// //| alt: "Radial bar chart with theta-axis category labels tilted 30 degrees and minor ticks between major spokes."
+/// //| alt: "Radial bar chart with theta-axis category labels tilted 30 degrees, tick marks on each spoke, and shorter minor ticks between them."
 /// #let d = (
 ///   (axis: "speed", value: 4),
 ///   (axis: "comfort", value: 3),
@@ -38,6 +41,10 @@
 ///   layers: (geom-col(),),
 ///   coord: coord-radial(),
 ///   guides: guides(theta: guide-axis-theta(angle: 30, minor-ticks: true)),
+///   theme: theme-minimal(
+///     axis-line: element-line(stroke: 0.5pt),
+///     axis-ticks: element-tick(length: 0.15cm),
+///   ),
 ///   width: 8cm,
 ///   height: 8cm,
 /// )

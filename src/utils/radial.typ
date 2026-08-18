@@ -53,17 +53,20 @@
 
 // `label-bounds` carries one record per theta tick label: the canvas angle
 // `theta` it is drawn at and the half-extents `hw` / `hh` it reaches from
-// there. Each label is centred `THETA-LABEL-PAD` beyond `r-max`, so it stays
-// inside the panel while
+// there. `tick-cm` is how far the theta tick marks reach outward from the
+// circle, drawn between it and the labels. Each label is centred `tick-cm`
+// plus `THETA-LABEL-PAD` beyond `r-max`, so both stay inside the panel while
 //
-//   (r-max + THETA-LABEL-PAD) * |cos theta| + hw <= half-width
-//   (r-max + THETA-LABEL-PAD) * |sin theta| + hh <= half-height
+//   (r-max + tick-cm + THETA-LABEL-PAD) * |cos theta| + hw <= half-width
+//   (r-max + tick-cm + THETA-LABEL-PAD) * |sin theta| + hh <= half-height
 //
 // and `r-max` is the tightest radius those two bounds leave across every
 // label. Solving per label rather than insetting all four sides by the widest
 // one means a label only costs the circle the direction it is drawn in: the
 // panel is the room the chrome already granted this plot, and growing past it
 // would push the whole figure past the `width`/`height` it was asked for.
+// `tick-cm` comes off the seed too, because a plot with no theta labels at all
+// still draws its ticks, and there the inscribed circle is what binds.
 #let radial-ctx(
   coord,
   x-trained,
@@ -71,6 +74,7 @@
   px-range,
   py-range,
   label-bounds: (),
+  tick-cm: 0.0,
 ) = {
   if not is-radial(coord) { return none }
   let (px-lo, px-hi) = px-range
@@ -78,15 +82,16 @@
   let centre = ((px-lo + px-hi) / 2, (py-lo + py-hi) / 2)
   let half-w = (px-hi - px-lo) / 2
   let half-h = (py-hi - py-lo) / 2
-  let r-max = calc.min(half-w, half-h)
+  let outer-pad = tick-cm + THETA-LABEL-PAD
+  let r-max = calc.min(half-w, half-h) - tick-cm
   for b in label-bounds {
     let cos-t = calc.abs(calc.cos(b.theta))
     let sin-t = calc.abs(calc.sin(b.theta))
     if cos-t > _TRIG-EPS {
-      r-max = calc.min(r-max, (half-w - b.hw) / cos-t - THETA-LABEL-PAD)
+      r-max = calc.min(r-max, (half-w - b.hw) / cos-t - outer-pad)
     }
     if sin-t > _TRIG-EPS {
-      r-max = calc.min(r-max, (half-h - b.hh) / sin-t - THETA-LABEL-PAD)
+      r-max = calc.min(r-max, (half-h - b.hh) / sin-t - outer-pad)
     }
   }
   r-max = calc.max(0, r-max)
