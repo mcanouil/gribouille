@@ -17,10 +17,13 @@
   layers: (
     geom-density-ridges(scale: 1.1, alpha: 0.6),
   ),
-  scales: scales(fill: scale-discrete(
-    limits: species-colours.keys(),
-    palette: species-colours.values(),
-  )),
+  scales: scales(
+    y: scale-discrete(expand: (0%, 60%)),
+    fill: scale-discrete(
+      limits: species-colours.keys(),
+      palette: species-colours.values(),
+    )
+  ),
   labels: labels(
     title: "Chinstrap and Gentoo bills overlap; Adelie bills stand apart",
     subtitle: "Bill length distribution per species",
@@ -29,7 +32,10 @@
     caption: "Source: bundled Palmer penguins dataset.",
   ),
   guides: guides(default: none),
-  theme: theme-minimal(),
+  theme: theme-minimal(
+    axis-ticks: element-tick(length: 0.12cm),
+    panel-grid-major-y: element-line()
+  ),
   width: 12cm,
   height: 7.5cm,
 )
