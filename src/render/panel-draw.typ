@@ -667,6 +667,7 @@
       ax-line: _ax-line,
       theta-ticks: _theta-ticks,
       show-x-labels: show-x-labels,
+      show-y-labels: show-y-labels,
     ))
   }
 
@@ -752,6 +753,7 @@
       x-disp: _x-disp,
       y-disp: _y-disp,
       ax-text: _ax-text,
+      show-x-labels: show-x-labels,
       show-y-labels: show-y-labels,
     ))
   }

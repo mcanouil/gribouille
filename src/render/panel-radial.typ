@@ -80,10 +80,22 @@
   )
 }
 
+// Which facet visibility flag governs each radial axis. A faceted panel hides
+// the tick labels its neighbours already carry, and the two flags are named
+// for the cartesian axes, so a `theta: "y"` pie reads them the other way
+// round: its angular labels belong to `y` and its radial ones to `x`.
+#let _radial-label-flags(cat-is-theta, show-x-labels, show-y-labels) = if (
+  cat-is-theta
+) {
+  (theta: show-x-labels, r: show-y-labels)
+} else {
+  (theta: show-y-labels, r: show-x-labels)
+}
+
 // Pre-geom radial pass. `rctx` carries the enclosing panel state: `spec`,
 // `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`,
 // `grid-radial`, `grid-radial-discrete`, `ax-line`, `theta-ticks`,
-// `show-x-labels`.
+// `show-x-labels`, `show-y-labels`.
 #let _draw-radial-panel(rctx) = {
   import cetz.draw: circle, content, line
   let spec = rctx.spec
@@ -97,7 +109,11 @@
   let _grid-radial-discrete = rctx.grid-radial-discrete
   let _ax-line = rctx.ax-line
   let _theta-ticks = rctx.theta-ticks
-  let show-x-labels = rctx.show-x-labels
+  let show-theta-labels = _radial-label-flags(
+    rctx.outer-radial.cat-is-theta,
+    rctx.show-x-labels,
+    rctx.show-y-labels,
+  ).theta
 
   let theta-guide = _read-theta-guide(spec)
   let theta-suppress = theta-guide != none and theta-guide.suppress
@@ -219,7 +235,7 @@
   }
 
   if (
-    show-x-labels
+    show-theta-labels
       and theta-text.size > 0pt
       and theta-trained != none
       and not theta-suppress
@@ -255,7 +271,7 @@
 
 // Post-geom radial pass: r-axis tick labels. `rctx` carries `spec`,
 // `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`,
-// `show-y-labels`.
+// `show-x-labels`, `show-y-labels`.
 #let _draw-radial-r-labels(rctx) = {
   import cetz.draw: content
   let spec = rctx.spec
@@ -272,8 +288,13 @@
   let r-text = if outer-radial.cat-is-theta {
     rctx.ax-text.yl
   } else { rctx.ax-text.xb }
+  let show-r-labels = _radial-label-flags(
+    outer-radial.cat-is-theta,
+    rctx.show-x-labels,
+    rctx.show-y-labels,
+  ).r
   if (
-    rctx.show-y-labels
+    show-r-labels
       and r-text.size > 0pt
       and r-trained != none
       and r-trained.type == "continuous"
