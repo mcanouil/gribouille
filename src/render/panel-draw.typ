@@ -410,13 +410,9 @@
     let range = if axis == "x" { px-range } else { py-range }
     let major-stroke = if axis == "x" { _grid-major.x } else { _grid-major.y }
     let minor-stroke = if axis == "x" { _grid-minor.x } else { _grid-minor.y }
-    let draw-major = (
-      major-stroke != none
-        and (
-          is-continuous
-            or (if axis == "x" { _grid-discrete.x } else { _grid-discrete.y })
-        )
-    )
+    let major-discrete = if axis == "x" {
+      _grid-discrete.x
+    } else { _grid-discrete.y }
     let cached = if axis-breaks == none { none } else {
       axis-breaks.at(axis, default: none)
     }
@@ -436,7 +432,7 @@
     }
     for (idx, b) in breaks.enumerate() {
       let c = map-break(trained, b, range)
-      if draw-major {
+      if major-stroke != none and (is-continuous or major-discrete) {
         if axis == "x" {
           line((c, py-lo), (c, py-hi), stroke: major-stroke)
         } else {
