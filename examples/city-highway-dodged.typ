@@ -41,7 +41,7 @@
   labels: labels(
     title: "Highway economy beats city economy in every class",
     subtitle: "Mean miles per gallon by vehicle class and driving condition",
-    x: "",
+    x: none,
     y: "Mean mpg",
     fill: "Condition",
     caption: "Source: bundled mpg dataset.",

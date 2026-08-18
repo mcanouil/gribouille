@@ -25,7 +25,7 @@
     title: "Four-cylinder compacts are the most common combination",
     subtitle: "Number of vehicles per class and cylinder count",
     x: "Cylinders",
-    y: "",
+    y: none,
     caption: "Source: bundled mpg dataset.",
   ),
   guides: guides(default: none),

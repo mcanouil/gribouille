@@ -19,7 +19,7 @@
   labels: labels(
     title: "Small cars run on four cylinders, pickups and SUVs rarely do",
     subtitle: "Share of cylinder counts within each vehicle class",
-    x: "",
+    x: none,
     y: "Share of vehicles",
     fill: "Cylinders",
     caption: "Source: bundled mpg dataset.",

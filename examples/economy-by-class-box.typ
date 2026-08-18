@@ -22,7 +22,7 @@
   labels: labels(
     title: "Fuel economy varies as much within classes as between them",
     subtitle: "Highway mpg per vehicle class, with the raw data behind each box",
-    x: "",
+    x: none,
     y: "Highway mpg",
     caption: "Source: bundled mpg dataset.",
   ),

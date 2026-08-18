@@ -59,7 +59,7 @@
     geom-rug(sides: "b", colour: rgb("#2ca02c"), length: 0.4cm),
   ),
   scales: scales(x: scale-continuous(name: "Highway mpg")),
-  labels: labels(title: "Forced X-Range to Highlight Rug Density", y: ""),
+  labels: labels(title: "Forced X-Range to Highlight Rug Density", y: none),
   theme: theme-minimal(),
   width: 12cm,
   height: 9cm,

@@ -37,8 +37,8 @@
         )[#row.species (#row.n)])
         .join([, ], last: [, and ])
     }),
-    x: "",
-    y: "",
+    x: none,
+    y: none,
     caption: "Source: bundled Palmer penguins dataset.",
   ),
   guides: guides(default: none, x: none, y: none),

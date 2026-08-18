@@ -29,7 +29,7 @@
   labels: labels(
     title: "Compact, midsize, and subcompact cannot be told apart",
     subtitle: "Mean highway mpg per vehicle class with 95% confidence intervals",
-    x: "",
+    x: none,
     y: "Highway mpg",
     caption: "Interval: normal-theory 95% CI of the mean; classes with a single observation carry no interval. Source: bundled mpg dataset.",
   ),

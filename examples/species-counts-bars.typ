@@ -27,7 +27,7 @@
   labels: labels(
     title: "Adelie penguins dominate the sample",
     subtitle: "Penguins measured per species, 2007-2009",
-    x: "",
+    x: none,
     y: "Penguins measured",
     caption: "Source: bundled Palmer penguins dataset.",
   ),

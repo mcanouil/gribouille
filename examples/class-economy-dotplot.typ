@@ -27,7 +27,7 @@
     title: "Pickups and SUVs trail every car class on fuel economy",
     subtitle: "Median highway miles per gallon by vehicle class",
     x: "Median highway mpg",
-    y: "",
+    y: none,
     caption: "Source: bundled mpg dataset.",
   ),
   theme: theme-minimal(),

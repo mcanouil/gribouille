@@ -163,7 +163,7 @@ On tinted paper, swap `white` for your page colour.
     y: scale-continuous(limits: window.y),
   ),
   guides: guides(colour: none),
-  labels: labels(x: "", y: ""),
+  labels: labels(x: none, y: none),
   theme: theme-minimal(),
   width: 4.6cm,
   height: 3.4cm,
@@ -231,7 +231,7 @@ A right-hand legend would otherwise narrow one row against the other.
   layers: (geom-density(),),
   scales: scales(x: shared-x),
   guides: guides(colour: none),
-  labels: labels(x: "", y: ""),
+  labels: labels(x: none, y: none),
   theme: theme-minimal(axis-text-y: element-blank()),
 )
 #let scatter = defer(

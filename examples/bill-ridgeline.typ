@@ -28,7 +28,7 @@
     title: "Chinstrap and Gentoo bills overlap; Adelie bills stand apart",
     subtitle: "Bill length distribution per species",
     x: "Bill length (mm)",
-    y: "",
+    y: none,
     caption: "Source: bundled Palmer penguins dataset.",
   ),
   guides: guides(default: none),
