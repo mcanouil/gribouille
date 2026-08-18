@@ -1145,6 +1145,12 @@ blockquote {
     box-shadow: var(--gb-shadow-lift);
   }
 
+  // The overlay swallows the link's own focus ring, so the card carries it.
+  &:focus-within {
+    outline: 2px solid var(--gb-primary);
+    outline-offset: 3px;
+  }
+
   img {
     display: block;
     width: 100%;
@@ -1160,7 +1166,11 @@ blockquote {
     font-size: 1.1rem;
   }
 
+  // Lifted above the overlay so the blurb stays selectable. The image and the
+  // card padding keep the whole-card click, and the title is a real link.
   p {
+    position: relative;
+    z-index: 1;
     margin: 0;
     color: var(--gb-muted);
     font-size: 0.95em;

@@ -4,7 +4,7 @@ subtitle: "Show shares of a total, or wrap a sequence around a circle."
 gallery-intent: part-to-whole
 toc: true
 toc-depth: 3
-body-classes: examples-page
+body-classes: gallery-page
 engine: markdown
 listing:
   - id: gallery

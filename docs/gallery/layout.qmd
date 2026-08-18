@@ -4,7 +4,7 @@ subtitle: "Split data into small multiples, transform coordinates, and compose p
 gallery-intent: layout
 toc: true
 toc-depth: 3
-body-classes: examples-page
+body-classes: gallery-page
 engine: markdown
 listing:
   - id: gallery

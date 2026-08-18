@@ -23,5 +23,9 @@ Each page below opens with curated, real-data showcases that follow data visuali
 The **By feature** pages cover the finishing work that turns a correct chart into a clear one: annotation, colour, guides, layout, and theming.
 Every example lives in the [`examples/`](https://github.com/mcanouil/gribouille/tree/main/examples) directory of the repository, and its source can be copied from the page.
 
+The gallery replaces the single `/examples/` page, which is now an alias for this hub.
+The per-example anchors of that page are gone.
+To find an example again, open the intent page that matches it.
+
 ::: {#gallery}
 :::

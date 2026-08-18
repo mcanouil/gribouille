@@ -3,6 +3,10 @@
 # blocks). `hero` must be a slug from `gallery.yml`; `group` is `story` (the
 # six intent pages) or `craft` (the six technique pages).
 # All values MUST be single-line scalars (the Lua filter uses a flat parser).
+# `href` is page-relative because the listing template resolves it from
+# `index.qmd`, while `_sidebar-gallery.yml` is project-relative because Quarto
+# resolves a sidebar from the project root. `tools/typstdoc` checks both
+# surfaces against the pages on disk, so neither convention can drift.
 
 - group: story
   title: "Comparison and ranking"

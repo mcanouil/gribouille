@@ -10,10 +10,12 @@
 -- source for the `modal` extension to wrap as a Bootstrap modal.
 --
 -- The hub renders its heroes under a `hero-` prefix rather than reusing the
--- intent pages' SVGs. That costs 12 extra Typst compilations per build and buys
--- build-order independence: `quarto render gallery/index.qmd` alone yields a
--- complete hub instead of one wired to artefacts a sibling page may not have
--- produced yet.
+-- intent pages' SVGs. That costs 24 extra Typst compilations per build, one
+-- light and one dark for each of the 12 cards, and buys build-order
+-- independence: `quarto render gallery/index.qmd` alone yields a complete hub
+-- instead of one wired to artefacts a sibling page may not have produced yet.
+-- `index.qmd` at the site root is the deliberate exception: its four preview
+-- images reuse the intent pages' renders, so it needs a full site build.
 
 local function read_file(path)
   local f = io.open(path, 'rb')
