@@ -97,7 +97,6 @@
 // stays a visible-but-modest "fade" no matter how wide the theta sweep is.
 #let _THETA-CAP-FRAC = 0.02
 #let _THETA-CAP-MAX-RAD = calc.pi / 90
-#let _THETA-MINOR-TICK-FRAC = 0.03
 #let _THETA-CAP-VALUES = ("none", "both", "upper", "lower")
 
 // Read a `guide-axis-theta(...)` configuration off the plot spec. Returns

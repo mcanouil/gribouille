@@ -23,7 +23,9 @@
   _per-side, _resolve-data, _resolve-mapping, _should-draw-tick,
 )
 #import "colour.typ": _make-resolve-colour
-#import "panel-radial.typ": _draw-radial-panel, _draw-radial-r-labels
+#import "panel-radial.typ": (
+  _draw-radial-panel, _draw-radial-r-labels, _theta-tick-marks,
+)
 #import "axis-format.typ": (
   _axis-breaks, _axis-minor-breaks, _axis-tick-values, _axis-title,
   _log10-minor-positions, _sec-spec, _secondary-breaks, _tick-label-fallback,
@@ -246,6 +248,15 @@
       )
     } else { () }
   }
+  // The theta ticks sit between the circle and those labels, so they are
+  // resolved here rather than with the cartesian sides below: the radius owes
+  // them their length before either can be placed.
+  let _theta-ticks = _theta-tick-marks(
+    theme,
+    _theta-key,
+    _theta-guide,
+    if _theta-key == "x" { x-trained } else { y-trained },
+  )
   let outer-radial = radial-ctx(
     coord,
     x-trained,
@@ -253,6 +264,7 @@
     px-range,
     py-range,
     label-bounds: _label-bounds,
+    tick-cm: _theta-ticks.reach,
   )
   let is-radial = outer-radial != none
 
@@ -653,6 +665,7 @@
       grid-radial: _grid-radial,
       grid-radial-discrete: _grid-radial-discrete,
       ax-line: _ax-line,
+      theta-ticks: _theta-ticks,
       show-x-labels: show-x-labels,
     ))
   }
@@ -676,6 +689,7 @@
     inner-ctx.px-range,
     inner-ctx.py-range,
     label-bounds: _label-bounds,
+    tick-cm: _theta-ticks.reach,
   )
   inner-ctx.radial = inner-radial
   if inner-radial != none {

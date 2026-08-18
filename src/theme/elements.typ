@@ -325,6 +325,10 @@
 /// leaves `length` to the cascade. \@element-blank turns the marks off
 /// entirely: no ink and no reserved depth around the panel.
 ///
+/// Under \@coord-radial the same surfaces drive the angular axis: the marks
+/// ring the circle, pointing outward, and are read off whichever scale carries
+/// the sweep, `x` on a rose or radar and `y` on a pie.
+///
 /// \@category Themes
 /// \@subcategory Theme elements
 /// \@stability stable
