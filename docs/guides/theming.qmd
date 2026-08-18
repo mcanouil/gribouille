@@ -33,6 +33,10 @@ Each axis family cascades in three steps: per-side (`-x-bottom`, `-x-top`, `-y-l
 Setting `axis-text` alone styles all four sides at once.
 The panel grid cascades by weight then axis: per-axis (`-x`, `-y`) falls back to the weight (`panel-grid-major`, `panel-grid-minor`), which falls back to `panel-grid`.
 Minor gridlines default to half the major weight in the same colour, and a blank `panel-grid` blanks both weights.
+A discrete axis draws no gridlines from `panel-grid` alone, because its ticks already mark every level.
+To get them, set the grid on `panel-grid-major` or on one axis with `panel-grid-major-x` or `panel-grid-major-y`.
+A discrete axis draws no minor gridlines at all, because a gap between two levels has no subdivision.
+A [`coord-radial()`](../reference/coord/coord-radial.qmd) panel draws one grid weight for both its circles and its spokes, so its circles read `panel-grid-major` only, and a discrete radial axis draws them without tick labels.
 
 | Region                                                                                       | Key(s)                                                                                                                            | Element type                                                                                                    |
 | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |

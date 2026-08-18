@@ -21,7 +21,7 @@
 
 // Pre-geom radial pass. `rctx` carries the enclosing panel state: `spec`,
 // `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`,
-// `grid-radial`, `ax-line`, `show-x-labels`.
+// `grid-radial`, `grid-radial-discrete`, `ax-line`, `show-x-labels`.
 #let _draw-radial-panel(rctx) = {
   import cetz.draw: circle, content, line
   let spec = rctx.spec
@@ -32,6 +32,7 @@
   let _y-disp = rctx.y-disp
   let _ax-text = rctx.ax-text
   let _grid-radial = rctx.grid-radial
+  let _grid-radial-discrete = rctx.grid-radial-discrete
   let _ax-line = rctx.ax-line
   let show-x-labels = rctx.show-x-labels
 
@@ -50,13 +51,19 @@
     (y-trained, x-trained, _y-disp, _ax-text.yl)
   }
 
-  if _grid-radial != none and r-trained != none {
-    if r-trained.type == "continuous" {
-      for b in _axis-breaks(r-trained) {
-        let r = map-axis-data(r-trained, b, r-range)
-        if r > 0 and r <= r-max {
-          circle((cx, cy), radius: r, fill: none, stroke: _grid-radial)
-        }
+  // A discrete r scale draws its circles only when the theme sets the grid on
+  // the major weight, matching the cartesian rule. The spokes below carry no
+  // such gate: a radial panel with no spokes reads as an empty disc.
+  let draw-r-grid = (
+    _grid-radial != none
+      and r-trained != none
+      and (r-trained.type == "continuous" or _grid-radial-discrete)
+  )
+  if draw-r-grid {
+    for b in _axis-tick-values(r-trained) {
+      let r = map-break(r-trained, b, r-range)
+      if r > 0 and r <= r-max {
+        circle((cx, cy), radius: r, fill: none, stroke: _grid-radial)
       }
     }
   }
