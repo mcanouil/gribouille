@@ -66,7 +66,7 @@ Run the survey command at the bottom before extending the table.
 | `cap`     | cap length / cap mode     | end-cap of a stroke or arc (radial axis arc).                                         |
 | `tick`    | axis tick                 | tick mark (`axis-ticks`, `element-tick`); the label is `axis-text`.                   |
 | `ext`     | measured extents          | `(width, height)` cm record from `measure-labels-cm`; an axis title's also carries `along` and `min-width`. |
-| `along`   | along-panel reading length | cm an axis title may read before its projection overruns the panel; the box it wraps in (`_title-along-cm`, `_title-boxed`). |
+| `along`   | along-panel reading length | cm an axis title may read before its projection overruns the panel; the box it wraps in (`_title-along-cm`, `_title-boxed`). In `_axes-of` it names the reading axis of a side, paired with `across`. |
 | `reach`   | reach from a pin          | cm a label spreads from the point it is anchored at, per canvas side (`_label-reach`). |
 | `overhang` | overhang past an edge    | cm a label's reach exceeds its distance from the panel edge; a floor on the chrome margin (`_label-overhang`). |
 | `frac`    | fractional position       | a break's place inside the data area, 0 at one end and 1 at the other (`map-break` into `(0, 1)`). |
@@ -127,6 +127,11 @@ Run the survey command at the bottom before extending the table.
 | `entries` | guide entry table   | array of `entry` dicts (`src/guide/entry.typ`). Not to be confused with `key`, which keeps the dict-key and legend-glyph senses.                    |
 | `tier`    | tick weight         | `"major"` / `"mid"` / `"minor"` on an entry; picks the tick length and whether a label is drawn. Named `tier` because `type` is the trained-scale kind. |
 | `depth`   | range nesting level | which row of a bracket stack a range entry occupies; 0 sits nearest the panel.                                                                      |
+| `gctx`    | guide context       | what a guide part is drawn under (`src/guide/gctx.typ`): `position`, `aesthetic`, `mode`, `direction`, `axis`, and the injected `place` and `tick-length` closures. Parallels `ctx`. |
+| `mode`    | guide mode          | `"axis"` or `"legend"` on a `gctx`; derived from the aesthetic, and what selects the theme surfaces a part resolves against.                        |
+| `across`  | across-guide extent | the thickness axis of a side, growing away from the panel. Paired with `along` in `_axes-of`; the dimension a side reserves.                        |
+| `place`   | guide point map     | `(frac, across) -> (x, y)` closure on a `gctx`; the only thing a radial guide changes.                                                              |
+| `role`    | theme surface role  | what a part asks a `gctx` for (`"text"`, `"ticks"`, `"line"`, …) instead of naming a surface; resolved by `surface-for`.                            |
 
 ## Legend placement
 
