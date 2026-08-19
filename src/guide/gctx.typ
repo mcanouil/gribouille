@@ -17,7 +17,7 @@
 ///! The scale and the theme both live downstream of `src/guide/`, so this
 ///! module takes closures rather than reaching forward for either.
 
-#import "../utils/errors.typ": fail-enum
+#import "../utils/errors.typ": fail, fail-enum, fail-type
 #import "../utils/radial.typ": polar-canvas
 
 // Where a guide sits. The four cartesian sides, the two radial positions, and
@@ -33,7 +33,10 @@
 // the positional channels carry an axis, everything else carries a legend.
 // This is what selects the theme surfaces a part resolves against.
 #let _mode-of(aesthetic) = if (
-  aesthetic == "x" or aesthetic == "y" or aesthetic == "theta" or aesthetic == "r"
+  aesthetic == "x"
+    or aesthetic == "y"
+    or aesthetic == "theta"
+    or aesthetic == "r"
 ) { "axis" } else { "legend" }
 
 // The along and across axes of a cartesian side, and the sign that points away
@@ -62,7 +65,7 @@
 
 // Order a pair the way the side runs: `(along, across)` on a horizontal side,
 // swapped on a vertical one. One horizontal routine then serves every side.
-#let pt(axes, along, across) = if axes.along == "x" {
+#let side-pt(axes, along, across) = if axes.along == "x" {
   (along, across)
 } else {
   (across, along)
@@ -83,10 +86,16 @@
   let (py-lo, py-hi) = py-range
   if axes.along == "x" {
     let edge = if position == "bottom" { py-lo } else { py-hi }
-    (frac, across) => (px-lo + frac * (px-hi - px-lo), edge + axes.sign * across)
+    (frac, across) => (
+      px-lo + frac * (px-hi - px-lo),
+      edge + axes.sign * across,
+    )
   } else {
     let edge = if position == "left" { px-lo } else { px-hi }
-    (frac, across) => (edge + axes.sign * across, py-lo + frac * (py-hi - py-lo))
+    (frac, across) => (
+      edge + axes.sign * across,
+      py-lo + frac * (py-hi - py-lo),
+    )
   }
 }
 
@@ -124,13 +133,12 @@
   direction: auto,
   axis: auto,
   place: none,
-  span: none,
   tick-length: none,
   tick-gap: 0.1,
-  trained: none,
-  palette: none,
-  ink: black,
 ) = {
+  if type(aesthetic) != str {
+    fail-type("guide-gctx", "aesthetic", aesthetic, "an aesthetic name")
+  }
   if not POSITIONS.contains(position) {
     fail-enum("guide-gctx", "position", position, POSITIONS)
   }
@@ -140,28 +148,35 @@
   if not DIRECTIONS.contains(dir) {
     fail-enum("guide-gctx", "direction", dir, DIRECTIONS)
   }
+  let mode = _mode-of(aesthetic)
+  // The axis the guide runs along, which the per-axis tick tiers are keyed on
+  // and which picks the side surfaces under a radial coord. A cartesian side
+  // derives it; `theta` and `r` cannot, so the caller states it. An axis guide
+  // without one would resolve a surface name against `none`, so it fails here
+  // rather than at the draw site.
+  let ax = if axis != auto { axis } else if SIDES.contains(position) {
+    _axes-of(position).along
+  } else { none }
+  if mode == "axis" and ax == none {
+    fail(
+      "guide-gctx",
+      "an axis guide at " + repr(position) + " has no axis",
+      hint: "Pass `axis: \"x\"` or `axis: \"y\"`; only a cartesian side can "
+        + "derive it.",
+    )
+  }
   (
     position: position,
     aesthetic: aesthetic,
-    mode: _mode-of(aesthetic),
+    mode: mode,
     direction: dir,
-    // The axis the guide runs along, which the per-axis tick tiers are keyed
-    // on and which picks the side surfaces under a radial coord. Derived on a
-    // cartesian side; supplied by the caller on `theta` / `r`, where it is the
-    // axis the sweep runs on.
-    axis: if axis != auto { axis } else if SIDES.contains(position) {
-      _axes-of(position).along
-    } else { none },
+    axis: ax,
     place: place,
-    span: span,
     // `(surface) -> cm` for a tick surface. Injected because the theme lives
     // downstream of this module.
     tick-length: tick-length,
     // Cm between a tick and its label in an axis context. Mirrors the chrome
     // stage's `_TICK-LABEL-GAP`, passed in rather than imported.
     tick-gap: tick-gap,
-    trained: trained,
-    palette: palette,
-    ink: ink,
   )
 }

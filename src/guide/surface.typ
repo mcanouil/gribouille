@@ -60,18 +60,16 @@
     // theta axis reads the left ones.
     let side = _SIDE-SUFFIX.at(
       gctx.position,
-      default: if gctx.at("axis", default: "x") == "y" { "y-left" } else {
-        "x-bottom"
-      },
+      default: if gctx.axis == "y" { "y-left" } else { "x-bottom" },
     )
     if role == "text" { "axis-text-" + side } else if role == "title" {
       "axis-title-" + side
     } else if role == "line" { "axis-line-" + side } else if role == "ticks" {
       "axis-ticks-" + side
     } else if role == "ticks-mid" {
-      "axis-ticks-mid-" + gctx.at("axis", default: "x")
+      "axis-ticks-mid-" + gctx.axis
     } else if role == "ticks-minor" {
-      "axis-ticks-minor-" + gctx.at("axis", default: "x")
+      "axis-ticks-minor-" + gctx.axis
     } else if role == "background" { "panel-background" } else { none }
   } else {
     if role == "text" { "legend-text" } else if role == "title" {
@@ -94,6 +92,10 @@
 #let tick-metrics(gctx, tier: "major") = {
   let role = if tier == "major" { "ticks" } else { "ticks-" + tier }
   let surface = surface-for(gctx, role)
+  // No surface means this context has no such tick: a legend has no sub-decade
+  // tiers. Answer with nothing to draw, so a caller reading `len` reserves no
+  // room for a tick that never appears.
+  if surface == none { return (surface: none, len: 0.0, gap: 0.0) }
   if gctx.mode == "legend" {
     return (surface: surface, len: LEGEND-TICK-LEN, gap: LEGEND-TICK-GAP)
   }

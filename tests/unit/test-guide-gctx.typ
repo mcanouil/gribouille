@@ -3,9 +3,10 @@
 
 #import "../../src/guide/gctx.typ": (
   DIRECTIONS, POSITIONS, SIDES, _axes-of, _mode-of, direction-for, gctx,
-  place-cartesian, place-r, place-theta, pt,
+  place-cartesian, place-r, place-theta, side-pt,
 )
 #import "../../src/utils/radial.typ": polar-canvas
+#import "../../src/utils/errors.typ": enum-text, error-text, type-text
 
 #assert.eq(SIDES, ("top", "right", "bottom", "left"))
 #assert.eq(DIRECTIONS, ("horizontal", "vertical"))
@@ -19,8 +20,8 @@
 #assert.eq(_axes-of("right"), (along: "y", across: "x", sign: 1))
 
 // The flip is what lets one horizontal routine serve all four sides.
-#assert.eq(pt(_axes-of("bottom"), 3.0, 0.5), (3.0, 0.5))
-#assert.eq(pt(_axes-of("left"), 3.0, 0.5), (0.5, 3.0))
+#assert.eq(side-pt(_axes-of("bottom"), 3.0, 0.5), (3.0, 0.5))
+#assert.eq(side-pt(_axes-of("left"), 3.0, 0.5), (0.5, 3.0))
 
 // Context comes from the aesthetic, never from the side.
 #assert.eq(_mode-of("x"), "axis")
@@ -101,5 +102,29 @@
 #let theta-ctx = gctx("theta", "theta", axis: "y", place: theta)
 #assert.eq(theta-ctx.axis, "y")
 #assert.eq(theta-ctx.mode, "axis")
+
+// Rejection wording. An axis guide that cannot derive its axis and was not
+// given one fails at construction, rather than resolving a surface name against
+// `none` at the draw site.
+#assert.eq(
+  error-text(
+    "guide-gctx",
+    "an axis guide at \"theta\" has no axis",
+    hint: "Pass `axis: \"x\"` or `axis: \"y\"`; only a cartesian side can derive it.",
+  ),
+  "guide-gctx: an axis guide at \"theta\" has no axis. Pass `axis: \"x\"` or `axis: \"y\"`; only a cartesian side can derive it.",
+)
+#assert.eq(
+  enum-text("guide-gctx", "position", "middle", POSITIONS),
+  "guide-gctx: position must be one of \"top\", \"right\", \"bottom\", \"left\", \"theta\", \"r\", \"inside\"; got \"middle\".",
+)
+#assert.eq(
+  enum-text("guide-gctx", "direction", "sideways", DIRECTIONS),
+  "guide-gctx: direction must be one of \"horizontal\", \"vertical\"; got \"sideways\".",
+)
+#assert.eq(
+  type-text("guide-gctx", "aesthetic", 3, "an aesthetic name"),
+  "guide-gctx: aesthetic must be an aesthetic name; got 3.",
+)
 
 Guide-gctx tests passed.

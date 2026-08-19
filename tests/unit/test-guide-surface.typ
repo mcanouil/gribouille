@@ -61,9 +61,12 @@
 #assert.eq(tick-metrics(axis-x).len, 0.1)
 #assert.eq(tick-metrics(axis-x).gap, 0.1)
 
-// The minor tier halves the resolved major length (`axis-ticks-minor` is 50%).
-#assert.eq(tick-metrics(axis-x, tier: "minor").len, 0.05)
-// The mid tier takes three quarters of it (`axis-ticks-mid` is 75%).
+// The minor tier halves the resolved major length (`axis-ticks-minor` is 50%),
+// and the mid tier takes three quarters of it (`axis-ticks-mid` is 75%).
+#assert.eq(
+  calc.round(tick-metrics(axis-x, tier: "minor").len, digits: 6),
+  0.05,
+)
 #assert.eq(
   calc.round(tick-metrics(axis-x, tier: "mid").len, digits: 6),
   0.075,
@@ -76,6 +79,17 @@
 #assert.eq(
   tick-metrics(legend),
   (surface: "legend-ticks", len: 0.1, gap: 0.08),
+)
+
+// A tier the context has no surface for reserves nothing, so a caller reading
+// `len` never leaves room for a tick that is never drawn.
+#assert.eq(
+  tick-metrics(legend, tier: "minor"),
+  (surface: none, len: 0.0, gap: 0.0),
+)
+#assert.eq(
+  tick-metrics(legend, tier: "mid"),
+  (surface: none, len: 0.0, gap: 0.0),
 )
 
 #assert.eq(ROLES.len(), 8)

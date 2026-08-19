@@ -132,6 +132,7 @@ Run the survey command at the bottom before extending the table.
 | `across`  | across-guide extent | the thickness axis of a side, growing away from the panel. Paired with `along` in `_axes-of`; the dimension a side reserves.                        |
 | `place`   | guide point map     | `(frac, across) -> (x, y)` closure on a `gctx`; the only thing a radial guide changes.                                                              |
 | `role`    | theme surface role  | what a part asks a `gctx` for (`"text"`, `"ticks"`, `"line"`, …) instead of naming a surface; resolved by `surface-for`.                            |
+| `side-pt` | side-ordered point  | orders an `(along, across)` pair the way a side runs, so one horizontal routine serves all four sides. Named in full because a bare `pt` reads as the Typst length unit. |
 
 ## Legend placement
 
