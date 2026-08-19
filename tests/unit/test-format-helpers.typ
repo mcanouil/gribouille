@@ -1,8 +1,8 @@
 // Unit tests for the format-* formatter helpers.
 
 #import "../../src/utils/format.typ": (
-  format-comma, format-currency, format-lower, format-number, format-percent,
-  format-scientific, format-title, format-upper, format-wrap,
+  format-comma, format-currency, format-log, format-lower, format-number,
+  format-percent, format-scientific, format-title, format-upper, format-wrap,
 )
 #import "../../src/utils/typst-markup.typ": is-typst-markup
 
@@ -49,6 +49,32 @@
 // In-range still wraps with typst() (consistent type) but the math is plain.
 #assert.eq(is-typst-markup(sci(12.34)), true)
 #assert.eq(sci(0).source, "$0$")
+
+// format-log writes an exact power as a superscript, and keeps a mantissa for
+// the 1/2/5 breaks an automatic log axis produces.
+#let lg = format-log()
+#assert.eq(lg(1000).source, "$10^(3)$")
+#assert.eq(lg(1).source, "$10^(0)$")
+// `str` of a negative integer uses the minus sign, not the hyphen, which is
+// what the math mode wants anyway.
+#assert.eq(lg(0.001).source, "$10^(" + str(-3) + ")$")
+#assert.eq(lg(1000000).source, "$10^(6)$")
+#assert.eq(lg(2).source, "$2$")
+#assert.eq(lg(5).source, "$5$")
+#assert.eq(lg(20).source, "$2 times 10^(1)$")
+#assert.eq(lg(50).source, "$5 times 10^(1)$")
+// A string break parses like every other formatter takes one.
+#assert.eq(lg("1000").source, "$10^(3)$")
+// A break at or below zero belongs to a linear axis; label it plainly.
+#assert.eq(lg(0), "0")
+#assert.eq(lg(-5), "-5")
+#assert.eq(lg(none), none)
+
+// Another base labels its own powers.
+#let lg2 = format-log(base: 2)
+#assert.eq(lg2(8).source, "$2^(3)$")
+#assert.eq(lg2(1).source, "$2^(0)$")
+#assert.eq(lg2(3).source, "$1.5 times 2^(1)$")
 
 // Case helpers.
 #let title = format-title()

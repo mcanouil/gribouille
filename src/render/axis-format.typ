@@ -106,17 +106,23 @@
   (calc.min(lo, hi), calc.max(lo, hi))
 }
 
-// Sub-decade positions 2..9 x 10^k inside `[lo, hi]` for a log10 axis. Shared
-// by minor gridlines and the opt-in `guide-axis-logticks` minor ticks. Assumes
-// `lo` and `hi` are strictly positive (callers guard).
-#let _log10-minor-positions(lo, hi) = {
+// Sub-decade mantissas, split into the tick tiers `guide-axis-logticks` draws.
+// The mid tier marks the half step of a decade, the short tier the rest. Between
+// them they cover 2 to 9, and nothing else places a mark there: the minor
+// gridlines subdivide between the majors, as they do on every other transform.
+#let LOG10-MID-MANTISSAS = (5,)
+#let LOG10-SHORT-MANTISSAS = (2, 3, 4, 6, 7, 8, 9)
+
+// Positions `mantissa x 10^k` inside `[lo, hi]` for a log10 axis. Assumes `lo`
+// and `hi` are strictly positive (callers guard).
+#let _log10-tier-positions(lo, hi, mantissas) = {
   let k-lo = int(calc.floor(calc.log(lo, base: 10)))
   let k-hi = int(calc.ceil(calc.log(hi, base: 10)))
   let out = ()
   let k = k-lo
   while k <= k-hi {
     let decade = calc.pow(10.0, k)
-    for c in (2, 3, 4, 5, 6, 7, 8, 9) {
+    for c in mantissas {
       let v = c * decade
       if v >= lo and v <= hi { out.push(v) }
     }
@@ -126,10 +132,11 @@
 }
 
 // Minor gridline positions for a continuous axis, given its drawn `majors`.
-// linear/sqrt/reverse subdivide between majors (default one
-// minor per gap) and extend one step past each end; log10 uses sub-decade
-// lines; binned scales get none. Honours a user `minor-breaks` override and an
-// `n-minor` subdivision count from the scale spec.
+// Every transform subdivides between the majors (default one minor per gap) and
+// extends one step past each end, in transformed space, so a log10 decade takes
+// one line at its visual centre rather than one per sub-decade step; binned
+// scales get none. Honours a user `minor-breaks` override and an `n-minor`
+// subdivision count from the scale spec.
 #let _axis-minor-breaks(trained, majors) = {
   let spec = trained.at("spec", default: none)
   // Binned ticks already sit at bin midpoints; no minor gridlines.
@@ -144,11 +151,6 @@
     let arr = if type(user-minor) == array { user-minor } else { (user-minor,) }
     return arr.filter(b => b >= dlo and b <= dhi)
   }
-  // log10: sub-decade positions 2..9 x 10^k inside the domain.
-  if transform == "log10" {
-    if dlo <= 0 or dhi <= 0 { return () }
-    return _log10-minor-positions(dlo, dhi)
-  }
   if majors == none or majors.len() < 2 { return () }
   let n-minor = if spec == none { auto } else {
     spec.at("n-minor", default: auto)
@@ -162,12 +164,15 @@
   if step == 0 { return () }
   let tol = calc.abs(step) * 1e-6
   // Irregular majors (e.g. user-supplied breaks) have no single step; fall back
-  // to one minor per gap at the data-space midpoint, with no end extension.
+  // to one minor per gap, halfway in transformed space so the line sits where
+  // the eye puts it, with no end extension.
   let uniform = range(t.len() - 1).all(i => (
     calc.abs((t.at(i + 1) - t.at(i)) - step) <= tol
   ))
   if not uniform {
-    return edge-midpoints(sorted).filter(b => b >= dlo and b <= dhi)
+    return range(t.len() - 1)
+      .map(i => transform-inv(transform, (t.at(i) + t.at(i + 1)) / 2))
+      .filter(b => b >= dlo and b <= dhi)
   }
   let spacing = step / (n + 1)
   // Candidates span one major step beyond each end; interior subdivisions that

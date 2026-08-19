@@ -61,6 +61,12 @@
   out.insert("axis-ticks-minor", "axis-ticks")
   out.insert("axis-ticks-minor-x", "axis-ticks-minor")
   out.insert("axis-ticks-minor-y", "axis-ticks-minor")
+  // Mid ticks parent to `axis-ticks`, not to the minors: a relative length
+  // compounds down the chain, so parenting them to the minors would resolve
+  // shorter than the tier they are meant to outrank.
+  out.insert("axis-ticks-mid", "axis-ticks")
+  out.insert("axis-ticks-mid-x", "axis-ticks-mid")
+  out.insert("axis-ticks-mid-y", "axis-ticks-mid")
   out
 }
 
@@ -464,6 +470,25 @@
   if type(len) == ratio { return default-tick-length * (len / 100%) }
   len
 }
+
+/// Longest tick a primary axis edge can draw, across every tier.
+///
+/// The axis band reserves depth from this rather than from the major ticks
+/// alone, so a theme that lengthens a sub-decade tier past the major one still
+/// has room for it. The cartesian counterpart of the radial `reach`.
+///
+/// \@internal
+/// \@param theme Merged theme dictionary.
+///
+/// \@param side Tick surface suffix of the primary edge, e.g., `"x-bottom"`.
+///
+/// \@param axis `"x"` or `"y"`; the sub-decade tiers have no per-side variant.
+/// \@returns Tick mark length as an absolute Typst length.
+#let tick-reach(theme, side, axis) = calc.max(
+  _tick-length(theme, "axis-ticks-" + side),
+  _tick-length(theme, "axis-ticks-mid-" + axis),
+  _tick-length(theme, "axis-ticks-minor-" + axis),
+)
 
 /// Resolve a rect surface into a fill colour, outline stroke, and per-side
 /// cm margins. `inset-cm` is consumed by cetz draw sites (positive values

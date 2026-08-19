@@ -8,6 +8,7 @@
 // aesthetic mapping is typst-tagged, plain-string callback returns are
 // wrapped automatically by the render path so they evaluate as markup.
 
+#import "./errors.typ": check, fail-type
 #import "./types.typ": parse-number
 #import "./typst-markup.typ": typst
 
@@ -297,6 +298,78 @@
   }
   let m-str = _format-number-impl(mantissa, digits: digits)
   typst("$" + m-str + " times 10^(" + str(exp) + ")$")
+}
+
+/// Format a numeric break as a power of a base, in Typst math.
+///
+/// Returns a `typst()`-tagged string, so a break that is an exact power reads
+/// as `10^3` with a real superscript. A break that is not an exact power keeps
+/// a mantissa, which is what an automatic log axis needs: its breaks fall on
+/// 1, 2, and 5 times a power. The counterpart of `scales::label_log()`, except
+/// that `scales` writes a fractional exponent where this keeps the mantissa.
+///
+/// A secondary axis formats the value it has already transformed, so a
+/// `dup-axis` or `sec-axis` needs its own `labels:` to match the primary.
+///
+/// \@category Helpers
+/// \@subcategory Formatters
+/// \@stability stable
+///
+/// \@param base Base of the powers; must be above 1.
+///
+/// \@param digits Significant decimal digits in the mantissa.
+///
+/// \@returns A closure `value => content`.
+///
+/// \@examples Decade labels on a log axis, written as powers of ten.
+/// ```
+/// //| alt: "Scatter chart of seven growing values with a log y axis whose labels read as powers of ten."
+/// #plot(
+///   data: (
+///     (x: 1, y: 3), (x: 2, y: 12), (x: 3, y: 60), (x: 4, y: 250),
+///     (x: 5, y: 900), (x: 6, y: 4000), (x: 7, y: 20000),
+///   ),
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (geom-point(size: 3pt),),
+///   scales: scales(y: scale-log10(labels: format-log())),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@see \@format-scientific, \@breaks-log, \@typst
+#let format-log(base: 10, digits: 3) = {
+  if type(base) != int and type(base) != float {
+    fail-type("format-log", "base", base, "a number")
+  }
+  check(base > 1, "format-log", "base must be above 1; got " + repr(base))
+  let base-str = _format-number-impl(base, big-mark: "")
+  value => {
+    if value == none { return none }
+    let v = if type(value) == str { parse-number(value) } else { value }
+    if v == none { return str(value) }
+    // A logarithm is undefined at or below zero. Such a break belongs to a
+    // linear axis, so label it plainly rather than fail.
+    if v <= 0 { return _format-number-impl(v, big-mark: "") }
+    let e = calc.log(v, base: base)
+    let rounded = calc.round(e)
+    // `calc.log(1000, base: 10)` gives 2.9999999999999996, so an exact power is
+    // recognised by proximity rather than by equality.
+    if calc.abs(e - rounded) < 1e-9 {
+      return typst("$" + base-str + "^(" + str(int(rounded)) + ")$")
+    }
+    let exp = int(calc.floor(e))
+    let mantissa = calc.round(v / calc.pow(float(base), exp), digits: digits)
+    // Rounding can push the mantissa up to the base itself; carry the overflow
+    // into the exponent so the notation stays below one whole step.
+    if mantissa >= base {
+      exp += 1
+      mantissa = calc.round(v / calc.pow(float(base), exp), digits: digits)
+    }
+    let m-str = _format-number-impl(mantissa, big-mark: "")
+    if exp == 0 { return typst("$" + m-str + "$") }
+    typst("$" + m-str + " times " + base-str + "^(" + str(exp) + ")$")
+  }
 }
 
 #let _lower-clusters = "abcdefghijklmnopqrstuvwxyz".clusters()

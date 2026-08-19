@@ -1,6 +1,7 @@
 // Minor gridline break computation for continuous axes: midpoint subdivision
-// with end extension on linear/sqrt, sub-decade lines on log10, explicit
-// `minor-breaks` / `n-minor` overrides, and no minors for binned scales.
+// with end extension, taken in transformed space so log10 and sqrt space evenly
+// on screen, explicit `minor-breaks` / `n-minor` overrides, and no minors for
+// binned scales.
 
 #import "../../src/render/axis-format.typ": _axis-minor-breaks
 
@@ -77,7 +78,17 @@
 )
 #assert.eq(_axis-minor-breaks(lin-irr, (0, 1, 4)), (0.5, 2.5))
 
-// ── log10: sub-decade positions 2..9 within each decade ────────────────────
+// ── log10: one minor per decade, at the midpoint in transformed space ──────
+
+// The positions are irrational, so they are compared with a relative whisker.
+#let close(got, want) = {
+  if got.len() != want.len() { return false }
+  for (i, w) in want.enumerate() {
+    if calc.abs(got.at(i) - w) > 1e-9 * w { return false }
+  }
+  true
+}
+
 #let lg = (
   type: "continuous",
   domain: (0, 2),
@@ -85,27 +96,48 @@
   pre-transformed: true,
   spec: none,
 )
-#assert.eq(
+#assert(close(
   _axis-minor-breaks(lg, (1, 10, 100)),
-  (
-    2.0,
-    3.0,
-    4.0,
-    5.0,
-    6.0,
-    7.0,
-    8.0,
-    9.0,
-    20.0,
-    30.0,
-    40.0,
-    50.0,
-    60.0,
-    70.0,
-    80.0,
-    90.0,
-  ),
+  (calc.pow(10.0, 0.5), calc.pow(10.0, 1.5)),
+))
+
+// `n-minor` reaches a log axis like any other: three minors per decade, evenly
+// spaced in log space.
+#let lg-n = (
+  type: "continuous",
+  domain: (0, 2),
+  transform: "log10",
+  pre-transformed: true,
+  spec: (minor-breaks: auto, n-minor: 3, binned: false),
 )
+#assert(close(
+  _axis-minor-breaks(lg-n, (1, 10, 100)),
+  (0.25, 0.5, 0.75, 1.25, 1.5, 1.75).map(e => calc.pow(10.0, e)),
+))
+
+// n-minor: 0 switches the log minors off.
+#let lg-0 = (
+  type: "continuous",
+  domain: (0, 2),
+  transform: "log10",
+  pre-transformed: true,
+  spec: (minor-breaks: auto, n-minor: 0, binned: false),
+)
+#assert.eq(_axis-minor-breaks(lg-0, (1, 10, 100)), ())
+
+// Irregular log majors take the midpoint in transformed space, the geometric
+// mean of each pair, rather than the data-space midpoint.
+#let lg-irr = (
+  type: "continuous",
+  domain: (0, 1),
+  transform: "log10",
+  pre-transformed: true,
+  spec: none,
+)
+#assert(close(
+  _axis-minor-breaks(lg-irr, (1, 2, 5, 10)),
+  (calc.sqrt(2.0), calc.sqrt(10.0), calc.sqrt(50.0)),
+))
 
 // ── sqrt: minors subdivide in transformed space, staying within the domain ──
 #let sq = (

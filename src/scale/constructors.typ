@@ -49,7 +49,7 @@
 /// \@param minor-breaks Array of minor-gridline positions in data units, a
 ///   function of the trained values returning positions (the `breaks-*`
 ///   helpers return such a function), or `auto` (default) to subdivide the
-///   majors; a `"log10"` axis uses sub-decade lines instead. `x`/`y` only.
+///   majors, halfway between them in transformed space. `x`/`y` only.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set. `x`/`y`
@@ -411,7 +411,7 @@
 /// \@param minor-breaks Array of minor-gridline positions in data units, a
 ///   function of the trained values returning positions (the `breaks-*`
 ///   helpers return such a function), or `auto` (default) to subdivide the
-///   majors; a `"log10"` axis uses sub-decade lines instead.
+///   majors, halfway between them in transformed space.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set.
@@ -468,7 +468,7 @@
 /// \@param minor-breaks Array of minor-gridline positions in data units, a
 ///   function of the trained values returning positions (the `breaks-*`
 ///   helpers return such a function), or `auto` (default) to subdivide the
-///   majors; a `"log10"` axis uses sub-decade lines instead.
+///   majors, halfway between them in transformed space.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set.
@@ -525,7 +525,7 @@
 /// \@param minor-breaks Array of minor-gridline positions in data units, a
 ///   function of the trained values returning positions (the `breaks-*`
 ///   helpers return such a function), or `auto` (default) to subdivide the
-///   majors; a `"log10"` axis uses sub-decade lines instead.
+///   majors, halfway between them in transformed space.
 ///
 /// \@param n-minor Integer count of minor gridlines between adjacent majors, or
 ///   `auto` (default) for one; ignored when `minor-breaks` is set.

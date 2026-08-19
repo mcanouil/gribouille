@@ -4,7 +4,9 @@
 // `render-plot-deferred` so the orchestrator reads as a pipeline.
 
 #import "../scale/train.typ": mapping-display-name
-#import "../theme/theme.typ": _rect-outset-cm, _text-style, _tick-length
+#import "../theme/theme.typ": (
+  _rect-outset-cm, _text-style, _tick-length, tick-reach,
+)
 #import "../utils/margin.typ": opposite-side, perpendicular-sides
 #import "../utils/radial.typ": is-radial
 #import "common.typ": _per-side
@@ -210,8 +212,14 @@
   // A suppressed axis (`guides(x: none)`) draws no ticks or labels, so it
   // reserves no tick depth either; the axis line and title still render. A
   // radial panel draws no cartesian tick marks at all, so it reserves none.
-  let x-tick-cm = if _radial or x-guide.suppress { 0.0 } else { tick-len.xb }
-  let y-tick-cm = if _radial or y-guide.suppress { 0.0 } else { tick-len.yl }
+  // The primary edges carry the sub-decade tiers as well as the major ticks, so
+  // they reserve the longest of them. The secondary edges draw majors only.
+  let x-tick-cm = if _radial or x-guide.suppress { 0.0 } else {
+    tick-reach(theme, "x-bottom", "x") / 1cm
+  }
+  let y-tick-cm = if _radial or y-guide.suppress { 0.0 } else {
+    tick-reach(theme, "y-left", "y") / 1cm
+  }
   // The whole band between the panel edge and its axis title: the ticks and
   // their labels, plus the gap that holds them off the edge. It is what the two
   // extents below reserve and what the draw sites offset the title by, and it

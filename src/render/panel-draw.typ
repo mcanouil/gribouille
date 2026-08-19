@@ -4,9 +4,7 @@
 
 #import "../deps.typ": cetz
 #import "../utils/errors.typ": fail
-#import "../scale/train.typ": (
-  map-axis-data, map-break, mapping-display-name, transform-inv,
-)
+#import "../scale/train.typ": map-axis-data, map-break, mapping-display-name
 #import "../theme/defaults.typ": resolve-colour
 #import "../theme/theme.typ": (
   _line-stroke, _rect-style, _text-args, _text-style, _tick-length,
@@ -27,8 +25,9 @@
   _draw-radial-panel, _draw-radial-r-labels, _theta-tick-marks,
 )
 #import "axis-format.typ": (
-  _axis-breaks, _axis-minor-breaks, _axis-tick-values, _axis-title,
-  _log10-minor-positions, _sec-spec, _secondary-breaks, _tick-label-fallback,
+  LOG10-MID-MANTISSAS, LOG10-SHORT-MANTISSAS, _axis-breaks, _axis-minor-breaks,
+  _axis-tick-values, _axis-title, _log10-tier-positions, _sec-spec,
+  _secondary-breaks, _tick-label-fallback, _visible-domain,
 )
 #import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
 #import "extents.typ": (
@@ -492,40 +491,42 @@
     _draw-y-label,
   )
 
-  // Minor log ticks: opt-in via guide-axis-logticks() on a log10-trans axis.
-  // Emits unlabelled ticks at sub-decade positions (2, 3, ..., 9 within each
-  // decade) covered by the visible domain, themed via `axis-ticks-minor`
-  // (default: half the resolved `axis-ticks` length, same stroke).
-  let _draw-log-minors(trained, guide, axis, range) = {
+  // Sub-decade log ticks: opt-in via guide-axis-logticks() on a log10-trans
+  // axis. Emits unlabelled ticks in two tiers below the labelled decades, which
+  // the majors already draw: a mid tier at 5 x 10^k, themed via
+  // `axis-ticks-mid`, and a short tier at 2, 3, 4, 6, 7, 8, 9 x 10^k, themed
+  // via `axis-ticks-minor`. Both inherit the `axis-ticks` stroke.
+  let _draw-log-ticks(trained, guide, axis, range) = {
     if not guide.logticks or guide.suppress { return }
     if trained == none { return }
     if trained.type != "continuous" { return }
     if trained.at("transform", default: "identity") != "log10" { return }
-    let surface = "axis-ticks-minor-" + axis
-    let stroke = _line-stroke(theme, surface, fallback-colour: _ink)
-    let minor-len = _tick-length(theme, surface) / 1cm
-    if not _should-draw-tick(stroke, minor-len) { return }
-    let view-transform = trained.at("view-transform", default: none)
-    let (lo, hi) = if view-transform != none {
-      (
-        transform-inv("log10", view-transform.at(0)),
-        transform-inv("log10", view-transform.at(1)),
-      )
-    } else { trained.domain }
+    // A pre-transformed scale holds its domain in stat space, so the positions
+    // have to come from the unwarped domain the gridlines already use.
+    let (lo, hi) = _visible-domain(trained)
     if lo <= 0 or hi <= 0 { return }
-    for v in _log10-minor-positions(lo, hi) {
-      if axis == "x" {
-        let cx = map-axis-data(trained, v, range)
-        line((cx, py-lo), (cx, py-lo - minor-len), stroke: stroke)
-      } else {
-        let cy = map-axis-data(trained, v, range)
-        line((px-lo - minor-len, cy), (px-lo, cy), stroke: stroke)
+    let tiers = (
+      ("axis-ticks-mid-" + axis, LOG10-MID-MANTISSAS),
+      ("axis-ticks-minor-" + axis, LOG10-SHORT-MANTISSAS),
+    )
+    for (surface, mantissas) in tiers {
+      let stroke = _line-stroke(theme, surface, fallback-colour: _ink)
+      let tick-len = _tick-length(theme, surface) / 1cm
+      if not _should-draw-tick(stroke, tick-len) { continue }
+      for v in _log10-tier-positions(lo, hi, mantissas) {
+        if axis == "x" {
+          let cx = map-axis-data(trained, v, range)
+          line((cx, py-lo), (cx, py-lo - tick-len), stroke: stroke)
+        } else {
+          let cy = map-axis-data(trained, v, range)
+          line((px-lo - tick-len, cy), (px-lo, cy), stroke: stroke)
+        }
       }
     }
   }
   if not is-radial {
-    _draw-log-minors(x-trained, x-guide, "x", px-range)
-    _draw-log-minors(y-trained, y-guide, "y", py-range)
+    _draw-log-ticks(x-trained, x-guide, "x", px-range)
+    _draw-log-ticks(y-trained, y-guide, "y", py-range)
   }
 
   // Secondary x-axis: draw on top edge if the trained x scale carries a

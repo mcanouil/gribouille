@@ -18,11 +18,11 @@ local AXIS_VARIANT_SUFFIXES = { "-x", "-x-bottom", "-x-top", "-y", "-y-left", "-
 local PANEL_GRID_WEIGHTS = { "panel-grid-major", "panel-grid-minor" }
 local PANEL_GRID_AXIS_SUFFIXES = { "-x", "-y" }
 
--- Minor tick marks inherit `axis-ticks` and gain a per-axis variant, with no
--- per-side variants. Mirrors the axis-ticks-minor block in
--- src/theme/theme.typ::_surface-parent.
-local AXIS_TICKS_MINOR = "axis-ticks-minor"
-local AXIS_TICKS_MINOR_SUFFIXES = { "-x", "-y" }
+-- Sub-decade tick tiers inherit `axis-ticks` and gain a per-axis variant, with
+-- no per-side variants. Mirrors the axis-ticks-mid and axis-ticks-minor blocks
+-- in src/theme/theme.typ::_surface-parent.
+local AXIS_TICKS_SUB_TIERS = { "axis-ticks-mid", "axis-ticks-minor" }
+local AXIS_TICKS_SUB_SUFFIXES = { "-x", "-y" }
 
 -- Identifier substitutions: source uses sys.inputs-driven placeholders that
 -- collapse to these literals in standalone renders.
@@ -163,9 +163,11 @@ function M.read_surface_parent(path)
       parents[weight .. suf] = weight
     end
   end
-  parents[AXIS_TICKS_MINOR] = "axis-ticks"
-  for _, suf in ipairs(AXIS_TICKS_MINOR_SUFFIXES) do
-    parents[AXIS_TICKS_MINOR .. suf] = AXIS_TICKS_MINOR
+  for _, tier in ipairs(AXIS_TICKS_SUB_TIERS) do
+    parents[tier] = "axis-ticks"
+    for _, suf in ipairs(AXIS_TICKS_SUB_SUFFIXES) do
+      parents[tier .. suf] = tier
+    end
   end
   return parents
 end
@@ -237,9 +239,11 @@ local function variant_keys_for(root)
     table.insert(out, root .. suf)
   end
   if root == "axis-ticks" then
-    table.insert(out, AXIS_TICKS_MINOR)
-    for _, suf in ipairs(AXIS_TICKS_MINOR_SUFFIXES) do
-      table.insert(out, AXIS_TICKS_MINOR .. suf)
+    for _, tier in ipairs(AXIS_TICKS_SUB_TIERS) do
+      table.insert(out, tier)
+      for _, suf in ipairs(AXIS_TICKS_SUB_SUFFIXES) do
+        table.insert(out, tier .. suf)
+      end
     end
   end
   return out

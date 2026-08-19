@@ -76,6 +76,9 @@
   // blanking `axis-ticks` blanks the minors too, while a per-axis or per-side
   // override rescales them proportionally.
   axis-ticks-minor: (length: 50%),
+  // Mid tick marks sit between the two, marking the half step of a decade so a
+  // log axis reads at a glance. They inherit `axis-ticks` the same way.
+  axis-ticks-mid: (length: 75%),
   // Thinner than the base to keep colour-bar ticks subtle.
   legend-ticks: element-line(stroke: (0.3 / 0.5) * 100%),
 

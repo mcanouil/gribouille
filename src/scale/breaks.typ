@@ -6,7 +6,7 @@
 ///! Writing the closure by hand works just as well; these cover the common
 ///! placements.
 
-#import "../utils/errors.typ": check, fail-type
+#import "../utils/errors.typ": check, fail, fail-type
 #import "../utils/pretty.typ": pretty
 #import "../utils/extended.typ": extended
 
@@ -163,6 +163,150 @@
     if span == none { return () }
     let (lo, hi) = span
     extended(lo, hi, m: n, integer: values.all(v => v == calc.round(v)))
+  }
+}
+
+// Exponent of `v` in `base`, snapped to a whole number when the logarithm lands
+// within a whisker of one: `calc.log(1000, base: 10)` gives 2.9999999999999996,
+// and an unsnapped `floor` would drop a whole decade.
+#let _log-exponent(v, base) = {
+  let e = calc.log(v, base: base)
+  let rounded = calc.round(e)
+  if calc.abs(e - rounded) < 1e-9 { rounded } else { e }
+}
+
+// Powers `base^k` for `k` walking `kmin` to `kmax` in steps of `by`.
+#let _log-powers(kmin, kmax, by, base) = {
+  range(kmin, kmax + 1, step: by).map(k => calc.pow(float(base), k))
+}
+
+// How many of `breaks` land inside the data range, with the same relative
+// tolerance `pretty-log10` uses so a break sitting exactly on an endpoint counts.
+#let _log-in-range(breaks, lo, hi) = {
+  let tol-lo = lo * (1 - 1e-9)
+  let tol-hi = hi * (1 + 1e-9)
+  breaks.filter(b => b >= tol-lo and b <= tol-hi).len()
+}
+
+// Smallest gap, in log space, between consecutive entries of `steps`, `x`, and
+// `base`. The candidate mantissa that maximises it is the one that best bisects
+// the mantissas placed so far, which is how `scales` orders its fill-in.
+#let _log-gap(x, steps, base) = {
+  let points = (steps + (x, base)).map(v => calc.log(v, base: base)).sorted()
+  let gap = points.at(1) - points.at(0)
+  for i in range(2, points.len()) {
+    let d = points.at(i) - points.at(i - 1)
+    if d < gap { gap = d }
+  }
+  gap
+}
+
+// Sub-decade fill-in: add one mantissa at a time, best bisection first, until
+// enough breaks land inside the data range. Mirrors `scales:::log_sub_breaks`,
+// including the one break of padding either side; `_axis-breaks` clips the
+// padding back off against the visible domain, so it never reaches an axis.
+#let _log-sub-breaks(lo, hi, kmin, kmax, n, base) = {
+  if base <= 2 { return _log-powers(kmin, kmax, 1, base) }
+  let steps = (1,)
+  let candidates = range(2, int(calc.floor(base)))
+  let breaks = ()
+  while candidates.len() > 0 {
+    let best = 0
+    let best-gap = _log-gap(candidates.first(), steps, base)
+    for (i, c) in candidates.enumerate() {
+      let gap = _log-gap(c, steps, base)
+      if gap > best-gap {
+        best-gap = gap
+        best = i
+      }
+    }
+    steps.push(candidates.at(best))
+    let _ = candidates.remove(best)
+    breaks = ()
+    for k in range(kmin, kmax + 1) {
+      let power = calc.pow(float(base), k)
+      for s in steps { breaks.push(s * power) }
+    }
+    if _log-in-range(breaks, lo, hi) >= n - 2 { break }
+  }
+  if _log-in-range(breaks, lo, hi) < n - 2 { return extended(lo, hi, m: n) }
+  breaks = breaks.sorted()
+  let tol-lo = lo * (1 - 1e-9)
+  let tol-hi = hi * (1 + 1e-9)
+  let first = breaks.position(b => b >= tol-lo)
+  if first == none { return breaks }
+  let last = breaks.len() - 1 - breaks.rev().position(b => b <= tol-hi)
+  breaks.slice(calc.max(first - 1, 0), calc.min(last + 2, breaks.len()))
+}
+
+/// Breaks at powers of a base.
+///
+/// Places a tick on each power of `base` that the data spans, thinning them
+/// when the span is wide. When too few powers fall inside the range, sub-decade
+/// steps fill in, best bisection first, the way `scales::breaks_log()` does.
+/// Pair it with `transform: "log10"`, where evenly spaced powers are what the
+/// axis draws.
+///
+/// \@category Scales
+/// \@subcategory Breaks
+/// \@stability stable
+///
+/// \@param n Target number of ticks; the fill-in stops once the count is near
+///   it, so the result may hold one or two more or fewer.
+///
+/// \@param base Base of the powers; must be above 1. It is independent of the
+///   scale transform, so `base: 2` on a `"log10"` axis places its ticks at
+///   powers of two, spaced unevenly on screen.
+///
+/// \@returns Closure taking the trained values and returning break positions.
+///
+/// \@examples A tick on every decade of a log axis.
+/// ```
+/// //| alt: "Scatter chart of ten exponential values with a log y axis ticked at each power of ten."
+/// #plot(
+///   data: (
+///     (x: 1, y: 3), (x: 2, y: 12), (x: 3, y: 60), (x: 4, y: 250),
+///     (x: 5, y: 900), (x: 6, y: 4000), (x: 7, y: 20000),
+///   ),
+///   mapping: aes(x: "x", y: "y"),
+///   layers: (geom-point(size: 3pt),),
+///   scales: scales(y: scale-log10(breaks: breaks-log())),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
+/// \@see \@breaks-pretty, \@format-log, \@scale-log10
+#let breaks-log(n: 5, base: 10) = {
+  check(
+    type(n) == int and n > 0,
+    "breaks-log",
+    "n must be a positive integer; got " + repr(n),
+  )
+  if type(base) != int and type(base) != float {
+    fail-type("breaks-log", "base", base, "a number")
+  }
+  check(base > 1, "breaks-log", "base must be above 1; got " + repr(base))
+  values => {
+    if values.len() == 0 { return () }
+    // A log break is undefined at or below zero. Non-positive rows drop out
+    // rather than fail, since a log axis discards them too, but a vector with
+    // nothing positive left has no answer to give.
+    let positive = values.filter(v => v > 0)
+    if positive.len() == 0 {
+      fail("breaks-log", "no positive values to place breaks on")
+    }
+    let (lo, hi) = _range-of(positive)
+    let kmin = int(calc.floor(_log-exponent(lo, base)))
+    let kmax = int(calc.ceil(_log-exponent(hi, base)))
+    if kmax == kmin { return (calc.pow(float(base), kmin),) }
+    let by = int(calc.floor((kmax - kmin) / n)) + 1
+    while by >= 1 {
+      let breaks = _log-powers(kmin, kmax, by, base)
+      if _log-in-range(breaks, lo, hi) >= n - 2 { return breaks }
+      by = by - 1
+    }
+    _log-sub-breaks(lo, hi, kmin, kmax, n, base)
   }
 }
 
