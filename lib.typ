@@ -119,8 +119,8 @@
 #import "src/plot.typ": get-alt-text
 #import "src/utils/arrow.typ": arrow
 #import "src/utils/format.typ": (
-  format-comma, format-currency, format-lower, format-number, format-percent,
-  format-scientific, format-title, format-upper, format-wrap,
+  format-comma, format-currency, format-log, format-lower, format-number,
+  format-percent, format-scientific, format-title, format-upper, format-wrap,
 )
 #import "src/utils/summaries.typ": (
   mean, mean-cl-boot, mean-cl-normal, mean-sd, mean-se, median, median-hilow,
@@ -152,7 +152,7 @@
 )
 #import "src/scale/secondary.typ": dup-axis, sec-axis
 #import "src/scale/breaks.typ": (
-  breaks-extended, breaks-pretty, breaks-quantile, breaks-width,
+  breaks-extended, breaks-log, breaks-pretty, breaks-quantile, breaks-width,
 )
 #import "src/utils/palette.typ": brewer-palette, okabe-ito
 #import "src/utils/colour.typ": colour-mix
