@@ -119,6 +119,15 @@ Run the survey command at the bottom before extending the table.
 | `mm`      | millimetres               | rare; example datasets (penguins flipper length).                                                |
 | `cb`      | callback                  | user-supplied closure passed through.                                                            |
 
+## Guide layer
+
+| Term      | Expansion           | Notes                                                                                                                                              |
+| --------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entry`   | one guide entry     | one drawn row of a guide: an axis tick, a legend row, a colour-bar tick. `(value, frac, label, tier)`, or `(start, end, label, depth)` for a range. |
+| `entries` | guide entry table   | array of `entry` dicts (`src/guide/entry.typ`). Not to be confused with `key`, which keeps the dict-key and legend-glyph senses.                    |
+| `tier`    | tick weight         | `"major"` / `"mid"` / `"minor"` on an entry; picks the tick length and whether a label is drawn. Named `tier` because `type` is the trained-scale kind. |
+| `depth`   | range nesting level | which row of a bracket stack a range entry occupies; 0 sits nearest the panel.                                                                      |
+
 ## Legend placement
 
 | Term        | Expansion               | Notes                                                                                                                       |

@@ -24,7 +24,7 @@
 )
 #import "../guide/draw-key.typ": default-key-for, draw-glyph
 #import "../guide/legend.typ": _normalise-position
-#import "extents.typ": _rotated-extent
+#import "../utils/label-geometry.typ": _rotated-extent
 #import "../scale/train.typ": mapping-display-name
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/margin.typ": length-to-cm, opposite-side

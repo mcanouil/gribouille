@@ -33,10 +33,10 @@ Entry points trace the same path:
 | `src/scale/` | Aesthetic-agnostic scales. `constructors.typ` returns family-tagged stubs. `bind.typ` validates stub arguments against per-builder key tuples (sync-checked by `tools/typstdoc/scale_keys.lua`), then dispatches `(aesthetic, name)` to family-file builders (continuous, discrete, colour, date, size, …). `train.typ` trains domains. |
 | `src/coord/` | Coordinate systems (cartesian, fixed, flip, radial, transform). |
 | `src/facet/` | Faceting (grid, wrap) and strip labellers. |
-| `src/guide/` | Legend and axis configuration plus legend-symbol drawing. |
+| `src/guide/` | Legend and axis configuration, legend-symbol drawing, and the entry table (`entry.typ`) that says what a guide annotates. Imports only from `deps.typ` and `utils/`, never from `render/` or `scale/`; anything here that needs a scale takes a closure instead. |
 | `src/theme/` | Theme structure, named themes, element builders, global state. |
 | `src/render/` | Rendering pipeline: domain, facet layout, panel draw, canvas, chrome, legend renderer (`render/legend.typ`). |
-| `src/utils/` | Shared leaf helpers: types, formatting, colour, late-binding, binning, errors. No cetz drawing lives here. |
+| `src/utils/` | Shared leaf helpers: types, formatting, colour, late-binding, binning, errors, rotated-label geometry (`label-geometry.typ`). No cetz drawing lives here. |
 | `src/datasets/` | Built-in example datasets (economics, mpg, penguins). |
 
 Design tenets worth knowing before editing:
