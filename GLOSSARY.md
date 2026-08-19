@@ -66,7 +66,8 @@ Run the survey command at the bottom before extending the table.
 | `cap`     | cap length / cap mode     | end-cap of a stroke or arc (radial axis arc).                                         |
 | `tick`    | axis tick                 | tick mark (`axis-ticks`, `element-tick`); the label is `axis-text`.                   |
 | `ext`     | measured extents          | `(width, height)` cm record from `measure-labels-cm`; an axis title's also carries `along` and `min-width`. |
-| `along`   | along-panel reading length | cm an axis title may read before its projection overruns the panel; the box it wraps in (`_title-along-cm`, `_title-boxed`). |
+| `along`   | extent along the reading axis | cm a guide part spreads along the side it sits on; for an axis title, the length it may read before its projection overruns the panel, and the box it wraps in (`_title-along-cm`, `_title-boxed`). Paired with `across`. |
+| `across`  | extent away from the panel | cm a guide part is thick, measured growing away from the panel or the anchor edge. The dimension a side reserves. Paired with `along`. |
 | `reach`   | reach from a pin          | cm a label spreads from the point it is anchored at, per canvas side (`_label-reach`). |
 | `overhang` | overhang past an edge    | cm a label's reach exceeds its distance from the panel edge; a floor on the chrome margin (`_label-overhang`). |
 | `frac`    | fractional position       | a break's place inside the data area, 0 at one end and 1 at the other (`map-break` into `(0, 1)`). |
@@ -118,6 +119,23 @@ Run the survey command at the bottom before extending the table.
 | `sp`      | species                   | example data column (penguins / iris-style).                                                     |
 | `mm`      | millimetres               | rare; example datasets (penguins flipper length).                                                |
 | `cb`      | callback                  | user-supplied closure passed through.                                                            |
+
+## Guide layer
+
+A guide is built from three layers: an entry table says what to annotate, a
+primitive draws one visual element of it, and a composition lays several
+primitives out. The same primitive serves an axis and a legend.
+
+| Term          | Expansion                | Notes                                                                                                                     |
+| ------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `entry`       | one guide entry          | one drawn row of a guide: an axis tick, a legend row, a colour-bar tick. `(value, frac, label, tier)`, or `(start, end, label, depth)` for a range. |
+| `entries`     | guide entry table        | array of `entry` dicts (`src/guide/entry.typ`). Not to be confused with `key`, which stays the dict-key and legend-glyph sense. |
+| `tier`        | tick weight              | `"major"` / `"mid"` / `"minor"` on an entry; picks the tick length and whether a label is drawn. Named `tier` because `type` is the trained-scale kind. |
+| `depth`       | range nesting level      | which row of a bracket stack a range entry occupies; 0 sits nearest the panel.                                            |
+| `primitive`   | one guide element        | dict tagged `kind: "primitive"` exporting `measure(prim, gctx)` and `draw(prim, gctx, frame)`. Side-agnostic.              |
+| `composition` | guide layout node        | dict tagged `kind: "composition"` holding child primitives and laying them out (`compose-stack`, `compose-sandwich`, …).   |
+| `gctx`        | guide context            | the parameters a primitive is trained under: `position`, `aesthetic`, `direction`, `theme`, and the `place` closure. Named after `ctx`, which it parallels. |
+| `frame`       | guide draw rectangle     | `(x0, y0, x1, y1, grow)` in cetz canvas cm; the box a primitive draws into and the direction it grows.                    |
 
 ## Legend placement
 
