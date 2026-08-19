@@ -5,6 +5,7 @@
   entries-sequence, entries-tiered, entry, entry-tiers, range-entry,
   resolve-entries, train-entries, train-range-entries,
 )
+#import "../../src/utils/errors.typ": enum-text, error-text, type-text
 
 #assert.eq(TIERS, ("major", "mid", "minor"))
 
@@ -56,6 +57,18 @@
 #let named-bins = entries-bins((0, 2, 5), labels: ("low", "high"))
 #assert.eq(named-bins.map(r => r.label), ("low", "high"))
 
+// A bin label closure reads both bounds, since a bin label usually names them.
+#let spanned = entries-bins((0, 2, 5), labels: (lo, hi) => (
+  str(lo) + "-" + str(hi)
+))
+#assert.eq(spanned.map(r => r.label), ("0-2", "2-5"))
+
+// A value listed under two tiers keeps the heavier one and is dropped from the
+// lighter, so no position carries two ticks.
+#let clashing = entries-tiered((1, 10), mid: (5, 10), minor: (5, 20))
+#assert.eq(clashing.map(r => r.value), (1, 5, 10, 20))
+#assert.eq(clashing.map(r => r.tier), ("major", "mid", "major", "minor"))
+
 // Training maps `value` to `frac` through an injected closure, so this module
 // never reaches forward to the scale stage. Reference: a linear map of the
 // domain 0..10 onto 0..1, so 5 lands halfway.
@@ -78,5 +91,40 @@
 // Validation accepts a trained table and a range table alike.
 #assert.eq(check-entries(trained, "test").len(), 3)
 #assert.eq(check-entries(trained-bins, "test").len(), 2)
+
+// Rejection wording. `errors.typ` splits the message builders from the `fail-*`
+// wrappers so the text is assertable without catching a panic; these pin what
+// each guard says, not merely that it fires.
+#assert.eq(
+  enum-text("guide-entry", "tier", "huge", TIERS),
+  "guide-entry: tier must be one of \"major\", \"mid\", \"minor\"; got \"huge\".",
+)
+#assert.eq(
+  type-text(
+    "guide-entry",
+    "labels",
+    3,
+    "an array, a closure, or `auto`",
+  ),
+  "guide-entry: labels must be an array, a closure, or `auto`; got 3.",
+)
+#assert.eq(
+  error-text(
+    "guide-entry",
+    "labels has 3 items for 2 values",
+    hint: "Supply one label per value, a closure, or `auto`.",
+  ),
+  "guide-entry: labels has 3 items for 2 values. Supply one label per value, a closure, or `auto`.",
+)
+#assert.eq(
+  type-text(
+    "guide-entry",
+    "entries",
+    auto,
+    "a resolved table",
+    hint: "`auto` inherits from the parent composition; resolve it there.",
+  ),
+  "guide-entry: entries must be a resolved table; got auto. `auto` inherits from the parent composition; resolve it there.",
+)
 
 Guide-entry tests passed.

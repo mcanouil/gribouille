@@ -14,7 +14,7 @@
 ///! The scale lives downstream of this module, so the caller supplies the map
 ///! rather than this module reaching forward for it.
 
-#import "../utils/errors.typ": check, fail-enum, fail-type, quote-each
+#import "../utils/errors.typ": check, fail-enum, fail-type
 
 // The tick weights a guide draws. `major` is the labelled tick, `mid` the half
 // step of a log decade, `minor` the rest. Named `tier` because `type` already
@@ -41,13 +41,23 @@
   depth: depth,
 )
 
+// Reject a `labels` argument the table constructors cannot apply, so a typo
+// names the guide rather than panicking inside a call to a non-function.
+#let _check-labels(labels, scope) = {
+  if labels == auto or type(labels) == array or type(labels) == function {
+    return labels
+  }
+  fail-type(scope, "labels", labels, "an array, a closure, or `auto`")
+}
+
 // A table from explicit values. `labels` is `auto` to leave every label unset
 // for a later resolver, an array matching `values` one for one, or a closure
-// applied to each value.
+// called with one value.
 #let entries-manual(values, labels: auto, tier: "major") = {
   if type(values) != array {
     fail-type("guide-entry", "values", values, "an array")
   }
+  let _ = _check-labels(labels, "guide-entry")
   if type(labels) == array {
     check(
       labels.len() == values.len(),
@@ -71,13 +81,20 @@
     ))
 }
 
-// A table spanning several tick weights, as a log axis draws it. Each tier
-// keeps its own values; the merged table is sorted by value so a primitive can
-// walk it once.
+// A table spanning several tick weights, as a log axis draws it. The merged
+// table is sorted by value so a primitive can walk it once.
+//
+// A value listed under more than one tier keeps the heaviest one and is dropped
+// from the rest, because two entries at one position would draw two overlapping
+// ticks of different lengths and report the value under both tiers.
 #let entries-tiered(majors, mid: (), minor: (), labels: auto) = {
+  let seen = majors
+  let mid-kept = mid.filter(v => not seen.contains(v))
+  seen = seen + mid-kept
+  let minor-kept = minor.filter(v => not seen.contains(v))
   let major-rows = entries-manual(majors, labels: labels)
-  let mid-rows = entries-manual(mid, tier: "mid")
-  let minor-rows = entries-manual(minor, tier: "minor")
+  let mid-rows = entries-manual(mid-kept, tier: "mid")
+  let minor-rows = entries-manual(minor-kept, tier: "minor")
   (..major-rows, ..mid-rows, ..minor-rows).sorted(key: e => e.value)
 }
 
@@ -86,10 +103,11 @@
 // `value` is left `none`, so the gizmo reads the colour straight off `frac`.
 #let entries-sequence(n: 64) = {
   check(
-    n >= 2,
+    type(n) == int and n >= 2,
     "guide-entry",
-    "a colour-bar sequence needs at least 2 samples; got " + repr(n),
-    hint: "Raise `n`.",
+    "a colour-bar sequence needs a whole number of at least 2 samples; got "
+      + repr(n),
+    hint: "Raise `n` to a whole number of 2 or more.",
   )
   range(n).map(i => (
     value: none,
@@ -100,7 +118,8 @@
 }
 
 // A table of bins from their edges, for a binned colour bar. `n` edges give
-// `n - 1` bins, each a range entry spanning one step.
+// `n - 1` bins, each a range entry spanning one step. A `labels` closure is
+// called with both bounds, because a bin label usually reads them both.
 #let entries-bins(edges, labels: auto) = {
   check(
     type(edges) == array and edges.len() >= 2,
@@ -108,12 +127,25 @@
     "bin edges need at least 2 values; got " + repr(edges),
     hint: "Supply the bin boundaries in ascending order.",
   )
+  let _ = _check-labels(labels, "guide-entry")
+  if type(labels) == array {
+    check(
+      labels.len() == edges.len() - 1,
+      "guide-entry",
+      "labels has "
+        + str(labels.len())
+        + " items for "
+        + str(edges.len() - 1)
+        + " bins",
+      hint: "Supply one label per bin, a closure, or `auto`.",
+    )
+  }
   range(edges.len() - 1).map(i => range-entry(
     edges.at(i),
     edges.at(i + 1),
     label: if labels == auto { none } else if type(labels) == array {
       labels.at(i)
-    } else { (labels)(edges.at(i)) },
+    } else { (labels)(edges.at(i), edges.at(i + 1)) },
   ))
 }
 
