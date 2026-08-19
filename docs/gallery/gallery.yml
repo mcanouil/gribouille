@@ -513,6 +513,14 @@
   description: 'Pass `end: calc.pi` to `coord-radial` for a partial sweep; the panel becomes a half-circle and domain endpoints land at distinct angles instead of stacking.'
   alt: "Half-circle radial plot of 13 hourly load samples connected by a line, sweeping from 12 o'clock clockwise to 6 o'clock."
 
+- slug: coord-radial-facets
+  intent: layout
+  data: "two categoricals"
+  chart: "pie chart"
+  title: "Faceted radial panels"
+  description: 'One pie per level under `facet-wrap`. A radial panel rings its tick labels inside its own circle rather than on a shared edge, so every panel keeps them; the angular labels follow the sweep, which `coord-radial(theta: "y")` puts on `y`.'
+  alt: "Two by two grid of pie charts, one per quarter, each split into two channel shares and each carrying its own ring of angular tick labels."
+
 - slug: coord-radial-clock
   intent: part-to-whole
   data: "time series"

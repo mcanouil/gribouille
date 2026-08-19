@@ -666,7 +666,6 @@
       grid-radial-discrete: _grid-radial-discrete,
       ax-line: _ax-line,
       theta-ticks: _theta-ticks,
-      show-x-labels: show-x-labels,
     ))
   }
 
@@ -752,7 +751,6 @@
       x-disp: _x-disp,
       y-disp: _y-disp,
       ax-text: _ax-text,
-      show-y-labels: show-y-labels,
     ))
   }
 

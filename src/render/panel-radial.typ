@@ -82,8 +82,16 @@
 
 // Pre-geom radial pass. `rctx` carries the enclosing panel state: `spec`,
 // `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`,
-// `grid-radial`, `grid-radial-discrete`, `ax-line`, `theta-ticks`,
-// `show-x-labels`.
+// `grid-radial`, `grid-radial-discrete`, `ax-line`, `theta-ticks`.
+//
+// A faceted radial panel keeps its own tick labels, both weights, where a
+// cartesian one gives them up to the panel on its edge. `show-x-labels` and
+// `show-y-labels` mean "bottom row" and "first column", and they exist because
+// neighbouring cartesian panels share the axis along the edge between them. A
+// radial panel rings its labels inside its own circle, sharing them with
+// nobody, so dropping them would leave an interior panel with no scale to read
+// against. `radial-ctx` reserves the ring in every panel either way, so
+// keeping them costs no room.
 #let _draw-radial-panel(rctx) = {
   import cetz.draw: circle, content, line
   let spec = rctx.spec
@@ -97,7 +105,6 @@
   let _grid-radial-discrete = rctx.grid-radial-discrete
   let _ax-line = rctx.ax-line
   let _theta-ticks = rctx.theta-ticks
-  let show-x-labels = rctx.show-x-labels
 
   let theta-guide = _read-theta-guide(spec)
   let theta-suppress = theta-guide != none and theta-guide.suppress
@@ -219,10 +226,7 @@
   }
 
   if (
-    show-x-labels
-      and theta-text.size > 0pt
-      and theta-trained != none
-      and not theta-suppress
+    theta-text.size > 0pt and theta-trained != none and not theta-suppress
   ) {
     for group in theta-groups {
       // Shared with the chrome stage, which reserves the band this lands in.
@@ -254,8 +258,8 @@
 }
 
 // Post-geom radial pass: r-axis tick labels. `rctx` carries `spec`,
-// `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`,
-// `show-y-labels`.
+// `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`. Like
+// the theta labels above, these stay on every faceted panel.
 #let _draw-radial-r-labels(rctx) = {
   import cetz.draw: content
   let spec = rctx.spec
@@ -273,8 +277,7 @@
     rctx.ax-text.yl
   } else { rctx.ax-text.xb }
   if (
-    rctx.show-y-labels
-      and r-text.size > 0pt
+    r-text.size > 0pt
       and r-trained != none
       and r-trained.type == "continuous"
       and not _read-r-guide(spec).suppress
