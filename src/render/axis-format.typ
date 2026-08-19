@@ -106,17 +106,23 @@
   (calc.min(lo, hi), calc.max(lo, hi))
 }
 
-// Sub-decade positions 2..9 x 10^k inside `[lo, hi]` for a log10 axis. Shared
-// by minor gridlines and the opt-in `guide-axis-logticks` minor ticks. Assumes
-// `lo` and `hi` are strictly positive (callers guard).
-#let _log10-minor-positions(lo, hi) = {
+// Sub-decade mantissas, split into the tick tiers `guide-axis-logticks` draws.
+// The mid tier marks the half step of a decade, the short tier the rest. The
+// two partition the full set, which the minor gridlines keep using whole.
+#let LOG10-MID-MANTISSAS = (5,)
+#let LOG10-SHORT-MANTISSAS = (2, 3, 4, 6, 7, 8, 9)
+#let LOG10-ALL-MANTISSAS = (2, 3, 4, 5, 6, 7, 8, 9)
+
+// Positions `mantissa x 10^k` inside `[lo, hi]` for a log10 axis. Assumes `lo`
+// and `hi` are strictly positive (callers guard).
+#let _log10-tier-positions(lo, hi, mantissas) = {
   let k-lo = int(calc.floor(calc.log(lo, base: 10)))
   let k-hi = int(calc.ceil(calc.log(hi, base: 10)))
   let out = ()
   let k = k-lo
   while k <= k-hi {
     let decade = calc.pow(10.0, k)
-    for c in (2, 3, 4, 5, 6, 7, 8, 9) {
+    for c in mantissas {
       let v = c * decade
       if v >= lo and v <= hi { out.push(v) }
     }
@@ -124,6 +130,13 @@
   }
   out
 }
+
+// Every sub-decade position, which is what a minor gridline draws.
+#let _log10-minor-positions(lo, hi) = _log10-tier-positions(
+  lo,
+  hi,
+  LOG10-ALL-MANTISSAS,
+)
 
 // Minor gridline positions for a continuous axis, given its drawn `majors`.
 // linear/sqrt/reverse subdivide between majors (default one

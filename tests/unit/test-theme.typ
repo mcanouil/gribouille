@@ -138,6 +138,31 @@
   ),
   0.05cm,
 )
+// Mid ticks sit between the major and the minor length, per axis. They parent
+// to `axis-ticks`, so the ratio resolves against the major rather than
+// compounding down through the minors.
+#assert.eq(_tick-length(minor-default, "axis-ticks-mid-x"), 0.3cm)
+#assert.eq(_tick-length(minor-default, "axis-ticks-mid-y"), 0.3cm)
+#assert.eq(
+  _tick-length(
+    merge-theme(theme(axis-ticks-mid: element-tick(length: 0.06cm))),
+    "axis-ticks-mid-x",
+  ),
+  0.06cm,
+)
+
+// The reach of a primary edge is the longest tier it can draw.
+#import "../../src/theme/theme.typ": tick-reach
+#assert.eq(tick-reach(minor-default, "x-bottom", "x"), 0.4cm)
+#assert.eq(
+  tick-reach(
+    merge-theme(theme(axis-ticks-mid: element-tick(length: 200%))),
+    "x-bottom",
+    "x",
+  ),
+  0.2cm,
+)
+
 // Minor marks inherit the major stroke and colour unless overridden.
 #let minor-inherit = merge-theme(theme(axis-ticks: element-tick(
   colour: rgb("#334455"),

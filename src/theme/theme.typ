@@ -61,6 +61,12 @@
   out.insert("axis-ticks-minor", "axis-ticks")
   out.insert("axis-ticks-minor-x", "axis-ticks-minor")
   out.insert("axis-ticks-minor-y", "axis-ticks-minor")
+  // Mid ticks parent to `axis-ticks`, not to the minors: a relative length
+  // compounds down the chain, so parenting them to the minors would resolve
+  // shorter than the tier they are meant to outrank.
+  out.insert("axis-ticks-mid", "axis-ticks")
+  out.insert("axis-ticks-mid-x", "axis-ticks-mid")
+  out.insert("axis-ticks-mid-y", "axis-ticks-mid")
   out
 }
 
@@ -480,6 +486,7 @@
 /// \@returns Tick mark length as an absolute Typst length.
 #let tick-reach(theme, side, axis) = calc.max(
   _tick-length(theme, "axis-ticks-" + side),
+  _tick-length(theme, "axis-ticks-mid-" + axis),
   _tick-length(theme, "axis-ticks-minor-" + axis),
 )
 
