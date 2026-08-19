@@ -4,9 +4,7 @@
 
 #import "../deps.typ": cetz
 #import "../utils/errors.typ": fail
-#import "../scale/train.typ": (
-  map-axis-data, map-break, mapping-display-name, transform-inv,
-)
+#import "../scale/train.typ": map-axis-data, map-break, mapping-display-name
 #import "../theme/defaults.typ": resolve-colour
 #import "../theme/theme.typ": (
   _line-stroke, _rect-style, _text-args, _text-style, _tick-length,
@@ -29,6 +27,7 @@
 #import "axis-format.typ": (
   _axis-breaks, _axis-minor-breaks, _axis-tick-values, _axis-title,
   _log10-minor-positions, _sec-spec, _secondary-breaks, _tick-label-fallback,
+  _visible-domain,
 )
 #import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
 #import "extents.typ": (
@@ -505,13 +504,9 @@
     let stroke = _line-stroke(theme, surface, fallback-colour: _ink)
     let minor-len = _tick-length(theme, surface) / 1cm
     if not _should-draw-tick(stroke, minor-len) { return }
-    let view-transform = trained.at("view-transform", default: none)
-    let (lo, hi) = if view-transform != none {
-      (
-        transform-inv("log10", view-transform.at(0)),
-        transform-inv("log10", view-transform.at(1)),
-      )
-    } else { trained.domain }
+    // A pre-transformed scale holds its domain in stat space, so the positions
+    // have to come from the unwarped domain the gridlines already use.
+    let (lo, hi) = _visible-domain(trained)
     if lo <= 0 or hi <= 0 { return }
     for v in _log10-minor-positions(lo, hi) {
       if axis == "x" {
