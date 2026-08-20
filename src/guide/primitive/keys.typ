@@ -18,13 +18,14 @@
 ///! downstream of this module.
 
 #import "../../deps.typ": cetz
-#import "../../utils/errors.typ": check, fail-type
+#import "../../utils/errors.typ": assert-halign, check, fail-type
 #import "../entry.typ": check-grid-entries
 #import "../grid.typ": (
-  align-offset, column-widths, grid-rc, pin-right-of, row-overflows,
+  METRIC-FIELDS, align-offset, column-widths, grid-rc, pin-right-of,
+  row-overflows,
 )
 #import "../surface.typ": surface-for
-#import "common.typ": NOTHING, measured, primitive
+#import "common.typ": NOTHING, entries-of, measured, primitive
 
 // `metrics` is the record `grid.key-metrics` builds; `shape` the `(rows, cols)`
 // the keys flow into. `label-align` justifies a label inside its own column and
@@ -50,14 +51,36 @@
       "a dictionary with `rows` and `cols`",
     )
   }
-  if type(metrics) != dictionary {
+  // A grid of no rows is legal and measures nothing, which is what a guide with
+  // no levels resolves to. A fractional or negative count is not.
+  for name in ("rows", "cols") {
+    let n = shape.at(name)
+    if type(n) != int or n < 0 {
+      fail-type(
+        "guide-keys",
+        "shape." + name,
+        n,
+        "a whole number of at least 0",
+      )
+    }
+  }
+  if (
+    type(metrics) != dictionary or METRIC-FIELDS.any(k => k not in metrics)
+  ) {
     fail-type(
       "guide-keys",
       "metrics",
       metrics,
       "the record `key-metrics` builds",
+      hint: "Build it with `key-metrics`, which carries "
+        + METRIC-FIELDS.join(", ")
+        + ".",
     )
   }
+  // Both alignments go through the shared guard, so a string such as "center"
+  // fails by name rather than falling through to the left default.
+  assert-halign("guide-keys", label-align, name: "label-align")
+  assert-halign("guide-keys", justify, name: "justify")
   primitive(
     "keys",
     entries: entries,
@@ -72,21 +95,34 @@
 }
 
 // The table this grid draws, checked at the boundary between the builder that
-// stamped it and the primitive that reads it back.
-#let _rows-of(prim, inherited) = {
-  let own = prim.at("entries", default: auto)
-  let rows = if own != auto { own } else if (
-    inherited == auto or inherited == none
-  ) { () } else { inherited }
-  if rows.len() == 0 { return () }
-  check-grid-entries(rows, "guide-keys")
-}
+// stamped it and the primitive that reads it back. A grid row is placed by its
+// cell rather than by a fraction, so it is checked as a grid table.
+#let _rows-of(prim, inherited) = entries-of(
+  prim,
+  inherited,
+  scope: "guide-keys",
+  check: check-grid-entries,
+)
 
 // The column widths and the row overflows, from the extents the render stage
 // stamped. Measure and draw both read this, so the room and the ink come from
 // one grid.
 #let _grid-of(prim, rows) = {
   let m = prim.metrics
+  // Every row has to have a cell to land in. Without this, an index past the
+  // grid reaches `grid-rc` and fails on a bare missing offset.
+  check(
+    prim.shape.rows * prim.shape.cols >= rows.len(),
+    "guide-keys",
+    "a "
+      + str(prim.shape.rows)
+      + " by "
+      + str(prim.shape.cols)
+      + " grid has no room for "
+      + str(rows.len())
+      + " keys",
+    hint: "Size the shape from the entry count, as `grid-shape` does.",
+  )
   (
     columns: column-widths(
       rows.len(),

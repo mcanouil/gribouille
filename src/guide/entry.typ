@@ -227,6 +227,10 @@
 // column sizes to and the line count its row height grows by. A missing stamp
 // would otherwise collapse a column to its glyph, so it fails here with the
 // name of the guide that built the table.
+//
+// A row height is not stamped: a grid row is as tall as the stride it was given
+// plus one stride per extra line, never as tall as the ink in it, so measuring
+// the height would cost a text measurement per key and buy nothing.
 #let check-grid-entries(entries, scope) = {
   if type(entries) != array {
     fail-type(scope, "entries", entries, "an array of entry dicts")
@@ -241,18 +245,16 @@
       "entry " + str(i) + " carries no `value`",
       hint: "A key glyph is inked from the level the entry stands for.",
     )
-    for name in ("width", "height") {
-      let v = e.at(name, default: none)
-      if type(v) not in (int, float) or v < 0 {
-        fail-type(
-          scope,
-          "entry " + str(i) + " " + name,
-          v,
-          "a number of centimetres of at least 0",
-          hint: "The render stage measures each label and stamps its extent "
-            + "on the entry.",
-        )
-      }
+    let width = e.at("width", default: none)
+    if type(width) not in (int, float) or width < 0 {
+      fail-type(
+        scope,
+        "entry " + str(i) + " width",
+        width,
+        "a number of centimetres of at least 0",
+        hint: "The render stage measures each label and stamps its extent on "
+          + "the entry.",
+      )
     }
     let lines = e.at("lines", default: none)
     if type(lines) != int or lines < 1 {

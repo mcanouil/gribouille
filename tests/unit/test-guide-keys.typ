@@ -5,20 +5,20 @@
 
 #import "../../src/guide/gctx.typ": gctx
 #import "../../src/guide/grid.typ": (
-  COL-GAP-MIN, COL-GAP-RATIO, align-offset, column-widths, grid-index, grid-rc,
-  grid-shape, key-metrics, pin-right-of, row-overflows, stack-offsets,
+  COL-GAP-MIN, COL-GAP-RATIO, METRIC-FIELDS, align-offset, column-widths,
+  grid-index, grid-rc, grid-shape, key-metrics, pin-right-of, row-overflows,
+  stack-offsets,
 )
 #import "../../src/guide/primitive/common.typ": PRIMITIVE, measured
 #import "../../src/guide/primitive/keys.typ": prim-keys
 #import "../../src/guide/primitive/registry.typ" as registry
 #import "../../src/utils/errors.typ": error-text, type-text
 
-// One entry per level, carrying the label extents the render stage stamps.
+// One entry per level, carrying the label geometry the render stage stamps.
 #let entry(value, width, lines: 1) = (
   value: value,
   label: value,
   width: width,
-  height: 0.3,
   lines: lines,
 )
 
@@ -116,8 +116,60 @@
 )
 #assert.eq(registry.measure(wrapped, legend).across, box.across + 2 * 0.5)
 
-// An empty grid takes no room at all.
+// An empty grid takes no room at all, including the shape a guide with no
+// levels resolves to, which is no rows at all.
 #assert.eq(registry.measure(prim-keys(metrics: metrics), legend), measured())
+#assert.eq(
+  registry.measure(
+    prim-keys(metrics: metrics, shape: (rows: 0, cols: 1)),
+    legend,
+  ),
+  measured(),
+)
+
+// A grid too small for its keys fails by name. Without this the extra key
+// reaches a column that was never sized and fails on a bare missing offset.
+#assert.eq(
+  error-text(
+    "guide-keys",
+    "a 1 by 1 grid has no room for 4 keys",
+    hint: "Size the shape from the entry count, as `grid-shape` does.",
+  ),
+  "guide-keys: a 1 by 1 grid has no room for 4 keys. Size the shape from the entry count, as `grid-shape` does.",
+)
+
+// Both alignments go through the shared guard, so the string \"center\" fails
+// by the name of the field it was passed as rather than silently drawing
+// left-aligned.
+#assert.eq(
+  type-text(
+    "guide-keys",
+    "justify",
+    "center",
+    "a Typst alignment `left`, `center`, or `right`",
+    hint: "Use the alignment value `left`, not the string \"left\".",
+  ),
+  "guide-keys: justify must be a Typst alignment `left`, `center`, or `right`; got \"center\". Use the alignment value `left`, not the string \"left\".",
+)
+// An alignment is still optional, and every legal one is accepted.
+#for a in (none, left, center, right) {
+  assert.eq(prim-keys(metrics: metrics, justify: a, label-align: a).justify, a)
+}
+
+// The metrics are taken as a whole record, so a half-built one fails where it
+// is supplied rather than as a missing key inside the layout.
+#assert.eq(
+  type-text(
+    "guide-keys",
+    "metrics",
+    (:),
+    "the record `key-metrics` builds",
+    hint: "Build it with `key-metrics`, which carries "
+      + METRIC-FIELDS.join(", ")
+      + ".",
+  ),
+  "guide-keys: metrics must be the record `key-metrics` builds; got (:). Build it with `key-metrics`, which carries diam, line-h, slack, lead, label-lead.",
+)
 
 // A table that never went past the render stage is rejected where it is
 // supplied, rather than sizing every column to its glyph.

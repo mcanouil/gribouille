@@ -144,6 +144,8 @@
 // leaves half an em past the glyph and the draw leaves a flat 0.15 cm. They are
 // carried separately rather than reconciled, because reconciling them moves
 // every legend.
+#let METRIC-FIELDS = ("diam", "line-h", "slack", "lead", "label-lead")
+
 #let key-metrics(
   diam: 0.0,
   line-h: 0.0,
@@ -151,13 +153,13 @@
   lead: 0.0,
   label-lead: 0.0,
 ) = {
-  for (name, value) in (
-    ("diam", diam),
-    ("line-h", line-h),
-    ("slack", slack),
-    ("lead", lead),
-    ("label-lead", label-lead),
-  ) {
+  for (name, value) in METRIC-FIELDS.zip((
+    diam,
+    line-h,
+    slack,
+    lead,
+    label-lead,
+  )) {
     check(
       type(value) in (int, float) and value >= 0,
       "guide-grid",

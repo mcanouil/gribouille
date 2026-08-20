@@ -892,14 +892,12 @@
   let rows = ()
   for (i, level) in g.levels.enumerate() {
     let label = _swatch-label(g, i)
-    let extents = _label-extents(label, style)
     rows.push((
       value: level,
       label: label,
       // The reserved width, not the raw ink: a label is given slack so it never
       // sits flush against the next column.
       width: _label-width(label, style),
-      height: extents.height,
       lines: _label-lines(label, style),
     ))
   }
