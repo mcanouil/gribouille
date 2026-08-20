@@ -49,7 +49,7 @@
     depth = calc.max(depth, ink.len)
   }
   if depth == 0.0 { return NOTHING }
-  measured(across: depth, along: 1.0)
+  measured(across: depth, fills: true)
 }
 
 #let draw(prim, gctx, entries: auto) = {

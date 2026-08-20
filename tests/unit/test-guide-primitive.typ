@@ -63,9 +63,12 @@
 #assert.eq(registry.measure(prim-spacer(0.4), legend).across, 0.4)
 
 // The spine runs the length of the guide and adds no depth to the band.
+// It reports no length of its own: it spans whatever the composition gives it,
+// which is what `fills` says and what keeps `along` in centimetres throughout.
 #let line-b = registry.measure(prim-line(), bottom)
 #assert.eq(line-b.across, 0.0)
-#assert.eq(line-b.along, 1.0)
+#assert.eq(line-b.along, 0.0)
+#assert.eq(line-b.fills, true)
 
 // A legend has no line surface, so the same spine measures nothing there. The
 // asymmetry is a tested fact rather than a comment.
@@ -74,7 +77,8 @@
 // Major ticks reserve the resolved `axis-ticks` length: 0.1cm by default.
 #let ticks-b = registry.measure(prim-ticks(), bottom, entries: majors)
 #assert.eq(ticks-b.across, 0.1)
-#assert.eq(ticks-b.along, 1.0)
+#assert.eq(ticks-b.along, 0.0)
+#assert.eq(ticks-b.fills, true)
 #assert.eq(registry.measure(prim-ticks(), left, entries: majors).across, 0.1)
 
 // With no entries there is nothing to tick, so nothing is reserved.
@@ -159,15 +163,16 @@
   ),
   "guide-spacer: space cannot be negative; got -0.4. Use a positive number of centimetres, or drop the spacer.",
 )
-#assert.eq(
-  enum-text(
-    "guide-primitive.measure",
-    "primitive",
-    "wobble",
-    registry.PRIMITIVES.keys(),
-  ),
-  "guide-primitive.measure: primitive must be one of \"line\", \"ticks\", \"spacer\"; got \"wobble\".",
-)
+// Every registered primitive exposes the same pair, and an unregistered name is
+// not silently drawable. Asserting the key set rather than a rendered message
+// keeps this from rotting each time a primitive is added.
+#assert(not registry.PRIMITIVES.keys().contains("wobble"))
+#for (name, fns) in registry.PRIMITIVES {
+  assert(
+    type(fns.measure) == function and type(fns.draw) == function,
+    message: name + " must expose measure and draw",
+  )
+}
 
 // An untrained table is rejected at the boundary between the builder and the
 // primitive, rather than panicking inside `place` on `none * float`.

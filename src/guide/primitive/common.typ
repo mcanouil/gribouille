@@ -4,10 +4,11 @@
 ///!
 ///! - `measure(prim, gctx)` answers how much room it needs, as a `measured`
 ///!   record. `across` is its thickness growing away from the panel, `along` is
-///!   its extent in the direction the guide reads, and `reach` is how far it
-///!   overhangs each end of that extent. `reach` is not derivable from the other
-///!   two: a rotated corner-pinned label swings about its pin, so the chrome
-///!   stage floors the margin on it separately.
+///!   the length it needs in the reading direction, and `reach` is how far it
+///!   overhangs each end of that length. Both are centimetres; a primitive that
+///!   simply spans the length it is given reports `fills` instead. `reach` is
+///!   not derivable from the other two: a rotated corner-pinned label swings
+///!   about its pin, so the chrome stage floors the margin on it separately.
 ///! - `draw(prim, gctx)` emits cetz and returns nothing. It places ink through
 ///!   `gctx.place` alone, never from a side of its own, which is what lets one
 ///!   primitive serve four sides, a legend, and the radial sweep.
@@ -16,9 +17,18 @@
 #import "../entry.typ": check-entries
 
 // The shape every `measure` returns.
-#let measured(across: 0.0, along: 0.0, near: 0.0, far: 0.0) = (
+//
+// `across` and `along` are both centimetres. `along` is what the primitive
+// needs in the reading direction, which for a title is the length of its box.
+// A primitive that spans whatever length it is given instead reports
+// `fills: true` and leaves `along` at zero: a tick row is as long as the axis
+// it sits on, and has no length of its own to report. A composition sizes a
+// side from the longest `along` and lets the fillers take that length, so the
+// two must never be added together.
+#let measured(across: 0.0, along: 0.0, fills: false, near: 0.0, far: 0.0) = (
   across: across,
   along: along,
+  fills: fills,
   reach: (near: near, far: far),
 )
 

@@ -6,13 +6,17 @@
 
 #import "../../utils/errors.typ": fail-enum, fail-type
 #import "common.typ": PRIMITIVE
+#import "labels.typ" as labels-mod
 #import "line.typ" as line-mod
 #import "spacer.typ" as spacer-mod
 #import "ticks.typ" as ticks-mod
+#import "title.typ" as title-mod
 
 #let PRIMITIVES = (
   line: (measure: line-mod.measure, draw: line-mod.draw),
   ticks: (measure: ticks-mod.measure, draw: ticks-mod.draw),
+  labels: (measure: labels-mod.measure, draw: labels-mod.draw),
+  title: (measure: title-mod.measure, draw: title-mod.draw),
   spacer: (measure: spacer-mod.measure, draw: spacer-mod.draw),
 )
 

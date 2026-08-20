@@ -22,7 +22,7 @@
 // draw gate on the same stroke.
 #let measure(prim, gctx, entries: auto) = {
   if stroke-for(gctx, surface-for(gctx, "line")) == none { return NOTHING }
-  measured(along: 1.0)
+  measured(fills: true)
 }
 
 #let draw(prim, gctx, entries: auto) = {
