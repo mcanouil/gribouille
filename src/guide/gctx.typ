@@ -132,6 +132,7 @@
   aesthetic,
   direction: auto,
   axis: auto,
+  axes: auto,
   place: none,
   tick-length: none,
   surface-stroke: none,
@@ -149,6 +150,35 @@
   }
   if not DIRECTIONS.contains(dir) {
     fail-enum("guide-gctx", "direction", dir, DIRECTIONS)
+  }
+  if axes != auto {
+    if (
+      type(axes) != dictionary
+        or ("along", "across", "sign").any(k => (
+          k not in axes
+        ))
+    ) {
+      fail-type(
+        "guide-gctx",
+        "axes",
+        axes,
+        "a dictionary with `along`, `across` and `sign`",
+      )
+    }
+    if not ("x", "y").contains(axes.along) {
+      fail-enum("guide-gctx", "axes.along", axes.along, ("x", "y"))
+    }
+    if axes.across == axes.along or not ("x", "y").contains(axes.across) {
+      fail-enum(
+        "guide-gctx",
+        "axes.across",
+        axes.across,
+        (if axes.along == "x" { "y" } else { "x" },),
+      )
+    }
+    if not (-1, 1).contains(axes.sign) {
+      fail-enum("guide-gctx", "axes.sign", axes.sign, (-1, 1))
+    }
   }
   let mode = _mode-of(aesthetic)
   // The axis the guide runs along, which the per-axis tick tiers are keyed on
@@ -173,6 +203,18 @@
     mode: mode,
     direction: dir,
     axis: ax,
+    // Which canvas axis `across` runs along, and the sign that points away from
+    // the panel. This belongs to the `place` closure, not to the side: a
+    // cartesian axis grows away from the edge it sits on, but a legend box
+    // stacks its parts downward whichever side it sits on, so a right-side
+    // legend still puts its title above its keys. A cartesian side derives it;
+    // everything else takes the downward default or states its own.
+    // Only an axis takes its orientation from the side it sits on. A legend box
+    // stacks downward whichever side it sits on, so a right-side legend still
+    // puts its title above its keys.
+    axes: if axes != auto { axes } else if (
+      mode == "axis" and SIDES.contains(position)
+    ) { _axes-of(position) } else { (along: "x", across: "y", sign: -1) },
     place: place,
     // `(surface) -> cm` for a tick surface, and `(surface) -> stroke | none`
     // for any stroked surface. Both injected because the theme lives downstream

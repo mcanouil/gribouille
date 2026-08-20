@@ -11,9 +11,7 @@
 ///! reservation cannot drift from the ink.
 
 #import "../../deps.typ": cetz
-#import "../../utils/label-geometry.typ": _rotated-extent
 #import "../../utils/errors.typ": assert-halign, check
-#import "../gctx.typ": _axes-of
 #import "../surface.typ": surface-for
 #import "common.typ": NOTHING, measured, primitive
 
@@ -37,28 +35,29 @@
   )
 }
 
-// A title is as deep as its turned box, and as long as that box reads.
+// A title occupies the box it was given.
+//
+// `extent` is the box the title lands in, already resolved by the caller: the
+// render stage measures the text on its surface and turns it if the surface
+// turns it, so this module neither measures nor rotates. `angle` is carried for
+// the draw alone, which is what keeps the reserved box and the ink the same box
+// even when a theme grows the band past the turned text.
 #let measure(prim, gctx, entries: auto) = {
   if prim.at("body", default: none) == none { return NOTHING }
   if surface-for(gctx, "title") == none { return NOTHING }
   let (w, h) = prim.at("extent", default: (0.0, 0.0))
   if w == 0.0 and h == 0.0 { return NOTHING }
-  let turned = _rotated-extent(w, h, prim.at("angle", default: 0))
-  let axes = if gctx.position in ("theta", "r", "inside") { none } else {
-    _axes-of(gctx.position)
-  }
-  if axes == none or axes.along == "x" {
-    measured(across: turned.height, along: turned.width)
+  if gctx.axes.along == "x" {
+    measured(across: h, along: w)
   } else {
-    measured(across: turned.width, along: turned.height)
+    measured(across: w, along: h)
   }
 }
 
 // The point along the guide a title is pinned at, and the cetz anchor that
 // pins it there. Mirrors `_draw-title`: left-aligned at the near edge, centred
 // at the middle, right-aligned at the far edge.
-#let _pin-for(a, axes) = {
-  let vertical = axes != none and axes.along == "y"
+#let _pin-for(a, vertical) = {
   if a == right {
     (1.0, if vertical { "north" } else { "north-east" })
   } else if a == center {
@@ -80,12 +79,9 @@
   let style = (styles)(surface)
   let a = prim.at("align", default: none)
   let resolved = if a == none { style.at("align", default: left) } else { a }
-  let axes = if gctx.position in ("theta", "r", "inside") { none } else {
-    _axes-of(gctx.position)
-  }
   let (frac, anchor) = _pin-for(
     if resolved == none { left } else { resolved },
-    axes,
+    gctx.axes.along == "y",
   )
   cetz.draw.content(
     place(frac, 0.0),

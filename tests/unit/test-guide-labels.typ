@@ -11,7 +11,7 @@
 #import "../../src/guide/primitive/title.typ": prim-title
 #import "../../src/guide/primitive/registry.typ" as registry
 #import "../../src/render/extents.typ": _x-label-depth, _y-label-width
-#import "../../src/utils/label-geometry.typ": _label-reach, _rotated-extent
+#import "../../src/utils/label-geometry.typ": _label-reach
 #import "../../src/utils/errors.typ": error-text, range-text
 
 // The gaps mirror the ones the chrome stage and the axis draw both apply.
@@ -118,12 +118,14 @@
 #assert.eq(registry.measure(title, ctx-left).across, 2.0)
 #assert.eq(registry.measure(title, ctx-left).along, 0.5)
 
-// Turned a quarter, the box swaps, matching `_rotated-extent`.
+// `extent` is the box the title lands in, already resolved by the caller: the
+// render stage measures the text on its surface and turns it if the surface
+// turns it. The primitive neither measures nor rotates, so a turned title
+// reserves the box it was handed and `angle` only reaches the draw.
 #let upright = prim-title([Speed], angle: 90, extent: (2.0, 0.5))
-#assert.eq(
-  calc.round(registry.measure(upright, ctx-left).across, digits: 9),
-  calc.round(_rotated-extent(2.0, 0.5, 90).width, digits: 9),
-)
+#assert.eq(registry.measure(upright, ctx-left).across, 2.0)
+#assert.eq(registry.measure(upright, ctx-left).along, 0.5)
+#assert.eq(registry.measure(upright, ctx-bottom).across, 0.5)
 
 // No body, or no measured ink, reserves nothing.
 #assert.eq(registry.measure(prim-title(none), ctx-bottom), measured())

@@ -25,6 +25,13 @@
 #import "../guide/draw-key.typ": default-key-for, draw-glyph
 #import "../guide/legend.typ": _normalise-position
 #import "../utils/label-geometry.typ": _rotated-extent
+#import "../guide/gctx.typ": gctx
+#import "../guide/compose.typ": (
+  compose-stack, draw as compose-draw, layout-of as compose-layout-of,
+)
+#import "../guide/primitive/content.typ": prim-content
+#import "../guide/primitive/spacer.typ": prim-spacer
+#import "../guide/primitive/title.typ": prim-title
 #import "../scale/train.typ": mapping-display-name
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/margin.typ": length-to-cm, opposite-side
@@ -958,8 +965,46 @@
   }
 }
 
-#let _custom-height(guide, title-h) = {
-  _title-prefix(guide, title-h) + guide.cm-height + 0.2
+// Slack below a custom block, so its content is not flush with the edge of the
+// slot the legend gave it.
+#let _CUSTOM-PAD-V = 0.2
+
+// The stack a custom guide is: its title, its block, and that slack. The guide
+// carries it so the sizing pass and the draw read one layout.
+//
+// The context stacks downward: a legend box puts its title above its block
+// whichever side the box itself sits on, which is why `axes` comes from here
+// rather than from the side.
+#let _custom-node(g, title-w, title-h, title-angle) = compose-stack(
+  ..if g.title == none { () } else {
+    (
+      prim-title(
+        g.title,
+        align: g.at("align", default: none),
+        // The band the theme resolved, not the raw text box: a surface that
+        // turns its title, or grows the gap below it, grows this with it.
+        extent: (title-w, title-h),
+        angle: title-angle,
+      ),
+    )
+  },
+  prim-content(g.content, width: g.cm-width, height: g.cm-height),
+  prim-spacer(_CUSTOM-PAD-V),
+  // The parts of a custom block sit flush; the slack is the trailing spacer.
+  spacing: 0.0,
+)
+
+// A custom block is laid out in a box of its own, not against a panel edge, so
+// its context carries only the orientation the stack needs.
+// The side is nominal: a legend box stacks downward whichever side it lands on,
+// which is what the context gives a legend by default.
+#let _CUSTOM-GCTX = gctx("right", "custom")
+
+// The layout a custom guide reserves and draws from. Built once per guide in
+// `_stamp-sizes` and read back by both, so the two cannot drift.
+#let _custom-layout(g, title-w, title-h, title-angle) = {
+  let node = _custom-node(g, title-w, title-h, title-angle)
+  (node: node, layout: compose-layout-of(node, _CUSTOM-GCTX))
 }
 
 // Total height (cm) of a guide box, read off the `legend-title` band
@@ -972,7 +1017,9 @@
     return _size-ladder-height(g, title-h, style)
   }
   if g.kind == "colourbar" { return _colourbar-height(g, title-h, style) }
-  if g.kind == "custom" { return _custom-height(g, title-h) }
+  // A custom guide is a stack of primitives, so its height is what the stack
+  // measured rather than a formula of its own.
+  if g.kind == "custom" { return g.stack.layout.across }
   fail("legend._guide-render-height", "unknown guide kind " + repr(g.kind))
 }
 
@@ -991,6 +1038,19 @@
   let out = g
   out.insert("width", _guide-width(out, text-style, title.width))
   out.insert("title-h", _legend-title-h(title-style, title.height))
+  // A custom guide is built from primitives, so its stack is laid out once here
+  // and both the height below and the draw read that one record.
+  if out.kind == "custom" {
+    out.insert(
+      "stack",
+      _custom-layout(
+        out,
+        title.width,
+        out.title-h,
+        if title-style.angle != none { title-style.angle / 1deg } else { 0 },
+      ),
+    )
+  }
   out.insert("height", _guide-render-height(out, text-style))
   out
 }
@@ -1685,21 +1745,24 @@
   }
 }
 
+// A custom guide is drawn by its own stack, from the record `_stamp-sizes`
+// measured. `place` maps the stack onto the slot the legend gave it: the guide
+// reads left to right across its own width, and its parts stack downward from
+// the cursor.
 #let _draw-custom(guide, ox, cursor, theme) = {
-  let has-title = guide.title != none
-  if has-title {
-    _draw-title(guide, ox, cursor, theme)
-  }
-  let top = cursor - if has-title { guide.title-h } else { 0.0 }
-  cetz.draw.content(
-    (ox, top),
-    box(
-      width: guide.cm-width * 1cm,
-      height: guide.cm-height * 1cm,
-      guide.content,
+  let title-style = _text-style(theme, "legend-title")
+  let ctx = (
+    .._CUSTOM-GCTX,
+    place: (frac, across) => (ox + frac * guide.width, cursor - across),
+    text-style: _ => (
+      render: body => text(.._text-args(title-style))[#resolve-prose(
+        body,
+        eval-strings: title-style.typst,
+      )],
+      align: title-style.align,
     ),
-    anchor: "north-west",
   )
+  compose-draw(guide.stack.node, ctx, guide.stack.layout)
 }
 
 #let _draw-guide-body(g, ctx, ox, cursor, theme) = {
