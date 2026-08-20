@@ -119,6 +119,32 @@
   0,
 )
 
+// The block is a stack of primitives now, so the room it reserves is what the
+// stack measured. `_guide-width` still carries its own formula for the width,
+// so the two are pinned against each other here: the stack's length is the
+// wider of the title and the block, and its depth is the title band, the block,
+// and the trailing slack.
+#context {
+  let found = guides-for(
+    _spec(note: guide-custom([x], width: 3cm, height: 2cm, title: "Notes")),
+    (:),
+  )
+  let custom = found.first()
+  assert.eq(custom.custom.layout.along, calc.max(custom.width, 3.0))
+  assert.eq(
+    calc.round(custom.height, digits: 9),
+    calc.round(custom.title-h + 2.0 + 0.2, digits: 9),
+  )
+  assert.eq(custom.height, custom.custom.layout.across)
+
+  // A block with no title loses the title band but keeps the slack.
+  let bare = guides-for(
+    _spec(note: guide-custom([x], width: 3cm, height: 2cm)),
+    (:),
+  ).first()
+  assert.eq(calc.round(bare.height, digits: 9), 2.2)
+}
+
 // An `order` set on a `default:` entry reaches the guides that inherit from it,
 // rather than being dropped by the placement a bare `position` builds.
 #assert.eq(

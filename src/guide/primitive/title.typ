@@ -13,7 +13,6 @@
 #import "../../deps.typ": cetz
 #import "../../utils/label-geometry.typ": _rotated-extent
 #import "../../utils/errors.typ": assert-halign, check
-#import "../gctx.typ": _axes-of
 #import "../surface.typ": surface-for
 #import "common.typ": NOTHING, measured, primitive
 
@@ -44,10 +43,7 @@
   let (w, h) = prim.at("extent", default: (0.0, 0.0))
   if w == 0.0 and h == 0.0 { return NOTHING }
   let turned = _rotated-extent(w, h, prim.at("angle", default: 0))
-  let axes = if gctx.position in ("theta", "r", "inside") { none } else {
-    _axes-of(gctx.position)
-  }
-  if axes == none or axes.along == "x" {
+  if gctx.axes.along == "x" {
     measured(across: turned.height, along: turned.width)
   } else {
     measured(across: turned.width, along: turned.height)
@@ -57,8 +53,7 @@
 // The point along the guide a title is pinned at, and the cetz anchor that
 // pins it there. Mirrors `_draw-title`: left-aligned at the near edge, centred
 // at the middle, right-aligned at the far edge.
-#let _pin-for(a, axes) = {
-  let vertical = axes != none and axes.along == "y"
+#let _pin-for(a, vertical) = {
   if a == right {
     (1.0, if vertical { "north" } else { "north-east" })
   } else if a == center {
@@ -80,12 +75,9 @@
   let style = (styles)(surface)
   let a = prim.at("align", default: none)
   let resolved = if a == none { style.at("align", default: left) } else { a }
-  let axes = if gctx.position in ("theta", "r", "inside") { none } else {
-    _axes-of(gctx.position)
-  }
   let (frac, anchor) = _pin-for(
     if resolved == none { left } else { resolved },
-    axes,
+    gctx.axes.along == "y",
   )
   cetz.draw.content(
     place(frac, 0.0),

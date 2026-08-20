@@ -132,6 +132,7 @@
   aesthetic,
   direction: auto,
   axis: auto,
+  axes: auto,
   place: none,
   tick-length: none,
   surface-stroke: none,
@@ -173,6 +174,15 @@
     mode: mode,
     direction: dir,
     axis: ax,
+    // Which canvas axis `across` runs along, and the sign that points away from
+    // the panel. This belongs to the `place` closure, not to the side: a
+    // cartesian axis grows away from the edge it sits on, but a legend box
+    // stacks its parts downward whichever side it sits on, so a right-side
+    // legend still puts its title above its keys. A cartesian side derives it;
+    // everything else takes the downward default or states its own.
+    axes: if axes != auto { axes } else if SIDES.contains(position) {
+      _axes-of(position)
+    } else { (along: "x", across: "y", sign: -1) },
     place: place,
     // `(surface) -> cm` for a tick surface, and `(surface) -> stroke | none`
     // for any stroked surface. Both injected because the theme lives downstream

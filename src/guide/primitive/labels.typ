@@ -22,7 +22,6 @@
   _label-reach, _rotated-extent, _x-label-anchor,
 )
 #import "../../utils/errors.typ": check, fail-range
-#import "../gctx.typ": _axes-of
 #import "../surface.typ": surface-for
 #import "common.typ": NOTHING, entries-of, measured, primitive
 
@@ -118,20 +117,16 @@
   let (w, h) = _largest(rows)
   if w == 0.0 and h == 0.0 { return NOTHING }
   let turned = _rotated-extent(w, h, angle)
-  // The radial positions and an inside placement have no along/across split,
-  // so they read as a horizontal side rather than reaching `_axes-of`.
-  let axes = if gctx.position in ("theta", "r", "inside") { none } else {
-    _axes-of(gctx.position)
-  }
-  let across = if axes == none or axes.along == "x" {
-    turned.height
-  } else { turned.width }
+  // The context says which canvas axis the depth runs along, because that
+  // belongs to the `place` closure rather than to the side.
+  let horizontal = gctx.axes.along == "x"
+  let across = if horizontal { turned.height } else { turned.width }
   let depth = across + (n-dodge - 1) * _dodge-gap(prim, gctx)
   // How far the pinned label spreads either way along the side. The chrome
   // stage floors its margin on this, so it is reported rather than folded in.
   let anchor = _anchor-for(gctx, angle)
   let spread = _label-reach(w, h, angle, anchor)
-  let (near, far) = if axes == none or axes.along == "x" {
+  let (near, far) = if horizontal {
     (spread.left, spread.right)
   } else { (spread.down, spread.up) }
   measured(across: depth, fills: true, near: near, far: far)
