@@ -4,8 +4,9 @@
 
 #import "../../src/guide/gctx.typ": gctx, place-cartesian
 #import "../../src/guide/entry.typ": (
-  entries-manual, entries-tiered, train-entries,
+  TIERS, entries-manual, entries-tiered, train-entries,
 )
+#import "../../src/utils/errors.typ": enum-text, error-text
 #import "../../src/guide/primitive/common.typ": PRIMITIVE, measured
 #import "../../src/guide/primitive/line.typ": prim-line
 #import "../../src/guide/primitive/spacer.typ": prim-spacer
@@ -36,10 +37,13 @@
 
 #let bottom = ctx-for("bottom", "x")
 #let left = ctx-for("left", "y")
+// The legend tick length must come from `LEGEND-TICK-LEN`, never from the
+// theme, so this context resolves a length nothing else uses. An assertion of
+// 0.1 would otherwise pass on either path.
 #let legend = gctx(
   "right",
   "colour",
-  tick-length: len-of,
+  tick-length: _ => 0.5,
   surface-stroke: stroke-of,
   place: place-cartesian("right", (2.0, 7.0), (1.0, 5.0)),
 )
@@ -131,8 +135,49 @@
   measured(),
 )
 
-// Beside a legend the tick length comes from the two constants the colour bar
-// has always drawn at, not from the theme.
+// Beside a legend the tick length comes from the constant the colour bar has
+// always drawn at, not from the theme: this context's theme closure answers
+// 0.5, so only the legend constant satisfies the assertion.
 #assert.eq(registry.measure(prim-ticks(), legend, entries: majors).across, 0.1)
+
+// A blanked spine measures nothing, because measure and draw gate on the same
+// stroke. Without this, `theme-void` would reserve a line it never draws.
+#assert.eq(registry.measure(prim-line(), no-stroke), measured())
+
+// Rejection wording for the guards. An unknown tier fails where it is supplied
+// rather than drawing an empty guide, and a negative spacer fails rather than
+// eating a neighbour's room.
+#assert.eq(
+  enum-text("guide-ticks", "tier", "mnior", TIERS),
+  "guide-ticks: tier must be one of \"major\", \"mid\", \"minor\"; got \"mnior\".",
+)
+#assert.eq(
+  error-text(
+    "guide-spacer",
+    "space cannot be negative; got -0.4",
+    hint: "Use a positive number of centimetres, or drop the spacer.",
+  ),
+  "guide-spacer: space cannot be negative; got -0.4. Use a positive number of centimetres, or drop the spacer.",
+)
+#assert.eq(
+  enum-text(
+    "guide-primitive.measure",
+    "primitive",
+    "wobble",
+    registry.PRIMITIVES.keys(),
+  ),
+  "guide-primitive.measure: primitive must be one of \"line\", \"ticks\", \"spacer\"; got \"wobble\".",
+)
+
+// An untrained table is rejected at the boundary between the builder and the
+// primitive, rather than panicking inside `place` on `none * float`.
+#assert.eq(
+  error-text(
+    "guide-ticks",
+    "entry 0 is untrained; its `frac` is `none`",
+    hint: "Run the table through `train-entries` before drawing it.",
+  ),
+  "guide-ticks: entry 0 is untrained; its `frac` is `none`. Run the table through `train-entries` before drawing it.",
+)
 
 Guide-primitive tests passed.

@@ -16,33 +16,33 @@
 #import "../../deps.typ": cetz
 #import "../entry.typ": TIERS, entries-of-tier
 #import "../surface.typ": tick-metrics
-#import "common.typ": NOTHING, draws-tick, entries-of, measured, primitive
+#import "common.typ": (
+  NOTHING, check-tier, draws-tick, entries-of, measured, primitive, stroke-for,
+)
 
 // Draw ticks for these weights, in this order. A plain axis draws majors only;
 // a log axis adds the two sub-decade tiers.
 #let prim-ticks(entries: auto, tiers: ("major",)) = primitive(
   "ticks",
   entries: entries,
-  tiers: tiers,
+  tiers: tiers.map(t => check-tier(t, TIERS, "guide-ticks")),
 )
 
 // The stroke and length a tier resolves to, or `none` when nothing is drawn.
 #let _tier-ink(gctx, tier) = {
   let m = tick-metrics(gctx, tier: tier)
   if m.surface == none { return none }
-  let resolve = gctx.at("surface-stroke", default: none)
-  let stroke = if resolve == none { none } else { (resolve)(m.surface) }
+  let stroke = stroke-for(gctx, m.surface)
   if not draws-tick(stroke, m.len) { return none }
   (stroke: stroke, len: m.len)
 }
 
 // The band a tick row occupies is the longest tier that actually draws.
 #let measure(prim, gctx, entries: auto) = {
-  let rows = entries-of(prim, entries)
+  let rows = entries-of(prim, entries, scope: "guide-ticks")
   if rows.len() == 0 { return NOTHING }
   let depth = 0.0
   for tier in prim.at("tiers", default: ("major",)) {
-    if not TIERS.contains(tier) { continue }
     if entries-of-tier(rows, tier).len() == 0 { continue }
     let ink = _tier-ink(gctx, tier)
     if ink == none { continue }
@@ -53,12 +53,11 @@
 }
 
 #let draw(prim, gctx, entries: auto) = {
-  let rows = entries-of(prim, entries)
+  let rows = entries-of(prim, entries, scope: "guide-ticks")
   if rows.len() == 0 { return }
   let place = gctx.place
   if place == none { return }
   for tier in prim.at("tiers", default: ("major",)) {
-    if not TIERS.contains(tier) { continue }
     let ink = _tier-ink(gctx, tier)
     if ink == none { continue }
     for e in entries-of-tier(rows, tier) {
