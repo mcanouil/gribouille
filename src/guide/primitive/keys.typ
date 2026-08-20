@@ -18,10 +18,12 @@
 ///! edge. `src/guide/grid.typ` holds all three, and measure and draw read the
 ///! one record, so the room and the ink still cannot drift apart.
 ///!
-///! Nothing is measured here. The render stage stamps each entry with the extent
-///! of its label and hands the glyph draw down as a closure on the context,
-///! because the aesthetic bundle a glyph is inked from lives with the scales,
-///! downstream of this module.
+///! Nothing is measured here. An entry carries the value its glyph is inked
+///! from and the label beside it, and nothing else the walk reads: the render
+///! stage measures the labels and turns them into those records before the
+///! table arrives. The glyph draw comes down as a closure on the context for the
+///! same reason, because the aesthetic bundle a glyph is inked from lives with
+///! the scales, downstream of this module.
 
 #import "../../deps.typ": cetz
 #import "../../utils/errors.typ": assert-halign, check, fail-enum, fail-type
@@ -110,11 +112,13 @@
   }
   let cols = _check-record(columns, _COLUMN-FIELDS, "columns")
   let stack = _check-record(rows, _ROW-FIELDS, "rows")
-  // The records have to describe this grid, or a key lands in a column that was
-  // never sized.
+  // The records have to describe this grid, in every field the walk reads, or a
+  // key lands in a column that was never sized.
   for (name, got, want) in (
-    ("columns", cols.widths.len(), shape.cols),
-    ("rows", stack.extra.len(), shape.rows),
+    ("columns.widths", cols.widths.len(), shape.cols),
+    ("columns.offsets", cols.offsets.len(), shape.cols),
+    ("rows.extra", stack.extra.len(), shape.rows),
+    ("rows.before", stack.before.len(), shape.rows),
   ) {
     check(
       got == want,
@@ -230,7 +234,10 @@
     // centred on the first line.
     let row-top = rc.row * m.line-h + stack.before.at(rc.row)
     let centre = start + m.off
-    let across = row-top + m.drop + stack.extra.at(rc.row) / 2
+    // A row that stacked a multi-line label grows downward, so everything in it
+    // drops half that growth and stays centred on the first line together.
+    let stacked = stack.extra.at(rc.row) / 2
+    let across = row-top + m.drop + stacked
     if ink-key != none {
       (ink-key)(prim.key, e.value, at-cm(centre, across), m.off)
     }
@@ -245,7 +252,7 @@
       )
     }
     let label-across = if prim.flow == "below" {
-      row-top + m.label-drop
+      row-top + m.label-drop + stacked
     } else { across }
     cetz.draw.content(
       at-cm(along, label-across),

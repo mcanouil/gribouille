@@ -87,8 +87,9 @@
 // A size ladder sizes every column alike instead, and a horizontal one packs
 // them edge to edge.
 #let uniform = uniform-columns(3, 1.5, gap: COL-GAP-MIN)
+#let stride = 1.5 + COL-GAP-MIN
 #assert.eq(uniform.widths, (1.5, 1.5, 1.5))
-#assert.eq(uniform.offsets, (0.0, 1.65, 3.3))
+#assert.eq(uniform.offsets, (0.0, stride, 2 * stride))
 #assert.eq(uniform.total, 3 * 1.5 + 2 * COL-GAP-MIN)
 #assert.eq(uniform-columns(3, 1.5).total, 4.5)
 #assert.eq(uniform-columns(0, 1.5).total, 0.0)
@@ -174,14 +175,14 @@
 )
 
 // A grid record built from another shape is caught where it arrives, for the
-// same reason.
+// same reason, in every field the walk indexes.
 #assert.eq(
   error-text(
     "guide-keys",
-    "columns describes 3 of 2",
+    "columns.offsets describes 3 of 2",
     hint: "Build the record from the same shape the keys flow into.",
   ),
-  "guide-keys: columns describes 3 of 2. Build the record from the same shape the keys flow into.",
+  "guide-keys: columns.offsets describes 3 of 2. Build the record from the same shape the keys flow into.",
 )
 
 // Both alignments go through the shared guard, so the string "center" fails by
@@ -233,18 +234,31 @@
   "guide-keys: metrics must be the record `key-metrics` builds; got (:). Build it with `key-metrics`, which carries off, drop, last, line-h, slack, lead, label-lead, label-drop.",
 )
 
-// A table that never went past the render stage is rejected where it is
-// supplied, rather than sizing every column to its glyph.
+// An entry has to carry what the walk reads, and only that: the value its glyph
+// is inked from, and the label beside it. The label geometry the render stage
+// stamps is its own input to the records above, so it is not demanded here.
 #assert.eq(
-  type-text(
+  error-text(
     "guide-keys",
-    "entry 0 width",
-    none,
-    "a number of centimetres of at least 0",
-    hint: "The render stage measures each label and stamps its extent on the "
-      + "entry.",
+    "entry 0 carries no `label`",
+    hint: "Use `label: none` for a key that shows no label.",
   ),
-  "guide-keys: entry 0 width must be a number of centimetres of at least 0; got none. The render stage measures each label and stamps its extent on the entry.",
+  "guide-keys: entry 0 carries no `label`. Use `label: none` for a key that shows no label.",
+)
+#assert.eq(
+  registry
+    .measure(
+      prim-keys(
+        entries: ((value: "a", label: none),),
+        shape: (rows: 1, cols: 1),
+        metrics: metrics,
+        columns: uniform-columns(1, 0.4),
+        rows: flat-rows(1),
+      ),
+      legend,
+    )
+    .along,
+  0.4,
 )
 
 // A context with no span could only put every key at the near edge, so the

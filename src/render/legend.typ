@@ -501,17 +501,24 @@
   typst-mark: g.at("typst-mark", default: false),
 )
 
+// The largest of a list of cm, or zero for an empty one. Every band a legend
+// reserves is the widest or tallest of something, so the fold lives once.
+#let _largest(values) = {
+  let max-v = 0.0
+  for v in values {
+    if v > max-v { max-v = v }
+  }
+  max-v
+}
+
 // Widest break label (cm) across `breaks` on the entry-label surface. Shared by
 // the ladder / colourbar width estimate and their draw passes so reserved and
 // drawn label slots agree.
-#let _max-break-label-width(g, breaks, style) = {
-  let label-w = 0.0
-  for (i, b) in breaks.enumerate() {
-    let w = _label-width(_break-label(g, b, i), style)
-    if w > label-w { label-w = w }
-  }
-  label-w
-}
+#let _max-break-label-width(g, breaks, style) = _largest(
+  breaks
+    .enumerate()
+    .map(((i, b)) => _label-width(_break-label(g, b, i), style)),
+)
 
 // The `legend-title` surface every title metric resolves against. A theme-less
 // caller (unit tests) falls back to the merged defaults.
@@ -656,12 +663,11 @@
 // default; zero when every label fits one line.
 #let _breaks-overflow(g, breaks, style) = {
   let line-h = _swatch-line-h-cm(style.size / 1pt)
-  let max-e = 0.0
-  for (i, b) in breaks.enumerate() {
-    let e = _label-overflow(_break-label(g, b, i), line-h, style)
-    if e > max-e { max-e = e }
-  }
-  max-e
+  _largest(
+    breaks
+      .enumerate()
+      .map(((i, b)) => _label-overflow(_break-label(g, b, i), line-h, style)),
+  )
 }
 
 #let _LADDER-H-COL-H = 0.32
@@ -878,6 +884,9 @@
   let entries = _swatch-entries(g, style)
   let shape = _guide-shape(g, g.levels.len())
   let line-h = _swatch-stride-cm(diam, size-pt)
+  // One lead serves the metric and the column sizing: the room a column
+  // reserves before its label is the room the metric spends on the glyph.
+  let lead = _swatch-lead-cm(diam, size-pt)
   compose-stack(
     .._box-title(g, title-style, title-w, title-h),
     prim-keys(
@@ -890,7 +899,7 @@
         last: diam,
         line-h: line-h,
         slack: _glyph-bottom-slack(size-pt),
-        lead: _swatch-lead-cm(diam, size-pt),
+        lead: lead,
         label-lead: diam + _KEY-LABEL-LEAD,
       ),
       columns: column-widths(
@@ -898,7 +907,7 @@
         i => entries.at(i).width,
         shape,
         g.placement.byrow,
-        _swatch-lead-cm(diam, size-pt),
+        lead,
       ),
       rows: row-overflows(
         entries.len(),
@@ -921,24 +930,13 @@
 
 // The widest label in a table, which is what a size ladder sizes every column
 // to, against the swatch, which sizes each column to its own.
-#let _widest(entries) = {
-  let max-w = 0.0
-  for e in entries {
-    if e.width > max-w { max-w = e.width }
-  }
-  max-w
-}
+#let _widest(entries) = _largest(entries.map(e => e.width))
 
 // The tallest multi-line overflow across a table, which a horizontal ladder
 // folds into a stride uniform across its rows rather than stacking per row.
-#let _tallest-overflow(entries, line-h) = {
-  let max-e = 0.0
-  for e in entries {
-    let extra = (e.lines - 1) * line-h
-    if extra > max-e { max-e = extra }
-  }
-  max-e
-}
+#let _tallest-overflow(entries, line-h) = _largest(
+  entries.map(e => (e.lines - 1) * line-h),
+)
 
 // The stack a size-ladder guide is: its title above its key grid.
 //
