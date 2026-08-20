@@ -71,6 +71,29 @@
 )
 #assert.eq(calc.round(sp.across, digits: 9), 0.6)
 
+// A spine draws on the panel edge and has no thickness of its own, so the ticks
+// after it still start on that edge. The gap separates depth from depth, and a
+// zero-depth child owes none of it.
+#let spined = train(
+  compose-stack(prim-line(), prim-ticks(), spacing: 0.1),
+  inherited: rows,
+)
+#let sl = layout-of(spined, ctx-bottom)
+#assert.eq(sl.cells.first().drawn, true)
+#assert.eq(sl.cells.first().measure.across, 0.0)
+#assert.eq(sl.cells.last().off-across, 0.0)
+#assert.eq(sl.across, 0.1)
+
+// The same holds for a zero-depth child sitting between two thick ones: it
+// neither takes a gap nor gives one away.
+#let sandwiched = train(
+  compose-stack(prim-ticks(), prim-line(), prim-labels(), spacing: 0.1),
+  inherited: rows,
+)
+#let sw = layout-of(sandwiched, ctx-bottom)
+#assert.eq(sw.cells.at(1).off-across, 0.1)
+#assert.eq(calc.round(sw.cells.at(2).off-across, digits: 9), 0.2)
+
 // A child that reserves nothing takes no offset and no gap, so an axis with its
 // ticks blanked puts its labels where the ticks would have started.
 #let blank-ctx = gctx(
@@ -106,6 +129,14 @@
 #assert.eq(mixed.children.first().entries, rows)
 #assert.eq(mixed.children.last().entries, own)
 #assert.eq(mixed.entries, rows)
+
+// A closure is as legal on a primitive as on the composition above it, so a
+// leaf spec is resolved rather than reaching the primitive unresolved.
+#let deferred = train(
+  compose-stack(prim-ticks(entries: () => own)),
+  inherited: rows,
+)
+#assert.eq(deferred.children.first().entries, own)
 
 // A composition resolves its own table once and passes that down instead.
 #let bound = train(compose-stack(prim-ticks(), entries: own), inherited: rows)
@@ -169,6 +200,14 @@
 #assert.eq(
   type-text("guide-compose", "child 0", 3, "a primitive or a composition"),
   "guide-compose: child 0 must be a primitive or a composition; got 3.",
+)
+#assert.eq(
+  error-text(
+    "guide-compose",
+    "the layout has 2 cells for 3 children",
+    hint: "Pass the record `layout-of` returned for this same node.",
+  ),
+  "guide-compose: the layout has 2 cells for 3 children. Pass the record `layout-of` returned for this same node.",
 )
 
 Guide-compose tests passed.

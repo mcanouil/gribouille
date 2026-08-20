@@ -67,9 +67,13 @@
 #let train(node, inherited: auto) = {
   if type(node) != dictionary { return node }
   if node.at("kind", default: none) != COMPOSITION {
-    if node.at("entries", default: auto) == auto and inherited != auto {
-      return (..node, entries: inherited)
+    let own = node.at("entries", default: auto)
+    // A leaf resolves its own spec here too, so a closure is as legal on a
+    // primitive as it is on the composition above it.
+    if own != auto {
+      return (..node, entries: resolve-entries(own, scope: "guide-compose"))
     }
+    if inherited != auto { return (..node, entries: inherited) }
     return node
   }
   let own = node.at("entries", default: auto)
@@ -88,6 +92,9 @@
 // Room one child needs, whether it is a primitive or a nested composition, and
 // the nested layout when there is one. The nested record is kept so the draw
 // pass reads it back rather than measuring the subtree a second time.
+//
+// `layout-of` arrives as an argument because it is defined below this helper
+// and Typst resolves a binding only after it is bound.
 #let _measure-child(child, gctx, layout-of) = {
   if child.at("kind", default: none) == COMPOSITION {
     let inner = layout-of(child, gctx)
@@ -156,8 +163,13 @@
       ))
       continue
     }
-    // Neighbours are separated only once both of them occupy room.
-    let start = if cells.any(c => c.drawn) { offset + gap } else { offset }
+    // The gap separates depth from depth, so it is owed only when something
+    // before this child reserved some and this child reserves some too. A spine
+    // draws on the panel edge without any thickness of its own, so the ticks
+    // after it still start on that edge rather than floating a gap out.
+    let start = if offset > 0.0 and m.across > 0.0 { offset + gap } else {
+      offset
+    }
     cells.push((
       child: child,
       measure: m,
@@ -186,6 +198,18 @@
 // Passing it in rather than recomputing is what keeps the ink inside the room
 // that was reserved for it.
 #let draw(node, gctx, layout) = {
+  // The record has to be the one this node produced, or the ink lands outside
+  // the room that was reserved for it.
+  check(
+    layout.cells.len() == node.children.len(),
+    "guide-compose",
+    "the layout has "
+      + str(layout.cells.len())
+      + " cells for "
+      + str(node.children.len())
+      + " children",
+    hint: "Pass the record `layout-of` returned for this same node.",
+  )
   let place = gctx.at("place", default: none)
   if place == none { return }
   for cell in layout.cells {
