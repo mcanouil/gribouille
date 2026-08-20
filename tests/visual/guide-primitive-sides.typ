@@ -2,10 +2,10 @@
 // with no plot around them.
 //
 // Each primitive draws from its own edge outward and knows nothing about its
-// neighbours, so this file offsets them by hand, stacking each one past the
-// depth the previous ones measured. That is exactly what a composition will do,
-// and doing it here keeps the render readable while the compositions are still
-// to come.
+// neighbours. The first panel is stacked by a composition, which measures each
+// part and hands the next an edge past everything before it. The second panel
+// places two label rows directly, to isolate the label geometry from the
+// stacking.
 //
 // Read the first panel for the side mirroring: every tick points away from the
 // rectangle, labels sit outside their edge, and each title clears its labels.
@@ -17,6 +17,7 @@
 #import "../../src/deps.typ": cetz
 #import "../../src/guide/gctx.typ": gctx, place-cartesian
 #import "../../src/guide/entry.typ": entries-manual, train-entries
+#import "../../src/guide/compose.typ": compose-stack, draw, layout-of, train
 #import "../../src/guide/primitive/labels.typ": prim-labels
 #import "../../src/guide/primitive/line.typ": prim-line
 #import "../../src/guide/primitive/ticks.typ": prim-ticks
@@ -68,33 +69,20 @@
     ("left", "y"),
     ("right", "y"),
   ) {
-    let at-edge = shifted(position, aesthetic, px, py, 0.0)
-    registry.draw(prim-line(), at-edge)
-    registry.draw(prim-ticks(), at-edge, entries: rows)
-
-    // Labels clear the ticks; the title clears the labels.
-    let ticks-deep = registry.measure(prim-ticks(), at-edge, entries: rows)
-    let at-labels = shifted(
-      position,
-      aesthetic,
-      px,
-      py,
-      ticks-deep.across + 0.1,
+    // The composition does the stacking: it measures each part and hands the
+    // next one an edge past everything before it.
+    let ctx = shifted(position, aesthetic, px, py, 0.0)
+    let axis = train(
+      compose-stack(
+        prim-line(),
+        prim-ticks(),
+        prim-labels(),
+        prim-title(text(7pt)[#position], align: center, extent: (1.0, 0.3)),
+        spacing: 0.1,
+      ),
+      inherited: rows,
     )
-    registry.draw(prim-labels(), at-labels, entries: rows)
-
-    let labels-deep = registry.measure(prim-labels(), at-labels, entries: rows)
-    let at-title = shifted(
-      position,
-      aesthetic,
-      px,
-      py,
-      ticks-deep.across + 0.1 + labels-deep.across + 0.15,
-    )
-    registry.draw(
-      prim-title(text(7pt)[#position], align: center, extent: (1.0, 0.3)),
-      at-title,
-    )
+    draw(axis, ctx, layout-of(axis, ctx))
   }
 
   // Turned and dodged labels, each under its own panel.

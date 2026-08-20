@@ -1,0 +1,205 @@
+///! Laying primitives out into a guide.
+///!
+///! A primitive draws from its own edge outward and knows nothing about its
+///! neighbours. A composition is what gives each one an edge to draw from: it
+///! measures the children in order, stacks them away from the panel, and hands
+///! each a context whose `place` is pushed out past everything before it.
+///!
+///! Measuring and drawing read the same layout record, so the room a guide
+///! reserves and the ink it puts down cannot drift apart. That is the failure
+///! the legend renderer guards against today with paired comments, and the
+///! record makes it structural instead.
+///!
+///! Entries flow down. A composition resolves its own table once and passes it
+///! to every child that did not bring one, which is what lets a stack of ticks
+///! and labels share a single set of breaks.
+
+#import "../utils/errors.typ": check, fail-enum, fail-type
+#import "entry.typ": resolve-entries
+#import "primitive/common.typ": PRIMITIVE, measured
+#import "primitive/registry.typ" as registry
+
+// Tag a composition carries, so a parent can tell one from a primitive.
+#let COMPOSITION = "composition"
+
+// Children stack away from the panel, in the order given: the first sits
+// against the panel edge and each later one clears those before it.
+//
+// `spacing` is the gap between neighbours, in centimetres; `auto` takes the
+// context's tick gap, which is what separates a tick row from its labels today.
+#let compose-stack(..children, entries: auto, spacing: auto) = {
+  let kids = children.pos()
+  check(
+    kids.len() > 0,
+    "guide-compose",
+    "a stack needs at least one child",
+    hint: "Pass the primitives to stack as positional arguments.",
+  )
+  for (i, c) in kids.enumerate() {
+    if (
+      type(c) != dictionary
+        or c.at("kind", default: none)
+          not in (
+            PRIMITIVE,
+            COMPOSITION,
+          )
+    ) {
+      fail-type(
+        "guide-compose",
+        "child " + str(i),
+        c,
+        "a primitive or a composition",
+      )
+    }
+  }
+  (
+    kind: COMPOSITION,
+    name: "stack",
+    children: kids,
+    entries: entries,
+    spacing: spacing,
+  )
+}
+
+// Push a resolved entry table down to every child that did not bring one.
+// Mirrors the rule that a shared table reaches only children whose own table is
+// still `auto`, so a child can always override its parent.
+#let train(node, inherited: auto) = {
+  if type(node) != dictionary { return node }
+  if node.at("kind", default: none) != COMPOSITION {
+    if node.at("entries", default: auto) == auto and inherited != auto {
+      return (..node, entries: inherited)
+    }
+    return node
+  }
+  let own = node.at("entries", default: auto)
+  let table = if own != auto {
+    resolve-entries(own, scope: "guide-compose")
+  } else {
+    inherited
+  }
+  (
+    ..node,
+    entries: table,
+    children: node.children.map(c => train(c, inherited: table)),
+  )
+}
+
+// Room one child needs, whether it is a primitive or a nested composition, and
+// the nested layout when there is one. The nested record is kept so the draw
+// pass reads it back rather than measuring the subtree a second time.
+#let _measure-child(child, gctx, layout-of) = {
+  if child.at("kind", default: none) == COMPOSITION {
+    let inner = layout-of(child, gctx)
+    (
+      measure: measured(
+        across: inner.across,
+        along: inner.along,
+        fills: inner.fills,
+        near: inner.reach.near,
+        far: inner.reach.far,
+      ),
+      layout: inner,
+    )
+  } else {
+    (
+      measure: registry.measure(
+        child,
+        gctx,
+        entries: child.at("entries", default: auto),
+      ),
+      layout: none,
+    )
+  }
+}
+
+// The gap a stack puts between neighbours.
+#let _spacing-of(node, gctx) = {
+  let given = node.at("spacing", default: auto)
+  if given != auto { return given }
+  gctx.at("tick-gap", default: 0.0)
+}
+
+// Measure the whole tree into one record.
+//
+// `cells` carries one entry per child, in draw order, each with the depth it
+// occupies and the offset it starts at. The draw pass reads these back rather
+// than recomputing them, so the two agree by construction.
+//
+// A child that reserves nothing takes no offset and no gap: an axis with its
+// ticks blanked puts its labels where the ticks would have started, which is
+// how a stripped axis keeps the room today.
+#let layout-of(node, gctx) = {
+  if type(node) != dictionary or node.at("kind", default: none) != COMPOSITION {
+    fail-type("guide-compose", "node", node, "a composition")
+  }
+  if node.name != "stack" {
+    fail-enum("guide-compose", "composition", node.name, ("stack",))
+  }
+  let gap = _spacing-of(node, gctx)
+  let cells = ()
+  let offset = 0.0
+  let along = 0.0
+  let fills = false
+  let near = 0.0
+  let far = 0.0
+  for child in node.children {
+    let (measure: m, layout: inner) = _measure-child(child, gctx, layout-of)
+    let empty = m.across == 0.0 and not m.fills and m.along == 0.0
+    if empty {
+      cells.push((
+        child: child,
+        measure: m,
+        layout: inner,
+        off-across: offset,
+        drawn: false,
+      ))
+      continue
+    }
+    // Neighbours are separated only once both of them occupy room.
+    let start = if cells.any(c => c.drawn) { offset + gap } else { offset }
+    cells.push((
+      child: child,
+      measure: m,
+      layout: inner,
+      off-across: start,
+      drawn: true,
+    ))
+    offset = start + m.across
+    along = calc.max(along, m.along)
+    fills = fills or m.fills
+    near = calc.max(near, m.reach.near)
+    far = calc.max(far, m.reach.far)
+  }
+  (
+    across: offset,
+    along: along,
+    fills: fills,
+    reach: (near: near, far: far),
+    cells: cells,
+  )
+}
+
+// Draw the tree, each child from the edge the layout gave it.
+//
+// `layout` is the record `layout-of` returned for this same node and context.
+// Passing it in rather than recomputing is what keeps the ink inside the room
+// that was reserved for it.
+#let draw(node, gctx, layout) = {
+  let place = gctx.at("place", default: none)
+  if place == none { return }
+  for cell in layout.cells {
+    if not cell.drawn { continue }
+    let lead = cell.off-across
+    let shifted = (
+      ..gctx,
+      place: (frac, across) => place(frac, across + lead),
+    )
+    let child = cell.child
+    if child.at("kind", default: none) == COMPOSITION {
+      draw(child, shifted, cell.layout)
+    } else {
+      registry.draw(child, shifted, entries: child.at("entries", default: auto))
+    }
+  }
+}
