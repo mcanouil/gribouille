@@ -1,42 +1,75 @@
 ///! A legend's key grid: every glyph and its label, in rows and columns.
 ///!
-///! Ported from `_draw-swatch` in `render/legend.typ` and from the width and
-///! height estimates that reserve the room it draws into. The three shared a
-///! grid computed three times over and kept in step by comment; here the grid is
-///! computed from one set of formulas in `src/guide/grid.typ` and the estimates
-///! are what this primitive measures.
+///! Ported from `_draw-swatch` and `_draw-size-ladder` in `render/legend.typ`
+///! and from the width and height estimates that reserve the room they draw
+///! into. Each of those computed its own grid, and the three were kept in step
+///! by comment; here one walk serves all of them.
 ///!
 ///! This is the one primitive that is not a band. A tick row or a label row runs
 ///! along the guide and has a single thickness; a key grid has a width per
-///! column, an offset per row, and a glyph beside a label in every cell. No
-///! stack of primitives can express that, so the grid is one primitive that owns
-///! the whole of it.
+///! column, an offset per row, and a glyph beside or above a label in every
+///! cell. No stack of primitives can express that, so the grid is one primitive
+///! that owns the whole of it.
 ///!
-///! Nothing is measured here. The render stage stamps each entry with the extent
-///! of its label and hands the glyph draw down as a closure on the context,
-///! because the aesthetic bundle a glyph is inked from lives with the scales,
-///! downstream of this module.
+///! The grid records come in already built, because which formula sizes the
+///! columns belongs to the guide rather than to the walk: a swatch sizes each
+///! column to its own widest label, a vertical ladder sizes every column to the
+///! widest label in the guide, and a horizontal one packs its columns edge to
+///! edge. `src/guide/grid.typ` holds all three, and measure and draw read the
+///! one record, so the room and the ink still cannot drift apart.
+///!
+///! Nothing is measured here. An entry carries the value its glyph is inked
+///! from and the label beside it, and nothing else the walk reads: the render
+///! stage measures the labels and turns them into those records before the
+///! table arrives. The glyph draw comes down as a closure on the context for the
+///! same reason, because the aesthetic bundle a glyph is inked from lives with
+///! the scales, downstream of this module.
 
 #import "../../deps.typ": cetz
-#import "../../utils/errors.typ": assert-halign, check, fail-type
+#import "../../utils/errors.typ": assert-halign, check, fail-enum, fail-type
 #import "../entry.typ": check-grid-entries
 #import "../grid.typ": (
-  METRIC-FIELDS, align-offset, column-widths, grid-rc, pin-right-of,
-  row-overflows,
+  METRIC-FIELDS, align-offset, grid-rc, pin-below, pin-right-of,
 )
 #import "../surface.typ": surface-for
 #import "common.typ": NOTHING, entries-of, measured, primitive
 
-// `metrics` is the record `grid.key-metrics` builds; `shape` the `(rows, cols)`
-// the keys flow into. `label-align` justifies a label inside its own column and
-// `justify` justifies the whole grid inside the guide, which is what puts a
-// horizontal legend's keys under the centre of its title.
+// Where a label reads against its key: beside it, as every vertical legend
+// draws it, or under it, as a horizontal size ladder does.
+#let FLOWS = ("right", "below")
+
+// The fields each grid record carries, checked where the record arrives so a
+// half-built one fails by name rather than as a missing key inside the walk.
+#let _COLUMN-FIELDS = ("widths", "gap", "offsets", "total")
+#let _ROW-FIELDS = ("extra", "before", "total")
+
+#let _check-record(value, fields, name) = {
+  if type(value) != dictionary or fields.any(k => k not in value) {
+    fail-type(
+      "guide-keys",
+      name,
+      value,
+      "a record carrying " + fields.join(", "),
+      hint: "Build it with the helpers in `src/guide/grid.typ`.",
+    )
+  }
+  value
+}
+
+// `metrics` is the record `key-metrics` builds, `shape` the `(rows, cols)` the
+// keys flow into, and `columns` and `rows` the grid those keys land on.
+// `label-align` justifies a label inside its own column and `justify` justifies
+// the whole grid inside the guide, which is what puts a horizontal legend's keys
+// under the centre of its title.
 #let prim-keys(
   entries: auto,
   shape: (rows: 1, cols: 1),
   byrow: false,
   key: "rect",
   metrics: none,
+  columns: none,
+  rows: none,
+  flow: "right",
   angle: 0,
   label-align: none,
   justify: none,
@@ -77,6 +110,26 @@
         + ".",
     )
   }
+  let cols = _check-record(columns, _COLUMN-FIELDS, "columns")
+  let stack = _check-record(rows, _ROW-FIELDS, "rows")
+  // The records have to describe this grid, in every field the walk reads, or a
+  // key lands in a column that was never sized.
+  for (name, got, want) in (
+    ("columns.widths", cols.widths.len(), shape.cols),
+    ("columns.offsets", cols.offsets.len(), shape.cols),
+    ("rows.extra", stack.extra.len(), shape.rows),
+    ("rows.before", stack.before.len(), shape.rows),
+  ) {
+    check(
+      got == want,
+      "guide-keys",
+      name + " describes " + str(got) + " of " + str(want),
+      hint: "Build the record from the same shape the keys flow into.",
+    )
+  }
+  if not FLOWS.contains(flow) {
+    fail-enum("guide-keys", "flow", flow, FLOWS)
+  }
   // Both alignments go through the shared guard, so a string such as "center"
   // fails by name rather than falling through to the left default.
   assert-halign("guide-keys", label-align, name: "label-align")
@@ -88,6 +141,9 @@
     byrow: byrow,
     key: key,
     metrics: metrics,
+    columns: cols,
+    rows: stack,
+    flow: flow,
     angle: angle,
     label-align: label-align,
     justify: justify,
@@ -104,66 +160,49 @@
   check: check-grid-entries,
 )
 
-// The column widths and the row overflows, from the extents the render stage
-// stamped. Measure and draw both read this, so the room and the ink come from
-// one grid.
-#let _grid-of(prim, rows) = {
-  let m = prim.metrics
-  // Every row has to have a cell to land in. Without this, an index past the
-  // grid reaches `grid-rc` and fails on a bare missing offset.
-  check(
-    prim.shape.rows * prim.shape.cols >= rows.len(),
-    "guide-keys",
-    "a "
-      + str(prim.shape.rows)
-      + " by "
-      + str(prim.shape.cols)
-      + " grid has no room for "
-      + str(rows.len())
-      + " keys",
-    hint: "Size the shape from the entry count, as `grid-shape` does.",
-  )
-  (
-    columns: column-widths(
-      rows.len(),
-      i => rows.at(i).width,
-      prim.shape,
-      prim.byrow,
-      m.lead,
-    ),
-    stack: row-overflows(
-      rows.len(),
-      i => (rows.at(i).lines - 1) * m.line-h,
-      prim.shape,
-      prim.byrow,
-    ),
-  )
-}
+// Every key has to have a cell to land in. Without this, an index past the grid
+// reaches `grid-rc` and fails on a bare missing offset.
+#let _check-fit(prim, rows) = check(
+  prim.shape.rows * prim.shape.cols >= rows.len(),
+  "guide-keys",
+  "a "
+    + str(prim.shape.rows)
+    + " by "
+    + str(prim.shape.cols)
+    + " grid has no room for "
+    + str(rows.len())
+    + " keys",
+  hint: "Size the shape from the entry count, as `grid-shape` does.",
+)
 
 // A grid is as wide as its columns and as deep as its rows: a full stride for
-// every row but the last, which spends only the glyph and a slack below it, plus
-// whatever the multi-line rows added.
+// every row but the last, which spends only what that last row reserves and a
+// slack below it, plus whatever the multi-line rows added.
 //
 // It reports a length of its own rather than filling: a legend box is sized from
 // its keys, unlike a tick row, which is as long as the axis it sits on.
 #let measure(prim, gctx, entries: auto) = {
   let rows = _rows-of(prim, entries)
   if rows.len() == 0 { return NOTHING }
+  _check-fit(prim, rows)
   let m = prim.metrics
-  let (columns, stack) = _grid-of(prim, rows)
   measured(
-    across: (prim.shape.rows - 1) * m.line-h + m.diam + m.slack + stack.total,
-    along: columns.total,
+    across: (
+      (prim.shape.rows - 1) * m.line-h + m.last + m.slack + prim.rows.total
+    ),
+    along: prim.columns.total,
   )
 }
 
 #let draw(prim, gctx, entries: auto) = {
   let rows = _rows-of(prim, entries)
   if rows.len() == 0 { return }
+  _check-fit(prim, rows)
   let place = gctx.at("place", default: none)
   if place == none { return }
   let m = prim.metrics
-  let (columns, stack) = _grid-of(prim, rows)
+  let columns = prim.columns
+  let stack = prim.rows
   // The grid lays itself out in centimetres, so it needs to know what a
   // fraction of the guide is worth. A context that never stated one would put
   // every key at the near edge, so it fails here instead.
@@ -187,30 +226,36 @@
   let style = if surface == none or styles == none { none } else {
     (styles)(surface)
   }
-  let radius = m.diam / 2
   for (i, e) in rows.enumerate() {
     let rc = grid-rc(i, prim.shape, prim.byrow)
     let start = indent + columns.offsets.at(rc.col)
     // Push the row down past every multi-line row above it, then drop this key
     // half its own overflow, so its block grows downward and the glyph stays
     // centred on the first line.
-    let across = (
-      rc.row * m.line-h
-        + stack.before.at(rc.row)
-        + radius
-        + stack.extra.at(rc.row) / 2
-    )
+    let row-top = rc.row * m.line-h + stack.before.at(rc.row)
+    let centre = start + m.off
+    // A row that stacked a multi-line label grows downward, so everything in it
+    // drops half that growth and stays centred on the first line together.
+    let stacked = stack.extra.at(rc.row) / 2
+    let across = row-top + m.drop + stacked
     if ink-key != none {
-      (ink-key)(prim.key, e.value, at-cm(start + radius, across), radius)
+      (ink-key)(prim.key, e.value, at-cm(centre, across), m.off)
     }
     if style == none or e.at("label", default: none) == none { continue }
-    let (along, anchor) = pin-right-of(
-      prim.label-align,
-      start + m.label-lead,
-      columns.widths.at(rc.col) - m.lead,
-    )
+    let (along, anchor) = if prim.flow == "below" {
+      pin-below(prim.label-align, centre)
+    } else {
+      pin-right-of(
+        prim.label-align,
+        start + m.label-lead,
+        columns.widths.at(rc.col) - m.lead,
+      )
+    }
+    let label-across = if prim.flow == "below" {
+      row-top + m.label-drop + stacked
+    } else { across }
     cetz.draw.content(
-      at-cm(along, across),
+      at-cm(along, label-across),
       (style.render)(e.label),
       anchor: anchor,
       angle: prim.angle * 1deg,

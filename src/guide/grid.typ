@@ -110,6 +110,26 @@
   (widths: widths, gap: gap, offsets: offsets, total: acc - gap)
 }
 
+// Columns of one width, with a fixed gap between them.
+//
+// A size ladder sizes every column to the widest label in the whole guide
+// rather than to the widest in each column, and a horizontal one packs its
+// columns edge to edge. Both are this, against `column-widths` above.
+#let uniform-columns(cols, width, gap: 0.0) = {
+  let offsets = range(cols).map(col => col * (width + gap))
+  (
+    widths: range(cols).map(_ => width),
+    gap: gap,
+    offsets: offsets,
+    total: if cols == 0 { 0.0 } else { cols * width + (cols - 1) * gap },
+  )
+}
+
+// Rows that never stack, for a grid whose stride already carries the tallest
+// label in the guide. The record has the shape `row-overflows` returns, so one
+// walk serves a stacking grid and a uniform one alike.
+#let flat-rows(rows) = stack-offsets(range(rows).map(_ => 0.0))
+
 // Offset (cm) that justifies a part of width `part` inside a block of width
 // `total`: nothing for left, half the slack for centre, all of it for right.
 #let align-offset(align, total, part) = if align == right {
@@ -135,31 +155,71 @@
   }
 }
 
-// The cm a key cell spends on its parts. Grouped into one record because the
-// five travel together from the render stage, which is the only place the font
-// size and the themed key size they derive from are known.
+// Where a label drawn under a key lands, and the cetz anchor that pins it
+// there. The label keeps the key's own centre; the alignment only decides which
+// of its edges that centre pins.
+#let pin-below(align, centre) = {
+  if align == right {
+    (centre, "north-east")
+  } else if align == center {
+    (centre, "north")
+  } else {
+    (centre, "north-west")
+  }
+}
+
+// The cm a key cell spends on its parts. Grouped into one record because they
+// travel together from the render stage, which is the only place the font size
+// and the themed key size they derive from are known.
 //
-// `lead` is what a column reserves before its label and `label-lead` is where
-// the label is actually pinned. The two have never been equal: the reservation
-// leaves half an em past the glyph and the draw leaves a flat 0.15 cm. They are
-// carried separately rather than reconciled, because reconciling them moves
-// every legend.
-#let METRIC-FIELDS = ("diam", "line-h", "slack", "lead", "label-lead")
+// - `off` is the key glyph's radius, and the distance along the cell to its
+//   centre.
+// - `drop` is how far down the cell that centre sits. It equals `off` where the
+//   label reads beside the key, and is its own number where the label reads
+//   under it, because a horizontal ladder drops its glyph past its own radius.
+// - `last` is what the final row reserves in place of a full stride.
+// - `slack` is the room below that last row.
+// - `lead` is what a column reserves before its label and `label-lead` is where
+//   the label is actually pinned. The two have never been equal: the
+//   reservation leaves half an em past the glyph and the draw leaves a flat
+//   0.15 cm. They are carried separately rather than reconciled, because
+//   reconciling them moves every legend.
+// - `label-drop` is how far down the cell a label under a key sits, and is read
+//   only by that flow.
+#let METRIC-FIELDS = (
+  "off",
+  "drop",
+  "last",
+  "line-h",
+  "slack",
+  "lead",
+  "label-lead",
+  "label-drop",
+)
 
 #let key-metrics(
-  diam: 0.0,
+  off: 0.0,
+  drop: auto,
+  last: auto,
   line-h: 0.0,
   slack: 0.0,
   lead: 0.0,
   label-lead: 0.0,
+  label-drop: 0.0,
 ) = {
-  for (name, value) in METRIC-FIELDS.zip((
-    diam,
-    line-h,
-    slack,
-    lead,
-    label-lead,
-  )) {
+  // A key that reads beside its label sits at its own radius and reserves its
+  // own diameter, so those two follow the radius unless a flow states otherwise.
+  let resolved = (
+    off: off,
+    drop: if drop == auto { off } else { drop },
+    last: if last == auto { 2 * off } else { last },
+    line-h: line-h,
+    slack: slack,
+    lead: lead,
+    label-lead: label-lead,
+    label-drop: label-drop,
+  )
+  for (name, value) in resolved {
     check(
       type(value) in (int, float) and value >= 0,
       "guide-grid",
@@ -170,11 +230,5 @@
         + "size before they get here.",
     )
   }
-  (
-    diam: diam * 1.0,
-    line-h: line-h * 1.0,
-    slack: slack * 1.0,
-    lead: lead * 1.0,
-    label-lead: label-lead * 1.0,
-  )
+  resolved.pairs().map(((name, value)) => (name, value * 1.0)).to-dict()
 }
