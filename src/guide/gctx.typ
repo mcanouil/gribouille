@@ -134,6 +134,7 @@
   axis: auto,
   place: none,
   tick-length: none,
+  surface-stroke: none,
   tick-gap: 0.1,
 ) = {
   if type(aesthetic) != str {
@@ -172,9 +173,11 @@
     direction: dir,
     axis: ax,
     place: place,
-    // `(surface) -> cm` for a tick surface. Injected because the theme lives
-    // downstream of this module.
+    // `(surface) -> cm` for a tick surface, and `(surface) -> stroke | none`
+    // for any stroked surface. Both injected because the theme lives downstream
+    // of this module.
     tick-length: tick-length,
+    surface-stroke: surface-stroke,
     // Cm between a tick and its label in an axis context. Mirrors the chrome
     // stage's `_TICK-LABEL-GAP`, passed in rather than imported.
     tick-gap: tick-gap,
