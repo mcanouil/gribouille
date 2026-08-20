@@ -30,9 +30,10 @@
   compose-stack, draw as compose-draw, layout-of as compose-layout-of,
 )
 #import "../guide/grid.typ": (
-  COL-GAP-MIN, align-offset, column-widths, flat-rows, grid-shape, key-metrics,
-  pin-below, pin-right-of, row-overflows, uniform-columns,
+  COL-GAP-MIN, column-widths, flat-rows, grid-shape, key-metrics, row-overflows,
+  uniform-columns,
 )
+#import "../guide/gizmo/bar.typ": prim-bar
 #import "../guide/primitive/content.typ": prim-content
 #import "../guide/primitive/keys.typ": prim-keys
 #import "../guide/primitive/spacer.typ": prim-spacer
@@ -677,7 +678,6 @@
 #let _COLOURBAR-H-W = 3.0
 #let _COLOURBAR-H-H = 0.35
 #let _COLOURBAR-H-LABEL-H = 0.45
-#let _GUIDE-PAD-V = 0.2
 #let _COLOURBAR-PAD-V = 0.3
 // Width-estimate gap between a vertical colourbar and its tick labels; the
 // renderer positions labels at `tick-len + tick-gap`, this approximates it.
@@ -721,38 +721,19 @@
 }
 
 // The guide kinds built from primitives, which carry a laid-out stack and read
-// their box off it. The colour bar is the one that has not moved yet.
-#let _STACKED-KINDS = ("swatch", "size-ladder", "custom")
+// their box off it. Every kind is one now, so a guide that is not on this list
+// is a typo rather than a guide the renderer still sizes itself.
+#let _STACKED-KINDS = ("swatch", "size-ladder", "colourbar", "custom")
 
-// Per-guide width estimate. Stored on each guide so `estimate-extents` is
-// O(1). `style` is the legend-text surface the entry labels are measured on;
-// `title-w` is the width of the title box the caller measured on the
-// legend-title surface, which the title band above the first key also spends.
-#let _guide-width(g, style, title-w) = {
-  let size-pt = style.size / 1pt
-  // A guide built from primitives is as wide as its stack measured: the wider
-  // of its key grid and its title.
-  if _STACKED-KINDS.contains(g.kind) { return g.stack.layout.along }
-  if g.kind == "colourbar" {
-    let breaks = _colourbar-breaks(g)
-    let label-w = _max-break-label-width(g, breaks, style)
-    if g.placement.direction == "horizontal" {
-      return calc.max(
-        title-w,
-        _COLOURBAR-H-W + label-w,
-      )
-    }
-    return calc.max(
-      title-w,
-      _COLOURBAR-V-W + _COLOURBAR-V-LABEL-GAP + label-w,
-    )
+// Per-guide width. Stored on each guide so `estimate-extents` is O(1), and read
+// off the stack the guide was laid out as, which is the wider of its title and
+// whatever it puts under it.
+#let _guide-width(g) = {
+  if not _STACKED-KINDS.contains(g.kind) {
+    fail("legend._guide-width", "unknown guide kind " + repr(g.kind))
   }
-  fail("legend._guide-width", "unknown guide kind " + repr(g.kind))
+  g.stack.layout.along
 }
-
-// A titleless guide (`labels(... : none)`) reserves no title height; otherwise
-// the resolved `title-h` applies.
-#let _title-prefix(g, title-h) = if g.title == none { 0.0 } else { title-h }
 
 // Vertical size-ladder row metrics, shared by the height estimate and the draw
 // so the reserved space matches the drawn glyphs. When the resolved key glyph
@@ -770,21 +751,6 @@
     off: glyph-diam / 2,
     last: glyph-diam,
   )
-}
-
-#let _colourbar-height(guide, title-h, style) = {
-  let prefix = _title-prefix(guide, title-h)
-  if guide.placement.direction == "horizontal" {
-    let breaks = _colourbar-breaks(guide)
-    (
-      prefix
-        + _COLOURBAR-H-H
-        + _COLOURBAR-H-LABEL-H
-        + _breaks-overflow(guide, breaks, style)
-    )
-  } else {
-    prefix + _COLOURBAR-V-H + _COLOURBAR-PAD-V
-  }
 }
 
 // Resolve the horizontal alignment for a guide's entry labels: a per-guide
@@ -1017,6 +983,62 @@
   )
 }
 
+// The entry table a colour bar ticks: one row per break that lands inside the
+// domain, at the fraction of the strip it marks.
+//
+// A degenerate domain marks nothing, which is what the draw has always done
+// rather than dividing by a zero span.
+#let _colourbar-entries(g, breaks, style) = {
+  let (lo, hi) = g.domain
+  if hi == lo { return () }
+  let rows = ()
+  for (i, b) in breaks.enumerate() {
+    let frac = (b - lo) / (hi - lo)
+    if frac < 0 or frac > 1 { continue }
+    rows.push((
+      value: b,
+      frac: frac,
+      label: _break-label(g, b, i),
+      tier: "major",
+    ))
+  }
+  rows
+}
+
+// The stack a colour-bar guide is: its title above its strip.
+//
+// The strip is one primitive rather than a stack of them, because the flank of
+// a vertical bar reads across the guide while the guide stacks down it. The room
+// past the strip is the constant the guide has always reserved: a vertical bar
+// reserves 0.3 cm for a flank it draws at 0.18 cm, and unpicking that moves
+// every golden with a colour bar.
+#let _colourbar-node(g, style, title-style, title-w, title-h) = {
+  let horizontal = g.placement.direction == "horizontal"
+  let breaks = _colourbar-breaks(g)
+  let label-w = _max-break-label-width(g, breaks, style)
+  compose-stack(
+    .._box-title(g, title-style, title-w, title-h),
+    prim-bar(
+      entries: _colourbar-entries(g, breaks, style),
+      direction: g.placement.direction,
+      bar: if horizontal {
+        (_COLOURBAR-H-W, _COLOURBAR-H-H)
+      } else { (_COLOURBAR-V-W, _COLOURBAR-V-H) },
+      band: if horizontal {
+        _COLOURBAR-H-LABEL-H + _breaks-overflow(g, breaks, style)
+      } else { _COLOURBAR-PAD-V },
+      label-reserve: if horizontal { label-w } else {
+        _COLOURBAR-V-LABEL-GAP + label-w
+      },
+      label-w: label-w,
+      angle: if style.angle != none { style.angle / 1deg } else { 0 },
+      label-align: _label-align(g, style.align),
+      justify: _grid-justify(g, title-style),
+    ),
+    spacing: 0.0,
+  )
+}
+
 // Slack below a custom block, so its content is not flush with the edge of the
 // slot the legend gave it.
 #let _CUSTOM-PAD-V = 0.2
@@ -1057,13 +1079,11 @@
 // Total height (cm) of a guide box, read off the `legend-title` band
 // `guides-for` stamped on the guide, so the space reserved by the sizing pass
 // is the same space the draw consumes.
-#let _guide-render-height(g, style) = {
-  let title-h = g.title-h
-  // A guide built from primitives is as tall as its stack measured, rather than
-  // as tall as a formula of its own.
-  if _STACKED-KINDS.contains(g.kind) { return g.stack.layout.across }
-  if g.kind == "colourbar" { return _colourbar-height(g, title-h, style) }
-  fail("legend._guide-render-height", "unknown guide kind " + repr(g.kind))
+#let _guide-render-height(g) = {
+  if not _STACKED-KINDS.contains(g.kind) {
+    fail("legend._guide-render-height", "unknown guide kind " + repr(g.kind))
+  }
+  g.stack.layout.across
 }
 
 // Stamp the cm a guide occupies on the surfaces `theme` paints it with: its
@@ -1081,20 +1101,22 @@
   let title = _title-box(g, title-style)
   let out = g
   out.insert("title-h", _legend-title-h(title-style, title.height))
-  // A guide built from primitives is laid out once here, and its width, its
-  // height and its draw all read that one record.
-  if _STACKED-KINDS.contains(out.kind) {
-    let node = if out.kind == "swatch" {
-      _swatch-node(out, text-style, title-style, title.width, out.title-h)
-    } else if out.kind == "size-ladder" {
-      _ladder-node(out, text-style, title-style, title.width, out.title-h)
-    } else {
-      _custom-node(out, title-style, title.width, out.title-h)
-    }
-    out.insert("stack", _stack-layout(node))
+  // Every guide is a stack of primitives, laid out once here, and its width,
+  // its height and its draw all read that one record.
+  let node = if out.kind == "swatch" {
+    _swatch-node(out, text-style, title-style, title.width, out.title-h)
+  } else if out.kind == "size-ladder" {
+    _ladder-node(out, text-style, title-style, title.width, out.title-h)
+  } else if out.kind == "colourbar" {
+    _colourbar-node(out, text-style, title-style, title.width, out.title-h)
+  } else if out.kind == "custom" {
+    _custom-node(out, title-style, title.width, out.title-h)
+  } else {
+    fail("legend._stamp-sizes", "unknown guide kind " + repr(out.kind))
   }
-  out.insert("width", _guide-width(out, text-style, title.width))
-  out.insert("height", _guide-render-height(out, text-style))
+  out.insert("stack", _stack-layout(node))
+  out.insert("width", _guide-width(out))
+  out.insert("height", _guide-render-height(out))
   out
 }
 
@@ -1329,61 +1351,6 @@
   )
 }
 
-#let _draw-title(guide, ox, cursor, theme) = {
-  let s = _text-style(theme, "legend-title")
-  // A per-guide `align` (from `guide-legend(align:)`) wins over the theme.
-  // Default left-aligned at the legend's left edge; `center`/`right` offset
-  // within the legend block `width`. The key graphic uses the same alignment.
-  let a = _title-resolved-align(guide, s)
-  let (tx, t-anchor) = if a == right {
-    (ox + guide.width, "north-east")
-  } else if a == center {
-    (ox + guide.width / 2, "north")
-  } else {
-    (ox, "north-west")
-  }
-  cetz.draw.content(
-    (tx, cursor),
-    text(.._text-args(s))[#resolve-prose(guide.title, eval-strings: s.typst)],
-    anchor: t-anchor,
-    angle: if s.angle != none { s.angle } else { 0deg },
-  )
-}
-
-// The context a legend box is drawn under: its parts read left to right across
-// the width the box was given, and stack downward from the cursor.
-//
-// `key-draw` is where the aesthetics reach the glyph. The layer places a key and
-// says which level it stands for; the bundle that inks it is resolved here,
-// where the trained scales are.
-#let _legend-box-gctx(guide, ctx, ox, cursor, theme) = {
-  let ink = resolve-colour(theme, "ink")
-  let glyph-font = resolve-geom-defaults(theme).font
-  (
-    .._LEGEND-GCTX,
-    span: guide.width,
-    place: (frac, across) => (ox + frac * guide.width, cursor - across),
-    text-style: _guide-text-styles(theme),
-    key-draw: (key, value, pt, radius) => draw-glyph(
-      key,
-      pt.at(0),
-      pt.at(1),
-      radius,
-      _bundle-for(value, guide.at("aesthetics", default: ()), ctx, ink),
-      ink: ink,
-      font: glyph-font,
-    ),
-  )
-}
-
-// A guide built from primitives is drawn by its own stack, from the record
-// `_stamp-sizes` measured, in the box context every legend box shares.
-#let _draw-stacked(guide, ctx, ox, cursor, theme) = compose-draw(
-  guide.stack.node,
-  _legend-box-gctx(guide, ctx, ox, cursor, theme),
-  guide.stack.layout,
-)
-
 // Build positioned gradient stops for a continuous colourbar. Diverging
 // palettes (with `midpoint`) pin the middle stop at the midpoint's normalised
 // position; degenerate palettes flatten to a single colour across the bar.
@@ -1403,39 +1370,25 @@
   pal
 }
 
-#let _draw-colourbar(guide, ctx, ox, cursor, theme) = {
-  let horizontal = guide.placement.direction == "horizontal"
-  let bar-w = if horizontal { _COLOURBAR-H-W } else { _COLOURBAR-V-W }
-  let bar-h = if horizontal { _COLOURBAR-H-H } else { _COLOURBAR-V-H }
-  let tick-gap = 0.08
-  let tick-len = 0.1
+// Paint the body of a colour bar between the two corners the layer resolved:
+// the backstop fill, the gradient or the bins, and the frame stroke over them.
+//
+// This is what the guide layer cannot do for itself. Every colour here is
+// resolved from a palette and a trained scale, which live downstream of the
+// layer, so it reaches the strip as a closure on the context.
+#let _paint-bar(guide, ctx, theme, lo-pt, hi-pt, horizontal) = {
   let bar-aes = if guide.aesthetics.contains("colour") {
     "colour"
   } else { "fill" }
   let trained = ctx.trained.at(bar-aes)
   let ink = resolve-colour(theme, "ink")
-  let _legend-text = _text-style(theme, "legend-text")
-  let legend-text-args = _text-args(_legend-text)
-  let label-angle = if _legend-text.angle != none { _legend-text.angle } else {
-    0deg
-  }
-  let text-size = _legend-text.size
-  let size-pt = text-size / 1pt
   let (lo, hi) = guide.domain
-
-  if guide.title != none {
-    _draw-title(guide, ox, cursor, theme)
-  }
-  let bar-top = cursor - _title-prefix(guide, guide.title-h)
-  let bar-bottom = bar-top - bar-h
-  // Horizontal bars centre / right-justify under the title; vertical bars stay
-  // at the left edge with their labels to the right.
-  let bar-x = if horizontal {
-    let justify = _title-resolved-align(guide, _legend-title-style(theme))
-    ox + align-offset(justify, guide.width, bar-w)
-  } else { ox }
-  let bar-left = bar-x
-  let bar-right = bar-x + bar-w
+  let (bar-left, bar-bottom) = lo-pt
+  let (bar-right, bar-top) = hi-pt
+  let bar-w = bar-right - bar-left
+  let bar-h = bar-top - bar-bottom
+  // The frame stays glued to the strip bounds so a themed `inset` cannot bleed
+  // past the slot the guide reserved.
   let bar-frame = _rect-style(
     theme,
     "legend-bar",
@@ -1443,18 +1396,9 @@
     outset-ref-w: ctx.at("canvas-w", default: 0),
     outset-ref-h: ctx.at("canvas-h", default: 0),
   )
-  // Frame rect stays glued to the bar bounds so themed `inset` cannot
-  // bleed past the colourbar slot.
-  let frame-lo = (bar-left, bar-bottom)
-  let frame-hi = (bar-right, bar-top)
-  // Backstop fill (visible through transparent gradient stops only).
+  // Backstop fill, visible through transparent gradient stops only.
   if bar-frame.fill != none {
-    cetz.draw.rect(
-      frame-lo,
-      frame-hi,
-      fill: bar-frame.fill,
-      stroke: none,
-    )
+    cetz.draw.rect(lo-pt, hi-pt, fill: bar-frame.fill, stroke: none)
   }
   let pal = spec-palette(trained, ctx.palette)
   let spec = trained.at("spec", default: none)
@@ -1509,83 +1453,69 @@
       ink,
     )
     cetz.draw.rect(
-      (bar-left, bar-bottom),
-      (bar-right, bar-top),
+      lo-pt,
+      hi-pt,
       fill: gradient.linear(..stops, dir: if horizontal { ltr } else { btt }),
       stroke: none,
     )
   }
   if bar-frame.stroke != none {
-    cetz.draw.rect(
-      frame-lo,
-      frame-hi,
-      fill: none,
-      stroke: bar-frame.stroke,
-    )
-  }
-  let tick-stroke = _line-stroke(theme, "legend-ticks", fallback-colour: ink)
-  let breaks = _colourbar-breaks(guide)
-  let labels = guide.at("labels", default: auto)
-  let typst-mark = guide.at("typst-mark", default: false)
-  let align = _label-align(guide, _legend-text.align)
-  let label-w = _max-break-label-width(guide, breaks, _legend-text)
-  for (i, b) in breaks.enumerate() {
-    if hi == lo { continue }
-    let t = (b - lo) / (hi - lo)
-    if t < 0 or t > 1 { continue }
-    let tick-text = resolve-prose(
-      resolve-label(
-        labels,
-        b,
-        i,
-        format-break(b),
-        typst-mark: typst-mark,
-      ),
-      eval-strings: _legend-text.typst,
-    )
-    let (tick-from, tick-to, label-pos, label-anchor) = if horizontal {
-      let cx = bar-left + t * bar-w
-      let (lx, l-anchor) = pin-below(align, cx)
-      (
-        (cx, bar-bottom),
-        (cx, bar-bottom - tick-len),
-        (lx, bar-bottom - tick-len - tick-gap),
-        l-anchor,
-      )
-    } else {
-      let cy = bar-bottom + t * bar-h
-      let (lx, l-anchor) = pin-right-of(
-        align,
-        bar-right + tick-len + tick-gap,
-        label-w,
-      )
-      (
-        (bar-right, cy),
-        (bar-right + tick-len, cy),
-        (lx, cy),
-        l-anchor,
-      )
-    }
-    if tick-stroke != none {
-      cetz.draw.line(tick-from, tick-to, stroke: tick-stroke)
-    }
-    cetz.draw.content(
-      label-pos,
-      text(..legend-text-args)[#tick-text],
-      anchor: label-anchor,
-      angle: label-angle,
-    )
+    cetz.draw.rect(lo-pt, hi-pt, fill: none, stroke: bar-frame.stroke)
   }
 }
 
+// The context a legend box is drawn under: its parts read left to right across
+// the width the box was given, and stack downward from the cursor.
+//
+// `key-draw` is where the aesthetics reach the glyph. The layer places a key and
+// says which level it stands for; the bundle that inks it is resolved here,
+// where the trained scales are.
+#let _legend-box-gctx(guide, ctx, ox, cursor, theme) = {
+  let ink = resolve-colour(theme, "ink")
+  let glyph-font = resolve-geom-defaults(theme).font
+  (
+    .._LEGEND-GCTX,
+    span: guide.width,
+    place: (frac, across) => (ox + frac * guide.width, cursor - across),
+    text-style: _guide-text-styles(theme),
+    surface-stroke: surface => _line-stroke(
+      theme,
+      surface,
+      fallback-colour: ink,
+    ),
+    key-draw: (key, value, pt, radius) => draw-glyph(
+      key,
+      pt.at(0),
+      pt.at(1),
+      radius,
+      _bundle-for(value, guide.at("aesthetics", default: ()), ctx, ink),
+      ink: ink,
+      font: glyph-font,
+    ),
+    bar-draw: (lo-pt, hi-pt, horizontal) => _paint-bar(
+      guide,
+      ctx,
+      theme,
+      lo-pt,
+      hi-pt,
+      horizontal,
+    ),
+  )
+}
+
+// A guide built from primitives is drawn by its own stack, from the record
+// `_stamp-sizes` measured, in the box context every legend box shares.
+#let _draw-stacked(guide, ctx, ox, cursor, theme) = compose-draw(
+  guide.stack.node,
+  _legend-box-gctx(guide, ctx, ox, cursor, theme),
+  guide.stack.layout,
+)
+
 #let _draw-guide-body(g, ctx, ox, cursor, theme) = {
-  if _STACKED-KINDS.contains(g.kind) {
-    _draw-stacked(g, ctx, ox, cursor, theme)
-  } else if g.kind == "colourbar" {
-    _draw-colourbar(g, ctx, ox, cursor, theme)
-  } else {
+  if not _STACKED-KINDS.contains(g.kind) {
     fail("legend.draw", "unknown guide kind " + repr(g.kind))
   }
+  _draw-stacked(g, ctx, ox, cursor, theme)
 }
 
 // Vertical gap between stacked guides on a side: the panel-to-legend gap plus

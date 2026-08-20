@@ -1,8 +1,8 @@
-// `_draw-title` paints the legend title with the whole resolved `legend-title`
-// surface: its weight and font, a plain string evaluated as markup under an
-// `element-typst` surface, and the surface `angle`. The box reserved for the
-// guide has to follow every one of them, or the title is drawn outside the
-// room the chrome kept for it.
+// A legend title is drawn with the whole resolved `legend-title` surface: its
+// weight and font, a plain string evaluated as markup under an `element-typst`
+// surface, and the surface `angle`. The box reserved for the guide has to
+// follow every one of them, or the title is drawn outside the room the chrome
+// kept for it.
 
 #import "../../src/render/legend.typ": guides-for
 #import "../../src/theme/defaults.typ": merge-theme

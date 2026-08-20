@@ -5,8 +5,7 @@
 
 #import "../../src/guide/grid.typ": grid-index, grid-rc, grid-shape
 #import "../../src/render/legend.typ": (
-  _LABEL-SLACK-CM, _guide-title, _legend-title-style, _title-box, _title-prefix,
-  guides-for,
+  _LABEL-SLACK-CM, _guide-title, _legend-title-style, _title-box, guides-for,
 )
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../lib.typ": element-text, guide-custom, theme
@@ -51,8 +50,8 @@
   assert.eq(grid-index(rc-row.row, rc-row.col, s23, true), i)
 }
 
-// `labels(colour: none)` sets `spec.blank`, suppressing the legend title; a named
-// scale keeps it, and a titleless guide reserves no title height.
+// `labels(colour: none)` sets `spec.blank`, suppressing the legend title; a
+// named scale keeps it.
 #let _pspec = (mapping: (colour: "sp"))
 #assert.eq(
   _guide-title(
@@ -70,8 +69,6 @@
   ),
   none,
 )
-#assert.eq(_title-prefix((title: none), 0.5), 0.0)
-#assert.eq(_title-prefix((title: "X"), 0.5), 0.5)
 
 // The reserved guide height tracks the resolved `legend-title` surface: the
 // title band is `1.6em` of that surface, so scaling it from the default 8pt to
