@@ -29,7 +29,12 @@
 #import "../guide/compose.typ": (
   compose-stack, draw as compose-draw, layout-of as compose-layout-of,
 )
+#import "../guide/grid.typ": (
+  COL-GAP-MIN, align-offset, grid-rc, grid-shape, key-metrics, pin-right-of,
+  row-overflows,
+)
 #import "../guide/primitive/content.typ": prim-content
+#import "../guide/primitive/keys.typ": prim-keys
 #import "../guide/primitive/spacer.typ": prim-spacer
 #import "../guide/primitive/title.typ": prim-title
 #import "../scale/train.typ": mapping-display-name
@@ -164,26 +169,10 @@
   }
 }
 
-#let _grid-shape(n, nrow, ncol, direction) = {
-  if ncol != none {
-    let cols = calc.max(1, ncol)
-    let rows = calc.max(1, calc.ceil(n / cols))
-    (rows: rows, cols: cols)
-  } else if nrow != none {
-    let rows = calc.max(1, nrow)
-    let cols = calc.max(1, calc.ceil(n / rows))
-    (rows: rows, cols: cols)
-  } else if direction == "horizontal" {
-    (rows: 1, cols: n)
-  } else {
-    (rows: n, cols: 1)
-  }
-}
-
 // Grid shape for a guide laying `count` keys out under its `nrow`/`ncolumn` and
 // flow direction. Shared by every swatch and size-ladder layout site so the
 // width estimate, height estimate, and draw all agree on the grid.
-#let _guide-shape(g, count) = _grid-shape(
+#let _guide-shape(g, count) = grid-shape(
   count,
   g.nrow,
   g.ncolumn,
@@ -568,22 +557,6 @@
   title-h,
 )
 
-// Index of the level at (row, col). Column-major (`byrow: false`) numbers
-// items down each column; row-major (`byrow: true`) numbers items across
-// each row.
-#let _swatch-index(row, col, shape, byrow) = {
-  if byrow { row * shape.cols + col } else { col * shape.rows + row }
-}
-
-// Inverse of `_swatch-index`: recover (row, col) from a linear index.
-#let _swatch-rc(i, shape, byrow) = {
-  if byrow {
-    (row: calc.quo(i, shape.cols), col: calc.rem(i, shape.cols))
-  } else {
-    (row: calc.rem(i, shape.rows), col: calc.quo(i, shape.rows))
-  }
-}
-
 // The label a swatch cell draws (custom `labels:` resolved against the level,
 // falling back to the level itself), as measured for sizing.
 #let _swatch-label(guide, i) = resolve-label(
@@ -593,41 +566,6 @@
   guide.levels.at(i),
   typst-mark: guide.at("typst-mark", default: false),
 )
-
-// Swatch column gap: at least `MIN` cm, growing with the widest column by
-// `RATIO` so dense legends keep breathing room.
-#let _SWATCH-COL-GAP-MIN = 0.15
-#let _SWATCH-COL-GAP-RATIO = 0.1
-
-// Per-column widths, gap, cumulative left-offsets, and total grid width.
-// Each column sizes to its own widest label (measured on the entry-label
-// surface) so a single oversized level doesn't pad every other column
-// unnecessarily. Widths come from the resolved display labels, so a custom
-// `labels:` wider than its level still gets the column space it draws into.
-#let _swatch-layout(guide, shape, byrow, style) = {
-  let lead = _swatch-lead-cm(guide.key-diam-cm, style.size / 1pt)
-  let widths = range(shape.cols).map(col => {
-    let max-w = 0.0
-    for row in range(shape.rows) {
-      let i = _swatch-index(row, col, shape, byrow)
-      if i >= guide.levels.len() { continue }
-      let w = _label-width(_swatch-label(guide, i), style)
-      if w > max-w { max-w = w }
-    }
-    lead + max-w
-  })
-  let gap = calc.max(
-    _SWATCH-COL-GAP-MIN,
-    _SWATCH-COL-GAP-RATIO * calc.max(..widths),
-  )
-  let offsets = ()
-  let acc = 0.0
-  for w in widths {
-    offsets.push(acc)
-    acc += w + gap
-  }
-  (widths: widths, gap: gap, offsets: offsets, total: acc - gap)
-}
 
 // Default footprint (cm) for `guide-custom` when the user did not supply an
 // explicit length. Two columns wide so it sits next to the standard legends
@@ -713,20 +651,6 @@
   (_label-lines(label, style) - 1) * line-h
 )
 
-// Turn a per-row label-overflow list into stacking data: `extra` per row, the
-// cumulative overflow `before` each row (how far that row is pushed down), and
-// the `total` overflow added to the single-line stack height. Shared by the
-// vertical swatch grid and the vertical size-ladder.
-#let _stack-offsets(overflows) = {
-  let before = ()
-  let acc = 0.0
-  for e in overflows {
-    before.push(acc)
-    acc += e
-  }
-  (extra: overflows, before: before, total: acc)
-}
-
 // Tallest multi-line overflow across a break list, measured against a single
 // line. Grows a horizontal ladder / colourbar label band beyond its single-line
 // default; zero when every label fits one line.
@@ -740,31 +664,17 @@
   max-e
 }
 
-// Per-row stacking offsets for a grid: each row's overflow is the tallest
-// multi-line overflow across its columns. `label-of(i)` returns the i-th cell's
-// label; `count` bounds the populated cells. Shared by the swatch grid and the
-// grid size-ladder.
-#let _grid-row-overflows(count, label-of, shape, byrow, line-h, style) = {
-  let overflows = range(shape.rows).map(row => {
-    let max-e = 0.0
-    for col in range(shape.cols) {
-      let i = _swatch-index(row, col, shape, byrow)
-      if i >= count { continue }
-      let e = _label-overflow(label-of(i), line-h, style)
-      if e > max-e { max-e = e }
-    }
-    max-e
-  })
-  _stack-offsets(overflows)
-}
-
-#let _swatch-rows(guide, shape, byrow, style) = _grid-row-overflows(
-  guide.levels.len(),
-  i => _swatch-label(guide, i),
-  shape,
-  byrow,
-  _swatch-stride-cm(guide.key-diam-cm, style.size / 1pt),
-  style,
+// Per-row stacking offsets for a grid of labels, in the shape the grid layer
+// takes: the label measurement is the render stage's, the stacking is the
+// layer's. `label-of(i)` returns the i-th cell's label and `count` bounds the
+// populated cells.
+#let _grid-row-overflows(count, label-of, shape, byrow, line-h, style) = (
+  row-overflows(
+    count,
+    i => _label-overflow(label-of(i), line-h, style),
+    shape,
+    byrow,
+  )
 )
 
 #let _LADDER-H-COL-H = 0.32
@@ -827,7 +737,7 @@
 )
 
 // Per-row stacking offsets for a vertical size-ladder grid (the break analogue
-// of `_swatch-rows`).
+// of the swatch grid).
 #let _ladder-rows(guide, shape, byrow, line-h, style) = _grid-row-overflows(
   guide.breaks.len(),
   i => _break-label(guide, guide.breaks.at(i), i),
@@ -843,11 +753,9 @@
 // legend-title surface, which the title band above the first key also spends.
 #let _guide-width(g, style, title-w) = {
   let size-pt = style.size / 1pt
-  if g.kind == "swatch" {
-    let shape = _guide-shape(g, g.levels.len())
-    let layout = _swatch-layout(g, shape, g.placement.byrow, style)
-    return calc.max(title-w, layout.total)
-  }
+  // A swatch is a stack of primitives, so its width is the length its stack
+  // measured: the wider of its key grid and its title.
+  if g.kind == "swatch" { return g.stack.layout.along }
   if g.kind == "size-ladder" {
     let label-w = _max-break-label-width(g, g.breaks, style)
     let shape = _guide-shape(g, g.breaks.len())
@@ -856,7 +764,7 @@
       return calc.max(title-w, col-w * shape.cols)
     }
     let col-w = _ladder-lead-cm(size-pt) + label-w
-    let grid-w = shape.cols * col-w + (shape.cols - 1) * _SWATCH-COL-GAP-MIN
+    let grid-w = shape.cols * col-w + (shape.cols - 1) * COL-GAP-MIN
     return calc.max(title-w, grid-w)
   }
   if g.kind == "colourbar" {
@@ -903,28 +811,6 @@
   )
 }
 
-// Vertical height (cm) of a row-stack guide: full line-h for every row
-// except the last (which reserves only the glyph diameter), plus a
-// font-derived bottom slack so the rect doesn't graze the glyph.
-#let _row-stack-height(n-rows, line-h, size-pt, diam) = (
-  (n-rows - 1) * line-h + diam + _glyph-bottom-slack(size-pt)
-)
-
-#let _swatch-height(guide, title-h, style) = {
-  let shape = _guide-shape(guide, guide.levels.len())
-  let size-pt = style.size / 1pt
-  (
-    _title-prefix(guide, title-h)
-      + _row-stack-height(
-        shape.rows,
-        _swatch-stride-cm(guide.key-diam-cm, size-pt),
-        size-pt,
-        guide.key-diam-cm,
-      )
-      + _swatch-rows(guide, shape, guide.placement.byrow, style).total
-  )
-}
-
 #let _size-ladder-height(guide, title-h, style) = {
   let prefix = _title-prefix(guide, title-h)
   let shape = _guide-shape(guide, guide.breaks.len())
@@ -965,6 +851,102 @@
   }
 }
 
+// Resolve the horizontal alignment for a guide's entry labels: a per-guide
+// `align` (from `guide-legend(align:)`) wins, then the `legend-text` theme
+// align, then the per-direction default (horizontal centres labels, vertical
+// keeps them left). Returns a Typst alignment (`left` / `center` / `right`).
+#let _label-align(guide, theme-align) = {
+  let a = guide.at("align", default: none)
+  if a == none { a = theme-align }
+  if a == none {
+    a = if guide.placement.direction == "horizontal" { center } else { left }
+  }
+  a
+}
+
+// The title's effective alignment with the `none -> left` default applied: a
+// per-guide `align` (from `guide-legend(align:)`) wins over the `legend-title`
+// theme align. The key graphic of a horizontal legend is justified by the same
+// value so the two always share a centre.
+//
+// `style` is the resolved `legend-title` surface rather than the theme, because
+// the sizing pass reads it as well and runs with no theme at all under a
+// theme-less caller.
+#let _title-resolved-align(guide, style) = {
+  let a = guide.at("align", default: none)
+  if a == none { a = style.align }
+  if a == none { left } else { a }
+}
+
+// Lead before a drawn swatch label, which is not the lead its column reserves.
+// The two have differed since before the guide layer; `key-metrics` carries
+// both rather than reconciling them, because reconciling them moves every
+// legend.
+#let _SWATCH-LABEL-LEAD = 0.15
+
+// The entry table a swatch grid draws: one row per level, carrying the label it
+// shows and the extent that label was measured at. Measurement happens here
+// because the theme and the Typst measurement context live here; the grid reads
+// the numbers back.
+#let _swatch-entries(g, style) = {
+  let rows = ()
+  for (i, level) in g.levels.enumerate() {
+    let label = _swatch-label(g, i)
+    rows.push((
+      value: level,
+      label: label,
+      // The reserved width, not the raw ink: a label is given slack so it never
+      // sits flush against the next column.
+      width: _label-width(label, style),
+      lines: _label-lines(label, style),
+    ))
+  }
+  rows
+}
+
+// The stack a swatch guide is: its title above its key grid.
+#let _swatch-node(g, style, title-style, title-w, title-h) = {
+  let size-pt = style.size / 1pt
+  let diam = g.key-diam-cm
+  compose-stack(
+    ..if g.title == none { () } else {
+      (
+        prim-title(
+          g.title,
+          align: g.at("align", default: none),
+          extent: (title-w, title-h),
+          angle: if title-style.angle != none {
+            title-style.angle / 1deg
+          } else { 0 },
+        ),
+      )
+    },
+    prim-keys(
+      entries: _swatch-entries(g, style),
+      shape: _guide-shape(g, g.levels.len()),
+      byrow: g.placement.byrow,
+      key: g.at("key", default: "rect"),
+      metrics: key-metrics(
+        diam: diam,
+        line-h: _swatch-stride-cm(diam, size-pt),
+        slack: _glyph-bottom-slack(size-pt),
+        lead: _swatch-lead-cm(diam, size-pt),
+        label-lead: diam + _SWATCH-LABEL-LEAD,
+      ),
+      angle: if style.angle != none { style.angle / 1deg } else { 0 },
+      label-align: _label-align(g, style.align),
+      // A horizontal legend justifies its grid under its title; a vertical one
+      // keeps its left edge.
+      justify: if g.placement.direction == "horizontal" {
+        _title-resolved-align(g, title-style)
+      } else { none },
+    ),
+    // The title band already carries the gap below the title, so the parts sit
+    // flush.
+    spacing: 0.0,
+  )
+}
+
 // Slack below a custom block, so its content is not flush with the edge of the
 // slot the legend gave it.
 #let _CUSTOM-PAD-V = 0.2
@@ -994,32 +976,37 @@
   spacing: 0.0,
 )
 
-// A custom block is laid out in a box of its own, not against a panel edge, so
+// A legend box is laid out in a box of its own, not against a panel edge, so
 // its context carries only the orientation the stack needs.
 // The side is nominal: a legend box stacks downward whichever side it lands on,
 // which is what the context gives a legend by default.
-#let _CUSTOM-GCTX = gctx("right", "custom")
+//
+// The aesthetic decides the theme surfaces, and every legend box paints on the
+// legend ones, so the name here only has to be one no axis answers to.
+#let _LEGEND-GCTX = gctx("right", "legend")
 
-// The layout a custom guide reserves and draws from. Built once per guide in
+// The layout a guide reserves and draws from. Built once per guide in
 // `_stamp-sizes` and read back by both, so the two cannot drift.
-#let _custom-layout(g, title-w, title-h, title-angle) = {
-  let node = _custom-node(g, title-w, title-h, title-angle)
-  (node: node, layout: compose-layout-of(node, _CUSTOM-GCTX))
-}
+//
+// `span` is left unset: a measurement never asks where a point lands, and the
+// span is the width this record is about to decide.
+#let _stack-layout(node) = (
+  node: node,
+  layout: compose-layout-of(node, _LEGEND-GCTX),
+)
 
 // Total height (cm) of a guide box, read off the `legend-title` band
 // `guides-for` stamped on the guide, so the space reserved by the sizing pass
 // is the same space the draw consumes.
 #let _guide-render-height(g, style) = {
   let title-h = g.title-h
-  if g.kind == "swatch" { return _swatch-height(g, title-h, style) }
+  // A guide built from primitives is as tall as its stack measured, rather than
+  // as tall as a formula of its own.
+  if g.kind == "swatch" or g.kind == "custom" { return g.stack.layout.across }
   if g.kind == "size-ladder" {
     return _size-ladder-height(g, title-h, style)
   }
   if g.kind == "colourbar" { return _colourbar-height(g, title-h, style) }
-  // A custom guide is a stack of primitives, so its height is what the stack
-  // measured rather than a formula of its own.
-  if g.kind == "custom" { return g.stack.layout.across }
   fail("legend._guide-render-height", "unknown guide kind " + repr(g.kind))
 }
 
@@ -1028,7 +1015,8 @@
 // whole box. Every consumer reads these back rather than measuring again, so a
 // guide is stamped wherever the theme it is drawn under is settled.
 //
-// `_guide-render-height` reads the title band, so the band is stamped first.
+// The band and the stack both feed the width and the height, so they are
+// stamped first and in that order.
 #let _stamp-sizes(g, theme) = {
   let text-style = _legend-text-style(theme)
   let title-style = _legend-title-style(theme)
@@ -1036,21 +1024,30 @@
   // the title's own height, so the one box serves both and is measured once.
   let title = _title-box(g, title-style)
   let out = g
-  out.insert("width", _guide-width(out, text-style, title.width))
   out.insert("title-h", _legend-title-h(title-style, title.height))
-  // A custom guide is built from primitives, so its stack is laid out once here
-  // and both the height below and the draw read that one record.
-  if out.kind == "custom" {
+  // A guide built from primitives is laid out once here, and its width, its
+  // height and its draw all read that one record.
+  if out.kind == "swatch" {
     out.insert(
       "stack",
-      _custom-layout(
-        out,
-        title.width,
-        out.title-h,
-        if title-style.angle != none { title-style.angle / 1deg } else { 0 },
+      _stack-layout(
+        _swatch-node(out, text-style, title-style, title.width, out.title-h),
+      ),
+    )
+  } else if out.kind == "custom" {
+    out.insert(
+      "stack",
+      _stack-layout(
+        _custom-node(
+          out,
+          title.width,
+          out.title-h,
+          if title-style.angle != none { title-style.angle / 1deg } else { 0 },
+        ),
       ),
     )
   }
+  out.insert("width", _guide-width(out, text-style, title.width))
   out.insert("height", _guide-render-height(out, text-style))
   out
 }
@@ -1272,37 +1269,6 @@
   resolve-margin-side-cm(s.margin.left, 1.6em, size-pt: s.size / 1pt)
 }
 
-// Resolve the horizontal alignment for a guide's entry labels: a per-guide
-// `align` (from `guide-legend(align:)`) wins, then the `legend-text` theme
-// align, then the per-direction default (horizontal centres labels, vertical
-// keeps them left). Returns a Typst alignment (`left` / `center` / `right`).
-#let _label-align(guide, theme-align) = {
-  let a = guide.at("align", default: none)
-  if a == none { a = theme-align }
-  if a == none {
-    a = if guide.placement.direction == "horizontal" { center } else { left }
-  }
-  a
-}
-
-// Place a label drawn to the right of a mark, justified within a slot of width
-// `slot-w` whose left edge is `start`. `left` keeps the current west anchor at
-// `start`; `center` / `right` shift toward the slot's far edge. Returns
-// `(x, anchor)` for `cetz.draw.content`.
-//
-// The `mid-*` family centres on the cap-height / baseline band instead of the
-// glyph bounds, so a descender (`Chinstrap`) no longer lifts its label above a
-// neighbour without one (`Adelie`).
-#let _hjust-right-of(align, start, slot-w) = {
-  if align == right {
-    (start + slot-w, "mid-east")
-  } else if align == center {
-    (start + slot-w / 2, "mid")
-  } else {
-    (start, "mid-west")
-  }
-}
-
 // Place a label drawn below a mark sitting at x `cx`. `center` keeps the label
 // centred on the mark (the current north anchor); `left` / `right` pin an edge
 // to `cx`. Returns `(x, anchor)` for `cetz.draw.content`.
@@ -1316,40 +1282,26 @@
   }
 }
 
-// Resolve the legend title alignment: a per-guide `align` (from
-// `guide-legend(align:)`) wins over the `legend-title` theme align; `none`
-// falls through to the left default in `_draw-title`.
-#let _title-align(guide-align, theme-align) = if guide-align != none {
-  guide-align
-} else { theme-align }
-
-// The title's effective alignment with the `none -> left` default applied. The
-// key graphic of a horizontal legend is justified by the same value so the two
-// always share a centre (see `_draw-title` and the `_draw-*` graphic origins).
-#let _title-resolved-align(guide, theme) = {
-  let a = _title-align(
-    guide.at("align", default: none),
-    _text-style(theme, "legend-title").align,
+// The `(surface) -> (render:, align:)` closure a guide context is drawn under.
+// A primitive asks for rendered content rather than resolving a surface itself,
+// because the theme and the measurement context both live at this stage.
+#let _guide-text-styles(theme) = surface => {
+  let s = _text-style(theme, surface)
+  (
+    render: body => text(.._text-args(s))[#resolve-prose(
+      body,
+      eval-strings: s.typst,
+    )],
+    align: s.align,
   )
-  if a == none { left } else { a }
 }
-
-// Horizontal offset (cm) that justifies a graphic of width `graphic-w` within a
-// block of width `total-w`: `0` for left, half the slack for centre, all of it
-// for right. Mirrors `_draw-title`'s justification so a horizontal legend's key
-// graphic shares the title's centre / edges.
-#let _align-offset(align, total-w, graphic-w) = if align == right {
-  total-w - graphic-w
-} else if align == center {
-  (total-w - graphic-w) / 2
-} else { 0.0 }
 
 #let _draw-title(guide, ox, cursor, theme) = {
   let s = _text-style(theme, "legend-title")
   // A per-guide `align` (from `guide-legend(align:)`) wins over the theme.
   // Default left-aligned at the legend's left edge; `center`/`right` offset
   // within the legend block `width`. The key graphic uses the same alignment.
-  let a = _title-resolved-align(guide, theme)
+  let a = _title-resolved-align(guide, s)
   let (tx, t-anchor) = if a == right {
     (ox + guide.width, "north-east")
   } else if a == center {
@@ -1365,82 +1317,38 @@
   )
 }
 
-#let _draw-swatch(guide, ctx, ox, cursor, theme) = {
+// The context a legend box is drawn under: its parts read left to right across
+// the width the box was given, and stack downward from the cursor.
+//
+// `key-draw` is where the aesthetics reach the glyph. The layer places a key and
+// says which level it stands for; the bundle that inks it is resolved here,
+// where the trained scales are.
+#let _legend-box-gctx(guide, ctx, ox, cursor, theme) = {
   let ink = resolve-colour(theme, "ink")
   let glyph-font = resolve-geom-defaults(theme).font
-  let _legend-text = _text-style(theme, "legend-text")
-  let legend-text-args = _text-args(_legend-text)
-  let label-angle = if _legend-text.angle != none { _legend-text.angle } else {
-    0deg
-  }
-  let text-size = _legend-text.size
-  let size-pt = text-size / 1pt
-  let line-h = _swatch-stride-cm(guide.key-diam-cm, size-pt)
-  let glyph-size = guide.key-diam-cm / 2
-
-  if guide.title != none {
-    _draw-title(guide, ox, cursor, theme)
-  }
-  let top = cursor - _title-prefix(guide, guide.title-h)
-  let byrow = guide.placement.byrow
-  let shape = _guide-shape(guide, guide.levels.len())
-  let layout = _swatch-layout(guide, shape, byrow, _legend-text)
-  let rows = _swatch-rows(guide, shape, byrow, _legend-text)
-  let key-kind = guide.at("key", default: "rect")
-  let labels = guide.at("labels", default: auto)
-  let align = _label-align(guide, _legend-text.align)
-  let lead = _swatch-lead-cm(guide.key-diam-cm, size-pt)
-  // Horizontal legends centre / right-justify the key row under the title; the
-  // vertical column stays pinned at the left edge.
-  let bx = if guide.placement.direction == "horizontal" {
-    (
-      ox
-        + _align-offset(
-          _title-resolved-align(guide, theme),
-          guide.width,
-          layout.total,
-        )
-    )
-  } else { ox }
-  for (i, level) in guide.levels.enumerate() {
-    let rc = _swatch-rc(i, shape, byrow)
-    let cx = bx + layout.offsets.at(rc.col)
-    // Push the row down by the overflow of every multi-line row above it, and
-    // centre this item on its own block (`anchor: "mid-west"`) by dropping it
-    // half its overflow so the block grows downward and the glyph stays centred.
-    let cy = top - rc.row * line-h - rows.before.at(rc.row)
-    let cm = cy - glyph-size - rows.extra.at(rc.row) / 2
-    let bundle = _bundle-for(level, guide.aesthetics, ctx, ink)
-    draw-glyph(
-      key-kind,
-      cx + glyph-size,
-      cm,
-      glyph-size,
-      bundle,
+  (
+    .._LEGEND-GCTX,
+    span: guide.width,
+    place: (frac, across) => (ox + frac * guide.width, cursor - across),
+    text-style: _guide-text-styles(theme),
+    key-draw: (key, value, pt, radius) => draw-glyph(
+      key,
+      pt.at(0),
+      pt.at(1),
+      radius,
+      _bundle-for(value, guide.at("aesthetics", default: ()), ctx, ink),
       ink: ink,
       font: glyph-font,
-    )
-    let label-text = resolve-prose(
-      resolve-label(
-        labels,
-        level,
-        i,
-        level,
-        typst-mark: guide.at("typst-mark", default: false),
-      ),
-      eval-strings: _legend-text.typst,
-    )
-    let label-start = cx + glyph-size * 2 + 0.15
-    let slot-w = layout.widths.at(rc.col) - lead
-    let (lx, l-anchor) = _hjust-right-of(align, label-start, slot-w)
-    cetz.draw.content(
-      (lx, cm),
-      text(..legend-text-args)[#label-text],
-      anchor: l-anchor,
-      angle: label-angle,
-    )
-  }
+    ),
+  )
 }
+
+// A swatch is drawn by its own stack, from the record `_stamp-sizes` measured.
+#let _draw-swatch(guide, ctx, ox, cursor, theme) = compose-draw(
+  guide.stack.node,
+  _legend-box-gctx(guide, ctx, ox, cursor, theme),
+  guide.stack.layout,
+)
 
 #let _draw-size-ladder(guide, ctx, ox, cursor, theme) = {
   let ink = resolve-colour(theme, "ink")
@@ -1492,14 +1400,14 @@
     // Centre / right-justify the glyph band under the title.
     let bx = (
       ox
-        + _align-offset(
-          _title-resolved-align(guide, theme),
+        + align-offset(
+          _title-resolved-align(guide, _legend-title-style(theme)),
           guide.width,
           col-w * shape.cols,
         )
     )
     for (i, value) in guide.breaks.enumerate() {
-      let rc = _swatch-rc(i, shape, byrow)
+      let rc = grid-rc(i, shape, byrow)
       let row-top = top - rc.row * row-stride
       let cx = bx + hoff + rc.col * col-w
       let gcy = if grows { row-top - band / 2 } else {
@@ -1523,11 +1431,11 @@
     let line-h = m.line-h
     let off = m.off
     let rows = _ladder-rows(guide, shape, byrow, line-h, _legend-text)
-    let col-w = _ladder-lead-cm(size-pt) + label-w + _SWATCH-COL-GAP-MIN
+    let col-w = _ladder-lead-cm(size-pt) + label-w + COL-GAP-MIN
     for (i, value) in guide.breaks.enumerate() {
       // Same row-stacking as the swatch: push each row down by the overflow
       // above, then centre the break on its block by dropping half its own.
-      let rc = _swatch-rc(i, shape, byrow)
+      let rc = grid-rc(i, shape, byrow)
       let cy = top - rc.row * line-h - rows.before.at(rc.row)
       let cm = cy - off - rows.extra.at(rc.row) / 2
       let cx0 = ox + rc.col * col-w
@@ -1541,7 +1449,7 @@
         ink: ink,
         font: glyph-font,
       )
-      let (lx, l-anchor) = _hjust-right-of(align, cx0 + off * 2 + 0.15, label-w)
+      let (lx, l-anchor) = pin-right-of(align, cx0 + off * 2 + 0.15, label-w)
       cetz.draw.content(
         (lx, cm),
         text(..legend-text-args)[#break-text-of(value, i)],
@@ -1599,7 +1507,8 @@
   // Horizontal bars centre / right-justify under the title; vertical bars stay
   // at the left edge with their labels to the right.
   let bar-x = if horizontal {
-    ox + _align-offset(_title-resolved-align(guide, theme), guide.width, bar-w)
+    let justify = _title-resolved-align(guide, _legend-title-style(theme))
+    ox + align-offset(justify, guide.width, bar-w)
   } else { ox }
   let bar-left = bar-x
   let bar-right = bar-x + bar-w
@@ -1721,7 +1630,7 @@
       )
     } else {
       let cy = bar-bottom + t * bar-h
-      let (lx, l-anchor) = _hjust-right-of(
+      let (lx, l-anchor) = pin-right-of(
         align,
         bar-right + tick-len + tick-gap,
         label-w,
@@ -1746,24 +1655,12 @@
 }
 
 // A custom guide is drawn by its own stack, from the record `_stamp-sizes`
-// measured. `place` maps the stack onto the slot the legend gave it: the guide
-// reads left to right across its own width, and its parts stack downward from
-// the cursor.
-#let _draw-custom(guide, ox, cursor, theme) = {
-  let title-style = _text-style(theme, "legend-title")
-  let ctx = (
-    .._CUSTOM-GCTX,
-    place: (frac, across) => (ox + frac * guide.width, cursor - across),
-    text-style: _ => (
-      render: body => text(.._text-args(title-style))[#resolve-prose(
-        body,
-        eval-strings: title-style.typst,
-      )],
-      align: title-style.align,
-    ),
-  )
-  compose-draw(guide.stack.node, ctx, guide.stack.layout)
-}
+// measured, in the same box context a swatch is drawn under.
+#let _draw-custom(guide, ctx, ox, cursor, theme) = compose-draw(
+  guide.stack.node,
+  _legend-box-gctx(guide, ctx, ox, cursor, theme),
+  guide.stack.layout,
+)
 
 #let _draw-guide-body(g, ctx, ox, cursor, theme) = {
   if g.kind == "swatch" {
@@ -1773,7 +1670,7 @@
   } else if g.kind == "colourbar" {
     _draw-colourbar(g, ctx, ox, cursor, theme)
   } else if g.kind == "custom" {
-    _draw-custom(g, ox, cursor, theme)
+    _draw-custom(g, ctx, ox, cursor, theme)
   } else {
     fail("legend.draw", "unknown guide kind " + repr(g.kind))
   }

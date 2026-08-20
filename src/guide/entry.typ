@@ -219,6 +219,57 @@
   entries
 }
 
+// Reject a grid table a keys primitive cannot draw.
+//
+// A grid entry is placed by the cell it lands in rather than by a fraction, so
+// it carries no `frac` and `check-entries` does not apply to it. What it must
+// carry is the label geometry the render stage stamped on it: the width its
+// column sizes to and the line count its row height grows by. A missing stamp
+// would otherwise collapse a column to its glyph, so it fails here with the
+// name of the guide that built the table.
+//
+// A row height is not stamped: a grid row is as tall as the stride it was given
+// plus one stride per extra line, never as tall as the ink in it, so measuring
+// the height would cost a text measurement per key and buy nothing.
+#let check-grid-entries(entries, scope) = {
+  if type(entries) != array {
+    fail-type(scope, "entries", entries, "an array of entry dicts")
+  }
+  for (i, e) in entries.enumerate() {
+    if type(e) != dictionary {
+      fail-type(scope, "entry " + str(i), e, "a dictionary")
+    }
+    check(
+      "value" in e,
+      scope,
+      "entry " + str(i) + " carries no `value`",
+      hint: "A key glyph is inked from the level the entry stands for.",
+    )
+    let width = e.at("width", default: none)
+    if type(width) not in (int, float) or width < 0 {
+      fail-type(
+        scope,
+        "entry " + str(i) + " width",
+        width,
+        "a number of centimetres of at least 0",
+        hint: "The render stage measures each label and stamps its extent on "
+          + "the entry.",
+      )
+    }
+    let lines = e.at("lines", default: none)
+    if type(lines) != int or lines < 1 {
+      fail-type(
+        scope,
+        "entry " + str(i) + " lines",
+        lines,
+        "a whole number of at least 1",
+        hint: "Every entry occupies at least one line.",
+      )
+    }
+  }
+  entries
+}
+
 // The distinct tiers a table uses, in draw order. Lets a ticks primitive walk
 // its tiers without hard-coding which ones the table happens to carry.
 #let entry-tiers(entries) = TIERS.filter(t => (

@@ -57,13 +57,22 @@
 // primitive that consumes it, so the table is checked here. An untrained row
 // would otherwise reach `place` and panic on `none * float`, which is the
 // failure the check exists to replace.
-#let entries-of(prim, inherited, scope: "guide-primitive") = {
+//
+// `check` is the checker the table is held to. A standard table is checked as
+// one; a grid table is placed by its cell rather than by a fraction, so it
+// brings its own.
+#let entries-of(
+  prim,
+  inherited,
+  scope: "guide-primitive",
+  check: check-entries,
+) = {
   let own = prim.at("entries", default: auto)
   let rows = if own != auto { own } else if (
     inherited == auto or inherited == none
   ) { () } else { inherited }
   if rows.len() == 0 { return () }
-  check-entries(rows, scope)
+  (check)(rows, scope)
 }
 
 // Guard a tier name where it is supplied, so a typo names the primitive rather

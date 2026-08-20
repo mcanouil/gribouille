@@ -134,9 +134,11 @@
   axis: auto,
   axes: auto,
   place: none,
+  span: none,
   tick-length: none,
   surface-stroke: none,
   text-style: none,
+  key-draw: none,
   tick-gap: 0.1,
 ) = {
   if type(aesthetic) != str {
@@ -216,6 +218,11 @@
       mode == "axis" and SIDES.contains(position)
     ) { _axes-of(position) } else { (along: "x", across: "y", sign: -1) },
     place: place,
+    // The centimetres a full `frac` covers. A part that runs on fractions never
+    // needs it; a part that lays its own contents out in centimetres, as a key
+    // grid does with its columns, divides by it to reach `place`. `none` where
+    // the caller stated none, which such a part refuses to draw under.
+    span: span,
     // `(surface) -> cm` for a tick surface, and `(surface) -> stroke | none`
     // for any stroked surface. Both injected because the theme lives downstream
     // of this module.
@@ -225,6 +232,11 @@
     // typeset by the render stage, which owns the theme and the measurement
     // context, so a primitive only asks for the rendered content.
     text-style: text-style,
+    // `(key, value, point, radius) -> emits cetz` for one legend key glyph.
+    // Injected for the same reason as the text style: a glyph is inked from the
+    // aesthetics the value resolves to, and the scales live downstream of this
+    // module.
+    key-draw: key-draw,
     // Cm between a tick and its label in an axis context. Mirrors the chrome
     // stage's `_TICK-LABEL-GAP`, passed in rather than imported.
     tick-gap: tick-gap,
