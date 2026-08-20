@@ -24,6 +24,7 @@ website:
   favicon: assets/images/favicon.svg
   site-url: https://m.canouil.dev/gribouille
   repo-url: https://github.com/mcanouil/gribouille
+  repo-subdir: docs
   repo-actions: [ edit, issue ]
   repo-link-target: _blank
   repo-link-rel: noopener noreferrer
