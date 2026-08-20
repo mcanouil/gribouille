@@ -5,8 +5,8 @@
 
 #import "../../src/guide/legend.typ": guide-legend
 #import "../../src/render/legend.typ": (
-  _row-stack-height, _swatch-key-diam-cm, _swatch-lead-cm, _swatch-line-h-cm,
-  _swatch-stride-cm, guides-for,
+  _swatch-key-diam-cm, _swatch-lead-cm, _swatch-line-h-cm, _swatch-stride-cm,
+  guides-for,
 )
 
 // Helper: a per-legend `key-size` length wins; `none` defers to the themed base.
@@ -54,11 +54,24 @@
   assert.eq(g-key.at(0).key-diam-cm, 0.5)
 }
 
-// Reserve tracks draw: a wider glyph widens the lead and the row stack.
+// Reserve tracks draw: a wider glyph widens the lead, and the box the guide
+// reserves grows with it on both axes.
 #assert(_swatch-lead-cm(0.5, 9) > _swatch-lead-cm(0.24, 9))
-#assert(
-  _row-stack-height(3, 0.4, 9, 0.5) > _row-stack-height(3, 0.4, 9, 0.24),
-)
+#context {
+  let wide = guides-for(
+    spec((colour: guide-legend(key-size: 0.5cm))),
+    trained,
+  ).at(0)
+  let narrow = guides-for(spec((:)), trained).at(0)
+  assert(
+    wide.height > narrow.height,
+    message: "a 0.5cm key reserved " + repr(wide.height),
+  )
+  assert(
+    wide.width > narrow.width,
+    message: "a 0.5cm key reserved " + repr(wide.width),
+  )
+}
 
 // The row stride grows past the glyph so stacked glyphs never overlap; a small
 // glyph keeps the font-derived line height.

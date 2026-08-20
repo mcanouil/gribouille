@@ -127,12 +127,16 @@ Run the survey command at the bottom before extending the table.
 | `entries` | guide entry table   | array of `entry` dicts (`src/guide/entry.typ`). Not to be confused with `key`, which keeps the dict-key and legend-glyph senses.                    |
 | `tier`    | tick weight         | `"major"` / `"mid"` / `"minor"` on an entry; picks the tick length and whether a label is drawn. Named `tier` because `type` is the trained-scale kind. |
 | `depth`   | range nesting level | which row of a bracket stack a range entry occupies; 0 sits nearest the panel.                                                                      |
-| `gctx`    | guide context       | what a guide part is drawn under (`src/guide/gctx.typ`): `position`, `aesthetic`, `mode`, `direction`, `axis`, and the injected `place` and `tick-length` closures. Parallels `ctx`. |
+| `gctx`    | guide context       | what a guide part is drawn under (`src/guide/gctx.typ`): `position`, `aesthetic`, `mode`, `direction`, `axis`, `span`, and the injected `place`, `tick-length` and `key-draw` closures. Parallels `ctx`. |
 | `mode`    | guide mode          | `"axis"` or `"legend"` on a `gctx`; derived from the aesthetic, and what selects the theme surfaces a part resolves against.                        |
 | `across`  | across-guide extent | the thickness axis of a side, growing away from the panel. Paired with `along` in `_axes-of`; the dimension a side reserves.                        |
 | `place`   | guide point map     | `(frac, across) -> (x, y)` closure on a `gctx`; the only thing a radial guide changes.                                                              |
 | `role`    | theme surface role  | what a part asks a `gctx` for (`"text"`, `"ticks"`, `"line"`, …) instead of naming a surface; resolved by `surface-for`.                            |
 | `side-pt` | side-ordered point  | orders an `(along, across)` pair the way a side runs, so one horizontal routine serves all four sides. Named in full because a bare `pt` reads as the Typst length unit. |
+| `span`    | along-guide length  | cm a full `frac` covers, on a `gctx`. A part that lays its own contents out in centimetres divides by it; a part that runs on fractions never reads it. |
+| `metrics` | key cell metrics    | the cm a legend key cell spends (`diam`, `line-h`, `slack`, `lead`, `label-lead`), built by `key-metrics` in `src/guide/grid.typ`. |
+| `lead`    | room before a label | cm a cell reserves before its label, which the key glyph occupies. `label-lead` is the shorter offset the drawn label is actually pinned at. |
+| `justify` | grid justification  | the alignment a key grid takes inside the guide width, as against `label-align`, which justifies one label inside its own column. |
 
 ## Legend placement
 
