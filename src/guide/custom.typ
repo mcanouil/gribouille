@@ -24,7 +24,7 @@
 ///
 /// \@param title Optional title rendered above the block using the legend-title surface.
 ///
-/// \@param position Where the custom block sits. Same accepted values as `guide-legend.position` (`"top"`, `"right"`, `"bottom"`, `"left"`, `"none"`, a Typst alignment, or a `(dx:, dy:)` / `(x:, y:)` dict).
+/// \@param position Where the custom block sits. Same accepted values as `guide-legend.position` (`"top"`, `"right"`, `"bottom"`, `"left"`, `"none"`, a Typst alignment, or a `(dx:, dy:)` / `(x:, y:)` dict). `auto` (default) inherits the side from a `guides(default: ...)` entry or from `theme(legend-position:)` when either is set, otherwise falls back to `"right"`.
 ///
 /// \@param direction `"horizontal"` or `"vertical"`; `auto` infers from `position`. Affects title placement only since custom content is opaque.
 ///
@@ -65,7 +65,7 @@
   width: auto,
   height: auto,
   title: none,
-  position: "right",
+  position: auto,
   direction: auto,
   order: none,
   byrow: false,
