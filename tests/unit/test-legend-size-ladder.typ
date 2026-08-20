@@ -2,8 +2,8 @@
 // resolved `size` glyph so large markers never overlap the next key.
 
 #import "../../src/render/legend.typ": (
-  _GLYPH-DIAMETER-CM, _guide-shape, _ladder-key-diam-cm, _ladder-vmetrics,
-  _legend-text-style, _size-ladder-height,
+  _GLYPH-DIAMETER-CM, _guide-shape, _ladder-key-diam-cm, _ladder-node,
+  _ladder-vmetrics, _legend-text-style, _legend-title-style, _stack-layout,
 )
 
 // A size-ladder's grid shape uses its break count under nrow/ncolumn.
@@ -81,11 +81,18 @@
 
 // A two-column vertical ladder reserves less height than the single column it
 // wraps from; a two-row horizontal ladder reserves more than one row. The
-// height measures its break labels on the `legend-text` surface, so the calls
-// run inside a `context` block.
+// height is what the ladder's own stack measured, and measuring the break
+// labels needs a `context` block.
 #context {
   let style = _legend-text-style(none)
-  let height-of(guide) = _size-ladder-height(guide, 0, style)
+  let title-style = _legend-title-style(none)
+  let height-of(guide) = {
+    _stack-layout(
+      _ladder-node(guide, style, title-style, 0.0, 0.0),
+    )
+      .layout
+      .across
+  }
   assert(
     height-of(_ladder("vertical", (1, 2, 3, 4), ncolumn: 2))
       < height-of(_ladder("vertical", (1, 2, 3, 4))),

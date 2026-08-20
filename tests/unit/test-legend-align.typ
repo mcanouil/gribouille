@@ -3,9 +3,9 @@
 // title precedence resolved by `_title-resolved-align` and the alignment stored
 // by the `guide-legend` / `element-text` constructors.
 
-#import "../../src/guide/grid.typ": align-offset, pin-right-of
+#import "../../src/guide/grid.typ": align-offset, pin-below, pin-right-of
 #import "../../src/render/legend.typ": (
-  _hjust-below, _label-align, _legend-title-style, _title-resolved-align,
+  _label-align, _legend-title-style, _title-resolved-align,
 )
 #import "../../src/guide/legend.typ": guide-legend
 #import "../../src/theme/elements.typ": element-text, element-typst
@@ -21,9 +21,9 @@
 
 // Labels drawn below a mark hold x at `cx` and only vary the anchor; `center`
 // keeps the current north anchor.
-#assert.eq(_hjust-below(left, 5.0), (5.0, "north-west"))
-#assert.eq(_hjust-below(center, 5.0), (5.0, "north"))
-#assert.eq(_hjust-below(right, 5.0), (5.0, "north-east"))
+#assert.eq(pin-below(left, 5.0), (5.0, "north-west"))
+#assert.eq(pin-below(center, 5.0), (5.0, "north"))
+#assert.eq(pin-below(right, 5.0), (5.0, "north-east"))
 
 #let guide-with(align, direction) = (
   align: align,
