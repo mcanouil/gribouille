@@ -12,21 +12,30 @@
 
 #import "../../deps.typ": cetz
 #import "../../utils/label-geometry.typ": _rotated-extent
+#import "../../utils/errors.typ": assert-halign, check
 #import "../gctx.typ": _axes-of
 #import "../surface.typ": surface-for
 #import "common.typ": NOTHING, measured, primitive
 
-// Where a title sits across the guide it labels.
-#let ALIGNMENTS = (left, center, right)
-
-#let prim-title(body, angle: 0, align: none, extent: (0.0, 0.0)) = primitive(
-  "title",
-  entries: (),
-  body: body,
-  angle: angle,
-  align: align,
-  extent: extent,
-)
+#let prim-title(body, angle: 0, align: none, extent: (0.0, 0.0)) = {
+  // `left`, `center`, `right` or `none`. Routed through the shared helper so a
+  // string such as `"left"` fails by name rather than quietly left-aligning.
+  assert-halign("guide-title", align)
+  check(
+    type(extent) == array and extent.len() == 2,
+    "guide-title",
+    "extent must be a (width, height) pair in centimetres; got " + repr(extent),
+    hint: "The render stage measures the title and stamps its extent here.",
+  )
+  primitive(
+    "title",
+    entries: (),
+    body: body,
+    angle: angle,
+    align: align,
+    extent: extent,
+  )
+}
 
 // A title is as deep as its turned box, and as long as that box reads.
 #let measure(prim, gctx, entries: auto) = {
@@ -35,7 +44,7 @@
   let (w, h) = prim.at("extent", default: (0.0, 0.0))
   if w == 0.0 and h == 0.0 { return NOTHING }
   let turned = _rotated-extent(w, h, prim.at("angle", default: 0))
-  let axes = if gctx.position in ("theta", "r") { none } else {
+  let axes = if gctx.position in ("theta", "r", "inside") { none } else {
     _axes-of(gctx.position)
   }
   if axes == none or axes.along == "x" {
@@ -71,7 +80,7 @@
   let style = (styles)(surface)
   let a = prim.at("align", default: none)
   let resolved = if a == none { style.at("align", default: left) } else { a }
-  let axes = if gctx.position in ("theta", "r") { none } else {
+  let axes = if gctx.position in ("theta", "r", "inside") { none } else {
     _axes-of(gctx.position)
   }
   let (frac, anchor) = _pin-for(

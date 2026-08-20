@@ -23,7 +23,7 @@
 )
 #import "../../utils/errors.typ": check, fail-range
 #import "../gctx.typ": _axes-of
-#import "../surface.typ": surface-for, tick-metrics
+#import "../surface.typ": surface-for
 #import "common.typ": NOTHING, entries-of, measured, primitive
 
 // Gap between dodged rows, per side. Mirrors `_X-LABEL-ROW-GAP` and
@@ -43,6 +43,10 @@
       angle,
       -_ANGLE-LIMIT,
       _ANGLE-LIMIT,
+      lo-open: false,
+      hi-open: false,
+      hint: "A quarter turn either way is the limit; past it the labels read "
+        + "upside down.",
     )
   }
   check(
@@ -114,7 +118,9 @@
   let (w, h) = _largest(rows)
   if w == 0.0 and h == 0.0 { return NOTHING }
   let turned = _rotated-extent(w, h, angle)
-  let axes = if gctx.position in ("theta", "r") { none } else {
+  // The radial positions and an inside placement have no along/across split,
+  // so they read as a horizontal side rather than reaching `_axes-of`.
+  let axes = if gctx.position in ("theta", "r", "inside") { none } else {
     _axes-of(gctx.position)
   }
   let across = if axes == none or axes.along == "x" {
@@ -128,7 +134,7 @@
   let (near, far) = if axes == none or axes.along == "x" {
     (spread.left, spread.right)
   } else { (spread.down, spread.up) }
-  measured(across: depth, along: 1.0, near: near, far: far)
+  measured(across: depth, fills: true, near: near, far: far)
 }
 
 #let draw(prim, gctx, entries: auto) = {
@@ -144,15 +150,19 @@
   let angle = prim.at("angle", default: 0)
   let n-dodge = prim.at("n-dodge", default: 1)
   let gap = _dodge-gap(prim, gctx)
-  // Labels sit beyond the ticks, separated by the same gap the band reserves.
-  let ticks = tick-metrics(gctx)
-  let lead = ticks.len + ticks.gap
   let anchor = _anchor-for(gctx, angle)
-  for (idx, e) in rows.enumerate() {
-    if e.label == none { continue }
+  // A primitive draws from its own edge outward and lets the composition place
+  // that edge, exactly as the spine and the tick rows do. Reading a
+  // neighbour's geometry here would put the tick lead in the drawn position and
+  // in nobody's reservation.
+  //
+  // Rows are dodged over the labels actually drawn, so an unlabelled or
+  // sub-decade entry does not consume a row and shift the rest.
+  let drawn = rows.filter(e => e.at("label", default: none) != none)
+  for (idx, e) in drawn.enumerate() {
     let row = calc.rem(idx, n-dodge)
     cetz.draw.content(
-      place(e.frac, lead + row * gap),
+      place(e.frac, row * gap),
       (style.render)(e.label),
       anchor: anchor,
       angle: angle * 1deg,

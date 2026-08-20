@@ -63,9 +63,12 @@
 #assert.eq(registry.measure(prim-spacer(0.4), legend).across, 0.4)
 
 // The spine runs the length of the guide and adds no depth to the band.
+// It reports no length of its own: it spans whatever the composition gives it,
+// which is what `fills` says and what keeps `along` in centimetres throughout.
 #let line-b = registry.measure(prim-line(), bottom)
 #assert.eq(line-b.across, 0.0)
-#assert.eq(line-b.along, 1.0)
+#assert.eq(line-b.along, 0.0)
+#assert.eq(line-b.fills, true)
 
 // A legend has no line surface, so the same spine measures nothing there. The
 // asymmetry is a tested fact rather than a comment.
@@ -74,7 +77,8 @@
 // Major ticks reserve the resolved `axis-ticks` length: 0.1cm by default.
 #let ticks-b = registry.measure(prim-ticks(), bottom, entries: majors)
 #assert.eq(ticks-b.across, 0.1)
-#assert.eq(ticks-b.along, 1.0)
+#assert.eq(ticks-b.along, 0.0)
+#assert.eq(ticks-b.fills, true)
 #assert.eq(registry.measure(prim-ticks(), left, entries: majors).across, 0.1)
 
 // With no entries there is nothing to tick, so nothing is reserved.
