@@ -151,6 +151,35 @@
   if not DIRECTIONS.contains(dir) {
     fail-enum("guide-gctx", "direction", dir, DIRECTIONS)
   }
+  if axes != auto {
+    if (
+      type(axes) != dictionary
+        or ("along", "across", "sign").any(k => (
+          k not in axes
+        ))
+    ) {
+      fail-type(
+        "guide-gctx",
+        "axes",
+        axes,
+        "a dictionary with `along`, `across` and `sign`",
+      )
+    }
+    if not ("x", "y").contains(axes.along) {
+      fail-enum("guide-gctx", "axes.along", axes.along, ("x", "y"))
+    }
+    if axes.across == axes.along or not ("x", "y").contains(axes.across) {
+      fail-enum(
+        "guide-gctx",
+        "axes.across",
+        axes.across,
+        (if axes.along == "x" { "y" } else { "x" },),
+      )
+    }
+    if not (-1, 1).contains(axes.sign) {
+      fail-enum("guide-gctx", "axes.sign", axes.sign, (-1, 1))
+    }
+  }
   let mode = _mode-of(aesthetic)
   // The axis the guide runs along, which the per-axis tick tiers are keyed on
   // and which picks the side surfaces under a radial coord. A cartesian side
@@ -180,9 +209,12 @@
     // stacks its parts downward whichever side it sits on, so a right-side
     // legend still puts its title above its keys. A cartesian side derives it;
     // everything else takes the downward default or states its own.
-    axes: if axes != auto { axes } else if SIDES.contains(position) {
-      _axes-of(position)
-    } else { (along: "x", across: "y", sign: -1) },
+    // Only an axis takes its orientation from the side it sits on. A legend box
+    // stacks downward whichever side it sits on, so a right-side legend still
+    // puts its title above its keys.
+    axes: if axes != auto { axes } else if (
+      mode == "axis" and SIDES.contains(position)
+    ) { _axes-of(position) } else { (along: "x", across: "y", sign: -1) },
     place: place,
     // `(surface) -> cm` for a tick surface, and `(surface) -> stroke | none`
     // for any stroked surface. Both injected because the theme lives downstream

@@ -97,6 +97,22 @@
   "horizontal",
 )
 
+// Orientation belongs to the `place` closure, not to the side. A cartesian side
+// derives it, and everything else stacks downward unless it says otherwise,
+// because a legend box puts its title above its keys whichever side it is on.
+#assert.eq(axis-ctx.axes, (along: "x", across: "y", sign: -1))
+#assert.eq(gctx("left", "y").axes, (along: "y", across: "x", sign: -1))
+#assert.eq(gctx("top", "x").axes, (along: "x", across: "y", sign: 1))
+#assert.eq(legend-ctx.axes, (along: "x", across: "y", sign: -1))
+#assert.eq(
+  gctx("theta", "theta", axis: "x").axes,
+  (along: "x", across: "y", sign: -1),
+)
+#assert.eq(
+  gctx("right", "colour", axes: (along: "y", across: "x", sign: 1)).axes,
+  (along: "y", across: "x", sign: 1),
+)
+
 // A radial context takes its axis from the sweep, since the position cannot
 // imply one.
 #let theta-ctx = gctx("theta", "theta", axis: "y", place: theta)

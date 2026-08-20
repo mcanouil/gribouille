@@ -8,6 +8,7 @@
 )
 #import "../../src/utils/errors.typ": enum-text, error-text
 #import "../../src/guide/primitive/common.typ": PRIMITIVE, measured
+#import "../../src/guide/primitive/content.typ": prim-content
 #import "../../src/guide/primitive/line.typ": prim-line
 #import "../../src/guide/primitive/spacer.typ": prim-spacer
 #import "../../src/guide/primitive/ticks.typ": prim-ticks
@@ -147,6 +148,27 @@
 // A blanked spine measures nothing, because measure and draw gate on the same
 // stroke. Without this, `theme-void` would reserve a line it never draws.
 #assert.eq(registry.measure(prim-line(), no-stroke), measured())
+
+// An opaque block takes exactly the room it was given, whichever side its
+// legend box sits on, because a legend stacks its parts downward regardless.
+#let block = prim-content([Note], width: 3.0, height: 2.0)
+#assert.eq(registry.measure(block, legend).across, 2.0)
+#assert.eq(registry.measure(block, legend).along, 3.0)
+#assert.eq(registry.measure(block, bottom).across, 2.0)
+
+// A zero dimension still reserves and still draws: Typst does not clip a box,
+// so a block given no height kept showing its content before the guide layer
+// and keeps showing it now.
+#assert.eq(
+  registry.measure(prim-content([Note], width: 3.0, height: 0.0), legend).along,
+  3.0,
+)
+
+// Only a block with no body at all takes nothing.
+#assert.eq(
+  registry.measure(prim-content(none, width: 3.0, height: 2.0), legend),
+  measured(),
+)
 
 // Rejection wording for the guards. An unknown tier fails where it is supplied
 // rather than drawing an empty guide, and a negative spacer fails rather than

@@ -130,12 +130,12 @@
     (:),
   )
   let custom = found.first()
-  assert.eq(custom.custom.layout.along, calc.max(custom.width, 3.0))
+  assert.eq(custom.stack.layout.along, calc.max(custom.width, 3.0))
   assert.eq(
     calc.round(custom.height, digits: 9),
     calc.round(custom.title-h + 2.0 + 0.2, digits: 9),
   )
-  assert.eq(custom.height, custom.custom.layout.across)
+  assert.eq(custom.height, custom.stack.layout.across)
 
   // A block with no title loses the title band but keeps the slack.
   let bare = guides-for(

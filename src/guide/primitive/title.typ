@@ -11,7 +11,6 @@
 ///! reservation cannot drift from the ink.
 
 #import "../../deps.typ": cetz
-#import "../../utils/label-geometry.typ": _rotated-extent
 #import "../../utils/errors.typ": assert-halign, check
 #import "../surface.typ": surface-for
 #import "common.typ": NOTHING, measured, primitive
@@ -36,17 +35,22 @@
   )
 }
 
-// A title is as deep as its turned box, and as long as that box reads.
+// A title occupies the box it was given.
+//
+// `extent` is the box the title lands in, already resolved by the caller: the
+// render stage measures the text on its surface and turns it if the surface
+// turns it, so this module neither measures nor rotates. `angle` is carried for
+// the draw alone, which is what keeps the reserved box and the ink the same box
+// even when a theme grows the band past the turned text.
 #let measure(prim, gctx, entries: auto) = {
   if prim.at("body", default: none) == none { return NOTHING }
   if surface-for(gctx, "title") == none { return NOTHING }
   let (w, h) = prim.at("extent", default: (0.0, 0.0))
   if w == 0.0 and h == 0.0 { return NOTHING }
-  let turned = _rotated-extent(w, h, prim.at("angle", default: 0))
   if gctx.axes.along == "x" {
-    measured(across: turned.height, along: turned.width)
+    measured(across: h, along: w)
   } else {
-    measured(across: turned.width, along: turned.height)
+    measured(across: w, along: h)
   }
 }
 

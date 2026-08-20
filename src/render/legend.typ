@@ -975,13 +975,17 @@
 // The context stacks downward: a legend box puts its title above its block
 // whichever side the box itself sits on, which is why `axes` comes from here
 // rather than from the side.
-#let _custom-node(g, title-w, title-h) = compose-stack(
+#let _custom-node(g, title-w, title-h, title-angle) = compose-stack(
   ..if g.title == none { () } else {
     (
-      prim-title(g.title, align: g.at("align", default: none), extent: (
-        title-w,
-        title-h,
-      )),
+      prim-title(
+        g.title,
+        align: g.at("align", default: none),
+        // The band the theme resolved, not the raw text box: a surface that
+        // turns its title, or grows the gap below it, grows this with it.
+        extent: (title-w, title-h),
+        angle: title-angle,
+      ),
     )
   },
   prim-content(g.content, width: g.cm-width, height: g.cm-height),
@@ -992,16 +996,14 @@
 
 // A custom block is laid out in a box of its own, not against a panel edge, so
 // its context carries only the orientation the stack needs.
-#let _CUSTOM-GCTX = gctx(
-  "right",
-  "custom",
-  axes: (along: "x", across: "y", sign: -1),
-)
+// The side is nominal: a legend box stacks downward whichever side it lands on,
+// which is what the context gives a legend by default.
+#let _CUSTOM-GCTX = gctx("right", "custom")
 
 // The layout a custom guide reserves and draws from. Built once per guide in
 // `_stamp-sizes` and read back by both, so the two cannot drift.
-#let _custom-layout(g, title-w, title-h) = {
-  let node = _custom-node(g, title-w, title-h)
+#let _custom-layout(g, title-w, title-h, title-angle) = {
+  let node = _custom-node(g, title-w, title-h, title-angle)
   (node: node, layout: compose-layout-of(node, _CUSTOM-GCTX))
 }
 
@@ -1017,7 +1019,7 @@
   if g.kind == "colourbar" { return _colourbar-height(g, title-h, style) }
   // A custom guide is a stack of primitives, so its height is what the stack
   // measured rather than a formula of its own.
-  if g.kind == "custom" { return g.custom.layout.across }
+  if g.kind == "custom" { return g.stack.layout.across }
   fail("legend._guide-render-height", "unknown guide kind " + repr(g.kind))
 }
 
@@ -1039,7 +1041,15 @@
   // A custom guide is built from primitives, so its stack is laid out once here
   // and both the height below and the draw read that one record.
   if out.kind == "custom" {
-    out.insert("custom", _custom-layout(out, title.width, out.title-h))
+    out.insert(
+      "stack",
+      _custom-layout(
+        out,
+        title.width,
+        out.title-h,
+        if title-style.angle != none { title-style.angle / 1deg } else { 0 },
+      ),
+    )
   }
   out.insert("height", _guide-render-height(out, text-style))
   out
@@ -1752,7 +1762,7 @@
       align: title-style.align,
     ),
   )
-  compose-draw(guide.custom.node, ctx, guide.custom.layout)
+  compose-draw(guide.stack.node, ctx, guide.stack.layout)
 }
 
 #let _draw-guide-body(g, ctx, ox, cursor, theme) = {

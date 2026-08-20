@@ -11,13 +11,10 @@
 #import "../../utils/errors.typ": check
 #import "common.typ": NOTHING, measured, primitive
 
-// Footprint a custom block takes when the user named neither dimension. Two
-// legend columns wide, so it sits beside the standard legends without forcing
-// the page to grow.
-#let DEFAULT-WIDTH = 3.0
-#let DEFAULT-HEIGHT = 2.0
-
-#let prim-content(body, width: DEFAULT-WIDTH, height: DEFAULT-HEIGHT) = {
+// Both dimensions are required: the guide builder resolves `auto` against its
+// own defaults before it gets here, so a second set of defaults could only
+// drift from the ones that matter.
+#let prim-content(body, width: none, height: none) = {
   for (name, value) in (("width", width), ("height", height)) {
     check(
       type(value) in (int, float) and value >= 0,
@@ -37,18 +34,18 @@
   )
 }
 
-// The block is opaque, so it takes exactly the room it was given. Depth runs
-// along whichever canvas axis the context says `across` runs along: downward in
-// a legend box, away from the edge on an axis.
+// The block is opaque, so it takes exactly the room it was given.
+//
+// A zero dimension still reserves and still draws, because Typst does not clip
+// a box: a block given no height keeps showing its content, as it did before
+// the guide layer. Only a block with no body at all takes nothing.
+//
+// `draw` anchors the box at the near, upper corner of its slot, which is the
+// downward-stacking legend layout this primitive is built for. There is no
+// vertical-reading branch here because the draw could not produce one.
 #let measure(prim, gctx, entries: auto) = {
   if prim.at("body", default: none) == none { return NOTHING }
-  let (w, h) = (prim.width, prim.height)
-  if w == 0.0 or h == 0.0 { return NOTHING }
-  if gctx.axes.along == "x" {
-    measured(across: h, along: w)
-  } else {
-    measured(across: w, along: h)
-  }
+  measured(across: prim.height, along: prim.width)
 }
 
 #let draw(prim, gctx, entries: auto) = {
