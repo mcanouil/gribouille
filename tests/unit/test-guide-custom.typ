@@ -100,4 +100,41 @@
   0,
 )
 
+// Inheriting a side means inheriting suppression too: a theme that hides its
+// legends now hides a custom block with them, where the block used to stay
+// visible because it never read the theme at all.
+#assert.eq(
+  guides-for(
+    _spec(note: guide-custom([x])),
+    (:),
+    theme: theme-minimal(legend-position: "none"),
+  ).len(),
+  0,
+)
+#assert.eq(
+  guides-for(
+    _spec(default: guide-legend(position: "none"), note: guide-custom([x])),
+    (:),
+  ).len(),
+  0,
+)
+
+// An `order` set on a `default:` entry reaches the guides that inherit from it,
+// rather than being dropped by the placement a bare `position` builds.
+#assert.eq(
+  _side-of(_spec(
+    default: guide-legend(position: "bottom", order: 2),
+    note: guide-custom([x]),
+  )).order,
+  2,
+)
+// The guide's own order still wins.
+#assert.eq(
+  _side-of(_spec(
+    default: guide-legend(position: "bottom", order: 2),
+    note: guide-custom([x], order: 5),
+  )).order,
+  5,
+)
+
 Guide-custom tests passed.

@@ -63,10 +63,18 @@
 // position carries no positional information, so the inherited side, corner
 // (`align`), and offsets (`dx` / `dy`) all come from `base`; a `direction`
 // override still applies on its own.
+//
+// `order` inherits the same way: a placement built from a `position` alone
+// always carries `order: none`, so spreading it over the layer below would drop
+// an order that layer set. `byrow` cannot inherit, because its default `false`
+// is indistinguishable from an explicit `false`, so the top layer keeps it.
 #let _merge-placement(base, over) = {
   let direction = if over.at("direction", default: auto) == auto {
     base.direction
   } else { over.direction }
+  let order = if over.at("order", default: none) == none {
+    base.at("order", default: none)
+  } else { over.order }
   if over.at("side", default: auto) == auto {
     (
       (
@@ -77,10 +85,11 @@
         dx: base.dx,
         dy: base.dy,
         direction: direction,
+        order: order,
       )
     )
   } else {
-    (..base, ..over, direction: direction)
+    (..base, ..over, direction: direction, order: order)
   }
 }
 
