@@ -135,6 +135,7 @@
   place: none,
   tick-length: none,
   surface-stroke: none,
+  text-style: none,
   tick-gap: 0.1,
 ) = {
   if type(aesthetic) != str {
@@ -178,6 +179,10 @@
     // of this module.
     tick-length: tick-length,
     surface-stroke: surface-stroke,
+    // `(surface) -> (render: (label) -> content)` for a text surface. Text is
+    // typeset by the render stage, which owns the theme and the measurement
+    // context, so a primitive only asks for the rendered content.
+    text-style: text-style,
     // Cm between a tick and its label in an axis context. Mirrors the chrome
     // stage's `_TICK-LABEL-GAP`, passed in rather than imported.
     tick-gap: tick-gap,

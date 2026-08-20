@@ -9,6 +9,7 @@
 #import "../../src/deps.typ": cetz
 #import "../../src/guide/gctx.typ": gctx, place-cartesian
 #import "../../src/guide/entry.typ": entries-manual, train-entries
+#import "../../src/guide/primitive/labels.typ": prim-labels
 #import "../../src/guide/primitive/line.typ": prim-line
 #import "../../src/guide/primitive/ticks.typ": prim-ticks
 #import "../../src/guide/primitive/registry.typ" as registry
@@ -23,7 +24,12 @@
 #let stroke-of = surface => _line-stroke(th, surface, fallback-colour: ink)
 
 // Five breaks across the span, so the ends and the middle are both visible.
-#let rows = train-entries(entries-manual((0, 1, 2, 3, 4)), v => v / 4)
+// Each carries the ink extents the render stage would have measured, since a
+// label primitive reads them rather than measuring text itself.
+#let rows = train-entries(
+  entries-manual((0, 1, 2, 3, 4), labels: v => str(v * 25)),
+  v => v / 4,
+).map(e => (..e, width: 0.5, height: 0.3))
 
 #let px = (1.0, 6.0)
 #let py = (1.0, 4.0)
@@ -45,9 +51,11 @@
       aesthetic,
       tick-length: len-of,
       surface-stroke: stroke-of,
+      text-style: _ => (render: label => text(7pt)[#label], align: left),
       place: place-cartesian(position, px, py),
     )
     registry.draw(prim-line(), ctx)
     registry.draw(prim-ticks(), ctx, entries: rows)
+    registry.draw(prim-labels(), ctx, entries: rows)
   }
 })

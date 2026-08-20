@@ -159,15 +159,16 @@
   ),
   "guide-spacer: space cannot be negative; got -0.4. Use a positive number of centimetres, or drop the spacer.",
 )
-#assert.eq(
-  enum-text(
-    "guide-primitive.measure",
-    "primitive",
-    "wobble",
-    registry.PRIMITIVES.keys(),
-  ),
-  "guide-primitive.measure: primitive must be one of \"line\", \"ticks\", \"spacer\"; got \"wobble\".",
-)
+// Every registered primitive exposes the same pair, and an unregistered name is
+// not silently drawable. Asserting the key set rather than a rendered message
+// keeps this from rotting each time a primitive is added.
+#assert(not registry.PRIMITIVES.keys().contains("wobble"))
+#for (name, fns) in registry.PRIMITIVES {
+  assert(
+    type(fns.measure) == function and type(fns.draw) == function,
+    message: name + " must expose measure and draw",
+  )
+}
 
 // An untrained table is rejected at the boundary between the builder and the
 // primitive, rather than panicking inside `place` on `none * float`.
