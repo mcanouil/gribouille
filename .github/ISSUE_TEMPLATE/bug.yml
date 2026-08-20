@@ -38,7 +38,7 @@ body:
     attributes:
       label: Typst compiler version
       description: Output of `typst --version`.
-      placeholder: "e.g., 0.14.2"
+      placeholder: "e.g., 0.15.0"
     validations:
       required: true
 
