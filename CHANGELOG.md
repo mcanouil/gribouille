@@ -57,6 +57,7 @@
 - docs: `sec-axis` and `dup-axis` say that a secondary axis degrades to a no-op under `coord-radial`, and the feature matrix lists it alongside `geom-rug` among the combinations that do not translate to polar. (#236)
 - docs: the examples are organised by what a reader wants to show rather than by which part of the API they exercise, replacing the single feature-ordered page. A card hub routes to six story pages and six feature pages, each card carries a data-shape badge, and eighteen new plots on the bundled datasets demonstrate the practice. (#201)
 - docs: tighten prose and apply consistent British spelling across the README, contributor docs, docs site guides, and the AI-assistant skill. (ba666502)
+- build: the package compiles against Typst 0.15.0. Use Typst 0.15.0 or newer. (#282)
 
 ## 0.6.0 (2026-07-28)
 
