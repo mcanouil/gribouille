@@ -93,7 +93,7 @@
 ///
 /// \@param reverse Reverse the order of levels.
 ///
-/// \@param position Where the legend sits. One of `"top"`, `"right"`, `"bottom"`, `"left"`, `"none"`, a Typst alignment (e.g. `top + right`) for inside-panel placement, or a dict `(dx:, dy:)` / `(x:, y:)` for arbitrary offsets. `auto` (default) inherits the side from a `guides(default: ...)` entry when present, otherwise falls back to `"right"`. Wide horizontal legends on `"top"` / `"bottom"` can overflow the panel edge.
+/// \@param position Where the legend sits. One of `"top"`, `"right"`, `"bottom"`, `"left"`, `"none"`, a Typst alignment (e.g. `top + right`) for inside-panel placement, or a dict `(dx:, dy:)` / `(x:, y:)` for arbitrary offsets. `auto` (default) inherits the side from a `guides(default: ...)` entry or from `theme(legend-position:)` when either is set, otherwise falls back to `"right"`. Wide horizontal legends on `"top"` / `"bottom"` can overflow the panel edge.
 ///
 /// \@param direction Flow direction of swatch entries: `"horizontal"` or `"vertical"`. `auto` infers from `position` (horizontal for top/bottom, vertical otherwise).
 ///

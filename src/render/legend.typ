@@ -63,10 +63,18 @@
 // position carries no positional information, so the inherited side, corner
 // (`align`), and offsets (`dx` / `dy`) all come from `base`; a `direction`
 // override still applies on its own.
+//
+// `order` inherits the same way: a placement built from a `position` alone
+// always carries `order: none`, so spreading it over the layer below would drop
+// an order that layer set. `byrow` cannot inherit, because its default `false`
+// is indistinguishable from an explicit `false`, so the top layer keeps it.
 #let _merge-placement(base, over) = {
   let direction = if over.at("direction", default: auto) == auto {
     base.direction
   } else { over.direction }
+  let order = if over.at("order", default: none) == none {
+    base.at("order", default: none)
+  } else { over.order }
   if over.at("side", default: auto) == auto {
     (
       (
@@ -77,11 +85,50 @@
         dx: base.dx,
         dy: base.dy,
         direction: direction,
+        order: order,
       )
     )
   } else {
-    (..base, ..over, direction: direction)
+    (..base, ..over, direction: direction, order: order)
   }
+}
+
+// Resolve placement: per-guide override over `guides(default: ...)` over
+// `theme(legend-position:)` over the natural default. `auto` side / direction
+// inherit from the layer below, so `guide-legend(ncolumn: 2)` still picks up a
+// `default:` (or theme) side.
+//
+// Every guide resolves through here, scale-driven or not: a `guide-custom`
+// block follows the side a theme or a `default:` sets exactly as a legend does.
+#let _resolve-placement(override, default-guide, theme) = {
+  let placement = _default-placement
+  let theme-position = if theme != none {
+    theme.at("legend-position", default: auto)
+  } else { auto }
+  if theme-position != auto {
+    placement = _merge-placement(
+      placement,
+      _normalise-position(theme-position, auto, none, false),
+    )
+  }
+  let default-placement = if default-guide != none {
+    default-guide.at("placement", default: none)
+  } else { none }
+  if default-placement != none {
+    placement = _merge-placement(placement, default-placement)
+  }
+  let override-placement = if override != none {
+    override.at("placement", default: none)
+  } else { none }
+  if override-placement != none {
+    placement = _merge-placement(placement, override-placement)
+  }
+  let resolved-direction = if placement.direction == auto {
+    if placement.side == "top" or placement.side == "bottom" {
+      "horizontal"
+    } else { "vertical" }
+  } else { placement.direction }
+  (..placement, direction: resolved-direction)
 }
 
 // Equality key for placement comparisons. Two candidates with different keys
@@ -336,38 +383,7 @@
     return none
   }
 
-  // Resolve placement: per-aesthetic override over `guides(default: ...)` over
-  // `theme(legend-position:)` over the natural default. `auto` side / direction
-  // inherit from the layer below, so `guide-legend(ncolumn: 2)` still picks up a
-  // `default:` (or theme) side.
-  let placement = _default-placement
-  let theme-position = if theme != none {
-    theme.at("legend-position", default: auto)
-  } else { auto }
-  if theme-position != auto {
-    placement = _merge-placement(
-      placement,
-      _normalise-position(theme-position, auto, none, false),
-    )
-  }
-  let default-placement = if default-guide != none {
-    default-guide.at("placement", default: none)
-  } else { none }
-  if default-placement != none {
-    placement = _merge-placement(placement, default-placement)
-  }
-  let override-placement = if override != none {
-    override.at("placement", default: none)
-  } else { none }
-  if override-placement != none {
-    placement = _merge-placement(placement, override-placement)
-  }
-  let resolved-direction = if placement.direction == auto {
-    if placement.side == "top" or placement.side == "bottom" {
-      "horizontal"
-    } else { "vertical" }
-  } else { placement.direction }
-  placement = (..placement, direction: resolved-direction)
+  let placement = _resolve-placement(override, default-guide, theme)
   if placement.side == "none" { return none }
 
   let contributors = _mapped-contributors(spec, aes-name)
@@ -1112,10 +1128,15 @@
   // never sees them; surface them here in the order they appear in
   // `spec.guides`. Cm dimensions are resolved up-front so the dispatch and
   // measurement helpers stay O(1).
+  //
+  // Placement resolves through the same layering the scale-driven guides use,
+  // so a theme side or a `guides(default: ...)` side reaches a custom block as
+  // it reaches every other guide.
+  let shared-guide = overrides.at("default", default: none)
   for g in overrides.values() {
     if type(g) != dictionary { continue }
     if g.at("name", default: none) != "custom" { continue }
-    let placement = g.at("placement", default: _default-placement)
+    let placement = _resolve-placement(g, shared-guide, theme)
     if placement.side == "none" { continue }
     let cm-w = _custom-dim-cm(g.width, _CUSTOM-DEFAULT-WIDTH)
     let cm-h = _custom-dim-cm(g.height, _CUSTOM-DEFAULT-HEIGHT)
