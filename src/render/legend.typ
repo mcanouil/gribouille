@@ -988,7 +988,7 @@
 //
 // A degenerate domain marks nothing, which is what the draw has always done
 // rather than dividing by a zero span.
-#let _colourbar-entries(g, breaks, style) = {
+#let _colourbar-entries(g, breaks) = {
   let (lo, hi) = g.domain
   if hi == lo { return () }
   let rows = ()
@@ -1019,7 +1019,7 @@
   compose-stack(
     .._box-title(g, title-style, title-w, title-h),
     prim-bar(
-      entries: _colourbar-entries(g, breaks, style),
+      entries: _colourbar-entries(g, breaks),
       direction: g.placement.direction,
       bar: if horizontal {
         (_COLOURBAR-H-W, _COLOURBAR-H-H)

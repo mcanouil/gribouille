@@ -91,7 +91,11 @@
 }
 
 // The strip plus the room reserved past it, on both axes.
+//
+// A context with no bar surface has no colour bar to paint, so the strip takes
+// no room and draws none, which is the rule every part on the layer follows.
 #let measure(prim, gctx, entries: auto) = {
+  if surface-for(gctx, "bar") == none { return NOTHING }
   let (bar-w, bar-h) = prim.bar
   if bar-w == 0.0 and bar-h == 0.0 { return NOTHING }
   measured(
@@ -101,6 +105,7 @@
 }
 
 #let draw(prim, gctx, entries: auto) = {
+  if surface-for(gctx, "bar") == none { return }
   let place = gctx.at("place", default: none)
   if place == none { return }
   let span = gctx.at("span", default: none)

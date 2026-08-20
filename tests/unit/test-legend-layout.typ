@@ -5,7 +5,8 @@
 
 #import "../../src/guide/grid.typ": grid-index, grid-rc, grid-shape
 #import "../../src/render/legend.typ": (
-  _LABEL-SLACK-CM, _guide-title, _legend-title-style, _title-box, guides-for,
+  _LABEL-SLACK-CM, _colourbar-entries, _guide-title, _legend-title-style,
+  _title-box, guides-for,
 )
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../lib.typ": element-text, guide-custom, theme
@@ -156,5 +157,30 @@
     message: "custom guide width was " + repr(guides.at(0).width),
   )
 }
+
+// A colour bar ticks the breaks that land inside its domain, at the fraction of
+// the strip each one marks.
+#let _bar(domain) = (domain: domain, labels: auto)
+#assert.eq(
+  _colourbar-entries(_bar((0, 10)), (0, 5, 10)).map(r => r.frac),
+  (0.0, 0.5, 1.0),
+)
+
+// A break outside the domain marks nothing, because the strip only spans the
+// domain it was trained on.
+#assert.eq(
+  _colourbar-entries(_bar((0, 10)), (-5, 5, 15)).map(r => r.value),
+  (5,),
+)
+
+// A degenerate domain has no span to divide by, so it ticks nothing at all
+// rather than dividing by zero.
+#assert.eq(_colourbar-entries(_bar((5, 5)), (5,)), ())
+
+// Every row carries the label it draws, formatted the way the break is.
+#assert.eq(
+  _colourbar-entries(_bar((0, 10)), (5,)).first().label,
+  "5",
+)
 
 Legend-layout tests passed.

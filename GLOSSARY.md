@@ -136,7 +136,7 @@ Run the survey command at the bottom before extending the table.
 | `span`    | along-guide length  | cm a full `frac` covers, on a `gctx`. A part that lays its own contents out in centimetres divides by it; a part that runs on fractions never reads it. |
 | `metrics` | key cell metrics    | the cm a legend key cell spends (`off`, `drop`, `last`, `line-h`, `slack`, `lead`, `label-lead`, `label-drop`), built by `key-metrics` in `src/guide/grid.typ`. |
 | `flow`    | key label flow      | where a label reads against its key: `"right"` beside it, as every vertical legend draws it, or `"below"` under it, as a horizontal size ladder does. |
-| `gizmo`   | a guide that is not a band | a guide part with a body of its own, such as the colour bar in `src/guide/gizmo/`, whose tick flank reads across the guide while the guide stacks down it. |
+| `gizmo`   | guide part with a body | a guide part that paints something of its own rather than annotating a span, such as the colour bar in `src/guide/gizmo/`, whose tick flank reads across the guide while the guide stacks down it. |
 | `band`    | room past a strip   | on a colour bar, the cm reserved across the guide past the strip, which the tick flank draws into. |
 | `lead`    | room before a label | cm a cell reserves before its label, which the key glyph occupies. `label-lead` is the shorter offset the drawn label is actually pinned at. |
 | `justify` | grid justification  | the alignment a key grid takes inside the guide width, as against `label-align`, which justifies one label inside its own column. |
