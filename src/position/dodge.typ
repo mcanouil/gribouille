@@ -9,6 +9,7 @@
 ///! mark's own width, with `padding` between adjacent slots, scaled to fit
 ///! the bucket.
 
+#import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": parse-number
 #import "../scale/train.typ": discrete-slot-width, map-axis
@@ -205,30 +206,18 @@
   // Alphabetic levels so slot order matches the trained discrete domain
   // and the legend. Dedup is dict-keyed for O(n) instead of array-scan
   // O(n^2).
-  // The plan is the mapping's, so it is resolved once rather than per row, and
-  // the buckets are appended to in place: reading one out of the dictionary to
-  // push to it shares the array, so each push would copy the whole bucket.
+  // The plan is the mapping's, so the group key is resolved once per row here
+  // rather than rebuilt inside the bucketing and again for the level set.
   let plan = group-plan(mapping)
-  let index = (:)
-  let bucket-order = ()
-  let cells = ()
+  let entries = data
+    .enumerate()
+    .map(((i, row)) => (i: i, row: row, key: plan-key(plan, row)))
+  let (keys: bucket-order, buckets: cells) = bucket-index(entries, e => {
+    let xv = e.row.at(x-col, default: none)
+    if xv == none { "" } else { str(xv) }
+  })
   let level-set = (:)
-  for (i, row) in data.enumerate() {
-    let key = plan-key(plan, row)
-    if key not in level-set { level-set.insert(key, true) }
-    let xv = row.at(x-col, default: none)
-    let bk = if xv == none { "" } else { str(xv) }
-    let at = index.at(bk, default: none)
-    if at == none {
-      at = cells.len()
-      index.insert(bk, at)
-      bucket-order.push(bk)
-      cells.push(())
-    }
-    cells.at(at).push((i: i, row: row, key: key))
-  }
-  let buckets = (:)
-  for (i, bk) in bucket-order.enumerate() { buckets.insert(bk, cells.at(i)) }
+  for e in entries { level-set.insert(e.key, true) }
   let levels = level-set.keys().sorted()
   let level-index = (:)
   for (idx, k) in levels.enumerate() { level-index.insert(k, idx) }
@@ -239,9 +228,9 @@
   let offsets = range(n-data).map(_ => 0.0)
   let n-slots = range(n-data).map(_ => 1)
 
-  for bk in bucket-order {
-    let entries = buckets
-      .at(bk)
+  for (bucket-i, bk) in bucket-order.enumerate() {
+    let entries = cells
+      .at(bucket-i)
       .map(e => (
         i: e.i,
         row: e.row,

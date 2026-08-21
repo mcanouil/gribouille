@@ -5,6 +5,7 @@
 // The explicit "group" aesthetic always contributes regardless of value
 // type.
 
+#import "../utils/bucket.typ": bucket-index
 #import "../utils/types.typ": is-native-numeric
 #import "../scale/train.typ": mapping-ref-col, mapping-ref-type
 #import "../utils/late-binding.typ": after-scale-source
@@ -130,24 +131,8 @@
 /// \@internal
 #let partition-by-group(data, mapping, trained: none) = {
   let plan = group-plan(mapping, trained: trained)
-  // Buckets live in a plain array and are appended to in place. Reading one out
-  // of a dictionary to push to it shares the array, so the push copies it, and
-  // a single-bucket partition then costs a copy per row.
-  let index = (:)
-  let order = ()
-  let buckets = ()
-  for row in data {
-    let key = plan-key(plan, row)
-    let at = index.at(key, default: none)
-    if at == none {
-      at = buckets.len()
-      index.insert(key, at)
-      order.push(key)
-      buckets.push(())
-    }
-    buckets.at(at).push(row)
-  }
-  order.enumerate().map(((i, k)) => (key: k, data: buckets.at(i)))
+  let (keys, buckets) = bucket-index(data, row => plan-key(plan, row))
+  keys.enumerate().map(((i, k)) => (key: k, data: buckets.at(i)))
 }
 
 /// Bucket rows by the string form of one column's value, in first-appearance
@@ -162,23 +147,10 @@
 /// \@param col Column name whose value keys the buckets.
 /// \@returns Array of row-dictionary arrays, one bucket per distinct value, in first-appearance order.
 /// \@internal
-#let bucket-by-col(data, col) = {
-  // Same in-place append as `partition-by-group`, for the same reason.
-  let index = (:)
-  let buckets = ()
-  for row in data {
-    let key = str(row.at(col, default: ""))
-    if key == "" { continue }
-    let at = index.at(key, default: none)
-    if at == none {
-      at = buckets.len()
-      index.insert(key, at)
-      buckets.push(())
-    }
-    buckets.at(at).push(row)
-  }
-  buckets
-}
+#let bucket-by-col(data, col) = bucket-index(data, row => {
+  let key = str(row.at(col, default: ""))
+  if key == "" { none } else { key }
+}).buckets
 
 /// Return the column names for all grouping aesthetics (not x or y).
 ///

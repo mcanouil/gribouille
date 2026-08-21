@@ -3,7 +3,7 @@
 // overflowing the x (or y under coord-flip) axis.
 
 #import "../../src/scale/train.typ": train
-#import "../../src/render/domain.typ": _post-train
+#import "../../src/render/domain.typ": _col-half-width-x, _post-train
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/geom/col.typ": geom-col
 #import "../../src/aes.typ": aes
@@ -69,5 +69,32 @@
 #let padded-cat = _post-train(trained-cat, prepared-cat)
 #assert.eq(padded-cat.x.type, "discrete")
 #assert.eq(padded-cat.x.domain, ("a", "b", "c"))
+
+// --- the half-width the padding comes from ---
+// The gap is the smallest between two distinct x values, so repeats change
+// nothing: a column that repeats every value pads exactly as the same column
+// without the repeats does.
+#let half-of(xs, frac: 0.9) = _col-half-width-x(((xs: xs, bar-frac: frac),))
+#assert.eq(half-of((1.0, 2.0, 4.0)), 0.9 / 2)
+#assert.eq(half-of((1.0, 1.0, 2.0, 2.0, 4.0, 4.0)), 0.9 / 2)
+#assert.eq(half-of((4.0, 1.0, 2.0)), half-of((1.0, 2.0, 4.0)))
+
+// A narrower bar takes a narrower pad, in proportion.
+#assert.eq(half-of((1.0, 2.0), frac: 0.5), 0.5 / 2)
+
+// One distinct value leaves no gap to measure, so nothing is padded, whether
+// the column holds it once or many times.
+#assert.eq(half-of((3.0,)), 0.0)
+#assert.eq(half-of((3.0, 3.0, 3.0)), 0.0)
+#assert.eq(half-of(()), 0.0)
+
+// The widest half over every column layer wins, since one padding serves all.
+#assert.eq(
+  _col-half-width-x((
+    (xs: (1.0, 2.0), bar-frac: 0.9),
+    (xs: (0.0, 10.0, 20.0), bar-frac: 0.9),
+  )),
+  10.0 * 0.9 / 2,
+)
 
 geom-col continuous-axis padding tests passed.

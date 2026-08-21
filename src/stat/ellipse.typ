@@ -11,6 +11,7 @@
 ///! closed-form `−2 · ln(1 − level)`, no numerical inversion required.
 
 #import "../utils/types.typ": parse-number
+#import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-aesthetics, group-plan, plan-key
 #import "../utils/errors.typ": fail-range
 
@@ -89,26 +90,15 @@
 
   // Bucket rows by the composite group key (canonical group aesthetics).
   let plan = group-plan(mapping)
-  let index = (:)
-  let rows = ()
-  let order = ()
+  let (keys: order, buckets: bucket-rows) = bucket-index(
+    data,
+    row => plan-key(plan, row),
+  )
+  // The first row of each group carries the values the output row inherits.
   let proto = (:)
-  for row in data {
-    let key = plan-key(plan, row)
-    let at = index.at(key, default: none)
-    if at == none {
-      at = rows.len()
-      index.insert(key, at)
-      order.push(key)
-      proto.insert(key, row)
-      rows.push(())
-    }
-    rows.at(at).push(row)
+  for (i, key) in order.enumerate() {
+    proto.insert(key, bucket-rows.at(i).first())
   }
-  // Assembled after the walk: appending in place costs nothing per row, where
-  // reading a bucket out of a dictionary to push to it copies it.
-  let buckets = (:)
-  for (i, key) in order.enumerate() { buckets.insert(key, rows.at(i)) }
 
   let out-mapping = base-mapping
   for aes in group-aesthetics {
@@ -117,8 +107,8 @@
   }
 
   let out = ()
-  for key in order {
-    let rows = buckets.at(key)
+  for (bucket-i, key) in order.enumerate() {
+    let rows = bucket-rows.at(bucket-i)
     let pairs = rows
       .map(r => (
         x: parse-number(r.at(x-col, default: none)),

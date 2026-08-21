@@ -5,6 +5,7 @@
 ///! point, O(n²) per group. Both emit a dense grid of `(x, y, ymin, ymax)`
 ///! for the fitted curve and pointwise confidence band.
 
+#import "../utils/bucket.typ": bucket-index
 #import "../utils/types.typ": parse-number
 #import "../utils/summaries.typ": read-weight
 #import "../utils/late-binding.typ": after-scale-source
@@ -265,26 +266,17 @@
 
   let group-cols = _grouping-columns(mapping, x-col, y-col)
 
-  // Buckets are appended to in place: reading one out of a dictionary to push
-  // to it shares the array, so each push would copy the whole bucket.
-  let index = (:)
-  let keys = ()
-  let rows = ()
-  let samples = (:)
-  for row in data {
-    let key = _group-key(row, group-cols)
-    let at = index.at(key, default: none)
-    if at == none {
-      at = rows.len()
-      index.insert(key, at)
-      keys.push(key)
-      rows.push(())
-      samples.insert(key, row)
-    }
-    rows.at(at).push(row)
-  }
+  let (keys: group-keys, buckets: bucket-rows) = bucket-index(
+    data,
+    row => _group-key(row, group-cols),
+  )
+  // The first row of each group is the sample the output row inherits from.
   let groups = (:)
-  for (i, key) in keys.enumerate() { groups.insert(key, rows.at(i)) }
+  let samples = (:)
+  for (i, key) in group-keys.enumerate() {
+    groups.insert(key, bucket-rows.at(i))
+    samples.insert(key, bucket-rows.at(i).first())
+  }
 
   _validate(params)
   let weight-col = mapping.at("weight", default: none)

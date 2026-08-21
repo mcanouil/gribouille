@@ -5,6 +5,7 @@
 ///! as a closed silhouette. Under \@coord-radial the layer degrades to a
 ///! no-op (mirrored silhouettes do not translate to polar wedges yet).
 
+#import "../utils/bucket.typ": bucket-index
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../stat/ydensity.typ": stat-ydensity
@@ -170,27 +171,12 @@
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     // One silhouette per distinct x bucket within the group, in
     // first-appearance order.
-    let buckets = (:)
-    let order = ()
-    // Appended in place: reading a bucket out of the dictionary to push to it
-    // shares the array, so each push would copy the whole bucket.
-    let index = (:)
-    let bucket-rows = ()
-    for row in g.data {
+    let bucket-rows = bucket-index(g.data, row => {
       let key = str(row.at(x-col, default: ""))
-      if key == "" { continue }
-      let at = index.at(key, default: none)
-      if at == none {
-        at = bucket-rows.len()
-        index.insert(key, at)
-        order.push(key)
-        bucket-rows.push(())
-      }
-      bucket-rows.at(at).push(row)
-    }
+      if key == "" { none } else { key }
+    }).buckets
 
-    for (bucket-i, key) in order.enumerate() {
-      let rows = bucket-rows.at(bucket-i)
+    for rows in bucket-rows {
       let raw-x = rows.first().at(x-col, default: none)
       let cx = map-position(x-trained, raw-x, ctx.px-range)
       if cx == none { continue }

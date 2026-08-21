@@ -6,6 +6,7 @@
 ///! picks the right (continuous vs. discrete) interpretation without mutating
 ///! the data.
 
+#import "utils/bucket.typ": bucket-dict
 #import "utils/types.typ": parse-number
 #import "utils/errors.typ": fail, fail-type
 
@@ -26,28 +27,7 @@
 
 // Partition `rows` into buckets keyed by `str(key-fn(row))`.
 // Preserves input order within each bucket.
-#let group-by(rows, key-fn) = {
-  // Buckets are built in a plain array and appended to in place. Reading one
-  // out of the dictionary to push to it shares the array, so the push copies
-  // it, and a single-bucket grouping then costs a copy per row.
-  let index = (:)
-  let keys = ()
-  let buckets = ()
-  for row in rows {
-    let k = str(key-fn(row))
-    let at = index.at(k, default: none)
-    if at == none {
-      at = buckets.len()
-      index.insert(k, at)
-      keys.push(k)
-      buckets.push(())
-    }
-    buckets.at(at).push(row)
-  }
-  let out = (:)
-  for (i, k) in keys.enumerate() { out.insert(k, buckets.at(i)) }
-  out
-}
+#let group-by(rows, key-fn) = bucket-dict(rows, row => str(key-fn(row)))
 
 // Coerce a `data` argument into the canonical row-store shape.
 //
