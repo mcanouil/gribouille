@@ -320,5 +320,7 @@
   assert.eq(out.counts, (:))
 }
 
-// strict mode panics on first OOB row. Typst has no try/catch; the panic
-// path is exercised manually via examples/oob-strict-* (see PR description).
+// strict mode panics on the first out-of-range row. Typst has no try/catch, so
+// the panic cannot be asserted here, and no example compiles it either: an
+// example that panicked would fail `tools/check.sh`. The path is therefore
+// uncovered, and a change to it must be checked by hand.

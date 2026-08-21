@@ -773,29 +773,26 @@
   (hi - lo) / n
 }
 
-// The warp rule itself, stated once, over the two fields it reads.
-#let _to-stat-with(pre-transformed, transform, value) = {
-  if pre-transformed { return value }
-  transform-fwd(transform, value)
-}
-
 // Forward-warp `value` to stat space unless the scale is already
 // `pre-transformed` (in which case row values, the trained domain, and
 // `view-transform` already live there).
-#let _to-stat(trained, value) = _to-stat-with(
-  trained.at("pre-transformed", default: false),
-  trained.at("transform", default: "identity"),
-  value,
-)
+//
+// This sits on the per-value render path, so it stays a direct two-line body:
+// routing it through `to-stat-fn` below was measured to add a call per value
+// for no gain.
+#let _to-stat(trained, value) = {
+  if trained.at("pre-transformed", default: false) { return value }
+  transform-fwd(trained.at("transform", default: "identity"), value)
+}
 
 // The same warp as a closure, for a caller that warps many values off one
 // scale: the two fields are read once and captured, rather than being read
-// again for every value. A caller warping a single value uses `_to-stat`,
-// which allocates nothing.
+// again for every value. Kept in step with `_to-stat` by hand, since the rule
+// is two lines and the duplication buys the hot path a direct call.
 #let to-stat-fn(trained) = {
   let pre-transformed = trained.at("pre-transformed", default: false)
   let transform = trained.at("transform", default: "identity")
-  v => _to-stat-with(pre-transformed, transform, v)
+  v => if pre-transformed { v } else { transform-fwd(transform, v) }
 }
 
 // Expanded scale bounds in stat space: the `view-transform` set by
