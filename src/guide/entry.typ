@@ -7,8 +7,9 @@
 ///!
 ///! A standard entry carries `value` (the break in data space), `frac` (its
 ///! place inside the data area, 0 at one end and 1 at the other), `label`, and
-///! `tier`. A range entry carries `start`, `end`, `label`, and `depth`, and
-///! backs the bracket and box primitives.
+///! `tier`. A grid entry, which a legend key grid draws, carries the `value` its
+///! glyph is inked from and the `label` beside it, and is placed by its cell
+///! rather than by a fraction.
 ///!
 ///! `frac` is filled by `train-entries`, which takes the mapping as a closure.
 ///! The scale lives downstream of this module, so the caller supplies the map
@@ -31,15 +32,6 @@
   }
   (value: value, frac: none, label: label, tier: tier)
 }
-
-// One range entry. `depth` is the nesting level: 0 is the row nearest the
-// panel, and each further level stacks outward.
-#let range-entry(start, end, label: none, depth: 0) = (
-  start: start,
-  end: end,
-  label: label,
-  depth: depth,
-)
 
 // Reject a `labels` argument the table constructors cannot apply, so a typo
 // names the guide rather than panicking inside a call to a non-function.
@@ -98,57 +90,6 @@
   (..major-rows, ..mid-rows, ..minor-rows).sorted(key: e => e.value)
 }
 
-// A dense sampling of the unit interval, for a continuous colour bar. There is
-// no scale break behind these rows: `frac` is the sample position itself and
-// `value` is left `none`, so the gizmo reads the colour straight off `frac`.
-#let entries-sequence(n: 64) = {
-  check(
-    type(n) == int and n >= 2,
-    "guide-entry",
-    "a colour-bar sequence needs a whole number of at least 2 samples; got "
-      + repr(n),
-    hint: "Raise `n` to a whole number of 2 or more.",
-  )
-  range(n).map(i => (
-    value: none,
-    frac: i / (n - 1),
-    label: none,
-    tier: "major",
-  ))
-}
-
-// A table of bins from their edges, for a binned colour bar. `n` edges give
-// `n - 1` bins, each a range entry spanning one step. A `labels` closure is
-// called with both bounds, because a bin label usually reads them both.
-#let entries-bins(edges, labels: auto) = {
-  check(
-    type(edges) == array and edges.len() >= 2,
-    "guide-entry",
-    "bin edges need at least 2 values; got " + repr(edges),
-    hint: "Supply the bin boundaries in ascending order.",
-  )
-  let _ = _check-labels(labels, "guide-entry")
-  if type(labels) == array {
-    check(
-      labels.len() == edges.len() - 1,
-      "guide-entry",
-      "labels has "
-        + str(labels.len())
-        + " items for "
-        + str(edges.len() - 1)
-        + " bins",
-      hint: "Supply one label per bin, a closure, or `auto`.",
-    )
-  }
-  range(edges.len() - 1).map(i => range-entry(
-    edges.at(i),
-    edges.at(i + 1),
-    label: if labels == auto { none } else if type(labels) == array {
-      labels.at(i)
-    } else { (labels)(edges.at(i), edges.at(i + 1)) },
-  ))
-}
-
 // Resolve whatever a guide was given for its entries into a literal table.
 // `auto` means inherit from the parent composition and is resolved by the
 // composition, never here. A closure is called with no arguments, the caller
@@ -176,14 +117,6 @@
   (..e, frac: (to-frac)(e.value))
 })
 
-// Fill `start` and `end` on every range entry, the range counterpart of
-// `train-entries`.
-#let train-range-entries(entries, to-frac) = entries.map(e => (
-  ..e,
-  start: (to-frac)(e.start),
-  end: (to-frac)(e.end),
-))
-
 // Reject a table a primitive cannot draw. Runs at the boundary between the
 // builder that produced the table and the primitive that consumes it, so a
 // malformed table names the guide that built it rather than failing inside the
@@ -200,21 +133,18 @@
     if tier != none and not TIERS.contains(tier) {
       fail-enum(scope, "entry " + str(i) + " tier", tier, TIERS)
     }
-    let ranged = "start" in e and "end" in e
     check(
-      ranged or "frac" in e,
+      "frac" in e,
       scope,
-      "entry " + str(i) + " carries neither `frac` nor `start`/`end`",
+      "entry " + str(i) + " carries no `frac`",
       hint: "Run the table through `train-entries` before drawing it.",
     )
-    if not ranged and e.frac == none {
-      check(
-        false,
-        scope,
-        "entry " + str(i) + " is untrained; its `frac` is `none`",
-        hint: "Run the table through `train-entries` before drawing it.",
-      )
-    }
+    check(
+      e.frac != none,
+      scope,
+      "entry " + str(i) + " is untrained; its `frac` is `none`",
+      hint: "Run the table through `train-entries` before drawing it.",
+    )
   }
   entries
 }
@@ -253,12 +183,6 @@
   }
   entries
 }
-
-// The distinct tiers a table uses, in draw order. Lets a ticks primitive walk
-// its tiers without hard-coding which ones the table happens to carry.
-#let entry-tiers(entries) = TIERS.filter(t => (
-  entries.any(e => e.at("tier", default: "major") == t)
-))
 
 // Every entry of one tier.
 #let entries-of-tier(entries, tier) = {

@@ -1,9 +1,8 @@
 // The entry table: constructors, tier handling, training, and validation.
 
 #import "../../src/guide/entry.typ": (
-  TIERS, check-entries, entries-bins, entries-manual, entries-of-tier,
-  entries-sequence, entries-tiered, entry, entry-tiers, range-entry,
-  resolve-entries, train-entries, train-range-entries,
+  TIERS, check-entries, check-grid-entries, entries-manual, entries-of-tier,
+  entries-tiered, entry, resolve-entries, train-entries,
 )
 #import "../../src/utils/errors.typ": enum-text, error-text, type-text
 
@@ -37,31 +36,7 @@
   tiered.map(r => r.tier),
   ("major", "minor", "mid", "major", "minor", "mid", "major"),
 )
-#assert.eq(entry-tiers(tiered), ("major", "mid", "minor"))
 #assert.eq(entries-of-tier(tiered, "mid").map(r => r.value), (5, 50))
-#assert.eq(entry-tiers(plain), ("major",))
-
-// A colour-bar sequence carries `frac` directly and no scale break behind it.
-#let seq = entries-sequence(n: 5)
-#assert.eq(seq.len(), 5)
-#assert.eq(seq.map(r => r.frac), (0.0, 0.25, 0.5, 0.75, 1.0))
-#assert.eq(seq.first().value, none)
-
-// `n` edges give `n - 1` bins.
-#let bins = entries-bins((0, 2, 5, 10))
-#assert.eq(bins.len(), 3)
-#assert.eq(bins.map(r => r.start), (0, 2, 5))
-#assert.eq(bins.map(r => r.end), (2, 5, 10))
-#assert.eq(bins.first().depth, 0)
-
-#let named-bins = entries-bins((0, 2, 5), labels: ("low", "high"))
-#assert.eq(named-bins.map(r => r.label), ("low", "high"))
-
-// A bin label closure reads both bounds, since a bin label usually names them.
-#let spanned = entries-bins((0, 2, 5), labels: (lo, hi) => (
-  str(lo) + "-" + str(hi)
-))
-#assert.eq(spanned.map(r => r.label), ("0-2", "2-5"))
 
 // A value listed under two tiers keeps the heavier one and is dropped from the
 // lighter, so no position carries two ticks.
@@ -77,20 +52,17 @@
 #assert.eq(trained.map(r => r.frac), (0.0, 0.5, 1.0))
 #assert.eq(trained.map(r => r.value), (0, 5, 10))
 
-// A sequence row has no `value`, so training leaves it alone.
-#assert.eq(train-entries(seq, to-frac).map(r => r.frac), seq.map(r => r.frac))
-
-#let trained-bins = train-range-entries(entries-bins((0, 5, 10)), to-frac)
-#assert.eq(trained-bins.map(r => r.start), (0.0, 0.5))
-#assert.eq(trained-bins.map(r => r.end), (0.5, 1.0))
-
 // A resolved table passes through; a closure is called for its table.
 #assert.eq(resolve-entries(plain), plain)
 #assert.eq(resolve-entries(() => plain), plain)
 
-// Validation accepts a trained table and a range table alike.
+// A trained table passes validation. A grid table is checked apart from it,
+// because a key grid places its rows by their cell rather than by a fraction.
 #assert.eq(check-entries(trained, "test").len(), 3)
-#assert.eq(check-entries(trained-bins, "test").len(), 2)
+#assert.eq(
+  check-grid-entries(((value: "a", label: "a"),), "test").len(),
+  1,
+)
 
 // Rejection wording. `errors.typ` splits the message builders from the `fail-*`
 // wrappers so the text is assertable without catching a panic; these pin what

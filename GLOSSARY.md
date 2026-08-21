@@ -127,7 +127,7 @@ Run the survey command at the bottom before extending the table.
 | `entries` | guide entry table   | array of `entry` dicts (`src/guide/entry.typ`). Not to be confused with `key`, which keeps the dict-key and legend-glyph senses.                    |
 | `tier`    | tick weight         | `"major"` / `"mid"` / `"minor"` on an entry; picks the tick length and whether a label is drawn. Named `tier` because `type` is the trained-scale kind. |
 | `depth`   | range nesting level | which row of a bracket stack a range entry occupies; 0 sits nearest the panel.                                                                      |
-| `gctx`    | guide context       | what a guide part is drawn under (`src/guide/gctx.typ`): `position`, `aesthetic`, `mode`, `direction`, `axis`, `span`, and the injected `place`, `tick-length` and `key-draw` closures. Parallels `ctx`. |
+| `gctx`    | guide context       | what a guide part is drawn under (`src/guide/gctx.typ`): `position`, `aesthetic`, `mode`, `direction`, `axis`, `span`, and the injected `place`, `tick-length`, `key-draw` and `bar-draw` closures. Parallels `ctx`. |
 | `mode`    | guide mode          | `"axis"` or `"legend"` on a `gctx`; derived from the aesthetic, and what selects the theme surfaces a part resolves against.                        |
 | `across`  | across-guide extent | the thickness axis of a side, growing away from the panel. Paired with `along` in `_axes-of`; the dimension a side reserves.                        |
 | `place`   | guide point map     | `(frac, across) -> (x, y)` closure on a `gctx`; the only thing a radial guide changes.                                                              |
@@ -136,6 +136,8 @@ Run the survey command at the bottom before extending the table.
 | `span`    | along-guide length  | cm a full `frac` covers, on a `gctx`. A part that lays its own contents out in centimetres divides by it; a part that runs on fractions never reads it. |
 | `metrics` | key cell metrics    | the cm a legend key cell spends (`off`, `drop`, `last`, `line-h`, `slack`, `lead`, `label-lead`, `label-drop`), built by `key-metrics` in `src/guide/grid.typ`. |
 | `flow`    | key label flow      | where a label reads against its key: `"right"` beside it, as every vertical legend draws it, or `"below"` under it, as a horizontal size ladder does. |
+| `gizmo`   | guide part with a body | a guide part that paints something of its own rather than annotating a span, such as the colour bar in `src/guide/gizmo/`, whose tick flank reads across the guide while the guide stacks down it. |
+| `band`    | room past a strip   | on a colour bar, the cm reserved across the guide past the strip, which the tick flank draws into. |
 | `lead`    | room before a label | cm a cell reserves before its label, which the key glyph occupies. `label-lead` is the shorter offset the drawn label is actually pinned at. |
 | `justify` | grid justification  | the alignment a key grid takes inside the guide width, as against `label-align`, which justifies one label inside its own column. |
 

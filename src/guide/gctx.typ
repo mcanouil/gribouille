@@ -139,6 +139,7 @@
   surface-stroke: none,
   text-style: none,
   key-draw: none,
+  bar-draw: none,
   tick-gap: 0.1,
 ) = {
   if type(aesthetic) != str {
@@ -237,6 +238,11 @@
     // aesthetics the value resolves to, and the scales live downstream of this
     // module.
     key-draw: key-draw,
+    // `(lo, hi, horizontal) -> emits cetz` for the body of a colour bar, given
+    // the two canvas corners of its strip. Injected for the same reason as the
+    // key glyph: the gradient, the bins and the frame all read a palette and a
+    // trained scale.
+    bar-draw: bar-draw,
     // Cm between a tick and its label in an axis context. Mirrors the chrome
     // stage's `_TICK-LABEL-GAP`, passed in rather than imported.
     tick-gap: tick-gap,
