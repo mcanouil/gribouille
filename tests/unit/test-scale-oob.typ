@@ -12,10 +12,18 @@
 
 // Mirror `_train-entry`: when a user supplies `limits`, the trained `domain`
 // is overridden to match.
-#let _trained-continuous(limits: none, oob: "drop", view-transform: none) = {
+#let _trained-continuous(
+  limits: none,
+  oob: "drop",
+  view-transform: none,
+  transform: "identity",
+  pre-transformed: false,
+) = {
   let t = (
     type: "continuous",
     domain: if limits != none { limits } else { (0, 10) },
+    transform: transform,
+    pre-transformed: pre-transformed,
     spec: (
       aesthetic: "fill",
       type: "continuous",
@@ -202,6 +210,35 @@
   let rows = ((v: "a"), (v: "d"), (v: "c"))
   let out = filter-oob((_layer(rows),), trained)
   assert.eq(out.layers.at(0).data, ((v: "a"), (v: "c")))
+  assert.eq(out.counts.at("fill"), 1)
+}
+
+// a transformed scale warps the cell before it tests the span. The trained
+// domain of a `sqrt` scale lives in data space, so the limits `(1, 9)` become
+// the stat span `(1, 3)`, and the raw cell must be warped to be tested against
+// it. A cell of 4 warps to 2 and is in range; 16 warps to 4 and drops.
+#{
+  let trained = (fill: _trained-continuous(limits: (1, 9), transform: "sqrt"))
+  let rows = ((v: 4), (v: 16))
+  let out = filter-oob((_layer(rows),), trained)
+  assert.eq(out.layers.at(0).data, ((v: 4),))
+  assert.eq(out.counts.at("fill"), 1)
+}
+
+// a `pre-transformed` scale already holds stat-space values, so the cell is
+// tested as it stands. With the same `sqrt` name on the scale, warping the
+// cell again would drop the row that must survive.
+#{
+  let trained = (
+    fill: _trained-continuous(
+      limits: (1, 3),
+      transform: "sqrt",
+      pre-transformed: true,
+    ),
+  )
+  let rows = ((v: 2), (v: 9))
+  let out = filter-oob((_layer(rows),), trained)
+  assert.eq(out.layers.at(0).data, ((v: 2),))
   assert.eq(out.counts.at("fill"), 1)
 }
 

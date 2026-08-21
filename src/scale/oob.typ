@@ -9,7 +9,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
 #import "../utils/palette.typ": spec-attr
-#import "train.typ": mapping-ref-col, transform-fwd, view-bounds-stat
+#import "train.typ": mapping-ref-col, to-stat-fn, view-bounds-stat
 #import "../utils/errors.typ": fail
 
 // Build the per-row check for one trained scale, or `none` when the scale sets
@@ -48,16 +48,15 @@
     let span-lo = calc.min(t-lo, t-hi)
     let span-hi = calc.max(t-lo, t-hi)
     let (lo, hi) = trained.domain
-    // The two fields `_to-stat` reads, so the row path warps the value without
-    // reaching back into the trained scale.
-    let pre-transformed = trained.at("pre-transformed", default: false)
-    let transform = trained.at("transform", default: "identity")
+    // The scale's stat-space warp, captured so the row path does not reach back
+    // into the trained scale for it.
+    let to-stat = to-stat-fn(trained)
     return (
       limits: limits,
       check: raw => {
         let v = parse-number(raw)
         if v == none { return ("in", raw) }
-        let sv = if pre-transformed { v } else { transform-fwd(transform, v) }
+        let sv = to-stat(v)
         if sv >= span-lo and sv <= span-hi { return ("in", raw) }
         if oob == "squish" {
           // Clamp to the nearest `limits` endpoint (the visible data edge), not
