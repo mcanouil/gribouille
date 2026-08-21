@@ -5,8 +5,10 @@
 
 #import "../../lib.typ": *
 #import "../../src/theme/defaults.typ": merge-theme
-#import "../../src/render/guides.typ": _read-theta-guide
-#import "../../src/render/panel-radial.typ": theta-band
+#import "../../src/render/guides.typ": (
+  _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _read-theta-guide,
+)
+#import "../../src/render/panel-radial.typ": _arc-span, theta-band
 #import "../../src/utils/radial.typ": THETA-LABEL-PAD, radial-ctx
 
 #let PANEL = (px: (0.0, 6.0), py: (0.0, 5.0))
@@ -19,15 +21,17 @@
 // these tests are about the tick weights, and a label ringing the circle is
 // solved per angle rather than as part of the band.
 #let BLANK-TEXT = (size: 0pt, typst: false)
-#let band-of(theme, axis, guide, trained: TRAINED) = theta-band(
-  theme,
-  coord-radial(theta: axis),
-  guide,
-  trained,
-  axis,
-  (labels: auto, typst-mark: false),
-  BLANK-TEXT,
-  (width: 0.0, height: 0.0),
+#let band-of(theme, axis, guide, trained: TRAINED, text: BLANK-TEXT) = (
+  theta-band(
+    theme,
+    coord-radial(theta: axis),
+    guide,
+    trained,
+    axis,
+    (labels: auto, typst-mark: false),
+    text,
+    (width: 0.6, height: 0.3),
+  )
 )
 
 // The sub-decade rows a band carries, which is what says whether a minor weight
@@ -225,5 +229,43 @@
 // whether or not the difference reached the page. The angles and radii are
 // covered by the `guide-axis-theta` golden and by the eyeball plot in
 // `tests/visual/coord-radial-theta-ticks.typ`.
+
+// A cap fades the arc out short of the end it names and leaves the other end
+// whole. The trim is a fraction of the span, bounded in radians.
+#{
+  let turn = 2 * calc.pi
+  let trim = calc.min(turn * _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD) / turn
+  assert.eq(_arc-span(none, turn), (lo: 0.0, hi: 1.0))
+  assert.eq(_arc-span((cap: "none"), turn), (lo: 0.0, hi: 1.0))
+  assert.eq(_arc-span((cap: "lower"), turn), (lo: trim, hi: 1.0))
+  assert.eq(_arc-span((cap: "upper"), turn), (lo: 0.0, hi: 1.0 - trim))
+  assert.eq(_arc-span((cap: "both"), turn), (lo: trim, hi: 1.0 - trim))
+  // A sweep of no width has nothing to trim, and dividing by it would fail.
+  assert.eq(_arc-span((cap: "both"), 0), (lo: 0.0, hi: 1.0))
+}
+
+// A capped end keeps its tick label and gives up its tick mark: the cap has
+// just opened a gap in the arc, and a tick would float in it.
+#{
+  let ticked = merge-theme(theme(
+    axis-ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.4cm),
+  ))
+  let capped = theta-guide-of(guides(theta: guide-axis-theta(cap: "both")))
+  let rows = band-of(ticked, "x", capped, text: (size: 9pt, typst: false))
+    .node
+    .entries
+  let unticked = rows.filter(e => e.tier == none)
+  assert(unticked.len() > 0, message: "a capped end still carried a tick")
+  assert(
+    unticked.all(e => e.label != none),
+    message: "a capped end dropped the label it still draws",
+  )
+  // The ends are the only rows that give up their tick; every other break
+  // keeps one.
+  assert(
+    rows.filter(e => e.tier == "major").len() > 0,
+    message: "a capped axis dropped every tick",
+  )
+}
 
 Radial theta tick tests passed.
