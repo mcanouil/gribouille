@@ -71,8 +71,8 @@
 //
 // Groups exist because a full sweep puts its first and last break on one ray: a
 // 24-hour clock ticks once at 12 o'clock, under a label merged from both ends.
-// A capped end draws no major, because the cap has just opened a gap there and
-// a tick would float in it.
+// A capped end keeps its label and gives up its tick, because the cap has just
+// opened a gap in the arc there and a tick would float in it.
 #let _theta-entries(groups, guide, theta-range, extent) = {
   let (theta-lo, theta-hi) = theta-range
   let sweep = theta-hi - theta-lo
@@ -82,8 +82,6 @@
   let fracs = groups.map(g => (g.theta - theta-lo) / sweep)
   let major = ()
   for (i, group) in groups.enumerate() {
-    // A capped end keeps its label and gives up its tick: the cap has just
-    // opened a gap in the arc there, and a tick would float in it.
     let capped = ends.any(end => _same-angle(group.theta, end))
     major.push((
       ..entry(
@@ -146,7 +144,7 @@
 // sweep, a blank surface, and minors nobody asked for all reach nothing.
 #let theta-band(theme, coord, guide, trained, axis, disp, style, ext) = {
   let none-band = (node: none, layout: none, ctx: none, reach: 0.0)
-  if axis == none or trained == none { return none-band }
+  if axis == none { return none-band }
   if guide != none and guide.suppress { return none-band }
   let theta-range = theta-range-of(coord)
   let (theta-lo, theta-hi) = theta-range
@@ -154,10 +152,12 @@
   // A blank `axis-text` draws no labels, so the rows carry none and stamp
   // nothing, which is what keeps the ring off the reservation as well.
   let labelled = style.size > 0pt
-  let groups = group-theta-breaks(
-    _axis-tick-values(trained),
-    b => map-break(trained, b, theta-range),
-  ).map(group => (
+  let groups = if trained == none { () } else {
+    group-theta-breaks(
+      _axis-tick-values(trained),
+      b => map-break(trained, b, theta-range),
+    )
+  }.map(group => (
     theta: group.first().theta,
     // The group stands for every break on its ray, and the first of them is
     // the value its merged label was built from.
@@ -181,8 +181,9 @@
     if labelled { (ext.width, ext.height) } else { (0.0, 0.0) },
   )
   // The arc is the axis itself, so it stands on a sweep that ticks nothing: a
-  // scale with `breaks: ()` draws a bare ring, as it always has. Only a plot
-  // that binds no theta guide has no angular axis to draw at all.
+  // scale with `breaks: ()`, and one that never trained, both draw a bare ring
+  // as they always have. Only a plot that binds no theta guide has no angular
+  // axis to draw at all.
   if entries.len() == 0 and guide == none { return none-band }
   let node = _theta-node(
     guide,
