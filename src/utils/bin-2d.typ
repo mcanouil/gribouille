@@ -102,6 +102,7 @@
     entries.push(entry)
   }
   if entries.len() == 0 { return none }
+  // The thunks must stay unevaluated here, for the reason given in `bin.typ`.
   let grid = resolve-bin-grid-2d(
     params,
     () => entries.map(e => e.x),

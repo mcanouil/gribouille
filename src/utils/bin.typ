@@ -123,6 +123,8 @@
     entries.push(entry)
   }
   if entries.len() == 0 { return none }
+  // The thunk must stay unevaluated here: a stashed panel grid answers
+  // without it, and building the array first restores the per-group pass.
   let grid = resolve-bin-grid(params, () => entries.map(e => e.x))
   let counts = range(grid.n-bins).map(_ => 0)
   let buckets = if collect-y {

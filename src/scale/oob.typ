@@ -23,12 +23,11 @@
 // is shared by reference and costs nothing. This is the same measured cost the
 // per-row `layer` argument carried before it was hoisted out.
 //
-// Capture is what buys the saving, not the faster level test. Measured over
-// twenty thousand rows, with both arms already testing the level through a
-// dict lookup rather than a scan: carrying the levels in a plain record kept
-// the cost growing with the level count (0.29 s at fifty levels, 1.17 s at two
-// thousand), while capturing them in a closure is flat (0.26 s and 0.31 s).
-// The record still reaches every level, so the row walk keeps paying for them.
+// Capture is what buys the saving, not the faster level test. Carrying the
+// levels in a plain record instead was measured with the same dict lookup in
+// place, and the cost still grew with the level count, because the record
+// reaches every level. Only the closure is flat in it. The figures are in the
+// body of the pull request that made the change.
 //
 // The closure returns one of:
 //   ("in",     value)   — unchanged
@@ -114,10 +113,10 @@
   // carries so that walk holds nothing that grows with the domain.
   let limits-of = (:)
   for (aes, t) in trained.pairs() {
-    let plan = _checker(t)
-    if plan == none { continue }
-    active.push((aes: aes, check: plan.check))
-    limits-of.insert(aes, plan.limits)
+    let resolved = _checker(t)
+    if resolved == none { continue }
+    active.push((aes: aes, check: resolved.check))
+    limits-of.insert(aes, resolved.limits)
   }
   if active.len() == 0 { return (layers: layers, counts: (:)) }
 
@@ -142,11 +141,11 @@
     // of the row, and `mapping-ref-col` walks the wrapper chain to find it.
     // Resolve it once per layer so the row walk only reads the cell.
     let bound = ()
-    for plan in active {
-      let raw = mapping.at(plan.aes, default: none)
+    for entry in active {
+      let raw = mapping.at(entry.aes, default: none)
       if raw == none { continue }
       if is-late-binding(raw) { continue }
-      bound.push((col: mapping-ref-col(raw), ..plan))
+      bound.push((col: mapping-ref-col(raw), ..entry))
     }
     if bound.len() == 0 {
       new-layers.push(layer)
@@ -156,11 +155,11 @@
     for (row-idx, row) in data.enumerate() {
       let new-row = row
       let drop = false
-      for plan in bound {
-        let aes = plan.aes
-        let col = plan.col
+      for binding in bound {
+        let aes = binding.aes
+        let col = binding.col
         let cell = row.at(col, default: none)
-        let (action, value) = (plan.check)(cell)
+        let (action, value) = (binding.check)(cell)
         if action == "in" { continue }
         if action == "squish" {
           new-row.insert(col, value)
