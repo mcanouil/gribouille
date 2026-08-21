@@ -10,7 +10,6 @@
 #import "../deps.typ": cetz
 #import "../utils/extended.typ": extended
 #import "../utils/format.typ": format-break
-#import "../utils/measure.typ": measure-text-cm
 #import "../utils/colour.typ": (
   bin-edges, edge-midpoints, resolve-continuous-colour,
 )
