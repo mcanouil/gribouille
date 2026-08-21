@@ -7,7 +7,7 @@
 #import "../utils/errors.typ": fail-enum
 
 // Accepted `transform` names, mirrored by `transform-fwd`/`transform-inv` in
-// train.typ, and accepted `oob` modes, mirrored by `_check` in oob.typ. The
+// train.typ, and accepted `oob` modes, mirrored by `_checker` in oob.typ. The
 // public `scale-*` constructors defer, so these fire when `scales()` binds the
 // scale: a typo fails there rather than silently no-opping downstream.
 #let _TRANSFORMS = ("identity", "reverse", "log10", "sqrt")

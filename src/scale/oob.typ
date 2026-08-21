@@ -15,10 +15,16 @@
 // no user `limits` and therefore censors nothing.
 //
 // The check is a closure taking the cell alone. Everything else it needs is
-// captured, which matters because a trained discrete scale reaches its whole
-// domain: handing that dict to a per-row function costs a pass over every
-// level on every row, while a captured scope is shared by reference and costs
-// nothing.
+// captured rather than passed, because an argument that reaches a long array
+// costs time proportional to its length on every call, while a captured scope
+// is shared by reference and costs nothing. This is the same measured cost the
+// per-row `layer` argument carried before it was hoisted out.
+//
+// The distinction is what makes the closure necessary. Hoisting the same
+// values into a plain record does not help: the record still reaches every
+// level, so the row walk keeps paying for them. Measured over twenty thousand
+// rows, a record kept the cost growing with the level count (0.29 s at fifty
+// levels, 1.17 s at two thousand); the closure is flat (0.26 s and 0.31 s).
 //
 // The closure returns one of:
 //   ("in",     value)   — unchanged
@@ -94,15 +100,15 @@
 // layers and a per-aesthetic dropped-row count. `strict: true` converts the
 // first drop into a `panic` instead.
 #let filter-oob(layers, trained, strict: false) = {
-  let active = ()
   // Everything the check reads is constant per aesthetic, so each scale is
   // resolved once here into a closure the row walk calls with the cell alone.
-  let plans = (:)
+  // Held as an array rather than a dict, so the row walk iterates it directly
+  // instead of looking each aesthetic up again on every row.
+  let active = ()
   for (aes, t) in trained.pairs() {
     let plan = _checker(t)
     if plan == none { continue }
-    active.push(aes)
-    plans.insert(aes, plan)
+    active.push((aes: aes, ..plan))
   }
   if active.len() == 0 { return (layers: layers, counts: (:)) }
 
@@ -127,13 +133,13 @@
     for (row-idx, row) in data.enumerate() {
       let new-row = row
       let drop = false
-      for aes in active {
+      for plan in active {
+        let aes = plan.aes
         let raw = mapping.at(aes, default: none)
         if raw == none { continue }
         if is-late-binding(raw) { continue }
         let col = mapping-ref-col(raw)
         let cell = row.at(col, default: none)
-        let plan = plans.at(aes)
         let (action, value) = (plan.check)(cell)
         if action == "in" { continue }
         if action == "squish" {

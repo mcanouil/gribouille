@@ -188,5 +188,29 @@
   assert.eq(out.counts.at("fill", default: 0), 0)
 }
 
+// a discrete domain may hold a level that is not a string. The cell is tested
+// as a string, so such a level can never match one, and building the level set
+// must neither coerce it nor fail on it. Here `1` is unreachable as a level
+// name: the cell `"1"` parses as a number and is kept as a fractional level
+// position, while `"z"` is off the set and drops.
+#{
+  let trained = (
+    fill: (
+      type: "discrete",
+      domain: (1, "b"),
+      spec: (
+        aesthetic: "fill",
+        type: "discrete",
+        limits: (1, "b"),
+        oob: "drop",
+      ),
+    ),
+  )
+  let rows = ((v: "b"), (v: "1"), (v: "z"))
+  let out = filter-oob((_layer(rows),), trained)
+  assert.eq(out.layers.at(0).data, ((v: "b"), (v: "1")))
+  assert.eq(out.counts.at("fill"), 1)
+}
+
 // strict mode panics on first OOB row. Typst has no try/catch; the panic
 // path is exercised manually via examples/oob-strict-* (see PR description).
