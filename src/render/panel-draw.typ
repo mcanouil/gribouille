@@ -25,16 +25,15 @@
   _draw-radial-panel, _draw-radial-r-labels, _theta-tick-marks,
 )
 #import "axis-format.typ": (
-  LOG10-MID-MANTISSAS, LOG10-SHORT-MANTISSAS, _axis-breaks, _axis-minor-breaks,
-  _axis-tick-values, _axis-title, _log10-tier-positions, _sec-spec,
-  _secondary-breaks, _tick-label-fallback, _visible-domain,
+  _axis-breaks, _axis-minor-breaks, _axis-tick-values, _axis-title, _sec-spec,
+  _secondary-breaks, _tick-label-fallback,
 )
+#import "axis-parts.typ": axis-entries, draw-axis-band
 #import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _X-LABEL-ROW-GAP, _Y-LABEL-COL-GAP,
-  _axis-guide-rows, _resolve-extents, _sec-title-offset-cm, _text-margin-cm,
-  _theta-label-bounds, _title-angle, _title-body, _title-extent-cm,
-  _x-label-anchor, _x-title-place, _y-title-place,
+  _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _resolve-extents, _sec-title-offset-cm,
+  _text-margin-cm, _theta-label-bounds, _title-angle, _title-body,
+  _title-extent-cm, _x-title-place, _y-title-place,
 )
 
 #import "../geom/point.typ" as point-geom
@@ -341,62 +340,6 @@
     theme,
     "y",
   ))
-  // Pre-compute row metadata for each axis: the sub-guide, the cumulative
-  // dodge offset (in row units) up to this sub-guide, and the inter-row gap
-  // offset (in cm). Lifted out of the per-break draw loops so flat plots
-  // walk a single tuple instead of rebuilding it every label.
-  let _stack-rows(g, gap) = {
-    let rows = _axis-guide-rows(g)
-    let spacing = if g.stack { g.spacing } else { 0 }
-    let row-base = 0
-    let metas = ()
-    for (i, sub) in rows.enumerate() {
-      metas.push((sub: sub, dodge-base: row-base, stack-offset: i * spacing))
-      row-base += sub.n-dodge
-    }
-    metas
-  }
-  let _x-rows = _stack-rows(x-guide, _X-LABEL-ROW-GAP)
-  let _y-rows = _stack-rows(y-guide, _Y-LABEL-COL-GAP)
-  let _draw-x-label(cx, label-text, idx) = {
-    if not (show-x-labels and _ax-text.xb.size > 0pt) { return }
-    for r in _x-rows {
-      let dodge-row = calc.rem(idx, r.sub.n-dodge)
-      let cy = (
-        py-lo
-          - _tick-len.xb
-          - _TICK-LABEL-GAP
-          - (r.dodge-base + dodge-row) * _X-LABEL-ROW-GAP
-          - r.stack-offset
-      )
-      content(
-        (cx, cy),
-        text(.._text-args(_ax-text.xb))[#label-text],
-        anchor: _x-label-anchor(r.sub.angle),
-        angle: r.sub.angle * 1deg,
-      )
-    }
-  }
-  let _draw-y-label(cy, label-text, idx) = {
-    if not (show-y-labels and _ax-text.yl.size > 0pt) { return }
-    for r in _y-rows {
-      let dodge-col = calc.rem(idx, r.sub.n-dodge)
-      let cx = (
-        px-lo
-          - _tick-len.yl
-          - _TICK-LABEL-GAP
-          - (r.dodge-base + dodge-col) * _Y-LABEL-COL-GAP
-          - r.stack-offset
-      )
-      content(
-        (cx, cy),
-        text(.._text-args(_ax-text.yl))[#label-text],
-        anchor: "mid-east",
-        angle: r.sub.angle * 1deg,
-      )
-    }
-  }
-
   let _axis-display(trained) = (
     typst-mark: if trained != none {
       trained.at("typst-mark", default: false)
@@ -466,97 +409,82 @@
     }
   }
 
-  // The tick marks and the tick labels of one axis: everything the axis band
-  // outside the panel holds.
-  let _draw-cartesian-marks(axis, trained, walk, disp, ax-typst, draw-label) = {
-    if walk == none or walk.suppress { return }
-    let stroke = if axis == "x" { _ax-ticks.xb } else { _ax-ticks.yl }
-    let tick-len = if axis == "x" { _tick-len.xb } else { _tick-len.yl }
-    let ticked = _should-draw-tick(stroke, tick-len)
-    for (idx, b) in walk.breaks.enumerate() {
-      let c = map-break(trained, b, walk.range)
-      if ticked {
-        if axis == "x" {
-          line((c, py-lo), (c, py-lo - tick-len), stroke: stroke)
-        } else {
-          line((px-lo - tick-len, c), (px-lo, c), stroke: stroke)
-        }
-      }
-      let fallback = _tick-label-fallback(trained, b)
-      draw-label(
-        c,
-        resolve-prose(
-          resolve-label(
-            disp.labels,
-            b,
-            idx,
-            fallback,
-            typst-mark: disp.typst-mark,
-          ),
-          eval-strings: ax-typst,
+  // The label one break reads, or nothing where the band draws no labels at
+  // all: a facet cell that leaves them to the edge panel, or a theme that
+  // blanked `axis-text`. An entry with no label still ticks.
+  let _band-labels(trained, walk, disp, style, shown) = {
+    if not shown or style.size == 0pt { return () }
+    walk
+      .breaks
+      .enumerate()
+      .map(((idx, b)) => resolve-prose(
+        resolve-label(
+          disp.labels,
+          b,
+          idx,
+          _tick-label-fallback(trained, b),
+          typst-mark: disp.typst-mark,
         ),
-        idx,
-      )
-    }
+        eval-strings: style.typst,
+      ))
+  }
+
+  // The entry table one axis band annotates: one row per break, plus the
+  // sub-decade rows a log axis ticks. Every row carries the widest label the
+  // chrome stage measured, which is the figure the band it reserved was sized
+  // from, so the panel draws inside the room it was given.
+  let _band-entries(axis, trained, walk, guide, disp, style, shown, extents) = {
+    if walk == none { return () }
+    let ext = _resolve-extents(extents, style.size)
+    let labels = _band-labels(trained, walk, disp, style, shown)
+    axis-entries(
+      trained,
+      guide,
+      walk.breaks,
+      labels: labels,
+      extent: if labels.len() == 0 { (0.0, 0.0) } else {
+        (ext.width, ext.height)
+      },
+    )
   }
   let _x-walk = _cartesian-walk("x", x-trained)
   let _y-walk = _cartesian-walk("y", y-trained)
   _draw-cartesian-grid("x", x-trained, _x-walk)
-  _draw-cartesian-marks(
+  draw-axis-band(
+    theme,
     "x",
-    x-trained,
-    _x-walk,
-    _x-disp,
-    _ax-text.xb.typst,
-    _draw-x-label,
+    x-guide,
+    _band-entries(
+      "x",
+      x-trained,
+      _x-walk,
+      x-guide,
+      _x-disp,
+      _ax-text.xb,
+      show-x-labels,
+      x-extents,
+    ),
+    px-range,
+    (py-lo, py-hi),
   )
   _draw-cartesian-grid("y", y-trained, _y-walk)
-  _draw-cartesian-marks(
+  draw-axis-band(
+    theme,
     "y",
-    y-trained,
-    _y-walk,
-    _y-disp,
-    _ax-text.yl.typst,
-    _draw-y-label,
+    y-guide,
+    _band-entries(
+      "y",
+      y-trained,
+      _y-walk,
+      y-guide,
+      _y-disp,
+      _ax-text.yl,
+      show-y-labels,
+      y-extents,
+    ),
+    py-range,
+    (px-lo, px-hi),
   )
-
-  // Sub-decade log ticks: opt-in via guide-axis-logticks() on a log10-trans
-  // axis. Emits unlabelled ticks in two tiers below the labelled decades, which
-  // the majors already draw: a mid tier at 5 x 10^k, themed via
-  // `axis-ticks-mid`, and a short tier at 2, 3, 4, 6, 7, 8, 9 x 10^k, themed
-  // via `axis-ticks-minor`. Both inherit the `axis-ticks` stroke.
-  let _draw-log-ticks(trained, guide, axis, range) = {
-    if not guide.logticks or guide.suppress { return }
-    if trained == none { return }
-    if trained.type != "continuous" { return }
-    if trained.at("transform", default: "identity") != "log10" { return }
-    // A pre-transformed scale holds its domain in stat space, so the positions
-    // have to come from the unwarped domain the gridlines already use.
-    let (lo, hi) = _visible-domain(trained)
-    if lo <= 0 or hi <= 0 { return }
-    let tiers = (
-      ("axis-ticks-mid-" + axis, LOG10-MID-MANTISSAS),
-      ("axis-ticks-minor-" + axis, LOG10-SHORT-MANTISSAS),
-    )
-    for (surface, mantissas) in tiers {
-      let stroke = _line-stroke(theme, surface, fallback-colour: _ink)
-      let tick-len = _tick-length(theme, surface) / 1cm
-      if not _should-draw-tick(stroke, tick-len) { continue }
-      for v in _log10-tier-positions(lo, hi, mantissas) {
-        if axis == "x" {
-          let cx = map-axis-data(trained, v, range)
-          line((cx, py-lo), (cx, py-lo - tick-len), stroke: stroke)
-        } else {
-          let cy = map-axis-data(trained, v, range)
-          line((px-lo - tick-len, cy), (px-lo, cy), stroke: stroke)
-        }
-      }
-    }
-  }
-  if not is-radial {
-    _draw-log-ticks(x-trained, x-guide, "x", px-range)
-    _draw-log-ticks(y-trained, y-guide, "y", py-range)
-  }
 
   // Secondary x-axis: draw on top edge if the trained x scale carries a
   // secondary spec. Breaks are its own when set, else the primary axis grid;
