@@ -265,6 +265,17 @@
   assert.eq(out.counts, (:))
 }
 
+// empty discrete `limits` censor every named level, which is the input state a
+// legend answers by drawing no guide at all. A numeric cell still survives,
+// because it addresses a position rather than a level name.
+#{
+  let trained = (fill: _trained-discrete(limits: ()))
+  let rows = ((v: "a"), (v: "b"))
+  let out = filter-oob((_layer(rows),), trained)
+  assert.eq(out.layers.at(0).data, ())
+  assert.eq(out.counts.at("fill"), 2)
+}
+
 // an identity scale censors nothing, whatever `limits` it carries, so the
 // pre-pass never walks a layer for it.
 #{

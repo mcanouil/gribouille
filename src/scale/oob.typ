@@ -17,17 +17,10 @@
 // Build the per-row check for one trained scale, or `none` when the scale sets
 // no user `limits` and therefore censors nothing.
 //
-// The check is a closure taking the cell alone. Everything else it needs is
-// captured rather than passed, because an argument that reaches a long array
-// costs time proportional to its length on every call, while a captured scope
-// is shared by reference and costs nothing. This is the same measured cost the
-// per-row `layer` argument carried before it was hoisted out.
-//
-// Capture is what buys the saving, not the faster level test. Carrying the
-// levels in a plain record instead was measured with the same dict lookup in
-// place, and the cost still grew with the level count, because the record
-// reaches every level. Only the closure is flat in it. The figures are in the
-// body of the pull request that made the change.
+// The check is a closure taking the cell alone, so the level lookup is
+// captured once rather than reaching the call on every row. Holding the same
+// values in a record instead was measured to be slower, and to keep growing
+// with the level count.
 //
 // The closure returns one of:
 //   ("in",     value)   — unchanged
