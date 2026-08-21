@@ -263,6 +263,11 @@
 
   let new = layer
   new.data = pos-data
+  // The rows leaving this stage are canonical: they came out of the stat and
+  // the position passes, both of which read a normalised source. Saying so
+  // keeps every geom `draw` from validating the same rows a second time, which
+  // the faceted path has always avoided by the same flag.
+  new.insert("data-trusted", true)
   new.mapping = pos-mapping
   new.inherit-aes = false
   new.typst-marks = _typst-marks-of(mapping)
