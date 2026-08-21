@@ -26,8 +26,13 @@
 // One standard entry. `frac` stays `none` until `train-entries` fills it, so a
 // table that reached a primitive untrained fails loudly rather than drawing at
 // the origin.
+//
+// `tier: none` is a row that carries a label but no tick weight. A capped
+// angular axis is the case: the cap fades the arc out short of its end angle,
+// so a tick there would float in the gap it just opened, while the label the
+// end reads stays where it is.
 #let entry(value, label: none, tier: "major") = {
-  if not TIERS.contains(tier) {
+  if tier != none and not TIERS.contains(tier) {
     fail-enum("guide-entry", "tier", tier, TIERS)
   }
   (value: value, frac: none, label: label, tier: tier)

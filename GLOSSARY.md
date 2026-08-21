@@ -133,6 +133,7 @@ Run the survey command at the bottom before extending the table.
 | `place`   | guide point map     | `(frac, across) -> (x, y)` closure on a `gctx`; the only thing a radial guide changes.                                                              |
 | `role`    | theme surface role  | what a part asks a `gctx` for (`"text"`, `"ticks"`, `"line"`, …) instead of naming a surface; resolved by `surface-for`.                            |
 | `side-pt` | side-ordered point  | orders an `(along, across)` pair the way a side runs, so one horizontal routine serves all four sides. Named in full because a bare `pt` reads as the Typst length unit. |
+| `sweep`   | along-guide angle   | radians a full `frac` covers, on a `gctx` at a position that turns. A part that runs along the guide is a straight segment where it is `none` and a sampled polyline where it is not. |
 | `span`    | along-guide length  | cm a full `frac` covers, on a `gctx`. A part that lays its own contents out in centimetres divides by it; a part that runs on fractions never reads it. |
 | `metrics` | key cell metrics    | the cm a legend key cell spends (`off`, `drop`, `last`, `line-h`, `slack`, `lead`, `label-lead`, `label-drop`), built by `key-metrics` in `src/guide/grid.typ`. |
 | `flow`    | key label flow      | where a label reads against its key: `"right"` beside it, as every vertical legend draws it, or `"below"` under it, as a horizontal size ladder does. |

@@ -9,11 +9,12 @@
 #import "../../src/utils/errors.typ": enum-text, error-text
 #import "../../src/guide/primitive/common.typ": PRIMITIVE, measured
 #import "../../src/guide/primitive/content.typ": prim-content
-#import "../../src/guide/primitive/line.typ": prim-line
+#import "../../src/guide/primitive/line.typ": _points, prim-line
 #import "../../src/guide/primitive/spacer.typ": prim-spacer
 #import "../../src/guide/primitive/ticks.typ": prim-ticks
 #import "../../src/guide/primitive/registry.typ" as registry
 #import "../../src/theme/theme.typ": _line-stroke, _tick-length, tick-reach
+#import "../../src/utils/radial.typ": arc-steps
 #import "../../src/theme/defaults.typ": default-theme, resolve-colour
 
 #let th = default-theme
@@ -205,6 +206,40 @@
     hint: "Run the table through `train-entries` before drawing it.",
   ),
   "guide-ticks: entry 0 is untrained; its `frac` is `none`. Run the table through `train-entries` before drawing it.",
+)
+
+// A spine on a straight side is one segment from end to end.
+#let flat = gctx("bottom", "x", place: (frac, across) => (frac, across))
+#assert.eq(_points(prim-line(), flat), ((0.0, 0.0), (1.0, 0.0)))
+
+// A swept spine is a polyline instead, sampled at the rate every curve drawn
+// at a constant radius takes, so an arc reads as round rather than as a chord.
+#let SWEEP = calc.pi
+#let swept = gctx(
+  "theta",
+  "x",
+  axis: "x",
+  sweep: SWEEP,
+  place: (frac, across) => (frac, across),
+)
+#assert.eq(_points(prim-line(), swept).len(), arc-steps(SWEEP) + 1)
+
+// A capped end starts the spine short of the guide, and the samples span what
+// is left of it rather than the whole sweep.
+#let capped = _points(prim-line(lo: 0.1, hi: 0.9), swept)
+#assert.eq(capped.first(), (0.1, 0.0))
+#assert.eq(capped.last(), (0.9, 0.0))
+#assert.eq(capped.len(), arc-steps(0.8 * SWEEP) + 1)
+
+// A spine that runs backwards, or past either end of the guide, is rejected
+// where it is built rather than drawing off the panel.
+#assert.eq(
+  error-text(
+    "guide-line",
+    "the spine runs from 0.6 to 0.4",
+    hint: "Both are fractions of the guide, with `lo` before `hi`.",
+  ),
+  "guide-line: the spine runs from 0.6 to 0.4. Both are fractions of the guide, with `lo` before `hi`.",
 )
 
 Guide-primitive tests passed.

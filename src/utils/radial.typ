@@ -262,15 +262,20 @@
 // polar.
 #let RADIAL-DEFAULT-CAP-HALF = 0.15
 
+// Samples one polyline takes over `span` radians: one step per five degrees,
+// with a floor of eight so even a narrow arc looks round. Every curve drawn at
+// a constant radius reads it, so a swept axis is sampled as finely as the
+// wedges and whiskers beside it.
+#let arc-steps(span) = calc.max(8, int(calc.ceil(
+  calc.abs(span) / (calc.pi / 36),
+)))
+
 // Polyline samples along an arc at constant radius between `theta-lo` and
 // `theta-hi`. Used by composite geoms (boxplot, crossbar) to draw a median
 // or whisker line that follows the polar layout.
 #let radial-arc(theta-lo, theta-hi, r, radial, n: none) = {
   let (cx, cy) = radial.centre
-  let span = calc.abs(theta-hi - theta-lo)
-  let steps = if n != none { n } else {
-    calc.max(8, int(calc.ceil(span / (calc.pi / 36))))
-  }
+  let steps = if n != none { n } else { arc-steps(theta-hi - theta-lo) }
   range(steps + 1).map(i => {
     let t = theta-lo + (theta-hi - theta-lo) * i / steps
     (cx + r * calc.cos(t), cy + r * calc.sin(t))
@@ -283,10 +288,7 @@
 // even narrow wedges look round.
 #let radial-wedge(theta-lo, theta-hi, r-lo, r-hi, radial, n: none) = {
   let (cx, cy) = radial.centre
-  let span = calc.abs(theta-hi - theta-lo)
-  let steps = if n != none { n } else {
-    calc.max(8, int(calc.ceil(span / (calc.pi / 36))))
-  }
+  let steps = if n != none { n } else { arc-steps(theta-hi - theta-lo) }
   let pts = ()
   for i in range(steps + 1) {
     let t = theta-lo + (theta-hi - theta-lo) * i / steps

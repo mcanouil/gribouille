@@ -23,7 +23,7 @@
 )
 #import "colour.typ": _make-resolve-colour
 #import "panel-radial.typ": (
-  _draw-radial-panel, _draw-radial-r-labels, _theta-tick-marks,
+  _draw-radial-panel, _draw-radial-r-labels, theta-band,
 )
 #import "axis-format.typ": (
   _axis-breaks, _axis-minor-breaks, _axis-tick-values, _axis-title, _sec-spec,
@@ -224,6 +224,17 @@
   let y-trained = trained.at("y", default: none)
 
   let coord = spec.at("coord", default: none)
+  // How a scale's own `labels` and its typst marking reach the tick labels of
+  // every axis the panel draws, angular and radial included.
+  let _axis-display(trained) = (
+    typst-mark: if trained != none {
+      trained.at("typst-mark", default: false)
+    } else { false },
+    labels: spec-attr(trained, "labels", fallback: auto),
+  )
+  let _x-disp = _axis-display(x-trained)
+  let _y-disp = _axis-display(y-trained)
+
   // The theta tick labels ring the circle just outside it, so the circle has
   // to leave them room inside the panel: the panel is all the room the chrome
   // granted, and a label past its edge grows the whole figure past the
@@ -246,14 +257,22 @@
       )
     } else { () }
   }
-  // The theta ticks sit between the circle and those labels, so they are
-  // resolved here rather than with the cartesian sides below: the radius owes
-  // them their length before either can be placed.
-  let _theta-ticks = _theta-tick-marks(
+  // The theta ticks sit between the circle and those labels, so the angular
+  // axis is laid out here rather than with the cartesian sides below: the
+  // radius owes its ticks their length before either can be placed.
+  let _theta-y = _theta-key == "y"
+  let _theta-band = theta-band(
     theme,
-    _theta-key,
+    coord,
     _theta-guide,
-    if _theta-key == "x" { x-trained } else { y-trained },
+    if _theta-y { y-trained } else { x-trained },
+    _theta-key,
+    if _theta-y { _y-disp } else { _x-disp },
+    if _theta-y { _ax-text.yl } else { _ax-text.xb },
+    _resolve-extents(
+      if _theta-y { y-extents } else { x-extents },
+      if _theta-y { _ax-text.yl.size } else { _ax-text.xb.size },
+    ),
   )
   let outer-radial = radial-ctx(
     coord,
@@ -262,7 +281,7 @@
     px-range,
     py-range,
     label-bounds: _label-bounds,
-    tick-cm: _theta-ticks.reach,
+    tick-cm: _theta-band.reach,
   )
   let is-radial = outer-radial != none
 
@@ -339,15 +358,6 @@
     theme,
     "y",
   ))
-  let _axis-display(trained) = (
-    typst-mark: if trained != none {
-      trained.at("typst-mark", default: false)
-    } else { false },
-    labels: spec-attr(trained, "labels", fallback: auto),
-  )
-  let _x-disp = _axis-display(x-trained)
-  let _y-disp = _axis-display(y-trained)
-
   // What one cartesian axis walks: the breaks, where they map to, and whether
   // the guide suppressed the band. `none` where the panel draws no cartesian
   // axis at all, which is every radial panel and every axis without a scale.
@@ -612,17 +622,12 @@
 
   if is-radial {
     _draw-radial-panel((
-      spec: spec,
       outer-radial: outer-radial,
       x-trained: x-trained,
       y-trained: y-trained,
-      x-disp: _x-disp,
-      y-disp: _y-disp,
-      ax-text: _ax-text,
       grid-radial: _grid-radial,
       grid-radial-discrete: _grid-radial-discrete,
-      ax-line: _ax-line,
-      theta-ticks: _theta-ticks,
+      theta: _theta-band,
     ))
   }
 
@@ -645,7 +650,7 @@
     inner-ctx.px-range,
     inner-ctx.py-range,
     label-bounds: _label-bounds,
-    tick-cm: _theta-ticks.reach,
+    tick-cm: _theta-band.reach,
   )
   inner-ctx.radial = inner-radial
   if inner-radial != none {
@@ -702,12 +707,15 @@
   if is-radial {
     _draw-radial-r-labels((
       spec: spec,
+      theme: theme,
       outer-radial: outer-radial,
       x-trained: x-trained,
       y-trained: y-trained,
       x-disp: _x-disp,
       y-disp: _y-disp,
       ax-text: _ax-text,
+      x-extents: x-extents,
+      y-extents: y-extents,
     ))
   }
 

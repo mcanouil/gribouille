@@ -97,16 +97,18 @@
   line: false,
 )
 
-// The context the band is measured and drawn under. `place` stays `none` to
-// measure, since a measurement never asks where a point lands.
+// The context a guide is measured and drawn under, with the theme read through
+// the closures the guide layer takes rather than reached for. `place` stays
+// `none` to measure, since a measurement never asks where a point lands.
 //
-// The two ranges are not the same box: a break sits inside the data area, which
-// `view-pad-cm` insets, while the edge the band grows from is the panel bound.
-// `place-cartesian` takes the pair and reads one from each.
-#let axis-gctx(theme, axis, place: none) = gctx(
-  AXIS-SIDE.at(axis),
+// The four cartesian sides and the two radial positions share it: only `place`
+// and `sweep` tell an arc from an edge.
+#let guide-gctx(theme, position, axis, place: none, sweep: none) = gctx(
+  position,
   axis,
+  axis: axis,
   place: place,
+  sweep: sweep,
   tick-length: surface => _tick-length(theme, surface) / 1cm,
   surface-stroke: surface => _line-stroke(
     theme,
@@ -118,6 +120,18 @@
     (render: label => text(.._text-args(style))[#label])
   },
   tick-gap: _TICK-LABEL-GAP,
+)
+
+// The context a cartesian band is measured and drawn under.
+//
+// The two ranges `place-cartesian` takes are not the same box: a break sits
+// inside the data area, which `view-pad-cm` insets, while the edge the band
+// grows from is the panel bound.
+#let axis-gctx(theme, axis, place: none) = guide-gctx(
+  theme,
+  AXIS-SIDE.at(axis),
+  axis,
+  place: place,
 )
 
 // The centimetres an axis band takes between the panel edge and whatever sits

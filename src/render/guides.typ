@@ -15,10 +15,10 @@
 // there, plus the depth reserved for them, are both quarter-turn geometry.
 // Past a quarter turn the text also reads upside down, so the rotation is
 // bounded rather than silently mis-hung.
-#let _check-axis-angle(angle) = {
+#let _check-axis-angle(angle, scope: "guide-axis") = {
   if angle < -90 or angle > 90 {
     fail-range(
-      "guide-axis",
+      scope,
       "angle",
       angle,
       -90,
@@ -115,7 +115,13 @@
     fail-enum("guide-axis-theta", "cap", cap, _THETA-CAP-VALUES)
   }
   (
-    angle: g.at("angle", default: 0),
+    // An angular tick label hangs off the arc the way a cartesian one hangs
+    // off its edge, so it takes the same quarter-turn bound: past it the text
+    // reads upside down whichever axis it labels.
+    angle: _check-axis-angle(
+      g.at("angle", default: 0),
+      scope: "guide-axis-theta",
+    ),
     minor-ticks: g.at("minor-ticks", default: false),
     cap: cap,
     suppress: false,

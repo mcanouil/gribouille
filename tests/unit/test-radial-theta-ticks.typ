@@ -5,8 +5,10 @@
 
 #import "../../lib.typ": *
 #import "../../src/theme/defaults.typ": merge-theme
-#import "../../src/render/guides.typ": _read-theta-guide
-#import "../../src/render/panel-radial.typ": _theta-tick-marks
+#import "../../src/render/guides.typ": (
+  _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _read-theta-guide,
+)
+#import "../../src/render/panel-radial.typ": _arc-span, theta-band
 #import "../../src/utils/radial.typ": THETA-LABEL-PAD, radial-ctx
 
 #let PANEL = (px: (0.0, 6.0), py: (0.0, 5.0))
@@ -14,6 +16,29 @@
 // Stand-in for the trained sweep scale: the marks resolve off the theme, but
 // an axis that never trained draws nothing and so reserves nothing.
 #let TRAINED = (type: "continuous", domain: (0, 1))
+
+// The band the angular axis reserves, over a sweep whose labels are blanked:
+// these tests are about the tick weights, and a label ringing the circle is
+// solved per angle rather than as part of the band.
+#let BLANK-TEXT = (size: 0pt, typst: false)
+#let band-of(theme, axis, guide, trained: TRAINED, text: BLANK-TEXT) = (
+  theta-band(
+    theme,
+    coord-radial(theta: axis),
+    guide,
+    trained,
+    axis,
+    (labels: auto, typst-mark: false),
+    text,
+    (width: 0.6, height: 0.3),
+  )
+)
+
+// The sub-decade rows a band carries, which is what says whether a minor weight
+// is drawn at all.
+#let minors-of(band) = if band.node == none { () } else {
+  band.node.entries.filter(e => e.at("tier", default: "major") == "minor")
+}
 
 #let r-of(bounds: (), tick-cm: 0.0) = {
   radial-ctx(
@@ -71,15 +96,14 @@
   let ticked-y = merge-theme(theme(
     axis-ticks-y: element-tick(colour: black, stroke: 0.5pt, length: 0.4cm),
   ))
-  let sweep-on-y = _theta-tick-marks(ticked-y, "y", none, TRAINED)
+  let sweep-on-y = band-of(ticked-y, "y", none)
   assert(
     calc.abs(sweep-on-y.reach - 0.4) < 1e-9,
     message: "a pie read its theta ticks as " + repr(sweep-on-y.reach),
   )
   // `x` keeps the inherited base length, so it cannot have read the `y` one.
   assert(
-    calc.abs(_theta-tick-marks(ticked-y, "x", none, TRAINED).reach - 0.1)
-      < 1e-9,
+    calc.abs(band-of(ticked-y, "x", none).reach - 0.1) < 1e-9,
     message: "a rose read the y-axis tick surface",
   )
 }
@@ -87,9 +111,8 @@
 // A blank surface draws nothing, so it must not hold radius back either. This
 // is the shipped default: `theme-minimal` blanks `axis-ticks`.
 #{
-  let marks = _theta-tick-marks(merge-theme(none), "x", none, TRAINED)
-  assert.eq(marks.reach, 0.0)
-  assert.eq(marks.major, none)
+  let band = band-of(merge-theme(none), "x", none)
+  assert.eq(band.reach, 0.0)
 }
 
 // An untrained sweep draws no tick, so it must not reserve one either.
@@ -97,7 +120,7 @@
   let ticked = merge-theme(theme(
     axis-ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.4cm),
   ))
-  assert.eq(_theta-tick-marks(ticked, "x", none, none).reach, 0.0)
+  assert.eq(band-of(ticked, "x", none, trained: none).reach, 0.0)
 }
 
 // `_read-theta-guide` reads a plot spec, so a bare `guides()` call needs
@@ -110,7 +133,7 @@
     axis-ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.4cm),
   ))
   let suppressed = theta-guide-of(guides(theta: none))
-  assert.eq(_theta-tick-marks(ticked, "x", suppressed, TRAINED).reach, 0.0)
+  assert.eq(band-of(ticked, "x", suppressed).reach, 0.0)
 }
 
 // Minor ticks are opt-in through the guide and read the `axis-ticks-minor`
@@ -124,16 +147,18 @@
     theta: guide-axis-theta(minor-ticks: true),
   ))
 
-  let off = _theta-tick-marks(ticked, "x", theta-guide-of(guides()), TRAINED)
-  assert.eq(off.minor, none)
+  let off = band-of(ticked, "x", theta-guide-of(guides()))
+  assert.eq(minors-of(off).len(), 0)
   assert(calc.abs(off.reach - 0.4) < 1e-9, message: repr(off.reach))
 
-  let on = _theta-tick-marks(ticked, "x", minors-on, TRAINED)
-  assert(on.minor != none, message: "minor-ticks: true drew no minor stroke")
+  let on = band-of(ticked, "x", minors-on)
   assert(
-    calc.abs(on.minor-len - 0.2) < 1e-9,
-    message: "the minor weight resolved to " + repr(on.minor-len),
+    minors-of(on).len() > 0,
+    message: "minor-ticks: true carried no minor row",
   )
+  // A minor bisects each gap between majors, and a full turn closes the ring,
+  // so a sweep with four gaps between five breaks bisects all four.
+  assert.eq(minors-of(on).len(), 4)
   assert(calc.abs(on.reach - 0.4) < 1e-9, message: repr(on.reach))
 
   // A longer minor than major still fits: the band is the longer of the two.
@@ -141,7 +166,7 @@
     axis-ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.1cm),
     axis-ticks-minor: element-tick(length: 0.5cm),
   ))
-  let both = _theta-tick-marks(long-minor, "x", minors-on, TRAINED)
+  let both = band-of(long-minor, "x", minors-on)
   assert(calc.abs(both.reach - 0.5) < 1e-9, message: repr(both.reach))
 }
 
@@ -204,5 +229,43 @@
 // whether or not the difference reached the page. The angles and radii are
 // covered by the `guide-axis-theta` golden and by the eyeball plot in
 // `tests/visual/coord-radial-theta-ticks.typ`.
+
+// A cap fades the arc out short of the end it names and leaves the other end
+// whole. The trim is a fraction of the span, bounded in radians.
+#{
+  let turn = 2 * calc.pi
+  let trim = calc.min(turn * _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD) / turn
+  assert.eq(_arc-span(none, turn), (lo: 0.0, hi: 1.0))
+  assert.eq(_arc-span((cap: "none"), turn), (lo: 0.0, hi: 1.0))
+  assert.eq(_arc-span((cap: "lower"), turn), (lo: trim, hi: 1.0))
+  assert.eq(_arc-span((cap: "upper"), turn), (lo: 0.0, hi: 1.0 - trim))
+  assert.eq(_arc-span((cap: "both"), turn), (lo: trim, hi: 1.0 - trim))
+  // A sweep of no width has nothing to trim, and dividing by it would fail.
+  assert.eq(_arc-span((cap: "both"), 0), (lo: 0.0, hi: 1.0))
+}
+
+// A capped end keeps its tick label and gives up its tick mark: the cap has
+// just opened a gap in the arc, and a tick would float in it.
+#{
+  let ticked = merge-theme(theme(
+    axis-ticks: element-tick(colour: black, stroke: 0.5pt, length: 0.4cm),
+  ))
+  let capped = theta-guide-of(guides(theta: guide-axis-theta(cap: "both")))
+  let rows = band-of(ticked, "x", capped, text: (size: 9pt, typst: false))
+    .node
+    .entries
+  let unticked = rows.filter(e => e.tier == none)
+  assert(unticked.len() > 0, message: "a capped end still carried a tick")
+  assert(
+    unticked.all(e => e.label != none),
+    message: "a capped end dropped the label it still draws",
+  )
+  // The ends are the only rows that give up their tick; every other break
+  // keeps one.
+  assert(
+    rows.filter(e => e.tier == "major").len() > 0,
+    message: "a capped axis dropped every tick",
+  )
+}
 
 Radial theta tick tests passed.
