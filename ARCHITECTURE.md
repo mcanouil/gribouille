@@ -58,7 +58,8 @@ Design tenets worth knowing before editing:
   Provide a legend symbol via `src/guide/draw-key.typ` / `src/guide/draw-marker.typ`.
 - **A guide.** Write a builder in [`src/render/legend.typ`](src/render/legend.typ) that returns the stack the guide is, over the primitives in `src/guide/primitive/` laid out by `src/guide/compose.typ`, and register it under its kind in the `_NODE-BUILDERS` table beside the others.
   The builder is the one place that measures text and reads the theme; a primitive takes the stamped numbers and the closures on the guide context ([`src/guide/gctx.typ`](src/guide/gctx.typ)) instead.
-  Nothing else branches on a guide kind: the width, the height, the reserved slot and the draw all read the record `compose.typ` laid out.
+  The width, the height, the reserved slot and the draw all read the record `compose.typ` laid out, so none of them branches on a kind: a guide that paints a colour bar is reserved for by carrying that part, not by being named one.
+  Merging is the one decision left that reads the kind, in `can-merge-cross-panel`, because whether two guides describe the same scale depends on what a kind compares.
   An axis is the same shape, built by [`src/render/axis-parts.typ`](src/render/axis-parts.typ) for a cartesian side and by [`src/render/panel-radial.typ`](src/render/panel-radial.typ) for the angular and radial ones.
 - **A stat.** Add `src/stat/<name>.typ` and register it in [`src/stat/apply.typ`](src/stat/apply.typ).
 - **A position.** Add `src/position/<name>.typ` and register it in [`src/position/apply.typ`](src/position/apply.typ).

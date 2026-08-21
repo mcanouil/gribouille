@@ -214,6 +214,21 @@
   )
 }
 
+// Whether a guide is built from a part of this name, at any depth.
+//
+// A stage outside the guide layer asks this when the ink a part puts down costs
+// room of its own: the chrome stage reserves the `legend-bar` outset for a
+// guide that paints a bar. Asking the tree is what keeps that reservation on
+// the same footing as the rest, which all reads the record rather than the kind
+// of guide it came from.
+#let has-part(node, name) = {
+  if type(node) != dictionary { return false }
+  if node.at("kind", default: none) != COMPOSITION {
+    return node.at("name", default: none) == name
+  }
+  node.children.any(child => has-part(child, name))
+}
+
 // The room one named part of a laid-out guide takes.
 //
 // A guide that reserves its band whole reads `across` and never needs this. A

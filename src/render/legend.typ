@@ -26,7 +26,8 @@
 #import "../utils/label-geometry.typ": _rotated-extent
 #import "../guide/gctx.typ": gctx
 #import "../guide/compose.typ": (
-  compose-stack, draw as compose-draw, layout-of as compose-layout-of,
+  compose-stack, draw as compose-draw, has-part,
+  layout-of as compose-layout-of,
 )
 #import "../guide/grid.typ": (
   COL-GAP-MIN, column-widths, flat-rows, grid-shape, key-metrics, row-overflows,
@@ -1045,7 +1046,8 @@
 )
 
 // Which builder makes the stack each guide kind is. Adding a guide is a builder
-// and a row here; nothing else in the renderer branches on a kind.
+// and a row here; everything that sizes, places or draws one reads the record
+// that stack laid out instead of the kind it came from.
 //
 // A custom block carries no entry labels, so it takes no entry text style,
 // which is the one signature the table has to bridge.
@@ -1099,11 +1101,16 @@
   // stack. Everything downstream reads the record that stack laid out, so a new
   // kind is a builder and an entry here rather than an arm at every site that
   // sizes, places or draws a guide.
-  let build = _NODE-BUILDERS.at(out.kind, default: none)
-  if build == none {
+  if type(out.kind) != str or out.kind not in _NODE-BUILDERS {
     fail("legend._stamp-sizes", "unknown guide kind " + repr(out.kind))
   }
-  let node = build(out, text-style, title-style, title.width, out.title-h)
+  let node = (_NODE-BUILDERS.at(out.kind))(
+    out,
+    text-style,
+    title-style,
+    title.width,
+    out.title-h,
+  )
   out.insert("stack", _stack-layout(node))
   // The width is the wider of the title and whatever the guide puts under it,
   // and the height is the whole box; both come off that one layout, so the room
@@ -1112,6 +1119,12 @@
   out.insert("height", out.stack.layout.across)
   out
 }
+
+// Whether a guide paints a colour bar, read off the stack it was laid out as.
+// The chrome stage reserves the `legend-bar` outset for one, and asks this
+// rather than testing the kind, so a new guide that paints a bar is reserved
+// for by building one.
+#let paints-bar(g) = has-part(g.stack.node, "bar")
 
 #let guides-for(
   spec,
