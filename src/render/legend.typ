@@ -10,7 +10,6 @@
 #import "../deps.typ": cetz
 #import "../utils/extended.typ": extended
 #import "../utils/format.typ": format-break
-#import "../utils/measure.typ": measure-text-cm
 #import "../utils/colour.typ": (
   bin-edges, edge-midpoints, resolve-continuous-colour,
 )
@@ -27,7 +26,8 @@
 #import "../utils/label-geometry.typ": _rotated-extent
 #import "../guide/gctx.typ": gctx
 #import "../guide/compose.typ": (
-  compose-stack, draw as compose-draw, layout-of as compose-layout-of,
+  compose-stack, draw as compose-draw, has-part,
+  layout-of as compose-layout-of,
 )
 #import "../guide/grid.typ": (
   COL-GAP-MIN, column-widths, flat-rows, grid-shape, key-metrics, row-overflows,
@@ -723,18 +723,6 @@
 // The guide kinds built from primitives, which carry a laid-out stack and read
 // their box off it. Every kind is one now, so a guide that is not on this list
 // is a typo rather than a guide the renderer still sizes itself.
-#let _STACKED-KINDS = ("swatch", "size-ladder", "colourbar", "custom")
-
-// Per-guide width. Stored on each guide so `estimate-extents` is O(1), and read
-// off the stack the guide was laid out as, which is the wider of its title and
-// whatever it puts under it.
-#let _guide-width(g) = {
-  if not _STACKED-KINDS.contains(g.kind) {
-    fail("legend._guide-width", "unknown guide kind " + repr(g.kind))
-  }
-  g.stack.layout.along
-}
-
 // Vertical size-ladder row metrics, shared by the height estimate and the draw
 // so the reserved space matches the drawn glyphs. When the resolved key glyph
 // stays within the fixed swatch diameter the values reproduce the original
@@ -1057,6 +1045,24 @@
   spacing: 0.0,
 )
 
+// Which builder makes the stack each guide kind is. Adding a guide is a builder
+// and a row here; everything that sizes, places or draws one reads the record
+// that stack laid out instead of the kind it came from.
+//
+// A custom block carries no entry labels, so it takes no entry text style,
+// which is the one signature the table has to bridge.
+#let _NODE-BUILDERS = (
+  swatch: _swatch-node,
+  "size-ladder": _ladder-node,
+  colourbar: _colourbar-node,
+  custom: (g, style, title-style, title-w, title-h) => _custom-node(
+    g,
+    title-style,
+    title-w,
+    title-h,
+  ),
+)
+
 // A legend box is laid out in a box of its own, not against a panel edge, so
 // its context carries only the orientation the stack needs.
 // The side is nominal: a legend box stacks downward whichever side it lands on,
@@ -1076,16 +1082,6 @@
   layout: compose-layout-of(node, _LEGEND-GCTX),
 )
 
-// Total height (cm) of a guide box, read off the `legend-title` band
-// `guides-for` stamped on the guide, so the space reserved by the sizing pass
-// is the same space the draw consumes.
-#let _guide-render-height(g) = {
-  if not _STACKED-KINDS.contains(g.kind) {
-    fail("legend._guide-render-height", "unknown guide kind " + repr(g.kind))
-  }
-  g.stack.layout.across
-}
-
 // Stamp the cm a guide occupies on the surfaces `theme` paints it with: its
 // width, the `legend-title` band above its first key, and the height of the
 // whole box. Every consumer reads these back rather than measuring again, so a
@@ -1101,24 +1097,34 @@
   let title = _title-box(g, title-style)
   let out = g
   out.insert("title-h", _legend-title-h(title-style, title.height))
-  // Every guide is a stack of primitives, laid out once here, and its width,
-  // its height and its draw all read that one record.
-  let node = if out.kind == "swatch" {
-    _swatch-node(out, text-style, title-style, title.width, out.title-h)
-  } else if out.kind == "size-ladder" {
-    _ladder-node(out, text-style, title-style, title.width, out.title-h)
-  } else if out.kind == "colourbar" {
-    _colourbar-node(out, text-style, title-style, title.width, out.title-h)
-  } else if out.kind == "custom" {
-    _custom-node(out, title-style, title.width, out.title-h)
-  } else {
+  // The one place a guide kind decides anything: which builder makes its
+  // stack. Everything downstream reads the record that stack laid out, so a new
+  // kind is a builder and an entry here rather than an arm at every site that
+  // sizes, places or draws a guide.
+  if type(out.kind) != str or out.kind not in _NODE-BUILDERS {
     fail("legend._stamp-sizes", "unknown guide kind " + repr(out.kind))
   }
+  let node = (_NODE-BUILDERS.at(out.kind))(
+    out,
+    text-style,
+    title-style,
+    title.width,
+    out.title-h,
+  )
   out.insert("stack", _stack-layout(node))
-  out.insert("width", _guide-width(out))
-  out.insert("height", _guide-render-height(out))
+  // The width is the wider of the title and whatever the guide puts under it,
+  // and the height is the whole box; both come off that one layout, so the room
+  // the sizing pass reserves is the room the draw consumes.
+  out.insert("width", out.stack.layout.along)
+  out.insert("height", out.stack.layout.across)
   out
 }
+
+// Whether a guide paints a colour bar, read off the stack it was laid out as.
+// The chrome stage reserves the `legend-bar` outset for one, and asks this
+// rather than testing the kind, so a new guide that paints a bar is reserved
+// for by building one.
+#let paints-bar(g) = has-part(g.stack.node, "bar")
 
 #let guides-for(
   spec,
@@ -1503,20 +1509,14 @@
   )
 }
 
-// A guide built from primitives is drawn by its own stack, from the record
-// `_stamp-sizes` measured, in the box context every legend box shares.
-#let _draw-stacked(guide, ctx, ox, cursor, theme) = compose-draw(
+// Every guide is drawn by its own stack, from the record `_stamp-sizes`
+// measured, in the box context every legend box shares. Nothing here reads the
+// kind: the stack already says what the guide is.
+#let _draw-guide-body(guide, ctx, ox, cursor, theme) = compose-draw(
   guide.stack.node,
   _legend-box-gctx(guide, ctx, ox, cursor, theme),
   guide.stack.layout,
 )
-
-#let _draw-guide-body(g, ctx, ox, cursor, theme) = {
-  if not _STACKED-KINDS.contains(g.kind) {
-    fail("legend.draw", "unknown guide kind " + repr(g.kind))
-  }
-  _draw-stacked(g, ctx, ox, cursor, theme)
-}
 
 // Vertical gap between stacked guides on a side: the panel-to-legend gap plus
 // the legend-background outset on the panel-facing edge.

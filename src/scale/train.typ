@@ -106,20 +106,6 @@
   _factor-sentinel-type(data, col-name)
 }
 
-#let _column-for-aesthetic(layer, aesthetic, plot-mapping, plot-data) = {
-  let mapping = _merged-mapping(layer, plot-mapping)
-  let data = _layer-data(layer, plot-data)
-  if mapping == none { return none }
-  let raw = mapping.at(aesthetic, default: none)
-  if raw == none { return none }
-  let col-name = mapping-ref-col(raw)
-  (
-    name: col-name,
-    values: column(data, col-name),
-    forced-type: _resolve-forced-type(raw, data, col-name),
-  )
-}
-
 // Positional aesthetics drive panel layout and are retrained per panel under
 // `facet-wrap` free scales. The order here matters: `train()` folds the
 // synthetic feeders (xmin/xmax/ymin/ymax/xend/yend, xintercept/yintercept)

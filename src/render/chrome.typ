@@ -11,7 +11,7 @@
 #import "axis-format.typ": _axis-tick-values, _axis-title, _sec-spec
 #import "axis-parts.typ": axis-band-cm, axis-entries
 #import "guides.typ": _axis-text-angle, _read-axis-guide
-#import "legend.typ": side-block-cm
+#import "legend.typ": paints-bar, side-block-cm
 #import "facet.typ": _facet-gutter, _fit-gutter
 #import "domain.typ": _fixed-inner-size, _is-flipped
 #import "../utils/errors.typ": cm-text, fail
@@ -283,7 +283,7 @@
   // grows; perpendicular sides inflate the matching `margin.{perpendicular}`.
   // `panel-background` and `legend-bar` ignore `inset`, so they reserve
   // their `outset` alone.
-  let any-bar = guides.any(g => g.kind == "colourbar")
+  let any-bar = guides.any(paints-bar)
   let panel-out = _rect-outset-cm(
     theme,
     "panel-background",

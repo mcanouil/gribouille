@@ -17,7 +17,7 @@
 // Re-exported so the chrome stage keeps reading the label geometry from here
 // while the guide primitives read it straight from `utils/`.
 #import "../utils/label-geometry.typ": (
-  _ANCHOR-OFFSET, _label-reach, _rotated-extent, _x-label-anchor,
+  _label-reach, _rotated-extent, _x-label-anchor,
 )
 #import "../scale/secondary.typ" as secondary-mod
 #import "axis-format.typ": (

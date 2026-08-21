@@ -119,18 +119,18 @@
   0,
 )
 
-// The block is a stack of primitives now, so the room it reserves is what the
-// stack measured. `_guide-width` still carries its own formula for the width,
-// so the two are pinned against each other here: the stack's length is the
-// wider of the title and the block, and its depth is the title band, the block,
-// and the trailing slack.
+// The block is a stack of primitives, so the room it reserves is what the stack
+// measured: its length is the wider of the title and the block it was given,
+// and its depth is the title band, the block, and the trailing slack.
 #context {
   let found = guides-for(
     _spec(note: guide-custom([x], width: 3cm, height: 2cm, title: "Notes")),
     (:),
   )
   let custom = found.first()
-  assert.eq(custom.stack.layout.along, calc.max(custom.width, 3.0))
+  // The block asked for 3cm and the title "Notes" is narrower, so the block is
+  // what sets the width here.
+  assert.eq(custom.width, 3.0)
   assert.eq(
     calc.round(custom.height, digits: 9),
     calc.round(custom.title-h + 2.0 + 0.2, digits: 9),

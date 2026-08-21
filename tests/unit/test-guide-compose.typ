@@ -4,7 +4,7 @@
 #import "../../src/guide/gctx.typ": gctx, place-cartesian
 #import "../../src/guide/entry.typ": entries-manual, train-entries
 #import "../../src/guide/compose.typ": (
-  COMPOSITION, compose-stack, draw, layout-of, train,
+  COMPOSITION, compose-stack, draw, has-part, layout-of, part-across, train,
 )
 #import "../../src/guide/primitive/labels.typ": prim-labels
 #import "../../src/guide/primitive/line.typ": prim-line
@@ -209,5 +209,31 @@
   ),
   "guide-compose: the layout has 2 cells for 3 children. Pass the record `layout-of` returned for this same node.",
 )
+
+// A stage outside the guide layer asks what a guide is built from rather than
+// what kind it was called: the chrome stage reserves the colour-bar outset for
+// any guide carrying a bar. The question reaches through nested compositions,
+// because a part may sit at any depth.
+#let nested = compose-stack(
+  prim-line(),
+  compose-stack(prim-ticks(), prim-spacer(0.2)),
+)
+#assert.eq(has-part(nested, "line"), true)
+#assert.eq(has-part(nested, "ticks"), true)
+#assert.eq(has-part(nested, "spacer"), true)
+#assert.eq(has-part(nested, "bar"), false)
+#assert.eq(has-part(prim-ticks(), "ticks"), true)
+// Anything that is not a node carries no parts, rather than failing.
+#assert.eq(has-part(none, "ticks"), false)
+
+// The room one named part takes, which the radial reservation reads to give up
+// radius for the tick band alone. A part the stack does not carry takes none.
+#let ticked = compose-stack(prim-ticks(), entries: rows)
+#let ticked-layout = layout-of(train(ticked), ctx-bottom)
+#assert.eq(
+  part-across(ticked-layout, "ticks"),
+  ticked-layout.across,
+)
+#assert.eq(part-across(ticked-layout, "bar"), 0.0)
 
 Guide-compose tests passed.

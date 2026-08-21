@@ -4,8 +4,7 @@
 
 #import "../deps.typ": cetz
 #import "../scale/train.typ": mapping-display-name, positional-aesthetics, train
-#import "../theme/theme.typ": _text-args, _tick-length, resolve-theme-palette
-#import "../utils/typst-markup.typ": resolve-prose
+#import "../theme/theme.typ": _tick-length, resolve-theme-palette
 #import "legend.typ" as legend-mod
 #import "common.typ": _tick-cm-sides
 #import "axis-format.typ": _axis-title, _sec-spec, _shared-axis-breaks
