@@ -242,6 +242,27 @@
   assert.eq(out.counts.at("fill"), 1)
 }
 
+// an identity scale censors nothing, whatever `limits` it carries, so the
+// pre-pass never walks a layer for it.
+#{
+  let trained = (
+    fill: (
+      type: "identity",
+      domain: (0, 10),
+      spec: (
+        aesthetic: "fill",
+        type: "identity",
+        limits: (2, 5),
+        oob: "drop",
+      ),
+    ),
+  )
+  let rows = ((v: 1), (v: 8))
+  let out = filter-oob((_layer(rows),), trained)
+  assert.eq(out.layers.at(0).data, rows)
+  assert.eq(out.counts, (:))
+}
+
 // a layer that does not map the limited aesthetic passes through untouched.
 // The pre-pass binds each aesthetic to its column once per layer, so a layer
 // with nothing to bind is never walked.

@@ -63,6 +63,8 @@
     .map(r => parse-number(r.at(x-col, default: none)))
     .filter(v => v != none)
   if xs.len() == 0 { return (data: (), mapping: new-mapping) }
+  // `xs` is needed by the assignment loop below whatever the grid answers, so
+  // the thunk defers nothing here; it is the resolver's signature.
   let grid = resolve-bin-grid(params, () => xs)
   let counts = range(grid.n-bins).map(_ => 0)
   let assignments = ()

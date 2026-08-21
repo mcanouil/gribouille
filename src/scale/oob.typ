@@ -99,7 +99,10 @@
     )
   }
 
-  (limits: limits, check: raw => ("in", raw))
+  // Any other scale type, `identity` among them, censors nothing. Answering
+  // `none` keeps the aesthetic out of the walk entirely, rather than calling a
+  // closure that can only ever answer "in" on every row.
+  none
 }
 
 // Filter rows of every layer through the trained dict. Returns the rewritten
