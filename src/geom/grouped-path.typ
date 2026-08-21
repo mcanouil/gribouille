@@ -62,12 +62,12 @@
   // resolve-channel("linewidth", ...) folds the auto/theme/per-geom-default
   // cascade for stroke thickness.
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
-  // One head per group, at the ends of the whole path rather than each join.
-  let arrow-spec = layer.params.at("arrow", default: none)
-  // Both are the layer's, not the group's: resolving either per group would
-  // scan every row of the layer again, and passing the layer itself into a
-  // per-group call carries those rows with it.
+  // All three are the layer's, not the group's: resolving the slot per group
+  // would scan every row of the layer again, and passing the layer itself into
+  // a per-group call carries those rows with it.
   let params = layer.params
+  // One head per group, at the ends of the whole path rather than each join.
+  let arrow-spec = params.at("arrow", default: none)
   let dodge = dodge-geometry(ctx, layer)
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
@@ -78,7 +78,7 @@
     let leader = rows.first()
     let final-colour = resolve-channel(
       "colour",
-      layer.params,
+      params,
       mapping,
       ctx,
       leader,
@@ -86,7 +86,7 @@
     )
     let dash = resolve-channel(
       "linetype",
-      layer.params,
+      params,
       mapping,
       ctx,
       leader,
@@ -94,7 +94,7 @@
     )
     let thickness = resolve-channel(
       "linewidth",
-      layer.params,
+      params,
       mapping,
       ctx,
       leader,

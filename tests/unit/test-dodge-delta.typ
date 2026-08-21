@@ -49,9 +49,37 @@
 // Radial coordinates: dodge does not apply on the angular axis.
 #assert.eq(dodge-geometry(ctx + (radial: true), layer-dodge), none)
 
-// Continuous category axis is out of scope for this helper.
+// A continuous category axis has no slot width of its own, so the geometry
+// infers one from the data: the narrowest canvas gap between two distinct x
+// values, scaled by the dodge width. This is the branch that costs a pass over
+// every row, which is why it is resolved once per draw rather than per group.
+#let cont-x = (type: "continuous", domain: (0, 10))
+#let cont-ctx(rows) = (
+  trained: (x: cont-x, y: y-cont),
+  px-range: (0, 10),
+  py-range: (0, 6),
+  resolve-data: _ => rows,
+  resolve-mapping: _ => (x: "x"),
+)
+
+// Values 0, 2 and 6 map to 0, 2 and 6 on a 10cm axis, so the narrowest gap is
+// 2cm and the span is that gap times the 0.9 default width.
+#assert-close(
+  dodge-geometry(cont-ctx(((x: 0), (x: 2), (x: 6))), layer-dodge).span,
+  2 * 0.9,
+)
+
+// One distinct value leaves no gap to measure, so the axis falls back to a
+// tenth of its own length.
+#assert-close(
+  dodge-geometry(cont-ctx(((x: 3), (x: 3))), layer-dodge).span,
+  10 / 10 * 0.9,
+)
+
+// Without the closures that reach the data there is no way to infer a slot, so
+// the layer does not dodge rather than dodging by a guess.
 #let ctx-cont = (
-  trained: (x: (type: "continuous", domain: (0, 10)), y: y-cont),
+  trained: (x: cont-x, y: y-cont),
   px-range: (0, 10),
   py-range: (0, 6),
 )

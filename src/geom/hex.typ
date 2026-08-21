@@ -94,9 +94,7 @@
     alpha: alpha,
   )
     + split-aes-params("geom-hex", args),
-  stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else {
-    stat
-  },
+  stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

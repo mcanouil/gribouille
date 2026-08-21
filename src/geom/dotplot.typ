@@ -102,9 +102,7 @@
     dotsize: dotsize,
   )
     + split-aes-params("geom-dotplot", args),
-  stat: if stat == auto {
-    stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
-  } else { stat },
+  stat: if stat == auto { stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio) } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
