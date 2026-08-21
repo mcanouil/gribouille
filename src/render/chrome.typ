@@ -4,10 +4,10 @@
 // `render-plot-deferred` so the orchestrator reads as a pipeline.
 
 #import "../scale/train.typ": mapping-display-name
-#import "../theme/theme.typ": _rect-outset-cm, _text-style, _tick-length
+#import "../theme/theme.typ": _rect-outset-cm
 #import "../utils/margin.typ": opposite-side, perpendicular-sides
 #import "../utils/radial.typ": is-radial
-#import "common.typ": _per-side
+#import "common.typ": _text-sides, _tick-cm-sides
 #import "axis-format.typ": _axis-tick-values, _axis-title, _sec-spec
 #import "axis-parts.typ": axis-band-cm, axis-entries
 #import "guides.typ": _axis-text-angle, _read-axis-guide
@@ -76,11 +76,9 @@
   let _radial = is-radial(coord)
   let x-sec = _sec-spec(x-trained-top, coord: coord)
   let y-sec = _sec-spec(y-trained-top, coord: coord)
-  let _surface-style = (p, s, _) => _text-style(theme, p + "-" + s)
-  let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
-  let tick-len = _per-side(_len-side, "axis-ticks")
-  let ax-text = _per-side(_surface-style, "axis-text")
-  let ax-title = _per-side(_surface-style, "axis-title")
+  let tick-len = _tick-cm-sides(theme)
+  let ax-text = _text-sides(theme, "axis-text")
+  let ax-title = _text-sides(theme, "axis-title")
 
   let x-extents = _axis-label-extents(
     x-trained-top,

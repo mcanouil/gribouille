@@ -7,8 +7,8 @@
 #import "../scale/train.typ": map-axis-data, map-break, mapping-display-name
 #import "../theme/defaults.typ": resolve-colour
 #import "../theme/theme.typ": (
-  _line-stroke, _rect-style, _text-args, _text-style, _tick-length,
-  resolve-theme-palette, surface-set-below,
+  _line-stroke, _rect-style, _text-args, resolve-theme-palette,
+  surface-set-below,
 )
 #import "../utils/radial.typ": radial-ctx, theta-axis-of
 #import "../utils/typst-markup.typ": resolve-prose
@@ -18,7 +18,8 @@
 #import "../scale/secondary.typ" as secondary-mod
 #import "legend.typ" as legend-mod
 #import "common.typ": (
-  _per-side, _resolve-data, _resolve-mapping, _should-draw-tick,
+  _per-side, _resolve-data, _resolve-mapping, _should-draw-tick, _text-sides,
+  _tick-cm-sides,
 )
 #import "colour.typ": _make-resolve-colour
 #import "panel-radial.typ": (
@@ -184,9 +185,8 @@
   let py-range = (py-lo + y-pad-lo, py-hi - y-pad-hi)
 
   let _ink = resolve-colour(theme, "ink")
-  let _surface-style = (p, s, _) => _text-style(theme, p + "-" + s)
-  let _ax-text = _per-side(_surface-style, "axis-text")
-  let _ax-title = _per-side(_surface-style, "axis-title")
+  let _ax-text = _text-sides(theme, "axis-text")
+  let _ax-title = _text-sides(theme, "axis-title")
 
   let _resolve-mapping-flipped(layer) = {
     let m = _resolve-mapping(layer, spec.mapping)
@@ -329,8 +329,7 @@
   )
   let _ax-line = _per-side(_stroke-side, "axis-line")
   let _ax-ticks = _per-side(_stroke-side, "axis-ticks")
-  let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
-  let _tick-len = _per-side(_len-side, "axis-ticks")
+  let _tick-len = _tick-cm-sides(theme)
 
   let x-guide = _read-axis-guide(spec, "x", default-angle: _axis-text-angle(
     theme,

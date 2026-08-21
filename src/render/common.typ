@@ -2,6 +2,7 @@
 // small per-axis / accumulator primitives used across the render submodules.
 
 #import "../scale/train.typ": mapping-ref-col
+#import "../theme/theme.typ": _text-style, _tick-length
 #import "../utils/typst-markup.typ": is-typst-markup
 #import "../utils/aes-resolve.typ": merge-mapping
 #import "../data.typ": _normalise-data
@@ -88,6 +89,19 @@
   xt: builder(prefix, "x-top", "x"),
   yl: builder(prefix, "y-left", "y"),
   yr: builder(prefix, "y-right", "y"),
+)
+
+// The two families every stage reads per side: the text surfaces it typesets
+// on and the tick length it measures against. Here rather than at each stage,
+// because the chrome that reserves a side, the canvas that places its title,
+// and the panel that draws it have to resolve it the same way.
+#let _text-sides(theme, prefix) = _per-side(
+  (p, s, _) => _text-style(theme, p + "-" + s),
+  prefix,
+)
+#let _tick-cm-sides(theme) = _per-side(
+  (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm,
+  "axis-ticks",
 )
 
 // Whether a tick draw should emit anything: needs both an active stroke and

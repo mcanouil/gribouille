@@ -7,7 +7,7 @@
 #import "../theme/theme.typ": _text-args, _tick-length, resolve-theme-palette
 #import "../utils/typst-markup.typ": resolve-prose
 #import "legend.typ" as legend-mod
-#import "common.typ": _per-side
+#import "common.typ": _tick-cm-sides
 #import "axis-format.typ": _axis-title, _sec-spec, _shared-axis-breaks
 #import "domain.typ": (
   _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
@@ -141,8 +141,7 @@
   }
   let x-title = _axis-title(x-trained, _map-name("x"))
   let y-title = _axis-title(y-trained, _map-name("y"))
-  let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
-  let _tick-len = _per-side(_len-side, "axis-ticks")
+  let _tick-len = _tick-cm-sides(theme)
   // The band between the panel grid and its title is the one `_chrome-margins`
   // reserved, carried here rather than recomputed: a suppressed axis draws no
   // ticks or labels and a radial panel draws neither band outside its edges, so
