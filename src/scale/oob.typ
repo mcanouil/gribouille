@@ -8,7 +8,7 @@
 
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
-#import "train.typ": _to-stat, mapping-ref-col, view-bounds-stat
+#import "train.typ": mapping-ref-col, transform-fwd, view-bounds-stat
 #import "../utils/errors.typ": fail
 
 // Build the per-row check for one trained scale, or `none` when the scale sets
@@ -20,11 +20,12 @@
 // is shared by reference and costs nothing. This is the same measured cost the
 // per-row `layer` argument carried before it was hoisted out.
 //
-// The distinction is what makes the closure necessary. Hoisting the same
-// values into a plain record does not help: the record still reaches every
-// level, so the row walk keeps paying for them. Measured over twenty thousand
-// rows, a record kept the cost growing with the level count (0.29 s at fifty
-// levels, 1.17 s at two thousand); the closure is flat (0.26 s and 0.31 s).
+// Capture is what buys the saving, not the faster level test. Measured over
+// twenty thousand rows, with both arms already testing the level through a
+// dict lookup rather than a scan: carrying the levels in a plain record kept
+// the cost growing with the level count (0.29 s at fifty levels, 1.17 s at two
+// thousand), while capturing them in a closure is flat (0.26 s and 0.31 s).
+// The record still reaches every level, so the row walk keeps paying for them.
 //
 // The closure returns one of:
 //   ("in",     value)   — unchanged
@@ -48,12 +49,16 @@
     let span-lo = calc.min(t-lo, t-hi)
     let span-hi = calc.max(t-lo, t-hi)
     let (lo, hi) = trained.domain
+    // The two fields `_to-stat` reads, so the row path warps the value without
+    // reaching back into the trained scale.
+    let pre-transformed = trained.at("pre-transformed", default: false)
+    let transform = trained.at("transform", default: "identity")
     return (
       limits: limits,
       check: raw => {
         let v = parse-number(raw)
         if v == none { return ("in", raw) }
-        let sv = _to-stat(trained, v)
+        let sv = if pre-transformed { v } else { transform-fwd(transform, v) }
         if sv >= span-lo and sv <= span-hi { return ("in", raw) }
         if oob == "squish" {
           // Clamp to the nearest `limits` endpoint (the visible data edge), not
@@ -132,16 +137,27 @@
       new-layers.push(layer)
       continue
     }
+    // Which column each limited aesthetic reads is a property of the layer, not
+    // of the row, and `mapping-ref-col` walks the wrapper chain to find it.
+    // Resolve it once per layer so the row walk only reads the cell.
+    let bound = ()
+    for plan in active {
+      let raw = mapping.at(plan.aes, default: none)
+      if raw == none { continue }
+      if is-late-binding(raw) { continue }
+      bound.push((col: mapping-ref-col(raw), ..plan))
+    }
+    if bound.len() == 0 {
+      new-layers.push(layer)
+      continue
+    }
     let kept = ()
     for (row-idx, row) in data.enumerate() {
       let new-row = row
       let drop = false
-      for plan in active {
+      for plan in bound {
         let aes = plan.aes
-        let raw = mapping.at(aes, default: none)
-        if raw == none { continue }
-        if is-late-binding(raw) { continue }
-        let col = mapping-ref-col(raw)
+        let col = plan.col
         let cell = row.at(col, default: none)
         let (action, value) = (plan.check)(cell)
         if action == "in" { continue }
