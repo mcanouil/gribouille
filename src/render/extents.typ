@@ -586,23 +586,6 @@
 // axis flows through the same rendering path.
 #let _axis-guide-rows(g) = if g.stack { g.guides } else { (g,) }
 
-// Stack-aware variants: a `guide-axis-stack` carries multiple sub-guides
-// rendered as separate label rows. Inter-row spacing is added once per gap
-// between successive rows; non-stack guides degenerate to a single row.
-#let _stacked-extent(g, per-row-fn) = {
-  let rows = _axis-guide-rows(g)
-  let spacing = if g.stack { g.spacing } else { 0 }
-  rows.map(per-row-fn).sum() + (rows.len() - 1) * spacing
-}
-#let _x-label-depth-stack(g, w, h) = _stacked-extent(
-  g,
-  s => _x-label-depth(s.angle, s.n-dodge, w, h),
-)
-#let _y-label-width-stack(g, w, h) = _stacked-extent(
-  g,
-  s => _y-label-width(s.angle, s.n-dodge, w, h),
-)
-
 // Depth (cm) of the secondary axis ink alone, tick mark plus gap plus label
 // band, with no title. A facet cell reserves this between the panel edge and
 // the strip band that would otherwise be painted over it; the grid draws the

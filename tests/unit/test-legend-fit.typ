@@ -8,6 +8,7 @@
 // unit test; `tests/unit/test-legend-canvas-fit.typ` records their wording and
 // the plots that raise them.
 
+#import "../../src/render/chrome.typ": _shrink-hint
 #import "../../src/render/legend.typ": side-block-cm, side-stacked-height
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../src/theme/grey.typ": theme-grey
@@ -82,5 +83,34 @@
 // reads as width there rather than height.
 #let along = side-block-cm("bottom", (cg(1.0), cg(2.0)), ctx, th, 0.3)
 #assert.eq(along.content-w, 2.0 + 2.0 + 0.3)
+
+// When a legend does not fit, the hint names what the guide at fault can
+// actually do. A key grid takes rows and columns; a colour bar and a custom
+// block do not, and used to be told to use them anyway.
+#assert.eq(
+  _shrink-hint(((kind: "swatch"),)),
+  "shrink its footprint with `guide-legend(nrow:/ncolumn:)`.",
+)
+#assert.eq(
+  _shrink-hint(((kind: "colourbar"),)),
+  "turn it with `guide-legend(direction:)`.",
+)
+#assert.eq(
+  _shrink-hint(((kind: "custom"),)),
+  "shrink the block with `guide-custom(width:/height:)`.",
+)
+
+// A side stacking several guides offers each way once, since any one of them
+// shrinking may be enough.
+#assert.eq(
+  _shrink-hint(((kind: "swatch"), (kind: "size-ladder"), (kind: "custom"))),
+  "shrink its footprint with `guide-legend(nrow:/ncolumn:)`, or shrink the "
+    + "block with `guide-custom(width:/height:)`.",
+)
+
+// A kind with no advice of its own leaves the sentence whole rather than
+// trailing off.
+#assert.eq(_shrink-hint(((kind: "unknown"),)), "shrink the legend.")
+#assert.eq(_shrink-hint(()), "shrink the legend.")
 
 Legend fit tests passed.

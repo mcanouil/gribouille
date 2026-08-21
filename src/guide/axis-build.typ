@@ -34,6 +34,9 @@
 
 // The parts of an axis, in the order they leave the panel.
 //
+// `line` draws the spine along the panel edge. It reserves nothing either way,
+// so a caller whose panel draws its own edge turns it off.
+//
 // `band-gap` is the gap that holds the band off the panel edge, owed whenever
 // the ticks or the labels reserve anything. `tiers` are the tick weights the
 // axis draws, `stack-gap` separates the label rows of a stacked axis, and the
@@ -42,6 +45,7 @@
 #let axis-node(
   entries: (),
   rows: (),
+  line: true,
   tiers: ("major",),
   band-gap: 0.0,
   stack-gap: 0.0,
@@ -87,8 +91,11 @@
   // is the gate the chrome stage applies through the title's own surface: a
   // blanked `axis-title` would otherwise push the panel in by two gaps around
   // ink that never draws.
-  let titled = title != none and (
-    title-extent.at(0) > 0.0 or title-extent.at(1) > 0.0
+  let titled = (
+    title != none
+      and (
+        title-extent.at(0) > 0.0 or title-extent.at(1) > 0.0
+      )
   )
   let title-parts = if not titled { () } else {
     (
@@ -106,7 +113,9 @@
   // measure and the draw each take a child's own entries rather than the
   // parent's.
   train(compose-stack(
-    prim-line(),
+    // The spine adds no depth, so an axis whose panel already draws its own
+    // leaves it out rather than drawing it twice.
+    ..if line { (prim-line(),) } else { () },
     prim-ticks(tiers: tiers),
     // The gap belongs to the band rather than to a pair of neighbours: an axis
     // that draws ticks and no labels still reserves it, one that draws labels

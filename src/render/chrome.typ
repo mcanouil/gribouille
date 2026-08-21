@@ -4,13 +4,12 @@
 // `render-plot-deferred` so the orchestrator reads as a pipeline.
 
 #import "../scale/train.typ": mapping-display-name
-#import "../theme/theme.typ": (
-  _rect-outset-cm, _text-style, _tick-length, tick-reach,
-)
+#import "../theme/theme.typ": _rect-outset-cm
 #import "../utils/margin.typ": opposite-side, perpendicular-sides
 #import "../utils/radial.typ": is-radial
-#import "common.typ": _per-side
-#import "axis-format.typ": _axis-title, _sec-spec
+#import "common.typ": _text-sides, _tick-cm-sides
+#import "axis-format.typ": _axis-tick-values, _axis-title, _sec-spec
+#import "axis-parts.typ": axis-band-cm, axis-entries
 #import "guides.typ": _axis-text-angle, _read-axis-guide
 #import "legend.typ": side-block-cm
 #import "facet.typ": _facet-gutter, _fit-gutter
@@ -18,12 +17,34 @@
 #import "../utils/errors.typ": cm-text, fail
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _LAYOUT-TOLERANCE, _TICK-LABEL-GAP, _axis-guide-rows,
-  _axis-label-extents, _axis-title-extents, _band-gap-cm, _fit-title-extents,
-  _label-overhang, _label-reach, _merge-extents, _sec-extent,
-  _secondary-label-extents, _text-margin-cm, _title-angle, _title-extent-cm,
-  _title-overrun-cm, _title-pad-cm, _title-span-cm, _x-label-anchor,
-  _x-label-depth-stack, _y-label-width-stack,
+  _axis-label-extents, _axis-title-extents, _fit-title-extents, _label-overhang,
+  _label-reach, _merge-extents, _sec-extent, _secondary-label-extents,
+  _text-margin-cm, _title-angle, _title-extent-cm, _title-overrun-cm,
+  _title-pad-cm, _title-span-cm, _x-label-anchor,
 )
+
+// What actually makes a guide of each kind smaller. A key grid takes rows and
+// columns; a colour bar is one bar and ignores them, and a custom block is the
+// content it was handed, so each is told what it can do rather than what a
+// swatch can.
+#let _SHRINK-ADVICE = (
+  swatch: "shrink its footprint with `guide-legend(nrow:/ncolumn:)`",
+  "size-ladder": "shrink its footprint with `guide-legend(nrow:/ncolumn:)`",
+  colourbar: "turn it with `guide-legend(direction:)`",
+  custom: "shrink the block with `guide-custom(width:/height:)`",
+)
+
+// The advice for the guides one side carries. A side with several kinds on it
+// gets each of them once, because any one of them shrinking may be enough.
+#let _shrink-hint(side-guides) = {
+  let advice = ()
+  for g in side-guides {
+    let one = _SHRINK-ADVICE.at(g.at("kind", default: ""), default: none)
+    if one != none and not advice.contains(one) { advice.push(one) }
+  }
+  if advice.len() == 0 { return "shrink the legend." }
+  advice.join(", or ") + "."
+}
 
 // Passes allowed when settling axis-title wrapping against the panel size.
 // Real plots settle in two or three; the cap only bounds a degenerate one.
@@ -55,11 +76,9 @@
   let _radial = is-radial(coord)
   let x-sec = _sec-spec(x-trained-top, coord: coord)
   let y-sec = _sec-spec(y-trained-top, coord: coord)
-  let _surface-style = (p, s, _) => _text-style(theme, p + "-" + s)
-  let _len-side = (p, s, _) => _tick-length(theme, p + "-" + s) / 1cm
-  let tick-len = _per-side(_len-side, "axis-ticks")
-  let ax-text = _per-side(_surface-style, "axis-text")
-  let ax-title = _per-side(_surface-style, "axis-title")
+  let tick-len = _tick-cm-sides(theme)
+  let ax-text = _text-sides(theme, "axis-text")
+  let ax-title = _text-sides(theme, "axis-title")
 
   let x-extents = _axis-label-extents(
     x-trained-top,
@@ -144,12 +163,33 @@
   // axis draw does under radial.
   let x-drawn = not _radial and ax-text.xb.size > 0pt and not x-guide.suppress
   let y-drawn = not _radial and ax-text.yl.size > 0pt and not y-guide.suppress
-  let x-label-depth = if x-drawn {
-    _x-label-depth-stack(x-guide, x-extents.width, x-extents.height)
-  } else { 0.0 }
-  let y-label-width = if y-drawn {
-    _y-label-width-stack(y-guide, y-extents.width, y-extents.height)
-  } else { 0.0 }
+  // The table the band is measured over: the breaks the panels tick, stamped
+  // with the widest label measured above. The labels themselves stay out of it,
+  // because a reservation asks how deep the band is rather than what it reads,
+  // and the depth comes from the stamped extents.
+  let _band-entries = (axis, trained, guide, drawn, ext) => {
+    if _radial or trained == none { return () }
+    axis-entries(
+      trained,
+      guide,
+      _axis-tick-values(trained),
+      extent: if drawn { (ext.width, ext.height) } else { (0.0, 0.0) },
+    )
+  }
+  let x-band-entries = _band-entries(
+    "x",
+    x-trained-top,
+    x-guide,
+    x-drawn,
+    x-extents,
+  )
+  let y-band-entries = _band-entries(
+    "y",
+    y-trained-top,
+    y-guide,
+    y-drawn,
+    y-extents,
+  )
   // A tick label is centred on its break, so the break nearest a panel edge
   // reaches past it, and nothing used to reserve that reach: the label band is
   // perpendicular to its own axis. The per-break records sit behind the same
@@ -209,31 +249,25 @@
   let left-gap = if y-title != none and ax-title.yl.size > 0pt {
     _text-margin-cm(ax-title.yl, "right", _AX-TITLE-LABEL-GAP)
   } else { 0.0 }
-  // A suppressed axis (`guides(x: none)`) draws no ticks or labels, so it
-  // reserves no tick depth either; the axis line and title still render. A
-  // radial panel draws no cartesian tick marks at all, so it reserves none.
-  // The primary edges carry the sub-decade tiers as well as the major ticks, so
-  // they reserve the longest of them. The secondary edges draw majors only.
-  let x-tick-cm = if _radial or x-guide.suppress { 0.0 } else {
-    tick-reach(theme, "x-bottom", "x") / 1cm
-  }
-  let y-tick-cm = if _radial or y-guide.suppress { 0.0 } else {
-    tick-reach(theme, "y-left", "y") / 1cm
-  }
   // The whole band between the panel edge and its axis title: the ticks and
   // their labels, plus the gap that holds them off the edge. It is what the two
   // extents below reserve and what the draw sites offset the title by, and it
-  // travels as one figure because no reader of it wants a part: a builder that
-  // re-derived the rule would have to remember the radial case twice. Radial is
-  // that case. It reserves no band, because its theta labels ring the inside of
-  // the panel edge rather than sitting outside it, but that ink is up against
-  // the edge and owes it the gap all the same.
-  let _edge-gap = band => if _radial { _TICK-LABEL-GAP } else {
-    _band-gap-cm(band)
+  // travels as one figure because no reader of it wants a part.
+  //
+  // The band is the stack the panel draws, measured here rather than summed
+  // again: a suppressed axis brings no entries and reserves nothing, a blanked
+  // `axis-text` stamps no extents and reserves the ticks alone, and the gap is
+  // owed whenever either of them takes room.
+  //
+  // Radial is the case that band cannot answer. It reserves none, because its
+  // theta labels ring the inside of the panel edge rather than sitting outside
+  // it, but that ink is up against the edge and owes it the gap all the same.
+  let x-edge-band = if _radial { _TICK-LABEL-GAP } else {
+    axis-band-cm(theme, "x", x-guide, x-band-entries)
   }
-  let _edge-band = band => band + _edge-gap(band)
-  let x-edge-band = _edge-band(x-tick-cm + x-label-depth)
-  let y-edge-band = _edge-band(y-tick-cm + y-label-width)
+  let y-edge-band = if _radial { _TICK-LABEL-GAP } else {
+    axis-band-cm(theme, "y", y-guide, y-band-entries)
+  }
   let _side-gap = side => (
     extents.at(side) + (if extents.at(side) > 0 { legend-gap } else { 0.0 })
   )
@@ -261,6 +295,11 @@
   // read twice, by the reservation below and by the centring check at the end,
   // so the room kept for a legend and the room it is reported to need are the
   // same figure rather than two that have to agree.
+  // Both fit checks below blame a side, so both name what the guides on that
+  // side can do about it.
+  let _shrink-advice = side => _shrink-hint(
+    guides.filter(g => g.placement.side == side),
+  )
   let _no-edge = (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0)
   let legend-blocks = (:)
   let legend-edges = (:)
@@ -778,15 +817,13 @@
       dim: "width",
       sides: ("left", "right"),
       extent: width-units,
-      hint: "Increase `width`, move the legend to `top`/`bottom`, or shrink "
-        + "its footprint with `guide-legend(nrow:/ncolumn:)`.",
+      lead: "Increase `width`, move the legend to `top`/`bottom`, or ",
     ),
     (
       dim: "height",
       sides: ("bottom", "top"),
       extent: height-units,
-      hint: "Increase `height`, move the legend to `left`/`right`, or shrink "
-        + "its footprint with `guide-legend(nrow:/ncolumn:)`.",
+      lead: "Increase `height`, move the legend to `left`/`right`, or ",
     ),
   ) {
     let base-total = axis.sides.map(s => fit.base.at(s)).sum()
@@ -825,7 +862,7 @@
             room - legend-slot.at(opposite-side.at(side)),
           ))
           + " cm",
-        hint: axis.hint,
+        hint: axis.lead + _shrink-advice(side),
       )
     }
   }
@@ -865,17 +902,12 @@
           + " centred on the panel and overruns the plot by "
           + cm-text(over)
           + " cm",
-        hint: if vertical {
-          (
-            "Increase `height`, move the legend to `top`/`bottom`, or give it "
-              + "fewer rows with `guide-legend(nrow:/ncolumn:)`."
-          )
-        } else {
-          (
-            "Increase `width`, move the legend to `left`/`right`, or give it "
-              + "fewer columns with `guide-legend(nrow:/ncolumn:)`."
-          )
-        },
+        hint: (
+          if vertical {
+            "Increase `height`, move the legend to `top`/`bottom`, or "
+          } else { "Increase `width`, move the legend to `left`/`right`, or " }
+        )
+          + _shrink-advice(side),
       )
     }
   }
