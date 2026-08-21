@@ -107,11 +107,11 @@
 // the line paint; pointrange keeps the paint opaque so its marker fill
 // inherits the plain colour.
 //
-// `dodge` is the record `dodge-geometry` answered for the layer, resolved once
-// by the caller: it is the same for every row, and resolving it here would put
-// the layer, and the rows hanging off it, in a per-row call.
+// `params` and `dodge` both arrive resolved, and for the same reason: this runs
+// once a row, so it takes the layer's parameters and its dodge slot rather than
+// the layer, which reaches every row of the plot.
 #let range-line-row(
-  layer,
+  params,
   mapping,
   ctx,
   row,
@@ -135,7 +135,7 @@
 
   let colour = resolve-channel(
     "colour",
-    layer.params,
+    params,
     mapping,
     ctx,
     row,
@@ -144,7 +144,7 @@
   let paint = if line-alpha {
     apply-alpha(colour, resolve-channel(
       "alpha",
-      layer.params,
+      params,
       mapping,
       ctx,
       row,
@@ -154,7 +154,7 @@
 
   let thickness = resolve-channel(
     "linewidth",
-    layer.params,
+    params,
     mapping,
     ctx,
     row,
@@ -167,7 +167,7 @@
       stroke: (
         paint: paint,
         thickness: thickness,
-        dash: resolve-linetype(layer.params, mapping, ctx, row),
+        dash: resolve-linetype(params, mapping, ctx, row),
       ),
     ),
     dd: dd,
@@ -192,7 +192,7 @@
 
   for row in data {
     let res = range-line-row(
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

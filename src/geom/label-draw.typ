@@ -228,9 +228,9 @@
     placements: placements,
     aabbs: aabbs,
     seg-cfg: seg-cfg,
-    layer: layer,
-    // Carried rather than resolved per row: `row-centre` runs once a row and
-    // the dodge slot is the same for all of them.
+    // The record carries the dodge slot rather than the layer it came off:
+    // `row-centre` takes this record once a row, and a layer reaches every row
+    // of the plot through it.
     dodge: dodge-geometry(ctx, layer),
   )
 }

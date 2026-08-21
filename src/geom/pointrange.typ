@@ -139,7 +139,7 @@
     let p-mid = project-point(ctx, xv, mid)
     if p-mid == none { continue }
     let res = range-line-row(
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
