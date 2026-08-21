@@ -94,7 +94,9 @@
     linewidth: linewidth,
   )
     + split-aes-params("geom-quantile", args),
-  stat: if stat == auto { stat-quantile(quantiles: quantiles, n-samples: n-samples) } else { stat },
+  stat: if stat == auto {
+    stat-quantile(quantiles: quantiles, n-samples: n-samples)
+  } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

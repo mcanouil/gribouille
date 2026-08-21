@@ -229,17 +229,17 @@
     )
     if projected == none { continue }
     let (cx, cy) = shift-point(projected, dodge-delta(dodge, row))
-    let size = resolve-channel("size", layer, mapping, ctx, row, 1.5pt)
+    let size = resolve-channel("size", layer.params, mapping, ctx, row, 1.5pt)
     let body-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
       default-fill,
     )
     let stroke-spec = resolve-stroke-spec(
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

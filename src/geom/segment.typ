@@ -162,7 +162,7 @@
 
     let final-colour = resolve-channel(
       "colour",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -171,7 +171,7 @@
 
     let thickness = resolve-channel(
       "linewidth",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -183,7 +183,7 @@
       stroke: (
         paint: final-colour,
         thickness: thickness,
-        dash: resolve-linetype(layer, mapping, ctx, row),
+        dash: resolve-linetype(layer.params, mapping, ctx, row),
       ),
     )
     draw-arrow-heads(

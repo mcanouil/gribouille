@@ -88,7 +88,9 @@
     linetype: linetype,
   )
     + split-aes-params("geom-contour", args),
-  stat: if stat == auto { stat-contour(bins: bins, binwidth: binwidth, breaks: breaks) } else { stat },
+  stat: if stat == auto {
+    stat-contour(bins: bins, binwidth: binwidth, breaks: breaks)
+  } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

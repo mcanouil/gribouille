@@ -116,7 +116,9 @@
     width: width,
   )
     + split-aes-params("geom-histogram", args),
-  stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else { stat },
+  stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else {
+    stat
+  },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

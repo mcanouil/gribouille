@@ -80,17 +80,17 @@
 
     let colour = resolve-channel(
       "colour",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
       theme-colour,
     )
-    let alpha = resolve-channel("alpha", layer, mapping, ctx, row, 1)
+    let alpha = resolve-channel("alpha", layer.params, mapping, ctx, row, 1)
     let final-colour = apply-alpha(colour, alpha)
     let thickness = resolve-channel(
       "linewidth",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -100,7 +100,7 @@
     let stroke-spec = (
       paint: final-colour,
       thickness: thickness,
-      dash: resolve-linetype(layer, mapping, ctx, row),
+      dash: resolve-linetype(layer.params, mapping, ctx, row),
     )
 
     if ctx.at("radial", default: none) != none {

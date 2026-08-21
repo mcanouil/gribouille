@@ -155,7 +155,7 @@
     let (cx-mid, cy-mid) = shift-point(p-mid, res.dd)
     let final-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -163,7 +163,7 @@
     )
     let radius = resolve-channel(
       "size",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

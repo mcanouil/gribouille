@@ -21,17 +21,16 @@
   palette: (rgb("#111111"), rgb("#222222")),
 )
 
-#let layer(fill: auto, alpha: 1) = (
-  name: "point",
-  params: (fill: fill, alpha: alpha),
-)
+// The resolvers take the parameters rather than the layer they came off, so a
+// case here is the params dict alone.
+#let params(fill: auto, alpha: 1) = (fill: fill, alpha: alpha)
 
 // 1. Fill mapping with a trained fill scale resolves through the fill scale.
 #let ctx-fill = make-ctx((fill: fake-trained))
 #let fill-col-row = (k: "a")
 #assert.eq(
   resolve-fill-colour(
-    layer(),
+    params(),
     (fill: "k"),
     ctx-fill,
     fill-col-row,
@@ -46,7 +45,7 @@
 #let ctx-colour = make-ctx((colour: fake-trained))
 #assert.eq(
   resolve-fill-colour(
-    layer(),
+    params(),
     (colour: "k"),
     ctx-colour,
     (k: "a"),
@@ -59,7 +58,7 @@
 // that genuinely want it (currently none, but the parameter is preserved).
 #assert.eq(
   resolve-fill-colour(
-    layer(),
+    params(),
     (colour: "k"),
     ctx-colour,
     (k: "b"),
@@ -72,7 +71,7 @@
 // 4. A fixed `params.fill` wins over any scale resolution.
 #assert.eq(
   resolve-fill-colour(
-    layer(fill: rgb("#abcdef")),
+    params(fill: rgb("#abcdef")),
     (fill: "k"),
     ctx-fill,
     (k: "a"),
@@ -106,7 +105,7 @@
 // consults the trained colour scale and returns the colour-scale paint.
 #assert.eq(
   resolve-stroke-colour(
-    (name: "point", params: (colour: auto, alpha: 1)),
+    (colour: auto, alpha: 1),
     (colour: "k"),
     ctx-colour,
     (k: "a"),
@@ -119,7 +118,7 @@
 // value wins and the colour-scale paint is ignored.
 #assert.eq(
   resolve-stroke-colour(
-    (name: "point", params: (colour: rgb("#abcdef"), alpha: 1)),
+    (colour: rgb("#abcdef"), alpha: 1),
     (colour: "k"),
     ctx-colour,
     (k: "a"),
@@ -132,7 +131,7 @@
 // is ignored and the resolver returns `none`.
 #assert.eq(
   resolve-stroke-colour(
-    (name: "point", params: (colour: none, alpha: 1)),
+    (colour: none, alpha: 1),
     (colour: "k"),
     ctx-colour,
     (k: "a"),
@@ -145,7 +144,7 @@
 // ignored and the resolver returns `none`.
 #assert.eq(
   resolve-fill-colour(
-    layer(fill: none),
+    params(fill: none),
     (fill: "k"),
     ctx-fill,
     (k: "a"),
@@ -158,7 +157,7 @@
 // the resulting paint must match the explicitly transparentised colour.
 #assert.eq(
   resolve-stroke-colour(
-    (name: "point", params: (colour: rgb("#abcdef"), alpha: 0.5)),
+    (colour: rgb("#abcdef"), alpha: 0.5),
     (colour: "k"),
     ctx-colour,
     (k: "a"),
@@ -172,12 +171,12 @@
 // instead of a neutral fallback. This lets dual-aesthetic geoms skip injecting
 // a fill default when the user has only set `colour`.
 #assert.eq(
-  resolve-fill-colour(layer(), (:), make-ctx((:)), (:), none),
+  resolve-fill-colour(params(), (:), make-ctx((:)), (:), none),
   none,
 )
 #assert.eq(
   resolve-stroke-colour(
-    (name: "point", params: (colour: auto, alpha: 1)),
+    (colour: auto, alpha: 1),
     (:),
     make-ctx((:)),
     (:),

@@ -94,7 +94,9 @@
     alpha: alpha,
   )
     + split-aes-params("geom-hex", args),
-  stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else { stat },
+  stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else {
+    stat
+  },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
@@ -138,7 +140,7 @@
 
     let final-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -146,7 +148,7 @@
       colour-fallback: false,
     )
     let stroke-spec = resolve-stroke-spec(
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

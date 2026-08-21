@@ -140,7 +140,7 @@
 
     let final-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -148,7 +148,7 @@
       colour-fallback: false,
     )
     let stroke-spec = resolve-stroke-spec(
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

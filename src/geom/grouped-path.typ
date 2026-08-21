@@ -72,16 +72,23 @@
     let leader = rows.first()
     let final-colour = resolve-channel(
       "colour",
-      layer,
+      layer.params,
       mapping,
       ctx,
       leader,
       theme-colour,
     )
-    let dash = resolve-channel("linetype", layer, mapping, ctx, leader, none)
+    let dash = resolve-channel(
+      "linetype",
+      layer.params,
+      mapping,
+      ctx,
+      leader,
+      none,
+    )
     let thickness = resolve-channel(
       "linewidth",
-      layer,
+      layer.params,
       mapping,
       ctx,
       leader,

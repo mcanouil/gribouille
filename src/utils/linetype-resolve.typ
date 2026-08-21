@@ -5,13 +5,13 @@
 /// Resolve a per-row linetype dash keyword.
 ///
 /// Priority order:
-/// 1. `layer.params.linetype == none` → returns `"solid"` (user opted out of dashing).
-/// 2. Pinned `layer.params.linetype` when it is not `auto`.
+/// 1. `params.linetype == none` → returns `"solid"` (user opted out of dashing).
+/// 2. Pinned `params.linetype` when it is not `auto`.
 /// 3. The trained linetype scale, when a `linetype` mapping is set (identity, continuous via binning, or discrete via the palette).
 /// 4. `"solid"` otherwise.
 ///
 /// \@internal
-/// \@param layer The layer dictionary providing `params.linetype`.
+/// \@param params The layer's resolved parameters, providing `linetype`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
@@ -19,8 +19,8 @@
 ///
 /// \@param sample-row The row used to read the linetype value.
 /// \@returns A dash keyword (e.g., `"solid"`, `"dashed"`).
-#let resolve-linetype(layer, mapping, ctx, sample-row) = {
-  let linetype-param = layer.params.at("linetype", default: auto)
+#let resolve-linetype(params, mapping, ctx, sample-row) = {
+  let linetype-param = params.at("linetype", default: auto)
   if linetype-param == none { return "solid" }
   if linetype-param != auto { return linetype-param }
 

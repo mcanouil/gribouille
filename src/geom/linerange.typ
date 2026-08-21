@@ -135,19 +135,26 @@
 
   let colour = resolve-channel(
     "colour",
-    layer,
+    layer.params,
     mapping,
     ctx,
     row,
     theme-colour,
   )
   let paint = if line-alpha {
-    apply-alpha(colour, resolve-channel("alpha", layer, mapping, ctx, row, 1))
+    apply-alpha(colour, resolve-channel(
+      "alpha",
+      layer.params,
+      mapping,
+      ctx,
+      row,
+      1,
+    ))
   } else { colour }
 
   let thickness = resolve-channel(
     "linewidth",
-    layer,
+    layer.params,
     mapping,
     ctx,
     row,
@@ -160,7 +167,7 @@
       stroke: (
         paint: paint,
         thickness: thickness,
-        dash: resolve-linetype(layer, mapping, ctx, row),
+        dash: resolve-linetype(layer.params, mapping, ctx, row),
       ),
     ),
     dd: dd,

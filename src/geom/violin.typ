@@ -225,7 +225,7 @@
       let leader = rows.first()
       let final-fill = resolve-channel(
         "fill",
-        layer,
+        layer.params,
         mapping,
         ctx,
         leader,
@@ -233,7 +233,7 @@
       )
       let resolved-stroke = resolve-channel(
         "colour",
-        layer,
+        layer.params,
         mapping,
         ctx,
         leader,

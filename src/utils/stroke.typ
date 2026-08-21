@@ -32,12 +32,12 @@
   stroke-param
 }
 
-/// Resolve the per-row stroke spec for a dual-aesthetic geom in one step: looks up `layer.params.stroke`, resolves the stroke paint via the colour scale, and wraps the pair via \@build-stroke.
+/// Resolve the per-row stroke spec for a dual-aesthetic geom in one step: looks up `params.stroke`, resolves the stroke paint via the colour scale, and wraps the pair via \@build-stroke.
 ///
 /// Returns `none` when the layer disabled the stroke (`params.stroke == none`) or when `default-colour` is `none` (the exclusive-default rule suppressed the stroke because only `fill` is set).
 ///
 /// \@internal
-/// \@param layer The layer dictionary providing `params.stroke` and `params.colour`.
+/// \@param params The layer's resolved parameters, providing `stroke` and `params.colour`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
@@ -50,17 +50,17 @@
 /// \@param default-thickness Fallback stroke thickness when `params.stroke == auto` and no `linewidth` mapping resolves; defaults to \@default-stroke-thickness.
 /// \@returns A CeTZ stroke dictionary or `none`.
 #let resolve-stroke-spec(
-  layer,
+  params,
   mapping,
   ctx,
   sample-row,
   default-colour,
   default-thickness: default-stroke-thickness,
 ) = {
-  let stroke-param = layer.params.stroke
+  let stroke-param = params.stroke
   if stroke-param == none { return none }
   let paint = resolve-stroke-colour(
-    layer,
+    params,
     mapping,
     ctx,
     sample-row,
@@ -70,7 +70,7 @@
   // (mapping or `default-thickness`). Pinned lengths and dictionaries pass
   // through build-stroke unchanged.
   let resolved-param = if stroke-param == auto {
-    resolve-stroke-width(layer, mapping, ctx, sample-row, default-thickness)
+    resolve-stroke-width(params, mapping, ctx, sample-row, default-thickness)
   } else { stroke-param }
   build-stroke(resolved-param, paint)
 }

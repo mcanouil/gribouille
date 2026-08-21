@@ -121,7 +121,10 @@
   let n = calc.max(2, int(params.at("n", default: 101)))
   let (lo, hi) = (float(x-limits.at(0)), float(x-limits.at(1)))
   if hi <= lo {
-    fail("stat-function", "x-limits must satisfy hi > lo; got " + repr((lo, hi)))
+    fail(
+      "stat-function",
+      "x-limits must satisfy hi > lo; got " + repr((lo, hi)),
+    )
   }
   let step = (hi - lo) / (n - 1)
   let rows = ()

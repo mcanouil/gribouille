@@ -115,7 +115,9 @@
 /// \@param channel Channel name (`"colour"`, `"fill"`, `"size"`,
 ///   `"alpha"`, `"linewidth"`, `"stroke"`, `"linetype"`).
 ///
-/// \@param layer The layer dictionary providing `params.<channel>`.
+/// \@param params The layer's resolved parameters, providing `<channel>`. The
+///   layer itself is deliberately not taken: a per-row call reaches every row
+///   through it, and costs time proportional to their number.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
@@ -128,21 +130,21 @@
 ///
 /// \@param ..extra Extra named arguments forwarded to the resolver.
 /// \@returns The resolved channel value.
-#let resolve-channel(channel, layer, mapping, ctx, row, default, ..extra) = {
+#let resolve-channel(channel, params, mapping, ctx, row, default, ..extra) = {
   if channel == "colour" {
-    resolve-stroke-colour(layer, mapping, ctx, row, default)
+    resolve-stroke-colour(params, mapping, ctx, row, default)
   } else if channel == "fill" {
-    resolve-fill-colour(layer, mapping, ctx, row, default, ..extra)
+    resolve-fill-colour(params, mapping, ctx, row, default, ..extra)
   } else if channel == "size" {
-    resolve-size(layer, mapping, ctx, row, default)
+    resolve-size(params, mapping, ctx, row, default)
   } else if channel == "alpha" {
-    resolve-alpha(layer, mapping, ctx, row, default-alpha: default, ..extra)
+    resolve-alpha(params, mapping, ctx, row, default-alpha: default, ..extra)
   } else if channel == "linewidth" {
-    resolve-linewidth(layer, mapping, ctx, row, default)
+    resolve-linewidth(params, mapping, ctx, row, default)
   } else if channel == "stroke" {
-    resolve-stroke-width(layer, mapping, ctx, row, default)
+    resolve-stroke-width(params, mapping, ctx, row, default)
   } else if channel == "linetype" {
-    resolve-linetype(layer, mapping, ctx, row)
+    resolve-linetype(params, mapping, ctx, row)
   } else {
     fail("resolve-channel", "unsupported channel '" + channel + "'")
   }

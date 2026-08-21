@@ -26,8 +26,7 @@
 #import "../utils/label-geometry.typ": _rotated-extent
 #import "../guide/gctx.typ": gctx
 #import "../guide/compose.typ": (
-  compose-stack, draw as compose-draw, has-part,
-  layout-of as compose-layout-of,
+  compose-stack, draw as compose-draw, has-part, layout-of as compose-layout-of,
 )
 #import "../guide/grid.typ": (
   COL-GAP-MIN, column-widths, flat-rows, grid-shape, key-metrics, row-overflows,

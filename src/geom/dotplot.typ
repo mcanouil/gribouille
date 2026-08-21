@@ -102,7 +102,9 @@
     dotsize: dotsize,
   )
     + split-aes-params("geom-dotplot", args),
-  stat: if stat == auto { stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio) } else { stat },
+  stat: if stat == auto {
+    stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
+  } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
@@ -150,13 +152,13 @@
 
     let body-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
       default-fill,
     )
-    let alpha = resolve-channel("alpha", layer, mapping, ctx, row, 1)
+    let alpha = resolve-channel("alpha", layer.params, mapping, ctx, row, 1)
     let outline = if layer.params.stroke == none { none } else {
       (
         paint: apply-alpha(default-colour, alpha),
