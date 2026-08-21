@@ -205,14 +205,14 @@
 
     let final-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       ridge.leader,
       default-fill,
     )
     let resolved-stroke = resolve-stroke-spec(
-      layer,
+      layer.params,
       mapping,
       ctx,
       ridge.leader,

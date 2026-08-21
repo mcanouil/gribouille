@@ -218,7 +218,7 @@
     if label-typst { label = eval-as-markup(label) }
     let colour = resolve-channel(
       "colour",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -226,7 +226,7 @@
     )
     let text-size = resolve-channel(
       "size",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

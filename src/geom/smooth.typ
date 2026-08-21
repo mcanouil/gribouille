@@ -257,7 +257,7 @@
       if pts.all(p => p != none) {
         let alpha = resolve-channel(
           "alpha",
-          layer,
+          layer.params,
           mapping,
           ctx,
           rows.first(),
@@ -274,7 +274,7 @@
     if line-pts.len() >= 2 and not suppress-line {
       let thickness = resolve-channel(
         "linewidth",
-        layer,
+        layer.params,
         mapping,
         ctx,
         rows.first(),
@@ -282,7 +282,7 @@
       )
       let dash = resolve-channel(
         "linetype",
-        layer,
+        layer.params,
         mapping,
         ctx,
         rows.first(),

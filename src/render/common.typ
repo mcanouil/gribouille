@@ -62,9 +62,9 @@
 }
 
 // `data-trusted: true` on the layer signals that `layer.data` is already in
-// canonical row-store form; the faceted path sets it on per-panel buckets it
-// has just produced from a normalised source, avoiding a second validation
-// pass over the same rows.
+// canonical row-store form, so the rows are not validated a second time. The
+// prepare stage marks every layer it produces, and the facet and pre-stat
+// passes mark the buckets they build from an already normalised source.
 #let _resolve-data(layer, plot-data) = {
   if layer.data == none { return plot-data }
   if type(layer.data) == function {

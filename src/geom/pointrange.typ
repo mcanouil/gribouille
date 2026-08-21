@@ -6,6 +6,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point, shift-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
+#import "../position/dodge.typ": dodge-geometry
 #import "linerange.typ": range-line-row
 
 /// Pointrange layer: a marker at `(x, y)` plus a linerange from `ymin` to `ymax`.
@@ -129,6 +130,7 @@
   if x-trained == none or y-trained == none { return }
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
+  let dodge = dodge-geometry(ctx, layer)
 
   for row in data {
     let xv = row.at(x-col, default: none)
@@ -137,7 +139,7 @@
     let p-mid = project-point(ctx, xv, mid)
     if p-mid == none { continue }
     let res = range-line-row(
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -145,6 +147,7 @@
       ymin-col,
       ymax-col,
       theme-colour,
+      dodge,
       line-alpha: false,
     )
     if res == none { continue }
@@ -152,7 +155,7 @@
     let (cx-mid, cy-mid) = shift-point(p-mid, res.dd)
     let final-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -160,7 +163,7 @@
     )
     let radius = resolve-channel(
       "size",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

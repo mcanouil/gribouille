@@ -32,14 +32,16 @@
   palette: (rgb("#111111"),),
   theme: (ink: black),
 )
-#let layer-of(params) = (name: "point", params: params)
+// The resolvers take the parameters rather than the layer they came off, so
+// a case here is the params dict alone.
+#let params-of(params) = params
 
 // --- after-scale on `colour` darkens the channel default ---------------
 
 #let darken-half = after-scale((c, _) => c.darken(50%))
 #assert.eq(
   resolve-stroke-colour(
-    layer-of((colour: auto, alpha: 1)),
+    params-of((colour: auto, alpha: 1)),
     (colour: darken-half),
     make-ctx((:)),
     (:),
@@ -56,7 +58,7 @@
 })
 #assert.eq(
   resolve-stroke-colour(
-    layer-of((colour: auto, alpha: 1)),
+    params-of((colour: auto, alpha: 1)),
     (colour: mirror-fill, fill: "sp"),
     make-ctx((fill: fake-trained)),
     (sp: "a"),
@@ -70,7 +72,7 @@
 #let translucent = after-scale((c, _) => c.transparentize(50%))
 #assert.eq(
   resolve-fill-colour(
-    layer-of((fill: auto, alpha: 1)),
+    params-of((fill: auto, alpha: 1)),
     (fill: translucent),
     make-ctx((:)),
     (:),
@@ -83,7 +85,7 @@
 
 #assert.eq(
   resolve-stroke-colour(
-    layer-of((colour: auto, alpha: 0.5)),
+    params-of((colour: auto, alpha: 0.5)),
     (colour: darken-half),
     make-ctx((:)),
     (:),
@@ -97,7 +99,7 @@
 #let halve-alpha = after-scale((a, _) => a * 0.5)
 #assert.eq(
   resolve-alpha(
-    layer-of((alpha: auto)),
+    params-of((alpha: auto)),
     (alpha: halve-alpha),
     make-ctx((:)),
     (:),
@@ -111,7 +113,7 @@
 #let double-size = after-scale((s, _) => s * 2)
 #assert.eq(
   resolve-size(
-    layer-of((size: auto)),
+    params-of((size: auto)),
     (size: double-size),
     make-ctx((:)),
     (:),
@@ -124,7 +126,7 @@
 
 #assert.eq(
   resolve-linewidth(
-    layer-of((linewidth: auto)),
+    params-of((linewidth: auto)),
     (linewidth: after-scale((w, _) => w * 2)),
     make-ctx((:)),
     (:),
@@ -137,7 +139,7 @@
 
 #assert.eq(
   resolve-linetype(
-    layer-of((linetype: auto)),
+    params-of((linetype: auto)),
     (linetype: after-scale((_, _) => "dashed")),
     make-ctx((:)),
     (:),
@@ -149,7 +151,7 @@
 
 #assert.eq(
   resolve-stroke-width(
-    layer-of((stroke: auto)),
+    params-of((stroke: auto)),
     (stroke: after-scale((w, _) => w * 2)),
     make-ctx((:)),
     (:),

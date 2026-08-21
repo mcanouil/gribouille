@@ -1,6 +1,9 @@
 // Verify the precedence rule for layer parameters across aesthetics:
-// pinned `layer.params.<aes>` wins over the trained scale, and the mapping
-// only takes effect when the param is left at `auto` (or `none` for colour).
+// a pinned `params.<aes>` wins over the trained scale, and the mapping only
+// takes effect when the param is left at `auto` (or `none` for colour).
+//
+// The resolvers take the parameters rather than the layer they came off,
+// because they run once a row and a layer reaches every row of the plot.
 
 #import "../../src/utils/colour-resolve.typ": (
   resolve-alpha, resolve-linewidth, resolve-size,
@@ -17,7 +20,7 @@
 #let ctx-alpha = (trained: (alpha: alpha-trained))
 #assert.eq(
   resolve-alpha(
-    (params: (alpha: auto)),
+    (alpha: auto),
     (alpha: "k"),
     ctx-alpha,
     (k: 10),
@@ -29,7 +32,7 @@
 // value wins regardless of the row's mapped column.
 #assert.eq(
   resolve-alpha(
-    (params: (alpha: 0.25)),
+    (alpha: 0.25),
     (alpha: "k"),
     ctx-alpha,
     (k: 10),
@@ -40,7 +43,7 @@
 // 3. `default-alpha` is the fallback when neither pin nor mapping applies.
 #assert.eq(
   resolve-alpha(
-    (params: (alpha: auto)),
+    (alpha: auto),
     (:),
     (trained: (:)),
     (:),
@@ -59,7 +62,7 @@
 #let ctx-lw = (trained: (linewidth: lw-trained))
 #assert.eq(
   resolve-linewidth(
-    (params: (linewidth: auto, stroke: 0.8pt)),
+    (linewidth: auto, stroke: 0.8pt),
     (linewidth: "k"),
     ctx-lw,
     (k: 0),
@@ -71,7 +74,7 @@
 // 5. Pinned `params.linewidth` length overrides the mapped scale.
 #assert.eq(
   resolve-linewidth(
-    (params: (linewidth: 1.6pt, stroke: 0.8pt)),
+    (linewidth: 1.6pt, stroke: 0.8pt),
     (linewidth: "k"),
     ctx-lw,
     (k: 10),
@@ -90,7 +93,7 @@
 #let ctx-size = (trained: (size: size-trained))
 #assert.eq(
   resolve-size(
-    (params: (size: auto)),
+    (size: auto),
     (size: "k"),
     ctx-size,
     (k: 10),
@@ -102,7 +105,7 @@
 // 7. Pinned `params.size` length overrides the mapped scale.
 #assert.eq(
   resolve-size(
-    (params: (size: 4pt)),
+    (size: 4pt),
     (size: "k"),
     ctx-size,
     (k: 10),
@@ -114,7 +117,7 @@
 // 8. `default-size` is the fallback when neither pin nor mapping applies.
 #assert.eq(
   resolve-size(
-    (params: (size: auto)),
+    (size: auto),
     (:),
     (trained: (:)),
     (:),

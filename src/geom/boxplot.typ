@@ -219,7 +219,7 @@
 
       let final-fill = resolve-channel(
         "fill",
-        layer,
+        layer.params,
         mapping,
         ctx,
         row,
@@ -227,7 +227,7 @@
       )
       let resolved-stroke = resolve-channel(
         "colour",
-        layer,
+        layer.params,
         mapping,
         ctx,
         row,
@@ -390,7 +390,7 @@
 
     let final-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -398,7 +398,7 @@
     )
     let resolved-stroke = resolve-channel(
       "colour",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

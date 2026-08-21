@@ -12,7 +12,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": project-point, shift-point
-#import "../position/dodge.typ": dodge-delta
+#import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/stroke.typ": resolve-stroke-spec
 #import "../guide/draw-marker.typ": draw-marker
 #import "../utils/late-binding.typ": after-scale-source, apply-after-scale
@@ -217,6 +217,10 @@
     shape-scale-spec.at("n-breaks", default: 4)
   } else { 4 }
 
+  // Resolved once: the dodge slot is a property of the layer, and a per-row
+  // call taking the layer would carry the whole row set with it.
+  let dodge = dodge-geometry(ctx, layer)
+
   for row in data {
     let projected = project-point(
       ctx,
@@ -224,18 +228,18 @@
       row.at(mapping.y, default: none),
     )
     if projected == none { continue }
-    let (cx, cy) = shift-point(projected, dodge-delta(ctx, layer, row))
-    let size = resolve-channel("size", layer, mapping, ctx, row, 1.5pt)
+    let (cx, cy) = shift-point(projected, dodge-delta(dodge, row))
+    let size = resolve-channel("size", layer.params, mapping, ctx, row, 1.5pt)
     let body-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
       default-fill,
     )
     let stroke-spec = resolve-stroke-spec(
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

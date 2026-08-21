@@ -296,7 +296,7 @@
     let leader = g.data.first()
     let final-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       leader,
@@ -305,7 +305,7 @@
       default-alpha: 1,
     )
     let stroke-spec = resolve-stroke-spec(
-      layer,
+      layer.params,
       mapping,
       ctx,
       leader,

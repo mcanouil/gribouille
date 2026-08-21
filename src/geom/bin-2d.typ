@@ -83,7 +83,9 @@
     alpha: alpha,
   )
     + split-aes-params("geom-bin-2d", args),
-  stat: if stat == auto { stat-bin-2d(bins: bins, binwidth: binwidth) } else { stat },
+  stat: if stat == auto { stat-bin-2d(bins: bins, binwidth: binwidth) } else {
+    stat
+  },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

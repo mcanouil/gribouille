@@ -249,7 +249,7 @@
     // when only `fill` is set.
     let text-paint = resolve-channel(
       "colour",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -257,7 +257,7 @@
     )
     let box-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
@@ -270,7 +270,7 @@
     }
     let text-size = resolve-channel(
       "size",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,

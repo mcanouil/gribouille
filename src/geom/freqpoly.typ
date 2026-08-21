@@ -99,7 +99,9 @@
     linetype: linetype,
   )
     + split-aes-params("geom-freqpoly", args),
-  stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else { stat },
+  stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else {
+    stat
+  },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

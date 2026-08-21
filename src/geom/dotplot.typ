@@ -150,13 +150,13 @@
 
     let body-fill = resolve-channel(
       "fill",
-      layer,
+      layer.params,
       mapping,
       ctx,
       row,
       default-fill,
     )
-    let alpha = resolve-channel("alpha", layer, mapping, ctx, row, 1)
+    let alpha = resolve-channel("alpha", layer.params, mapping, ctx, row, 1)
     let outline = if layer.params.stroke == none { none } else {
       (
         paint: apply-alpha(default-colour, alpha),

@@ -70,13 +70,13 @@
 /// Resolve a per-row alpha value.
 ///
 /// Priority order:
-/// 1. `layer.params.alpha == none` → returns `1` (user opted out of transparency).
-/// 2. Pinned `layer.params.alpha` when it is not `auto`.
+/// 1. `params.alpha == none` → returns `1` (user opted out of transparency).
+/// 2. Pinned `params.alpha` when it is not `auto`.
 /// 3. The trained alpha scale (continuous/discrete/identity), if `mapping.alpha` is set.
 /// 4. `default-alpha` otherwise (defaults to `1`, geoms with intrinsic translucency pass their own).
 ///
 /// \@internal
-/// \@param layer The layer dictionary providing `params.alpha`.
+/// \@param params The layer's resolved parameters, providing `alpha`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
@@ -86,8 +86,8 @@
 ///
 /// \@param default-alpha Fallback opacity when no pin or mapping applies.
 /// \@returns A scalar alpha in `[0, 1]`.
-#let resolve-alpha(layer, mapping, ctx, sample-row, default-alpha: 1) = {
-  let pinned = layer.params.at("alpha", default: auto)
+#let resolve-alpha(params, mapping, ctx, sample-row, default-alpha: 1) = {
+  let pinned = params.at("alpha", default: auto)
   if pinned == none { return 1 }
   if pinned != auto {
     return _clamp(pinned, 0, 1)
@@ -194,17 +194,17 @@
 /// Resolve a per-row stroke thickness.
 ///
 /// Priority order:
-/// 1. `layer.params.linewidth == none` → returns `0pt` (no stroke).
-/// 2. Pinned `layer.params.linewidth` when set to a non-`auto` length.
+/// 1. `params.linewidth == none` → returns `0pt` (no stroke).
+/// 2. Pinned `params.linewidth` when set to a non-`auto` length.
 /// 3. The trained linewidth scale, if `mapping.linewidth` is set.
-/// 4. Pinned `layer.params.stroke` when set to a length.
+/// 4. Pinned `params.stroke` when set to a length.
 /// 5. `theme.geom.linewidth` when the layer's `stroke:` is `auto`.
 /// 6. `params.stroke-fallback` when set (used by wrapper layers like
 ///    \@geom-contour / \@geom-quantile that dispatch through another geom).
 /// 7. `default-thickness` otherwise.
 ///
 /// \@internal
-/// \@param layer The layer dictionary providing `params.linewidth`.
+/// \@param params The layer's resolved parameters, providing `linewidth`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
@@ -214,19 +214,19 @@
 ///
 /// \@param default-thickness Per-geom default thickness when no pin or mapping resolves.
 /// \@returns A Typst length suitable for `stroke.thickness`.
-#let resolve-linewidth(layer, mapping, ctx, sample-row, default-thickness) = {
-  let pinned-lw = layer.params.at("linewidth", default: auto)
+#let resolve-linewidth(params, mapping, ctx, sample-row, default-thickness) = {
+  let pinned-lw = params.at("linewidth", default: auto)
   if pinned-lw == none { return 0pt }
   if pinned-lw != auto and type(pinned-lw) == length {
     return pinned-lw
   }
-  let pinned-stroke = layer.params.at("stroke", default: auto)
+  let pinned-stroke = params.at("stroke", default: auto)
   let effective-default = if type(pinned-stroke) == length {
     pinned-stroke
   } else if pinned-stroke == auto {
     resolve-geom-linewidth(
       resolve-geom-defaults(ctx.theme),
-      fallback: layer.params.at("stroke-fallback", default: default-thickness),
+      fallback: params.at("stroke-fallback", default: default-thickness),
     )
   } else { default-thickness }
   let spec = if mapping == none { none } else {
@@ -256,13 +256,13 @@
 /// Resolve a per-row marker outline thickness from the `stroke` aesthetic.
 ///
 /// Priority order:
-/// 1. Pinned `layer.params.stroke` when set to a length.
+/// 1. Pinned `params.stroke` when set to a length.
 /// 2. Pinned stroke dictionary's `thickness` field, when one is supplied.
 /// 3. The trained stroke scale, if `mapping.stroke` is set.
 /// 4. `default-thickness` otherwise.
 ///
 /// \@internal
-/// \@param layer The layer dictionary providing `params.stroke`.
+/// \@param params The layer's resolved parameters, providing `stroke`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
@@ -273,13 +273,13 @@
 /// \@param default-thickness Fallback thickness when no mapping or pin applies.
 /// \@returns A Typst length suitable for `stroke.thickness`.
 #let resolve-stroke-width(
-  layer,
+  params,
   mapping,
   ctx,
   sample-row,
   default-thickness,
 ) = {
-  let pinned = layer.params.at("stroke", default: auto)
+  let pinned = params.at("stroke", default: auto)
   if type(pinned) == length { return pinned }
   if type(pinned) == dictionary {
     return pinned.at("thickness", default: default-thickness)
@@ -325,13 +325,13 @@
 /// Resolve a per-row marker size.
 ///
 /// Priority order:
-/// 1. `layer.params.size == none` → returns `0pt` (caller should skip the marker).
-/// 2. Pinned `layer.params.size` when set to a non-`auto` length.
+/// 1. `params.size == none` → returns `0pt` (caller should skip the marker).
+/// 2. Pinned `params.size` when set to a non-`auto` length.
 /// 3. The trained size scale, if `mapping.size` is set.
 /// 4. `default-size` otherwise.
 ///
 /// \@internal
-/// \@param layer The layer dictionary providing `params.size`.
+/// \@param params The layer's resolved parameters, providing `size`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
@@ -341,8 +341,8 @@
 ///
 /// \@param default-size Fallback length when no mapping or pin applies.
 /// \@returns A Typst length suitable for a marker radius.
-#let resolve-size(layer, mapping, ctx, sample-row, default-size) = {
-  let pinned = layer.params.at("size", default: auto)
+#let resolve-size(params, mapping, ctx, sample-row, default-size) = {
+  let pinned = params.at("size", default: auto)
   if pinned == none { return 0pt }
   if pinned != auto and type(pinned) == length {
     return pinned
@@ -358,15 +358,15 @@
 /// Resolve a stroke colour for a row sample.
 ///
 /// Priority order:
-/// 1. `layer.params.colour == none` → returns `none` (user disabled the stroke colour).
-/// 2. Pinned `layer.params.colour` when it is not `auto`.
+/// 1. `params.colour == none` → returns `none` (user disabled the stroke colour).
+/// 2. Pinned `params.colour` when it is not `auto`.
 /// 3. The trained colour scale, when `mapping.colour` is set.
 /// 4. `default-colour` otherwise.
 ///
 /// Applies the per-row alpha (mapped or pinned) as a transparentise step.
 ///
 /// \@internal
-/// \@param layer The layer dictionary providing `params.colour`/`params.alpha`.
+/// \@param params The layer's resolved parameters, providing `colour`/`alpha`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
@@ -376,8 +376,8 @@
 ///
 /// \@param default-colour The colour used when no scale resolution applies.
 /// \@returns A colour ready to use as a stroke paint.
-#let resolve-stroke-colour(layer, mapping, ctx, sample-row, default-colour) = {
-  let colour-param = layer.params.at("colour", default: auto)
+#let resolve-stroke-colour(params, mapping, ctx, sample-row, default-colour) = {
+  let colour-param = params.at("colour", default: auto)
   if colour-param == none { return none }
   let spec = mapping.at("colour", default: none)
   let resolved = if colour-param != auto {
@@ -392,6 +392,6 @@
     )
   } else { default-colour }
   resolved = apply-after-scale(resolved, spec, ctx, sample-row)
-  let alpha = resolve-alpha(layer, mapping, ctx, sample-row)
+  let alpha = resolve-alpha(params, mapping, ctx, sample-row)
   apply-alpha(resolved, alpha)
 }

@@ -6,8 +6,8 @@
 /// Resolve a fill colour for a row sample.
 ///
 /// Priority order:
-/// 1. `layer.params.fill == none` → returns `none` (user disabled the fill).
-/// 2. Fixed `layer.params.fill` when it is not `auto`.
+/// 1. `params.fill == none` → returns `none` (user disabled the fill).
+/// 2. Fixed `params.fill` when it is not `auto`.
 /// 3. The fill scale, when `fill-mapping` is `true`, a fill mapping is set, and the fill scale is trained.
 /// 4. `default-fill` otherwise.
 ///
@@ -16,7 +16,7 @@
 /// Applies the per-row alpha (mapped or fixed) via \@apply-alpha as the final step.
 ///
 /// \@internal
-/// \@param layer The layer dictionary providing `params.fill` and `params.alpha`.
+/// \@param params The layer's resolved parameters, providing `fill` and `alpha`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
@@ -33,7 +33,7 @@
 /// \@param default-alpha Fallback opacity passed through to \@resolve-alpha when no pin or mapping applies.
 /// \@returns A fill colour with alpha applied.
 #let resolve-fill-colour(
-  layer,
+  params,
   mapping,
   ctx,
   sample-row,
@@ -42,7 +42,7 @@
   colour-fallback: false,
   default-alpha: 1,
 ) = {
-  let fill-param = layer.params.at("fill", default: auto)
+  let fill-param = params.at("fill", default: auto)
   if fill-param == none { return none }
   let fill-spec = if fill-mapping { mapping.at("fill", default: none) } else {
     none
@@ -78,7 +78,7 @@
   } else { default-fill }
   resolved = apply-after-scale(resolved, fill-spec, ctx, sample-row)
   let alpha = resolve-alpha(
-    layer,
+    params,
     mapping,
     ctx,
     sample-row,

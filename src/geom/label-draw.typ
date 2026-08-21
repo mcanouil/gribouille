@@ -3,7 +3,7 @@
 // rendering. Kept here so the three geoms do not redeclare the same bits.
 
 #import "../deps.typ": cetz
-#import "../position/dodge.typ": dodge-delta
+#import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/aes-resolve.typ": aes-col
 #import "../utils/arrow.typ": draw-arrow-heads
 #import "../utils/radial.typ": axis-numeric, project-point, shift-point
@@ -83,7 +83,7 @@
 // Compute per-row anchor + label-centre pairs (canvas-cm) for one layer.
 // `placements.at(idx)` is `none` when the row fails to project so callers
 // can skip without re-checking inputs.
-#let compute-placements(ctx, layer, mapping, data) = {
+#let compute-placements(ctx, layer, mapping, data, dodge) = {
   let nudge-x-spec = _nudge-spec(layer, mapping, "nudge-x")
   let nudge-y-spec = _nudge-spec(layer, mapping, "nudge-y")
   let needs-nudge = nudge-x-spec != none or nudge-y-spec != none
@@ -94,7 +94,7 @@
       let yv = row.at(mapping.y, default: none)
       let projected = project-point(ctx, xv, yv)
       if projected == none { return none }
-      let (cx, cy) = shift-point(projected, dodge-delta(ctx, layer, row))
+      let (cx, cy) = shift-point(projected, dodge-delta(dodge, row))
       let (nudge-dx, nudge-dy) = if not needs-nudge {
         (0.0, 0.0)
       } else {
@@ -124,6 +124,7 @@
   data,
   sizes,
   repel-params,
+  dodge,
 ) = {
   let live-idx = ()
   let anchors = ()
@@ -134,7 +135,7 @@
     let projected = project-point(ctx, xv, yv)
     if projected == none { continue }
     live-idx.push(idx)
-    anchors.push(shift-point(projected, dodge-delta(ctx, layer, row)))
+    anchors.push(shift-point(projected, dodge-delta(dodge, row)))
     live-sizes.push(sizes.at(idx, default: (w: 0.0, h: 0.0)))
   }
   let offsets = repel(anchors, live-sizes, params: repel-params)
@@ -199,6 +200,10 @@
       )
   )
   let sizes = label-sizes-of(layer)
+  // Resolved once for the whole draw: on a continuous category axis the slot
+  // costs a pass over every row, and the placement pass and `row-centre` both
+  // want the same answer.
+  let dodge = dodge-geometry(ctx, layer)
   let placements = if repel-on {
     compute-repel-placements(
       ctx,
@@ -207,9 +212,10 @@
       data,
       sizes,
       repel-params-of(layer.params),
+      dodge,
     )
   } else if needs-placement {
-    compute-placements(ctx, layer, mapping, data)
+    compute-placements(ctx, layer, mapping, data, dodge)
   } else { () }
   let aabbs = if segment-on {
     compute-aabbs(placements, sizes, layer.params.box-padding)
@@ -224,7 +230,10 @@
     placements: placements,
     aabbs: aabbs,
     seg-cfg: seg-cfg,
-    layer: layer,
+    // The record carries the dodge slot rather than the layer it came off:
+    // `row-centre` takes this record once a row, and a layer reaches every row
+    // of the plot through it.
+    dodge: dodge,
   )
 }
 
@@ -243,7 +252,7 @@
     row.at(mapping.y, default: none),
   )
   if projected == none { return none }
-  shift-point(projected, dodge-delta(ctx, state.layer, row))
+  shift-point(projected, dodge-delta(state.dodge, row))
 }
 
 // Render a routed connector for one row when its label has been moved off

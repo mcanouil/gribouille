@@ -31,9 +31,23 @@
 
   let theme-ink = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
   let _stroke-for(row) = (
-    paint: resolve-channel("colour", layer, mapping, ctx, row, theme-ink),
-    thickness: resolve-channel("linewidth", layer, mapping, ctx, row, 0.6pt),
-    dash: resolve-channel("linetype", layer, mapping, ctx, row, "solid"),
+    paint: resolve-channel(
+      "colour",
+      layer.params,
+      mapping,
+      ctx,
+      row,
+      theme-ink,
+    ),
+    thickness: resolve-channel(
+      "linewidth",
+      layer.params,
+      mapping,
+      ctx,
+      row,
+      0.6pt,
+    ),
+    dash: resolve-channel("linetype", layer.params, mapping, ctx, row, "solid"),
   )
 
   // Each entry pairs an intercept value with the stroke spec to draw it with.
