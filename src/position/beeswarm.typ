@@ -5,6 +5,7 @@
 ///! sequence so the cloud fills evenly without a random number generator.
 ///! Renders are reproducible without a seed.
 
+#import "../utils/bucket.typ": bucket-dict
 #import "../utils/types.typ": parse-number
 #import "../utils/kde.typ": bw-nrd0
 
@@ -82,16 +83,17 @@
 
   // Bucket row indices by their numeric x value; rows with a non-numeric x
   // (an unforced discrete level) pass through unchanged.
-  let buckets = (:)
-  for (i, row) in data.enumerate() {
-    let xv = parse-number(row.at(x-col, default: none))
-    let yv = parse-number(row.at(y-col, default: none))
-    if xv == none or yv == none { continue }
-    let key = str(xv)
-    let bucket = buckets.at(key, default: ())
-    bucket.push((i: i, y: yv))
-    buckets.insert(key, bucket)
-  }
+  // One pass to drop the rows with no position, one to bucket what is left by
+  // the slot they share.
+  let placed = data
+    .enumerate()
+    .map(((i, row)) => (
+      i: i,
+      x: parse-number(row.at(x-col, default: none)),
+      y: parse-number(row.at(y-col, default: none)),
+    ))
+    .filter(e => e.x != none and e.y != none)
+  let buckets = bucket-dict(placed, e => str(e.x))
 
   let offsets = (:)
   for (key, bucket) in buckets.pairs() {

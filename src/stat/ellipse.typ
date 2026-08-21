@@ -11,7 +11,8 @@
 ///! closed-form `−2 · ln(1 − level)`, no numerical inversion required.
 
 #import "../utils/types.typ": parse-number
-#import "../utils/group.typ": group-aesthetics, group-key
+#import "../utils/bucket.typ": bucket-index
+#import "../utils/group.typ": group-aesthetics, group-plan, plan-key
 #import "../utils/errors.typ": fail-range
 
 /// Covariance-ellipse statistic: one ellipse per group from the sample
@@ -88,18 +89,15 @@
   let chi-sq = -2 * calc.ln(1 - level)
 
   // Bucket rows by the composite group key (canonical group aesthetics).
-  let buckets = (:)
-  let order = ()
+  let plan = group-plan(mapping)
+  let (keys: order, buckets: bucket-rows) = bucket-index(
+    data,
+    row => plan-key(plan, row),
+  )
+  // The first row of each group carries the values the output row inherits.
   let proto = (:)
-  for row in data {
-    let key = group-key(row, mapping)
-    if key not in buckets {
-      order.push(key)
-      proto.insert(key, row)
-    }
-    let bucket = buckets.at(key, default: ())
-    bucket.push(row)
-    buckets.insert(key, bucket)
+  for (i, key) in order.enumerate() {
+    proto.insert(key, bucket-rows.at(i).first())
   }
 
   let out-mapping = base-mapping
@@ -109,8 +107,8 @@
   }
 
   let out = ()
-  for key in order {
-    let rows = buckets.at(key)
+  for (bucket-i, key) in order.enumerate() {
+    let rows = bucket-rows.at(bucket-i)
     let pairs = rows
       .map(r => (
         x: parse-number(r.at(x-col, default: none)),

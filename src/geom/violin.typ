@@ -5,6 +5,7 @@
 ///! as a closed silhouette. Under \@coord-radial the layer degrades to a
 ///! no-op (mirrored silhouettes do not translate to polar wedges yet).
 
+#import "../utils/bucket.typ": bucket-index
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../stat/ydensity.typ": stat-ydensity
@@ -170,19 +171,12 @@
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     // One silhouette per distinct x bucket within the group, in
     // first-appearance order.
-    let buckets = (:)
-    let order = ()
-    for row in g.data {
+    let bucket-rows = bucket-index(g.data, row => {
       let key = str(row.at(x-col, default: ""))
-      if key == "" { continue }
-      if key not in buckets { order.push(key) }
-      let bucket = buckets.at(key, default: ())
-      bucket.push(row)
-      buckets.insert(key, bucket)
-    }
+      if key == "" { none } else { key }
+    }).buckets
 
-    for key in order {
-      let rows = buckets.at(key)
+    for rows in bucket-rows {
       let raw-x = rows.first().at(x-col, default: none)
       let cx = map-position(x-trained, raw-x, ctx.px-range)
       if cx == none { continue }

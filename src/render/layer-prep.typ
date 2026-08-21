@@ -95,8 +95,11 @@
       }
       new-row
     })
-    combined += enriched
+    // Pushed, not concatenated: rebinding `combined = combined + enriched`
+    // copies everything gathered so far on every group.
+    combined.push(enriched)
   }
+  combined = combined.flatten()
   // stat-output-mapping preserves whatever keys we passed in, but we
   // passed `stripped` so any `as-factor`/`as-numeric`/`typst` wrappers
   // were dropped. Restore them on aesthetics the stat passed through

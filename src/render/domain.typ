@@ -166,12 +166,19 @@
 #let _col-half-width-x(cols) = {
   let max-half = 0.0
   for layer in cols {
-    let sorted = layer.xs.dedup().sorted()
+    // Sorted first, then walked: `dedup` scans everything it has kept for each
+    // element, so deduplicating a column of n values before sorting costs n^2.
+    // Sorted values put the duplicates side by side, where a zero gap is the
+    // same thing and is skipped.
+    let sorted = layer.xs.sorted()
     if sorted.len() < 2 { continue }
-    let gaps = range(sorted.len() - 1).map(i => (
-      sorted.at(i + 1) - sorted.at(i)
-    ))
-    let min-gap = calc.min(..gaps)
+    let min-gap = none
+    for i in range(sorted.len() - 1) {
+      let gap = sorted.at(i + 1) - sorted.at(i)
+      if gap == 0 { continue }
+      if min-gap == none or gap < min-gap { min-gap = gap }
+    }
+    if min-gap == none { continue }
     let half = min-gap * layer.bar-frac / 2
     if half > max-half { max-half = half }
   }

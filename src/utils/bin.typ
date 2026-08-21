@@ -129,10 +129,10 @@
     counts.at(idx) = counts.at(idx) + e.w
     total = total + e.w
     if collect-y {
-      let bucket = buckets.at(idx)
-      bucket.ys.push(e.y)
-      bucket.ws.push(e.w)
-      buckets.at(idx) = bucket
+      // Appended in place: reading the bucket out and writing it back shares
+      // the arrays, so each push would copy the whole bin.
+      buckets.at(idx).ys.push(e.y)
+      buckets.at(idx).ws.push(e.w)
     }
   }
   (grid: grid, counts: counts, buckets: buckets, total: total)
