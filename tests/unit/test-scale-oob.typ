@@ -160,5 +160,34 @@
   assert.eq(out.counts.at("fill"), 2)
 }
 
+// two limited aesthetics on one layer keep their own rule. The pre-pass
+// resolves each aesthetic once before the row walk, so a mixed pair proves the
+// continuous squish and the discrete censor are not resolved against each
+// other's scale.
+#{
+  let trained = (
+    fill: _trained-continuous(limits: (2, 5), oob: "squish"),
+    colour: (
+      .._trained-discrete(limits: ("a", "b")),
+      spec: (
+        aesthetic: "colour",
+        type: "discrete",
+        limits: ("a", "b"),
+        oob: "drop",
+      ),
+    ),
+  )
+  let layer = (
+    kind: "layer",
+    data: ((v: 1, g: "a"), (v: 3, g: "z"), (v: 9, g: "b")),
+    mapping: (fill: "v", colour: "g"),
+  )
+  let out = filter-oob((layer,), trained)
+  assert.eq(out.layers.at(0).data, ((v: 2, g: "a"), (v: 5, g: "b")))
+  assert.eq(out.counts.at("colour"), 1)
+  assert.eq(out.counts.at("fill", default: 0), 0)
+}
+
+
 // strict mode panics on first OOB row. Typst has no try/catch; the panic
 // path is exercised manually via examples/oob-strict-* (see PR description).
