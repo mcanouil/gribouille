@@ -35,7 +35,7 @@ Entry points trace the same path:
 | `src/facet/` | Faceting (grid, wrap) and strip labellers. |
 | `src/guide/` | Legend and axis configuration, legend-symbol drawing, the entry table (`entry.typ`) that says what a guide annotates, the parts that draw it (`primitive/` and `gizmo/`, laid out by `compose.typ` on the grid geometry in `grid.typ`), and the context they draw under (`gctx.typ`). Imports only from `deps.typ` and `utils/`, never from `render/` or `scale/`; anything here that needs a scale, a theme, or a text measurement takes a closure or a stamped number instead. |
 | `src/theme/` | Theme structure, named themes, element builders, global state. |
-| `src/render/` | Rendering pipeline: domain, facet layout, panel draw, canvas, chrome, legend renderer (`render/legend.typ`). |
+| `src/render/` | Rendering pipeline: domain, facet layout, panel draw, canvas, chrome, legend renderer (`render/legend.typ`), and the axis band (`render/axis-parts.typ`), which the chrome stage measures and the panel draws from one stack of guide primitives. |
 | `src/utils/` | Shared leaf helpers: types, formatting, colour, late-binding, binning, errors, rotated-label geometry (`label-geometry.typ`). No cetz drawing lives here. |
 | `src/datasets/` | Built-in example datasets (economics, mpg, penguins). |
 

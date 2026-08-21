@@ -23,6 +23,29 @@
   _title-pad-cm, _title-span-cm, _x-label-anchor,
 )
 
+// What actually makes a guide of each kind smaller. A key grid takes rows and
+// columns; a colour bar is one bar and ignores them, and a custom block is the
+// content it was handed, so each is told what it can do rather than what a
+// swatch can.
+#let _SHRINK-ADVICE = (
+  swatch: "shrink its footprint with `guide-legend(nrow:/ncolumn:)`",
+  "size-ladder": "shrink its footprint with `guide-legend(nrow:/ncolumn:)`",
+  colourbar: "turn it with `guide-legend(direction:)`",
+  custom: "shrink the block with `guide-custom(width:/height:)`",
+)
+
+// The advice for the guides one side carries. A side with several kinds on it
+// gets each of them once, because any one of them shrinking may be enough.
+#let _shrink-hint(side-guides) = {
+  let advice = ()
+  for g in side-guides {
+    let one = _SHRINK-ADVICE.at(g.at("kind", default: ""), default: none)
+    if one != none and not advice.contains(one) { advice.push(one) }
+  }
+  if advice.len() == 0 { return "shrink the legend." }
+  advice.join(", or ") + "."
+}
+
 // Passes allowed when settling axis-title wrapping against the panel size.
 // Real plots settle in two or three; the cap only bounds a degenerate one.
 #let _TITLE-FIT-PASSES = 8
@@ -274,6 +297,11 @@
   // read twice, by the reservation below and by the centring check at the end,
   // so the room kept for a legend and the room it is reported to need are the
   // same figure rather than two that have to agree.
+  // Both fit checks below blame a side, so both name what the guides on that
+  // side can do about it.
+  let _shrink-advice = side => _shrink-hint(
+    guides.filter(g => g.placement.side == side),
+  )
   let _no-edge = (top: 0.0, right: 0.0, bottom: 0.0, left: 0.0)
   let legend-blocks = (:)
   let legend-edges = (:)
@@ -791,15 +819,13 @@
       dim: "width",
       sides: ("left", "right"),
       extent: width-units,
-      hint: "Increase `width`, move the legend to `top`/`bottom`, or shrink "
-        + "its footprint with `guide-legend(nrow:/ncolumn:)`.",
+      lead: "Increase `width`, move the legend to `top`/`bottom`, or ",
     ),
     (
       dim: "height",
       sides: ("bottom", "top"),
       extent: height-units,
-      hint: "Increase `height`, move the legend to `left`/`right`, or shrink "
-        + "its footprint with `guide-legend(nrow:/ncolumn:)`.",
+      lead: "Increase `height`, move the legend to `left`/`right`, or ",
     ),
   ) {
     let base-total = axis.sides.map(s => fit.base.at(s)).sum()
@@ -838,7 +864,7 @@
             room - legend-slot.at(opposite-side.at(side)),
           ))
           + " cm",
-        hint: axis.hint,
+        hint: axis.lead + _shrink-advice(side),
       )
     }
   }
@@ -878,17 +904,12 @@
           + " centred on the panel and overruns the plot by "
           + cm-text(over)
           + " cm",
-        hint: if vertical {
-          (
-            "Increase `height`, move the legend to `top`/`bottom`, or give it "
-              + "fewer rows with `guide-legend(nrow:/ncolumn:)`."
-          )
-        } else {
-          (
-            "Increase `width`, move the legend to `left`/`right`, or give it "
-              + "fewer columns with `guide-legend(nrow:/ncolumn:)`."
-          )
-        },
+        hint: (
+          if vertical {
+            "Increase `height`, move the legend to `top`/`bottom`, or "
+          } else { "Increase `width`, move the legend to `left`/`right`, or " }
+        )
+          + _shrink-advice(side),
       )
     }
   }
