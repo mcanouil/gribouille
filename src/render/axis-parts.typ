@@ -103,14 +103,7 @@
 //
 // The four cartesian sides and the two radial positions share it: only `place`
 // and `sweep` tell an arc from an edge.
-#let guide-gctx(
-  theme,
-  position,
-  axis,
-  place: none,
-  sweep: none,
-  tick-gap: _TICK-LABEL-GAP,
-) = gctx(
+#let guide-gctx(theme, position, axis, place: none, sweep: none) = gctx(
   position,
   axis,
   axis: axis,
@@ -126,7 +119,7 @@
     let style = _text-style(theme, surface)
     (render: label => text(.._text-args(style))[#label])
   },
-  tick-gap: tick-gap,
+  tick-gap: _TICK-LABEL-GAP,
 )
 
 // The context a cartesian band is measured and drawn under.

@@ -180,7 +180,10 @@
     theta-range,
     if labelled { (ext.width, ext.height) } else { (0.0, 0.0) },
   )
-  if entries.len() == 0 { return none-band }
+  // The arc is the axis itself, so it stands on a sweep that ticks nothing: a
+  // scale with `breaks: ()` draws a bare ring, as it always has. Only a plot
+  // that binds no theta guide has no angular axis to draw at all.
+  if entries.len() == 0 and guide == none { return none-band }
   let node = _theta-node(
     guide,
     entries,
