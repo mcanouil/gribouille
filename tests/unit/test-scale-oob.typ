@@ -188,27 +188,19 @@
   assert.eq(out.counts.at("fill", default: 0), 0)
 }
 
-// a discrete domain may hold a level that is not a string. The cell is tested
-// as a string, so such a level can never match one, and building the level set
-// must neither coerce it nor fail on it. Here `1` is unreachable as a level
-// name: the cell `"1"` parses as a number and is kept as a fractional level
-// position, while `"z"` is off the set and drops.
+// a trained scale carrying `level-index` is tested through it, and one built
+// by hand without it falls back to the domain. Every other case in this file
+// takes the fallback, so this one pins the indexed path.
 #{
   let trained = (
     fill: (
-      type: "discrete",
-      domain: (1, "b"),
-      spec: (
-        aesthetic: "fill",
-        type: "discrete",
-        limits: (1, "b"),
-        oob: "drop",
-      ),
+      .._trained-discrete(limits: ("a", "b", "c")),
+      level-index: (a: 0, b: 1, c: 2),
     ),
   )
-  let rows = ((v: "b"), (v: "1"), (v: "z"))
+  let rows = ((v: "a"), (v: "d"), (v: "c"))
   let out = filter-oob((_layer(rows),), trained)
-  assert.eq(out.layers.at(0).data, ((v: "b"), (v: "1")))
+  assert.eq(out.layers.at(0).data, ((v: "a"), (v: "c")))
   assert.eq(out.counts.at("fill"), 1)
 }
 
