@@ -406,34 +406,46 @@
   let _x-disp = _axis-display(x-trained)
   let _y-disp = _axis-display(y-trained)
 
-  // Draw the cartesian axis ticks, gridlines, and labels for one axis.
-  // Continuous and discrete axes share everything except how `cx`/`cy` is
-  // mapped, where the labels come from, and which gridlines are drawn. A
-  // discrete axis draws majors only when the theme asks for them per weight or
-  // per axis, and never draws minors: a gap between levels has no subdivision.
-  let _draw-cartesian-axis(axis, trained, disp, ax-text-typst, draw-label) = {
-    if is-radial or trained == none { return }
+  // What one cartesian axis walks: the breaks, where they map to, and whether
+  // the guide suppressed the band. `none` where the panel draws no cartesian
+  // axis at all, which is every radial panel and every axis without a scale.
+  //
+  // Continuous and discrete axes share everything except where the breaks come
+  // from, so only that branches here.
+  let _cartesian-walk(axis, trained) = {
+    if is-radial or trained == none { return none }
     let is-continuous = trained.type == "continuous"
-    if not is-continuous and trained.type != "discrete" { return }
-    let stroke = if axis == "x" { _ax-ticks.xb } else { _ax-ticks.yl }
-    let tick-len = if axis == "x" { _tick-len.xb } else { _tick-len.yl }
-    let suppress = if axis == "x" { x-guide.suppress } else { y-guide.suppress }
-    let range = if axis == "x" { px-range } else { py-range }
+    if not is-continuous and trained.type != "discrete" { return none }
+    let cached = if axis-breaks == none { none } else {
+      axis-breaks.at(axis, default: none)
+    }
+    (
+      is-continuous: is-continuous,
+      breaks: if is-continuous and cached != none {
+        cached
+      } else { _axis-tick-values(trained) },
+      range: if axis == "x" { px-range } else { py-range },
+      suppress: if axis == "x" { x-guide.suppress } else { y-guide.suppress },
+    )
+  }
+
+  // Gridlines for one axis. They are panel furniture rather than part of the
+  // axis band: they mark where a break crosses the panel, so they stay with the
+  // panel whatever draws the ticks and the labels outside it.
+  //
+  // A discrete axis draws majors only when the theme asks for them per weight or
+  // per axis, and never draws minors: a gap between levels has no subdivision.
+  let _draw-cartesian-grid(axis, trained, walk) = {
+    if walk == none { return }
     let major-stroke = if axis == "x" { _grid-major.x } else { _grid-major.y }
     let minor-stroke = if axis == "x" { _grid-minor.x } else { _grid-minor.y }
     let major-discrete = if axis == "x" {
       _grid-discrete.x
     } else { _grid-discrete.y }
-    let cached = if axis-breaks == none { none } else {
-      axis-breaks.at(axis, default: none)
-    }
-    let breaks = if is-continuous and cached != none {
-      cached
-    } else { _axis-tick-values(trained) }
     // Minor gridlines sit under the majors, so draw them first.
-    if is-continuous and minor-stroke != none {
-      for mb in _axis-minor-breaks(trained, breaks) {
-        let mc = map-axis-data(trained, mb, range)
+    if walk.is-continuous and minor-stroke != none {
+      for mb in _axis-minor-breaks(trained, walk.breaks) {
+        let mc = map-axis-data(trained, mb, walk.range)
         if axis == "x" {
           line((mc, py-lo), (mc, py-hi), stroke: minor-stroke)
         } else {
@@ -441,51 +453,68 @@
         }
       }
     }
-    for (idx, b) in breaks.enumerate() {
-      let c = map-break(trained, b, range)
-      if major-stroke != none and (is-continuous or major-discrete) {
-        if axis == "x" {
-          line((c, py-lo), (c, py-hi), stroke: major-stroke)
-        } else {
-          line((px-lo, c), (px-hi, c), stroke: major-stroke)
-        }
+    if major-stroke == none or not (walk.is-continuous or major-discrete) {
+      return
+    }
+    for b in walk.breaks {
+      let c = map-break(trained, b, walk.range)
+      if axis == "x" {
+        line((c, py-lo), (c, py-hi), stroke: major-stroke)
+      } else {
+        line((px-lo, c), (px-hi, c), stroke: major-stroke)
       }
-      if _should-draw-tick(stroke, tick-len) and not suppress {
+    }
+  }
+
+  // The tick marks and the tick labels of one axis: everything the axis band
+  // outside the panel holds.
+  let _draw-cartesian-marks(axis, trained, walk, disp, ax-typst, draw-label) = {
+    if walk == none or walk.suppress { return }
+    let stroke = if axis == "x" { _ax-ticks.xb } else { _ax-ticks.yl }
+    let tick-len = if axis == "x" { _tick-len.xb } else { _tick-len.yl }
+    let ticked = _should-draw-tick(stroke, tick-len)
+    for (idx, b) in walk.breaks.enumerate() {
+      let c = map-break(trained, b, walk.range)
+      if ticked {
         if axis == "x" {
           line((c, py-lo), (c, py-lo - tick-len), stroke: stroke)
         } else {
           line((px-lo - tick-len, c), (px-lo, c), stroke: stroke)
         }
       }
-      if not suppress {
-        let fallback = _tick-label-fallback(trained, b)
-        draw-label(
-          c,
-          resolve-prose(
-            resolve-label(
-              disp.labels,
-              b,
-              idx,
-              fallback,
-              typst-mark: disp.typst-mark,
-            ),
-            eval-strings: ax-text-typst,
+      let fallback = _tick-label-fallback(trained, b)
+      draw-label(
+        c,
+        resolve-prose(
+          resolve-label(
+            disp.labels,
+            b,
+            idx,
+            fallback,
+            typst-mark: disp.typst-mark,
           ),
-          idx,
-        )
-      }
+          eval-strings: ax-typst,
+        ),
+        idx,
+      )
     }
   }
-  _draw-cartesian-axis(
+  let _x-walk = _cartesian-walk("x", x-trained)
+  let _y-walk = _cartesian-walk("y", y-trained)
+  _draw-cartesian-grid("x", x-trained, _x-walk)
+  _draw-cartesian-marks(
     "x",
     x-trained,
+    _x-walk,
     _x-disp,
     _ax-text.xb.typst,
     _draw-x-label,
   )
-  _draw-cartesian-axis(
+  _draw-cartesian-grid("y", y-trained, _y-walk)
+  _draw-cartesian-marks(
     "y",
     y-trained,
+    _y-walk,
     _y-disp,
     _ax-text.yl.typst,
     _draw-y-label,
