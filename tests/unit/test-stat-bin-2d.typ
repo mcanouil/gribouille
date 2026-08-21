@@ -79,7 +79,7 @@
   (bins: 4, binwidth: none),
 )
 #assert.eq(panel-params.grid.x-n-bins, 4)
-#let resolved = resolve-bin-grid-2d((), (), panel-params)
+#let resolved = resolve-bin-grid-2d(panel-params, () => (), () => ())
 #assert.eq(resolved.x-n-bins, 4)
 
 // Empty input: no rows emitted.

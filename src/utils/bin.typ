@@ -81,11 +81,16 @@
 
 // Resolve the bin grid for a per-group `apply()`. Prefers a panel-level grid
 // stashed in `params.grid` (set by `panel-bin-grid` during setup); otherwise
-// derives a per-group grid from `xs`.
-#let resolve-bin-grid(xs, params) = {
+// derives a per-group grid from the values `get-xs` returns.
+//
+// The values arrive through a thunk rather than as an array because the
+// stashed grid is the normal case, and a caller that materialises its values
+// first pays a full pass per group for a resolver that never reads them. A
+// closure captures its scope by reference, so passing one costs nothing.
+#let resolve-bin-grid(params, get-xs) = {
   let grid = params.at("grid", default: none)
   if grid != none { return grid }
-  let (lo, hi) = bin-domain(xs)
+  let (lo, hi) = bin-domain((get-xs)())
   let (n-bins, width) = bin-config(
     lo,
     hi,
@@ -118,7 +123,7 @@
     entries.push(entry)
   }
   if entries.len() == 0 { return none }
-  let grid = resolve-bin-grid(entries.map(e => e.x), params)
+  let grid = resolve-bin-grid(params, () => entries.map(e => e.x))
   let counts = range(grid.n-bins).map(_ => 0)
   let buckets = if collect-y {
     range(grid.n-bins).map(_ => (ys: (), ws: ()))
