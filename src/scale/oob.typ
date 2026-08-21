@@ -9,7 +9,9 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
 #import "../utils/palette.typ": spec-attr
-#import "train.typ": mapping-ref-col, to-stat-fn, view-bounds-stat
+#import "train.typ": (
+  level-lookup, mapping-ref-col, to-stat-fn, view-bounds-stat,
+)
 #import "../utils/errors.typ": fail
 
 // Build the per-row check for one trained scale, or `none` when the scale sets
@@ -72,12 +74,9 @@
   }
 
   if trained.type == "discrete" {
-    // `level-index` is the `(level: position)` dict every trained discrete
-    // scale carries, so the level test is one lookup rather than a scan of the
-    // domain. Fall back to the domain when it is absent, as `discrete-index`
-    // does, since a hand-built trained dict carries no index.
-    let levels = trained.at("level-index", default: none)
-    let domain = trained.domain
+    // The level lookup, resolved once here so the row test is one dict read
+    // rather than a scan of the domain.
+    let levels = level-lookup(trained)
     return (
       limits: limits,
       check: raw => {
@@ -89,11 +88,7 @@
         // bound any overflow; drop fires only for a non-numeric value off the
         // set.
         if parse-number(raw) != none { return ("in", raw) }
-        let s = str(raw)
-        let known = if levels == none { domain.contains(s) } else {
-          s in levels
-        }
-        if known { return ("in", raw) }
+        if str(raw) in levels { return ("in", raw) }
         ("drop", raw)
       },
     )

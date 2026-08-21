@@ -242,6 +242,24 @@
   assert.eq(out.counts.at("fill"), 1)
 }
 
+// squish on a transformed scale compares in stat space but clamps to a data
+// space endpoint. With `sqrt` limits of `(1, 9)`, a cell of 0 warps to 0 and
+// clamps to 1, and a cell of 16 warps to 4 and clamps to 9. Clamping to the
+// stat-space bound instead would write 1 and 3.
+#{
+  let trained = (
+    fill: _trained-continuous(
+      limits: (1, 9),
+      oob: "squish",
+      transform: "sqrt",
+    ),
+  )
+  let rows = ((v: 0), (v: 16))
+  let out = filter-oob((_layer(rows),), trained)
+  assert.eq(out.layers.at(0).data, ((v: 1), (v: 9)))
+  assert.eq(out.counts, (:))
+}
+
 // an identity scale censors nothing, whatever `limits` it carries, so the
 // pre-pass never walks a layer for it.
 #{
