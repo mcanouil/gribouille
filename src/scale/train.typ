@@ -738,9 +738,6 @@
   r-lo + (idx - v-lo) * (r-hi - r-lo) / (v-hi - v-lo)
 }
 
-// 1-indexed level position of `value` on a trained discrete scale, or `none`
-// when it is neither a level nor already a numeric position. The 1-indexing
-// matches how `map-discrete` reads a bare number, so callers can offset the
 // The `(level: position)` lookup of a discrete trained scale. Every scale the
 // trainer emits carries one; a hand-built trained dict may not, so it is built
 // on demand. A caller testing many values resolves it once through this rather
@@ -750,13 +747,14 @@
   if lookup == none { _level-index(trained.domain) } else { lookup }
 }
 
+// 1-indexed level position of `value` on a trained discrete scale, or `none`
+// when it is neither a level nor already a numeric position. The 1-indexing
+// matches how `map-discrete` reads a bare number, so callers can offset the
 // result and feed it straight back through `map-position`.
 #let level-position(trained, value) = {
   if value == none { return none }
   if type(value) == int or type(value) == float { return float(value) }
-  let lookup = trained.at("level-index", default: none)
-  if lookup == none { lookup = _level-index(trained.domain) }
-  let idx = lookup.at(str(value), default: none)
+  let idx = level-lookup(trained).at(str(value), default: none)
   if idx == none { none } else { idx + 1 }
 }
 

@@ -213,10 +213,14 @@
   assert.eq(out.counts.at("fill"), 1)
 }
 
-// a transformed scale warps the cell before it tests the span. The trained
-// domain of a `sqrt` scale lives in data space, so the limits `(1, 9)` become
-// the stat span `(1, 3)`, and the raw cell must be warped to be tested against
-// it. A cell of 4 warps to 2 and is in range; 16 warps to 4 and drops.
+// the warp rule itself, on a synthetic entry: a scale that names a transform
+// and is not `pre-transformed` warps the cell before it tests the span, so a
+// domain of `(1, 9)` is read as the stat span `(1, 3)`. A cell of 4 warps to 2
+// and is in range; 16 warps to 4 and drops.
+//
+// The trainer never emits this shape, because `_train-entry` marks every
+// `log10` and `sqrt` scale `pre-transformed` and lifts the user limits into
+// stat space. The case below covers the shape a real `sqrt` scale has.
 #{
   let trained = (fill: _trained-continuous(limits: (1, 9), transform: "sqrt"))
   let rows = ((v: 4), (v: 16))
@@ -225,9 +229,10 @@
   assert.eq(out.counts.at("fill"), 1)
 }
 
-// a `pre-transformed` scale already holds stat-space values, so the cell is
-// tested as it stands. With the same `sqrt` name on the scale, warping the
-// cell again would drop the row that must survive.
+// the shape a real `sqrt` scale has: `pre-transformed`, with the user limits
+// already lifted into stat space, so `limits: (1, 9)` reaches the pre-pass as
+// the domain `(1, 3)` and the row values are warped too. The cell is tested as
+// it stands, and warping it a second time would drop the row that survives.
 #{
   let trained = (
     fill: _trained-continuous(
