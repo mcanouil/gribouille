@@ -127,6 +127,13 @@
   gctx.at("tick-gap", default: 0.0)
 }
 
+// Whether a child is a spacer that is owed only when the stack takes room.
+#let _is-owed(child) = (
+  child.at("kind", default: none) == PRIMITIVE
+    and child.at("name", default: none) == "spacer"
+    and child.at("owed", default: false)
+)
+
 // Measure the whole tree into one record.
 //
 // `cells` carries one entry per child, in draw order, each with the depth it
@@ -144,6 +151,17 @@
     fail-enum("guide-compose", "composition", node.name, ("stack",))
   }
   let gap = _spacing-of(node, gctx)
+  // An owed spacer belongs to the band rather than to a neighbour, so it is
+  // decided from what the rest of the stack reserved rather than from what sits
+  // beside it. That is the gap an axis holds its labels off the panel edge by.
+  //
+  // Deciding it costs a pass over the children, so a stack without one, which is
+  // every legend, never pays for it.
+  let owes = node.children.any(_is-owed)
+  let band = owes and node.children.any(child => (
+    not _is-owed(child)
+      and _measure-child(child, gctx, layout-of).measure.across > 0.0
+  ))
   let cells = ()
   let offset = 0.0
   let along = 0.0
@@ -152,6 +170,7 @@
   let far = 0.0
   for child in node.children {
     let (measure: m, layout: inner) = _measure-child(child, gctx, layout-of)
+    if _is-owed(child) and not band { m = measured() }
     let empty = m.across == 0.0 and not m.fills and m.along == 0.0
     if empty {
       cells.push((
