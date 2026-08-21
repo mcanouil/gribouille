@@ -188,6 +188,5 @@
   assert.eq(out.counts.at("fill", default: 0), 0)
 }
 
-
 // strict mode panics on first OOB row. Typst has no try/catch; the panic
 // path is exercised manually via examples/oob-strict-* (see PR description).

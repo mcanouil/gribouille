@@ -11,41 +11,58 @@
 #import "train.typ": _to-stat, mapping-ref-col, view-bounds-stat
 #import "../utils/errors.typ": fail
 
-// Everything the per-row check reads, resolved once per aesthetic.
+// Build the per-row check for one trained scale, or `none` when the scale sets
+// no user `limits` and therefore censors nothing.
 //
-// A trained scale reaches its whole domain, so handing one to a per-row
-// function costs a pass over every level on every row. This record carries the
-// few small values the check needs instead. `to-stat` is a closure, which
-// captures the trained scale by reference and so costs nothing to pass.
-#let _plan(trained) = {
+// The check is a closure taking the cell alone. Everything else it needs is
+// captured, which matters because a trained discrete scale reaches its whole
+// domain: handing that dict to a per-row function costs a pass over every
+// level on every row, while a captured scope is shared by reference and costs
+// nothing.
+//
+// The closure returns one of:
+//   ("in",     value)   — unchanged
+//   ("squish", clamped) — kept, value rewritten
+//   ("drop",   value)   — caller drops the row
+#let _checker(trained) = {
   let spec = trained.at("spec", default: none)
   if spec == none { return none }
   let limits = spec.at("limits", default: none)
   if limits == none { return none }
-  let plan = (
-    kind: trained.type,
-    oob: spec.at("oob", default: "drop"),
-    limits: limits,
-  )
+  let oob = spec.at("oob", default: "drop")
+
   if trained.type == "continuous" {
     // The expanded view in stat space, rather than the raw `limits`, so a value
     // sitting in the expansion headroom -- which still maps inside the visible
     // panel -- survives instead of being dropped.
     let (t-lo, t-hi) = view-bounds-stat(trained)
+    // `t-lo`/`t-hi` follow the domain order, which runs high-to-low when the
+    // user supplies reversed `limits` to flip the axis; the in-range test reads
+    // the sorted span so it holds either way.
+    let span-lo = calc.min(t-lo, t-hi)
+    let span-hi = calc.max(t-lo, t-hi)
     let (lo, hi) = trained.domain
-    plan += (
-      t-lo: t-lo,
-      t-hi: t-hi,
-      // `t-lo`/`t-hi` follow the domain order, which runs high-to-low when the
-      // user supplies reversed `limits` to flip the axis; the in-range test
-      // reads the sorted span so it holds either way.
-      span-lo: calc.min(t-lo, t-hi),
-      span-hi: calc.max(t-lo, t-hi),
-      lo: lo,
-      hi: hi,
-      to-stat: v => _to-stat(trained, v),
+    return (
+      limits: limits,
+      check: raw => {
+        let v = parse-number(raw)
+        if v == none { return ("in", raw) }
+        let sv = _to-stat(trained, v)
+        if sv >= span-lo and sv <= span-hi { return ("in", raw) }
+        if oob == "squish" {
+          // Clamp to the nearest `limits` endpoint (the visible data edge), not
+          // the expanded bound, matching the documented squish-to-limit
+          // semantics. `t-lo` pairs with `lo` and `t-hi` with `hi` whatever the
+          // order.
+          let to-lo = calc.abs(sv - t-lo) <= calc.abs(sv - t-hi)
+          return ("squish", if to-lo { lo } else { hi })
+        }
+        ("drop", raw)
+      },
     )
-  } else if trained.type == "discrete" {
+  }
+
+  if trained.type == "discrete" {
     // A set, so the level test is one lookup rather than a scan of the domain.
     // Only string levels are kept: the cell is compared as a string, and a
     // level of any other type could never have matched it.
@@ -53,44 +70,24 @@
     for level in trained.domain {
       if type(level) == str { levels.insert(level, true) }
     }
-    plan += (levels: levels)
+    return (
+      limits: limits,
+      check: raw => {
+        if raw == none { return ("in", raw) }
+        // A numeric value addresses a 1-indexed fractional level position rather
+        // than a level name (`map-discrete` places it at `value - 1`), e.g. a
+        // polygon vertex set between level centres or a jittered point. The
+        // renderer can place it, so the pre-pass keeps it and lets panel clipping
+        // bound any overflow; drop fires only for a non-numeric value off the
+        // set.
+        if parse-number(raw) != none { return ("in", raw) }
+        if str(raw) in levels { return ("in", raw) }
+        ("drop", raw)
+      },
+    )
   }
-  plan
-}
 
-// Returns one of:
-//   ("in",     value)   — unchanged
-//   ("squish", clamped) — kept, value rewritten
-//   ("drop",   value)   — caller drops the row
-//
-// `plan` is the record `_plan` resolved once per aesthetic.
-#let _check(plan, raw) = {
-  if plan.kind == "continuous" {
-    let v = parse-number(raw)
-    if v == none { return ("in", raw) }
-    let sv = (plan.to-stat)(v)
-    if sv >= plan.span-lo and sv <= plan.span-hi { return ("in", raw) }
-    if plan.oob == "squish" {
-      // Clamp to the nearest `limits` endpoint (the visible data edge), not the
-      // expanded bound, matching the documented squish-to-limit semantics.
-      // `t-lo` pairs with `lo` and `t-hi` with `hi` whatever the order.
-      let to-lo = calc.abs(sv - plan.t-lo) <= calc.abs(sv - plan.t-hi)
-      return ("squish", if to-lo { plan.lo } else { plan.hi })
-    }
-    return ("drop", raw)
-  }
-  if plan.kind == "discrete" {
-    if raw == none { return ("in", raw) }
-    // A numeric value addresses a 1-indexed fractional level position rather
-    // than a level name (`map-discrete` places it at `value - 1`), e.g. a
-    // polygon vertex set between level centres or a jittered point. The
-    // renderer can place it, so the pre-pass keeps it and lets panel clipping
-    // bound any overflow; drop fires only for a non-numeric value off the set.
-    if parse-number(raw) != none { return ("in", raw) }
-    if str(raw) in plan.levels { return ("in", raw) }
-    return ("drop", raw)
-  }
-  ("in", raw)
+  (limits: limits, check: raw => ("in", raw))
 }
 
 // Filter rows of every layer through the trained dict. Returns the rewritten
@@ -98,11 +95,11 @@
 // first drop into a `panic` instead.
 #let filter-oob(layers, trained, strict: false) = {
   let active = ()
-  // Everything the check reads is constant per aesthetic, so it is resolved
-  // once here and the per-row `_check` only warps the cell value.
+  // Everything the check reads is constant per aesthetic, so each scale is
+  // resolved once here into a closure the row walk calls with the cell alone.
   let plans = (:)
   for (aes, t) in trained.pairs() {
-    let plan = _plan(t)
+    let plan = _checker(t)
     if plan == none { continue }
     active.push(aes)
     plans.insert(aes, plan)
@@ -137,7 +134,7 @@
         let col = mapping-ref-col(raw)
         let cell = row.at(col, default: none)
         let plan = plans.at(aes)
-        let (action, value) = _check(plan, cell)
+        let (action, value) = (plan.check)(cell)
         if action == "in" { continue }
         if action == "squish" {
           new-row.insert(col, value)

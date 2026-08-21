@@ -5,6 +5,11 @@
 // `apply()` call after that already has its partition. Building the value
 // arrays for a resolver that will not look at them costs one full pass per
 // group, which is why the resolvers take thunks rather than arrays.
+//
+// These tests pin the resolvers, not their callers. A caller that builds its
+// values before wrapping them in a thunk still passes every case here, because
+// an eager `entries.map()` has no observable effect. The call sites are
+// `bin-1d-cells`, `bin-2d-cells` and `stat/bindot.typ`.
 
 #import "../../src/utils/bin.typ": panel-bin-grid, resolve-bin-grid
 #import "../../src/utils/bin-2d.typ": panel-bin-grid-2d, resolve-bin-grid-2d
