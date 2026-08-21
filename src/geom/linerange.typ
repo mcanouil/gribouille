@@ -6,7 +6,7 @@
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point, shift-point
-#import "../position/dodge.typ": dodge-delta
+#import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
@@ -106,6 +106,10 @@
 // the row does not resolve. `line-alpha: true` folds the alpha channel into
 // the line paint; pointrange keeps the paint opaque so its marker fill
 // inherits the plain colour.
+//
+// `dodge` is the record `dodge-geometry` answered for the layer, resolved once
+// by the caller: it is the same for every row, and resolving it here would put
+// the layer, and the rows hanging off it, in a per-row call.
 #let range-line-row(
   layer,
   mapping,
@@ -115,6 +119,7 @@
   ymin-col,
   ymax-col,
   theme-colour,
+  dodge: none,
   line-alpha: true,
 ) = {
   let xv = row.at(x-col, default: none)
@@ -124,7 +129,7 @@
   let p-lo = project-point(ctx, xv, lo)
   let p-hi = project-point(ctx, xv, hi)
   if p-lo == none or p-hi == none { return none }
-  let dd = dodge-delta(ctx, layer, row)
+  let dd = dodge-delta(dodge, row)
   let (cx-lo, cy-lo) = shift-point(p-lo, dd)
   let (cx-hi, cy-hi) = shift-point(p-hi, dd)
 
@@ -176,6 +181,7 @@
   if x-trained == none or y-trained == none { return }
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
+  let dodge = dodge-geometry(ctx, layer)
 
   for row in data {
     let res = range-line-row(
@@ -187,6 +193,7 @@
       ymin-col,
       ymax-col,
       theme-colour,
+      dodge: dodge,
     )
     if res != none { res.elem }
   }

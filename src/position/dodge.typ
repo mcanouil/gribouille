@@ -100,29 +100,32 @@
 /// \@param half Undodged half-width on the canvas.
 #let dodge-half(row, half) = half / row.at("_dodge-n", default: 1)
 
-/// Canvas-cm shift to apply to a projected point so it rides its dodge slot.
+/// The dodge geometry a layer draws under: the canvas cm one slot covers and
+/// which axis the shift lands on.
 ///
 /// For geoms that place marks via `project-point` (point, line, path, text,
 /// label, typst, pointrange, linerange) rather than the band math used by the
-/// bar geoms. Returns `(dx, dy)` to add to the projected `(cx, cy)`: the shift
-/// lands on the category axis (`x`, or `y` under flip) and is zero unless the
-/// layer dodges over a discrete category axis in Cartesian coordinates.
+/// bar geoms. Nothing here varies per row, so a draw resolves it once and
+/// carries the record into its row loop: the layer dictionary reaches the whole
+/// row set, and a call that takes one costs time proportional to it.
+///
+/// `none` unless the layer dodges over a category axis in Cartesian
+/// coordinates, which is what makes the per-row shift free for every other
+/// plot.
 ///
 /// \@internal
 /// \@param ctx Draw context carrying `trained`, `px-range`/`py-range`, `flipped`, and optional `radial`.
 ///
 /// \@param layer Layer dictionary; its `position` field selects dodge and its width.
 ///
-/// \@param row Data row carrying `_dodge-offset` written by `apply`.
-///
-/// \@returns `(dx, dy)` canvas-cm offset, `(0, 0)` when dodge does not apply.
-#let dodge-delta(ctx, layer, row) = {
+/// \@returns `(span, flipped)`, or `none` when dodge does not apply.
+#let dodge-geometry(ctx, layer) = {
   let pos = layer.at("position", default: "identity")
   let name = if type(pos) == str { pos } else if pos == none {
     "identity"
   } else { pos.at("name", default: "identity") }
-  if name != "dodge" { return (0.0, 0.0) }
-  if ctx.at("radial", default: none) != none { return (0.0, 0.0) }
+  if name != "dodge" { return none }
+  if ctx.at("radial", default: none) != none { return none }
 
   let width = if type(pos) == dictionary {
     pos.at("params", default: (:)).at("width", default: 0.9)
@@ -134,7 +137,7 @@
     default: none,
   )
   let cat-range = if flipped { ctx.py-range } else { ctx.px-range }
-  if cat-trained == none { return (0.0, 0.0) }
+  if cat-trained == none { return none }
 
   let span = if cat-trained.type == "discrete" {
     discrete-slot-width(cat-trained, cat-range) * width
@@ -142,14 +145,14 @@
     // Continuous axis: infer slot width from min canvas gap between unique x values.
     let resolve-data = ctx.at("resolve-data", default: none)
     let resolve-mapping = ctx.at("resolve-mapping", default: none)
-    if resolve-data == none or resolve-mapping == none { return (0.0, 0.0) }
+    if resolve-data == none or resolve-mapping == none { return none }
     let data = resolve-data(layer)
     let mapping = resolve-mapping(layer)
     // resolve-mapping is flip-aware: mapping.at("x") is always the category column.
     let x-col = mapping.at("x", default: none)
-    if x-col == none { return (0.0, 0.0) }
+    if x-col == none { return none }
     let (d-lo, d-hi) = cat-trained.domain
-    if d-hi == d-lo { return (0.0, 0.0) }
+    if d-hi == d-lo { return none }
     let (cat-lo, cat-hi) = cat-range
     let xs = data
       .map(r => parse-number(r.at(x-col, default: none)))
@@ -166,8 +169,24 @@
     }
   }
 
-  let shift = row.at("_dodge-offset", default: 0) * span
-  if flipped { (0.0, shift) } else { (shift, 0.0) }
+  (span: span, flipped: flipped)
+}
+
+/// Canvas-cm shift that puts one row on its dodge slot.
+///
+/// Takes the record `dodge-geometry` resolved for the layer, so the per-row
+/// call carries a pair of numbers rather than the layer the rows hang off.
+///
+/// \@internal
+/// \@param geometry The record `dodge-geometry` answered, or `none`.
+///
+/// \@param row Data row carrying `_dodge-offset` written by `apply`.
+///
+/// \@returns `(dx, dy)` canvas-cm offset, `(0, 0)` when dodge does not apply.
+#let dodge-delta(geometry, row) = {
+  if geometry == none { return (0.0, 0.0) }
+  let shift = row.at("_dodge-offset", default: 0) * geometry.span
+  if geometry.flipped { (0.0, shift) } else { (shift, 0.0) }
 }
 
 #let _row-width(row, default-width) = {

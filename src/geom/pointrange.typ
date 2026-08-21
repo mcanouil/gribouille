@@ -6,6 +6,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": project-point, shift-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
+#import "../position/dodge.typ": dodge-geometry
 #import "linerange.typ": range-line-row
 
 /// Pointrange layer: a marker at `(x, y)` plus a linerange from `ymin` to `ymax`.
@@ -129,6 +130,7 @@
   if x-trained == none or y-trained == none { return }
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
+  let dodge = dodge-geometry(ctx, layer)
 
   for row in data {
     let xv = row.at(x-col, default: none)
@@ -145,6 +147,7 @@
       ymin-col,
       ymax-col,
       theme-colour,
+      dodge: dodge,
       line-alpha: false,
     )
     if res == none { continue }

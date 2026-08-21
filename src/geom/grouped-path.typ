@@ -9,7 +9,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
 #import "../utils/radial.typ": project-point, shift-point
-#import "../position/dodge.typ": dodge-delta
+#import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 // Sort rows by their x value: numeric for continuous scales, domain index
@@ -34,6 +34,9 @@
 // through `ctx.radial` when active. Skips rows whose mapped position fails
 // to resolve.
 #let rows-to-points(rows, layer, mapping, ctx) = {
+  // Resolved once: nothing about the dodge slot varies per row, and a per-row
+  // call taking the layer would carry the whole row set with it.
+  let dodge = dodge-geometry(ctx, layer)
   let pts = ()
   for row in rows {
     let p = project-point(
@@ -42,7 +45,7 @@
       row.at(mapping.y, default: none),
     )
     if p == none { continue }
-    pts.push(shift-point(p, dodge-delta(ctx, layer, row)))
+    pts.push(shift-point(p, dodge-delta(dodge, row)))
   }
   pts
 }

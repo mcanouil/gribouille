@@ -3,7 +3,7 @@
 // rendering. Kept here so the three geoms do not redeclare the same bits.
 
 #import "../deps.typ": cetz
-#import "../position/dodge.typ": dodge-delta
+#import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/aes-resolve.typ": aes-col
 #import "../utils/arrow.typ": draw-arrow-heads
 #import "../utils/radial.typ": axis-numeric, project-point, shift-point
@@ -87,6 +87,9 @@
   let nudge-x-spec = _nudge-spec(layer, mapping, "nudge-x")
   let nudge-y-spec = _nudge-spec(layer, mapping, "nudge-y")
   let needs-nudge = nudge-x-spec != none or nudge-y-spec != none
+  // Resolved once: the dodge slot belongs to the layer, and a per-row call
+  // taking the layer would carry the whole row set with it.
+  let dodge = dodge-geometry(ctx, layer)
   data
     .enumerate()
     .map(((idx, row)) => {
@@ -94,7 +97,7 @@
       let yv = row.at(mapping.y, default: none)
       let projected = project-point(ctx, xv, yv)
       if projected == none { return none }
-      let (cx, cy) = shift-point(projected, dodge-delta(ctx, layer, row))
+      let (cx, cy) = shift-point(projected, dodge-delta(dodge, row))
       let (nudge-dx, nudge-dy) = if not needs-nudge {
         (0.0, 0.0)
       } else {
@@ -125,6 +128,7 @@
   sizes,
   repel-params,
 ) = {
+  let dodge = dodge-geometry(ctx, layer)
   let live-idx = ()
   let anchors = ()
   let live-sizes = ()
@@ -134,7 +138,7 @@
     let projected = project-point(ctx, xv, yv)
     if projected == none { continue }
     live-idx.push(idx)
-    anchors.push(shift-point(projected, dodge-delta(ctx, layer, row)))
+    anchors.push(shift-point(projected, dodge-delta(dodge, row)))
     live-sizes.push(sizes.at(idx, default: (w: 0.0, h: 0.0)))
   }
   let offsets = repel(anchors, live-sizes, params: repel-params)
@@ -225,6 +229,9 @@
     aabbs: aabbs,
     seg-cfg: seg-cfg,
     layer: layer,
+    // Carried rather than resolved per row: `row-centre` runs once a row and
+    // the dodge slot is the same for all of them.
+    dodge: dodge-geometry(ctx, layer),
   )
 }
 
@@ -243,7 +250,7 @@
     row.at(mapping.y, default: none),
   )
   if projected == none { return none }
-  shift-point(projected, dodge-delta(ctx, state.layer, row))
+  shift-point(projected, dodge-delta(state.dodge, row))
 }
 
 // Render a routed connector for one row when its label has been moved off
