@@ -424,9 +424,10 @@
   if t.type == "discrete" {
     let levels = t.domain
     // A scale with no levels has no key to draw, so it is not a guide. The
-    // domain is empty when the user pins `limits: ()`, or when the
-    // out-of-range pre-pass censored every row the scale saw. Letting it
-    // through reserves a box that holds a title and nothing else.
+    // domain is empty when the user pins `limits: ()`, or when every value in
+    // the mapped column is `none` or empty, which `_discrete-domain-from-cache`
+    // skips. Letting it through reserves a box holding a title and nothing
+    // else.
     if levels.len() == 0 { return none }
     let labels = spec-attr(t, "labels", fallback: auto)
     cand.insert("levels", levels)
