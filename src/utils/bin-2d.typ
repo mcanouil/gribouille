@@ -113,9 +113,8 @@
     counts.at(k) = counts.at(k) + e.w
     total = total + e.w
     if collect-z {
-      let bucket = buckets.at(k)
-      bucket.push(e.z)
-      buckets.at(k) = bucket
+      // Appended in place, for the same reason as the one-dimensional bins.
+      buckets.at(k).push(e.z)
     }
   }
   (grid: grid, counts: counts, buckets: buckets, total: total)

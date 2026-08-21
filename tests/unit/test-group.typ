@@ -1,7 +1,8 @@
 // Group-key and group-cols utility tests.
 
 #import "../../src/utils/group.typ": (
-  expose-shared-positional, group-aesthetics, group-cols, group-key,
+  bucket-by-col, expose-shared-positional, group-aesthetics, group-cols,
+  group-key, group-plan, partition-by-group, plan-key,
 )
 #import "../../src/aes.typ": aes
 #import "../../src/data.typ": as-factor
@@ -151,5 +152,61 @@
 #let m-after-stat = aes(x: "x", y: "y", fill: after-stat("_sign"))
 #assert.eq(group-key(row1, m-after-stat), "_all")
 #assert.eq(group-cols(m-after-stat), ())
+
+// --- the plan and the key it produces ---
+// Which aesthetics can group is a property of the mapping, so it is resolved
+// once and spent per row. Only the data-type mode leaves a decision to the
+// row, where a cell that is numeric does not group.
+
+#let m-colour = aes(x: "x", y: "y", colour: "g")
+#assert.eq(group-plan(m-colour), ((col: "g", by-value: true),))
+#assert.eq(
+  group-plan(m-colour, trained: (colour: (type: "discrete", domain: ("a",)))),
+  ((col: "g", by-value: false),),
+)
+#assert.eq(group-plan(aes(x: "x", y: "y")), ())
+
+// The key a plan makes is the key the one-shot helper makes.
+#let rows-mixed = ((x: 1, y: 2, g: "a"), (x: 2, y: 3, g: 4))
+#for row in rows-mixed {
+  assert.eq(plan-key(group-plan(m-colour), row), group-key(row, m-colour))
+}
+
+// A missing cell keys as the empty string, so a row with no value for the
+// grouping column still lands in a bucket rather than being dropped.
+#assert.eq(group-key((x: 1, y: 2), m-colour), "")
+
+// --- partitioning keeps first-appearance order and every row ---
+#let rows = (
+  (x: 1, g: "b"),
+  (x: 2, g: "a"),
+  (x: 3, g: "b"),
+  (x: 4, g: "a"),
+  (x: 5, g: "b"),
+)
+#let parts = partition-by-group(rows, aes(x: "x", y: "y", colour: "g"))
+#assert.eq(parts.map(p => p.key), ("b", "a"))
+#assert.eq(parts.map(p => p.data.len()), (3, 2))
+#assert.eq(parts.at(0).data.map(r => r.x), (1, 3, 5))
+#assert.eq(parts.at(1).data.map(r => r.x), (2, 4))
+
+// One bucket is the worst case for the copy-on-push pattern this avoids, and
+// it must still answer every row in order.
+#let one = partition-by-group(rows, aes(x: "x", y: "y"))
+#assert.eq(one.len(), 1)
+#assert.eq(one.at(0).key, "_all")
+#assert.eq(one.at(0).data.map(r => r.x), (1, 2, 3, 4, 5))
+
+// --- bucket-by-col: first-appearance order, empty values dropped ---
+#let col-rows = (
+  (v: "x", i: 0),
+  (v: "y", i: 1),
+  (v: "", i: 2),
+  (v: "x", i: 3),
+)
+#let cols = bucket-by-col(col-rows, "v")
+#assert.eq(cols.len(), 2)
+#assert.eq(cols.at(0).map(r => r.i), (0, 3))
+#assert.eq(cols.at(1).map(r => r.i), (1,))
 
 Group tests passed.

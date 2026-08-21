@@ -172,17 +172,25 @@
     // first-appearance order.
     let buckets = (:)
     let order = ()
+    // Appended in place: reading a bucket out of the dictionary to push to it
+    // shares the array, so each push would copy the whole bucket.
+    let index = (:)
+    let bucket-rows = ()
     for row in g.data {
       let key = str(row.at(x-col, default: ""))
       if key == "" { continue }
-      if key not in buckets { order.push(key) }
-      let bucket = buckets.at(key, default: ())
-      bucket.push(row)
-      buckets.insert(key, bucket)
+      let at = index.at(key, default: none)
+      if at == none {
+        at = bucket-rows.len()
+        index.insert(key, at)
+        order.push(key)
+        bucket-rows.push(())
+      }
+      bucket-rows.at(at).push(row)
     }
 
-    for key in order {
-      let rows = buckets.at(key)
+    for (bucket-i, key) in order.enumerate() {
+      let rows = bucket-rows.at(bucket-i)
       let raw-x = rows.first().at(x-col, default: none)
       let cx = map-position(x-trained, raw-x, ctx.px-range)
       if cx == none { continue }

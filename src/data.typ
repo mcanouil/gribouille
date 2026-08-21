@@ -27,13 +27,25 @@
 // Partition `rows` into buckets keyed by `str(key-fn(row))`.
 // Preserves input order within each bucket.
 #let group-by(rows, key-fn) = {
-  let out = (:)
+  // Buckets are built in a plain array and appended to in place. Reading one
+  // out of the dictionary to push to it shares the array, so the push copies
+  // it, and a single-bucket grouping then costs a copy per row.
+  let index = (:)
+  let keys = ()
+  let buckets = ()
   for row in rows {
     let k = str(key-fn(row))
-    let bucket = out.at(k, default: ())
-    bucket.push(row)
-    out.insert(k, bucket)
+    let at = index.at(k, default: none)
+    if at == none {
+      at = buckets.len()
+      index.insert(k, at)
+      keys.push(k)
+      buckets.push(())
+    }
+    buckets.at(at).push(row)
   }
+  let out = (:)
+  for (i, k) in keys.enumerate() { out.insert(k, buckets.at(i)) }
   out
 }
 

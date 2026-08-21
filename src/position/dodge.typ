@@ -9,7 +9,7 @@
 ///! mark's own width, with `padding` between adjacent slots, scaled to fit
 ///! the bucket.
 
-#import "../utils/group.typ": group-key
+#import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": parse-number
 #import "../scale/train.typ": discrete-slot-width, map-axis
 
@@ -205,22 +205,30 @@
   // Alphabetic levels so slot order matches the trained discrete domain
   // and the legend. Dedup is dict-keyed for O(n) instead of array-scan
   // O(n^2).
-  let buckets = (:)
+  // The plan is the mapping's, so it is resolved once rather than per row, and
+  // the buckets are appended to in place: reading one out of the dictionary to
+  // push to it shares the array, so each push would copy the whole bucket.
+  let plan = group-plan(mapping)
+  let index = (:)
   let bucket-order = ()
+  let cells = ()
   let level-set = (:)
   for (i, row) in data.enumerate() {
-    let key = group-key(row, mapping)
+    let key = plan-key(plan, row)
     if key not in level-set { level-set.insert(key, true) }
     let xv = row.at(x-col, default: none)
     let bk = if xv == none { "" } else { str(xv) }
-    if bk not in buckets {
-      buckets.insert(bk, ())
+    let at = index.at(bk, default: none)
+    if at == none {
+      at = cells.len()
+      index.insert(bk, at)
       bucket-order.push(bk)
+      cells.push(())
     }
-    let bucket = buckets.at(bk)
-    bucket.push((i: i, row: row, key: key))
-    buckets.insert(bk, bucket)
+    cells.at(at).push((i: i, row: row, key: key))
   }
+  let buckets = (:)
+  for (i, bk) in bucket-order.enumerate() { buckets.insert(bk, cells.at(i)) }
   let levels = level-set.keys().sorted()
   let level-index = (:)
   for (idx, k) in levels.enumerate() { level-index.insert(k, idx) }

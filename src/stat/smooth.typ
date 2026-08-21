@@ -265,15 +265,26 @@
 
   let group-cols = _grouping-columns(mapping, x-col, y-col)
 
-  let groups = (:)
+  // Buckets are appended to in place: reading one out of a dictionary to push
+  // to it shares the array, so each push would copy the whole bucket.
+  let index = (:)
+  let keys = ()
+  let rows = ()
   let samples = (:)
   for row in data {
     let key = _group-key(row, group-cols)
-    let bucket = groups.at(key, default: ())
-    bucket.push(row)
-    groups.insert(key, bucket)
-    if samples.at(key, default: none) == none { samples.insert(key, row) }
+    let at = index.at(key, default: none)
+    if at == none {
+      at = rows.len()
+      index.insert(key, at)
+      keys.push(key)
+      rows.push(())
+      samples.insert(key, row)
+    }
+    rows.at(at).push(row)
   }
+  let groups = (:)
+  for (i, key) in keys.enumerate() { groups.insert(key, rows.at(i)) }
 
   _validate(params)
   let weight-col = mapping.at("weight", default: none)

@@ -12,7 +12,7 @@
 // pinch the stream to y = 0 while the bands float elsewhere), so the
 // streamgraph offsets drop them; plain stacking keeps them at zero.
 
-#import "../utils/group.typ": group-key
+#import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": parse-number
 
 #let cumulate-by-x(data, mapping, slice, shift: none, drop-empty: false) = {
@@ -20,22 +20,31 @@
   let y-col = mapping.at("y", default: none)
   if x-col == none or y-col == none { return (data: data, mapping: mapping) }
 
-  let buckets = (:)
+  // The plan is the mapping's, not the row's, so it is resolved once here
+  // rather than rebuilt for every row.
+  let plan = group-plan(mapping)
+  // Buckets are appended to in place: reading one out of the dictionary to
+  // push to it shares its arrays, so each push would copy the whole bucket.
+  let index = (:)
   let bucket-order = ()
+  let cells = ()
   for (i, row) in data.enumerate() {
     let xv = row.at(x-col, default: none)
     let yv = parse-number(row.at(y-col, default: none))
     if xv == none or yv == none { continue }
     let bk = str(xv)
-    if bk not in buckets {
-      buckets.insert(bk, (entries: (), tot: 0.0))
+    let at = index.at(bk, default: none)
+    if at == none {
+      at = cells.len()
+      index.insert(bk, at)
       bucket-order.push(bk)
+      cells.push((entries: (), tot: 0.0))
     }
-    let bucket = buckets.at(bk)
-    bucket.entries.push((i: i, row: row, key: group-key(row, mapping), y: yv))
-    bucket.tot += yv
-    buckets.insert(bk, bucket)
+    cells.at(at).entries.push((i: i, row: row, key: plan-key(plan, row), y: yv))
+    cells.at(at).tot += yv
   }
+  let buckets = (:)
+  for (i, bk) in bucket-order.enumerate() { buckets.insert(bk, cells.at(i)) }
 
   let out = data
   let drop = ()

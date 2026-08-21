@@ -11,7 +11,7 @@
 ///! closed-form `−2 · ln(1 − level)`, no numerical inversion required.
 
 #import "../utils/types.typ": parse-number
-#import "../utils/group.typ": group-aesthetics, group-key
+#import "../utils/group.typ": group-aesthetics, group-plan, plan-key
 #import "../utils/errors.typ": fail-range
 
 /// Covariance-ellipse statistic: one ellipse per group from the sample
@@ -88,19 +88,27 @@
   let chi-sq = -2 * calc.ln(1 - level)
 
   // Bucket rows by the composite group key (canonical group aesthetics).
-  let buckets = (:)
+  let plan = group-plan(mapping)
+  let index = (:)
+  let rows = ()
   let order = ()
   let proto = (:)
   for row in data {
-    let key = group-key(row, mapping)
-    if key not in buckets {
+    let key = plan-key(plan, row)
+    let at = index.at(key, default: none)
+    if at == none {
+      at = rows.len()
+      index.insert(key, at)
       order.push(key)
       proto.insert(key, row)
+      rows.push(())
     }
-    let bucket = buckets.at(key, default: ())
-    bucket.push(row)
-    buckets.insert(key, bucket)
+    rows.at(at).push(row)
   }
+  // Assembled after the walk: appending in place costs nothing per row, where
+  // reading a bucket out of a dictionary to push to it copies it.
+  let buckets = (:)
+  for (i, key) in order.enumerate() { buckets.insert(key, rows.at(i)) }
 
   let out-mapping = base-mapping
   for aes in group-aesthetics {
