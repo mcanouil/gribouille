@@ -8,6 +8,7 @@
 
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
+#import "../utils/palette.typ": spec-attr
 #import "train.typ": mapping-ref-col, transform-fwd, view-bounds-stat
 #import "../utils/errors.typ": fail
 
@@ -32,11 +33,9 @@
 //   ("squish", clamped) — kept, value rewritten
 //   ("drop",   value)   — caller drops the row
 #let _checker(trained) = {
-  let spec = trained.at("spec", default: none)
-  if spec == none { return none }
-  let limits = spec.at("limits", default: none)
+  let limits = spec-attr(trained, "limits")
   if limits == none { return none }
-  let oob = spec.at("oob", default: "drop")
+  let oob = spec-attr(trained, "oob", fallback: "drop")
 
   if trained.type == "continuous" {
     // The expanded view in stat space, rather than the raw `limits`, so a value
@@ -113,10 +112,15 @@
   // Held as an array rather than a dict, so the row walk iterates it directly
   // instead of looking each aesthetic up again on every row.
   let active = ()
+  // Only the `strict` panic reads the limits, and on a discrete scale they are
+  // the whole level array. They are kept out of the records the row walk
+  // carries so that walk holds nothing that grows with the domain.
+  let limits-of = (:)
   for (aes, t) in trained.pairs() {
     let plan = _checker(t)
     if plan == none { continue }
-    active.push((aes: aes, ..plan))
+    active.push((aes: aes, check: plan.check))
+    limits-of.insert(aes, plan.limits)
   }
   if active.len() == 0 { return (layers: layers, counts: (:)) }
 
@@ -173,7 +177,7 @@
               + " value "
               + repr(cell)
               + " outside limits "
-              + repr(plan.limits),
+              + repr(limits-of.at(aes)),
             hint: "Set `oob: \"squish\"` to clamp, widen `limits`, "
               + "or remove `strict: true` to drop silently.",
           )

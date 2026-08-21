@@ -8,6 +8,7 @@
 //   - rows with unparseable values survive (treated as in-range)
 
 #import "../../src/scale/oob.typ": filter-oob
+#import "../../src/utils/late-binding.typ": from-theme
 
 // Mirror `_train-entry`: when a user supplies `limits`, the trained `domain`
 // is overridden to match.
@@ -202,6 +203,29 @@
   let out = filter-oob((_layer(rows),), trained)
   assert.eq(out.layers.at(0).data, ((v: "a"), (v: "c")))
   assert.eq(out.counts.at("fill"), 1)
+}
+
+// a layer that does not map the limited aesthetic passes through untouched.
+// The pre-pass binds each aesthetic to its column once per layer, so a layer
+// with nothing to bind is never walked.
+#{
+  let trained = (fill: _trained-continuous(limits: (2, 5)))
+  let rows = ((v: 1), (v: 8))
+  let layer = (kind: "layer", data: rows, mapping: (x: "v"))
+  let out = filter-oob((layer,), trained)
+  assert.eq(out.layers.at(0).data, rows)
+  assert.eq(out.counts, (:))
+}
+
+// a late-bound mapping names no column yet, so the pre-pass cannot read a cell
+// for it and leaves the layer alone.
+#{
+  let trained = (fill: _trained-continuous(limits: (2, 5)))
+  let rows = ((v: 1), (v: 8))
+  let layer = (kind: "layer", data: rows, mapping: (fill: from-theme("ink")))
+  let out = filter-oob((layer,), trained)
+  assert.eq(out.layers.at(0).data, rows)
+  assert.eq(out.counts, (:))
 }
 
 // strict mode panics on first OOB row. Typst has no try/catch; the panic
