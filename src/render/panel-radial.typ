@@ -1,24 +1,35 @@
 // Radial-panel rendering split out of `_draw-axis-and-layers`: the pre-geom
-// pass draws grid circles, spokes, the outer theta arc, and theta tick
-// labels; the post-geom pass draws the r-axis tick labels so filled wedges,
-// lines, and points cannot mask them.
+// pass draws grid circles and spokes, which are panel furniture, and the
+// angular axis; the post-geom pass draws the radial axis so filled wedges,
+// lines, and points cannot mask its labels.
+//
+// Both axes are guides, built as stacks of primitives and drawn through
+// `place-theta` and `place-r`. A tick and a label are the same parts a
+// cartesian side draws; only where they land changes, and that is the whole
+// difference the `place` closure carries.
 
+#import "../guide/compose.typ": (
+  compose-stack, draw as compose-draw, layout-of, part-across, train,
+)
+#import "../guide/entry.typ": entry
+#import "../guide/gctx.typ": place-r, place-theta
+#import "../guide/primitive/labels.typ": prim-labels
+#import "../guide/primitive/line.typ": prim-line
+#import "../guide/primitive/spacer.typ": prim-spacer
+#import "../guide/primitive/ticks.typ": prim-ticks
 #import "../deps.typ": cetz
 #import "../scale/train.typ": map-axis-data, map-break
-#import "../theme/defaults.typ": resolve-colour
-#import "../theme/theme.typ": _line-stroke, _text-args, _tick-length
 #import "../utils/radial.typ": (
-  THETA-LABEL-PAD, group-theta-breaks, polar-canvas, radial-arc,
+  THETA-LABEL-PAD, group-theta-breaks, theta-range-of,
 )
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "axis-format.typ": (
   _axis-breaks, _axis-label, _axis-tick-values, _theta-group-label,
 )
-#import "common.typ": _should-draw-tick
-#import "guides.typ": (
-  _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _read-r-guide, _read-theta-guide,
-)
+#import "axis-parts.typ": guide-gctx
+#import "extents.typ": _resolve-extents
+#import "guides.typ": _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _read-r-guide
 
 // Two canvas angles are the same direction when they differ by a whole number
 // of turns: a full sweep puts its first and last break on one ray.
@@ -30,59 +41,166 @@
   calc.min(d, turn - d) < _FULL-TURN-EPS
 }
 
-// The theta tick marks a radial panel will draw, resolved once so the layout
-// and the draw site cannot disagree. `theta-axis` is the axis the sweep runs
-// along, "x" on a rose or radar and "y" on a pie, and the surfaces are read
-// off it rather than off `x`: a pie's angular ticks belong to its `y` scale.
-// `reach` is how far past `r-max` the longest weight that actually draws
-// reaches, which is what `radial-ctx` keeps back; a blank surface, an axis
-// `guides(theta: none)` suppressed, an untrained sweep, and minors nobody
-// asked for all reach nothing, so none of them costs the circle any radius.
-// Every condition the draw site checks is checked here, or the circle gives up
-// radius for ink that never appears.
-#let _theta-tick-marks(theme, theta-axis, theta-guide, theta-trained) = {
-  let nothing = (
-    major: none,
-    major-len: 0.0,
-    minor: none,
-    minor-len: 0.0,
-    reach: 0.0,
-  )
-  if theta-axis == none or theta-trained == none { return nothing }
-  if theta-guide != none and theta-guide.suppress { return nothing }
+// The ends a cap fades the arc out at, as canvas angles.
+#let _capped-ends(guide, theta-range) = {
+  let cap = if guide == none { "none" } else { guide.cap }
+  let ends = ()
+  if cap == "lower" or cap == "both" { ends.push(theta-range.at(0)) }
+  if cap == "upper" or cap == "both" { ends.push(theta-range.at(1)) }
+  ends
+}
 
-  let ink = resolve-colour(theme, "ink")
-  let side = if theta-axis == "x" { "x-bottom" } else { "y-left" }
-  let read = surface => (
-    _line-stroke(theme, surface, fallback-colour: ink),
-    _tick-length(theme, surface) / 1cm,
-  )
-
-  let (major, major-len) = read("axis-ticks-" + side)
-  if not _should-draw-tick(major, major-len) {
-    major = none
-    major-len = 0.0
+// Where the arc starts and ends along the guide. A cap fades it out short of
+// the end angle by a fraction of the span, bounded in radians, so the notch
+// stays visible on a narrow sweep without swallowing a wide one. Only a capped
+// end is trimmed; the other keeps the whole span.
+#let _arc-span(guide, sweep) = {
+  let span = calc.abs(sweep)
+  let cap = if guide == none { "none" } else { guide.cap }
+  let trim = if cap == "none" or span == 0 { 0.0 } else {
+    calc.min(span * _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD) / span
   }
-
-  let (minor, minor-len) = read("axis-ticks-minor-" + theta-axis)
-  let wants-minor = theta-guide != none and theta-guide.minor-ticks
-  if not (wants-minor and _should-draw-tick(minor, minor-len)) {
-    minor = none
-    minor-len = 0.0
-  }
-
   (
-    major: major,
-    major-len: major-len,
-    minor: minor,
-    minor-len: minor-len,
-    reach: calc.max(major-len, minor-len),
+    lo: if cap == "lower" or cap == "both" { trim } else { 0.0 },
+    hi: if cap == "upper" or cap == "both" { 1.0 - trim } else { 1.0 },
   )
 }
 
-// Pre-geom radial pass. `rctx` carries the enclosing panel state: `spec`,
-// `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`,
-// `grid-radial`, `grid-radial-discrete`, `ax-line`, `theta-ticks`.
+// The entry table the angular axis annotates: one major row per group of breaks
+// that share a canvas angle, and one minor row bisecting each gap between them.
+//
+// Groups exist because a full sweep puts its first and last break on one ray: a
+// 24-hour clock ticks once at 12 o'clock, under a label merged from both ends.
+// A capped end draws no major, because the cap has just opened a gap there and
+// a tick would float in it.
+#let _theta-entries(groups, guide, theta-range, extent) = {
+  let (theta-lo, theta-hi) = theta-range
+  let sweep = theta-hi - theta-lo
+  if sweep == 0 { return () }
+  let (w, h) = extent
+  let ends = _capped-ends(guide, theta-range)
+  let fracs = groups.map(g => (g.theta - theta-lo) / sweep)
+  let major = ()
+  for (i, group) in groups.enumerate() {
+    // A capped end keeps its label and gives up its tick: the cap has just
+    // opened a gap in the arc there, and a tick would float in it.
+    let capped = ends.any(end => _same-angle(group.theta, end))
+    major.push((
+      ..entry(
+        group.value,
+        label: group.label,
+        tier: if capped { none } else { "major" },
+      ),
+      frac: fracs.at(i),
+      width: w,
+      height: h,
+    ))
+  }
+  // Minors bisect each gap between majors, and are opt-in through
+  // `guide-axis-theta(minor-ticks: true)`. A full turn closes the ring: its
+  // last group and its first sit a gap apart like any other pair, so bisect
+  // that one too rather than leaving the wrap gap bare.
+  let wants-minor = guide != none and guide.minor-ticks
+  let minor = ()
+  if wants-minor and groups.len() >= 2 {
+    let steps = fracs
+    if calc.abs(calc.abs(sweep) - 2 * calc.pi) < _FULL-TURN-EPS {
+      steps.push(steps.first() + 1.0)
+    }
+    for i in range(1, steps.len()) {
+      let mid = (steps.at(i - 1) + steps.at(i)) / 2
+      minor.push((..entry(none, tier: "minor"), frac: mid))
+    }
+  }
+  (..major, ..minor)
+}
+
+// The stack the angular axis is: its arc, its tick weights, the pad that holds
+// its labels off the circle, and the labels themselves.
+//
+// The pad is a plain spacer rather than an owed one, because the labels have
+// always been held off the circle whether or not a tick was drawn between them.
+#let _theta-node(guide, entries, sweep, angle) = {
+  let arc = _arc-span(guide, sweep)
+  train(compose-stack(
+    // A spoke-only plot binds no theta guide and draws no arc; the ticks and
+    // the labels do not wait for one.
+    ..if guide == none { () } else { (prim-line(lo: arc.lo, hi: arc.hi),) },
+    prim-ticks(tiers: ("major", "minor")),
+    prim-spacer(THETA-LABEL-PAD),
+    prim-labels(angle: angle),
+    entries: entries,
+    spacing: 0.0,
+  ))
+}
+
+// The angular axis of one radial panel: the stack it draws and the radius its
+// tick weights cost the circle.
+//
+// `reach` is the tick band alone. The labels that ring the circle are solved
+// per angle by `radial-ctx` from their own boxes, so folding them in here would
+// take their room twice.
+//
+// Every reason not to draw is folded in here, or the circle gives up radius for
+// ink that never appears: a suppressed `guides(theta: none)`, an untrained
+// sweep, a blank surface, and minors nobody asked for all reach nothing.
+#let theta-band(theme, coord, guide, trained, axis, disp, style, ext) = {
+  let none-band = (node: none, layout: none, ctx: none, reach: 0.0)
+  if axis == none or trained == none { return none-band }
+  if guide != none and guide.suppress { return none-band }
+  let theta-range = theta-range-of(coord)
+  let (theta-lo, theta-hi) = theta-range
+  let sweep = theta-hi - theta-lo
+  // A blank `axis-text` draws no labels, so the rows carry none and stamp
+  // nothing, which is what keeps the ring off the reservation as well.
+  let labelled = style.size > 0pt
+  let groups = group-theta-breaks(
+    _axis-tick-values(trained),
+    b => map-break(trained, b, theta-range),
+  ).map(group => (
+    theta: group.first().theta,
+    // The group stands for every break on its ray, and the first of them is
+    // the value its merged label was built from.
+    value: group.first().b,
+    label: if not labelled { none } else {
+      let text = _theta-group-label(
+        trained,
+        disp.labels,
+        disp.typst-mark,
+        group,
+      )
+      if text == none { none } else {
+        resolve-prose(text, eval-strings: style.typst)
+      }
+    },
+  ))
+  let entries = _theta-entries(
+    groups,
+    guide,
+    theta-range,
+    if labelled { (ext.width, ext.height) } else { (0.0, 0.0) },
+  )
+  if entries.len() == 0 { return none-band }
+  let node = _theta-node(
+    guide,
+    entries,
+    sweep,
+    if guide == none { 0 } else { guide.angle },
+  )
+  let ctx = guide-gctx(theme, "theta", axis, sweep: sweep)
+  let layout = layout-of(node, ctx)
+  (
+    node: node,
+    layout: layout,
+    ctx: ctx,
+    reach: part-across(layout, "ticks"),
+  )
+}
+
+// Pre-geom radial pass: the grid circles and the spokes, which are panel
+// furniture, and then the angular axis. `rctx` carries the enclosing panel
+// state: `outer-radial`, `x-trained`/`y-trained`, `grid-radial`,
+// `grid-radial-discrete`, and `theta`, the band `theta-band` built.
 //
 // A faceted radial panel keeps its own tick labels, both weights, where a
 // cartesian one gives them up to the panel on its edge. `show-x-labels` and
@@ -93,34 +211,22 @@
 // against. `radial-ctx` reserves the ring in every panel either way, so
 // keeping them costs no room.
 #let _draw-radial-panel(rctx) = {
-  import cetz.draw: circle, content, line
-  let spec = rctx.spec
+  import cetz.draw: circle, line
   let outer-radial = rctx.outer-radial
-  let x-trained = rctx.x-trained
-  let y-trained = rctx.y-trained
-  let _x-disp = rctx.x-disp
-  let _y-disp = rctx.y-disp
-  let _ax-text = rctx.ax-text
   let _grid-radial = rctx.grid-radial
   let _grid-radial-discrete = rctx.grid-radial-discrete
-  let _ax-line = rctx.ax-line
-  let _theta-ticks = rctx.theta-ticks
 
-  let theta-guide = _read-theta-guide(spec)
-  let theta-suppress = theta-guide != none and theta-guide.suppress
   let (cx, cy) = outer-radial.centre
   let r-max = outer-radial.r-max
   let theta-range = outer-radial.theta-range
   let r-range = outer-radial.r-range
 
-  // The angular axis owns the sweep, so its chrome is read off whichever
-  // scale carries it: `x` on a rose or radar, `y` on a pie.
-  let (theta-trained, r-trained, theta-disp, theta-text, theta-line) = if (
-    outer-radial.cat-is-theta
-  ) {
-    (x-trained, y-trained, _x-disp, _ax-text.xb, _ax-line.xb)
+  // The angular axis owns the sweep, so the radius runs along whichever scale
+  // does not: `y` on a rose or radar, `x` on a pie.
+  let (theta-trained, r-trained) = if outer-radial.cat-is-theta {
+    (rctx.x-trained, rctx.y-trained)
   } else {
-    (y-trained, x-trained, _y-disp, _ax-text.yl, _ax-line.yl)
+    (rctx.y-trained, rctx.x-trained)
   }
 
   // A discrete r scale draws its circles only when the theme sets the grid on
@@ -161,148 +267,79 @@
     }
   }
 
-  // Outer axis arc (the `guide-axis-theta` guide). Spoke-only plots, which
-  // bind no theta guide, skip it.
-  if theta-guide != none and not theta-suppress and theta-line != none {
-    let (theta-lo, theta-hi) = (theta-range.at(0), theta-range.at(1))
-    let span = calc.abs(theta-hi - theta-lo)
-    let trim = if theta-guide.cap == "none" { 0 } else {
-      calc.min(span * _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD)
-    }
-    let direction = if theta-hi >= theta-lo { 1 } else { -1 }
-    let arc-lo = if theta-guide.cap == "lower" or theta-guide.cap == "both" {
-      theta-lo + direction * trim
-    } else { theta-lo }
-    let arc-hi = if theta-guide.cap == "upper" or theta-guide.cap == "both" {
-      theta-hi - direction * trim
-    } else { theta-hi }
-    let arc-pts = radial-arc(arc-lo, arc-hi, r-max, outer-radial)
-    line(..arc-pts, stroke: theta-line)
-  }
-
-  // Tick marks, drawn outward from the circle into the band `radial-ctx` kept
-  // back for them. `_theta-tick-marks` has already folded in every reason not
-  // to draw, so a `none` weight here means the band it would have needed was
-  // never taken off the radius either.
-  let tick(theta, len, stroke) = line(
-    polar-canvas(outer-radial, theta, r-max),
-    polar-canvas(outer-radial, theta, r-max + len),
-    stroke: stroke,
-  )
-  let sweep = theta-range.at(1) - theta-range.at(0)
-
-  // Majors sit on the breaks, and unlike the arc they need no guide to appear.
-  // A capped end is the exception: `cap` fades the arc out short of the end
-  // angle, so a tick there would float in the gap the cap just opened.
-  if _theta-ticks.major != none {
-    let capping = if theta-guide == none { "none" } else { theta-guide.cap }
-    let ends = ()
-    if capping == "lower" or capping == "both" {
-      ends.push(theta-range.at(0))
-    }
-    if capping == "upper" or capping == "both" {
-      ends.push(theta-range.at(1))
-    }
-    for group in theta-groups {
-      let theta = group.first().theta
-      if ends.any(end => _same-angle(theta, end)) { continue }
-      tick(theta, _theta-ticks.major-len, _theta-ticks.major)
-    }
-  }
-
-  // Minors bisect each gap between majors, and are opt-in through
-  // `guide-axis-theta(minor-ticks: true)`. A full turn closes the ring: its
-  // last group and its first sit a gap apart like any other pair, so bisect
-  // that one too rather than leaving the wrap gap bare.
-  if _theta-ticks.minor != none and theta-groups.len() >= 2 {
-    let angles = theta-groups.map(g => g.first().theta)
-    if calc.abs(calc.abs(sweep) - 2 * calc.pi) < _FULL-TURN-EPS {
-      angles.push(angles.first() + sweep)
-    }
-    for i in range(1, angles.len()) {
-      let mid = (angles.at(i - 1) + angles.at(i)) / 2
-      tick(mid, _theta-ticks.minor-len, _theta-ticks.minor)
-    }
-  }
-
-  if (
-    theta-text.size > 0pt and theta-trained != none and not theta-suppress
-  ) {
-    for group in theta-groups {
-      // Shared with the chrome stage, which reserves the band this lands in.
-      // A `labels` callback may return `none` to drop a wrap-side break from
-      // the merged label (e.g., hide "6" so a 0..6 radar shows "0", not "6/0"),
-      // and a group that resolves away entirely draws nothing.
-      let label-text = _theta-group-label(
-        theta-trained,
-        theta-disp.labels,
-        theta-disp.typst-mark,
-        group,
-      )
-      if label-text == none { continue }
-      let theta = group.first().theta
-      let lr = r-max + _theta-ticks.reach + THETA-LABEL-PAD
-      content(
-        (cx + lr * calc.cos(theta), cy + lr * calc.sin(theta)),
-        text(.._text-args(theta-text))[#resolve-prose(
-          label-text,
-          eval-strings: theta-text.typst,
-        )],
-        anchor: "center",
-        angle: if theta-guide == none { 0deg } else {
-          theta-guide.angle * 1deg
-        },
-      )
-    }
+  // The angular axis: its arc, its tick weights and its labels, drawn from the
+  // stack the panel laid out before it knew its own radius. Only `place` is
+  // added here, because that is the one thing the circle decides.
+  if rctx.theta.node != none {
+    compose-draw(
+      rctx.theta.node,
+      (..rctx.theta.ctx, place: place-theta(outer-radial)),
+      rctx.theta.layout,
+    )
   }
 }
 
-// Post-geom radial pass: r-axis tick labels. `rctx` carries `spec`,
-// `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`. Like
-// the theta labels above, these stay on every faceted panel.
-#let _draw-radial-r-labels(rctx) = {
-  import cetz.draw: content
-  let spec = rctx.spec
-  let outer-radial = rctx.outer-radial
-
-  let (cx, cy) = outer-radial.centre
-  let r-max = outer-radial.r-max
-  let theta-range = outer-radial.theta-range
-  let r-range = outer-radial.r-range
-  let r-trained = if outer-radial.cat-is-theta {
-    rctx.y-trained
-  } else { rctx.x-trained }
-  let r-disp = if outer-radial.cat-is-theta { rctx.y-disp } else { rctx.x-disp }
-  let r-text = if outer-radial.cat-is-theta {
-    rctx.ax-text.yl
-  } else { rctx.ax-text.xb }
-  if (
-    r-text.size > 0pt
-      and r-trained != none
-      and r-trained.type == "continuous"
-      and not _read-r-guide(spec).suppress
-  ) {
-    let start-angle = theta-range.at(0)
-    let dx = calc.cos(start-angle)
-    let dy = calc.sin(start-angle)
-    for (idx, b) in _axis-breaks(r-trained).enumerate() {
-      let r = map-axis-data(r-trained, b, r-range)
-      if r < 0 or r > r-max { continue }
-      let label-text = resolve-label(
-        r-disp.labels,
-        b,
-        idx,
-        _axis-label(r-trained, b),
-        typst-mark: r-disp.typst-mark,
-      )
-      content(
-        (cx + r * dx, cy + r * dy),
-        text(.._text-args(r-text))[#resolve-prose(
-          label-text,
-          eval-strings: r-text.typst,
-        )],
-        anchor: "center",
-      )
-    }
+// The entry table the radial axis annotates: one row per break that lands
+// inside the circle, at the fraction of the radius it marks.
+//
+// A radial label sits on the radius rather than beside it, which is why the
+// stack carries neither a tick row nor a spine: there is nothing for either to
+// annotate along a spoke the grid already draws.
+#let _r-entries(trained, disp, style, r-max, r-range, ext) = {
+  if r-max <= 0 or trained == none or trained.type != "continuous" { return () }
+  if style.size == 0pt { return () }
+  let rows = ()
+  for (idx, b) in _axis-breaks(trained).enumerate() {
+    let r = map-axis-data(trained, b, r-range)
+    if r < 0 or r > r-max { continue }
+    let label = resolve-label(
+      disp.labels,
+      b,
+      idx,
+      _axis-label(trained, b),
+      typst-mark: disp.typst-mark,
+    )
+    rows.push((
+      ..entry(b, label: resolve-prose(label, eval-strings: style.typst)),
+      frac: r / r-max,
+      width: ext.width,
+      height: ext.height,
+    ))
   }
+  rows
+}
+
+// Post-geom radial pass: the radial axis, drawn after the layers so filled
+// wedges, lines, and points cannot mask its labels. `rctx` carries `spec`,
+// `theme`, `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`,
+// `ax-text`, and `x-extents`/`y-extents`. Like the angular labels, these stay
+// on every faceted panel.
+#let _draw-radial-r-labels(rctx) = {
+  let outer-radial = rctx.outer-radial
+  if _read-r-guide(rctx.spec).suppress { return }
+  let cat-is-theta = outer-radial.cat-is-theta
+  let axis = if cat-is-theta { "y" } else { "x" }
+  let trained = if cat-is-theta { rctx.y-trained } else { rctx.x-trained }
+  let disp = if cat-is-theta { rctx.y-disp } else { rctx.x-disp }
+  let style = if cat-is-theta { rctx.ax-text.yl } else { rctx.ax-text.xb }
+  let entries = _r-entries(
+    trained,
+    disp,
+    style,
+    outer-radial.r-max,
+    outer-radial.r-range,
+    _resolve-extents(
+      if cat-is-theta { rctx.y-extents } else { rctx.x-extents },
+      style.size,
+    ),
+  )
+  if entries.len() == 0 { return }
+  let node = train(compose-stack(prim-labels(), entries: entries, spacing: 0.0))
+  let ctx = guide-gctx(
+    rctx.theme,
+    "r",
+    axis,
+    place: place-r(outer-radial),
+  )
+  compose-draw(node, ctx, layout-of(node, ctx))
 }

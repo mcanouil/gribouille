@@ -135,6 +135,7 @@
   axes: auto,
   place: none,
   span: none,
+  sweep: none,
   tick-length: none,
   surface-stroke: none,
   text-style: none,
@@ -224,6 +225,11 @@
     // grid does with its columns, divides by it to reach `place`. `none` where
     // the caller stated none, which such a part refuses to draw under.
     span: span,
+    // The radians a full `frac` covers, on a position that sweeps. A part that
+    // runs along the guide is a straight segment where this is `none` and a
+    // sampled polyline where it is not, because the samples a curve needs
+    // follow the angle it turns through rather than its length.
+    sweep: sweep,
     // `(surface) -> cm` for a tick surface, and `(surface) -> stroke | none`
     // for any stroked surface. Both injected because the theme lives downstream
     // of this module.

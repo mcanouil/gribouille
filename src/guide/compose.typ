@@ -158,10 +158,13 @@
   // Deciding it costs a pass over the children, so a stack without one, which is
   // every legend, never pays for it.
   let owes = node.children.any(_is-owed)
-  let band = owes and node.children.any(child => (
-    not _is-owed(child)
-      and _measure-child(child, gctx, layout-of).measure.across > 0.0
-  ))
+  let band = (
+    owes
+      and node.children.any(child => (
+        not _is-owed(child)
+          and _measure-child(child, gctx, layout-of).measure.across > 0.0
+      ))
+  )
   let cells = ()
   let offset = 0.0
   let along = 0.0
@@ -209,6 +212,20 @@
     reach: (near: near, far: far),
     cells: cells,
   )
+}
+
+// The room one named part of a laid-out guide takes.
+//
+// A guide that reserves its band whole reads `across` and never needs this. A
+// radial one does: its circle gives up radius for the tick weights alone,
+// because the labels that ring it are solved per angle rather than as one band.
+#let part-across(layout, name) = {
+  for cell in layout.cells {
+    if cell.child.at("name", default: none) == name {
+      return cell.measure.across
+    }
+  }
+  0.0
 }
 
 // Draw the tree, each child from the edge the layout gave it.
