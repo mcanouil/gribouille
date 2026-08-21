@@ -366,7 +366,7 @@
 /// Applies the per-row alpha (mapped or pinned) as a transparentise step.
 ///
 /// \@internal
-/// \@param params The layer's resolved parameters, providing `colour`/`params.alpha`.
+/// \@param params The layer's resolved parameters, providing `colour`/`alpha`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///

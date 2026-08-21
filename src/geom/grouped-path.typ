@@ -33,10 +33,11 @@
 // Map rows to (cx, cy) screen positions via `project-point`, which routes
 // through `ctx.radial` when active. Skips rows whose mapped position fails
 // to resolve.
-#let rows-to-points(rows, layer, mapping, ctx) = {
-  // Resolved once: nothing about the dodge slot varies per row, and a per-row
-  // call taking the layer would carry the whole row set with it.
-  let dodge = dodge-geometry(ctx, layer)
+//
+// `dodge` is the slot `dodge-geometry` answered for the whole layer. It is
+// resolved once there and handed down because resolving it costs a pass over
+// every row on a continuous category axis, and this runs once a group.
+#let rows-to-points(rows, mapping, ctx, dodge) = {
   let pts = ()
   for row in rows {
     let p = project-point(
@@ -63,10 +64,15 @@
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
   // One head per group, at the ends of the whole path rather than each join.
   let arrow-spec = layer.params.at("arrow", default: none)
+  // Both are the layer's, not the group's: resolving either per group would
+  // scan every row of the layer again, and passing the layer itself into a
+  // per-group call carries those rows with it.
+  let params = layer.params
+  let dodge = dodge-geometry(ctx, layer)
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     let rows = g.data
-    let pts = build-pts(rows, layer, mapping, x-trained, ctx)
+    let pts = build-pts(rows, params, mapping, x-trained, ctx, dodge)
     if pts.len() < 2 { continue }
 
     let leader = rows.first()

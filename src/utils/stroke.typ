@@ -37,7 +37,7 @@
 /// Returns `none` when the layer disabled the stroke (`params.stroke == none`) or when `default-colour` is `none` (the exclusive-default rule suppressed the stroke because only `fill` is set).
 ///
 /// \@internal
-/// \@param params The layer's resolved parameters, providing `stroke` and `params.colour`.
+/// \@param params The layer's resolved parameters, providing `stroke` and `colour`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///

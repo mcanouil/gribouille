@@ -112,14 +112,14 @@
   )
 }
 
-#let _build-pts(rows, layer, mapping, x-trained, ctx) = {
+#let _build-pts(rows, params, mapping, x-trained, ctx, dodge) = {
   let pts = rows-to-points(
     sort-rows-by-x(rows, mapping, x-trained),
-    layer,
     mapping,
     ctx,
+    dodge,
   )
-  stair(pts, layer.params.direction)
+  stair(pts, params.direction)
 }
 
 #let draw(layer, ctx) = draw-grouped-paths(layer, ctx, _build-pts)

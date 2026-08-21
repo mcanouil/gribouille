@@ -119,7 +119,7 @@
   ymin-col,
   ymax-col,
   theme-colour,
-  dodge: none,
+  dodge,
   line-alpha: true,
 ) = {
   let xv = row.at(x-col, default: none)
@@ -200,7 +200,7 @@
       ymin-col,
       ymax-col,
       theme-colour,
-      dodge: dodge,
+      dodge,
     )
     if res != none { res.elem }
   }

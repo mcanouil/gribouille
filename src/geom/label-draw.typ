@@ -83,13 +83,10 @@
 // Compute per-row anchor + label-centre pairs (canvas-cm) for one layer.
 // `placements.at(idx)` is `none` when the row fails to project so callers
 // can skip without re-checking inputs.
-#let compute-placements(ctx, layer, mapping, data) = {
+#let compute-placements(ctx, layer, mapping, data, dodge) = {
   let nudge-x-spec = _nudge-spec(layer, mapping, "nudge-x")
   let nudge-y-spec = _nudge-spec(layer, mapping, "nudge-y")
   let needs-nudge = nudge-x-spec != none or nudge-y-spec != none
-  // Resolved once: the dodge slot belongs to the layer, and a per-row call
-  // taking the layer would carry the whole row set with it.
-  let dodge = dodge-geometry(ctx, layer)
   data
     .enumerate()
     .map(((idx, row)) => {
@@ -127,8 +124,8 @@
   data,
   sizes,
   repel-params,
+  dodge,
 ) = {
-  let dodge = dodge-geometry(ctx, layer)
   let live-idx = ()
   let anchors = ()
   let live-sizes = ()
@@ -203,6 +200,10 @@
       )
   )
   let sizes = label-sizes-of(layer)
+  // Resolved once for the whole draw: on a continuous category axis the slot
+  // costs a pass over every row, and the placement pass and `row-centre` both
+  // want the same answer.
+  let dodge = dodge-geometry(ctx, layer)
   let placements = if repel-on {
     compute-repel-placements(
       ctx,
@@ -211,9 +212,10 @@
       data,
       sizes,
       repel-params-of(layer.params),
+      dodge,
     )
   } else if needs-placement {
-    compute-placements(ctx, layer, mapping, data)
+    compute-placements(ctx, layer, mapping, data, dodge)
   } else { () }
   let aabbs = if segment-on {
     compute-aabbs(placements, sizes, layer.params.box-padding)
@@ -231,7 +233,7 @@
     // The record carries the dodge slot rather than the layer it came off:
     // `row-centre` takes this record once a row, and a layer reaches every row
     // of the plot through it.
-    dodge: dodge-geometry(ctx, layer),
+    dodge: dodge,
   )
 }
 

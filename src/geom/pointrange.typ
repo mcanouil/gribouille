@@ -147,7 +147,7 @@
       ymin-col,
       ymax-col,
       theme-colour,
-      dodge: dodge,
+      dodge,
       line-alpha: false,
     )
     if res == none { continue }

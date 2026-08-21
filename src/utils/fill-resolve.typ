@@ -16,7 +16,7 @@
 /// Applies the per-row alpha (mapped or fixed) via \@apply-alpha as the final step.
 ///
 /// \@internal
-/// \@param params The layer's resolved parameters, providing `fill` and `params.alpha`.
+/// \@param params The layer's resolved parameters, providing `fill` and `alpha`.
 ///
 /// \@param mapping The resolved aesthetic mapping.
 ///
