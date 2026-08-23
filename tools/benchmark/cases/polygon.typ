@@ -14,12 +14,17 @@
 #let n = int(sys.inputs.at("n", default: "100"))
 
 #let rings = 12
-#let per-ring = calc.max(3, int(n / rings))
+// The vertex total is exactly `n`, as in every other case: the remainder of
+// the split is spread one vertex at a time over the first rings. A ring needs
+// three vertices to be a polygon at all, which sets the floor.
+#let base-per-ring = calc.max(3, int(n / rings))
+#let remainder = calc.max(0, n - base-per-ring * rings)
 
 #let ring-rows(r) = {
   let cx = calc.rem(r, 4) * 3.0 + 1.5
   let cy = int(r / 4) * 3.0 + 1.5
   let radius = 1.0 + calc.rem(r, 3) * 0.25
+  let per-ring = base-per-ring + if r < remainder { 1 } else { 0 }
   range(0, per-ring).map(i => {
     let theta = i / per-ring * 2 * calc.pi
     // A wobble on the radius keeps the outline from collapsing onto a shape
