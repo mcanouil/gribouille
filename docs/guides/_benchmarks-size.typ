@@ -35,7 +35,7 @@
   facet: facet-wrap("case", ncolumn: 3),
   labels: labels(
     title: "Vector output balloons with element count, raster stays compact",
-    subtitle: "SVG and PDF carry the geometry; PNG rasterises and grows far more slowly",
+    subtitle: "SVG stores one node per mark and one point per vertex",
     x: "Elements (log scale)",
     y: "Output size, KB (log scale)",
     colour: "Format",
