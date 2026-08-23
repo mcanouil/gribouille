@@ -28,9 +28,11 @@
 //   ("drop",   value)   — caller drops the row
 #let _checker(trained) = {
   if spec-attr(trained, "limits") == none { return none }
-  let oob = spec-attr(trained, "oob", fallback: "drop")
 
   if trained.type == "continuous" {
+    // Only a continuous scale can squish. A discrete scale censors whatever
+    // `oob` says, because clamping to a level has no geometric meaning.
+    let oob = spec-attr(trained, "oob", fallback: "drop")
     // The expanded view in stat space, rather than the raw `limits`, so a value
     // sitting in the expansion headroom -- which still maps inside the visible
     // panel -- survives instead of being dropped.
