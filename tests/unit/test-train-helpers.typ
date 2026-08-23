@@ -49,9 +49,11 @@
   assert.eq((to-stat-fn(t))(4), _to-stat(t, 4))
 }
 
-// `level-lookup` keys by the stringified level, so a hand-built domain holding
-// a non-string level answers `none` rather than failing on the key. That keeps
-// the behaviour the two call sites had before they shared this helper.
+// `level-lookup` keys by the stringified level. That stops a hand-built domain
+// holding a non-string level from failing on the key, and it makes such a
+// level reachable by its string form, where the scan the two call sites used
+// before answered `none`. No production path reaches it: a trained domain is
+// stringified, and user `limits` are checked to be level names.
 #{
   let t = (type: "discrete", domain: (1, "b"))
   assert.eq(level-lookup(t).at("b", default: none), 1)
