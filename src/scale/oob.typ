@@ -41,7 +41,10 @@
     // the sorted span so it holds either way.
     let span-lo = calc.min(t-lo, t-hi)
     let span-hi = calc.max(t-lo, t-hi)
-    let (lo, hi) = trained.domain
+    // Only squish reads the domain endpoints, and it is read only when the mode
+    // asks for it: a `drop` scale whose domain is not a pair still filters, as
+    // it did before the check was hoisted.
+    let (lo, hi) = if oob == "squish" { trained.domain } else { (none, none) }
     // The scale's stat-space warp, captured so the row path does not reach back
     // into the trained scale for it.
     let to-stat = to-stat-fn(trained)

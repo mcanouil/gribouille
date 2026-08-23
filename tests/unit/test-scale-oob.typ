@@ -320,6 +320,29 @@
   assert.eq(out.counts, (:))
 }
 
+// a drop-mode continuous scale whose domain is not a pair still filters. Only
+// squish reads the endpoints, so the pre-pass must not destructure them for a
+// scale that never clamps.
+#{
+  let trained = (
+    fill: (
+      type: "continuous",
+      domain: (1, 5, 9),
+      spec: (
+        aesthetic: "fill",
+        type: "continuous",
+        limits: (1, 5, 9),
+        oob: "drop",
+      ),
+      view-transform: (1, 9),
+    ),
+  )
+  let rows = ((v: 0), (v: 4), (v: 20))
+  let out = filter-oob((_layer(rows),), trained)
+  assert.eq(out.layers.at(0).data, ((v: 4),))
+  assert.eq(out.counts.at("fill"), 2)
+}
+
 // strict mode panics on the first out-of-range row. Typst has no try/catch, so
 // the panic cannot be asserted here, and no example compiles it either: an
 // example that panicked would fail `tools/check.sh`. The path is therefore
