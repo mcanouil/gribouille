@@ -1,0 +1,49 @@
+// `_to-stat` and `to-stat-fn` state the same warp twice.
+//
+// `_to-stat` stays a direct two-line body because it sits on the per-value
+// render path, and `to-stat-fn` captures the two fields once for a caller that
+// warps many values, such as the out-of-range pre-pass. The duplication is
+// deliberate, so this pins the two against each other: if one gains a branch
+// and the other does not, `filter-oob` and `map-position` would disagree about
+// which rows are in range, and the only symptom would be missing or wrongly
+// clamped data.
+
+#import "../../src/scale/train.typ": _to-stat, to-stat-fn
+
+#let _scale(transform, pre-transformed) = (
+  type: "continuous",
+  domain: (1, 100),
+  transform: transform,
+  pre-transformed: pre-transformed,
+)
+
+// Positive throughout, since `log10` refuses anything else and the point here
+// is agreement between the two spellings, not their input validation.
+#let _values = (0.25, 1, 2.5, 4, 9, 100)
+
+#for transform in ("identity", "reverse", "log10", "sqrt") {
+  for pre-transformed in (false, true) {
+    let t = _scale(transform, pre-transformed)
+    let warp = to-stat-fn(t)
+    for v in _values {
+      assert.eq(
+        warp(v),
+        _to-stat(t, v),
+        message: "to-stat-fn disagrees with _to-stat for transform "
+          + transform
+          + ", pre-transformed "
+          + repr(pre-transformed)
+          + ", value "
+          + repr(v),
+      )
+    }
+  }
+}
+
+// A scale carrying neither field takes the same defaults through both.
+#{
+  let t = (type: "continuous", domain: (1, 10))
+  assert.eq((to-stat-fn(t))(4), _to-stat(t, 4))
+}
+
+to-stat agreement tests passed.
