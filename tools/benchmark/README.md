@@ -53,6 +53,7 @@ lua tools/benchmark/run.lua --mem
 | `line`         | `geom-line`                  | Linear: one vertex per row, single path.             |
 | `col`          | `geom-col`                   | Linear: one bar per row.                             |
 | `tile`         | `geom-tile`                  | Linear: one rectangle per row.                       |
+| `polygon`      | `geom-polygon`               | Flat in marks: many vertices carried by twelve rings. |
 | `bin2d`        | `geom-bin-2d`                | Sublinear: rows aggregated into a fixed grid.        |
 | `boxplot`      | `geom-boxplot`               | Sublinear: rows reduced to a per-group summary.      |
 | `facet-smooth` | `facet-wrap` + `geom-smooth` | Per-panel stat re-training on a per-row point layer. |
