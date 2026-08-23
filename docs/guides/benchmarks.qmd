@@ -87,7 +87,7 @@ The full harness, every other case, and the command-line options are in [`tools/
 //| fig-cap: "Compile time against element count for each chart type, on log scales. Layers that draw one mark per row reach the time budget first, while the path, polygon, and binning layers stay inside it."
 //| output-filename: "benchmarks-time.svg"
 //| file: _benchmarks-time.typ
-//| alt: "A three by three grid of small line charts, one per chart type, plotting compile time against element count on logarithmic axes for the PNG, SVG, and PDF formats. The column, faceted smoother, point, and tile panels rise steeply and end in a cross that marks the largest size exceeding the time budget. The line and polygon panels rise almost as fast as the data grows and reach that size without a cross, ending near thirty-five and sixteen seconds. The two-dimensional bin and boxplot panels stay nearly flat and end lowest of all."
+//| alt: "A three by three grid of small line charts, one per chart type, plotting compile time against element count on logarithmic axes for the PNG, SVG, and PDF formats. The column, faceted smoother, point, and tile panels rise steeply and end in a cross that marks the largest size exceeding the time budget. The line and polygon panels rise almost as fast as the data grows and reach that size without a cross, ending near thirty-five and sixteen seconds as PNG, with the SVG line of the line panel higher again at about sixty. The two-dimensional bin and boxplot panels stay nearly flat and end lowest of all."
 ```
 
 Cost follows the number of marks a chart draws, not the number of rows it reads.
@@ -95,7 +95,7 @@ Per-row layers (`geom-point`, `geom-col`, `geom-tile`) draw one mark per row, so
 On the test machine a scatter of one thousand points compiles in under two seconds, ten thousand points take about fifteen seconds, and one hundred thousand do not finish inside the budget.
 
 A layer that carries many rows on few marks is far cheaper.
-`geom-line` holds every row as a vertex of one path: ten thousand rows take under two seconds, and one hundred thousand finish in about thirty-five.
+`geom-line` holds every row as a vertex of one path: ten thousand rows take under two seconds, and one hundred thousand finish in about thirty-five as PNG, or closer to sixty as SVG.
 `geom-polygon` behaves the same way, and draws twelve rings holding one hundred thousand vertices in about sixteen seconds.
 So a dense trace or an outline is not the problem that a dense scatter is.
 
