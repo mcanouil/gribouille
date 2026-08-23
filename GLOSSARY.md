@@ -118,6 +118,7 @@ Run the survey command at the bottom before extending the table.
 | `sp`      | species                   | example data column (penguins / iris-style).                                                     |
 | `mm`      | millimetres               | rare; example datasets (penguins flipper length).                                                |
 | `cb`      | callback                  | user-supplied closure passed through.                                                            |
+| `fn`      | function                  | suffix on a name holding a closure rather than a value (`key-fn`, `to-stat-fn`). Read the value once, then call it many times. |
 
 ## Guide layer
 
