@@ -27,8 +27,7 @@
 //   ("squish", clamped) — kept, value rewritten
 //   ("drop",   value)   — caller drops the row
 #let _checker(trained) = {
-  let limits = spec-attr(trained, "limits")
-  if limits == none { return none }
+  if spec-attr(trained, "limits") == none { return none }
   let oob = spec-attr(trained, "oob", fallback: "drop")
 
   if trained.type == "continuous" {
@@ -41,52 +40,48 @@
     // the sorted span so it holds either way.
     let span-lo = calc.min(t-lo, t-hi)
     let span-hi = calc.max(t-lo, t-hi)
-    // Only squish reads the domain endpoints, and it is read only when the mode
-    // asks for it: a `drop` scale whose domain is not a pair still filters, as
-    // it did before the check was hoisted.
-    let (lo, hi) = if oob == "squish" { trained.domain } else { (none, none) }
+    let domain = trained.domain
     // The scale's stat-space warp, captured so the row path does not reach back
     // into the trained scale for it.
     let to-stat = to-stat-fn(trained)
-    return (
-      limits: limits,
-      check: raw => {
-        let v = parse-number(raw)
-        if v == none { return ("in", raw) }
-        let sv = to-stat(v)
-        if sv >= span-lo and sv <= span-hi { return ("in", raw) }
-        if oob == "squish" {
-          // Clamp to the nearest `limits` endpoint (the visible data edge), not
-          // the expanded bound, matching the documented squish-to-limit
-          // semantics. `t-lo` pairs with `lo` and `t-hi` with `hi` whatever the
-          // order.
-          let to-lo = calc.abs(sv - t-lo) <= calc.abs(sv - t-hi)
-          return ("squish", if to-lo { lo } else { hi })
-        }
-        ("drop", raw)
-      },
-    )
+    return raw => {
+      let v = parse-number(raw)
+      if v == none { return ("in", raw) }
+      let sv = to-stat(v)
+      if sv >= span-lo and sv <= span-hi { return ("in", raw) }
+      if oob == "squish" {
+        // Clamp to the nearest `limits` endpoint (the visible data edge), not
+        // the expanded bound, matching the documented squish-to-limit
+        // semantics. `t-lo` pairs with `lo` and `t-hi` with `hi` whatever the
+        // order.
+        //
+        // The endpoints are read here rather than when the check is built, so
+        // a scale whose domain is not a pair fails only where the clamp needs
+        // them, as it did before the check was hoisted out of the row walk.
+        let (lo, hi) = domain
+        let to-lo = calc.abs(sv - t-lo) <= calc.abs(sv - t-hi)
+        return ("squish", if to-lo { lo } else { hi })
+      }
+      ("drop", raw)
+    }
   }
 
   if trained.type == "discrete" {
     // The level lookup, resolved once here so the row test is one dict read
     // rather than a scan of the domain.
     let levels = level-lookup(trained)
-    return (
-      limits: limits,
-      check: raw => {
-        if raw == none { return ("in", raw) }
-        // A numeric value addresses a 1-indexed fractional level position rather
-        // than a level name (`map-discrete` places it at `value - 1`), e.g. a
-        // polygon vertex set between level centres or a jittered point. The
-        // renderer can place it, so the pre-pass keeps it and lets panel clipping
-        // bound any overflow; drop fires only for a non-numeric value off the
-        // set.
-        if parse-number(raw) != none { return ("in", raw) }
-        if str(raw) in levels { return ("in", raw) }
-        ("drop", raw)
-      },
-    )
+    return raw => {
+      if raw == none { return ("in", raw) }
+      // A numeric value addresses a 1-indexed fractional level position rather
+      // than a level name (`map-discrete` places it at `value - 1`), e.g. a
+      // polygon vertex set between level centres or a jittered point. The
+      // renderer can place it, so the pre-pass keeps it and lets panel clipping
+      // bound any overflow; drop fires only for a non-numeric value off the
+      // set.
+      if parse-number(raw) != none { return ("in", raw) }
+      if str(raw) in levels { return ("in", raw) }
+      ("drop", raw)
+    }
   }
 
   // Any other scale type, `identity` among them, censors nothing. Answering
@@ -102,17 +97,14 @@
   // Everything the check reads is constant per aesthetic, so each scale is
   // resolved once here into a closure the row walk calls with the cell alone.
   // Held as an array rather than a dict, so the row walk iterates it directly
-  // instead of looking each aesthetic up again on every row.
+  // instead of looking each aesthetic up again on every row. The limits are
+  // not carried with it: only the `strict` panic needs them, and on a discrete
+  // scale they are the whole level array.
   let active = ()
-  // Only the `strict` panic reads the limits, and on a discrete scale they are
-  // the whole level array. They are kept out of the records the row walk
-  // carries so that walk holds nothing that grows with the domain.
-  let limits-of = (:)
   for (aes, t) in trained.pairs() {
-    let resolved = _checker(t)
-    if resolved == none { continue }
-    active.push((aes: aes, check: resolved.check))
-    limits-of.insert(aes, resolved.limits)
+    let check = _checker(t)
+    if check == none { continue }
+    active.push((aes: aes, check: check))
   }
   if active.len() == 0 { return (layers: layers, counts: (:)) }
 
@@ -169,7 +161,7 @@
               + " value "
               + repr(cell)
               + " outside limits "
-              + repr(limits-of.at(aes)),
+              + repr(spec-attr(trained.at(aes), "limits")),
             hint: "Set `oob: \"squish\"` to clamp, widen `limits`, "
               + "or remove `strict: true` to drop silently.",
           )
