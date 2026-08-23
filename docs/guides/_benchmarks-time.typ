@@ -41,7 +41,7 @@
     geom-point(data: stalled, shape: "cross", size: 3.5pt),
   ),
   scales: scales(x: scale-log10(), y: scale-log10()),
-  facet: facet-wrap("case", ncolumn: 4),
+  facet: facet-wrap("case", ncolumn: 3),
   labels: labels(
     title: "Compile time grows superlinearly with element count",
     subtitle: "Crosses mark sizes that exceeded the "
