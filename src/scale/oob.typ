@@ -69,7 +69,7 @@
   if trained.type == "discrete" {
     // The level lookup, resolved once here so the row test is one dict read
     // rather than a scan of the domain.
-    let levels = level-lookup(trained)
+    let level-index = level-lookup(trained)
     return raw => {
       if raw == none { return ("in", raw) }
       // A numeric value addresses a 1-indexed fractional level position rather
@@ -79,7 +79,7 @@
       // bound any overflow; drop fires only for a non-numeric value off the
       // set.
       if parse-number(raw) != none { return ("in", raw) }
-      if str(raw) in levels { return ("in", raw) }
+      if str(raw) in level-index { return ("in", raw) }
       ("drop", raw)
     }
   }
