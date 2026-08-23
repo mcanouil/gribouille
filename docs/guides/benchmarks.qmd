@@ -114,7 +114,7 @@ Those layers too slow as the row count climbs, because they still read every row
 //| fig-cap: "Output size against element count for each chart type, on log scales. Vector output grows with the number of marks and vertices, while raster output stays compact."
 //| output-filename: "benchmarks-size.svg"
 //| file: _benchmarks-size.typ
-//| alt: "A three by three grid of small line charts, one per chart type, plotting output file size against element count on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply wherever the chart carries many marks or many vertices, including the column, faceted smoother, line, point, polygon, and tile panels, because each one becomes a node in the file. The PNG line stays low and almost flat in every panel. In most panels the PDF line starts below PNG where a chart draws few marks, and rises above it as the mark or vertex count grows. The two-dimensional bin and boxplot panels stay flat for all three formats."
+//| alt: "A three by three grid of small line charts, one per chart type, plotting output file size against element count on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply wherever the chart carries many marks or many vertices, including the column, faceted smoother, line, point, polygon, and tile panels, because each one becomes a node in the file. The PNG line stays low in every panel and almost flat in most, with the tile panel the one clear rise. In most panels the PDF line starts below PNG where a chart draws few marks, and rises above it as the mark or vertex count grows. The two-dimensional bin and boxplot panels stay flat for all three formats."
 ```
 
 Format matters as much as count.
