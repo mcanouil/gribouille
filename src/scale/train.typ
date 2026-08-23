@@ -416,6 +416,25 @@
       // Discrete limits are a level array, not a `(lo, hi)` pair, so there is
       // no per-side `auto`; the continuous-only lift/fold below never reads the
       // `explicit-*` flags for this branch.
+      //
+      // A level must be a string. A discrete scale reads a bare number as a
+      // 1-indexed position rather than a level name (`map-discrete`), so a
+      // numeric level would be ambiguous: the pre-pass could not censor
+      // against it, and a position and a level of the same value would
+      // disagree. A domain trained from data is stringified, so only a user
+      // limit can carry another type.
+      for level in user-scale.limits {
+        if type(level) != str {
+          fail-type(
+            "scale `" + aes + "`",
+            "limits",
+            level,
+            "a level name as a string",
+            hint: "A discrete scale reads a bare number as a position, not as "
+              + "a level. Quote the levels, as in `limits: (\"1\", \"2\")`.",
+          )
+        }
+      }
       domain = user-scale.limits
     }
   }
