@@ -84,7 +84,7 @@ The full harness, every other case, and the command-line options are in [`tools/
 //| code-fold: true
 //| code-summary: "Typst source for this figure"
 //| label: fig-benchmark-time
-//| fig-cap: "Compile time against element count for each chart type, on log scales. Layers that draw one mark per row reach the time budget first, while the path, polygon, and binning layers stay inside it."
+//| fig-cap: "Compile time against element count for each chart type, on log scales. Layers that draw one mark per row reach the time budget first, while the path, polygon, and aggregating layers stay inside it."
 //| output-filename: "benchmarks-time.svg"
 //| file: _benchmarks-time.typ
 //| alt: "A grid of small line charts, three to a row and eight in all, one per chart type, plotting compile time against element count on logarithmic axes for the PNG, SVG, and PDF formats. The column, faceted smoother, point, and tile panels rise steeply and end in a cross that marks the largest size exceeding the time budget. The line and polygon panels rise almost as fast as the data grows and reach that size without a cross, ending near thirty-five and sixteen seconds as PNG, with the SVG line of the line panel higher again at about sixty. The two-dimensional bin and boxplot panels stay nearly flat and end lowest of all."

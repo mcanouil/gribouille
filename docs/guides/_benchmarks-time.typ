@@ -43,7 +43,7 @@
   scales: scales(x: scale-log10(), y: scale-log10()),
   facet: facet-wrap("case", ncolumn: 3),
   labels: labels(
-    title: "Per-row layers reach the time budget, path and binning layers do not",
+    title: "Per-row layers reach the time budget, path and aggregating layers do not",
     subtitle: "Crosses mark sizes that exceeded the "
       + str(budget)
       + "s budget",
