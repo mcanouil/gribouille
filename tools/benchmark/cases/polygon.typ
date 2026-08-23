@@ -16,7 +16,8 @@
 #let rings = 12
 // The vertex total is exactly `n`, as in every other case: the remainder of
 // the split is spread one vertex at a time over the first rings. A ring needs
-// three vertices to be a polygon at all, which sets the floor.
+// three vertices to be a polygon at all, so below `rings * 3` that floor wins
+// and the total is `rings * 3` instead. Every measured size is far above it.
 #let base-per-ring = calc.max(3, int(n / rings))
 #let remainder = calc.max(0, n - base-per-ring * rings)
 
