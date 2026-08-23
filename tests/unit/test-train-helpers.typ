@@ -56,6 +56,10 @@
   let t = (type: "discrete", domain: (1, "b"))
   assert.eq(level-lookup(t).at("b", default: none), 1)
   assert.eq(level-lookup(t).at("zz", default: none), none)
+  // A numeric level is reachable by its own string, which is how every caller
+  // spells the lookup. Keying the index by the raw value failed outright here,
+  // because a Typst dictionary key must be a string.
+  assert.eq(level-lookup(t).at("1", default: none), 0)
 }
 
 to-stat and level-lookup tests passed.
