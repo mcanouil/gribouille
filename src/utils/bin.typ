@@ -86,7 +86,8 @@
 // The values arrive through a thunk rather than as an array because the
 // stashed grid is the normal case, and a caller that materialises its values
 // first pays a full pass per group for a resolver that never reads them. A
-// closure captures its scope by reference, so passing one costs nothing.
+// captured array is reference-counted, so wrapping it in a thunk copies no
+// data.
 #let resolve-bin-grid(params, get-xs) = {
   let grid = params.at("grid", default: none)
   if grid != none { return grid }

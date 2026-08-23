@@ -6,12 +6,16 @@
 // arrays for a resolver that will not look at them costs one full pass per
 // group, which is why the resolvers take thunks rather than arrays.
 //
-// These tests pin the resolvers, not their callers. A caller that builds its
-// values before wrapping them in a thunk still passes every case here, because
-// an eager `entries.map()` has no observable effect. The call sites are
-// `bin-1d-cells`, `bin-2d-cells` and `stat/bindot.typ`.
+// The last case pins that `bin-1d-cells` honours the stashed grid. Laziness
+// itself stays unpinned: an eager `entries.map()` inside the thunk has no
+// observable effect, and Typst offers no cheap way to instrument the read. A
+// revert of the thunk at `bin-1d-cells`, `bin-2d-cells` or `stat/bindot.typ`
+// would therefore restore the cost with the suite still green. That gap is
+// accepted, and the call sites carry a comment saying so.
 
-#import "../../src/utils/bin.typ": panel-bin-grid, resolve-bin-grid
+#import "../../src/utils/bin.typ": (
+  bin-1d-cells, panel-bin-grid, resolve-bin-grid,
+)
 #import "../../src/utils/bin-2d.typ": panel-bin-grid-2d, resolve-bin-grid-2d
 #import "../../src/aes.typ": aes
 
@@ -65,5 +69,24 @@
 #assert.eq(derived-2d.y-n-bins, 2)
 #assert.eq(derived-2d.x-width, 5.0)
 #assert.eq(derived-2d.y-width, 2.0)
+
+// --- the call site short-circuits on the stashed grid ---------------------
+//
+// `bin-1d-cells` is given a stashed grid that no group of these rows would
+// derive: four bins over `[0, 20)` against rows spanning `[0, 4]`. The cells it
+// emits must follow the stashed partition, which is what the thunk defers to.
+
+#let stashed = (bins: 4, binwidth: none, grid: (lo: 0, n-bins: 4, width: 5.0))
+#let cells = bin-1d-cells(
+  range(0, 5).map(v => (a: v)),
+  "a",
+  none,
+  stashed,
+)
+#assert.eq(cells.grid.n-bins, 4)
+#assert.eq(cells.grid.width, 5.0)
+// All five rows fall in the first stashed bin; a grid derived from the rows
+// would have spread them across four bins of width 1.
+#assert.eq(cells.counts, (5, 0, 0, 0))
 
 bin grid laziness tests passed.
