@@ -87,7 +87,7 @@ The full harness, every other case, and the command-line options are in [`tools/
 //| fig-cap: "Compile time against element count for each chart type, on log scales. Layers that draw one mark per row reach the time budget first, while the path, polygon, and binning layers stay inside it."
 //| output-filename: "benchmarks-time.svg"
 //| file: _benchmarks-time.typ
-//| alt: "A three by three grid of small line charts, one per chart type, plotting compile time against element count on logarithmic axes for the PNG, SVG, and PDF formats. The column, faceted smoother, point, and tile panels rise steeply and end in a cross that marks the largest size exceeding the time budget. The line and polygon panels rise almost as fast as the data grows and reach that size without a cross, ending near thirty-five and sixteen seconds as PNG, with the SVG line of the line panel higher again at about sixty. The two-dimensional bin and boxplot panels stay nearly flat and end lowest of all."
+//| alt: "A grid of small line charts, three to a row and eight in all, one per chart type, plotting compile time against element count on logarithmic axes for the PNG, SVG, and PDF formats. The column, faceted smoother, point, and tile panels rise steeply and end in a cross that marks the largest size exceeding the time budget. The line and polygon panels rise almost as fast as the data grows and reach that size without a cross, ending near thirty-five and sixteen seconds as PNG, with the SVG line of the line panel higher again at about sixty. The two-dimensional bin and boxplot panels stay nearly flat and end lowest of all."
 ```
 
 Cost follows the number of marks a chart draws, not the number of rows it reads.
@@ -114,7 +114,7 @@ Those layers too slow as the row count climbs, because they still read every row
 //| fig-cap: "Output size against element count for each chart type, on log scales. Vector output grows with the number of marks and vertices, while raster output stays compact."
 //| output-filename: "benchmarks-size.svg"
 //| file: _benchmarks-size.typ
-//| alt: "A three by three grid of small line charts, one per chart type, plotting output file size against element count on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply wherever the chart carries many marks or many vertices, including the column, faceted smoother, line, point, polygon, and tile panels, because each one becomes a node in the file. The PNG line stays low in every panel and almost flat in most, with the tile panel the one clear rise. In most panels the PDF line starts below PNG where a chart draws few marks, and rises above it as the mark or vertex count grows. The two-dimensional bin and boxplot panels stay flat for all three formats."
+//| alt: "A grid of small line charts, three to a row and eight in all, one per chart type, plotting output file size against element count on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply wherever the chart carries many marks or many vertices, including the column, faceted smoother, line, point, polygon, and tile panels, because each one becomes a node in the file. The PNG line stays low in every panel and almost flat in most, with the tile panel the one clear rise. In most panels the PDF line starts below PNG where a chart draws few marks, and rises above it as the mark or vertex count grows. The two-dimensional bin and boxplot panels stay flat for all three formats."
 ```
 
 Format matters as much as count.
