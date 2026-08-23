@@ -42,5 +42,5 @@
   ),
   theme: theme-minimal(),
   width: 24cm,
-  height: 11cm,
+  height: 13cm,
 )
