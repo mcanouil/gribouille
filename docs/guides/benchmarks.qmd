@@ -114,14 +114,14 @@ Those layers too slow as the row count climbs, because they still read every row
 //| fig-cap: "Output size against element count for each chart type, on log scales. Vector output grows with the number of marks and vertices, while raster output stays compact."
 //| output-filename: "benchmarks-size.svg"
 //| file: _benchmarks-size.typ
-//| alt: "A three by three grid of small line charts, one per chart type, plotting output file size against element count on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply wherever the chart carries many marks or many vertices, including the column, faceted smoother, line, point, polygon, and tile panels, because each one becomes a node in the file. The PNG line stays low and almost flat in every panel. The PDF line starts below PNG where a chart draws few marks, and rises above it as the mark or vertex count grows. The two-dimensional bin and boxplot panels stay flat for all three formats."
+//| alt: "A three by three grid of small line charts, one per chart type, plotting output file size against element count on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply wherever the chart carries many marks or many vertices, including the column, faceted smoother, line, point, polygon, and tile panels, because each one becomes a node in the file. The PNG line stays low and almost flat in every panel. In most panels the PDF line starts below PNG where a chart draws few marks, and rises above it as the mark or vertex count grows. The two-dimensional bin and boxplot panels stay flat for all three formats."
 ```
 
 Format matters as much as count.
 SVG stores one node per mark and one point per vertex, so a dense scatter, a long line, and a detailed outline all produce a very large file.
 A polygon chart of one hundred thousand vertices writes about 2.5 MB of SVG, which is the price of keeping the geometry.
 PNG rasterises to a fixed grid and stays compact whatever the chart holds.
-PDF starts below PNG where a chart draws few marks, because there is then little geometry to write, and rises above it as the mark or vertex count grows.
+PDF usually starts below PNG where a chart draws few marks, because there is then little geometry to write, and rises above it as the mark or vertex count grows.
 For a chart with many thousands of marks or vertices, prefer a raster format unless you need vector output.
 
 ## What this means for your charts
