@@ -248,7 +248,10 @@
 // for downstream resolvers (palette index, colour mapping, position).
 #let _level-index(domain) = {
   let idx = (:)
-  for (i, v) in domain.enumerate() { idx.insert(v, i) }
+  // Keyed by the stringified level, because every lookup is a `str(value)`.
+  // A trained domain already holds strings, so this only matters for a
+  // hand-built one, where it answers `none` rather than failing on the key.
+  for (i, v) in domain.enumerate() { idx.insert(str(v), i) }
   idx
 }
 

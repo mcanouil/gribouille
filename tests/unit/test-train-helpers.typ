@@ -1,3 +1,6 @@
+// Shared helpers in `train.typ`: the two spellings of the stat-space warp,
+// and the discrete level lookup.
+//
 // `_to-stat` and `to-stat-fn` state the same warp twice.
 //
 // `_to-stat` stays a direct two-line body because it sits on the per-value
@@ -8,7 +11,7 @@
 // which rows are in range, and the only symptom would be missing or wrongly
 // clamped data.
 
-#import "../../src/scale/train.typ": _to-stat, to-stat-fn
+#import "../../src/scale/train.typ": _to-stat, level-lookup, to-stat-fn
 
 #let _scale(transform, pre-transformed) = (
   type: "continuous",
@@ -46,4 +49,13 @@
   assert.eq((to-stat-fn(t))(4), _to-stat(t, 4))
 }
 
-to-stat agreement tests passed.
+// `level-lookup` keys by the stringified level, so a hand-built domain holding
+// a non-string level answers `none` rather than failing on the key. That keeps
+// the behaviour the two call sites had before they shared this helper.
+#{
+  let t = (type: "discrete", domain: (1, "b"))
+  assert.eq(level-lookup(t).at("b", default: none), 1)
+  assert.eq(level-lookup(t).at("zz", default: none), none)
+}
+
+to-stat and level-lookup tests passed.
