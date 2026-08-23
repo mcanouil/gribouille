@@ -16,7 +16,9 @@
 #import "../../src/utils/bin.typ": (
   bin-1d-cells, panel-bin-grid, resolve-bin-grid,
 )
-#import "../../src/utils/bin-2d.typ": panel-bin-grid-2d, resolve-bin-grid-2d
+#import "../../src/utils/bin-2d.typ": (
+  bin-2d-cells, panel-bin-grid-2d, resolve-bin-grid-2d,
+)
 #import "../../src/aes.typ": aes
 
 #let raw = range(0, 20).map(v => (a: v, b: v * 2))
@@ -88,5 +90,30 @@
 // All five rows fall in the first stashed bin; a grid derived from the rows
 // would have spread them across four bins of width 1.
 #assert.eq(cells.counts, (5, 0, 0, 0))
+
+// The two-dimensional builder carries the same contract, so it is pinned the
+// same way: a stashed two-by-two grid over `[0, 20)` against rows spanning
+// `[0, 4]` puts every row in the first cell.
+#let stashed-2d = (
+  bins: 2,
+  binwidth: none,
+  grid: (
+    x-lo: 0,
+    x-n-bins: 2,
+    x-width: 10.0,
+    y-lo: 0,
+    y-n-bins: 2,
+    y-width: 10.0,
+  ),
+)
+#let cells-2d = bin-2d-cells(
+  range(0, 5).map(v => (a: v, b: v)),
+  "a",
+  "b",
+  stashed-2d,
+)
+#assert.eq(cells-2d.grid.x-n-bins, 2)
+#assert.eq(cells-2d.grid.x-width, 10.0)
+#assert.eq(cells-2d.counts, (5, 0, 0, 0))
 
 bin grid laziness tests passed.

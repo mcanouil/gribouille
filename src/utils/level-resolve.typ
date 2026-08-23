@@ -15,7 +15,7 @@
 #import "./palette.typ": (
   default-linetypes, default-shapes, palette-at, spec-attr, spec-palette,
 )
-#import "../scale/train.typ": map-continuous
+#import "../scale/train.typ": level-lookup, map-continuous
 
 #let spec-range(trained, fallback) = spec-attr(
   trained,
@@ -24,11 +24,7 @@
 )
 
 #let discrete-index(trained, level) = {
-  let s = str(level)
-  let lookup = trained.at("level-index", default: none)
-  if lookup == none { trained.domain.position(v => v == s) } else {
-    lookup.at(s, default: none)
-  }
+  level-lookup(trained).at(str(level), default: none)
 }
 
 #let discrete-numeric(trained, level, range) = {
