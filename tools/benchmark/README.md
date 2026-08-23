@@ -118,3 +118,6 @@ lua tools/benchmark/run.lua \
 ```
 
 The timings are machine-specific, so the page presents them as illustrative.
+
+The harness writes CRLF line endings on some platforms.
+The committed dataset uses LF, so convert the file after a refresh if your run adds carriage returns.
