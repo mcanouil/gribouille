@@ -127,7 +127,7 @@ For a chart with many thousands of marks or vertices, prefer a raster format unl
 ## What this means for your charts
 
 - A few hundred to a few thousand marks per chart compile comfortably in any format.
-- Tens of thousands of per-row marks are slow, taking tens of seconds, and a raster format is the only sensible choice.
+- Tens of thousands of per-row marks take ten to fifteen seconds, and a raster format is the only sensible choice.
 - One hundred thousand per-row marks exceed the budget, so reshape the work instead of drawing every mark.
 - Count the marks, not the rows. One hundred thousand points on one line, or on a handful of polygons, compile inside the budget, where the same number of separate markers does not.
 - When the data is large, reach for a layer that aggregates first, such as [`geom-bin-2d`](../reference/geoms/geom-bin-2d.qmd), [`geom-hex`](../reference/geoms/geom-hex.qmd), [`geom-histogram`](../reference/geoms/geom-histogram.qmd), or [`geom-boxplot`](../reference/geoms/geom-boxplot.qmd).
