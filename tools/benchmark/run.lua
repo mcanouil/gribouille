@@ -27,7 +27,7 @@ end
 local USAGE = [[
 Usage: tools/benchmark/run.lua [options]
 
-Sweeps each case in tools/benchmark/cases/ across a range of element counts and
+Sweeps each case in tools/benchmark/cases/ across a range of row counts and
 output formats, compiling serially and recording compile time, output size, and
 (optionally) peak resident memory.
 
@@ -35,7 +35,7 @@ Options:
   --cases    <list>  Comma-separated case names (default: every cases/*.typ).
   --variants <list>  Comma-separated render variants applied to every case
                      (default: each case's own variant set, see CASE_VARIANTS).
-  --sizes    <list>  Comma-separated element counts (default: 10,100,1000,5000,10000).
+  --sizes    <list>  Comma-separated row counts (default: 10,100,1000,5000,10000).
   --formats  <list>  Comma-separated of png,svg,pdf (default: png,svg,pdf).
   --reps    <n>      Timed compiles per cell; median reported (default: 3).
   --timeout <secs>   Per-compile budget; over it the cell is recorded as a

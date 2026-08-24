@@ -32,7 +32,7 @@
     geom-point(size: 2.5pt),
   ),
   scales: scales(x: scale-log10(), y: scale-log10()),
-  facet: facet-wrap("case", ncolumn: 4),
+  facet: facet-wrap("case", ncolumn: 3),
   labels: labels(
     title: "Vector output balloons with element count, raster stays compact",
     subtitle: "SVG carries one node per mark; PNG and PDF grow far more slowly",
