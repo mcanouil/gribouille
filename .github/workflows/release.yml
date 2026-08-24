@@ -240,7 +240,6 @@ jobs:
     env:
       VERSION: ${{ needs.bump-version.outputs.version }}
       COMMIT_SHA: ${{ needs.bump-version.outputs.commit_sha }}
-      PR_URL: ${{ needs.bump-version.outputs.pr_url }}
 
     steps:
       - name: Create GitHub App token
@@ -250,9 +249,13 @@ jobs:
           client-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_KEY }}
 
-      - name: Checkout repository
+      # Check out the bump commit by SHA. The bump job already merged it, so no
+      # wait is needed, and a branch checkout would land on whatever `main`
+      # points at, which is the commit that triggered the run.
+      - name: Checkout bump commit
         uses: actions/checkout@v7
         with:
+          ref: ${{ needs.bump-version.outputs.commit_sha }}
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
@@ -263,51 +266,6 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           app-slug: ${{ steps.app-token.outputs.app-slug }}
           gh-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Wait for bump PR to merge on main
-        env:
-          GH_TOKEN: ${{ steps.git-user.outputs.token }}
-        shell: bash
-        run: |
-          STATE=""
-          for attempt in {1..30}; do
-            if ! STATE=$(gh pr view "${PR_URL}" --json state --jq .state 2>err.log); then
-              echo "::error::gh pr view failed for ${PR_URL}:"
-              cat err.log
-              exit 1
-            fi
-            if [ "${STATE}" = "MERGED" ]; then
-              echo "Bump PR merged."
-              break
-            fi
-            echo "PR state: ${STATE}. Waiting (attempt ${attempt}/30)..."
-            sleep 10
-          done
-          if [ "${STATE}" != "MERGED" ]; then
-            echo "::error::Bump PR ${PR_URL} did not merge within the timeout (final state: ${STATE})."
-            exit 1
-          fi
-
-          # actions/checkout pins refs/remotes/origin/main to the commit that
-          # triggered the run, which predates the bump. A bare `git fetch origin
-          # main` leaves that tracking ref behind, so fetch the branch through an
-          # explicit refspec and retry while the merge propagates.
-          found=false
-          for attempt in {1..10}; do
-            git fetch --no-tags --force origin "+refs/heads/main:refs/remotes/origin/main" --quiet || true
-            if git log origin/main --format='%H' -n 20 | grep -qF "${COMMIT_SHA}"; then
-              found=true
-              break
-            fi
-            echo "Bump commit not on origin/main yet (attempt ${attempt}/10); retrying in 6s..."
-            sleep 6
-          done
-          if [ "${found}" != "true" ]; then
-            echo "::error::Bump commit ${COMMIT_SHA} not found on origin/main after waiting."
-            exit 1
-          fi
-          git checkout main
-          git reset --hard origin/main
 
       - name: Extract release notes from CHANGELOG
         shell: bash
@@ -351,6 +309,7 @@ jobs:
           gh release create "${VERSION}" \
             "./release_assets/gribouille-${VERSION}.tar.gz#gribouille ${VERSION} (tar.gz)" \
             "./release_assets/gribouille-${VERSION}.zip#gribouille ${VERSION} (zip)" \
+            --target "${COMMIT_SHA}" \
             --title "${VERSION}" \
             --notes-file "${CHANGELOG_FILE}" \
             --generate-notes
