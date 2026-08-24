@@ -13,12 +13,14 @@
 
 #let n = int(sys.inputs.at("n", default: "100"))
 
-#let rings = 12
-// The vertex total is exactly `n`, as in every other case: the remainder of
-// the split is spread one vertex at a time over the first rings. A ring needs
-// three vertices to be a polygon at all, so below `rings * 3` that floor wins
-// and the total is `rings * 3` instead. Every measured size is far above it.
+// The vertex total is exactly `n`, as in every other case. A ring needs three
+// vertices to be a polygon at all, so a small `n` is drawn as fewer rings
+// rather than as more vertices than asked for. Twelve is the ceiling, which
+// every size from thirty-six upward reaches.
+#let rings = calc.max(1, calc.min(12, int(n / 3)))
 #let base-per-ring = calc.max(3, int(n / rings))
+// The remainder of the split is spread one vertex at a time over the first
+// rings.
 #let remainder = calc.max(0, n - base-per-ring * rings)
 
 #let ring-rows(r) = {
