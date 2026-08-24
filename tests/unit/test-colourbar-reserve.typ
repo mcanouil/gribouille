@@ -55,7 +55,10 @@
   let lead = bar-lead(gctx("right", "legend"))
   // Stated outright, so this file carries the geometry it claims to pin rather
   // than only the wiring: a tick of 0.1 cm and a gap of 0.08 cm after it.
-  assert.eq(lead, 0.18)
+  assert(
+    calc.abs(lead - 0.18) < 1e-9,
+    message: "the drawn lead is " + repr(lead) + ", not 0.18",
+  )
   let expected = _COLOURBAR-V-W + lead + label-w
 
   // The precondition: the title must not be what sets the width.
