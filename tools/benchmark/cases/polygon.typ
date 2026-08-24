@@ -22,8 +22,11 @@
 #let remainder = calc.max(0, n - base-per-ring * rings)
 
 #let ring-rows(r) = {
-  let cx = calc.rem(r, 4) * 3.0 + 1.5
-  let cy = int(r / 4) * 3.0 + 1.5
+  // The grid pitch keeps the rings disjoint: the largest reaches
+  // `1.5 * 1.18 = 1.77`, inside the half-pitch of 2.0. Overlapping translucent
+  // fills would add compositing work, which is not the cost this case isolates.
+  let cx = calc.rem(r, 4) * 4.0 + 2.0
+  let cy = int(r / 4) * 4.0 + 2.0
   let radius = 1.0 + calc.rem(r, 3) * 0.25
   let per-ring = base-per-ring + if r < remainder { 1 } else { 0 }
   range(0, per-ring).map(i => {
