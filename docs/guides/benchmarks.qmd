@@ -5,13 +5,13 @@ engine: markdown
 ---
 
 Every Gribouille chart is compiled by Typst, and most layers draw one mark per data row.
-That makes compile cost rise with the number of elements on the page.
+That makes compile cost rise with the number of marks on the page.
 A chart that is instant at a few hundred points can become impractical at tens of thousands.
-This page measures that growth so you can judge, before you build a chart, whether your data volume suits the library.
+This page measures that growth against the row count, so you can judge, before you build a chart, whether your data volume suits the library.
 
 ## How the numbers are produced
 
-A small harness under `tools/benchmark/` compiles a fixed set of charts across a range of element counts and the three output formats.
+A small harness under `tools/benchmark/` compiles a fixed set of charts across a range of row counts and the three output formats.
 For each cell it records the compile time, the output size, and whether the compile finished within a fixed time budget.
 A chart that exceeds the budget is recorded as a timeout rather than measured.
 Past that point the library is no longer a practical choice for that workload.
@@ -21,7 +21,9 @@ The numbers are illustrative and depend on the machine that produced them, so re
 
 ### Procedure
 
-Each case is a standalone Typst file that reads its element count from `sys.inputs`, so one file covers every size.
+Each case is a standalone Typst file that reads its row count from `sys.inputs`, so one file covers every size.
+Every case builds that many rows.
+What a row becomes differs: a mark of its own in the per-row cases, one vertex of a ring in the polygon case, one contribution to a bin in the aggregating cases.
 Each case also builds deterministic synthetic data, so a given size renders the same chart on every run.
 The harness compiles the cases one at a time, never in parallel, so concurrent compiles cannot contend for the processor and distort the timings.
 It wraps each compile in `/usr/bin/time`, takes the median wall time over a few repetitions, and records the output file size.
@@ -77,52 +79,60 @@ The point case, for instance, is:
 
 The full harness, every other case, and the command-line options are in [`tools/benchmark/`](https://github.com/mcanouil/gribouille/tree/main/tools/benchmark).
 
-## Compile time against element count
+## Compile time against row count
 
 ```{typst}
 //| echo: true
 //| code-fold: true
 //| code-summary: "Typst source for this figure"
 //| label: fig-benchmark-time
-//| fig-cap: "Compile time against element count for each chart type, on log scales. Per-row layers climb steeply and hit the time budget, while binning and aggregating layers stay within it."
+//| fig-cap: "Compile time against row count for each chart type, on log scales. Layers that draw one mark per row reach the time budget first, while the path, polygon, and aggregating layers stay inside it."
 //| output-filename: "benchmarks-time.svg"
 //| file: _benchmarks-time.typ
-//| alt: "A grid of small line charts, one per chart type, plotting compile time against element count on logarithmic axes for the PNG, SVG, and PDF formats. The point, column, tile, line, and faceted smoother panels rise sharply and end in crosses that mark sizes which exceeded the time budget. The two-dimensional bin and boxplot panels rise more gently and reach the largest size without a cross."
+//| alt: "A grid of small line charts, three to a row and eight in all, one per chart type, plotting compile time against the number of rows on logarithmic axes for the PNG, SVG, and PDF formats. The column, faceted smoother, point, and tile panels rise steeply and end in a cross that marks the largest size exceeding the time budget. The polygon panel rises in step with the data and the line panel faster than it, but both reach that size without a cross, ending near thirteen and thirty-five seconds as PNG, with the SVG line of the line panel higher again at about sixty. The two-dimensional bin and boxplot panels stay nearly flat and end lowest of all."
 ```
 
-Per-row layers (`geom-point`, `geom-col`, `geom-tile`) climb far faster than the data grows.
-On the test machine a scatter of one thousand points compiles in about two seconds.
-Ten thousand points take close to a minute, and one hundred thousand never finish inside the budget.
-Most of the cost is handling every row, so a single connected `geom-line` is markedly cheaper than the same number of separate markers.
-Aggregating layers move the ceiling outward rather than removing it.
-A two-dimensional bin or a boxplot collapses the rows to a small, fixed number of marks.
-It therefore still completes at one hundred thousand rows, where every per-row layer times out.
-It too slows as the row count climbs.
+Cost follows the number of marks a chart draws, not the number of rows it reads.
+Per-row layers (`geom-point`, `geom-col`, `geom-tile`) draw one mark per row, so their cost rises in step with the row count.
+On the test machine a scatter of one thousand points compiles in under two seconds, ten thousand points take about fifteen seconds, and one hundred thousand do not finish inside the budget.
 
-## Output size against element count
+A layer that carries many rows on few marks is far cheaper.
+`geom-line` holds every row as a vertex of one path: ten thousand rows take under two seconds, and one hundred thousand finish in about thirty-five as PNG, or closer to sixty as SVG.
+`geom-polygon` behaves the same way, and draws twelve rings holding one hundred thousand vertices in about thirteen seconds.
+So a dense trace or an outline is not the problem that a dense scatter is.
+
+Aggregating layers move the ceiling further out again.
+A two-dimensional bin or a boxplot collapses the rows to a small, fixed number of marks.
+One hundred thousand rows then cost about five seconds and about two seconds.
+Those layers too slow as the row count climbs, because they still read every row.
+
+## Output size against row count
 
 ```{typst}
 //| echo: true
 //| code-fold: true
 //| code-summary: "Typst source for this figure"
 //| label: fig-benchmark-size
-//| fig-cap: "Output size against element count for each chart type, on log scales. Vector output grows with the number of marks, while raster output stays compact."
+//| fig-cap: "Output size against row count for each chart type, on log scales. Vector output grows with the number of marks and vertices, while raster output stays compact."
 //| output-filename: "benchmarks-size.svg"
 //| file: _benchmarks-size.typ
-//| alt: "A grid of small line charts, one per chart type, plotting output file size against element count on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply for the per-row layers because every mark becomes a node in the file, while the PNG and PDF lines stay much lower and flatter. The binning and boxplot panels stay flat for all three formats."
+//| alt: "A grid of small line charts, three to a row and eight in all, one per chart type, plotting output file size against the number of rows on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply wherever the chart carries many marks or many vertices, including the column, faceted smoother, line, point, polygon, and tile panels, because each one becomes a node in the file. The PNG line stays low in every panel and almost flat in most, with the tile panel the one clear rise. In most panels the PDF line starts below PNG where a chart draws few marks, and rises above it as the mark or vertex count grows. The two-dimensional bin and boxplot panels stay flat for all three formats."
 ```
 
 Format matters as much as count.
-SVG stores one node per mark, so a dense scatter produces a very large file.
-PNG rasterises to a fixed grid and stays compact regardless of mark count.
-PDF sits between the two.
-For a chart with many thousands of marks, prefer a raster format unless you need vector output.
+SVG stores one node per mark and one point per vertex, so a dense scatter, a long line, and a detailed outline all produce a very large file.
+A polygon chart of one hundred thousand vertices writes about 2.5 MB of SVG, which is the price of keeping the geometry.
+PNG rasterises to a fixed grid and stays compact whatever the chart holds.
+PDF usually starts below PNG where a chart draws few marks, because there is then little geometry to write, and rises above it as the mark or vertex count grows.
+For a chart with many thousands of marks or vertices, prefer a raster format unless you need vector output.
 
 ## What this means for your charts
 
 - A few hundred to a few thousand marks per chart compile comfortably in any format.
-- Tens of thousands of per-row marks are slow, taking tens of seconds, and a raster format is the only sensible choice.
-- One hundred thousand per-row marks exceed the budget, so reshape the work instead of drawing every row.
+- Tens of thousands of per-row marks take ten to fifteen seconds, and a raster format is the only sensible choice.
+- One hundred thousand per-row marks exceed the budget, so reshape the work instead of drawing every mark.
+- Count the marks, not the rows.
+  One hundred thousand points on one line, or on a handful of polygons, compile inside the budget, where the same number of separate markers does not.
 - When the data is large, reach for a layer that aggregates first, such as [`geom-bin-2d`](../reference/geoms/geom-bin-2d.qmd), [`geom-hex`](../reference/geoms/geom-hex.qmd), [`geom-histogram`](../reference/geoms/geom-histogram.qmd), or [`geom-boxplot`](../reference/geoms/geom-boxplot.qmd).
   These layers collapse the rows to few marks and push the practical ceiling much further out.
   Very large row counts still cost time.

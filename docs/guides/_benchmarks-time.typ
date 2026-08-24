@@ -1,4 +1,4 @@
-// Compile time versus element count, read from the committed benchmark dataset
+// Compile time versus row count, read from the committed benchmark dataset
 // and drawn with gribouille itself.
 //
 // Compile from the project root for debugging:
@@ -43,15 +43,15 @@
   scales: scales(x: scale-log10(), y: scale-log10()),
   facet: facet-wrap("case", ncolumn: 3),
   labels: labels(
-    title: "Compile time grows superlinearly with element count",
+    title: "Per-row layers reach the time budget, path and aggregating layers do not",
     subtitle: "Crosses mark sizes that exceeded the "
       + str(budget)
       + "s budget",
-    x: "Elements (log scale)",
+    x: "Rows (log scale)",
     y: "Compile time, seconds (log scale)",
     colour: "Format",
   ),
   theme: theme-minimal(),
   width: 24cm,
-  height: 11cm,
+  height: 13cm,
 )
