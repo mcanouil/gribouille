@@ -7,7 +7,9 @@
 // limit can carry another type.
 //
 // The failure itself cannot be asserted here, because Typst has no try/catch.
-// This pins the working shape: quoted levels train, censor, and resolve.
+// This file pins the working shape, that quoted levels train, censor, and
+// resolve; `tests/errors/scale-discrete-limits-type.typ` pins the message a
+// numeric level fails with.
 
 #import "../../src/scale/train.typ": train
 #import "../../src/scale/constructors.typ": scale-discrete

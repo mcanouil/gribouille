@@ -345,6 +345,6 @@
 }
 
 // strict mode panics on the first out-of-range row. Typst has no try/catch, so
-// the panic cannot be asserted here, and no example compiles it either: an
-// example that panicked would fail `tools/check.sh`. The path is therefore
-// uncovered, and a change to it must be checked by hand.
+// the panic cannot be asserted here. It is pinned instead by
+// `tests/errors/scale-oob-strict.typ`, which requires the compile to fail and
+// the message to carry both its body and its hint.

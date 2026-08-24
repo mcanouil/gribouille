@@ -46,7 +46,8 @@ Keep contributed content accessible:
 The package metadata, compiler version, and excluded paths are defined in [`typst.toml`](typst.toml).
 The library entry point is [`lib.typ`](lib.typ).
 Source modules live under [`src/`](src/).
-Tests live under [`tests/unit/`](tests/unit) and [`tests/visual/`](tests/visual).
+Tests live under [`tests/unit/`](tests/unit), [`tests/visual/`](tests/visual), and [`tests/errors/`](tests/errors).
+Every file under `tests/errors/` must fail to compile, and declares the phrases its message has to carry on `// expect:` lines, because Typst has no `try`/`catch` for a unit test to use.
 Helper scripts live under [`tools/`](tools), in particular [`tools/check.sh`](tools/check.sh) for local checks.
 Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `cy`, `lo`, `hi`, …) are catalogued in [`GLOSSARY.md`](GLOSSARY.md).
 Consult that glossary before you introduce new short identifiers.
