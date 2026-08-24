@@ -7,8 +7,7 @@
 // `tools/check-errors.sh` compiles this file, requires the compile to fail, and
 // requires the `error:` line to carry the phrases below.
 //
-// expect: color.primary
-// expect: a `light` or `dark` key
+// expect: color.primary declares variants but names neither
 
 #import "/lib.typ": theme-brand
 

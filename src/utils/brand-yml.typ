@@ -67,10 +67,14 @@
   let cur = _pick-variant(token, mode)
   while true {
     if type(cur) == color { return (ok: true, colour: cur) }
-    // A dictionary this far in is one `_pick-variant` could not read a side
-    // from, which is its own mistake rather than a wrong type: the writer meant
-    // to declare variants and misspelled the keys.
-    if type(cur) == dictionary {
+    // A dictionary naming neither side is one `_pick-variant` could not read,
+    // which is its own mistake rather than a wrong type: the writer meant to
+    // declare variants and misspelled the keys.
+    //
+    // A dictionary that does name a side is a variant nested inside a variant.
+    // The side was read and held this, so the fault is the type of what it
+    // held, and calling it a missing side would demand the very keys it has.
+    if type(cur) == dictionary and "light" not in cur and "dark" not in cur {
       return (ok: false, reason: "variant", token: cur, chain: seen)
     }
     if type(cur) != str {
@@ -96,6 +100,12 @@
   }
 }
 
+// The palette hops a role walked before it failed, or nothing when the role
+// carried the offending value itself.
+#let _through(chain) = if chain.len() == 0 { "" } else {
+  ", reached through " + chain.map(repr).join(" -> ")
+}
+
 // Panicking wrapper over `_walk-alias`, naming the role that failed.
 #let _resolve-token(token, palette, mode, role) = {
   let res = _walk-alias(token, palette, mode)
@@ -109,11 +119,17 @@
       "a hex colour string or a `color.palette` entry name",
     )
   } else if res.reason == "variant" {
-    fail-type(
+    // Bespoke rather than `fail-type`, whose "must be" reads as a demand for a
+    // dictionary from a value that already is one. The chain is carried for the
+    // same reason "cycle" carries it: the role points at the palette entry, and
+    // the entry is what has to change.
+    fail(
       _SCOPE,
-      name,
-      res.token,
-      "a dictionary with a `light` or `dark` key",
+      name
+        + " declares variants but names neither `light` nor `dark`"
+        + _through(res.chain)
+        + "; got "
+        + repr(res.token),
       hint: "A colour with no variants is written as the value itself, not as"
         + " a dictionary.",
     )

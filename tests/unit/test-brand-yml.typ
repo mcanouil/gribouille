@@ -105,6 +105,13 @@
 #assert.eq(hop.reason, "variant")
 #assert.eq(hop.chain, ("accent",))
 
+// A side that is itself a dictionary is a variant nested in a variant, not a
+// misspelled key: the side was read, and what it held is the wrong type. The
+// verdict has to say so, or the message demands the very keys the value has.
+#let nested = _walk-alias((light: (light: "#111111")), (:), "light")
+#assert.eq(nested.reason, "type")
+#assert.eq(nested.token, (light: "#111111"))
+
 // Absent is never an error.
 #assert.eq(brand-colours((:), "light"), (:))
 #assert.eq(brand-colours((color: (:)), "light"), (:))

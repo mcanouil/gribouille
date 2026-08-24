@@ -100,8 +100,10 @@
     }
     lead + max-w
   })
-  // A guide with no keys and no stated shape flows into no column at all, and
-  // an empty grid is as wide as nothing. Answering here keeps `calc.max` off an
+  // A grid of no columns is as wide as nothing. This is the shape a horizontal
+  // guide with no keys flows into; a vertical one keeps its single column and
+  // sizes it as usual, because the record has to describe the shape the keys
+  // flow into or `prim-keys` rejects it. Answering here keeps `calc.max` off an
   // empty list, which raises a Typst message in place of a library one.
   if widths.len() == 0 {
     return (widths: (), gap: COL-GAP-MIN, offsets: (), total: 0.0)
