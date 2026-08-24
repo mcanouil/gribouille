@@ -517,14 +517,31 @@
   max-v
 }
 
-// Widest break label (cm) across `breaks` on the entry-label surface. Shared by
-// the ladder / colourbar width estimate and their draw passes so reserved and
-// drawn label slots agree.
-#let _max-break-label-width(g, breaks, style) = _largest(
-  breaks
-    .enumerate()
-    .map(((i, b)) => _label-width(_break-label(g, b, i), style)),
-)
+// Box (cm) the largest break label across `breaks` occupies on the entry-label
+// surface, turned by the surface `angle` the draw applies, as `_title-box`
+// already turns a title.
+//
+// Both axes are composed, because a turned label presents its height to the
+// flank a vertical colour bar reserves and its width to the band a horizontal
+// one reserves. The widest and the tallest need not be the same label, so each
+// axis takes its own largest.
+//
+// The slack a label is given past its ink is carried on both axes here, so a
+// caller reserves the box it can spend rather than a bare ink extent.
+#let _max-break-label-box(g, breaks, style) = {
+  let angle = if style.angle != none { style.angle / 1deg } else { 0 }
+  let width = 0.0
+  let height = 0.0
+  for (i, b) in breaks.enumerate() {
+    let e = _label-extents(_break-label(g, b, i), style)
+    if e.width == 0.0 and e.height == 0.0 { continue }
+    let turned = _rotated-extent(e.width, e.height, angle)
+    if turned.width > width { width = turned.width }
+    if turned.height > height { height = turned.height }
+  }
+  if width == 0.0 and height == 0.0 { return (width: 0.0, height: 0.0) }
+  (width: width + _LABEL-SLACK-CM, height: height + _LABEL-SLACK-CM)
+}
 
 // The `legend-title` surface every title metric resolves against. A theme-less
 // caller (unit tests) falls back to the merged defaults.
@@ -656,46 +673,21 @@
   calc.max(1, calc.round(h / one))
 }
 
-// Extra vertical space a multi-line label needs beyond a single row: a full
-// row stride per extra line, so multi-line rows keep the same inter-row gap as
-// single-line ones. Zero for every string / single-line label, so single-line
-// legends keep their geometry.
-#let _label-overflow(label, line-h, style) = (
-  (_label-lines(label, style) - 1) * line-h
-)
-
-// Tallest multi-line overflow across a break list, measured against a single
-// line. Grows a horizontal ladder / colourbar label band beyond its single-line
-// default; zero when every label fits one line.
-#let _breaks-overflow(g, breaks, style) = {
-  let line-h = _swatch-line-h-cm(style.size / 1pt)
-  _largest(
-    breaks
-      .enumerate()
-      .map(((i, b)) => _label-overflow(_break-label(g, b, i), line-h, style)),
-  )
-}
-
 #let _LADDER-H-COL-H = 0.32
 #let _LADDER-H-LABEL-H = 0.4
 #let _COLOURBAR-V-W = 0.35
 #let _COLOURBAR-V-H = 3.0
 #let _COLOURBAR-H-W = 3.0
 #let _COLOURBAR-H-H = 0.35
-#let _COLOURBAR-H-LABEL-H = 0.45
 #let _COLOURBAR-PAD-V = 0.3
-// Room between a vertical colour bar and its tick labels, read from the same
-// `bar-lead` the draw places them with, so the reservation cannot say one
-// thing while the draw does another.
+// Room between a colour bar and its tick labels, read from the same `bar-lead`
+// the draw places them with, so the reservation cannot say one thing while the
+// draw does another.
 //
-// The horizontal band above is deliberately left as one fixed reservation: it
-// covers the same lead plus a row of text, and unpicking it is a separate
-// pixel change from this one.
-//
-// A turned label is also still measured flat on this side, where the
-// horizontal branch corrects for the turn through `_breaks-overflow`. The
-// slack this constant used to carry hid small angles; it no longer does.
-#let _COLOURBAR-V-LABEL-LEAD = bar-lead(gctx("right", "legend"))
+// Both directions read it. A vertical bar spends it across its flank and a
+// horizontal one down its band, and what sits past it either way is the turned
+// label box from `_max-break-label-box`.
+#let _COLOURBAR-LABEL-LEAD = bar-lead(gctx("right", "legend"))
 
 // Resolve the displayed break positions for a continuous guide: keep the
 // explicit in-domain breaks when the scale supplies them, otherwise fall back
@@ -1011,12 +1003,13 @@
 //
 // The strip is one primitive rather than a stack of them, because the flank of
 // a vertical bar reads across the guide while the guide stacks down it. The
-// room past the strip is reserved here: a vertical bar reads the lead the draw
-// uses, and a horizontal one still reserves one fixed band.
+// room past the strip is reserved here, and each direction spends the same two
+// terms on its own axes: the lead the draw places a label at, and the box that
+// label was measured to occupy.
 #let _colourbar-node(g, style, title-style, title-w, title-h) = {
   let horizontal = g.placement.direction == "horizontal"
   let breaks = _colourbar-breaks(g)
-  let label-w = _max-break-label-width(g, breaks, style)
+  let label = _max-break-label-box(g, breaks, style)
   compose-stack(
     .._box-title(g, title-style, title-w, title-h),
     prim-bar(
@@ -1026,12 +1019,12 @@
         (_COLOURBAR-H-W, _COLOURBAR-H-H)
       } else { (_COLOURBAR-V-W, _COLOURBAR-V-H) },
       band: if horizontal {
-        _COLOURBAR-H-LABEL-H + _breaks-overflow(g, breaks, style)
+        _COLOURBAR-LABEL-LEAD + label.height
       } else { _COLOURBAR-PAD-V },
-      label-reserve: if horizontal { label-w } else {
-        _COLOURBAR-V-LABEL-LEAD + label-w
+      label-reserve: if horizontal { label.width } else {
+        _COLOURBAR-LABEL-LEAD + label.width
       },
-      label-w: label-w,
+      label-w: label.width,
       angle: if style.angle != none { style.angle / 1deg } else { 0 },
       label-align: _label-align(g, style.align),
       justify: _grid-justify(g, title-style),

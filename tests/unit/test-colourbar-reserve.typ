@@ -8,9 +8,11 @@
 // This pins the reservation against the geometry the draw asks for, through the
 // same `tick-metrics` call, so the two cannot drift apart again.
 //
-// Only the vertical flank is pinned. The horizontal band is one fixed number
-// covering the same lead plus a row of text, and is deliberately left
-// unpinned here until it is unpicked in turn.
+// The second block pins the same flank under a themed `legend-text` angle. The
+// draw turns the label, so the reservation reads the turned box.
+//
+// The third block pins the band below a horizontal bar, which is the same lead
+// and the row its labels are measured to occupy.
 //
 // The guide width is the wider of its title and its strip, so the fixture maps
 // a single-character column: a wide title would set the width instead, and the
@@ -18,13 +20,13 @@
 // assertion keeps that precondition honest.
 
 #import "../../src/render/legend.typ": (
-  _COLOURBAR-V-W, _colourbar-breaks, _legend-text-style, _legend-title-style,
-  _max-break-label-width, _title-box, guides-for,
+  _COLOURBAR-H-H, _COLOURBAR-V-W, _colourbar-breaks, _legend-text-style,
+  _legend-title-style, _max-break-label-box, _title-box, guides-for,
 )
 #import "../../src/guide/gizmo/bar.typ": bar-lead
 #import "../../src/guide/gctx.typ": gctx
 #import "../../src/theme/defaults.typ": merge-theme
-#import "../../lib.typ": theme
+#import "../../lib.typ": element-text, theme
 
 #let _spec = (
   mapping: (colour: "v"),
@@ -46,7 +48,7 @@
   assert.eq(bar.placement.direction, "vertical")
 
   let breaks = _colourbar-breaks(bar)
-  let label-w = _max-break-label-width(bar, breaks, _legend-text-style(th))
+  let label-w = _max-break-label-box(bar, breaks, _legend-text-style(th)).width
   // The one formula the draw places a label with, rather than a copy of it.
   // What this catches is the reservation ceasing to read it, as it did when a
   // rounded constant stood here. A change inside `bar-lead` moves the draw and
@@ -81,6 +83,102 @@
       + repr(lead)
       + ", and labels of "
       + repr(label-w),
+  )
+}
+
+// The same flank, under a themed turn.
+//
+// The draw applies the `legend-text` angle to the label, so the reservation has
+// to read the turned box rather than the upright one. A 45 degree turn on a
+// three-character label presents more width than the label has flat, which is
+// width the flank never reserved.
+#context {
+  let th = merge-theme(theme(legend-text: element-text(angle: 45deg)))
+  let guides = guides-for(_spec, _trained, theme: th)
+  let bar = guides.at(0)
+  assert.eq(bar.placement.direction, "vertical")
+
+  let breaks = _colourbar-breaks(bar)
+  let turned = _max-break-label-box(bar, breaks, _legend-text-style(th))
+  // The upright measure to compare against comes from a surface that differs
+  // in its angle alone. An `element-text` replaces the whole themed element,
+  // so the default theme would also measure at another size, and the two boxes
+  // would differ for a reason that is not the turn.
+  let flat = _max-break-label-box(
+    bar,
+    breaks,
+    _legend-text-style(merge-theme(theme(
+      legend-text: element-text(angle: 0deg),
+    ))),
+  )
+  // The precondition: the turn must move the box at all, or the assertion
+  // below would hold just as well against the upright measure.
+  assert(
+    turned.width > flat.width,
+    message: "a 45 degree turn left the label box at "
+      + repr(turned.width)
+      + ", which is not wider than the upright "
+      + repr(flat.width),
+  )
+
+  let lead = bar-lead(gctx("right", "legend"))
+  let expected = _COLOURBAR-V-W + lead + turned.width
+
+  let title-w = _title-box(bar, _legend-title-style(th)).width
+  assert(
+    title-w < expected,
+    message: "the fixture title is "
+      + repr(title-w)
+      + " wide, which is not narrower than the strip and its turned labels at "
+      + repr(expected),
+  )
+
+  assert(
+    calc.abs(bar.width - expected) < 1e-9,
+    message: "a vertical colour bar with turned labels reserved "
+      + repr(bar.width)
+      + " for a strip of "
+      + repr(_COLOURBAR-V-W)
+      + ", a drawn lead of "
+      + repr(lead)
+      + ", and turned labels of "
+      + repr(turned.width),
+  )
+}
+
+// The band below a horizontal colour bar.
+//
+// The band covers two things the renderer decides: the lead it draws between
+// the strip and its labels, and the row those labels are measured to occupy.
+// Each is read from the surface it belongs to, where the fixed number this
+// replaced could drift from either one.
+//
+// A multi-line label needs no separate term. `_max-break-label-box` measures
+// the resolved label, so its height already carries every row.
+#context {
+  let th = merge-theme(theme(legend-position: "bottom"))
+  let guides = guides-for(_spec, _trained, theme: th)
+  let bar = guides.at(0)
+  assert.eq(bar.placement.direction, "horizontal")
+
+  let breaks = _colourbar-breaks(bar)
+  let label = _max-break-label-box(bar, breaks, _legend-text-style(th))
+  let lead = bar-lead(gctx("right", "legend"))
+  // The whole guide box: the title band, the strip, and the band past it.
+  let expected = bar.title-h + _COLOURBAR-H-H + lead + label.height
+
+  assert(
+    calc.abs(bar.height - expected) < 1e-9,
+    message: "horizontal colour bar reserved "
+      + repr(bar.height)
+      + " for a title band of "
+      + repr(bar.title-h)
+      + ", a strip of "
+      + repr(_COLOURBAR-H-H)
+      + ", a drawn lead of "
+      + repr(lead)
+      + ", and a label row of "
+      + repr(label.height),
   )
 }
 
