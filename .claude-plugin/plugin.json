@@ -1,6 +1,6 @@
 {
   "name": "gribouille",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Author grammar-of-graphics plots with the gribouille Typst library.",
   "author": { "name": "Mickaël Canouil" },
   "homepage": "https://m.canouil.dev/gribouille",
