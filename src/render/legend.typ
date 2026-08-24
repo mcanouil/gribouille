@@ -693,7 +693,7 @@
 // The horizontal band above is deliberately left as one fixed reservation: it
 // covers the same lead plus a row of text, and unpicking it is a separate
 // pixel change from this one.
-#let _COLOURBAR-V-LABEL-GAP = LEGEND-TICK-LEN + LEGEND-TICK-GAP
+#let _COLOURBAR-V-LABEL-LEAD = LEGEND-TICK-LEN + LEGEND-TICK-GAP
 
 // Resolve the displayed break positions for a continuous guide: keep the
 // explicit in-domain breaks when the scale supplies them, otherwise fall back
@@ -1027,7 +1027,7 @@
         _COLOURBAR-H-LABEL-H + _breaks-overflow(g, breaks, style)
       } else { _COLOURBAR-PAD-V },
       label-reserve: if horizontal { label-w } else {
-        _COLOURBAR-V-LABEL-GAP + label-w
+        _COLOURBAR-V-LABEL-LEAD + label-w
       },
       label-w: label-w,
       angle: if style.angle != none { style.angle / 1deg } else { 0 },
