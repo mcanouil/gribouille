@@ -693,6 +693,10 @@
 // The horizontal band above is deliberately left as one fixed reservation: it
 // covers the same lead plus a row of text, and unpicking it is a separate
 // pixel change from this one.
+//
+// A turned label is also still measured flat on this side, where the
+// horizontal branch corrects for the turn through `_breaks-overflow`. The
+// slack this constant used to carry hid small angles; it no longer does.
 #let _COLOURBAR-V-LABEL-LEAD = LEGEND-TICK-LEN + LEGEND-TICK-GAP
 
 // Resolve the displayed break positions for a continuous guide: keep the
