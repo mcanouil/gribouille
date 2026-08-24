@@ -41,6 +41,9 @@
   assert.eq(guides.len(), 1)
   let bar = guides.at(0)
   assert.eq(bar.kind, "colourbar")
+  // The reservation below is the vertical one, so the fixture must resolve to
+  // a vertical bar for the assertion to be about what it claims.
+  assert.eq(bar.placement.direction, "vertical")
 
   let breaks = _colourbar-breaks(bar)
   let label-w = _max-break-label-width(bar, breaks, _legend-text-style(th))
