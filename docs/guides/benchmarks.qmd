@@ -5,9 +5,9 @@ engine: markdown
 ---
 
 Every Gribouille chart is compiled by Typst, and most layers draw one mark per data row.
-That makes compile cost rise with the number of elements on the page.
+That makes compile cost rise with the number of marks on the page.
 A chart that is instant at a few hundred points can become impractical at tens of thousands.
-This page measures that growth so you can judge, before you build a chart, whether your data volume suits the library.
+This page measures that growth against the row count, so you can judge, before you build a chart, whether your data volume suits the library.
 
 ## How the numbers are produced
 
