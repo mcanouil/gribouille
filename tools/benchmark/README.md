@@ -1,7 +1,7 @@
 # Benchmark harness
 
 Measures how compile cost and output size grow as charts go from light to heavy.
-Each case in `cases/` is compiled across a range of element counts, render
+Each case in `cases/` is compiled across a range of row counts, render
 variants, and output formats, recording compile time, output size, and
 (optionally) peak memory.
 
@@ -18,7 +18,7 @@ lua tools/benchmark/run.lua [options]
 | ------------------- | ----------------------------- | -------------------------------------------------------- |
 | `--cases <list>`    | every `cases/*.typ`           | Comma-separated case names.                              |
 | `--variants <list>` | each case's own set           | Comma-separated render variants applied to every case.   |
-| `--sizes <list>`    | `10,100,1000,5000,10000`      | Comma-separated element counts.                          |
+| `--sizes <list>`    | `10,100,1000,5000,10000`      | Comma-separated row counts.                          |
 | `--formats <list>`  | `png,svg,pdf`                 | Comma-separated subset of `png`, `svg`, `pdf`.           |
 | `--reps <n>`        | `3`                           | Timed compiles per cell; the median is reported.         |
 | `--timeout <secs>`  | `120`                         | Per-compile budget; over it the cell is a timeout (`0` disables). |
@@ -58,13 +58,13 @@ lua tools/benchmark/run.lua --mem
 | `boxplot`      | `geom-boxplot`               | Sublinear: rows reduced to a per-group summary.      |
 | `facet-smooth` | `facet-wrap` + `geom-smooth` | Per-panel stat re-training on a per-row point layer. |
 
-Each case reads its element count from `sys.inputs` (`--input n=<count>`) and
+Each case reads its row count from `sys.inputs` (`--input n=<count>`) and
 generates deterministic synthetic data, so a given size renders the same chart
 every run.
 
 ## Variants
 
-A variant fixes the element count and changes render settings, isolating the
+A variant fixes the row count and changes render settings, isolating the
 cost of those settings.
 Cases read the active variant from `sys.inputs` (`--input variant=<name>`).
 Without `--variants`, each case sweeps only the variants it implements; cases

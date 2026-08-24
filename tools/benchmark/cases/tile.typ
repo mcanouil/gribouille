@@ -1,5 +1,5 @@
 // Benchmark case: geom-tile. One filled rectangle per row laid out on a near-
-// square grid, so cost scales linearly with the element count `n` injected via
+// square grid, so cost scales linearly with the row count `n` injected via
 // `--input n=<count>`.
 
 #import "../../../lib.typ": *

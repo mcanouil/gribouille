@@ -1,5 +1,5 @@
 // Benchmark case: geom-point. One marker per row, so cost scales linearly with
-// the element count `n` (`--input n=<count>`). The `variant` input
+// the row count `n` (`--input n=<count>`). The `variant` input
 // (`--input variant=<name>`) switches render settings so the harness can
 // measure how marker size, shape, and alpha affect compile cost and output
 // size at a fixed count:

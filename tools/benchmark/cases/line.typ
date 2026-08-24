@@ -1,5 +1,5 @@
 // Benchmark case: geom-line. One vertex per row joined into a single path, so
-// cost scales linearly with the element count `n` injected via `--input n=<count>`.
+// cost scales linearly with the row count `n` injected via `--input n=<count>`.
 
 #import "../../../lib.typ": *
 

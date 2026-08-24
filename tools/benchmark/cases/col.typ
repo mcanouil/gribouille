@@ -1,5 +1,5 @@
 // Benchmark case: geom-col. One bar per row, so cost scales linearly with the
-// element count `n` injected via `--input n=<count>`.
+// row count `n` injected via `--input n=<count>`.
 
 #import "../../../lib.typ": *
 
