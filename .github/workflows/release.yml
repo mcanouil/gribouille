@@ -288,8 +288,21 @@ jobs:
             exit 1
           fi
 
-          git fetch origin main --quiet
-          if ! git log origin/main --format='%H' -n 20 | grep -qF "${COMMIT_SHA}"; then
+          # actions/checkout pins refs/remotes/origin/main to the commit that
+          # triggered the run, which predates the bump. A bare `git fetch origin
+          # main` leaves that tracking ref behind, so fetch the branch through an
+          # explicit refspec and retry while the merge propagates.
+          found=false
+          for attempt in {1..10}; do
+            git fetch --no-tags --force origin "+refs/heads/main:refs/remotes/origin/main" --quiet || true
+            if git log origin/main --format='%H' -n 20 | grep -qF "${COMMIT_SHA}"; then
+              found=true
+              break
+            fi
+            echo "Bump commit not on origin/main yet (attempt ${attempt}/10); retrying in 6s..."
+            sleep 6
+          done
+          if [ "${found}" != "true" ]; then
             echo "::error::Bump commit ${COMMIT_SHA} not found on origin/main after waiting."
             exit 1
           fi
