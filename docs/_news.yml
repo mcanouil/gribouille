@@ -1,3 +1,16 @@
+- version: "0.7"
+  title: "Gribouille 0.7"
+  date: "2026-08-25"
+  path: "https://mickael.canouil.fr/posts/2026-08-25-gribouille-0-7/"
+  description: |
+    Gribouille 0.7.0 builds a theme from a parsed `_brand.yml`, so a document's
+    plots follow the same brand as its prose, and any theme now carries a
+    `palette` that discrete colour and fill scales use by default. A plot draws
+    at any size that gives it room to draw, keeps to the `width` and `height`
+    you set, and says how much room it needs when it cannot, which is the
+    breaking change of the release. The line geoms take arrowheads through the
+    new `arrow()` helper, a log axis places and labels its breaks as powers,
+    and large plots draw several times faster.
 - version: "0.6"
   title: "Gribouille 0.6"
   date: "2026-07-28"
