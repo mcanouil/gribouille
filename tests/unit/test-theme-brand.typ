@@ -2,7 +2,7 @@
 // and discrete palette.
 
 #import "../../src/theme/brand.typ": theme-brand
-#import "../../src/theme/defaults.typ": merge-theme
+#import "../../src/theme/defaults.typ": default-theme, merge-theme
 #import "../../src/theme/theme.typ": _text-style, resolve-element
 #import "../../src/utils/palette.typ": default-discrete
 
@@ -74,7 +74,9 @@
 #let bare = merge-theme(theme-brand((:)))
 #assert.eq(bare.name, "brand")
 #assert.eq(bare.palette, auto)
-#assert.eq(bare.accent, rgb("#3366FF"))
+// A brand that names no `primary` keeps the library accent, read from the
+// defaults rather than repeated here, so the two cannot drift.
+#assert.eq(bare.accent, default-theme.accent)
 #assert.eq(resolve-element(bare, "text").at("font", default: none), none)
 
 // A brand with too few data-ink roles keeps the library default palette.

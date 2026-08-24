@@ -91,6 +91,20 @@
 #assert.eq(_pick-variant((dark: "#111111"), "light"), "#111111")
 #assert.eq(_pick-variant("#111111", "dark"), "#111111")
 
+// A dictionary carrying neither side is handed back whole rather than raised
+// from here, so the walk stays pure and answers a verdict for it.
+#assert.eq(_pick-variant((foo: "#111111"), "light"), (foo: "#111111"))
+#let variant = _walk-alias((foo: "#111111"), (:), "light")
+#assert.eq(variant.ok, false)
+#assert.eq(variant.reason, "variant")
+#assert.eq(variant.token, (foo: "#111111"))
+#assert.eq(variant.chain, ())
+
+// The same verdict one hop in, where the palette entry is the malformed one.
+#let hop = _walk-alias("accent", (accent: (foo: "#111111")), "light")
+#assert.eq(hop.reason, "variant")
+#assert.eq(hop.chain, ("accent",))
+
 // Absent is never an error.
 #assert.eq(brand-colours((:), "light"), (:))
 #assert.eq(brand-colours((color: (:)), "light"), (:))

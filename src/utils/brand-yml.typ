@@ -41,33 +41,38 @@
 // variants and is used in both modes. A one-sided dictionary falls back to the
 // side it does have: dropping the role would leave the plot unthemed, and a
 // brand that declares only one side means it to apply.
+//
+// A dictionary carrying neither side is handed back whole. Raising it here
+// would name no role, because the role is the caller's to know, and would make
+// the walk below panic from inside a function documented not to.
 #let _pick-variant(value, mode) = {
   if type(value) != dictionary { return value }
   if mode in value { return value.at(mode) }
   let other = if mode == "light" { "dark" } else { "light" }
   if other in value { return value.at(other) }
-  fail-type(
-    _SCOPE,
-    "colour",
-    value,
-    "a hex colour string, a `color.palette` entry name, or a dictionary with a"
-      + " `light` and/or `dark` key",
-  )
+  value
 }
 
 // Walk a colour token to a concrete colour, following palette aliases.
 //
 // Pure: returns `(ok: true, colour: ...)` or `(ok: false, reason: ..., token:
-// ..., chain: ...)` with `reason` one of "type", "empty", "hex", "cycle",
-// "unknown". `_pick-variant` is re-applied at every hop because a palette
-// entry may itself carry light/dark variants. `seen` grows by one per hop over
-// a finite palette, so the walk terminates; membership in it is the cycle
-// guard, and the chain it accumulates lets the caller name the actual cycle.
+// ..., chain: ...)` with `reason` one of "type", "variant", "empty", "hex",
+// "cycle", "unknown". `_pick-variant` is re-applied at every hop because a
+// palette entry may itself carry light/dark variants. `seen` grows by one per
+// hop over a finite palette, so the walk terminates; membership in it is the
+// cycle guard, and the chain it accumulates lets the caller name the actual
+// cycle.
 #let _walk-alias(token, palette, mode) = {
   let seen = ()
   let cur = _pick-variant(token, mode)
   while true {
     if type(cur) == color { return (ok: true, colour: cur) }
+    // A dictionary this far in is one `_pick-variant` could not read a side
+    // from, which is its own mistake rather than a wrong type: the writer meant
+    // to declare variants and misspelled the keys.
+    if type(cur) == dictionary {
+      return (ok: false, reason: "variant", token: cur, chain: seen)
+    }
     if type(cur) != str {
       return (ok: false, reason: "type", token: cur, chain: seen)
     }
@@ -102,6 +107,15 @@
       name,
       res.token,
       "a hex colour string or a `color.palette` entry name",
+    )
+  } else if res.reason == "variant" {
+    fail-type(
+      _SCOPE,
+      name,
+      res.token,
+      "a dictionary with a `light` or `dark` key",
+      hint: "A colour with no variants is written as the value itself, not as"
+        + " a dictionary.",
     )
   } else if res.reason == "empty" {
     fail(

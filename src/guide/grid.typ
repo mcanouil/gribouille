@@ -100,6 +100,12 @@
     }
     lead + max-w
   })
+  // A guide with no keys and no stated shape flows into no column at all, and
+  // an empty grid is as wide as nothing. Answering here keeps `calc.max` off an
+  // empty list, which raises a Typst message in place of a library one.
+  if widths.len() == 0 {
+    return (widths: (), gap: COL-GAP-MIN, offsets: (), total: 0.0)
+  }
   let gap = calc.max(COL-GAP-MIN, COL-GAP-RATIO * calc.max(..widths))
   let offsets = ()
   let acc = 0.0
