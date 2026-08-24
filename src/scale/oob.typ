@@ -9,74 +9,106 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
 #import "../utils/palette.typ": spec-attr
-#import "train.typ": _to-stat, mapping-ref-col, view-bounds-stat
+#import "train.typ": (
+  level-lookup, mapping-ref-col, to-stat-fn, view-bounds-stat,
+)
 #import "../utils/errors.typ": fail
 
-// Returns one of:
+// Build the per-row check for one trained scale, or `none` when the scale sets
+// no user `limits` and therefore censors nothing.
+//
+// The check is a closure taking the cell alone, so the level lookup is
+// captured once rather than reaching the call on every row. Holding the same
+// values in a record instead was measured to be slower, and to keep growing
+// with the level count.
+//
+// The closure returns one of:
 //   ("in",     value)   — unchanged
 //   ("squish", clamped) — kept, value rewritten
 //   ("drop",   value)   — caller drops the row
-//
-// `bounds` is the expanded `(t-lo, t-hi)` view in stat space, precomputed once
-// per aesthetic by `filter-oob`; `none` for discrete scales.
-#let _check(trained, raw, bounds: none) = {
-  let spec = trained.at("spec", default: none)
-  if spec == none { return ("in", raw) }
-  if spec.at("limits", default: none) == none { return ("in", raw) }
-  let oob = spec.at("oob", default: "drop")
+#let _checker(trained) = {
+  if spec-attr(trained, "limits") == none { return none }
+
   if trained.type == "continuous" {
-    let v = parse-number(raw)
-    if v == none { return ("in", raw) }
-    // Test against the expanded view bounds (in stat space) rather than the raw
-    // `limits`, so a value sitting in the expansion headroom -- which still maps
-    // inside the visible panel -- survives instead of being dropped.
-    let (t-lo, t-hi) = bounds
-    let sv = _to-stat(trained, v)
+    // Only a continuous scale reads `oob`, because only it can squish.
+    let oob = spec-attr(trained, "oob", fallback: "drop")
+    // The expanded view in stat space, rather than the raw `limits`, so a value
+    // sitting in the expansion headroom -- which still maps inside the visible
+    // panel -- survives instead of being dropped.
+    let (t-lo, t-hi) = view-bounds-stat(trained)
     // `t-lo`/`t-hi` follow the domain order, which runs high-to-low when the
-    // user supplies reversed `limits` to flip the axis; test against the sorted
-    // span so the in-range check holds either way.
-    if sv >= calc.min(t-lo, t-hi) and sv <= calc.max(t-lo, t-hi) {
-      return ("in", raw)
+    // user supplies reversed `limits` to flip the axis; the in-range test reads
+    // the sorted span so it holds either way.
+    let span-lo = calc.min(t-lo, t-hi)
+    let span-hi = calc.max(t-lo, t-hi)
+    let domain = trained.domain
+    // The scale's stat-space warp, captured so the row path does not reach back
+    // into the trained scale for it.
+    let to-stat = to-stat-fn(trained)
+    return raw => {
+      let v = parse-number(raw)
+      if v == none { return ("in", raw) }
+      let sv = to-stat(v)
+      if sv >= span-lo and sv <= span-hi { return ("in", raw) }
+      if oob == "squish" {
+        // Clamp to the nearest `limits` endpoint (the visible data edge), not
+        // the expanded bound, matching the documented squish-to-limit
+        // semantics. `t-lo` pairs with `lo` and `t-hi` with `hi` whatever the
+        // order.
+        //
+        // The endpoints are read here rather than when the check is built, so
+        // a scale whose domain is not a pair fails only where the clamp needs
+        // them, as it did before the check was hoisted out of the row walk.
+        let (lo, hi) = domain
+        let to-lo = calc.abs(sv - t-lo) <= calc.abs(sv - t-hi)
+        return ("squish", if to-lo { lo } else { hi })
+      }
+      ("drop", raw)
     }
-    if oob == "squish" {
-      // Clamp to the nearest `limits` endpoint (the visible data edge), not the
-      // expanded bound, matching the documented squish-to-limit semantics.
-      // `t-lo` pairs with `lo` and `t-hi` with `hi` whatever the order.
-      let (lo, hi) = trained.domain
-      let to-lo = calc.abs(sv - t-lo) <= calc.abs(sv - t-hi)
-      return ("squish", if to-lo { lo } else { hi })
-    }
-    return ("drop", raw)
   }
+
   if trained.type == "discrete" {
-    if raw == none { return ("in", raw) }
-    // A numeric value addresses a 1-indexed fractional level position rather
-    // than a level name (`map-discrete` places it at `value - 1`), e.g. a
-    // polygon vertex set between level centres or a jittered point. The
-    // renderer can place it, so the pre-pass keeps it and lets panel clipping
-    // bound any overflow; drop fires only for a non-numeric value off the set.
-    if parse-number(raw) != none { return ("in", raw) }
-    let s = str(raw)
-    if trained.domain.contains(s) { return ("in", raw) }
-    return ("drop", raw)
+    // A discrete scale censors whatever `oob` says, so the mode is not read
+    // here: clamping to a level has no geometric meaning.
+    //
+    // The level lookup is resolved once, so the row test is one dict read
+    // rather than a scan of the domain.
+    let level-index = level-lookup(trained)
+    return raw => {
+      if raw == none { return ("in", raw) }
+      // A numeric value addresses a 1-indexed fractional level position rather
+      // than a level name (`map-discrete` places it at `value - 1`), e.g. a
+      // polygon vertex set between level centres or a jittered point. The
+      // renderer can place it, so the pre-pass keeps it and lets panel clipping
+      // bound any overflow; drop fires only for a non-numeric value off the
+      // set.
+      if parse-number(raw) != none { return ("in", raw) }
+      if str(raw) in level-index { return ("in", raw) }
+      ("drop", raw)
+    }
   }
-  ("in", raw)
+
+  // Any other scale type, `identity` among them, censors nothing. Answering
+  // `none` keeps the aesthetic out of the walk entirely, rather than calling a
+  // closure that can only ever answer "in" on every row.
+  none
 }
 
 // Filter rows of every layer through the trained dict. Returns the rewritten
 // layers and a per-aesthetic dropped-row count. `strict: true` converts the
 // first drop into a `panic` instead.
 #let filter-oob(layers, trained, strict: false) = {
+  // Everything the check reads is constant per aesthetic, so each scale is
+  // resolved once here into a closure the row walk calls with the cell alone.
+  // Held as an array rather than a dict, so the row walk iterates it directly
+  // instead of looking each aesthetic up again on every row. The limits are
+  // not carried with it: only the `strict` panic needs them, and on a discrete
+  // scale they are the whole level array.
   let active = ()
-  // Expanded view bounds are constant per aesthetic; resolve them once here so
-  // the per-row `_check` only warps the cell value.
-  let bounds = (:)
   for (aes, t) in trained.pairs() {
-    let spec = t.at("spec", default: none)
-    if spec == none { continue }
-    if spec.at("limits", default: none) == none { continue }
-    active.push(aes)
-    if t.type == "continuous" { bounds.insert(aes, view-bounds-stat(t)) }
+    let check = _checker(t)
+    if check == none { continue }
+    active.push((aes: aes, check: check))
   }
   if active.len() == 0 { return (layers: layers, counts: (:)) }
 
@@ -97,21 +129,29 @@
       new-layers.push(layer)
       continue
     }
+    // Which column each limited aesthetic reads is a property of the layer, not
+    // of the row, and `mapping-ref-col` walks the wrapper chain to find it.
+    // Resolve it once per layer so the row walk only reads the cell.
+    let bound = ()
+    for entry in active {
+      let raw = mapping.at(entry.aes, default: none)
+      if raw == none { continue }
+      if is-late-binding(raw) { continue }
+      bound.push((col: mapping-ref-col(raw), ..entry))
+    }
+    if bound.len() == 0 {
+      new-layers.push(layer)
+      continue
+    }
     let kept = ()
     for (row-idx, row) in data.enumerate() {
       let new-row = row
       let drop = false
-      for aes in active {
-        let raw = mapping.at(aes, default: none)
-        if raw == none { continue }
-        if is-late-binding(raw) { continue }
-        let col = mapping-ref-col(raw)
+      for binding in bound {
+        let aes = binding.aes
+        let col = binding.col
         let cell = row.at(col, default: none)
-        let t = trained.at(aes)
-        let (action, value) = _check(t, cell, bounds: bounds.at(
-          aes,
-          default: none,
-        ))
+        let (action, value) = (binding.check)(cell)
         if action == "in" { continue }
         if action == "squish" {
           new-row.insert(col, value)
@@ -125,7 +165,7 @@
               + " value "
               + repr(cell)
               + " outside limits "
-              + repr(spec-attr(t, "limits")),
+              + repr(spec-attr(trained.at(aes), "limits")),
             hint: "Set `oob: \"squish\"` to clamp, widen `limits`, "
               + "or remove `strict: true` to drop silently.",
           )

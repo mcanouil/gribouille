@@ -118,7 +118,9 @@
 ///   falls back to the mapped column name.
 ///
 /// \@param limits Array of level names selecting which levels appear and in
-///   which order; `none` (default) keeps the trained levels.
+///   which order; `none` (default) keeps the trained levels. A level name must
+///   be a string, because a discrete scale reads a bare number as a position
+///   rather than as a level, so quote a numeric level as `"1"`.
 ///
 /// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
 ///   (default) removes them; `"squish"` censors too, since clamping has no
@@ -245,7 +247,9 @@
 ///   falls back to the mapped column name.
 ///
 /// \@param limits Array of level names selecting which levels appear and in
-///   which order; `none` (default) keeps the trained levels.
+///   which order; `none` (default) keeps the trained levels. A level name must
+///   be a string, because a discrete scale reads a bare number as a position
+///   rather than as a level, so quote a numeric level as `"1"`.
 ///
 /// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
 ///   (default) removes them; `"squish"` censors too, since clamping has no
@@ -743,7 +747,9 @@
 ///   falls back to the mapped column name.
 ///
 /// \@param limits Array of level names selecting which levels appear and in
-///   which order; `none` (default) keeps the trained levels.
+///   which order; `none` (default) keeps the trained levels. A level name must
+///   be a string, because a discrete scale reads a bare number as a position
+///   rather than as a level, so quote a numeric level as `"1"`.
 ///
 /// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
 ///   (default) removes them; `"squish"` censors too, since clamping has no
@@ -894,7 +900,9 @@
 ///   falls back to the mapped column name.
 ///
 /// \@param limits Array of level names selecting which levels appear and in
-///   which order; `none` (default) keeps the trained levels.
+///   which order; `none` (default) keeps the trained levels. A level name must
+///   be a string, because a discrete scale reads a bare number as a position
+///   rather than as a level, so quote a numeric level as `"1"`.
 ///
 /// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
 ///   (default) removes them; `"squish"` censors too, since clamping has no
@@ -937,7 +945,9 @@
 ///   falls back to the mapped column name.
 ///
 /// \@param limits Array of level names selecting which levels appear and in
-///   which order; `none` (default) keeps the trained levels.
+///   which order; `none` (default) keeps the trained levels. A level name must
+///   be a string, because a discrete scale reads a bare number as a position
+///   rather than as a level, so quote a numeric level as `"1"`.
 ///
 /// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
 ///   (default) removes them; `"squish"` censors too, since clamping has no
@@ -1152,7 +1162,9 @@
 ///   falls back to the mapped column name.
 ///
 /// \@param limits Array of level names selecting which levels appear and in
-///   which order; `none` (default) keeps the trained levels.
+///   which order; `none` (default) keeps the trained levels. A level name must
+///   be a string, because a discrete scale reads a bare number as a position
+///   rather than as a level, so quote a numeric level as `"1"`.
 ///
 /// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
 ///   (default) removes them; `"squish"` censors too, since clamping has no
@@ -1202,7 +1214,9 @@
 ///   falls back to the mapped column name.
 ///
 /// \@param limits Array of level names selecting which levels appear and in
-///   which order; `none` (default) keeps the trained levels.
+///   which order; `none` (default) keeps the trained levels. A level name must
+///   be a string, because a discrete scale reads a bare number as a position
+///   rather than as a level, so quote a numeric level as `"1"`.
 ///
 /// \@param oob Handling of rows whose level falls outside `limits`: `"drop"`
 ///   (default) removes them; `"squish"` censors too, since clamping has no

@@ -4,6 +4,7 @@
 
 #import "../utils/palette.typ": palette-at, spec-palette
 #import "../utils/colour.typ": resolve-continuous-colour
+#import "../scale/train.typ": level-lookup
 
 // Build a colour resolver curried over the (trained, palette) pair so per-row
 // callers resolve the palette once outside the row loop and call the returned
@@ -23,13 +24,11 @@
   }
   let pal = spec-palette(trained, palette)
   if trained.type == "discrete" {
-    let lookup = trained.at("level-index", default: none)
+    // Resolved once here, not per value: the closure below runs on every row.
+    let lookup = level-lookup(trained)
     return value => {
       if value == none or value == "" { return ink }
-      let s = str(value)
-      let idx = if lookup == none {
-        trained.domain.position(v => v == s)
-      } else { lookup.at(s, default: none) }
+      let idx = lookup.at(str(value), default: none)
       if idx == none { return ink }
       palette-at(pal, idx)
     }

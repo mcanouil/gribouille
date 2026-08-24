@@ -248,7 +248,10 @@
 // for downstream resolvers (palette index, colour mapping, position).
 #let _level-index(domain) = {
   let idx = (:)
-  for (i, v) in domain.enumerate() { idx.insert(v, i) }
+  // Keyed by the stringified level, because every lookup is a `str(value)`.
+  // A trained domain already holds strings, so this only matters for a
+  // hand-built one, where it answers `none` rather than failing on the key.
+  for (i, v) in domain.enumerate() { idx.insert(str(v), i) }
   idx
 }
 
@@ -413,6 +416,25 @@
       // Discrete limits are a level array, not a `(lo, hi)` pair, so there is
       // no per-side `auto`; the continuous-only lift/fold below never reads the
       // `explicit-*` flags for this branch.
+      //
+      // A level must be a string. A discrete scale reads a bare number as a
+      // 1-indexed position rather than a level name (`map-discrete`), so a
+      // numeric level would be ambiguous: the pre-pass could not censor
+      // against it, and a position and a level of the same value would
+      // disagree. A domain trained from data is stringified, so only a user
+      // limit can carry another type.
+      for level in user-scale.limits {
+        if type(level) != str {
+          fail-type(
+            "scale `" + aes + "`",
+            "limits",
+            level,
+            "a level name as a string",
+            hint: "A discrete scale reads a bare number as a position, not as "
+              + "a level. Quote the levels, as in `limits: (\"1\", \"2\")`.",
+          )
+        }
+      }
       domain = user-scale.limits
     }
   }
@@ -738,6 +760,15 @@
   r-lo + (idx - v-lo) * (r-hi - r-lo) / (v-hi - v-lo)
 }
 
+// The `(level: position)` lookup of a discrete trained scale. Every scale the
+// trainer emits carries one; a hand-built trained dict may not, so it is built
+// on demand. A caller testing many values resolves it once through this rather
+// than scanning the domain for each of them.
+#let level-lookup(trained) = {
+  let lookup = trained.at("level-index", default: none)
+  if lookup == none { _level-index(trained.domain) } else { lookup }
+}
+
 // 1-indexed level position of `value` on a trained discrete scale, or `none`
 // when it is neither a level nor already a numeric position. The 1-indexing
 // matches how `map-discrete` reads a bare number, so callers can offset the
@@ -745,9 +776,7 @@
 #let level-position(trained, value) = {
   if value == none { return none }
   if type(value) == int or type(value) == float { return float(value) }
-  let lookup = trained.at("level-index", default: none)
-  if lookup == none { lookup = _level-index(trained.domain) }
-  let idx = lookup.at(str(value), default: none)
+  let idx = level-lookup(trained).at(str(value), default: none)
   if idx == none { none } else { idx + 1 }
 }
 
@@ -769,9 +798,23 @@
 // Forward-warp `value` to stat space unless the scale is already
 // `pre-transformed` (in which case row values, the trained domain, and
 // `view-transform` already live there).
+//
+// This sits on the per-value render path, so it stays a direct two-line body:
+// routing it through `to-stat-fn` below was measured to add a call per value
+// for no gain.
 #let _to-stat(trained, value) = {
   if trained.at("pre-transformed", default: false) { return value }
   transform-fwd(trained.at("transform", default: "identity"), value)
+}
+
+// The same warp as a closure, for a caller that warps many values off one
+// scale: the two fields are read once and captured, rather than being read
+// again for every value. Kept in step with `_to-stat` by hand, since the rule
+// is two lines and the duplication buys the hot path a direct call.
+#let to-stat-fn(trained) = {
+  let pre-transformed = trained.at("pre-transformed", default: false)
+  let transform = trained.at("transform", default: "identity")
+  v => if pre-transformed { v } else { transform-fwd(transform, v) }
 }
 
 // Expanded scale bounds in stat space: the `view-transform` set by

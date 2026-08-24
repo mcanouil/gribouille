@@ -49,12 +49,16 @@
   out
 }
 
-#let resolve-bin-grid-2d(xs, ys, params) = {
+// Resolve the two-dimensional grid for a per-group `apply()`. Takes thunks for
+// the same reason `resolve-bin-grid` does: a stashed panel grid is the normal
+// case, and a caller that builds both value arrays first pays two full passes
+// for a resolver that reads neither.
+#let resolve-bin-grid-2d(params, get-xs, get-ys) = {
   let g = params.at("grid", default: none)
   if g != none { return g }
   bin-grid-2d(
-    xs,
-    ys,
+    (get-xs)(),
+    (get-ys)(),
     params.at("bins", default: 30),
     params.at("binwidth", default: none),
   )
@@ -98,10 +102,11 @@
     entries.push(entry)
   }
   if entries.len() == 0 { return none }
+  // The thunks must stay unevaluated here, for the reason given in `bin.typ`.
   let grid = resolve-bin-grid-2d(
-    entries.map(e => e.x),
-    entries.map(e => e.y),
     params,
+    () => entries.map(e => e.x),
+    () => entries.map(e => e.y),
   )
   let cell-count = grid.x-n-bins * grid.y-n-bins
   let counts = range(cell-count).map(_ => 0)
