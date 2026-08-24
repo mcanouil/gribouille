@@ -22,7 +22,8 @@ The numbers are illustrative and depend on the machine that produced them, so re
 ### Procedure
 
 Each case is a standalone Typst file that reads its row count from `sys.inputs`, so one file covers every size.
-Every case builds that many rows. What a row becomes differs: a mark of its own in the per-row cases, one vertex of a ring in the polygon case, one contribution to a bin in the aggregating cases.
+Every case builds that many rows.
+What a row becomes differs: a mark of its own in the per-row cases, one vertex of a ring in the polygon case, one contribution to a bin in the aggregating cases.
 Each case also builds deterministic synthetic data, so a given size renders the same chart on every run.
 The harness compiles the cases one at a time, never in parallel, so concurrent compiles cannot contend for the processor and distort the timings.
 It wraps each compile in `/usr/bin/time`, takes the median wall time over a few repetitions, and records the output file size.
@@ -130,7 +131,8 @@ For a chart with many thousands of marks or vertices, prefer a raster format unl
 - A few hundred to a few thousand marks per chart compile comfortably in any format.
 - Tens of thousands of per-row marks take ten to fifteen seconds, and a raster format is the only sensible choice.
 - One hundred thousand per-row marks exceed the budget, so reshape the work instead of drawing every mark.
-- Count the marks, not the rows. One hundred thousand points on one line, or on a handful of polygons, compile inside the budget, where the same number of separate markers does not.
+- Count the marks, not the rows.
+  One hundred thousand points on one line, or on a handful of polygons, compile inside the budget, where the same number of separate markers does not.
 - When the data is large, reach for a layer that aggregates first, such as [`geom-bin-2d`](../reference/geoms/geom-bin-2d.qmd), [`geom-hex`](../reference/geoms/geom-hex.qmd), [`geom-histogram`](../reference/geoms/geom-histogram.qmd), or [`geom-boxplot`](../reference/geoms/geom-boxplot.qmd).
   These layers collapse the rows to few marks and push the practical ceiling much further out.
   Very large row counts still cost time.
