@@ -24,8 +24,15 @@
       hint: "Use `6pt` or `0.2cm`; a bare number is not a length.",
     )
   }
+  // Positive is the whole constraint: a head as long as the line it sits on is
+  // ugly rather than wrong, so nothing caps it. The message says only that.
   if head-length <= 0pt {
-    fail-range("arrow", "length", head-length, 0pt, 1cm, hi-open: false)
+    fail-type(
+      "arrow",
+      "length",
+      head-length,
+      "a positive length such as `4pt`",
+    )
   }
   if type(half-angle) != angle {
     fail-type(

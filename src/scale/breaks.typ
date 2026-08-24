@@ -247,6 +247,12 @@
 /// Pair it with `transform: "log10"`, where evenly spaced powers are what the
 /// axis draws.
 ///
+/// A break is undefined at or below zero, so non-positive values drop out the
+/// way a log axis drops them. A scale that trained on values and kept none of
+/// them has no breaks to place and fails, rather than drawing an axis with no
+/// ticks and no reason given. A scale that trained on nothing at all is not
+/// that case, and answers no breaks as every other helper does.
+///
 /// \@category Scales
 /// \@subcategory Breaks
 /// \@stability stable

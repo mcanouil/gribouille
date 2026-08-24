@@ -91,6 +91,41 @@
 #assert.eq(_pick-variant((dark: "#111111"), "light"), "#111111")
 #assert.eq(_pick-variant("#111111", "dark"), "#111111")
 
+// A dictionary carrying neither side is handed back whole rather than raised
+// from here, so the walk stays pure and answers a verdict for it.
+#assert.eq(_pick-variant((foo: "#111111"), "light"), (foo: "#111111"))
+#let variant = _walk-alias((foo: "#111111"), (:), "light")
+#assert.eq(variant.ok, false)
+#assert.eq(variant.reason, "variant")
+#assert.eq(variant.token, (foo: "#111111"))
+#assert.eq(variant.chain, ())
+
+// The same verdict one hop in, where the palette entry is the malformed one.
+#let hop = _walk-alias("accent", (accent: (foo: "#111111")), "light")
+#assert.eq(hop.reason, "variant")
+#assert.eq(hop.chain, ("accent",))
+
+// A side that is itself a dictionary is a variant nested in a variant, not a
+// misspelled key: the side was read, and what it held is the wrong type. The
+// verdict has to say so, or the message demands the very keys the value has.
+#let nested = _walk-alias((light: (light: "#111111")), (:), "light")
+#assert.eq(nested.reason, "type")
+#assert.eq(nested.token, (light: "#111111"))
+
+// The same holds when the inner dictionary is the misspelled one: the role does
+// name a side, so the fault is what that side holds rather than a missing key.
+#let inner = _walk-alias((light: (bright: "#111111")), (:), "light")
+#assert.eq(inner.reason, "type")
+#assert.eq(inner.token, (bright: "#111111"))
+
+// One hop in, the palette entry is what carries the misspelled block.
+#let hop-inner = _walk-alias(
+  "accent",
+  (accent: (light: (bright: "#111111"))),
+  "light",
+)
+#assert.eq(hop-inner.reason, "type")
+
 // Absent is never an error.
 #assert.eq(brand-colours((:), "light"), (:))
 #assert.eq(brand-colours((color: (:)), "light"), (:))

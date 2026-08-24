@@ -96,8 +96,33 @@
 
 // The grid a count flows into, and the index mapping both ways.
 #assert.eq(grid-shape(5, none, 2, "vertical"), (rows: 3, cols: 2))
+
 #assert.eq(grid-index(1, 1, shape22, false), 3)
 #assert.eq(grid-rc(3, shape22, false), (row: 1, col: 1))
+
+// No keys and no stated shape leaves a horizontal guide with no column at all.
+// Sizing one answers an empty record rather than reaching `calc.max` with
+// nothing to compare, which raises a Typst message in place of a library one.
+#assert.eq(grid-shape(0, none, none, "horizontal"), (rows: 1, cols: 0))
+#let empty-cols = column-widths(
+  0,
+  _ => 0.0,
+  (rows: 1, cols: 0),
+  false,
+  0.5,
+)
+#assert.eq(empty-cols.widths, ())
+#assert.eq(empty-cols.offsets, ())
+#assert.eq(empty-cols.total, 0.0)
+#assert.eq(empty-cols.gap, COL-GAP-MIN)
+
+// A vertical guide with no keys keeps its one column and sizes it as usual, so
+// the record still describes the shape `prim-keys` is handed.
+#assert.eq(grid-shape(0, none, none, "vertical"), (rows: 0, cols: 1))
+#assert.eq(
+  column-widths(0, _ => 0.0, (rows: 0, cols: 1), false, 0.5).widths,
+  (0.5,),
+)
 
 // A part is justified inside the guide, a label inside its own column, and a
 // label under a key keeps that key's centre.

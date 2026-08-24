@@ -150,7 +150,7 @@
   let colours = brand-colours(brand, mode)
   let ink = colours.at("foreground", default: _tr-ink)
   let paper = colours.at("background", default: _tr-paper)
-  let accent = colours.at("primary", default: rgb("#3366FF"))
+  let accent = colours.at("primary", default: default-theme.accent)
   let derived = if palette == auto { brand-palette-from(colours) } else {
     palette
   }
