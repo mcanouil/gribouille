@@ -14,7 +14,7 @@
 #import "../../src/scales.typ": scales
 #import "../../src/aes.typ": aes
 #import "../../src/utils/level-resolve.typ": discrete-index
-#import "../../src/scale/oob.typ": filter-oob
+#import "../../src/scale/oob.typ": filter-oob, oob-plans
 
 #let data = (
   (x: 1, y: 1, g: "10"),
@@ -43,7 +43,7 @@
 // A level name that looks like a number is still a level name, so the pre-pass
 // censors it. The cell is the string "90", which the domain does not carry.
 #let layer = (kind: "layer", data: data, mapping: (colour: "g"))
-#let out = filter-oob((layer,), (colour: trained.colour))
+#let out = filter-oob((layer,), oob-plans((colour: trained.colour)))
 #assert.eq(out.layers.at(0).data.map(row => row.g), ("10", "20"))
 #assert.eq(out.counts.at("colour"), 1)
 
@@ -55,7 +55,7 @@
 #let placed = ((g: 1.5), (g: 90))
 #let placed-out = filter-oob(
   ((kind: "layer", data: placed, mapping: (colour: "g")),),
-  (colour: trained.colour),
+  oob-plans((colour: trained.colour)),
 )
 #assert.eq(placed-out.layers.at(0).data, placed)
 #assert.eq(placed-out.counts, (:))
@@ -71,7 +71,7 @@
 )
 #let named-out = filter-oob(
   ((kind: "layer", data: named, mapping: (colour: "g")),),
-  (colour: named-trained.colour),
+  oob-plans((colour: named-trained.colour)),
 )
 #assert.eq(named-out.layers.at(0).data, ((g: "keep"),))
 #assert.eq(named-out.counts.at("colour"), 1)
