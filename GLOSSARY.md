@@ -141,7 +141,7 @@ Run the survey command at the bottom before extending the table.
 | `gizmo`   | guide part with a body | a guide part that paints something of its own rather than annotating a span, such as the colour bar in `src/guide/gizmo/`, whose tick flank reads across the guide while the guide stacks down it. |
 | `band`    | room past a strip   | on a colour bar, the cm reserved across the guide past the strip, which the tick flank draws into. |
 | `band`    | axis band           | on an axis, the cm between the panel edge and whatever sits past it: the ticks, the gap, and the label rows, built by `axis-band` in `src/render/axis-parts.typ` and reserved as `x-edge-band` / `y-edge-band`. |
-| `lead`    | room before a label | cm a cell reserves before its label, which the key glyph occupies. `label-lead` is the shorter offset the drawn label is actually pinned at. |
+| `lead`    | room before a label | cm a cell reserves before its label, which the key glyph occupies, or the tick flank on a colour bar. `label-lead` is the shorter offset the drawn label is actually pinned at. |
 | `justify` | grid justification  | the alignment a key grid takes inside the guide width, as against `label-align`, which justifies one label inside its own column. |
 
 ## Legend placement
