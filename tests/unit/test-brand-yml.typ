@@ -112,6 +112,20 @@
 #assert.eq(nested.reason, "type")
 #assert.eq(nested.token, (light: "#111111"))
 
+// The same holds when the inner dictionary is the misspelled one: the role does
+// name a side, so the fault is what that side holds rather than a missing key.
+#let inner = _walk-alias((light: (bright: "#111111")), (:), "light")
+#assert.eq(inner.reason, "type")
+#assert.eq(inner.token, (bright: "#111111"))
+
+// One hop in, the palette entry is what carries the misspelled block.
+#let hop-inner = _walk-alias(
+  "accent",
+  (accent: (light: (bright: "#111111"))),
+  "light",
+)
+#assert.eq(hop-inner.reason, "type")
+
 // Absent is never an error.
 #assert.eq(brand-colours((:), "light"), (:))
 #assert.eq(brand-colours((color: (:)), "light"), (:))

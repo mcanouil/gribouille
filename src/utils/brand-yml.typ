@@ -64,18 +64,28 @@
 // cycle.
 #let _walk-alias(token, palette, mode) = {
   let seen = ()
-  let cur = _pick-variant(token, mode)
+  let raw = token
+  let cur = _pick-variant(raw, mode)
   while true {
     if type(cur) == color { return (ok: true, colour: cur) }
-    // A dictionary naming neither side is one `_pick-variant` could not read,
-    // which is its own mistake rather than a wrong type: the writer meant to
-    // declare variants and misspelled the keys.
-    //
-    // A dictionary that does name a side is a variant nested inside a variant.
-    // The side was read and held this, so the fault is the type of what it
-    // held, and calling it a missing side would demand the very keys it has.
-    if type(cur) == dictionary and "light" not in cur and "dark" not in cur {
-      return (ok: false, reason: "variant", token: cur, chain: seen)
+    if type(cur) == dictionary {
+      // Which of the two mistakes this is turns on the value the pick was
+      // handed, not on the one it answered.
+      //
+      // A value naming neither side is a variant block whose keys are
+      // misspelled, and naming those keys is the whole of the advice. A value
+      // that does name a side was read, so what came back is whatever that side
+      // holds: the fault is its type, and asking for a `light` key would demand
+      // the very key the role already has.
+      let named-a-side = (
+        type(raw) == dictionary and ("light" in raw or "dark" in raw)
+      )
+      return (
+        ok: false,
+        reason: if named-a-side { "type" } else { "variant" },
+        token: cur,
+        chain: seen,
+      )
     }
     if type(cur) != str {
       return (ok: false, reason: "type", token: cur, chain: seen)
@@ -96,7 +106,8 @@
     if next == none {
       return (ok: false, reason: "unknown", token: t, chain: seen)
     }
-    cur = _pick-variant(next, mode)
+    raw = next
+    cur = _pick-variant(raw, mode)
   }
 }
 

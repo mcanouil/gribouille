@@ -248,9 +248,10 @@
 /// axis draws.
 ///
 /// A break is undefined at or below zero, so non-positive values drop out the
-/// way a log axis drops them. A scale whose trained values hold nothing
-/// positive has no breaks to place and fails, rather than drawing an axis with
-/// no ticks and no reason given.
+/// way a log axis drops them. A scale that trained on values and kept none of
+/// them has no breaks to place and fails, rather than drawing an axis with no
+/// ticks and no reason given. A scale that trained on nothing at all is not
+/// that case, and answers no breaks as every other helper does.
 ///
 /// \@category Scales
 /// \@subcategory Breaks
