@@ -13,11 +13,11 @@
 ///! bins, and the frame stroke, because every one of those reads a palette and a
 ///! trained scale, which live downstream of this module.
 ///!
-///! `band` and `label-reserve` are the room the guide has always reserved past
-///! the strip. They are handed in as numbers rather than derived from the tick
-///! geometry, because the reservation and the draw have never agreed: a vertical
-///! bar reserves 0.3 cm for a flank it draws at 0.18 cm. Reconciling them moves
-///! every golden with a colour bar, so it is a declared change of its own.
+///! `band` and `label-reserve` are the room the guide reserves past the strip.
+///! They are handed in as numbers so the caller decides the geometry: the
+///! vertical flank is the same `tick length + tick gap` this file draws with,
+///! while the horizontal band is still one fixed reservation covering that lead
+///! and a row of text.
 
 #import "../../deps.typ": cetz
 #import "../../utils/errors.typ": assert-halign, check, fail-enum, fail-type
@@ -90,6 +90,14 @@
   )
 }
 
+// The room a break label sits past the strip: the tick it hangs off, plus the
+// gap after that tick. One formula, so the reservation a guide makes and the
+// place the draw below puts the label cannot say different things.
+#let bar-lead-of(ticks) = ticks.len + ticks.gap
+
+// The same, for a caller holding a context rather than resolved tick metrics.
+#let bar-lead(gctx) = bar-lead-of(tick-metrics(gctx))
+
 // The strip plus the room reserved past it, on both axes.
 //
 // A context with no bar surface has no colour bar to paint, so the strip takes
@@ -141,7 +149,7 @@
   let style = if text-surface == none or styles == none { none } else {
     (styles)(text-surface)
   }
-  let lead = ticks.len + ticks.gap
+  let lead = bar-lead-of(ticks)
   for e in rows {
     // The strip is painted from its low end: a horizontal one runs left to
     // right and a vertical one bottom to top, so a vertical break counts back

@@ -32,7 +32,7 @@
   COL-GAP-MIN, column-widths, flat-rows, grid-shape, key-metrics, row-overflows,
   uniform-columns,
 )
-#import "../guide/gizmo/bar.typ": prim-bar
+#import "../guide/gizmo/bar.typ": bar-lead, prim-bar
 #import "../guide/primitive/content.typ": prim-content
 #import "../guide/primitive/keys.typ": prim-keys
 #import "../guide/primitive/spacer.typ": prim-spacer
@@ -684,9 +684,18 @@
 #let _COLOURBAR-H-H = 0.35
 #let _COLOURBAR-H-LABEL-H = 0.45
 #let _COLOURBAR-PAD-V = 0.3
-// Width-estimate gap between a vertical colourbar and its tick labels; the
-// renderer positions labels at `tick-len + tick-gap`, this approximates it.
-#let _COLOURBAR-V-LABEL-GAP = 0.3
+// Room between a vertical colour bar and its tick labels, read from the same
+// `bar-lead` the draw places them with, so the reservation cannot say one
+// thing while the draw does another.
+//
+// The horizontal band above is deliberately left as one fixed reservation: it
+// covers the same lead plus a row of text, and unpicking it is a separate
+// pixel change from this one.
+//
+// A turned label is also still measured flat on this side, where the
+// horizontal branch corrects for the turn through `_breaks-overflow`. The
+// slack this constant used to carry hid small angles; it no longer does.
+#let _COLOURBAR-V-LABEL-LEAD = bar-lead(gctx("right", "legend"))
 
 // Resolve the displayed break positions for a continuous guide: keep the
 // explicit in-domain breaks when the scale supplies them, otherwise fall back
@@ -1001,10 +1010,9 @@
 // The stack a colour-bar guide is: its title above its strip.
 //
 // The strip is one primitive rather than a stack of them, because the flank of
-// a vertical bar reads across the guide while the guide stacks down it. The room
-// past the strip is the constant the guide has always reserved: a vertical bar
-// reserves 0.3 cm for a flank it draws at 0.18 cm, and unpicking that moves
-// every golden with a colour bar.
+// a vertical bar reads across the guide while the guide stacks down it. The
+// room past the strip is reserved here: a vertical bar reads the lead the draw
+// uses, and a horizontal one still reserves one fixed band.
 #let _colourbar-node(g, style, title-style, title-w, title-h) = {
   let horizontal = g.placement.direction == "horizontal"
   let breaks = _colourbar-breaks(g)
@@ -1021,7 +1029,7 @@
         _COLOURBAR-H-LABEL-H + _breaks-overflow(g, breaks, style)
       } else { _COLOURBAR-PAD-V },
       label-reserve: if horizontal { label-w } else {
-        _COLOURBAR-V-LABEL-GAP + label-w
+        _COLOURBAR-V-LABEL-LEAD + label-w
       },
       label-w: label-w,
       angle: if style.angle != none { style.angle / 1deg } else { 0 },

@@ -18,11 +18,14 @@
   place: (frac, across) => (frac * 10.0, -across),
 )
 
-// The constants the renderer has always reserved for a strip.
+// Arbitrary reservations for this fixture. They are the primitive's inputs,
+// not a copy of what the renderer reserves: `prim-bar` measures whatever it is
+// handed, and what the colour bar hands it is pinned by
+// `tests/unit/test-colourbar-reserve.typ`.
 #let V = (0.35, 3.0)
 #let H = (3.0, 0.35)
 #let LABEL-W = 0.8
-#let V-LABEL-GAP = 0.3
+#let V-LABEL-RESERVE = 0.3
 #let V-PAD = 0.3
 #let H-LABEL-BAND = 0.45
 
@@ -41,7 +44,7 @@
   direction: "vertical",
   bar: V,
   band: V-PAD,
-  label-reserve: V-LABEL-GAP + LABEL-W,
+  label-reserve: V-LABEL-RESERVE + LABEL-W,
   label-w: LABEL-W,
 )
 #assert.eq(vertical.kind, PRIMITIVE)
@@ -49,7 +52,7 @@
 #assert.eq(v-box.across, 3.0 + V-PAD)
 #assert.eq(
   calc.round(v-box.along, digits: 9),
-  calc.round(0.35 + V-LABEL-GAP + LABEL-W, digits: 9),
+  calc.round(0.35 + V-LABEL-RESERVE + LABEL-W, digits: 9),
 )
 
 // A horizontal strip reserves the label band under it, and the widest label
