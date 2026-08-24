@@ -90,15 +90,16 @@
   )
 }
 
-// The strip plus the room reserved past it, on both axes.
-//
 // The room a break label sits past the strip: the tick it hangs off, plus the
 // gap after that tick. One formula, so the reservation a guide makes and the
 // place the draw below puts the label cannot say different things.
 #let bar-lead-of(ticks) = ticks.len + ticks.gap
 
+// The same, for a caller holding a context rather than resolved tick metrics.
 #let bar-lead(gctx) = bar-lead-of(tick-metrics(gctx))
 
+// The strip plus the room reserved past it, on both axes.
+//
 // A context with no bar surface has no colour bar to paint, so the strip takes
 // no room and draws none, which is the rule every part on the layer follows.
 #let measure(prim, gctx, entries: auto) = {
