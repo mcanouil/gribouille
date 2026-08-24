@@ -30,8 +30,7 @@
   if spec-attr(trained, "limits") == none { return none }
 
   if trained.type == "continuous" {
-    // Only a continuous scale can squish. A discrete scale censors whatever
-    // `oob` says, because clamping to a level has no geometric meaning.
+    // Only a continuous scale reads `oob`, because only it can squish.
     let oob = spec-attr(trained, "oob", fallback: "drop")
     // The expanded view in stat space, rather than the raw `limits`, so a value
     // sitting in the expansion headroom -- which still maps inside the visible
@@ -69,7 +68,10 @@
   }
 
   if trained.type == "discrete" {
-    // The level lookup, resolved once here so the row test is one dict read
+    // A discrete scale censors whatever `oob` says, so the mode is not read
+    // here: clamping to a level has no geometric meaning.
+    //
+    // The level lookup is resolved once, so the row test is one dict read
     // rather than a scan of the domain.
     let level-index = level-lookup(trained)
     return raw => {
