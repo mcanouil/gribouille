@@ -58,6 +58,7 @@
 - fix: the axis titles a faceted plot draws once for the whole grid follow the themed `axis-title` `align`, pinning to the ends of the panel grid rather than staying centred over it. (#235)
 - fix: an axis title longer than the panel it labels wraps onto further lines instead of stretching the canvas past the requested `width`/`height`. A title that still cannot fit fails with the room it needs. (#234)
 - fix: an inside-panel legend background keeps its painted `inset` inside the panel at an edge-flush alignment, and `legend-background`'s `outset` now spaces the backdrop off the panel edge instead of being silently ignored. (#232)
+- perf: a faceted plot resolves each limited scale once for the whole render. A plot with twenty panels used to resolve it twenty-one times, because the out-of-range pre-pass rebuilt its plans on every panel. (#298)
 - perf: a binned plot no longer collects the values of each group for a bin grid the panel has already computed. (#291)
 - perf: a plot whose discrete scale carries user `limits` drops its out-of-range rows in time that no longer grows with the number of levels. At two thousand levels the pre-pass is about three times faster. (#291)
 - perf: a plot that groups its rows builds those groups in linear time, where the cost used to grow with the square of the row count. A boxplot of thirty thousand rows draws about seven times faster. (#289)
