@@ -9,9 +9,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
 #import "../utils/palette.typ": spec-attr
-#import "train.typ": (
-  level-lookup, mapping-ref-col, to-stat-fn, view-bounds-stat,
-)
+#import "train.typ": level-lookup, mapping-ref-col, to-stat-fn, view-bounds-stat
 #import "../utils/errors.typ": fail
 
 // Build the per-row check for one trained scale, or `none` when the scale sets
@@ -76,14 +74,20 @@
     let level-index = level-lookup(trained)
     return raw => {
       if raw == none { return ("in", raw) }
-      // A numeric value addresses a 1-indexed fractional level position rather
+      // The level name first, then the position, which is the order
+      // `map-discrete` reads a cell in. Reading the position first would leave
+      // a level whose name parses as a number impossible to censor, and would
+      // then miss that same level in the lookup and place the row at its face
+      // value, far outside the panel.
+      if str(raw) in level-index { return ("in", raw) }
+      // A native number addresses a 1-indexed fractional level position rather
       // than a level name (`map-discrete` places it at `value - 1`), e.g. a
       // polygon vertex set between level centres or a jittered point. The
       // renderer can place it, so the pre-pass keeps it and lets panel clipping
-      // bound any overflow; drop fires only for a non-numeric value off the
-      // set.
-      if parse-number(raw) != none { return ("in", raw) }
-      if str(raw) in level-index { return ("in", raw) }
+      // bound any overflow. A numeric string is not one of these: every writer
+      // of a position (`_prepare-layer`, `position-jitter`) writes a native
+      // number.
+      if type(raw) in (int, float) { return ("in", raw) }
       ("drop", raw)
     }
   }

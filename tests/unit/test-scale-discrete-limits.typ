@@ -16,7 +16,11 @@
 #import "../../src/utils/level-resolve.typ": discrete-index
 #import "../../src/scale/oob.typ": filter-oob
 
-#let data = ((x: 1, y: 1, g: "10"), (x: 2, y: 2, g: "20"), (x: 3, y: 3, g: "90"))
+#let data = (
+  (x: 1, y: 1, g: "10"),
+  (x: 2, y: 2, g: "20"),
+  (x: 3, y: 3, g: "90"),
+)
 #let mapping = aes(x: "x", y: "y", colour: "g")
 
 #let trained = train(
@@ -36,15 +40,25 @@
 #assert.eq(discrete-index(trained.colour, "20"), 1)
 #assert.eq(discrete-index(trained.colour, "90"), none)
 
-// The pre-pass keeps every row here, and that is the documented rule rather
-// than an accident: it reads any value that parses as a number as a position
-// between levels, which a jittered point or a polygon vertex relies on. A level
-// name that looks like a number therefore cannot be censored. That trade-off
-// predates this file and is tracked separately.
+// A level name that looks like a number is still a level name, so the pre-pass
+// censors it. The cell is the string "90", which the domain does not carry.
 #let layer = (kind: "layer", data: data, mapping: (colour: "g"))
 #let out = filter-oob((layer,), (colour: trained.colour))
-#assert.eq(out.layers.at(0).data.len(), 3)
-#assert.eq(out.counts, (:))
+#assert.eq(out.layers.at(0).data.map(row => row.g), ("10", "20"))
+#assert.eq(out.counts.at("colour"), 1)
+
+// A native number is a 1-indexed fractional level position rather than a level
+// name, which is how `map-discrete` reads it, so the pre-pass keeps it. A
+// jittered point and a polygon vertex both arrive as one, and the renderer can
+// place them. The value here is off the two-level domain on purpose: what keeps
+// it is its type, not its range.
+#let placed = ((g: 1.5), (g: 90))
+#let placed-out = filter-oob(
+  ((kind: "layer", data: placed, mapping: (colour: "g")),),
+  (colour: trained.colour),
+)
+#assert.eq(placed-out.layers.at(0).data, placed)
+#assert.eq(placed-out.counts, (:))
 
 // A level name that does not parse as a number is censored as expected.
 #let named = ((g: "keep"), (g: "drop-me"))
