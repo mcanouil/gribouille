@@ -75,4 +75,4 @@
   )
 }
 
-colourbar reserve tests passed.
+Colour bar reserve tests passed.
