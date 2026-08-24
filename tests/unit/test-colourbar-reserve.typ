@@ -5,8 +5,8 @@
 // The reservation used to approximate that with a named `0.3`, so a vertical
 // colour bar took 0.12 cm more width than it ever painted.
 //
-// This pins the reservation against the drawn geometry rather than against a
-// number, so the two cannot drift apart again.
+// This pins the reservation against the geometry the draw asks for, through the
+// same `tick-metrics` call, so the two cannot drift apart again.
 //
 // Only the vertical flank is pinned. The horizontal band is one fixed number
 // covering the same lead plus a row of text, and is deliberately left
@@ -21,7 +21,8 @@
   _COLOURBAR-V-W, _colourbar-breaks, _legend-text-style, _legend-title-style,
   _max-break-label-width, _title-box, guides-for,
 )
-#import "../../src/guide/surface.typ": LEGEND-TICK-GAP, LEGEND-TICK-LEN
+#import "../../src/guide/surface.typ": tick-metrics
+#import "../../src/guide/gctx.typ": gctx
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../lib.typ": theme
 
@@ -43,7 +44,12 @@
 
   let breaks = _colourbar-breaks(bar)
   let label-w = _max-break-label-width(bar, breaks, _legend-text-style(th))
-  let lead = LEGEND-TICK-LEN + LEGEND-TICK-GAP
+  // Read from the draw path, not from the two constants the reservation sums:
+  // this is the call `guide/gizmo/bar.typ` makes to place a label, so if the
+  // legend branch of `tick-metrics` ever reads a themed length, this test
+  // fails rather than moving with the reservation.
+  let ticks = tick-metrics(gctx("right", "legend"))
+  let lead = ticks.len + ticks.gap
   let expected = _COLOURBAR-V-W + lead + label-w
 
   // The precondition: the title must not be what sets the width.
