@@ -21,7 +21,7 @@
   _COLOURBAR-V-W, _colourbar-breaks, _legend-text-style, _legend-title-style,
   _max-break-label-width, _title-box, guides-for,
 )
-#import "../../src/guide/surface.typ": tick-metrics
+#import "../../src/guide/gizmo/bar.typ": bar-lead
 #import "../../src/guide/gctx.typ": gctx
 #import "../../src/theme/defaults.typ": merge-theme
 #import "../../lib.typ": theme
@@ -44,12 +44,12 @@
 
   let breaks = _colourbar-breaks(bar)
   let label-w = _max-break-label-width(bar, breaks, _legend-text-style(th))
-  // Read from the draw path, not from the two constants the reservation sums:
-  // this is the call `guide/gizmo/bar.typ` makes to place a label, so if the
-  // legend branch of `tick-metrics` ever reads a themed length, this test
-  // fails rather than moving with the reservation.
-  let ticks = tick-metrics(gctx("right", "legend"))
-  let lead = ticks.len + ticks.gap
+  // The one formula the draw places a label with, rather than a copy of it.
+  // What this catches is the reservation ceasing to read it, as it did when a
+  // rounded constant stood here. A change inside `bar-lead` moves the draw and
+  // this test together, which is the point: the two can no longer disagree,
+  // and the goldens are what notice the move.
+  let lead = bar-lead(gctx("right", "legend"))
   let expected = _COLOURBAR-V-W + lead + label-w
 
   // The precondition: the title must not be what sets the width.

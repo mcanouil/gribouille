@@ -92,6 +92,13 @@
 
 // The strip plus the room reserved past it, on both axes.
 //
+// The room a break label sits past the strip: the tick it hangs off, plus the
+// gap after that tick. One formula, so the reservation a guide makes and the
+// place the draw below puts the label cannot say different things.
+#let bar-lead-of(ticks) = ticks.len + ticks.gap
+
+#let bar-lead(gctx) = bar-lead-of(tick-metrics(gctx))
+
 // A context with no bar surface has no colour bar to paint, so the strip takes
 // no room and draws none, which is the rule every part on the layer follows.
 #let measure(prim, gctx, entries: auto) = {
@@ -141,7 +148,7 @@
   let style = if text-surface == none or styles == none { none } else {
     (styles)(text-surface)
   }
-  let lead = ticks.len + ticks.gap
+  let lead = bar-lead-of(ticks)
   for e in rows {
     // The strip is painted from its low end: a horizontal one runs left to
     // right and a vertical one bottom to top, so a vertical break counts back

@@ -25,7 +25,6 @@
 #import "../guide/legend.typ": _normalise-position
 #import "../utils/label-geometry.typ": _rotated-extent
 #import "../guide/gctx.typ": gctx
-#import "../guide/surface.typ": LEGEND-TICK-GAP, LEGEND-TICK-LEN
 #import "../guide/compose.typ": (
   compose-stack, draw as compose-draw, has-part, layout-of as compose-layout-of,
 )
@@ -33,7 +32,7 @@
   COL-GAP-MIN, column-widths, flat-rows, grid-shape, key-metrics, row-overflows,
   uniform-columns,
 )
-#import "../guide/gizmo/bar.typ": prim-bar
+#import "../guide/gizmo/bar.typ": bar-lead, prim-bar
 #import "../guide/primitive/content.typ": prim-content
 #import "../guide/primitive/keys.typ": prim-keys
 #import "../guide/primitive/spacer.typ": prim-spacer
@@ -685,10 +684,9 @@
 #let _COLOURBAR-H-H = 0.35
 #let _COLOURBAR-H-LABEL-H = 0.45
 #let _COLOURBAR-PAD-V = 0.3
-// Gap between a vertical colour bar and its tick labels. The renderer places a
-// label at `tick length + tick gap` past the strip (`lead` in
-// `guide/gizmo/bar.typ`), so the reservation reads the same two constants
-// rather than approximating their sum.
+// Room between a vertical colour bar and its tick labels, read from the same
+// `bar-lead` the draw places them with, so the reservation cannot say one
+// thing while the draw does another.
 //
 // The horizontal band above is deliberately left as one fixed reservation: it
 // covers the same lead plus a row of text, and unpicking it is a separate
@@ -697,7 +695,7 @@
 // A turned label is also still measured flat on this side, where the
 // horizontal branch corrects for the turn through `_breaks-overflow`. The
 // slack this constant used to carry hid small angles; it no longer does.
-#let _COLOURBAR-V-LABEL-LEAD = LEGEND-TICK-LEN + LEGEND-TICK-GAP
+#let _COLOURBAR-V-LABEL-LEAD = bar-lead(gctx("right", "legend"))
 
 // Resolve the displayed break positions for a continuous guide: keep the
 // explicit in-domain breaks when the scale supplies them, otherwise fall back
