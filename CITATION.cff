@@ -10,4 +10,4 @@ repository-code: "https://github.com/mcanouil/gribouille"
 url: "https://m.canouil.dev/gribouille/"
 license: "MIT"
 date-released: "2026-08-24"
-version: 0.7.0
+version: 0.8.0
