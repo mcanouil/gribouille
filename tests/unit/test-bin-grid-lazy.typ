@@ -6,12 +6,12 @@
 // arrays for a resolver that will not look at them costs one full pass per
 // group, which is why the resolvers take thunks rather than arrays.
 //
-// The last case pins that `bin-1d-cells` honours the stashed grid. Laziness
-// itself stays unpinned: an eager `entries.map()` inside the thunk has no
-// observable effect, and Typst offers no cheap way to instrument the read. A
-// revert of the thunk at `bin-1d-cells`, `bin-2d-cells` or `stat/bindot.typ`
-// would therefore restore the cost with the suite still green. That gap is
-// accepted, and the call sites carry a comment saying so.
+// The last three cases pin that each call site honours a stashed grid.
+// Laziness itself stays unpinned: an eager `entries.map()` inside the thunk
+// has no observable effect, and Typst offers no cheap way to instrument the
+// read. A revert of a thunk would therefore restore the cost with the suite
+// still green. That gap is accepted, and the call sites carry a comment saying
+// so.
 
 #import "../../src/utils/bin.typ": (
   bin-1d-cells, panel-bin-grid, resolve-bin-grid,
@@ -20,6 +20,7 @@
   bin-2d-cells, panel-bin-grid-2d, resolve-bin-grid-2d,
 )
 #import "../../src/aes.typ": aes
+#import "../../src/stat/bindot.typ": apply as bindot-apply
 
 #let raw = range(0, 20).map(v => (a: v, b: v * 2))
 
@@ -115,5 +116,17 @@
 #assert.eq(cells-2d.grid.x-n-bins, 2)
 #assert.eq(cells-2d.grid.x-width, 10.0)
 #assert.eq(cells-2d.counts, (5, 0, 0, 0))
+
+// `stat-bindot` shares the contract, so it is pinned the same way: a stashed
+// grid of four bins over `[0, 20)` against rows spanning `[0, 4]` stacks every
+// row in the first bin and stamps the stashed width on each output row.
+#let dot-rows = bindot-apply(
+  range(0, 5).map(v => (a: v)),
+  aes(x: "a"),
+  params: stashed,
+).data
+#assert.eq(dot-rows.len(), 5)
+#assert.eq(dot-rows.at(0).width, 5.0)
+#assert.eq(dot-rows.map(r => r.x).dedup(), (2.5,))
 
 bin grid laziness tests passed.
