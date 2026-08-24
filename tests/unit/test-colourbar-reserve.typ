@@ -7,10 +7,15 @@
 //
 // This pins the reservation against the drawn geometry rather than against a
 // number, so the two cannot drift apart again.
+//
+// The guide width is the wider of its title and its strip, so the fixture maps
+// a single-character column: a wide title would set the width instead, and the
+// assertion below would blame the reservation for a title effect. The first
+// assertion keeps that precondition honest.
 
 #import "../../src/render/legend.typ": (
-  _COLOURBAR-V-W, _colourbar-breaks, _legend-text-style, _max-break-label-width,
-  guides-for,
+  _COLOURBAR-V-W, _colourbar-breaks, _legend-text-style, _legend-title-style,
+  _max-break-label-width, _title-box, guides-for,
 )
 #import "../../src/guide/surface.typ": LEGEND-TICK-GAP, LEGEND-TICK-LEN
 #import "../../src/theme/defaults.typ": merge-theme
@@ -36,6 +41,16 @@
   let label-w = _max-break-label-width(bar, breaks, _legend-text-style(th))
   let lead = LEGEND-TICK-LEN + LEGEND-TICK-GAP
   let expected = _COLOURBAR-V-W + lead + label-w
+
+  // The precondition: the title must not be what sets the width.
+  let title-w = _title-box(bar, _legend-title-style(th)).width
+  assert(
+    title-w < expected,
+    message: "the fixture title is "
+      + repr(title-w)
+      + " wide, which is not narrower than the strip and its labels at "
+      + repr(expected),
+  )
 
   assert(
     calc.abs(bar.width - expected) < 1e-9,

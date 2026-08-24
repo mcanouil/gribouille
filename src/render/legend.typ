@@ -689,6 +689,10 @@
 // label at `tick length + tick gap` past the strip (`lead` in
 // `guide/gizmo/bar.typ`), so the reservation reads the same two constants
 // rather than approximating their sum.
+//
+// The horizontal band above is deliberately left as one fixed reservation: it
+// covers the same lead plus a row of text, and unpicking it is a separate
+// pixel change from this one.
 #let _COLOURBAR-V-LABEL-GAP = LEGEND-TICK-LEN + LEGEND-TICK-GAP
 
 // Resolve the displayed break positions for a continuous guide: keep the
