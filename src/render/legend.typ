@@ -25,6 +25,7 @@
 #import "../guide/legend.typ": _normalise-position
 #import "../utils/label-geometry.typ": _rotated-extent
 #import "../guide/gctx.typ": gctx
+#import "../guide/surface.typ": LEGEND-TICK-GAP, LEGEND-TICK-LEN
 #import "../guide/compose.typ": (
   compose-stack, draw as compose-draw, has-part, layout-of as compose-layout-of,
 )
@@ -684,9 +685,11 @@
 #let _COLOURBAR-H-H = 0.35
 #let _COLOURBAR-H-LABEL-H = 0.45
 #let _COLOURBAR-PAD-V = 0.3
-// Width-estimate gap between a vertical colourbar and its tick labels; the
-// renderer positions labels at `tick-len + tick-gap`, this approximates it.
-#let _COLOURBAR-V-LABEL-GAP = 0.3
+// Gap between a vertical colour bar and its tick labels. The renderer places a
+// label at `tick length + tick gap` past the strip (`lead` in
+// `guide/gizmo/bar.typ`), so the reservation reads the same two constants
+// rather than approximating their sum.
+#let _COLOURBAR-V-LABEL-GAP = LEGEND-TICK-LEN + LEGEND-TICK-GAP
 
 // Resolve the displayed break positions for a continuous guide: keep the
 // explicit in-domain breaks when the scale supplies them, otherwise fall back
