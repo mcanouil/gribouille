@@ -14,10 +14,10 @@
 ///! trained scale, which live downstream of this module.
 ///!
 ///! `band` and `label-reserve` are the room the guide reserves past the strip.
-///! They are handed in as numbers so the caller decides the geometry: the
-///! vertical flank is the same `tick length + tick gap` this file draws with,
-///! while the horizontal band is still one fixed reservation covering that lead
-///! and a row of text.
+///! They are handed in as numbers so the caller decides the geometry. Both
+///! directions spend the same `tick length + tick gap` this file draws with,
+///! plus the box their labels were measured to occupy: a vertical bar spends it
+///! across its flank, and a horizontal one down its band.
 
 #import "../../deps.typ": cetz
 #import "../../utils/errors.typ": assert-halign, check, fail-enum, fail-type

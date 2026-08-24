@@ -673,45 +673,21 @@
   calc.max(1, calc.round(h / one))
 }
 
-// Extra vertical space a multi-line label needs beyond a single row: a full
-// row stride per extra line, so multi-line rows keep the same inter-row gap as
-// single-line ones. Zero for every string / single-line label, so single-line
-// legends keep their geometry.
-#let _label-overflow(label, line-h, style) = (
-  (_label-lines(label, style) - 1) * line-h
-)
-
-// Tallest multi-line overflow across a break list, measured against a single
-// line. Grows a horizontal ladder / colourbar label band beyond its single-line
-// default; zero when every label fits one line.
-#let _breaks-overflow(g, breaks, style) = {
-  let line-h = _swatch-line-h-cm(style.size / 1pt)
-  _largest(
-    breaks
-      .enumerate()
-      .map(((i, b)) => _label-overflow(_break-label(g, b, i), line-h, style)),
-  )
-}
-
 #let _LADDER-H-COL-H = 0.32
 #let _LADDER-H-LABEL-H = 0.4
 #let _COLOURBAR-V-W = 0.35
 #let _COLOURBAR-V-H = 3.0
 #let _COLOURBAR-H-W = 3.0
 #let _COLOURBAR-H-H = 0.35
-#let _COLOURBAR-H-LABEL-H = 0.45
 #let _COLOURBAR-PAD-V = 0.3
-// Room between a vertical colour bar and its tick labels, read from the same
-// `bar-lead` the draw places them with, so the reservation cannot say one
-// thing while the draw does another.
+// Room between a colour bar and its tick labels, read from the same `bar-lead`
+// the draw places them with, so the reservation cannot say one thing while the
+// draw does another.
 //
-// The horizontal band above is deliberately left as one fixed reservation: it
-// covers the same lead plus a row of text, and unpicking it is a separate
-// pixel change from this one.
-//
-// What sits past the lead is the turned label box, from `_max-break-label-box`,
-// so a themed `legend-text` angle is reserved on both branches.
-#let _COLOURBAR-V-LABEL-LEAD = bar-lead(gctx("right", "legend"))
+// Both directions read it. A vertical bar spends it across its flank and a
+// horizontal one down its band, and what sits past it either way is the turned
+// label box from `_max-break-label-box`.
+#let _COLOURBAR-LABEL-LEAD = bar-lead(gctx("right", "legend"))
 
 // Resolve the displayed break positions for a continuous guide: keep the
 // explicit in-domain breaks when the scale supplies them, otherwise fall back
@@ -1027,8 +1003,9 @@
 //
 // The strip is one primitive rather than a stack of them, because the flank of
 // a vertical bar reads across the guide while the guide stacks down it. The
-// room past the strip is reserved here: a vertical bar reads the lead the draw
-// uses, and a horizontal one still reserves one fixed band.
+// room past the strip is reserved here, and each direction spends the same two
+// terms on its own axes: the lead the draw places a label at, and the box that
+// label was measured to occupy.
 #let _colourbar-node(g, style, title-style, title-w, title-h) = {
   let horizontal = g.placement.direction == "horizontal"
   let breaks = _colourbar-breaks(g)
@@ -1042,10 +1019,10 @@
         (_COLOURBAR-H-W, _COLOURBAR-H-H)
       } else { (_COLOURBAR-V-W, _COLOURBAR-V-H) },
       band: if horizontal {
-        _COLOURBAR-H-LABEL-H + _breaks-overflow(g, breaks, style)
+        _COLOURBAR-LABEL-LEAD + label.height
       } else { _COLOURBAR-PAD-V },
       label-reserve: if horizontal { label.width } else {
-        _COLOURBAR-V-LABEL-LEAD + label.width
+        _COLOURBAR-LABEL-LEAD + label.width
       },
       label-w: label.width,
       angle: if style.angle != none { style.angle / 1deg } else { 0 },

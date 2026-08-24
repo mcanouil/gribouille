@@ -11,9 +11,8 @@
 // The second block pins the same flank under a themed `legend-text` angle. The
 // draw turns the label, so the reservation reads the turned box.
 //
-// Only the vertical flank is pinned. The horizontal band is one fixed number
-// covering the same lead plus a row of text, and is deliberately left
-// unpinned here until it is unpicked in turn.
+// The third block pins the band below a horizontal bar, which is the same lead
+// and the row its labels are measured to occupy.
 //
 // The guide width is the wider of its title and its strip, so the fixture maps
 // a single-character column: a wide title would set the width instead, and the
@@ -21,8 +20,8 @@
 // assertion keeps that precondition honest.
 
 #import "../../src/render/legend.typ": (
-  _COLOURBAR-V-W, _colourbar-breaks, _legend-text-style, _legend-title-style,
-  _max-break-label-box, _title-box, guides-for,
+  _COLOURBAR-H-H, _COLOURBAR-V-W, _colourbar-breaks, _legend-text-style,
+  _legend-title-style, _max-break-label-box, _title-box, guides-for,
 )
 #import "../../src/guide/gizmo/bar.typ": bar-lead
 #import "../../src/guide/gctx.typ": gctx
@@ -144,6 +143,42 @@
       + repr(lead)
       + ", and turned labels of "
       + repr(turned.width),
+  )
+}
+
+// The band below a horizontal colour bar.
+//
+// The band covers two things the renderer decides: the lead it draws between
+// the strip and its labels, and the row those labels are measured to occupy.
+// Each is read from the surface it belongs to, where the fixed number this
+// replaced could drift from either one.
+//
+// A multi-line label needs no separate term. `_max-break-label-box` measures
+// the resolved label, so its height already carries every row.
+#context {
+  let th = merge-theme(theme(legend-position: "bottom"))
+  let guides = guides-for(_spec, _trained, theme: th)
+  let bar = guides.at(0)
+  assert.eq(bar.placement.direction, "horizontal")
+
+  let breaks = _colourbar-breaks(bar)
+  let label = _max-break-label-box(bar, breaks, _legend-text-style(th))
+  let lead = bar-lead(gctx("right", "legend"))
+  // The whole guide box: the title band, the strip, and the band past it.
+  let expected = bar.title-h + _COLOURBAR-H-H + lead + label.height
+
+  assert(
+    calc.abs(bar.height - expected) < 1e-9,
+    message: "horizontal colour bar reserved "
+      + repr(bar.height)
+      + " for a title band of "
+      + repr(bar.title-h)
+      + ", a strip of "
+      + repr(_COLOURBAR-H-H)
+      + ", a drawn lead of "
+      + repr(lead)
+      + ", and a label row of "
+      + repr(label.height),
   )
 }
 
