@@ -1,13 +1,14 @@
 // Out-of-range pre-pass unit tests.
 //
-// Exercises filter-oob over a synthetic trained dict + layer pair to cover:
+// Exercises filter-oob, over the plans `oob-plans` resolves from a synthetic
+// trained dict, against a layer pair, to cover:
 //   - default "drop" removes rows whose value falls outside `limits`
 //   - "squish" keeps the row and clamps the cell to the nearest limit
 //   - rows without user `limits` on a scale are never touched
 //   - discrete `limits` drops rows whose level is outside the set
 //   - rows with unparseable values survive (treated as in-range)
 
-#import "../../src/scale/oob.typ": filter-oob
+#import "../../src/scale/oob.typ": filter-oob, oob-plans
 #import "../../src/utils/late-binding.typ": from-theme
 
 // Mirror `_train-entry`: when a user supplies `limits`, the trained `domain`
@@ -56,7 +57,7 @@
 #{
   let trained = (fill: _trained-continuous(limits: (2, 5)))
   let rows = ((v: 1), (v: 3), (v: 4), (v: 8))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 3), (v: 4)))
   assert.eq(out.counts.at("fill"), 2)
 }
@@ -65,7 +66,7 @@
 #{
   let trained = (fill: _trained-continuous(limits: (2, 5), oob: "squish"))
   let rows = ((v: 1), (v: 3), (v: 4), (v: 8))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 2), (v: 3), (v: 4), (v: 5)))
   assert.eq(out.counts, (:))
 }
@@ -74,7 +75,7 @@
 #{
   let trained = (fill: _trained-continuous())
   let rows = ((v: 1), (v: 99))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, rows)
   assert.eq(out.counts, (:))
 }
@@ -83,7 +84,7 @@
 #{
   let trained = (fill: _trained-discrete(limits: ("a", "c")))
   let rows = ((v: "a"), (v: "b"), (v: "c"), (v: "d"))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: "a"), (v: "c")))
   assert.eq(out.counts.at("fill"), 2)
 }
@@ -92,7 +93,7 @@
 #{
   let trained = (fill: _trained-continuous(limits: (2, 5)))
   let rows = ((v: 3), (v: "abc"), (v: none))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, rows)
   assert.eq(out.counts, (:))
 }
@@ -107,7 +108,7 @@
     ),
   )
   let rows = ((v: 0.5), (v: 1.5), (v: 4), (v: 5.5), (v: 6.5))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 1.5), (v: 4), (v: 5.5)))
   assert.eq(out.counts.at("fill"), 2)
 }
@@ -123,7 +124,7 @@
     ),
   )
   let rows = ((v: 0.5), (v: 1.5), (v: 7))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 2), (v: 1.5), (v: 5)))
   assert.eq(out.counts, (:))
 }
@@ -139,7 +140,7 @@
     ),
   )
   let rows = ((v: 0.5), (v: 1.5), (v: 4), (v: 7))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 2), (v: 1.5), (v: 4), (v: 5)))
   assert.eq(out.counts, (:))
 }
@@ -151,7 +152,7 @@
 #{
   let trained = (fill: _trained-discrete(limits: ("a", "b", "c")))
   let rows = ((v: "a"), (v: "d"), (v: 1.5), (v: 0.74), (v: 3))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: "a"), (v: 1.5), (v: 0.74), (v: 3)))
   assert.eq(out.counts.at("fill"), 1)
 }
@@ -163,7 +164,7 @@
   let rows = ((v: 1), (v: 3), (v: 8))
   let clipped = _layer(rows)
   let unclipped = (.._layer(rows), clip: false)
-  let out = filter-oob((clipped, unclipped), trained)
+  let out = filter-oob((clipped, unclipped), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 3),))
   assert.eq(out.layers.at(1).data, rows)
   assert.eq(out.counts.at("fill"), 2)
@@ -191,7 +192,7 @@
     data: ((v: 1, g: "a"), (v: 3, g: "z"), (v: 9, g: "b")),
     mapping: (fill: "v", colour: "g"),
   )
-  let out = filter-oob((layer,), trained)
+  let out = filter-oob((layer,), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 2, g: "a"), (v: 5, g: "b")))
   assert.eq(out.counts.at("colour"), 1)
   assert.eq(out.counts.at("fill", default: 0), 0)
@@ -208,7 +209,7 @@
     ),
   )
   let rows = ((v: "a"), (v: "d"), (v: "c"))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: "a"), (v: "c")))
   assert.eq(out.counts.at("fill"), 1)
 }
@@ -224,7 +225,7 @@
 #{
   let trained = (fill: _trained-continuous(limits: (1, 9), transform: "sqrt"))
   let rows = ((v: 4), (v: 16))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 4),))
   assert.eq(out.counts.at("fill"), 1)
 }
@@ -242,7 +243,7 @@
     ),
   )
   let rows = ((v: 2), (v: 9))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 2),))
   assert.eq(out.counts.at("fill"), 1)
 }
@@ -260,7 +261,7 @@
     ),
   )
   let rows = ((v: 0), (v: 16))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 1), (v: 9)))
   assert.eq(out.counts, (:))
 }
@@ -271,7 +272,7 @@
 #{
   let trained = (fill: _trained-discrete(limits: ()))
   let rows = ((v: "a"), (v: "b"))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ())
   assert.eq(out.counts.at("fill"), 2)
 }
@@ -292,7 +293,7 @@
     ),
   )
   let rows = ((v: 1), (v: 8))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, rows)
   assert.eq(out.counts, (:))
 }
@@ -304,7 +305,7 @@
   let trained = (fill: _trained-continuous(limits: (2, 5)))
   let rows = ((v: 1), (v: 8))
   let layer = (kind: "layer", data: rows, mapping: (x: "v"))
-  let out = filter-oob((layer,), trained)
+  let out = filter-oob((layer,), oob-plans(trained))
   assert.eq(out.layers.at(0).data, rows)
   assert.eq(out.counts, (:))
 }
@@ -315,7 +316,7 @@
   let trained = (fill: _trained-continuous(limits: (2, 5)))
   let rows = ((v: 1), (v: 8))
   let layer = (kind: "layer", data: rows, mapping: (fill: from-theme("ink")))
-  let out = filter-oob((layer,), trained)
+  let out = filter-oob((layer,), oob-plans(trained))
   assert.eq(out.layers.at(0).data, rows)
   assert.eq(out.counts, (:))
 }
@@ -338,7 +339,7 @@
     ),
   )
   let rows = ((v: 0), (v: 4), (v: 20))
-  let out = filter-oob((_layer(rows),), trained)
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 4),))
   assert.eq(out.counts.at("fill"), 2)
 }

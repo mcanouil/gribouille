@@ -9,9 +9,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
 #import "../utils/palette.typ": spec-attr
-#import "train.typ": (
-  level-lookup, mapping-ref-col, to-stat-fn, view-bounds-stat,
-)
+#import "train.typ": level-lookup, mapping-ref-col, to-stat-fn, view-bounds-stat
 #import "../utils/errors.typ": fail
 
 // Build the per-row check for one trained scale, or `none` when the scale sets
@@ -76,14 +74,20 @@
     let level-index = level-lookup(trained)
     return raw => {
       if raw == none { return ("in", raw) }
-      // A numeric value addresses a 1-indexed fractional level position rather
+      // The level name first, then the position, which is the order
+      // `map-discrete` reads a cell in. Reading the position first would leave
+      // a level whose name parses as a number impossible to censor, and would
+      // then miss that same level in the lookup and place the row at its face
+      // value, far outside the panel.
+      if str(raw) in level-index { return ("in", raw) }
+      // A native number addresses a 1-indexed fractional level position rather
       // than a level name (`map-discrete` places it at `value - 1`), e.g. a
       // polygon vertex set between level centres or a jittered point. The
       // renderer can place it, so the pre-pass keeps it and lets panel clipping
-      // bound any overflow; drop fires only for a non-numeric value off the
-      // set.
-      if parse-number(raw) != none { return ("in", raw) }
-      if str(raw) in level-index { return ("in", raw) }
+      // bound any overflow. A numeric string is not one of these: every writer
+      // of a position (`_prepare-layer`, `position-jitter`) writes a native
+      // number.
+      if type(raw) in (int, float) { return ("in", raw) }
       ("drop", raw)
     }
   }
@@ -94,23 +98,35 @@
   none
 }
 
-// Filter rows of every layer through the trained dict. Returns the rewritten
-// layers and a per-aesthetic dropped-row count. `strict: true` converts the
-// first drop into a `panic` instead.
-#let filter-oob(layers, trained, strict: false) = {
-  // Everything the check reads is constant per aesthetic, so each scale is
-  // resolved once here into a closure the row walk calls with the cell alone.
-  // Held as an array rather than a dict, so the row walk iterates it directly
-  // instead of looking each aesthetic up again on every row. The limits are
-  // not carried with it: only the `strict` panic needs them, and on a discrete
-  // scale they are the whole level array.
-  let active = ()
+// Resolve every limited scale in the trained dict into the plan the row walk
+// runs it under.
+//
+// Everything a check reads is constant per aesthetic, so each scale is resolved
+// once here into a closure the row walk calls with the cell alone. Held as an
+// array rather than a dict, so the row walk iterates it directly instead of
+// looking each aesthetic up again on every row. The limits travel with the
+// check because the `strict` panic names them; nothing on the row path reads
+// them.
+//
+// The plans are built here rather than inside `filter-oob`, because a faceted
+// render filters the whole layer set and then every panel in turn, always
+// against the same trained dict. Resolving them per call would resolve each
+// scale once per panel.
+#let oob-plans(trained) = {
+  let plans = ()
   for (aes, t) in trained.pairs() {
     let check = _checker(t)
     if check == none { continue }
-    active.push((aes: aes, check: check))
+    plans.push((aes: aes, check: check, limits: spec-attr(t, "limits")))
   }
-  if active.len() == 0 { return (layers: layers, counts: (:)) }
+  plans
+}
+
+// Filter rows of every layer through the plans `oob-plans` resolved. Returns
+// the rewritten layers and a per-aesthetic dropped-row count. `strict: true`
+// converts the first drop into a `panic` instead.
+#let filter-oob(layers, plans, strict: false) = {
+  if plans.len() == 0 { return (layers: layers, counts: (:)) }
 
   let counts = (:)
   let new-layers = ()
@@ -133,7 +149,7 @@
     // of the row, and `mapping-ref-col` walks the wrapper chain to find it.
     // Resolve it once per layer so the row walk only reads the cell.
     let bound = ()
-    for entry in active {
+    for entry in plans {
       let raw = mapping.at(entry.aes, default: none)
       if raw == none { continue }
       if is-late-binding(raw) { continue }
@@ -165,7 +181,7 @@
               + " value "
               + repr(cell)
               + " outside limits "
-              + repr(spec-attr(trained.at(aes), "limits")),
+              + repr(binding.limits),
             hint: "Set `oob: \"squish\"` to clamp, widen `limits`, "
               + "or remove `strict: true` to drop silently.",
           )

@@ -4,7 +4,7 @@
 
 #import "scale/train.typ": train
 #import "utils/errors.typ": check, cm-text, fail
-#import "scale/oob.typ": filter-oob
+#import "scale/oob.typ": filter-oob, oob-plans
 #import "theme/current.typ": _theme-state
 #import "theme/defaults.typ": merge-theme
 #import "theme/theme.typ": _text-style
@@ -144,11 +144,15 @@
   // is the rendered cutoff; before per-panel re-train so panel scales see
   // the filtered subset.
   let strict = spec.at("strict", default: false)
-  let oob-pass = filter-oob(prepared, trained, strict: strict)
+  // Resolved once for the whole render: the panels below filter against the
+  // same trained dict, so a plot with twenty panels would otherwise resolve
+  // each limited scale twenty-one times.
+  let oob-plan = oob-plans(trained)
+  let oob-pass = filter-oob(prepared, oob-plan, strict: strict)
   prepared = oob-pass.layers
   if facet-wrap-mode or facet-grid-mode {
     panels = panels.map(p => {
-      let pass = filter-oob(p.layers, trained, strict: strict)
+      let pass = filter-oob(p.layers, oob-plan, strict: strict)
       let new = p
       new.layers = pass.layers
       new
