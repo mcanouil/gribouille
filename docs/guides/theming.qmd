@@ -242,7 +242,7 @@ Everything else cascades from [`theme()`](../reference/themes/theme.qmd).
 | [`theme-dark`](../reference/themes/theme-dark.qmd).         | Dark frame and grid on a dark panel.                                                |
 | [`theme-linedraw`](../reference/themes/theme-linedraw.qmd). | Black frame, dark grid, white panel.                                                |
 | [`theme-void`](../reference/themes/theme-void.qmd).         | Everything removable removed; useful for inset thumbnails.                          |
-| [`theme-brand`](../reference/themes/theme-brand.qmd).       | Colours, fonts, and palette taken from a parsed Quarto `_brand.yml`.                |
+| [`theme-brand`](../reference/themes/theme-brand.qmd).       | Colours, fonts, and palette taken from a parsed `_brand.yml`.                       |
 
 The `theme-sub-*` helpers go one level finer: they bundle the keys that move together for a single region.
 For example, [`theme-sub-axis`](../reference/themes/theme-sub-axis.qmd) accepts `line`, `ticks`, `text`, `title`, and rewrites the four corresponding [`theme()`](../reference/themes/theme.qmd) keys for you.

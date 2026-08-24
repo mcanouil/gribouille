@@ -1,4 +1,4 @@
-///! Quarto `_brand.yml` theme preset.
+///! `_brand.yml` theme preset.
 ///!
 ///! Maps a brand's semantic colour roles and font families onto a theme, and
 ///! derives a discrete palette from its data-ink roles.
@@ -15,7 +15,12 @@
   if family == none { record } else { (..record, font: family) }
 }
 
-/// Brand theme: a theme built from a parsed Quarto `_brand.yml`.
+/// Brand theme: a theme built from a parsed `_brand.yml`.
+///
+/// brand.yml is a tool-independent standard for a single brand definition,
+/// specified at <https://posit-dev.github.io/brand-yml/>. Quarto, Shiny for R,
+/// and Shiny for Python all read the same file, so one brand file can cover a
+/// document, an application, and the plots in either.
 ///
 /// Takes the dictionary `yaml()` produces, not a path: Typst resolves a
 /// relative path against the file that calls `yaml`, so the package cannot
@@ -43,7 +48,7 @@
 /// \@subcategory Complete themes
 /// \@stability stable
 ///
-/// \@param brand Dictionary parsed from a Quarto `_brand.yml`, e.g. `yaml("_brand.yml")`. An empty dictionary yields the \@theme-minimal defaults.
+/// \@param brand Dictionary parsed from a `_brand.yml`, e.g. `yaml("_brand.yml")`. An empty dictionary yields the \@theme-minimal defaults.
 ///
 /// \@param mode Which side of the brand's `light` / `dark` colour variants to use: `"light"` or `"dark"`. A colour with no variants is used in both. Default: `"light"`.
 ///

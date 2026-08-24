@@ -1,5 +1,6 @@
-// Quarto `_brand.yml` parsing: semantic colour roles, palette alias chains,
-// light/dark variants, and font families.
+// `_brand.yml` parsing: semantic colour roles, palette alias chains,
+// light/dark variants, and font families. brand.yml is a tool-independent
+// standard (https://posit-dev.github.io/brand-yml/), not a Quarto feature.
 //
 // Reading the file is Typst's job (`yaml()` resolves relative paths against
 // the calling file, so the library cannot do it on the caller's behalf). What
@@ -185,7 +186,7 @@
       _SCOPE,
       "brand",
       brand,
-      "a dictionary parsed from a Quarto _brand.yml",
+      "a dictionary parsed from a _brand.yml",
       hint: "Pass yaml(\"_brand.yml\"); the path resolves against your own"
         + " file, not the package.",
     )
@@ -241,7 +242,7 @@
       _SCOPE,
       "brand",
       brand,
-      "a dictionary parsed from a Quarto _brand.yml",
+      "a dictionary parsed from a _brand.yml",
     )
   }
   let typo = brand.at("typography", default: (:))

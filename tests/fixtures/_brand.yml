@@ -1,4 +1,4 @@
-# Realistic Quarto _brand.yml, read by tests/unit/test-brand-file.typ through a
+# Realistic _brand.yml, read by tests/unit/test-brand-file.typ through a
 # root-absolute path. Exercises the shapes a hand-written brand file uses:
 # palette aliases, light/dark variants, a flat colour, a role aliasing another,
 # and the blocks theme-brand deliberately ignores.
