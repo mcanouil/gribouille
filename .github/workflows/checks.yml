@@ -147,6 +147,17 @@ jobs:
           label: example
           glob: "examples/*.typ"
 
+      # The error fixtures assert the opposite of the globs above: each one must
+      # fail, with the message it declares. The typst-compile composite action
+      # cannot serve here, because it asserts that every file in its glob
+      # compiles.
+      - name: Check error messages
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools/check-errors.sh
+
       - name: Summary
         if: always()
         shell: bash

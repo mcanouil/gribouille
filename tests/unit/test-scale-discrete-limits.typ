@@ -7,7 +7,9 @@
 // limit can carry another type.
 //
 // The failure itself cannot be asserted here, because Typst has no try/catch.
-// This pins the working shape: quoted levels train, censor, and resolve.
+// This file pins the working shape, that quoted levels train, censor, and
+// resolve; `tests/errors/scale-discrete-limits-type.typ` pins the message a
+// numeric level fails with.
 
 #import "../../src/scale/train.typ": train
 #import "../../src/scale/constructors.typ": scale-discrete
@@ -16,7 +18,11 @@
 #import "../../src/utils/level-resolve.typ": discrete-index
 #import "../../src/scale/oob.typ": filter-oob
 
-#let data = ((x: 1, y: 1, g: "10"), (x: 2, y: 2, g: "20"), (x: 3, y: 3, g: "90"))
+#let data = (
+  (x: 1, y: 1, g: "10"),
+  (x: 2, y: 2, g: "20"),
+  (x: 3, y: 3, g: "90"),
+)
 #let mapping = aes(x: "x", y: "y", colour: "g")
 
 #let trained = train(

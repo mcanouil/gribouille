@@ -72,6 +72,13 @@ compile_glob "unit"     "tests/unit/*.typ"
 compile_glob "examples" "examples/*.typ"
 compile_glob "visual"   "tests/visual/*.typ"
 
+# The error fixtures assert the opposite of the globs above: each one must fail,
+# with the message it declares. Run unconditionally, because a suite whose whole
+# job is to pin a failure must not be skippable.
+if ! tools/check-errors.sh; then
+  failures=$((failures + 1))
+fi
+
 if [[ -n "${snapshot_mode}" ]]; then
   printf '\nsnapshots:\n'
   # shellcheck disable=SC2086  # snapshot_args is intentionally word-split
