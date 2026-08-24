@@ -8,6 +8,10 @@
 // This pins the reservation against the drawn geometry rather than against a
 // number, so the two cannot drift apart again.
 //
+// Only the vertical flank is pinned. The horizontal band is one fixed number
+// covering the same lead plus a row of text, and is deliberately left
+// unpinned here until it is unpicked in turn.
+//
 // The guide width is the wider of its title and its strip, so the fixture maps
 // a single-character column: a wide title would set the width instead, and the
 // assertion below would blame the reservation for a title effect. The first

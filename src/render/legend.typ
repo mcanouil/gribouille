@@ -1008,10 +1008,9 @@
 // The stack a colour-bar guide is: its title above its strip.
 //
 // The strip is one primitive rather than a stack of them, because the flank of
-// a vertical bar reads across the guide while the guide stacks down it. The room
-// past the strip is the constant the guide has always reserved: a vertical bar
-// reserves 0.3 cm for a flank it draws at 0.18 cm, and unpicking that moves
-// every golden with a colour bar.
+// a vertical bar reads across the guide while the guide stacks down it. The
+// room past the strip is reserved here: a vertical bar reads the lead the draw
+// uses, and a horizontal one still reserves one fixed band.
 #let _colourbar-node(g, style, title-style, title-w, title-h) = {
   let horizontal = g.placement.direction == "horizontal"
   let breaks = _colourbar-breaks(g)
