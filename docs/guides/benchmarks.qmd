@@ -11,7 +11,7 @@ This page measures that growth so you can judge, before you build a chart, wheth
 
 ## How the numbers are produced
 
-A small harness under `tools/benchmark/` compiles a fixed set of charts across a range of element counts and the three output formats.
+A small harness under `tools/benchmark/` compiles a fixed set of charts across a range of row counts and the three output formats.
 For each cell it records the compile time, the output size, and whether the compile finished within a fixed time budget.
 A chart that exceeds the budget is recorded as a timeout rather than measured.
 Past that point the library is no longer a practical choice for that workload.
@@ -21,7 +21,8 @@ The numbers are illustrative and depend on the machine that produced them, so re
 
 ### Procedure
 
-Each case is a standalone Typst file that reads its element count from `sys.inputs`, so one file covers every size.
+Each case is a standalone Typst file that reads its row count from `sys.inputs`, so one file covers every size.
+Every case builds that many rows. What a row becomes differs: a mark of its own in the per-row cases, one vertex of a ring in the polygon case, one contribution to a bin in the aggregating cases.
 Each case also builds deterministic synthetic data, so a given size renders the same chart on every run.
 The harness compiles the cases one at a time, never in parallel, so concurrent compiles cannot contend for the processor and distort the timings.
 It wraps each compile in `/usr/bin/time`, takes the median wall time over a few repetitions, and records the output file size.
@@ -77,17 +78,17 @@ The point case, for instance, is:
 
 The full harness, every other case, and the command-line options are in [`tools/benchmark/`](https://github.com/mcanouil/gribouille/tree/main/tools/benchmark).
 
-## Compile time against element count
+## Compile time against row count
 
 ```{typst}
 //| echo: true
 //| code-fold: true
 //| code-summary: "Typst source for this figure"
 //| label: fig-benchmark-time
-//| fig-cap: "Compile time against element count for each chart type, on log scales. Layers that draw one mark per row reach the time budget first, while the path, polygon, and aggregating layers stay inside it."
+//| fig-cap: "Compile time against row count for each chart type, on log scales. Layers that draw one mark per row reach the time budget first, while the path, polygon, and aggregating layers stay inside it."
 //| output-filename: "benchmarks-time.svg"
 //| file: _benchmarks-time.typ
-//| alt: "A grid of small line charts, three to a row and eight in all, one per chart type, plotting compile time against element count on logarithmic axes for the PNG, SVG, and PDF formats. The column, faceted smoother, point, and tile panels rise steeply and end in a cross that marks the largest size exceeding the time budget. The line and polygon panels rise almost as fast as the data grows and reach that size without a cross, ending near thirty-five and sixteen seconds as PNG, with the SVG line of the line panel higher again at about sixty. The two-dimensional bin and boxplot panels stay nearly flat and end lowest of all."
+//| alt: "A grid of small line charts, three to a row and eight in all, one per chart type, plotting compile time against the number of rows on logarithmic axes for the PNG, SVG, and PDF formats. The column, faceted smoother, point, and tile panels rise steeply and end in a cross that marks the largest size exceeding the time budget. The line and polygon panels rise almost as fast as the data grows and reach that size without a cross, ending near thirty-five and sixteen seconds as PNG, with the SVG line of the line panel higher again at about sixty. The two-dimensional bin and boxplot panels stay nearly flat and end lowest of all."
 ```
 
 Cost follows the number of marks a chart draws, not the number of rows it reads.
@@ -104,17 +105,17 @@ A two-dimensional bin or a boxplot collapses the rows to a small, fixed number o
 One hundred thousand rows then cost about five seconds and about two seconds.
 Those layers too slow as the row count climbs, because they still read every row.
 
-## Output size against element count
+## Output size against row count
 
 ```{typst}
 //| echo: true
 //| code-fold: true
 //| code-summary: "Typst source for this figure"
 //| label: fig-benchmark-size
-//| fig-cap: "Output size against element count for each chart type, on log scales. Vector output grows with the number of marks and vertices, while raster output stays compact."
+//| fig-cap: "Output size against row count for each chart type, on log scales. Vector output grows with the number of marks and vertices, while raster output stays compact."
 //| output-filename: "benchmarks-size.svg"
 //| file: _benchmarks-size.typ
-//| alt: "A grid of small line charts, three to a row and eight in all, one per chart type, plotting output file size against element count on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply wherever the chart carries many marks or many vertices, including the column, faceted smoother, line, point, polygon, and tile panels, because each one becomes a node in the file. The PNG line stays low in every panel and almost flat in most, with the tile panel the one clear rise. In most panels the PDF line starts below PNG where a chart draws few marks, and rises above it as the mark or vertex count grows. The two-dimensional bin and boxplot panels stay flat for all three formats."
+//| alt: "A grid of small line charts, three to a row and eight in all, one per chart type, plotting output file size against the number of rows on logarithmic axes for the PNG, SVG, and PDF formats. The SVG line rises steeply wherever the chart carries many marks or many vertices, including the column, faceted smoother, line, point, polygon, and tile panels, because each one becomes a node in the file. The PNG line stays low in every panel and almost flat in most, with the tile panel the one clear rise. In most panels the PDF line starts below PNG where a chart draws few marks, and rises above it as the mark or vertex count grows. The two-dimensional bin and boxplot panels stay flat for all three formats."
 ```
 
 Format matters as much as count.

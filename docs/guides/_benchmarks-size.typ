@@ -1,4 +1,4 @@
-// Output size versus element count, read from the committed benchmark dataset
+// Output size versus row count, read from the committed benchmark dataset
 // and drawn with gribouille itself.
 //
 // Compile from the project root for debugging:
@@ -34,9 +34,9 @@
   scales: scales(x: scale-log10(), y: scale-log10()),
   facet: facet-wrap("case", ncolumn: 3),
   labels: labels(
-    title: "Vector output balloons with element count, raster stays compact",
+    title: "Vector output balloons with the row count, raster stays compact",
     subtitle: "SVG stores one node per mark and one point per vertex",
-    x: "Elements (log scale)",
+    x: "Rows (log scale)",
     y: "Output size, KB (log scale)",
     colour: "Format",
   ),

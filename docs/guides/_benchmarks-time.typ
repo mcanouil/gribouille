@@ -1,4 +1,4 @@
-// Compile time versus element count, read from the committed benchmark dataset
+// Compile time versus row count, read from the committed benchmark dataset
 // and drawn with gribouille itself.
 //
 // Compile from the project root for debugging:
@@ -47,7 +47,7 @@
     subtitle: "Crosses mark sizes that exceeded the "
       + str(budget)
       + "s budget",
-    x: "Elements (log scale)",
+    x: "Rows (log scale)",
     y: "Compile time, seconds (log scale)",
     colour: "Format",
   ),
