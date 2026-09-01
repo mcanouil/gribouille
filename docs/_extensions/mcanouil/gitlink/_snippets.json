@@ -3,8 +3,7 @@
 		"prefix": "github-meta",
 		"body": [
 			"filters:",
-			"  - path: gitlink",
-			"    at: post-quarto",
+			"  - gitlink",
 			"extensions:",
 			"  gitlink:",
 			"    platform: github",
@@ -16,8 +15,7 @@
 		"prefix": "gitlink-widget-meta",
 		"body": [
 			"filters:",
-			"  - path: gitlink",
-			"    at: post-quarto",
+			"  - gitlink",
 			"extensions:",
 			"  gitlink:",
 			"    platform: ${1:github}",
@@ -31,8 +29,7 @@
 		"prefix": "gitlab-meta",
 		"body": [
 			"filters:",
-			"  - path: gitlink",
-			"    at: post-quarto",
+			"  - gitlink",
 			"extensions:",
 			"  gitlink:",
 			"    platform: gitlab",

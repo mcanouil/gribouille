@@ -1,10 +1,19 @@
 --- MC Bitbucket - Bitbucket-specific functionality for gitlink extension
---- @module bitbucket
+--- @module "bitbucket"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
 
-local str = require("_modules/string")
+--- Load a sibling module from the same directory as this file.
+--- @param filename string The sibling module filename (e.g., 'string.lua')
+--- @return table The loaded module
+local function load_sibling(filename)
+  local source = debug.getinfo(1, 'S').source:sub(2)
+  local dir = source:match('(.*[/\\])') or ''
+  return require((dir .. filename):gsub('%.lua$', ''))
+end
+
+local str = load_sibling('string.lua')
 
 local bitbucket_module = {}
 

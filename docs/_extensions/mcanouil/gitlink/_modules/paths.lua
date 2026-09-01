@@ -1,5 +1,5 @@
 --- MC Paths - Path resolution utilities for Quarto Lua filters and shortcodes
---- @module paths
+--- @module "paths"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
