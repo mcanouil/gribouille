@@ -1,13 +1,13 @@
 --- Platform Configuration Module
---- @module platforms
+--- @module "platforms"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
 
 local platforms_module = {}
 
--- Load schema validation module
-local schema = require(quarto.utils.resolve_path('_modules/schema.lua'):gsub('%.lua$', ''))
+-- Load platform schema validation module
+local platform_schema = require(quarto.utils.resolve_path('_modules/platform-schema.lua'):gsub('%.lua$', ''))
 
 -- ============================================================================
 -- CONFIGURATION STORAGE
@@ -112,7 +112,7 @@ function platforms_module.initialise(yaml_path)
     return false, msg
   end
 
-  local validation_results_all = schema.validate_all_platforms(loaded_configs)
+  local validation_results_all = platform_schema.validate_all_platforms(loaded_configs)
   local has_errors = false
   local error_messages = {}
 
@@ -221,7 +221,7 @@ function platforms_module.register_custom_platform(platform_name, config)
     return false, 'Platform name and configuration are required'
   end
 
-  local result = schema.validate_platform(platform_name, config)
+  local result = platform_schema.validate_platform(platform_name, config)
 
   if not result.valid then
     local error_lines = {}
@@ -303,7 +303,7 @@ end
 ---   local result = platforms_module.validate_platform_config('forgejo', config)
 ---   if result.valid then print('OK') else print(table.concat(result.errors, ', ')) end
 function platforms_module.validate_platform_config(platform_name, config)
-  return schema.validate_platform(platform_name, config)
+  return platform_schema.validate_platform(platform_name, config)
 end
 
 --- Validate all platforms in a configuration table
@@ -313,7 +313,7 @@ end
 --- @usage
 ---   local results = platforms_module.validate_all_platforms(platforms_config)
 function platforms_module.validate_all_platforms(platforms)
-  return schema.validate_all_platforms(platforms)
+  return platform_schema.validate_all_platforms(platforms)
 end
 
 -- ============================================================================

@@ -1,5 +1,5 @@
 --- Gitlink Repository Navbar Widget
---- @module widget
+--- @module "widget"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil

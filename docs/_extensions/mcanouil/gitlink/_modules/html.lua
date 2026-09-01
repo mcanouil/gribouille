@@ -1,5 +1,5 @@
 --- MC HTML - HTML generation and dependency management for Quarto Lua filters and shortcodes
---- @module html
+--- @module "html"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil

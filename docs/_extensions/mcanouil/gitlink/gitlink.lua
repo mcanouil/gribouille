@@ -1,4 +1,4 @@
---- @module gitlink
+--- @module "gitlink"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
@@ -74,6 +74,9 @@ local COMMIT_SHA_MIN_LENGTH = 7
 
 --- @type string Lua pattern matching a 3-, 4-, 6-, or 8-character hex colour with leading #
 local HEX_COLOUR_PATTERN = '^#%x%x%x%x?%x?%x?%x?%x?$'
+
+--- @type string Class Quarto puts on the markdown-pipeline envelope elements
+local MARKDOWN_ENVELOPE_CLASS = 'quarto-markdown-envelope-contents'
 
 --- Validate a colour value as a hex code or CSS named colour.
 --- Returns the original value if valid, or nil if invalid.
@@ -1020,6 +1023,52 @@ local function process_link(elem)
   return elem
 end
 
+--- Skip the content of an inline markdown-pipeline entry.
+--- Quarto renders navigation hrefs and social metadata values as hidden inline
+--- snippets in such a span, then reads the rendered fragment back with
+--- `innerText` and puts the result in an attribute. A converted reference would
+--- add its badge text to that value.
+--- The same envelope also carries values that Quarto inserts with `innerHTML`,
+--- such as a navbar or sidebar title, a navigation entry text, an `about` link
+--- text, and a next or previous page title. A reference in those no longer
+--- converts. The two kinds cannot be told apart, because a navigation entry
+--- registers its text and its href under one identifier prefix, so the whole
+--- envelope is skipped.
+--- A `Div` with the same class is a block entry (page footer, margin and body
+--- header and footer, announcement). Quarto inserts those with `innerHTML` as
+--- well, and they are a separate envelope, so only spans are skipped.
+--- @param span pandoc.Span The span element to inspect
+--- @return pandoc.Span span The unchanged span
+--- @return boolean|nil descend False to stop traversal of the subtree
+local function skip_markdown_envelope(span)
+  if span.classes:includes(MARKDOWN_ENVELOPE_CLASS) then
+    return span, false
+  end
+  return span
+end
+
+--- Convert a string element and stop traversal of the result.
+--- Top-down traversal descends into a returned element, so without this a
+--- created link would have its own text converted a second time.
+--- @param elem pandoc.Str The string element to process
+--- @return pandoc.Str|pandoc.Link|pandoc.List The result of `process_gitlink`
+--- @return boolean descend Always false
+local function process_gitlink_topdown(elem)
+  return process_gitlink(elem), false
+end
+
+--- Turn element handlers into a top-down pass that skips envelope spans.
+--- Each pass needs its own prune point, because the passes that create links
+--- stay separate walks: `process_link` unwraps an autolink into a `Str` that the
+--- later `Str` pass has to convert.
+--- @param handlers table The element handlers for the pass
+--- @return table The filter table for the pass
+local function envelope_safe_pass(handlers)
+  handlers.traverse = 'topdown'
+  handlers.Span = skip_markdown_envelope
+  return handlers
+end
+
 --- Pandoc filter configuration
 --- Defines the order of filter execution:
 --- 1. Extract references from the document
@@ -1032,7 +1081,7 @@ return {
   { Pandoc = get_references },
   { Meta = get_repository },
   { Plain = process_inlines, Para = process_inlines },
-  { Link = process_link },
-  { Str = process_gitlink },
-  { Cite = process_mentions }
+  envelope_safe_pass({ Link = process_link }),
+  envelope_safe_pass({ Str = process_gitlink_topdown }),
+  envelope_safe_pass({ Cite = process_mentions })
 }
