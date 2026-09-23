@@ -3,7 +3,8 @@
 Emits a Pandoc YAML metadata block carrying a hex-encoded JSON payload that
 the typst-render Lua filter ingests and converts into a
 `#let typst_define = (...)` binding available in every `{typst}` code block
-from that point onward.
+of the document. The filter ingests the metadata before it processes any
+block, so a block above this call sees the values as well.
 """
 
 import importlib
@@ -33,14 +34,13 @@ def _convert(v):
 
 def typst_define(**kwargs):
     import json
-    from IPython.display import display, Markdown
+
+    from IPython.display import Markdown, display
 
     for k, v in kwargs.items():
         _typst_define_state[k] = _convert(v)
     payload = {
-        "contents": [
-            {"name": k, "value": v} for k, v in _typst_define_state.items()
-        ]
+        "contents": [{"name": k, "value": v} for k, v in _typst_define_state.items()]
     }
     encoded = json.dumps(payload).encode("utf-8").hex()
     display(Markdown(f"\n---\ntypst-define: {encoded}\n---\n"))

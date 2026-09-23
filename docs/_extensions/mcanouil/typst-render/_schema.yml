@@ -34,6 +34,7 @@ options:
     type: [string, object]
     default: "none"
     description: "Page fill for image compilation; block fill with output: asis. Accepts a Typst colour string, 'auto' (reads from _brand.yml), or a map with light/dark keys."
+    additionalProperties: false
     properties:
       light:
         type: string
@@ -44,6 +45,7 @@ options:
   foreground:
     type: [string, object]
     description: "Text fill colour for rendered images. Accepts a Typst colour string, 'auto' (reads from _brand.yml), or a map with light/dark keys."
+    additionalProperties: false
     properties:
       light:
         type: string

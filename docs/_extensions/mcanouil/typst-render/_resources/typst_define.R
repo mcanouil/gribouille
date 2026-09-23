@@ -27,7 +27,8 @@ if (requireNamespace("knitr", quietly = TRUE)) {
 #' Emits a Pandoc YAML metadata block carrying a JSON payload that the
 #' typst-render Lua filter ingests and converts into a
 #' `#let typst_define = (...)` binding available in every `{typst}` code
-#' block from that point onward.
+#' block of the document. The filter ingests the metadata before it processes
+#' any block, so a block above this call sees the values as well.
 #'
 #' @param ... Named or positional values.
 #'   Unnamed positional values use the deparsed expression as the key.

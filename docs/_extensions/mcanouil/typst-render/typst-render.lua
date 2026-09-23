@@ -12,13 +12,30 @@
 local EXTENSION_NAME = 'typst-render'
 
 --- Load modules
-local str = require(quarto.utils.resolve_path('_modules/string.lua'):gsub('%.lua$', ''))
-local log = require(quarto.utils.resolve_path('_modules/logging.lua'):gsub('%.lua$', ''))
-local paths = require(quarto.utils.resolve_path('_modules/paths.lua'):gsub('%.lua$', ''))
-local meta_mod = require(quarto.utils.resolve_path('_modules/metadata.lua'):gsub('%.lua$', ''))
+local str = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/string.lua'):gsub('%.lua$', ''))
+local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
+local paths = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/paths.lua'):gsub('%.lua$', ''))
+local meta_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/metadata.lua'):gsub('%.lua$', ''))
 local typst_cli = require(quarto.utils.resolve_path('_modules/typst-cli.lua'):gsub('%.lua$', ''))
 local code_cell = require(quarto.utils.resolve_path('_modules/code-cell.lua'):gsub('%.lua$', ''))
+local schema = require(quarto.utils.resolve_path('_vendor/quarto-wizard/schema.lua'):gsub('%.lua$', ''))
+local check = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/schema-check.lua'):gsub('%.lua$', ''))
 local cell = code_cell.new({ language = '{typst}', comment_prefix = '//|', comment_chars = '//' })
+
+--- The schema check, built once for the render. It reads `_schema.yml` on the
+--- way in and checks the document configuration once. The extension contributes
+--- no shortcode, so there is no call to check.
+---
+--- The validator is injected rather than required by the check module, so the
+--- two vendored sources stay independent of where the other was placed.
+---
+--- The extension contributes two filters, and the check runs from the earlier
+--- one so that a render reads the schema once. Both filters read the same
+--- `extensions.typst-render` namespace, so this one call covers every option.
+---
+--- A schema that cannot be read is reported by the module as an error and the
+--- render carries on: a configuration file must not stop a document.
+local checker = check.new(schema, EXTENSION_NAME)
 
 -- ============================================================================
 -- CONSTANTS
@@ -66,15 +83,13 @@ local DEFAULTS = {
 --- Keys consumed by the filter; any other option is forwarded as an HTML attribute.
 --- NOTE: pairs(DEFAULTS) skips nil-valued keys, so all keys with nil defaults
 --- must be listed explicitly here to prevent them leaking as HTML attributes.
+--- Keys the filter sets on itself are not listed: `is_known_key` claims every
+--- name starting with an underscore.
 local KNOWN_KEYS = {
   cap = true,
   alt = true,
   ['code-summary'] = true,
   ['code-line-numbers'] = true,
-  _block_input = true,
-  _inline = true,
-  _alt = true,
-  _source = true,
   root = true,
   ['font-path'] = true,
   ['package-path'] = true,
@@ -97,10 +112,17 @@ for k in pairs(DEFAULTS) do
 end
 
 --- Check whether a key is consumed by the filter (not forwarded as an attribute).
---- Matches exact known keys and prefix-specific cross-ref keys (e.g. fig-cap, tbl-alt).
+--- Matches keys the filter sets on itself (leading underscore), exact known keys,
+--- and prefix-specific cross-ref keys (e.g. fig-cap, tbl-alt).
+--- The underscore rule is what `serialise_opts` uses to keep internal keys out of
+--- the cache key, so one convention covers both and a new internal key is safe by
+--- its name alone.
 --- @param key string
 --- @return boolean
 local function is_known_key(key)
+  if key:sub(1, 1) == '_' then
+    return true
+  end
   if KNOWN_KEYS[key] then
     return true
   end
@@ -274,6 +296,12 @@ end
 --- Cached brand module (nil = not yet attempted, false = unavailable)
 local brand_module = nil
 
+--- Memoised `_typst_render_brand` let-bindings, keyed by brand mode.
+local brand_binding_cache = {}
+
+--- Whether the non-hex colour omission has been reported for this document.
+local brand_omission_warned = false
+
 --- Load the Quarto brand module if available.
 --- @return table|nil The brand module, or nil if unavailable
 local function get_brand_module()
@@ -312,6 +340,137 @@ local function css_colour_to_typst(css_colour)
     return 'rgb("' .. css_colour .. '")'
   end
   return css_colour
+end
+
+--- Semantic brand colour roles carried by `_typst_render_brand`, in brand.yml order.
+--- These are the roles a Typst theme can act on: ink, paper, and the discrete
+--- data palette. Palette entries and logos stay out.
+local BRAND_COLOUR_ROLES = {
+  'foreground', 'background', 'primary', 'secondary', 'tertiary',
+  'success', 'info', 'warning', 'danger',
+}
+
+--- Brand typography entries carried by `_typst_render_brand`.
+--- Only the family survives: Typst can use a font family only when the compiler
+--- already has it, and brand sizes are relative units with no pt equivalent.
+local BRAND_TYPOGRAPHY_ENTRIES = { 'base', 'headings' }
+
+--- Keep a brand colour when it is a CSS hex string, the form a brand.yml reader
+--- expects.
+--- The brand dictionary carries brand.yml *values*, not Typst expressions, so a
+--- consumer reads them the same way it reads the file itself. Such a consumer
+--- takes hex only, and would read any other notation as a palette entry name.
+--- @param css string Colour string from the brand module
+--- @return string|nil The value unchanged when it is hex, else nil
+local function brand_colour_to_hex(css)
+  local digits = css:match('^#(%x+)$')
+  if not digits then return nil end
+  local count = #digits
+  -- Valid CSS hex colours are exactly 3, 4, 6, or 8 digits.
+  if count == 3 or count == 4 or count == 6 or count == 8 then return css end
+  return nil
+end
+
+--- Keep a brand typography entry when it names a font family.
+--- @param font any Value from the brand module
+--- @return string|nil The family name, or nil when the entry names none
+local function brand_font_family(font)
+  if type(font) ~= 'table' then return nil end
+  if type(font.family) ~= 'string' or font.family == '' then return nil end
+  return font.family
+end
+
+--- Read one brand entry, scanning the wanted mode first and then the other.
+--- The scan is per entry, not per brand: Quarto marks a brand as carrying a dark
+--- mode as soon as any one role declares a dark value, so a role written for
+--- light only would otherwise vanish in dark mode. `background: auto` falls back
+--- the same way, and the two must agree. A mode that holds the entry in a form
+--- the dictionary cannot carry does not stop the scan either, so one unusable
+--- side never hides a usable one.
+--- @param accessor function Brand module accessor taking (mode, name)
+--- @param mode string "light" or "dark"
+--- @param name string Colour role or typography entry name
+--- @param kind string Word for the log message, "colour" or "typography entry"
+--- @param keep function Maps a raw value to the value to carry, or nil to reject
+--- @return any|nil The kept value, or nil when neither mode offers one
+--- @return any|nil The first rejected value, for reporting
+local function brand_lookup(accessor, mode, name, kind, keep)
+  local other = mode == 'light' and 'dark' or 'light'
+  local rejected = nil
+  for _, side in ipairs({ mode, other }) do
+    local ok, value = pcall(accessor, side, name)
+    if not ok then
+      log.log_debug(
+        EXTENSION_NAME,
+        'Brand ' .. kind .. ' "' .. name .. '" could not be read for ' .. side
+        .. ' mode: ' .. tostring(value)
+      )
+    elseif value ~= nil and value ~= '' then
+      local kept = keep(value)
+      if kept ~= nil then return kept end
+      rejected = rejected or value
+    end
+  end
+  return nil, rejected
+end
+
+--- Build the brand dictionary for one mode, in brand.yml shape.
+--- Quarto's brand module has already followed palette aliases and light/dark
+--- variants, so a downstream resolver has nothing left to do.
+--- `color` and `typography` are always present, empty when the brand says
+--- nothing under them, so consuming code has one shape to read.
+--- @param mode string "light" or "dark"
+--- @return table Table with `color` and `typography` keys
+local function build_brand_dict(mode)
+  local colours = {}
+  local typography = {}
+  local dict = { color = colours, typography = typography }
+  local brand = get_brand_module()
+  if not brand or not brand.get_color_css then return dict end
+
+  local omitted = {}
+  for _, role in ipairs(BRAND_COLOUR_ROLES) do
+    local hex, rejected = brand_lookup(brand.get_color_css, mode, role, 'colour', brand_colour_to_hex)
+    if hex then
+      colours[role] = hex
+    elseif rejected then
+      omitted[#omitted + 1] = role
+    end
+  end
+
+  -- One line per document rather than one per role per mode: the brand file is
+  -- the same on both sides, and a brand written in another notation would
+  -- otherwise report every role it defines, twice.
+  if #omitted > 0 and not brand_omission_warned then
+    brand_omission_warned = true
+    log.log_warning(
+      EXTENSION_NAME,
+      '_typst_render_brand carries hex colours only, so these roles are left out of it: '
+      .. table.concat(omitted, ', ') .. '. Colour options such as `background: auto` are unaffected.'
+    )
+  end
+
+  for _, name in ipairs(BRAND_TYPOGRAPHY_ENTRIES) do
+    local family = brand_lookup(brand.get_typography, mode, name, 'typography entry', brand_font_family)
+    if family then
+      typography[name] = { family = family }
+    end
+  end
+
+  return dict
+end
+
+--- Return the `_typst_render_brand` let-binding for a mode, memoised per render.
+--- The whole line is cached rather than the dictionary alone: it is byte-identical
+--- for every block, and the caller runs once per block and inline expression.
+--- @param mode string "light" or "dark"
+--- @return string Typst let-binding, holding `(:)` without a brand
+local function brand_binding(mode)
+  local cached = brand_binding_cache[mode]
+  if cached then return cached end
+  local binding = '#let _typst_render_brand = ' .. to_typst_literal(build_brand_dict(mode))
+  brand_binding_cache[mode] = binding
+  return binding
 end
 
 --- Resolve a colour option to a config value preserving both modes when available.
@@ -728,6 +887,9 @@ end
 
 --- Resolve table-valued colours in opts to strings for a specific mode.
 --- Returns a shallow copy of opts with background/foreground as plain strings.
+--- Records the mode so the brand dictionary is built for the same side of the
+--- pair; paths that never split keep `_brand_mode` unset and fall back to the
+--- document-wide mode.
 --- @param opts table Merged options (may contain table-valued colours)
 --- @param mode string "light" or "dark"
 --- @return table Copy of opts with colours resolved to strings
@@ -738,6 +900,7 @@ local function resolve_opts_colours(opts, mode)
   end
   resolved.background = resolve_colour_value(opts.background, mode) or DEFAULTS.background
   resolved.foreground = resolve_colour_value(opts.foreground, mode)
+  resolved._brand_mode = mode
   return resolved
 end
 
@@ -750,17 +913,22 @@ local function typst_colour_to_hex(typst_expr)
   return typst_expr:match('^rgb%("(#[%x]+)"%)$')
 end
 
---- Prepend Typst let-bindings for the render background/foreground variables.
---- These make document colours available to library code under predictable names.
+--- Prepend the Typst let-bindings every block and inline expression receives:
+--- the render background and foreground, and the document brand dictionary.
+--- These make document colours and brand data available to library code under
+--- predictable names. All three are always bound, so consuming code compiles
+--- whether or not the document sets colours or carries a brand.
 --- @param parts table String parts list to append to
---- @param opts table Options containing background and optional foreground
-local function inject_colour_vars(parts, opts)
+--- @param opts table Options containing background, optional foreground, and
+---   optionally `_brand_mode` when compiling one side of a light/dark pair
+local function inject_render_bindings(parts, opts)
   parts[#parts + 1] = '#let _typst_render_background = ' .. opts.background
   if opts.foreground then
     parts[#parts + 1] = '#let _typst_render_foreground = ' .. opts.foreground
   else
     parts[#parts + 1] = '#let _typst_render_foreground = none'
   end
+  parts[#parts + 1] = brand_binding(opts._brand_mode or global_brand_mode)
 end
 
 --- Build the `#set page(...)` directive from options (for image compilation).
@@ -791,7 +959,7 @@ end
 --- @return string Complete Typst source
 local function build_typst_source(code, opts, include_page)
   local parts = {}
-  inject_colour_vars(parts, opts)
+  inject_render_bindings(parts, opts)
   local define_preamble = build_define_preamble()
   if define_preamble then
     parts[#parts + 1] = define_preamble
@@ -811,27 +979,13 @@ local function build_typst_source(code, opts, include_page)
 end
 
 --- Build the inner Typst source for `output: asis` pass-through.
---- Unlike build_typst_source there is no `#set page(...)`: the code is emitted
---- into the document Typst is already laying out, so it inherits the page.
+--- There is no `#set page(...)`: the code is emitted into the document Typst is
+--- already laying out, so it inherits the page.
 --- @param code string User Typst code
 --- @param opts table Merged options (colours must be plain strings)
 --- @return string Typst source to place inside a `#[ ... ]` scope
 local function build_asis_inner(code, opts)
-  local parts = {}
-  inject_colour_vars(parts, opts)
-  local define_preamble = build_define_preamble()
-  if define_preamble then
-    parts[#parts + 1] = define_preamble
-  end
-  if opts.foreground then
-    parts[#parts + 1] = '#set text(fill: ' .. opts.foreground .. ')'
-  end
-  local preamble = resolve_preamble(opts.preamble)
-  if preamble then
-    parts[#parts + 1] = preamble
-  end
-  parts[#parts + 1] = code
-  return table.concat(parts, '\n')
+  return build_typst_source(code, opts, false)
 end
 
 --- Build a human-readable cache file stem from label or block number and a
@@ -1179,12 +1333,10 @@ local function compile_typst(source, opts, img_format)
     return nil
   end
 
+  -- An invalid dpi is already named by the schema check, for both the
+  -- document option and the block attribute; falling back here is silent.
   local dpi = tonumber(opts.dpi)
   if not dpi or dpi <= 0 or dpi ~= math.floor(dpi) then
-    log.log_warning(
-      EXTENSION_NAME,
-      'Invalid dpi value "' .. tostring(opts.dpi) .. '"; falling back to default (' .. DEFAULTS.dpi .. ').'
-    )
     dpi = DEFAULTS.dpi
   end
   dpi = tostring(math.floor(dpi))
@@ -1245,7 +1397,7 @@ local function compile_typst(source, opts, img_format)
   -- Expose document colours to library theme functions via sys.inputs.
   -- Only hex colours (rgb("#RRGGBB")) can be round-tripped through a CLI flag;
   -- other expressions (oklch, named colours) are available via the #let bindings
-  -- injected by inject_colour_vars and do not need a separate --input flag.
+  -- injected by inject_render_bindings and do not need a separate --input flag.
   local fg_hex = typst_colour_to_hex(opts.foreground)
   local bg_hex = typst_colour_to_hex(opts.background)
   if fg_hex then
@@ -1429,12 +1581,9 @@ local function wrap_alignment(block, opts)
   if not align or align == 'default' then
     return block
   end
+  -- An invalid align is already named by the schema check; ignoring it here
+  -- is silent.
   if not VALID_ALIGN_SET[align] then
-    log.log_warning(
-      EXTENSION_NAME,
-      'Invalid align value "' .. align .. '"; ignoring. '
-      .. 'Valid values: left, center, right, default.'
-    )
     return block
   end
   if quarto.format.is_typst_output() then
@@ -1477,12 +1626,10 @@ end
 --- @param requested string|nil Format asked for by the options
 --- @return string Effective image format
 local function resolve_compile_format(requested)
+  -- An invalid format is already named by the schema check; auto-detecting
+  -- here is silent.
   local img_format = requested
   if img_format and not VALID_FORMAT_SET[img_format] then
-    log.log_warning(
-      EXTENSION_NAME,
-      'Invalid format "' .. img_format .. '"; auto-detecting from output format.'
-    )
     img_format = nil
   end
   if not img_format then
@@ -1620,8 +1767,14 @@ end
 local function get_configuration(meta)
   register_custom_crossref_types(meta)
   read_file_cache = {}
-  -- Quarto may reuse the Lua state across documents; re-inject the Typst head
-  -- CSS for each document that produces native HTML output.
+  -- Quarto gives each document its own Lua state, so nothing built here reaches
+  -- the next document of a project render and no brand binding can leak into
+  -- it. The resets are kept because they cost nothing and the lifetime is
+  -- Quarto's to change rather than this filter's.
+  brand_binding_cache = {}
+  brand_omission_warned = false
+  -- Re-inject the Typst head CSS for each document that produces native HTML
+  -- output.
   typst_cli.reset_head_injection()
 
   -- Build per-document cache subdirectory from the input file stem
@@ -1638,6 +1791,8 @@ local function get_configuration(meta)
   local code_annotations_meta = meta['code-annotations']
   code_annotations_disabled = code_annotations_meta ~= nil
     and pandoc.utils.stringify(code_annotations_meta) == 'false'
+
+  checker:options(meta)
 
   local ext_config = meta_mod.get_extension_config(meta, EXTENSION_NAME) or meta['typst-render']
 
@@ -1678,10 +1833,8 @@ local function get_configuration(meta)
             elseif str == 'false' then
               global_config[k] = false
             else
-              log.log_warning(
-                EXTENSION_NAME,
-                'Invalid code-fold value "' .. str .. '"; expected true, false, or show. Disabling code-fold.'
-              )
+              -- An invalid code-fold is already named by the schema check
+              -- above; disabling it here is silent.
               global_config[k] = false
             end
           end
@@ -1834,22 +1987,27 @@ local function process_codeblock(el)
 
   local block_opts, clean_code, option_lines = cell.parse_options(el.text)
 
-  if block_opts['cache-refresh'] ~= nil then
+  -- The schema resolves the comment-pipe options against the `typst`
+  -- attribute group before anything below strips or rewrites them; every
+  -- read from this point on uses the resolved table, never `block_opts`.
+  local resolved = checker:attributes(block_opts, 'typst')
+
+  if resolved['cache-refresh'] ~= nil then
     log.log_warning(
       EXTENSION_NAME,
       'Per-block "cache-refresh" is not supported; use the global option instead.'
     )
-    block_opts['cache-refresh'] = nil
+    resolved['cache-refresh'] = nil
   end
 
   -- Stash per-block input string before merge overwrites it with global table
   local block_input_str = nil
-  if type(block_opts.input) == 'string' then
-    block_input_str = block_opts.input
-    block_opts.input = nil
+  if type(resolved.input) == 'string' then
+    block_input_str = resolved.input
+    resolved.input = nil
   end
 
-  local opts = cell.merge_options(block_opts, global_config, DEFAULTS)
+  local opts = cell.merge_options(resolved, global_config, DEFAULTS)
   opts._block_input = block_input_str
 
   local block_id = (type(opts.label) == 'string' and opts.label ~= '')
@@ -1859,7 +2017,7 @@ local function process_codeblock(el)
   -- Resolve per-block colour overrides only. Values inherited from global_config
   -- are already resolved (e.g. 'rgb("#FAF6EE")') and must not be re-wrapped.
   for _, colour_key in ipairs({ 'background', 'foreground' }) do
-    local block_val = block_opts[colour_key]
+    local block_val = resolved[colour_key]
     if block_val == 'auto' then
       opts[colour_key] = resolve_colour_config('auto', colour_key) or DEFAULTS[colour_key]
     elseif type(block_val) == 'string' and block_val ~= DEFAULTS[colour_key] then
@@ -1874,13 +2032,10 @@ local function process_codeblock(el)
   local output_mode = cell.resolve_output_mode(opts)
 
   -- Code-fold collapses only the echoed source via Quarto's native attribute-driven
-  -- fold (rendered as a <details> for HTML output only).
+  -- fold (rendered as a <details> for HTML output only). An invalid value is
+  -- already named by the schema check above; disabling it here is silent.
   local cf = opts['code-fold']
   if cf ~= nil and cf ~= false and cf ~= true and cf ~= 'show' then
-    log.log_warning(
-      EXTENSION_NAME,
-      'Invalid code-fold value "' .. tostring(cf) .. '"; expected true, false, or show. Disabling code-fold.'
-    )
     cf = false
   end
   local fold = nil
@@ -2092,7 +2247,7 @@ local function process_codeblock(el)
     return pandoc.Null()
   end
 
-  local output_location = cell.resolve_output_location(opts, EXTENSION_NAME)
+  local output_location = cell.resolve_output_location(opts)
   if output_location then
     -- Reveal.js output-location layout does not support annotations; strip markers.
     local echo_block = do_echo

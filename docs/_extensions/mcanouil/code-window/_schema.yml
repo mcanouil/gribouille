@@ -14,6 +14,10 @@ options:
     enum: ["default", "macos", "windows"]
     default: "macos"
     description: "Window decoration style: 'macos' (traffic lights), 'windows' (title bar buttons), or 'default' (plain filename). Can be overridden per block with the 'code-window-style' attribute."
+  cell-output:
+    type: boolean
+    default: false
+    description: "Frame the output of an executed cell like a code block. Off by default, so output keeps the shape Quarto gives it."
   wrapper:
     type: string
     default: "code-window"
@@ -30,11 +34,13 @@ options:
   hotfix:
     type: object
     description: "Temporary hot-fixes for Typst output. These will be removed when Quarto natively supports the corresponding features (see quarto-dev/quarto-cli#14170)."
+    additionalProperties: false
     properties:
       code-annotations:
         type: [boolean, object]
         default: true
         description: "Enable the code-annotations hot-fix for Typst output. Use a boolean or a map with 'enabled' and 'quarto-version' keys."
+        additionalProperties: false
         properties:
           enabled:
             type: boolean
@@ -46,6 +52,7 @@ options:
         type: [boolean, object]
         default: true
         description: "Enable the Skylighting hot-fix for Typst output (overrides block styling and adds inline code background). Use a boolean or a map with 'enabled' and 'quarto-version' keys."
+        additionalProperties: false
         properties:
           enabled:
             type: boolean
@@ -57,6 +64,7 @@ options:
         type: [boolean, object]
         default: true
         description: "Enable the Typst title hot-fix (evaluates theorem title strings as markup). Use a boolean or a map with 'enabled' and 'quarto-version' keys."
+        additionalProperties: false
         properties:
           enabled:
             type: boolean
@@ -80,8 +88,8 @@ attributes:
       enum: ["default", "macos", "windows"]
       description: "Override the global window decoration style for this specific code block."
     code-window-collapse:
-      type: [boolean, string]
-      enum: [true, false, "open", "closed"]
+      type: string
+      enum: ["true", "false", "open", "closed"]
       description: "Wrap this code block in a collapsible <details> element (HTML only). Use 'open' to render expanded, 'closed' or true to render collapsed, false to disable."
     code-window-lines:
       type: string

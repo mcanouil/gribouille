@@ -1,8 +1,11 @@
---- @module language
+--- @module "language"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
 --- @brief Normalise code blocks with no or unknown language class.
+
+local cell_output = require(
+  quarto.utils.resolve_path('_modules/cell-output.lua'):gsub('%.lua$', ''))
 
 local M = {}
 
@@ -34,9 +37,14 @@ end
 --- keeps its original token as the label. The label is carried on the
 --- `code-window-auto-label` attribute (not `filename`, which is reserved for
 --- author-set filenames) and consumed by the auto-filename windowing path.
+--- The output of an executed cell is left as Quarto wrote it.
 --- @param block pandoc.CodeBlock
---- @return pandoc.CodeBlock
+--- @return pandoc.CodeBlock|nil
 function M.CodeBlock(block)
+  if cell_output.is_marked(block) then
+    return nil
+  end
+
   if not block.classes or #block.classes == 0 then
     block.classes:insert('default')
     if not block.attributes['filename'] or block.attributes['filename'] == '' then

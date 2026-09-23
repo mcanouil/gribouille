@@ -1,5 +1,5 @@
 --- MC Typst CLI - Typst binary discovery, version detection, and HTML extraction
---- @module typst-cli
+--- @module "typst-cli"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil

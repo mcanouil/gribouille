@@ -1,4 +1,4 @@
---- @module skylighting-typst-fix
+--- @module "skylighting-typst-fix"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
@@ -155,44 +155,35 @@ local function build_raw_line_annotation_rule()
 ]==], circled, circled)
 end
 
+--- Shape of the box that holds inline code, after its fill.
+local _inline_box_style = 'inset: (x: 3pt, y: 0pt), outset: (y: 3pt), '
+    .. 'radius: 2pt, stroke: none)['
+
 --- Process inline Code for Typst format.
---- Renders the Code element through Pandoc's Typst writer to get syntax-
---- highlighted output, then wraps it in a box with the theme background colour.
+--- Puts the Code element in a box that carries the theme background colour.
+--- The element itself stays in the document, so Pandoc highlights it and
+--- writes the token definitions for it.
 --- @param el pandoc.Code Inline code element
---- @return pandoc.RawInline|pandoc.Code Transformed or original element
+--- @return pandoc.Inlines The boxed code
 local function process_typst_inline(el)
   local hm = PANDOC_WRITER_OPTIONS and PANDOC_WRITER_OPTIONS.highlight_method
-  local bg_fill = nil
-  local write_opts = nil
+  local bg = hm and hm['background-color']
+  local opening, closing
 
-  if hm then
-    local bg = hm['background-color']
-    if bg and type(bg) == 'string' then
-      bg_fill = string.format('rgb("%s")', bg)
-    end
-    write_opts = pandoc.WriterOptions({
-      highlight_method = hm,
-    })
-  end
-
-  local rendered = pandoc.write(pandoc.Pandoc({ pandoc.Plain({ el }) }), 'typst', write_opts)
-  rendered = rendered:gsub('%s+$', '')
-  if rendered == '' then return el end
-
-  local typst_code
-  if bg_fill then
-    typst_code = string.format(
-      '#box(fill: %s, inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, stroke: none)[%s]',
-      bg_fill, rendered)
+  if type(bg) == 'string' then
+    opening = string.format('#box(fill: rgb("%s"), ', bg) .. _inline_box_style
+    closing = ']'
   else
-    typst_code = string.format(
-      '#context { let _bg = _cw-page-bg(); let _f = _cw-fg(_bg); '
-      .. 'box(fill: color.mix((_f, 10%%), (_bg, 90%%)), '
-      .. 'inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, stroke: none)[%s] }',
-      rendered)
+    opening = '#context { let _bg = _cw-page-bg(); let _f = _cw-fg(_bg); '
+      .. 'box(fill: color.mix((_f, 10%), (_bg, 90%)), ' .. _inline_box_style
+    closing = '] }'
   end
 
-  return pandoc.RawInline('typst', typst_code)
+  return pandoc.Inlines({
+    pandoc.RawInline('typst', opening),
+    el,
+    pandoc.RawInline('typst', closing),
+  })
 end
 
 --- Inject Skylighting override at the start of the document.
@@ -245,8 +236,10 @@ local function is_title_scaffold(div)
   return true
 end
 
---- Walk the document tree and convert inline Code to RawInline with
---- background styling. Code in title scaffolds is converted to plain
+--- Walk the document tree and box inline Code with background styling.
+--- The extension contributes the pass once, so it sees each Code element
+--- once and boxes it once.
+--- Code in title scaffolds is converted to plain
 --- Typst backtick code to avoid Skylighting tokens with inner quotes
 --- that would break the string parameter Quarto generates.
 --- The typst-title-fix post-quarto filter then evaluates the string

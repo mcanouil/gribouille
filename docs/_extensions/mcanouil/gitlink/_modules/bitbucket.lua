@@ -4,16 +4,7 @@
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
 
---- Load a sibling module from the same directory as this file.
---- @param filename string The sibling module filename (e.g., 'string.lua')
---- @return table The loaded module
-local function load_sibling(filename)
-  local source = debug.getinfo(1, 'S').source:sub(2)
-  local dir = source:match('(.*[/\\])') or ''
-  return require((dir .. filename):gsub('%.lua$', ''))
-end
-
-local str = load_sibling('string.lua')
+local str = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/string.lua'):gsub('%.lua$', ''))
 
 local bitbucket_module = {}
 

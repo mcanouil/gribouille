@@ -9,18 +9,9 @@
 
 local widget_module = {}
 
---- Load a sibling module from the same directory as this file.
---- @param filename string The sibling module filename (e.g., 'string.lua')
---- @return table The loaded module
-local function load_sibling(filename)
-  local source = debug.getinfo(1, 'S').source:sub(2)
-  local dir = source:match('(.*[/\\])') or ''
-  return require((dir .. filename):gsub('%.lua$', ''))
-end
-
-local str = load_sibling('string.lua')
-local log = load_sibling('logging.lua')
-local html_mod = load_sibling('html.lua')
+local str = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/string.lua'):gsub('%.lua$', ''))
+local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
+local html_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/html.lua'):gsub('%.lua$', ''))
 
 --- @type string Version used for the injected HTML dependency
 local WIDGET_DEPENDENCY_VERSION = '1.9.0'

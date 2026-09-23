@@ -1,6 +1,6 @@
 title: Modal
 author: Mickaël Canouil
-version: 1.5.2
+version: 1.6.2
 quarto-required: ">=1.9.38"
 contributes:
   filters:
@@ -8,5 +8,5 @@ contributes:
       at: pre-quarto
   shortcodes:
     - modal-shortcode.lua
-source: mcanouil/quarto-modal@1.5.2
+source: mcanouil/quarto-modal@1.6.2
 source-type: registry

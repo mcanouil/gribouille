@@ -1,5 +1,5 @@
 --- Code Cell - Generic code-cell processing for Quarto Lua extensions
---- @module code-cell
+--- @module "code-cell"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
@@ -8,8 +8,8 @@
 ---   manages output-location, and provides cross-referencing and prefix-aware
 ---   option resolution for custom executable code blocks.
 
-local str = require(quarto.utils.resolve_path('_modules/string.lua'):gsub('%.lua$', ''))
-local log = require(quarto.utils.resolve_path('_modules/logging.lua'):gsub('%.lua$', ''))
+local str = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/string.lua'):gsub('%.lua$', ''))
+local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
 
 local M = {}
 
@@ -253,11 +253,11 @@ function M.new(config)
   end
 
   --- Resolve and validate the output-location option.
-  --- Returns the location string only when rendering to Reveal.js.
+  --- Returns the location string only when rendering to Reveal.js. An
+  --- invalid value is reported by the schema check, not here.
   --- @param opts table Merged options
-  --- @param extension_name string The extension name for warning messages
   --- @return string|nil Valid location string, or nil
-  function cell.resolve_output_location(opts, extension_name)
+  function cell.resolve_output_location(opts)
     local loc = opts['output-location']
     if not loc or loc == '' then
       return nil
@@ -265,12 +265,9 @@ function M.new(config)
     if not quarto.doc.is_format('revealjs') then
       return nil
     end
+    -- An invalid output-location is already named by the schema check;
+    -- ignoring it here is silent.
     if not VALID_OUTPUT_LOCATION_SET[loc] then
-      log.log_warning(
-        extension_name,
-        'Invalid output-location value: "' .. loc .. '". '
-          .. 'Valid values: fragment, slide, column, column-fragment.'
-      )
       return nil
     end
     return loc

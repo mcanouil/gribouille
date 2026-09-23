@@ -1,4 +1,4 @@
---- @module modal-filter
+--- @module "modal-filter"
 --- @license MIT
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
@@ -7,14 +7,32 @@
 local EXTENSION_NAME = "modal"
 
 --- Load modules
-local str = require(quarto.utils.resolve_path('_modules/string.lua'):gsub('%.lua$', ''))
-local log = require(quarto.utils.resolve_path('_modules/logging.lua'):gsub('%.lua$', ''))
-local meta_mod = require(quarto.utils.resolve_path('_modules/metadata.lua'):gsub('%.lua$', ''))
-local pdoc = require(quarto.utils.resolve_path('_modules/pandoc-helpers.lua'):gsub('%.lua$', ''))
-local html_mod = require(quarto.utils.resolve_path('_modules/html.lua'):gsub('%.lua$', ''))
+local str = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/string.lua'):gsub('%.lua$', ''))
+local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
+local meta_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/metadata.lua'):gsub('%.lua$', ''))
+local pdoc = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/pandoc-helpers.lua'):gsub('%.lua$', ''))
+local html_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/html.lua'):gsub('%.lua$', ''))
 
 --- Load content-extraction module
-local content = require(quarto.utils.resolve_path('_modules/content-extraction.lua'):gsub('%.lua$', ''))
+local content = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/content-extraction.lua'):gsub('%.lua$', ''))
+
+local schema = require(quarto.utils.resolve_path('_vendor/quarto-wizard/schema.lua'):gsub('%.lua$', ''))
+local check = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/schema-check.lua'):gsub('%.lua$', ''))
+
+--- The schema check, built once for this filter. It reads `_schema.yml` on the
+--- way in and checks the document configuration against it.
+---
+--- The validator is injected rather than required by the check module, so the
+--- two vendored sources stay independent of where the other was placed.
+---
+--- The extension contributes a filter and a shortcode, and each entry point
+--- builds its own checker. The document configuration is checked here, from the
+--- `Meta` handler, which runs before the shortcodes expand at the `pre-quarto`
+--- stage. Each shortcode call is checked in `modal-shortcode.lua`.
+---
+--- A schema that cannot be read is reported by the module as an error and the
+--- render carries on: a configuration file must not stop a document.
+local checker = check.new(schema, EXTENSION_NAME)
 
 --- Generate unique modal ID
 local modal_count = 0
@@ -100,7 +118,9 @@ end
 --- Resolve a user-supplied size value to a Bootstrap size token.
 --- Accepts both raw Bootstrap tokens (``sm``/``lg``/``xl``) and friendly
 --- aliases (``small``/``large``/``extra-large``).
---- Emits a warning and returns the empty default when the value is unknown.
+--- Returns the empty default when the value is unknown. The schema check
+--- names an unknown value by itself, so this stays quiet and only applies
+--- the fallback; reporting it here too would name the same mistake twice.
 --- @param value string|nil User-supplied size value.
 --- @return string Resolved Bootstrap size token (one of "", "sm", "lg", "xl").
 local function resolve_size(value)
@@ -110,15 +130,50 @@ local function resolve_size(value)
   local normalised = value:lower()
   local resolved = SIZE_PRESETS[normalised]
   if resolved == nil then
-    log.log_warning(
-      EXTENSION_NAME,
-      "Unknown 'size' value '" .. value .. "'. " ..
-      "Expected one of: small/sm, medium/default, large/lg, extra-large/xlarge/xl. " ..
-      "Falling back to the default size."
-    )
     return ''
   end
   return resolved
+end
+
+--- Fold a schema-resolved attribute back to the string form the rest of
+--- this filter compares against.
+---
+--- The schema declares ``backdrop-static``, ``scrollable`` and ``keyboard``
+--- as booleans, so a value the document wrote and the schema accepted comes
+--- back as a real Lua boolean, not the string ``"true"``/``"false"`` that a
+--- Pandoc attribute always is. A bare ``or`` fallback would then treat an
+--- explicit ``false`` as unset, because ``false`` is the one non-nil value
+--- Lua's ``or`` still falls through. This stringifies a boolean so the
+--- explicit value survives, passes an invalid value through unchanged (the
+--- schema has already named it), and only falls back when the document did
+--- not write the attribute at all.
+--- @param value boolean|string|nil Schema-resolved attribute value.
+--- @param fallback string The document option to use when unset.
+--- @return string
+local function resolved_flag(value, fallback)
+  if value == nil then
+    return fallback
+  end
+  if type(value) == 'boolean' then
+    return tostring(value)
+  end
+  return value
+end
+
+--- Read a schema-resolved string attribute, guarding its Lua type.
+--- `fullscreen` is declared `type: string`, so a value the document wrote
+--- stays a string whether the schema accepts or rejects it; nothing here
+--- coerces it to another type. The guard exists so that a value of any
+--- other type, however it might arrive, cannot flow into the string-only
+--- comparisons this filter makes against it.
+--- @param value any Schema-resolved attribute value.
+--- @param fallback string The document option to use when unset or wrong-typed.
+--- @return string
+local function resolved_string(value, fallback)
+  if value == nil or type(value) ~= 'string' then
+    return fallback
+  end
+  return value
 end
 
 --- Collect every identifier appearing anywhere in the document.
@@ -236,36 +291,46 @@ local function modal(el)
 
   local modal_id = el.identifier ~= '' and el.identifier or unique_modal_id()
 
-  local raw_size = el.attributes.size or modal_settings_meta["size"]
+  local resolved = checker:attributes(el.attributes, 'modal')
+  local raw_size = resolved.size or modal_settings_meta["size"]
   local modal_size = resolve_size(raw_size)
-  local modal_backdrop_static = el.attributes["backdrop-static"] or modal_settings_meta["backdrop-static"]
-  local modal_scrollable = el.attributes.scrollable or modal_settings_meta["scrollable"]
-  local modal_keyboard = el.attributes.keyboard or modal_settings_meta["keyboard"]
-  local modal_centred = el.attributes.centred or modal_settings_meta["centred"]
-  local modal_centered = el.attributes.centered or modal_settings_meta["centered"]
-  if el.attributes.centred and el.attributes.centered then
-    log.log_warning(EXTENSION_NAME, "Both 'centred' and 'centered' are set; using 'centred'.")
+  local modal_backdrop_static = resolved_flag(resolved["backdrop-static"], modal_settings_meta["backdrop-static"])
+  local modal_scrollable = resolved_flag(resolved.scrollable, modal_settings_meta["scrollable"])
+  local modal_keyboard = resolved_flag(resolved.keyboard, modal_settings_meta["keyboard"])
+  -- `centred` declares `aliases: [centered]` in the schema, and this
+  -- extension's own attribute list names `centered` too, so both advertise
+  -- the spelling. The merge inside `checker:attributes` moves a
+  -- document-written `centered` onto `resolved.centred`, with the declared
+  -- spelling winning when both are written (the schema check already names
+  -- that conflict), and always empties `resolved.centered`.
+  --
+  -- Testing presence on `centred` alone previously carried forward a
+  -- pre-existing bug: `centered` written by itself was never honoured,
+  -- because `modal_settings_meta["centred"]` is never a falsy Lua value, so
+  -- the old `el.attributes.centred or modal_settings_meta["centred"]`
+  -- fallback chain could never reach `centered`. Testing presence on either
+  -- spelling fixes that: `resolved.centred` already carries the correctly
+  -- precedenced value once either was written, so this changes only the
+  -- "centered alone" case and leaves "centred alone", "both written" and
+  -- "neither written" exactly as they were.
+  local modal_centred = modal_settings_meta["centred"]
+  if el.attributes.centred ~= nil or el.attributes.centered ~= nil then
+    modal_centred = resolved_flag(resolved.centred, modal_settings_meta["centred"])
   end
-  if not modal_centred and modal_centered then
-    modal_centred = modal_centered
-  end
-  local modal_fade = el.attributes.fade or modal_settings_meta["fade"]
-  local modal_fullscreen = el.attributes.fullscreen or modal_settings_meta["fullscreen"]
+  local modal_fade = resolved_flag(resolved.fade, modal_settings_meta["fade"])
+  local modal_fullscreen = resolved_string(resolved.fullscreen, modal_settings_meta["fullscreen"])
 
   local dialog_classes = { 'modal-dialog' }
   if modal_size ~= '' then table.insert(dialog_classes, 'modal-' .. modal_size) end
   if modal_scrollable == 'true' then table.insert(dialog_classes, 'modal-dialog-scrollable') end
   if modal_centred == 'true' then table.insert(dialog_classes, 'modal-dialog-centered') end
+  -- An unknown value falls back to no fullscreen; the schema check already
+  -- names the same mistake, so this stays quiet and only applies the
+  -- fallback.
   if modal_fullscreen == 'true' then
     table.insert(dialog_classes, 'modal-fullscreen')
   elseif modal_fullscreen and FULLSCREEN_BREAKPOINTS[modal_fullscreen] then
     table.insert(dialog_classes, 'modal-fullscreen-' .. modal_fullscreen .. '-down')
-  elseif modal_fullscreen and modal_fullscreen ~= 'false' and modal_fullscreen ~= '' then
-    log.log_warning(
-      EXTENSION_NAME,
-      "Unknown 'fullscreen' value '" .. modal_fullscreen .. "' on modal '" .. modal_id .. "'. " ..
-      "Expected one of: false, true, sm, md, lg, xl, xxl. Falling back to no fullscreen."
-    )
   end
 
   --- Parse modal sections
@@ -283,9 +348,12 @@ local function modal(el)
   --- Optional close button in the header (Bootstrap-rendered "x").
   --- ``close-button=false`` suppresses it; ``close-button-label`` overrides
   --- the default aria-label (useful for localisation).
-  local close_button_attr = el.attributes['close-button']
-  local include_close_button = close_button_attr == nil or close_button_attr ~= 'false'
-  local close_button_label = el.attributes['close-button-label'] or 'Close'
+  --- Both declare a `default:` in the schema's `modal` attribute group, so
+  --- the resolved table already carries the same value (`true`, `"Close"`)
+  --- as the literal fallbacks below when the document wrote nothing.
+  local close_button_attr = resolved_flag(resolved['close-button'], 'true')
+  local include_close_button = close_button_attr ~= 'false'
+  local close_button_label = resolved_flag(resolved['close-button-label'], 'Close')
 
   local header_html = html_mod.raw_header(
     header_level,
@@ -370,7 +438,19 @@ local function expand_modal_link(el)
   return el
 end
 
+--- Check the document configuration against the extension schema.
+--- Runs before ``get_modal_meta`` replaces ``extensions.modal`` with the
+--- resolved settings, so the check reads what the author wrote.
+--- @param meta table Pandoc document metadata.
+--- @return nil Metadata is never modified by the check.
+local function check_document_options(meta)
+  if quarto.doc.is_format("html:js") and quarto.doc.has_bootstrap() then
+    checker:options(meta)
+  end
+end
+
 return {
+  { Meta = check_document_options },
   { Pandoc = get_modal_meta },
   { Div = modal },
   { Link = expand_modal_link }

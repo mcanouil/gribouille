@@ -15,27 +15,14 @@
 
 local M = {}
 
---- Load a sibling module from the same directory as this file.
---- @param filename string The sibling module filename (e.g., 'string.lua')
---- @return table The loaded module
-local function load_sibling(filename)
-  local source = debug.getinfo(1, 'S').source:sub(2)
-  local dir = source:match('(.*[/\\])') or ''
-  return require((dir .. filename):gsub('%.lua$', ''))
-end
-
-local str = load_sibling('string.lua')
-local log = load_sibling('logging.lua')
-local meta_mod = load_sibling('metadata.lua')
+local str = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/string.lua'):gsub('%.lua$', ''))
+local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
+local icon_name = require(quarto.utils.resolve_path('_modules/name.lua'):gsub('%.lua$', ''))
 
 --- Extension name constant
 local EXTENSION_NAME = 'iconify'
 --- Base URL of the public Iconify SVG API.
 local API_BASE = 'https://api.iconify.design/'
---- Default cache directory, relative to the Quarto project root.
-local DEFAULT_CACHE_REL = '.quarto/iconify-svg'
---- Default maximum age (days) before a cache entry is evicted.
-local DEFAULT_MAX_AGE_DAYS = 30
 --- Grace window (seconds) during which a recently-used entry is never evicted
 --- by the count cap, protecting icons an in-flight render is relying on.
 local GRACE_SECONDS = 300
@@ -62,19 +49,13 @@ local function project_base()
   return base
 end
 
---- Resolve the cache directory relative to the project root, honouring the
---- `extensions.iconify.typst-cache` metadata override. The result is kept
---- inside the project root: leading/trailing slashes are trimmed and any
---- `..` segments are dropped so the override cannot escape the project (and
---- so the Typst root-relative `#image` path stays valid).
---- @param meta table|nil Document metadata
---- @return string A normalised, project-root-relative directory
-local function resolve_reldir(meta)
-  local rel = meta and meta_mod.get_metadata_value(meta, 'iconify', 'typst-cache')
-  if str.is_empty(rel) then
-    rel = DEFAULT_CACHE_REL
-  end
-  --- @cast rel string
+--- Normalise a directory so it stays inside the project root: leading and
+--- trailing slashes are trimmed, and any `..` or `.` segment is dropped, so
+--- the value cannot escape the project and the Typst root-relative `#image`
+--- path stays valid.
+--- @param rel string A directory, relative to the project root
+--- @return string|nil The normalised directory, or nil when nothing is left
+local function normalise_reldir(rel)
   --- @type table<integer, string>
   local segments = {}
   for segment in rel:gmatch('[^/\\]+') do
@@ -83,9 +64,45 @@ local function resolve_reldir(meta)
     end
   end
   if #segments == 0 then
-    return DEFAULT_CACHE_REL
+    return nil
   end
   return table.concat(segments, '/')
+end
+
+--- Resolve the cache directory relative to the project root.
+--- The value and its fallback both come from `_schema.yml`, resolved by the
+--- caller, so no default is written here.
+--- @param options table Cache options: `cache_dir` and `cache_fallback`
+--- @return string|nil A normalised, project-root-relative directory
+local function resolve_reldir(options)
+  options = options or {}
+
+  --- @type string|nil
+  local resolved = nil
+  if not str.is_empty(options.cache_dir) then
+    resolved = normalise_reldir(options.cache_dir)
+    if resolved == nil then
+      log.log_warning(
+        EXTENSION_NAME,
+        'The typst-cache directory "' .. options.cache_dir .. '" leaves nothing ' ..
+        'inside the project root. Using the default instead.'
+      )
+    end
+  end
+
+  if resolved == nil and not str.is_empty(options.cache_fallback) then
+    resolved = normalise_reldir(options.cache_fallback)
+  end
+
+  if resolved == nil then
+    log.log_error(
+      EXTENSION_NAME,
+      'No Typst cache directory is available, so no icon can be cached. ' ..
+      'This needs a readable _schema.yml declaring a typst-cache default.'
+    )
+  end
+
+  return resolved
 end
 
 --- URL-encode a query parameter value (RFC 3986 unreserved set kept verbatim).
@@ -253,13 +270,26 @@ end
 
 --- Ensure an icon SVG is cached on disk, fetching it if needed.
 --- Refreshes the last-used stamp on every hit and write.
+---
+--- The set and the icon name reach both the API path and the cache file name,
+--- so each one has to be a single path segment. `resolve_reldir` keeps the
+--- cache directory inside the project, and this keeps the file name inside
+--- that directory.
+---
 --- @param set string
 --- @param icon string
 --- @param query string Pre-built query string (may be empty)
---- @param meta table|nil Document metadata
+--- @param options table Cache options resolved from `_schema.yml`
 --- @return string|nil Typst project-root-relative image path, or nil on failure
-function M.ensure_cached(set, icon, query, meta)
-  local reldir = resolve_reldir(meta)
+function M.ensure_cached(set, icon, query, options)
+  if not icon_name.is_valid(set) or not icon_name.is_valid(icon) then
+    return nil
+  end
+
+  local reldir = resolve_reldir(options)
+  if reldir == nil then
+    return nil
+  end
   local dir = project_base() .. '/' .. reldir
   local name = entry_name(set, icon, query)
   local fspath = dir .. '/' .. name
@@ -288,10 +318,10 @@ end
 
 --- Render an icon as a Typst `#image`, fetching/caching as needed.
 --- @param opts table Fields: set, icon, query, size_value, inline, alt,
----   fallback, meta.
+---   fallback, options.
 --- @return any Pandoc RawInline (Typst), Str (fallback), or Null
 function M.render(opts)
-  local typst_path = M.ensure_cached(opts.set, opts.icon, opts.query, opts.meta)
+  local typst_path = M.ensure_cached(opts.set, opts.icon, opts.query, opts.options)
   if typst_path == nil then
     log.log_warning(
       EXTENSION_NAME,
@@ -352,10 +382,15 @@ end
 --- unused for `max-age` days (which no live render references, since every use
 --- re-stamps), and the count cap never evicts entries used within a short
 --- grace window (so an in-flight render's freshly-cached icons are protected).
---- @param meta table Document metadata
+--- @param options table Cache options resolved from `_schema.yml`:
+---   `cache_dir`, `cache_fallback`, `max_age_days` and `max_entries`.
 --- @return nil
-function M.cleanup(meta)
-  local dir = project_base() .. '/' .. resolve_reldir(meta)
+function M.cleanup(options)
+  local reldir = resolve_reldir(options)
+  if reldir == nil then
+    return
+  end
+  local dir = project_base() .. '/' .. reldir
 
   --- @type table<integer, string>|nil
   local listing
@@ -365,14 +400,13 @@ function M.cleanup(meta)
     return
   end
 
+  --- Both caps come from `_schema.yml`, which declares their defaults. A
+  --- document may still write something that is not a number, so the parse
+  --- can fail; treat that as no cap rather than as a reason to stop.
   --- @type number
-  local max_age_days = tonumber(
-    meta_mod.get_metadata_value(meta, 'iconify', 'typst-cache-max-age')
-  ) or DEFAULT_MAX_AGE_DAYS
+  local max_age_days = tonumber(options.max_age_days) or 0
   --- @type number
-  local max_entries = tonumber(
-    meta_mod.get_metadata_value(meta, 'iconify', 'typst-cache-max-entries')
-  ) or 0
+  local max_entries = tonumber(options.max_entries) or 0
   --- @type integer
   local now = os.time()
 

@@ -1,4 +1,14 @@
 # Schema for the iconify extension
+#
+# This file is the single source of truth for every default the extension
+# applies. The Lua reads the defaults from here at render time, and
+# docs/_filters/schema-tables.lua builds the reference tables from the same
+# descriptions, so a default is written once and read everywhere.
+#
+# `inline` is deliberately typed differently at the two levels. A document
+# option is a real YAML boolean, while a shortcode attribute arrives as text,
+# so the attribute is a string with a "true"/"false" enum. The Lua compares
+# against the string form in both cases.
 
 $schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
 
@@ -6,36 +16,39 @@ options:
   set:
     type: string
     default: "octicon"
-    description: "Default icon set to use when not specified in the shortcode (e.g. 'mdi', 'fa-solid')."
+    description: "The icon set used when the shortcode names none, such as `mdi` or `fa6-brands`."
   size:
     type: string
-    description: "Default icon size as a keyword or CSS value (e.g. 'large', '2x', '1.5em')."
+    description: "A keyword or CSS length. Sets `font-size`, and suppresses `width` and `height`."
   width:
     type: string
-    description: "Default icon width."
+    description: "Explicit width, used only when `size` is absent. HTML output only."
   height:
     type: string
-    description: "Default icon height."
+    description: "Explicit height, used only when `size` is absent. HTML output only."
   flip:
     type: string
-    description: "Default flip transformation for icons."
+    description: "Flip transformation applied to every icon."
     enum:
       - horizontal
       - vertical
       - horizontal,vertical
   rotate:
     type: string
-    description: "Default rotation for icons (e.g. '90deg', '180deg', '1')."
+    description: "Rotation applied to every icon: `90deg`, `180deg`, or a quarter-turn count such as `1`."
+  color:
+    type: string
+    description: "Icon colour for Typst output, such as `red` or `#74aadb`, applied to monochrome icons through the Iconify API. With no `color`, a `color:` declaration inside `style` is read instead."
   style:
     type: string
-    description: "Default additional inline CSS styles applied to all icons."
+    description: "Extra inline CSS, written before the `font-size` that `size` generates."
   inline:
     type: boolean
     default: true
-    description: "Whether to render icons inline by default."
+    description: "Whether icons sit on the text baseline."
   mode:
     type: string
-    description: "Default rendering mode for icons."
+    description: "Rendering mode. HTML output only."
     enum:
       - svg
       - style
@@ -43,24 +56,24 @@ options:
       - mask
   fallback:
     type: string
-    description: "Default fallback text or emoji shown when an icon cannot be loaded (e.g. unknown name, offline, CDN unreachable)."
+    description: "Text or an emoji shown when an icon cannot be loaded, whether the name is wrong, the CDN is unreachable, or the reader is offline."
   preload:
     type: array
-    description: "List of local file paths containing Iconify icon-collection JSON to preload, enabling offline rendering of those icons; requires the iconify filter to be active (e.g. `filters: [iconify]`)."
+    description: "Paths to Iconify collection JSON files, for offline rendering. Requires the filter to be active, with `filters: [iconify]`."
     items:
       type: string
   typst-cache:
     type: string
     default: ".quarto/iconify-svg"
-    description: "Directory (relative to the project root) where SVGs retrieved for Typst output are cached. Point at a tracked directory to commit a reproducible offline cache."
+    description: "Where the SVGs are kept, relative to the project root. Point it at a tracked directory to commit a reproducible offline cache."
   typst-cache-max-age:
     type: number
     default: 30
-    description: "Maximum age in days before an unused Typst cache entry is pruned. Set to 0 to disable age-based pruning."
+    description: "Days before an unused entry is pruned. `0` disables pruning by age."
   typst-cache-max-entries:
     type: number
     default: 0
-    description: "Maximum number of Typst cache entries; the least-recently-used beyond this cap are pruned. 0 means unlimited."
+    description: "Cap on the number of entries, least recently used pruned first. `0` is unlimited."
 
 shortcodes:
   iconify:
@@ -68,6 +81,8 @@ shortcodes:
     arguments:
       - name: set-or-icon
         type: string
+        required: true
+        examples: ["mdi:home"]
         description: "Icon set name, or the combined 'set:icon' format."
       - name: icon
         type: string
@@ -75,35 +90,35 @@ shortcodes:
     attributes:
       size:
         type: string
-        description: "Icon size as a keyword or CSS value (e.g. 'large', '2x', '1.5em')."
+        description: "A keyword or CSS length. Sets `font-size`, and suppresses `width` and `height`."
       width:
         type: string
-        description: "Icon width."
+        description: "Explicit width, used only when `size` is absent."
       height:
         type: string
-        description: "Icon height."
+        description: "Explicit height, used only when `size` is absent."
       flip:
         type: string
-        description: "Flip transformation for the icon."
+        description: "`horizontal`, `vertical`, or `horizontal,vertical`."
         enum:
           - horizontal
           - vertical
           - horizontal,vertical
       rotate:
         type: string
-        description: "Rotation for the icon (e.g. '90deg', '180deg', '1')."
+        description: "`90deg`, `180deg`, or a quarter-turn count such as `1`."
       color:
         type: string
-        description: "Icon colour for Typst output (e.g. 'red', '#74aadb'); applied to monochrome icons via the Iconify API."
+        description: "Typst output only. Applied to monochrome icons through the Iconify API."
       inline:
         type: string
-        description: "Whether to render the icon inline."
+        description: "`true` or `false`. Any other value is treated as `true`."
         enum:
           - "true"
           - "false"
       mode:
         type: string
-        description: "Rendering mode for the icon."
+        description: "`svg`, `style`, `bg`, or `mask`. Any other value is dropped."
         enum:
           - svg
           - style
@@ -111,53 +126,56 @@ shortcodes:
           - mask
       style:
         type: string
-        description: "Additional inline CSS styles for the icon."
+        description: "Extra inline CSS, written before the `font-size` that `size` generates."
       label:
         type: string
-        description: "Accessible label for the icon (aria-label)."
+        description: "The `aria-label`. Replaces the generated one."
       title:
         type: string
-        description: "Title attribute for the icon tooltip."
+        description: "The tooltip. Replaces the generated one."
       aria-hidden:
         type: string
-        description: "Marks the icon as decorative, omitting role, aria-label and title so assistive technology skips it. Use when visible text beside the icon already carries the meaning."
+        description: "`true` marks the icon decorative, dropping `role`, `aria-label`, and `title`."
         enum:
           - "true"
           - "false"
       fallback:
         type: string
-        description: "Text or emoji shown when the icon cannot be loaded (e.g. unknown name, offline, CDN unreachable)."
+        description: "Text or an emoji revealed when the icon fails to load."
   quarto:
     description: "Renders the Quarto icon with default blue styling from the simple-icons set."
     attributes:
       size:
         type: string
-        description: "Icon size as a keyword or CSS value."
+        description: "A keyword or CSS length. Sets `font-size`, and suppresses `width` and `height`."
       width:
         type: string
-        description: "Icon width."
+        description: "Explicit width, used only when `size` is absent."
       height:
         type: string
-        description: "Icon height."
+        description: "Explicit height, used only when `size` is absent."
       flip:
         type: string
-        description: "Flip transformation for the icon."
+        description: "`horizontal`, `vertical`, or `horizontal,vertical`."
         enum:
           - horizontal
           - vertical
           - horizontal,vertical
       rotate:
         type: string
-        description: "Rotation for the icon (e.g. '90deg', '180deg', '1')."
+        description: "`90deg`, `180deg`, or a quarter-turn count such as `1`."
+      color:
+        type: string
+        description: "Typst output only. The HTML output keeps the Quarto blue."
       inline:
         type: string
-        description: "Whether to render the icon inline."
+        description: "`true` or `false`. Any other value is treated as `true`."
         enum:
           - "true"
           - "false"
       mode:
         type: string
-        description: "Rendering mode for the icon."
+        description: "`svg`, `style`, `bg`, or `mask`. Any other value is dropped."
         enum:
           - svg
           - style
@@ -165,19 +183,19 @@ shortcodes:
           - mask
       style:
         type: string
-        description: "Additional inline CSS styles for the icon."
+        description: "Extra inline CSS. Any `color:` in it is replaced by the Quarto blue."
       label:
         type: string
-        description: "Accessible label for the icon."
+        description: "Ignored. The `quarto` shortcode fixes the label to `Quarto icon`."
       title:
         type: string
-        description: "Title attribute for the icon tooltip."
+        description: "Ignored. The `quarto` shortcode fixes the tooltip to `Quarto icon`."
       aria-hidden:
         type: string
-        description: "Marks the icon as decorative, omitting role, aria-label and title so assistive technology skips it."
+        description: "`true` marks the icon decorative, dropping `role`, `aria-label`, and `title`."
         enum:
           - "true"
           - "false"
       fallback:
         type: string
-        description: "Text or emoji shown when the icon cannot be loaded."
+        description: "Text or an emoji revealed when the icon fails to load."
