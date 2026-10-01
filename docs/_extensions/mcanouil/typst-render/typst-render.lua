@@ -1979,7 +1979,9 @@ end
 --- @param el pandoc.CodeBlock
 --- @return pandoc.Block|pandoc.Blocks|nil
 local function process_codeblock(el)
-  if not cell.is_code_block(el) then
+  -- The knitr engine in `typst_define.R` emits `{.typst-render-cell}`
+  -- instead of `{typst}`; see the comment there for why.
+  if not (cell.is_code_block(el) or el.classes:includes('typst-render-cell')) then
     return nil
   end
 

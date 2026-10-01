@@ -1,6 +1,6 @@
 title: Typst Render
 author: Mickaël Canouil
-version: 0.22.2
+version: 0.22.4
 quarto-required: ">=1.10.18"
 contributes:
   filters:
@@ -8,5 +8,4 @@ contributes:
       path: typst-render.lua
     - at: post-quarto
       path: typst-math.lua
-source: mcanouil/quarto-typst-render@0.22.2
-source-type: registry
+source: mcanouil/quarto-typst-render@0.22.4

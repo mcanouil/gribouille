@@ -2,13 +2,43 @@
 #'
 #' Without this, knitr emits "Unknown language engine 'typst'" warnings and
 #' wraps the block in a cell-output div with a `typst` (singular) class. The
-#' engine simply re-emits the chunk source as a `` ```{typst} `` fenced block
-#' so pandoc sees the literal `{typst}` class that the typst-render filter
-#' expects.
+#' engine re-emits the chunk source as a `` ```{.typst-render-cell} `` fenced
+#' block, which the typst-render filter treats as a `{typst}` block.
+#' A bare `{typst}` fence would do for Quarto's own reader, but Quarto also
+#' runs the plain pandoc reader over the markdown to look for level-one
+#' headings before a Typst or PDF render. That reader does not know
+#' `{typst}`, so a blank line in the block makes it misread the rest of the
+#' document, which prints a spurious "Div unclosed" warning and can hide a
+#' level-one heading.
+#'
+#' knitr parses `#|` lines and chunk header options itself and removes them
+#' before calling the engine, so the filter never sees them. The engine warns
+#' about each such option: `{typst}` blocks take their options as `//|` lines.
 if (requireNamespace("knitr", quietly = TRUE)) {
   knitr::knit_engines$set(typst = function(options) {
+    label <- options[["label"]]
+    chunk_opts <- attr(knitr::knit_code$get(label), "chunk_opts")
+    consumed <- setdiff(names(chunk_opts), "engine")
+    auto_prefix <- knitr::opts_knit$get("unnamed.chunk.label")
+    is_auto_label <- grepl("-[0-9]+$", label) &&
+      identical(sub("-[0-9]+$", "", label), auto_prefix)
+    if (is_auto_label) {
+      consumed <- setdiff(consumed, "label")
+    }
+    if (length(consumed) > 0) {
+      warning(
+        "typst-render: knitr took these options from the {typst} chunk \"",
+        label, "\", so they have no effect: ",
+        paste(consumed, collapse = ", "), ". ",
+        "Write block options as `//| key: value` lines at the top of the ",
+        "chunk instead. The options are listed at ",
+        "https://m.canouil.dev/quarto-typst-render/reference.html",
+        "#per-block-options",
+        call. = FALSE
+      )
+    }
     code <- paste(options[["code"]], collapse = "\n")
-    knitr::asis_output(paste0("\n```{typst}\n", code, "\n```\n"))
+    knitr::asis_output(paste0("\n```{.typst-render-cell}\n", code, "\n```\n"))
   })
 }
 
