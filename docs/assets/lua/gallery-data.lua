@@ -61,17 +61,41 @@ local function parse_yaml_list(text)
   return items
 end
 
+-- Digest of lib.typ and every file under src/, keyed by path relative to the
+-- repository so it matches across machines. typst-render's cache key misses the
+-- library behind an @preview import, so each gallery block carries this digest
+-- as an input: a figure recompiles when the library changes and comes from the
+-- cache otherwise.
+local library_digest_cache = nil
+local function library_digest()
+  if library_digest_cache then return library_digest_cache end
+  local root = (quarto.project.directory or '.') .. '/..'
+  local parts = {}
+  local function add(rel)
+    local path = root .. '/' .. rel
+    local ok, entries = pcall(pandoc.system.list_directory, path)
+    if ok then
+      table.sort(entries)
+      for _, name in ipairs(entries) do add(rel .. '/' .. name) end
+    else
+      parts[#parts + 1] = rel .. '\n' .. (read_file(path) or '')
+    end
+  end
+  add('lib.typ')
+  add('src')
+  library_digest_cache = pandoc.utils.sha1(table.concat(parts, '\n'))
+  return library_digest_cache
+end
+
 -- typst-render resolves a leading `/` against docs/ and a relative path against
--- the page folder, docs/gallery/, so the examples are two levels up. Its cache
--- key hashes local imports only, and the examples import @preview/gribouille,
--- so their blocks skip the cache rather than serve a figure older than src/.
+-- the page folder, docs/gallery/, so the examples are two levels up.
 local function build_typst_block(slug, alt, output_name)
   local quoted_alt = "'" .. (alt or ''):gsub("'", "''") .. "'"
   local text = table.concat({
     "//| output-filename: '" .. (output_name or slug) .. ".svg'",
     '//| alt: ' .. quoted_alt,
     "//| file: '../../examples/" .. slug .. ".typ'",
-    '//| cache: false',
+    "//| input: 'gribouille-library=" .. library_digest() .. "'",
   }, '\n')
   return pandoc.CodeBlock(text, pandoc.Attr('', { '{typst}' }, {}))
 end
