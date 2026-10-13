@@ -3,9 +3,10 @@
 // read like a constellation, with the final spike glowing brightest.
 // Regenerate the CSVs with: .github/star-history/star-history.sh
 //                           .github/star-history/release-history.sh
-// Compile with: typst compile .github/star-history/star-history.typ --root .
+// Compile with: typst compile .github/star-history/star-history.typ --root . \
+//                 --package-path "$(tools/package-path.sh /tmp/gribouille-packages)"
 
-#import "../../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: 16cm, height: 18cm, margin: 0cm)
 // #set page("a4", margin: 2.5cm)

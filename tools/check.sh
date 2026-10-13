@@ -76,6 +76,7 @@ PACKAGE_PATH="$(tools/package-path.sh "${OUT_DIR}/packages")"
 
 compile_glob "unit"     "tests/unit/*.typ"
 compile_glob "examples" "examples/*.typ" --package-path "${PACKAGE_PATH}"
+compile_glob "star-history" ".github/star-history/star-history.typ" --package-path "${PACKAGE_PATH}"
 compile_glob "visual"   "tests/visual/*.typ"
 
 # The error fixtures assert the opposite of the globs above: each one must fail,
