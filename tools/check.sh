@@ -68,6 +68,10 @@ else
   printf 'skill inventory: SKIP (lua not installed)\n'
 fi
 
+if ! tools/package-path.sh --self-test; then
+  failures=$((failures + 1))
+fi
+
 compile_glob "unit"     "tests/unit/*.typ"
 compile_glob "examples" "examples/*.typ"
 compile_glob "visual"   "tests/visual/*.typ"
