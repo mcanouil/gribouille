@@ -1,7 +1,7 @@
 // Showcase: sorted Cleveland dot plot of median highway economy per class.
 // Dots over bars for point estimates; categories ordered by value, no legend.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

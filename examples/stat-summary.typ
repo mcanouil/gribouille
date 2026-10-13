@@ -1,6 +1,6 @@
 // stat-summary collapses each x bucket to a summary statistic per layer.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

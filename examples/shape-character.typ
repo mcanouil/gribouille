@@ -2,7 +2,7 @@
 // literal glyphs. Values may be a plain character or a Typst `sym.` symbol,
 // mixed freely across levels.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

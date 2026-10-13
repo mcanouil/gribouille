@@ -1,7 +1,7 @@
 // Showcase: horizontal count bars with direct value labels; long category
 // names stay readable and the labels replace a value axis.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

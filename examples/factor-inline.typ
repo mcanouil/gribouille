@@ -1,7 +1,7 @@
 // Inline aesthetic coercion: force a numeric column to be treated as discrete
 // for the fill aesthetic without changing the underlying data.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

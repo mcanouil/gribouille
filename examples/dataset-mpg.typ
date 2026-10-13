@@ -1,6 +1,6 @@
 // Bundled mpg dataset: highway mpg vs engine displacement, filled by class.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

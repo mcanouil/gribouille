@@ -1,6 +1,6 @@
 // Facet labellers: strip text driven by label-both() prefixes the variable name.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

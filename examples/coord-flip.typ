@@ -1,6 +1,6 @@
 // coord-flip swaps x and y so vertical bars read as horizontal.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

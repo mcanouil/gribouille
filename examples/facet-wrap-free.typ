@@ -1,6 +1,6 @@
 // Facet wrap with free y: each panel trains its own y axis on its own subset.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

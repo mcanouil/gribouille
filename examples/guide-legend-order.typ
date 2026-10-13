@@ -4,7 +4,7 @@
 // `direction` flips the swatch flow between vertical and horizontal;
 // `byrow` switches the grid fill from column-major to row-major.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

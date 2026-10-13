@@ -1,7 +1,7 @@
 // Showcase: filled bars comparing cylinder shares across classes; every bar
 // normalises to 1 so composition, not volume, is the message.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -99,8 +99,8 @@ local function compile_pool(sources, opts)
     if #pending >= opts.jobs then reap_oldest() end
     local png = string.format("%s/png/%s.png", opts.build_root, s.key)
     local cmd = string.format(
-      "typst compile %s --root %s --package-path %s --ignore-system-fonts --ppi %d %s 2>&1",
-      shell_quote(s.src_typ), shell_quote(opts.root), shell_quote(opts.package_path), opts.ppi, shell_quote(png)
+      "typst compile %s --root %s --ignore-system-fonts --ppi %d %s 2>&1",
+      shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(png)
     )
     local handle = io.popen(cmd, "r")
     if not handle then
@@ -195,11 +195,6 @@ local function main()
   end
 
   opts.build_root = build_root
-  -- The examples import @preview/gribouille as a reader does; the link makes
-  -- that import compile against this checkout rather than the published release.
-  opts.package_path = build_root .. "/packages"
-  util.run(string.format("%s %s >/dev/null",
-    shell_quote(opts.root .. "/tools/package-path.sh"), shell_quote(opts.package_path)))
   local compile_fail, diff_fail, missing, ok = {}, {}, {}, 0
   local compiled = compile_pool(sources, opts)
 

@@ -1,6 +1,6 @@
 // Ribbon + line: explicit ymin/ymax bounds around a fitted trend.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

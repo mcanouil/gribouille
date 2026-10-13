@@ -1,7 +1,7 @@
 // Showcase: Simpson's paradox in bill dimensions; the pooled trend (dashed)
 // slopes down while every within-species trend slopes up.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

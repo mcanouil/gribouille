@@ -1,6 +1,6 @@
 // guide-axis customises tick label rotation and dodging on a discrete axis.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

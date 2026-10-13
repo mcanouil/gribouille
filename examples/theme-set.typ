@@ -1,7 +1,7 @@
 // theme-set installs a global default once; subsequent plots inherit it
 // unless they pass an explicit `theme:` argument.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

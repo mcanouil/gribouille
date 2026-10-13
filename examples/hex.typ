@@ -1,7 +1,7 @@
 // Hexagonal binning. Each (x, y) sample drops into a pointy-top hex cell;
 // cells colour by count via the fill scale.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

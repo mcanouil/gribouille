@@ -18,6 +18,9 @@ on:
       - "typst.toml"
       - "tools/**"
       - "README.md"
+      - "CITATION.cff"
+      - ".claude-plugin/plugin.json"
+      - "skills/gribouille/SKILL.md"
       - "LICENSE"
       - ".github/actions/**"
       - ".github/workflows/checks.yml"
@@ -33,6 +36,9 @@ on:
       - "typst.toml"
       - "tools/**"
       - "README.md"
+      - "CITATION.cff"
+      - ".claude-plugin/plugin.json"
+      - "skills/gribouille/SKILL.md"
       - "LICENSE"
       - ".github/actions/**"
       - ".github/workflows/checks.yml"
@@ -143,18 +149,6 @@ jobs:
           label: unit
           glob: "tests/unit/*.typ"
 
-      # The examples and the star history chart import @preview/gribouille as a
-      # reader does. The link makes that import compile against this checkout,
-      # not the release on Typst Universe, which lacks unreleased code and, on a
-      # version bump, the new version itself.
-      - name: Link the package to the checkout
-        id: package
-        if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "path=$(tools/package-path.sh "${RUNNER_TEMP}/packages")" >> "${GITHUB_OUTPUT}"
-
       - name: Compile examples and the star history chart
         id: examples
         if: always()
@@ -162,14 +156,13 @@ jobs:
         with:
           label: example
           glob: "examples/*.typ .github/star-history/star-history.typ"
-          package-path: ${{ steps.package.outputs.path }}
 
-      - name: Check example imports
+      - name: Check versions
         if: always()
         shell: bash
         run: |
           set -euo pipefail
-          tools/check-imports.sh
+          tools/version-check.sh
 
       # The error fixtures assert the opposite of the globs above: each one must
       # fail, with the message it declares. The typst-compile composite action

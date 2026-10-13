@@ -1,7 +1,7 @@
 // Showcase: dodged bars comparing city and highway economy per class; two
 // dodge groups keep the within-class comparison easy, Okabe-Ito keeps it safe.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

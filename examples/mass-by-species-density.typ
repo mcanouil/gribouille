@@ -1,7 +1,7 @@
 // Showcase: overlaid body-mass densities per species, labelled in the
 // subtitle instead of a legend; translucent fills keep every curve readable.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

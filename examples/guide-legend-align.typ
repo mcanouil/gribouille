@@ -1,6 +1,6 @@
 // guide-legend(align:) and the legend-text align: justify entry labels.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

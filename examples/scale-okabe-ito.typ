@@ -1,6 +1,6 @@
 // scale-okabe-ito and scale-okabe-ito: CVD-safe discrete palette.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -16,10 +16,6 @@ inputs:
     description: "Typst project root passed with --root."
     required: false
     default: "."
-  package-path:
-    description: "Directory passed with --package-path, so @preview imports resolve to a local link (e.g., from tools/package-path.sh). Empty means Typst's defaults."
-    required: false
-    default: ""
 
 outputs:
   passed:
@@ -43,7 +39,6 @@ runs:
       env:
         GLOB: ${{ inputs.glob }}
         ROOT: ${{ inputs.root }}
-        PACKAGE_PATH: ${{ inputs.package-path }}
       run: |
         set -euo pipefail
         shopt -s nullglob
@@ -53,7 +48,7 @@ runs:
         RESULTS=$(mktemp -d)
         : > "${RESULTS}/status"
         mkdir "${RESULTS}/logs"
-        export ROOT RESULTS PACKAGE_PATH
+        export ROOT RESULTS
         # Compile in parallel across all cores. Workers cannot share stdout
         # (interleaved group markers), so each writes its own log block and a
         # status line (short O_APPEND writes are atomic); logs are replayed in
@@ -61,7 +56,7 @@ runs:
         compile_one() {
           set -euo pipefail
           f="$1"
-          if out=$(typst compile "${f}" --root "${ROOT}" ${PACKAGE_PATH:+--package-path "${PACKAGE_PATH}"} "/tmp/$(basename "${f%.typ}").pdf" 2>&1); then
+          if out=$(typst compile "${f}" --root "${ROOT}" "/tmp/$(basename "${f%.typ}").pdf" 2>&1); then
             status=pass
           else
             status=fail

@@ -1,6 +1,6 @@
 // geom-jitter spreads overlapping points so density per category is visible.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

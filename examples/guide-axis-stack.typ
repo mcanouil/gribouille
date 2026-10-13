@@ -2,7 +2,7 @@
 // on the same axis: one row carries readable labels, the next adds dense
 // minor ticks below.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

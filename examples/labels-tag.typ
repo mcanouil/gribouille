@@ -1,6 +1,6 @@
 // A figure tag drawn above the title, styled by the plot-tag theme element.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

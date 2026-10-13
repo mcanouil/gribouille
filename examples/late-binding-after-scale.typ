@@ -3,7 +3,7 @@
 // `colour` (outline) channel and darken it, so each marker's outline
 // follows its own fill swatch automatically.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

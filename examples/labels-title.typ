@@ -1,6 +1,6 @@
 // labels(): title, subtitle, caption, and axis labels in one call.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

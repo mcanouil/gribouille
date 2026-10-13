@@ -3,7 +3,6 @@ project:
   # lib-dir: lib
   output-dir: _site
   pre-render:
-    - ./_scripts/package-path.sh
     - ../tools/typstdoc/main.lua
   post-render:
     - ./_scripts/typst-render-check.sh

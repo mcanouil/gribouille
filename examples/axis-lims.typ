@@ -1,6 +1,6 @@
 // scale-*-continuous(limits:) sets explicit data domains; guide-axis tweaks tick text.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

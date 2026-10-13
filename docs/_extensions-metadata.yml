@@ -13,9 +13,6 @@ extensions:
   typst-render:
     root: "../"
     preamble: "_typst-preamble.typ"
-    # Resolves @preview/gribouille to the working tree; written by
-    # _scripts/package-path.sh before every render.
-    package-path: "/.typst-packages"
     style: "display: block; margin-inline: auto;"
     align: center
     background: auto

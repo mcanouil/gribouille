@@ -1,6 +1,6 @@
 // Family-scoped shortcuts compose with theme-minimal() via `+`.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

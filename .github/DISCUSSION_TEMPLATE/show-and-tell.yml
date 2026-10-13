@@ -35,7 +35,7 @@ body:
       description: Share a link, repository, or a minimal Typst snippet illustrating your work.
       placeholder: |
         ```typst
-        #import "@preview/gribouille:0.0.1": *
+        #import "@preview/gribouille:x.y.z": *
 
         // Snippet from your project.
         ```

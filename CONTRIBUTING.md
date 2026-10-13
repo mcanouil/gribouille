@@ -49,14 +49,14 @@ Source modules live under [`src/`](src/).
 Tests live under [`tests/unit/`](tests/unit), [`tests/visual/`](tests/visual), and [`tests/errors/`](tests/errors).
 Every file under `tests/errors/` must fail to compile, and declares the phrases its message has to carry on `// expect:` lines, because Typst has no `try`/`catch` for a unit test to use.
 Helper scripts live under [`tools/`](tools), in particular [`tools/check.sh`](tools/check.sh) for local checks.
-The examples under [`examples/`](examples) import `@preview/gribouille` as a reader does.
-To compile one against your working tree, link the package first with [`tools/package-path.sh`](tools/package-path.sh):
+The examples under [`examples/`](examples) import the working tree with `#import "/lib.typ": *`, so compile one from the repository root:
 
 ```sh
-typst compile examples/<name>.typ --root . --package-path "$(tools/package-path.sh "$(mktemp -d)")"
+typst compile examples/<name>.typ --root .
 ```
 
-Without `--package-path`, Typst uses the published release, and your changes under `src/` do not show.
+The documentation shows each example with `#import "@preview/gribouille:<version>": *`, the line a reader types, and takes the version from [`typst.toml`](typst.toml).
+Do not write a version number in an example.
 Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `cy`, `lo`, `hi`, …) are catalogued in [`GLOSSARY.md`](GLOSSARY.md).
 Consult that glossary before you introduce new short identifiers.
 [`ARCHITECTURE.md`](ARCHITECTURE.md) maps the rendering pipeline, module boundaries, and where to add a geom, stat, scale, or position.

@@ -1,7 +1,7 @@
 // scale_x_log10 pre-transforms data: stats fit a line in log space, so a
 // power-law dataset comes out straight.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

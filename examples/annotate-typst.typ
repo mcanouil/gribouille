@@ -2,7 +2,7 @@
 //   - annotate("typst", label: "...") — the typst geom always evaluates the label.
 //   - annotate("text",  label: typst("...")) — the typst() tag forces evaluation.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // Q-Q plot: 80 normal-ish samples (sum of 12 uniforms) against standard-normal quantiles.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

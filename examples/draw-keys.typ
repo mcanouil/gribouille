@@ -2,7 +2,7 @@
 // contribute filled rectangles, so the `colour` and `fill` aesthetics each
 // resolve to the right glyph automatically.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

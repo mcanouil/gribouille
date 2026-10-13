@@ -1,6 +1,6 @@
 // Dodged bars: products shown side-by-side per quarter.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

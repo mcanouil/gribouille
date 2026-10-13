@@ -2,7 +2,7 @@
 // linewidth into supporting geoms. Each panel below uses the same data and
 // shows how a single theme override re-tints every wired geom at once.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

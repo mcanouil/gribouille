@@ -1,6 +1,6 @@
 // Same scatter rendered in three contrasting themes side-by-side.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

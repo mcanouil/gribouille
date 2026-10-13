@@ -62,10 +62,10 @@ local function parse_yaml_list(text)
 end
 
 -- Digest of lib.typ and every file under src/, keyed by path relative to the
--- repository so it matches across machines. typst-render's cache key misses the
--- library behind an @preview import, so each gallery block carries this digest
--- as an input: a figure recompiles when the library changes and comes from the
--- cache otherwise.
+-- repository so it matches across machines. typst-render's cache key does not
+-- read `/lib.typ` or the nested src/ imports, so each gallery block carries this
+-- digest as an input: a figure recompiles when the library changes and comes
+-- from the cache otherwise.
 local library_digest_cache = nil
 local function library_digest()
   if library_digest_cache then return library_digest_cache end
@@ -89,6 +89,29 @@ local function library_digest()
   add('src')
   library_digest_cache = pandoc.utils.sha1(table.concat(parts, '\n'))
   return library_digest_cache
+end
+
+-- The examples import the working tree with `#import "/lib.typ"`. A reader
+-- types the published package instead, so the modal shows that line, with the
+-- version typst.toml declares.
+local package_import_cache = nil
+local function package_import()
+  if package_import_cache then return package_import_cache end
+  local toml_path = (quarto.project.directory or '.') .. '/../typst.toml'
+  local version = (read_file(toml_path) or ''):match('\nversion%s*=%s*"([^"]+)"')
+  if not version then
+    error('gallery-data: no version = "x.y.z" line in ' .. toml_path)
+  end
+  package_import_cache = '#import "@preview/gribouille:' .. version .. '"'
+  return package_import_cache
+end
+
+local function shown_source(source)
+  local shown, n = source:gsub('#import%s+"/lib%.typ"', package_import(), 1)
+  if n == 0 then
+    error('gallery-data: example has no #import "/lib.typ" line to show as the package import')
+  end
+  return shown
 end
 
 -- typst-render resolves a leading `/` against docs/, so `/../examples/` is the
@@ -153,7 +176,7 @@ local function intent_blocks(input_dir, project_dir, intent)
       local typ_path = project_dir .. '/../examples/' .. slug .. '.typ'
       local source = read_file(typ_path)
       if source then
-        source = source:gsub('\n+$', '')
+        source = shown_source(source):gsub('\n+$', '')
       else
         quarto.log.warning('gallery-data: cannot read ' .. typ_path)
         source = '// File not found: ' .. typ_path

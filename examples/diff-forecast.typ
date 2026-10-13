@@ -1,6 +1,6 @@
 // diff-forecast: shade the band between forecast and actuals by which leads.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

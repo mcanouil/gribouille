@@ -3,7 +3,7 @@
 // prepare time, so the values follow whatever theme the plot picks up
 // without hard-coding palette colours into the spec.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

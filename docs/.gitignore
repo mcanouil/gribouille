@@ -5,9 +5,6 @@
 # Rendered by the typst-render Quarto filter during `quarto render`.
 /assets/typst-render/
 
-# Package link written by _scripts/package-path.sh before every render.
-/.typst-packages/
-
 # Intermediate figure produced by assets/social-card/build.sh (the PNG it feeds is committed).
 /assets/social-card/penguins-light.svg
 

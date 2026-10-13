@@ -1,7 +1,7 @@
 // Marching-squares contour lines on a regular (x, y, z) grid. Sampling a
 // classic radial-wave field gives a clean ring of iso-lines.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

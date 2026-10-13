@@ -2,7 +2,7 @@
 // Two layers compare "hv" (default, step) and "mid" (midpoint corner)
 // connection modes against the same dataset.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

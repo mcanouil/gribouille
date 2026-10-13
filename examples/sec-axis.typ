@@ -1,6 +1,6 @@
 // dup-axis duplicates an axis; sec-axis derives a transformed companion.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

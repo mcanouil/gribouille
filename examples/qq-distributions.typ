@@ -1,6 +1,6 @@
 // Q-Q plots against three reference distributions: normal, uniform, exponential.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

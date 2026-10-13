@@ -1,7 +1,7 @@
 // Showcase: waffle of species shares; units stay countable where a pie would
 // force angle comparison, and the subtitle carries the colour key.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

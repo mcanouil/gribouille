@@ -1,7 +1,7 @@
 // Showcase: unemployment time series with an annotated context period and a
 // finding stated in the title; annotation does the pointing, not a legend.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

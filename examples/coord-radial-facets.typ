@@ -3,7 +3,7 @@
 // so a panel with none would have no scale to read against. The angular
 // labels follow the sweep, `y` under coord-radial(theta: "y").
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // Reference lines: hline, vline, and abline overlaid on a scatter plot.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

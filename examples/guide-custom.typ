@@ -1,7 +1,7 @@
 // guide-custom drops arbitrary Typst content into the legend area alongside
 // the auto-built colour swatch.
 
-#import "@preview/gribouille:0.7.0": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 
