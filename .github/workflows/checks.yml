@@ -12,6 +12,7 @@ on:
       - "src/**"
       - "lib.typ"
       - "examples/**"
+      - ".github/star-history/star-history.typ"
       - "tests/**"
       - "typst.toml"
       - "tools/**"
@@ -25,6 +26,7 @@ on:
       - "src/**"
       - "lib.typ"
       - "examples/**"
+      - ".github/star-history/star-history.typ"
       - "tests/**"
       - "typst.toml"
       - "tools/**"
@@ -139,6 +141,17 @@ jobs:
           label: unit
           glob: "tests/unit/*.typ"
 
+      # The examples and the star history chart import @preview/gribouille as a
+      # reader does. The link makes that import compile against this checkout,
+      # not the release on Typst Universe, which lacks unreleased code and, on a
+      # version bump, the new version itself.
+      - name: Link the package to the checkout
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "path=$(tools/package-path.sh "${RUNNER_TEMP}/packages")" >> "${GITHUB_OUTPUT}"
+
       - name: Compile examples
         id: examples
         if: always()
@@ -146,6 +159,23 @@ jobs:
         with:
           label: example
           glob: "examples/*.typ"
+          package-path: ${{ steps.package.outputs.path }}
+
+      - name: Compile star history chart
+        id: star-history
+        if: always()
+        uses: ./.github/actions/typst-compile
+        with:
+          label: star-history
+          glob: ".github/star-history/star-history.typ"
+          package-path: ${{ steps.package.outputs.path }}
+
+      - name: Check example imports
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools/check-imports.sh
 
       # The error fixtures assert the opposite of the globs above: each one must
       # fail, with the message it declares. The typst-compile composite action
@@ -170,6 +200,10 @@ jobs:
           EXAMPLES_TOTAL: ${{ steps.examples.outputs.total }}
           EXAMPLES_FAILED: ${{ steps.examples.outputs.failed }}
           EXAMPLES_FAILURES: ${{ steps.examples.outputs.failures }}
+          STAR_PASSED: ${{ steps.star-history.outputs.passed }}
+          STAR_TOTAL: ${{ steps.star-history.outputs.total }}
+          STAR_FAILED: ${{ steps.star-history.outputs.failed }}
+          STAR_FAILURES: ${{ steps.star-history.outputs.failures }}
         run: |
           set -euo pipefail
           render_section() {
@@ -194,6 +228,7 @@ jobs:
             echo "## Typst compile"
             render_section "Unit tests" "${UNIT_PASSED}" "${UNIT_TOTAL}" "${UNIT_FAILED}" "${UNIT_FAILURES}"
             render_section "Examples" "${EXAMPLES_PASSED}" "${EXAMPLES_TOTAL}" "${EXAMPLES_FAILED}" "${EXAMPLES_FAILURES}"
+            render_section "Star history chart" "${STAR_PASSED}" "${STAR_TOTAL}" "${STAR_FAILED}" "${STAR_FAILURES}"
           } >> "${GITHUB_STEP_SUMMARY}"
 
   visual-snapshots:

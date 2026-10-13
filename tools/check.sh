@@ -78,31 +78,10 @@ compile_glob "unit"     "tests/unit/*.typ"
 compile_glob "examples" "examples/*.typ" --package-path "${PACKAGE_PATH}"
 compile_glob "star-history" ".github/star-history/star-history.typ" --package-path "${PACKAGE_PATH}"
 
-# The examples and the star history chart show the import a reader copies, so
-# each must name the version typst.toml publishes. release.yml bumps them.
-check_import_versions() {
-  local version file found checked=0
-  local bad=()
-  version="$(awk -F'"' '/^version[[:space:]]*=/ { print $2; exit }' typst.toml)"
-  for file in examples/*.typ .github/star-history/star-history.typ; do
-    checked=$((checked + 1))
-    if ! grep -qE '^#import "@preview/gribouille:[0-9]+\.[0-9]+\.[0-9]+"' "${file}"; then
-      bad+=("${file}: no #import \"@preview/gribouille:${version}\" line; add one in place of any lib.typ import")
-      continue
-    fi
-    while IFS= read -r found; do
-      if [[ "${found}" != "${version}" ]]; then
-        bad+=("${file}: imports ${found}; typst.toml has ${version}")
-      fi
-    done < <(grep -oE '@preview/gribouille:[0-9]+\.[0-9]+\.[0-9]+' "${file}" | cut -d: -f2)
-  done
-  if [[ ${#bad[@]} -gt 0 ]]; then
-    failures=$((failures + 1))
-    printf '  FAIL  imports  %s\n' "${bad[@]}"
-  fi
-  printf '%-14s %d/%d\n' "imports:" "$((checked - ${#bad[@]}))" "${checked}"
-}
-check_import_versions
+if ! tools/check-imports.sh; then
+  failures=$((failures + 1))
+fi
+
 compile_glob "visual"   "tests/visual/*.typ"
 
 # The error fixtures assert the opposite of the globs above: each one must fail,
