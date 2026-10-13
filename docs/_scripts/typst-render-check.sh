@@ -36,13 +36,21 @@ if [[ ${#pages[@]} -eq 0 ]]; then
 fi
 
 failed=()
+read_count=0
 for page in "${pages[@]}"; do
   [[ "${page}" = /* ]] || page="${DOCS_DIR}/${page}"
   [[ -f "${page}" ]] || continue
+  read_count=$((read_count + 1))
   if grep -q 'typst-render-error' "${page}"; then
     failed+=("${page#"${DOCS_DIR}"/}")
   fi
 done
+
+# Listed pages that all fail to resolve would also pass having checked nothing.
+if [[ ${read_count} -eq 0 ]]; then
+  printf '[post-render] typst-render: none of the %d listed page(s) exists under %s\n' "${#pages[@]}" "${DOCS_DIR}" >&2
+  exit 1
+fi
 
 if [[ ${#failed[@]} -gt 0 ]]; then
   printf '[post-render] typst-render: %d page(s) with a failed block; got:\n' "${#failed[@]}" >&2

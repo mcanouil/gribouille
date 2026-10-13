@@ -147,6 +147,7 @@ jobs:
       # version bump, the new version itself.
       - name: Link the package to the checkout
         id: package
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
