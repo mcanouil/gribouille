@@ -72,7 +72,10 @@ fi
 if ! tools/package-path.sh --self-test; then
   failures=$((failures + 1))
 fi
-PACKAGE_PATH="$(tools/package-path.sh "${OUT_DIR}/packages")"
+# One link per run: a shared path would let a second checkout repoint it mid-run.
+PACKAGE_DIR="$(mktemp -d)"
+trap 'rm -rf "${PACKAGE_DIR}"' EXIT
+PACKAGE_PATH="$(tools/package-path.sh "${PACKAGE_DIR}")"
 
 compile_glob "unit"     "tests/unit/*.typ"
 compile_glob "examples" "examples/*.typ" --package-path "${PACKAGE_PATH}"
