@@ -3,7 +3,7 @@
 // Default `oob: "drop"` removes rows whose mapped value falls outside the
 // limits; `oob: "squish"` clamps them to the nearest endpoint instead.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,7 +1,7 @@
 // Binned shape and linetype scales: continuous variable cut into n bins, each bin gets one
 // shape (point geom) or one dash pattern (line geom).
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

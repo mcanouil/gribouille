@@ -1,7 +1,7 @@
 // Reduce a `z` aesthetic over a 2D grid: each cell colours by the mean of
 // the values that fell inside it, instead of the cell count.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

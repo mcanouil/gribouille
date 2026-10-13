@@ -4,7 +4,7 @@
 // `axis-line` theme surface and the ticks read `axis-ticks`, both of which
 // theme-minimal blanks, so the panels below turn them back on.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -3,7 +3,7 @@
 // The ramp stops at a mid tone so the fixed dark ink reads on every cell,
 // including the palest; a full light-to-dark ramp would strand the labels.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

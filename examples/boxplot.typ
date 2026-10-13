@@ -1,6 +1,6 @@
 // stat-boxplot reduces each group to a five-number summary; geom-boxplot draws the Tukey box.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

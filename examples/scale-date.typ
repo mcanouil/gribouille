@@ -1,6 +1,6 @@
 // scale-date parses ISO date strings on x and renders year-month tick labels.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

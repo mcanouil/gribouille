@@ -4,7 +4,7 @@
 // rather than relying on the geom's implicit y default. With no `labels(y:)`
 // override, the y-axis title is derived from the marker: `_count` -> `Count`.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

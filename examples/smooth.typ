@@ -1,6 +1,6 @@
 // Scatter with an OLS smoother and 95% CI band.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,7 +1,7 @@
 // Showcase: a smoother whose confidence band is explained where it is read;
 // the caption states exactly what the shading means.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

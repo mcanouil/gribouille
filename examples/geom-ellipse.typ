@@ -1,6 +1,6 @@
 // geom-ellipse: parametric ellipses with mapped fill and rotation.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

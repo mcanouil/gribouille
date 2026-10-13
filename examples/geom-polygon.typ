@@ -1,6 +1,6 @@
 // geom-polygon: closed filled polygons, one per group.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,7 +1,7 @@
 // Data-driven reference lines: bind the intercept channels through `aes()` so
 // each row of an annotations frame draws its own line, coloured per row.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

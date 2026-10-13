@@ -1,6 +1,6 @@
 // geom-path: connects rows in input order, not sorted by x.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // geom-freqpoly: line through binned counts, the line counterpart to a histogram.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

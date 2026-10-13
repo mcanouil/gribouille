@@ -1,7 +1,7 @@
 // geom-count: scatter where each unique (x, y) is drawn once and the count
 // is exposed as the size aesthetic via stat-sum.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

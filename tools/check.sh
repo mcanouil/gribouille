@@ -39,22 +39,23 @@ total=0
 compile_glob() {
   local label="$1"
   local glob="$2"
+  shift 2
   local label_passed=0
   local label_total=0
 
   for f in ${glob}; do
     label_total=$((label_total + 1))
     total=$((total + 1))
-    if typst compile "${f}" --root "${REPO_ROOT}" "${OUT_DIR}/$(basename "${f%.typ}").pdf" 2>/dev/null; then
+    if typst compile "${f}" --root "${REPO_ROOT}" "$@" "${OUT_DIR}/$(basename "${f%.typ}").pdf" 2>/dev/null; then
       label_passed=$((label_passed + 1))
     else
       failures=$((failures + 1))
       printf '  FAIL  %s  %s\n' "${label}" "${f}"
-      typst compile "${f}" --root "${REPO_ROOT}" "${OUT_DIR}/$(basename "${f%.typ}").pdf" || true
+      typst compile "${f}" --root "${REPO_ROOT}" "$@" "${OUT_DIR}/$(basename "${f%.typ}").pdf" || true
     fi
   done
 
-  printf '%-9s %d/%d\n' "${label}:" "${label_passed}" "${label_total}"
+  printf '%-14s %d/%d\n' "${label}:" "${label_passed}" "${label_total}"
 }
 
 if command -v lua5.4 >/dev/null 2>&1; then
@@ -71,9 +72,10 @@ fi
 if ! tools/package-path.sh --self-test; then
   failures=$((failures + 1))
 fi
+PACKAGE_PATH="$(tools/package-path.sh "${OUT_DIR}/packages")"
 
 compile_glob "unit"     "tests/unit/*.typ"
-compile_glob "examples" "examples/*.typ"
+compile_glob "examples" "examples/*.typ" --package-path "${PACKAGE_PATH}"
 compile_glob "visual"   "tests/visual/*.typ"
 
 # The error fixtures assert the opposite of the globs above: each one must fail,

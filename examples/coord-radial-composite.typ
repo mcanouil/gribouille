@@ -2,7 +2,7 @@
 // crossbar / boxplot all render polar wedges, radial spines and arc caps
 // instead of cartesian rectangles.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

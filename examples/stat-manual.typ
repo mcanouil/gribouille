@@ -1,7 +1,7 @@
 // stat-manual lets you splice an ad-hoc closure into the layer pipeline.
 // Here it adds a per-row index column, drawn as text labels.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // scale-stroke: marker outline thickness driven by the stroke aesthetic.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,7 +1,7 @@
 // Showcase: scatter with a trend line and a named outlier; the two-seater
 // that defies the trend gets a label instead of leaving readers guessing.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

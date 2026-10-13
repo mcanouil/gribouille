@@ -4,7 +4,7 @@
 // alignment (e.g. top + right) places it inside the panel anchored to that
 // corner; a dict (x:, y:) / (dx:, dy:) offsets it anywhere on the canvas.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -3,7 +3,7 @@
 //   - annotate("typst", label: [...]) — content block on a single row.
 // Both forms accept content directly; no `typst()` wrapper is needed.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

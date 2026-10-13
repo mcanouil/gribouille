@@ -1,6 +1,6 @@
 // coord-fixed combined with facet-wrap: every panel keeps a 1:1 unit ratio.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

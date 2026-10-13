@@ -1,6 +1,6 @@
 // Stacked bars: quarters on x, revenue by product stacked within each quarter.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

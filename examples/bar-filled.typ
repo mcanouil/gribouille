@@ -1,6 +1,6 @@
 // Filled bars: each quarter's total normalised to 1 (product share).
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

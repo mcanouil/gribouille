@@ -1,7 +1,7 @@
 // Showcase: three economic series as small multiples with free y scales;
 // separate panels beat spaghetti when units and ranges differ.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

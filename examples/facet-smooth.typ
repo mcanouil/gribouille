@@ -1,6 +1,6 @@
 // Facet-wrap with a per-panel smoother fitted only on each panel's subset.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

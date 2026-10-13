@@ -1,6 +1,6 @@
 // geom-step: stair-step interpolation between consecutive points.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

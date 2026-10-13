@@ -1,6 +1,6 @@
 // guide-axis-logticks adds minor ticks at log-scale subdivisions on a log10 axis.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // Bundled penguins dataset: flipper length vs body mass by species.
 
-#import "../lib.typ": *
+#import "@preview/gribouille:0.7.0": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

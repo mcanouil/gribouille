@@ -6,7 +6,7 @@
 -- `gallery-intent` metadata: `hub` injects one hidden `{typst}` chunk per
 -- `hub.yml` hero so `typst-render` writes `hero-<slug>` SVGs; any other value
 -- filters `gallery.yml` to that intent, prepending one hidden `{typst}` chunk
--- per item and appending a `#modal-<slug>` div carrying the rewritten `.typ`
+-- per item and appending a `#modal-<slug>` div carrying the `.typ`
 -- source for the `modal` extension to wrap as a Bootstrap modal.
 --
 -- The hub renders its heroes under a `hero-` prefix rather than reusing the
@@ -23,28 +23,6 @@ local function read_file(path)
   local body = f:read('*a')
   f:close()
   return body
-end
-
-local function rewrite_lib_import(source)
-  local version = os.getenv('VERSION') or '?.?.?'
-  local replacement = '#import "@preview/gribouille:' .. version .. '": *'
-  local rewritten, n = source:gsub('#import%s+"[^"]*lib%.typ"%s*:[^\n]*', replacement, 1)
-  if n > 0 then return rewritten end
-  local header_lines = {}
-  local rest_start = 1
-  for line, next_pos in source:gmatch('([^\n]*)\n()') do
-    if line:match('^%s*//') or line:match('^%s*$') then
-      header_lines[#header_lines + 1] = line
-      rest_start = next_pos
-    else
-      break
-    end
-  end
-  local rest = source:sub(rest_start):gsub('^\n+', '')
-  if #header_lines > 0 then
-    return table.concat(header_lines, '\n') .. '\n' .. replacement .. '\n\n' .. rest
-  end
-  return replacement .. '\n\n' .. rest
 end
 
 local function strip_quotes(v)
@@ -83,12 +61,14 @@ local function parse_yaml_list(text)
   return items
 end
 
+-- typst-render resolves a leading `/` against docs/ and a relative path against
+-- the page folder, docs/gallery/, so the examples are two levels up.
 local function build_typst_block(slug, alt, output_name)
   local quoted_alt = "'" .. (alt or ''):gsub("'", "''") .. "'"
   local text = table.concat({
     "//| output-filename: '" .. (output_name or slug) .. ".svg'",
     '//| alt: ' .. quoted_alt,
-    "//| file: '/assets/examples/" .. slug .. ".typ'",
+    "//| file: '../../examples/" .. slug .. ".typ'",
   }, '\n')
   return pandoc.CodeBlock(text, pandoc.Attr('', { '{typst}' }, {}))
 end
@@ -139,10 +119,10 @@ local function intent_blocks(input_dir, project_dir, intent)
     if slug and slug ~= '' and it.intent == intent then
       table.insert(typst_blocks, build_typst_block(slug, it.alt))
 
-      local typ_path = project_dir .. '/assets/examples/' .. slug .. '.typ'
+      local typ_path = project_dir .. '/../examples/' .. slug .. '.typ'
       local source = read_file(typ_path)
       if source then
-        source = rewrite_lib_import(source):gsub('\n+$', '')
+        source = source:gsub('\n+$', '')
       else
         quarto.log.warning('gallery-data: cannot read ' .. typ_path)
         source = '// File not found: ' .. typ_path
