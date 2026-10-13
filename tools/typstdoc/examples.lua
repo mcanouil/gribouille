@@ -214,7 +214,7 @@ function M.nav_drift(pages, card_pages, sidebar_pages)
 end
 
 -- Sorted list of `hub.yml` heroes that name no `gallery.yml` slug. The hub
--- filter emits `../../examples/<hero>.typ` for whatever string it finds, so a
+-- filter emits `/../examples/<hero>.typ` for whatever string it finds, so a
 -- typo becomes a Typst compile failure with no pointer back to the card.
 function M.bad_heroes(cards, slugs)
   local out = {}

@@ -14,6 +14,7 @@ on:
       - "examples/**"
       - "tools/typstdoc/**"
       - "tools/package.sh"
+      - "tools/package-path.sh"
       - "typst.toml"
       - "CHANGELOG.md"
       - ".github/workflows/deploy.yml"
@@ -29,6 +30,7 @@ on:
       - "examples/**"
       - "tools/typstdoc/**"
       - "tools/package.sh"
+      - "tools/package-path.sh"
       - "typst.toml"
       - "CHANGELOG.md"
       - ".github/workflows/deploy.yml"
@@ -244,6 +246,11 @@ jobs:
         run: |
           set -euo pipefail
           quarto render docs --profile "${{ matrix.profile }}"
+          pages=$(find docs/_site -name '*.html' | wc -l)
+          if [[ "${pages}" -eq 0 ]]; then
+            echo "::error::No rendered page found under docs/_site; the failed-block check read nothing."
+            exit 1
+          fi
           if failed=$(grep -rl 'typst-render-error' docs/_site --include='*.html'); then
             echo "::error::Typst blocks failed to compile on these pages:"
             echo "${failed}"
