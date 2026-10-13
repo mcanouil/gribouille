@@ -61,9 +61,7 @@ runs:
         compile_one() {
           set -euo pipefail
           f="$1"
-          extra=()
-          [[ -n "${PACKAGE_PATH}" ]] && extra=(--package-path "${PACKAGE_PATH}")
-          if out=$(typst compile "${f}" --root "${ROOT}" "${extra[@]}" "/tmp/$(basename "${f%.typ}").pdf" 2>&1); then
+          if out=$(typst compile "${f}" --root "${ROOT}" ${PACKAGE_PATH:+--package-path "${PACKAGE_PATH}"} "/tmp/$(basename "${f%.typ}").pdf" 2>&1); then
             status=pass
           else
             status=fail

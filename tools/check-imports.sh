@@ -12,23 +12,19 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPO_ROOT}"
 
 version="$(awk -F'"' '/^version[[:space:]]*=/ { print $2; exit }' typst.toml)"
-checked=0
+files=(examples/*.typ .github/star-history/star-history.typ)
 bad=()
-for file in examples/*.typ .github/star-history/star-history.typ; do
-  checked=$((checked + 1))
-  if ! grep -qE '^#import "@preview/gribouille:[0-9]+\.[0-9]+\.[0-9]+"' "${file}"; then
+for file in "${files[@]}"; do
+  found="$(grep -oE '^#import "@preview/gribouille:[0-9]+\.[0-9]+\.[0-9]+"' "${file}" | cut -d: -f2 | tr -d '"' || true)"
+  if [[ -z "${found}" ]]; then
     bad+=("${file}: no #import \"@preview/gribouille:${version}\" line; add one in place of any lib.typ import")
-    continue
+  elif [[ "${found}" != "${version}" ]]; then
+    bad+=("${file}: imports ${found//$'\n'/, }; typst.toml has ${version}")
   fi
-  while IFS= read -r found; do
-    if [[ "${found}" != "${version}" ]]; then
-      bad+=("${file}: imports ${found}; typst.toml has ${version}")
-    fi
-  done < <(grep -oE '@preview/gribouille:[0-9]+\.[0-9]+\.[0-9]+' "${file}" | cut -d: -f2)
 done
 
 if [[ ${#bad[@]} -gt 0 ]]; then
   printf '  FAIL  imports  %s\n' "${bad[@]}"
 fi
-printf '%-14s %d/%d\n' "imports:" "$((checked - ${#bad[@]}))" "${checked}"
+printf '%-9s %d/%d\n' "imports:" "$((${#files[@]} - ${#bad[@]}))" "${#files[@]}"
 [[ ${#bad[@]} -eq 0 ]]

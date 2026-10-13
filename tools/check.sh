@@ -55,7 +55,7 @@ compile_glob() {
     fi
   done
 
-  printf '%-14s %d/%d\n' "${label}:" "${label_passed}" "${label_total}"
+  printf '%-9s %d/%d\n' "${label}:" "${label_passed}" "${label_total}"
 }
 
 if command -v lua5.4 >/dev/null 2>&1; then
@@ -78,8 +78,7 @@ trap 'rm -rf "${PACKAGE_DIR}"' EXIT
 PACKAGE_PATH="$(tools/package-path.sh "${PACKAGE_DIR}")"
 
 compile_glob "unit"     "tests/unit/*.typ"
-compile_glob "examples" "examples/*.typ" --package-path "${PACKAGE_PATH}"
-compile_glob "star-history" ".github/star-history/star-history.typ" --package-path "${PACKAGE_PATH}"
+compile_glob "examples" "examples/*.typ .github/star-history/star-history.typ" --package-path "${PACKAGE_PATH}"
 
 if ! tools/check-imports.sh; then
   failures=$((failures + 1))
