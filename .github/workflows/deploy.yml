@@ -236,24 +236,12 @@ jobs:
         shell: bash
         run: echo "DEV_VERSION=$(date -u +%Y.%-m.%-d)" >> "${GITHUB_ENV}"
 
-      # typst-render swaps a placeholder in for a Typst block that fails to compile
-      # and the render still exits 0, so a broken figure ships with every job green.
-      # Match the failures in the log: they arrive as INFO records, so --log-level
-      # cannot select them, and --fail-if-warnings would trip on benign warnings.
+      # docs/_scripts/typst-render-check.sh fails the render on a failed Typst block.
       - name: Render site
         shell: bash
-        env:
-          RENDER_LOG: ${{ runner.temp }}/render.log
         run: |
           set -euo pipefail
-          quarto render docs --profile "${{ matrix.profile }}" \
-            --log "${RENDER_LOG}" --log-format json-stream
-          failures=$(jq -r '.msg' "${RENDER_LOG}" | grep '\[typst-render\] Compilation failed' || true)
-          if [ -n "${failures}" ]; then
-            echo "::error::Typst blocks failed to compile; see the failures below."
-            echo "${failures}"
-            exit 1
-          fi
+          quarto render docs --profile "${{ matrix.profile }}"
 
       - name: Set up Lua
         if: ${{ matrix.assets_dir != '' }}

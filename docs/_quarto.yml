@@ -5,6 +5,8 @@ project:
   pre-render:
     - ./_scripts/package-path.sh
     - ../tools/typstdoc/main.lua
+  post-render:
+    - ./_scripts/typst-render-check.sh
   resources:
     - assets/fonts/
     - assets/images/logo.svg
