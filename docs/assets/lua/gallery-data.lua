@@ -62,13 +62,16 @@ local function parse_yaml_list(text)
 end
 
 -- typst-render resolves a leading `/` against docs/ and a relative path against
--- the page folder, docs/gallery/, so the examples are two levels up.
+-- the page folder, docs/gallery/, so the examples are two levels up. Its cache
+-- key hashes local imports only, and the examples import @preview/gribouille,
+-- so their blocks skip the cache rather than serve a figure older than src/.
 local function build_typst_block(slug, alt, output_name)
   local quoted_alt = "'" .. (alt or ''):gsub("'", "''") .. "'"
   local text = table.concat({
     "//| output-filename: '" .. (output_name or slug) .. ".svg'",
     '//| alt: ' .. quoted_alt,
     "//| file: '../../examples/" .. slug .. ".typ'",
+    '//| cache: false',
   }, '\n')
   return pandoc.CodeBlock(text, pandoc.Attr('', { '{typst}' }, {}))
 end

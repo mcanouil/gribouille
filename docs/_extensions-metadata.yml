@@ -16,9 +16,6 @@ extensions:
     # Resolves @preview/gribouille to the working tree; written by
     # _scripts/package-path.sh before every render.
     package-path: "/.typst-packages"
-    # Off: the cache key hashes local imports only, so a block that imports
-    # @preview/gribouille would keep a stale image after a change under src/.
-    cache: false
     style: "display: block; margin-inline: auto;"
     align: center
     background: auto
