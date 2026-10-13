@@ -66,6 +66,20 @@ jobs:
           label: unit
           glob: "tests/unit/*.typ"
 
+      - name: Set up Lua
+        uses: leafo/gh-actions-lua@v13
+        with:
+          luaVersion: "5.4"
+
+      # Stages the payload Typst Universe receives, installs it as the published
+      # package, and compiles every example and the star history chart against it
+      # with the import a reader types.
+      - name: Rehearse the release
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools/dry-release.sh
+
       - name: Summary
         if: always()
         shell: bash

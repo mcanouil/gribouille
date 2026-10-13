@@ -44,13 +44,21 @@ fi
 ln -sfn "${STAGE}" "${INSTALL_LINK}"
 printf 'Linked @preview/gribouille:%s -> %s\n' "${VERSION}" "${STAGE}"
 
-# The examples import @preview/gribouille as a reader does, so each one compiles
-# against the staged payload above, not the working tree. A file the payload
+# The examples import the working tree with `#import "/lib.typ"`. A copy of each
+# one gets the import a reader types instead, as the documentation shows it, and
+# compiles against the staged payload above. The copies sit in their own root,
+# with no lib.typ, so nothing can resolve to the working tree. A file the payload
 # leaves out fails here rather than for the first user.
+SHOWN="${STAGE_ROOT}/shown"
+mkdir -p "${SHOWN}/.github" "${SHOWN}/docs/assets"
+cp -R examples "${SHOWN}/"
+cp -R .github/star-history "${SHOWN}/.github/"
+cp -R docs/assets/images "${SHOWN}/docs/assets/"
 compiled=0
 failed=()
 for f in examples/*.typ .github/star-history/star-history.typ; do
-  if typst compile --root "${REPO_ROOT}" "${f}" "${STAGE_ROOT}/$(basename "${f%.typ}").pdf"; then
+  sed 's|^#import "/lib.typ": \*$|#import "@preview/gribouille:'"${VERSION}"'": *|' "${f}" >"${SHOWN}/${f}"
+  if typst compile --root "${SHOWN}" "${SHOWN}/${f}" "${STAGE_ROOT}/$(basename "${f%.typ}").pdf"; then
     compiled=$((compiled + 1))
   else
     failed+=("${f}")
