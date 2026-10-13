@@ -326,7 +326,7 @@ end
 
 --- Typst colour helpers for adaptive theme support.
 --- Always injected so the code-window function can derive border, surface,
---- and muted colours from the page background at render time.
+--- muted, and label colours from the page background at render time.
 local TYPST_COLOUR_HELPERS = [==[
 // code-window: adaptive colour helpers (derive UI tones from page background)
 #let _cw-page-bg() = {
@@ -444,12 +444,13 @@ local function build_typst_function_def(has_hotfixes)
   let border-colour = color.mix((fg, 15%%), (page-bg, 85%%))
   let surface-fill = color.mix((fg, 5%%), (page-bg, 95%%))
   let muted-colour = color.mix((fg, 50%%), (page-bg, 50%%))
+  let label-colour = color.mix((fg, 65%%), (page-bg, 35%%))
 
   let filename-label = if filename != none {
     text(
       size: if is-auto { 0.7em } else { 0.85em },
       weight: 500,
-      fill: muted-colour,
+      fill: label-colour,
       if is-auto { upper(filename) } else { filename },
     )
   }
@@ -461,7 +462,7 @@ local function build_typst_function_def(has_hotfixes)
       radius: 3pt,
       fill: color.mix((fg, 10%%), (page-bg, 90%%)),
       stroke: 0.5pt + border-colour,
-      text(size: 0.7em, weight: 500, fill: muted-colour, lines-label),
+      text(size: 0.7em, weight: 500, fill: label-colour, lines-label),
     )
   }
 
@@ -783,7 +784,7 @@ document.addEventListener("DOMContentLoaded",function(){
       if(titleBar&&!titleBar.querySelector(".code-with-filename-lines")){
         var chip=document.createElement("span");
         chip.className="code-with-filename-lines";
-        chip.textContent="L"+spec;
+        chip.textContent="L"+spec.replace(/,/g,",\u200B");
         titleBar.appendChild(chip);
       }
     }

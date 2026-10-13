@@ -56,8 +56,11 @@ local badge_position = 'after'
 --- @type string Badge background colour (hex or colour name)
 local badge_background_colour = '#c3c3c3'
 
---- @type string|nil Badge text colour (hex or colour name)
+--- @type string|nil Badge text colour (hex or colour name), nil to pick black or white
 local badge_text_colour = nil
+
+--- @type boolean Whether this document has already warned about a faint badge background
+local badge_contrast_warned = false
 
 --- @type boolean Whether to shorten link text matching platform URLs
 local normalize_links = true
@@ -83,23 +86,41 @@ local COMMIT_SHA_SHORT_LENGTH = 7
 --- @type integer Minimum length for a valid git commit SHA
 local COMMIT_SHA_MIN_LENGTH = 7
 
---- @type string Lua pattern matching a 3-, 4-, 6-, or 8-character hex colour with leading #
-local HEX_COLOUR_PATTERN = '^#%x%x%x%x?%x?%x?%x?%x?$'
-
 --- @type string Class Quarto puts on the markdown-pipeline envelope elements
 local MARKDOWN_ENVELOPE_CLASS = 'quarto-markdown-envelope-contents'
 
+--- @type table<integer, boolean> Digit counts of a valid hex colour: #rgb, #rgba, #rrggbb, #rrggbbaa
+local HEX_COLOUR_DIGIT_COUNTS = { [3] = true, [4] = true, [6] = true, [8] = true }
+
+--- @type number WCAG AA minimum contrast ratio for normal text
+local WCAG_AA_CONTRAST = 4.5
+
+--- @type number[] Page colours behind an HTML badge: white for a light theme, black for a dark one
+local HTML_PAGES = { 1, 0 }
+
+--- @type number[] Page colour behind a Typst badge: white
+local TYPST_PAGES = { 1 }
+
+--- Check whether a value is a hex colour with 3, 4, 6, or 8 digits after the #.
+--- @param value string The candidate colour value
+--- @return boolean True if the value is a hex colour
+local function is_hex_colour(value)
+  return value:match('^#%x+$') ~= nil and HEX_COLOUR_DIGIT_COUNTS[#value - 1] == true
+end
+
 --- Validate a colour value as a hex code or CSS named colour.
 --- Returns the original value if valid, or nil if invalid.
---- @param value string|nil The candidate colour value
+--- A value that is not a string returns nil without a warning, because the
+--- schema check has already reported its type.
+--- @param value any The candidate colour value
 --- @param option_label string The metadata option name (for warnings)
 --- @return string|nil The validated colour value, or nil if invalid
 local function validate_colour(value, option_label)
-  if str.is_empty(value) then
+  if type(value) ~= 'string' or str.is_empty(value) then
     return nil
   end
   local s = value --[[@as string]]
-  if s:match(HEX_COLOUR_PATTERN) or colour.is_named_colour(s) then
+  if is_hex_colour(s) or colour.is_named_colour(s) then
     return s
   end
   log.log_warning(
@@ -116,10 +137,102 @@ end
 --- @param value string The colour value (hex code or CSS named colour)
 --- @return string The hex form
 local function colour_to_hex(value)
-  if value:match(HEX_COLOUR_PATTERN) then
+  if is_hex_colour(value) then
     return value
   end
   return colour.named_to_HTML(value)
+end
+
+--- Split a validated colour value into its channels, each from 0 to 1.
+--- @param value string The colour value (hex code or CSS named colour)
+--- @return number[] The red, green, and blue channels
+--- @return number The alpha channel, 1 when the colour has no alpha digits
+local function colour_channels(value)
+  local digits = colour_to_hex(value):sub(2)
+  if #digits <= 4 then
+    digits = digits:gsub('%x', '%0%0')
+  end
+  local channels = {}
+  for i = 1, 3 do
+    channels[i] = tonumber(digits:sub(2 * i - 1, 2 * i), 16) / 255
+  end
+  local alpha = #digits == 8 and tonumber(digits:sub(7, 8), 16) / 255 or 1
+  return channels, alpha
+end
+
+--- Compute the WCAG relative luminance of sRGB channels.
+--- @param channels number[] The red, green, and blue channels, each from 0 to 1
+--- @return number The relative luminance, from 0 (black) to 1 (white)
+local function relative_luminance(channels)
+  local luminance = 0
+  local weights = { 0.2126, 0.7152, 0.0722 }
+  for i, weight in ipairs(weights) do
+    local channel = channels[i]
+    if channel <= 0.04045 then
+      channel = channel / 12.92
+    else
+      channel = ((channel + 0.055) / 1.055) ^ 2.4
+    end
+    luminance = luminance + weight * channel
+  end
+  return luminance
+end
+
+--- Compute the WCAG contrast ratio between two relative luminances.
+--- @param a number A relative luminance
+--- @param b number Another relative luminance
+--- @return number The contrast ratio, from 1 to 21
+local function contrast_ratio(a, b)
+  return (math.max(a, b) + 0.05) / (math.min(a, b) + 0.05)
+end
+
+--- Pick black or white text for a background colour.
+--- A translucent background is blended over each page colour it can sit on.
+--- The text colour with the higher worst-case contrast wins.
+--- @param background string The background colour (hex code or CSS named colour)
+--- @param pages number[] The grey levels of the possible pages, from 0 (black) to 1 (white)
+--- @return string '#000000' or '#ffffff'
+--- @return number The worst-case contrast ratio of that text colour
+local function contrasting_text_colour(background, pages)
+  local channels, alpha = colour_channels(background)
+  local worst_black, worst_white = math.huge, math.huge
+  for _, page in ipairs(pages) do
+    local blended = {}
+    for i, channel in ipairs(channels) do
+      blended[i] = channel * alpha + page * (1 - alpha)
+    end
+    local luminance = relative_luminance(blended)
+    worst_black = math.min(worst_black, contrast_ratio(luminance, 0))
+    worst_white = math.min(worst_white, contrast_ratio(luminance, 1))
+  end
+  local text, worst = '#000000', worst_black
+  if worst_white > worst_black then
+    text, worst = '#ffffff', worst_white
+  end
+  return text, worst
+end
+
+--- Resolve the badge text colour for the pages of the current output format.
+--- Returns the configured text colour when there is one.
+--- Otherwise picks black or white, and warns once per document when neither
+--- reaches WCAG AA on every page.
+--- @param pages number[] The grey levels of the possible pages, from 0 (black) to 1 (white)
+--- @return string The text colour (hex code or CSS named colour)
+local function resolve_badge_text_colour(pages)
+  if badge_text_colour then
+    return badge_text_colour
+  end
+  local text, worst = contrasting_text_colour(badge_background_colour, pages)
+  if worst < WCAG_AA_CONTRAST and not badge_contrast_warned then
+    badge_contrast_warned = true
+    log.log_warning(
+      EXTENSION_NAME,
+      "'badge-background-colour' value '" .. badge_background_colour .. "' is too transparent for readable text " ..
+      "(" .. string.format('%.1f', worst) .. ':1 at worst, below ' .. WCAG_AA_CONTRAST .. ':1). ' ..
+      "Use a more opaque colour or a valid 'badge-text-colour'."
+    )
+  end
+  return text
 end
 
 --- Reset all module-level state to defaults.
@@ -136,6 +249,7 @@ local function reset_state()
   badge_position = 'after'
   badge_background_colour = '#c3c3c3'
   badge_text_colour = nil
+  badge_contrast_warned = false
   normalize_links = true
   fetch_titles = false
   title_cache = {}
@@ -231,22 +345,14 @@ local function create_platform_link(text, uri, platform_name)
         stylesheets = { css_path }
       })
 
-      local badge_classes = { 'gitlink-badge', 'badge', 'text-bg-secondary' }
-      local badge_style = {}
-      if not str.is_empty(badge_background_colour) then
-        table.insert(badge_style, 'background-color: ' .. badge_background_colour .. ';')
-      end
-      if not str.is_empty(badge_text_colour) then
-        table.insert(badge_style, 'color: ' .. badge_text_colour .. ';')
-      end
-
       local badge_attr = pandoc.Attr(
         '',
-        badge_classes,
+        { 'gitlink-badge', 'badge' },
         {
           title = platform_label,
           ['aria-label'] = platform_label .. ' platform',
-          style = table.concat(badge_style, ' ')
+          style = 'background-color: ' .. badge_background_colour ..
+              '; color: ' .. resolve_badge_text_colour(HTML_PAGES) .. ';'
         }
       )
       local badge = pandoc.Span({ pandoc.Str(platform_label) }, badge_attr)
@@ -269,14 +375,11 @@ local function create_platform_link(text, uri, platform_name)
       -- Typst rgb() only accepts hex strings, so convert any CSS-named colour
       -- (already validated at Meta time) to its hex equivalent.
       local bg_hex = colour_to_hex(badge_background_colour)
-      local text_colour_opt = ''
-      if not str.is_empty(badge_text_colour) then
-        text_colour_opt = ', fill: rgb("' .. colour_to_hex(badge_text_colour --[[@as string]]) .. '")'
-      end
+      local text_hex = colour_to_hex(resolve_badge_text_colour(TYPST_PAGES))
       local badge_raw = '#box(fill: rgb("' ..
           bg_hex ..
-          '"), inset: 2pt, outset: 0pt, radius: 3pt, baseline: -0.3em, text(size: 0.45em' ..
-          text_colour_opt .. ', [' .. platform_label .. ']))'
+          '"), inset: 2pt, outset: 0pt, radius: 3pt, baseline: -0.3em, text(size: 0.45em, fill: rgb("' ..
+          text_hex .. '"), [' .. platform_label .. ']))'
       local badge = pandoc.RawInline('typst', ' ' .. badge_raw)
 
       local inlines = {}
@@ -405,26 +508,12 @@ local function get_repository(meta)
 
   show_platform_badge = checker:option('show-platform-badge') ~= false
 
-  local badge_pos_meta = meta_mod.get_metadata_value(meta, 'gitlink', 'badge-position')
-  if badge_pos_meta ~= nil then
-    badge_position = badge_pos_meta --[[@as string]]
-  end
-
-  local badge_bg_colour_meta = meta_mod.get_metadata_value(meta, 'gitlink', 'badge-background-colour')
-  if not str.is_empty(badge_bg_colour_meta) then
-    local validated_bg = validate_colour(badge_bg_colour_meta --[[@as string]], 'badge-background-colour')
-    if validated_bg then
-      badge_background_colour = validated_bg
-    end
-  end
-
-  local badge_text_colour_meta = meta_mod.get_metadata_value(meta, 'gitlink', 'badge-text-colour')
-  if not str.is_empty(badge_text_colour_meta) then
-    local validated_text = validate_colour(badge_text_colour_meta --[[@as string]], 'badge-text-colour')
-    if validated_text then
-      badge_text_colour = validated_text
-    end
-  end
+  -- Read through the schema, which applies the defaults and resolves the
+  -- `-color` spelling aliases.
+  badge_position = checker:option('badge-position') or badge_position
+  badge_background_colour = validate_colour(checker:option('badge-background-colour'), 'badge-background-colour')
+      or badge_background_colour
+  badge_text_colour = validate_colour(checker:option('badge-text-colour'), 'badge-text-colour')
 
   normalize_links = checker:option('normalize-links') ~= false
 

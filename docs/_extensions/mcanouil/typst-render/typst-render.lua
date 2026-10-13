@@ -147,6 +147,15 @@ local global_brand_mode = 'light'
 --- Quarto's own pass leaves them literal instead of removing them.
 local code_annotations_disabled = false
 
+--- Whether Quarto's markdown reader is ready (set during Meta pass).
+--- False when the filter runs at `pre-ast`, before Quarto captures its reader
+--- options, where `quarto.utils.string_to_inlines` fails.
+local quarto_reader_ready = true
+
+--- Quarto's reader options at `pre-ast` (set during Meta pass), used to parse
+--- captions with Quarto's own reader there; nil once Quarto's reader is ready.
+local pre_ast_reader_options = nil
+
 --- Resolved Typst binary path (cached)
 local typst_bin = nil
 
@@ -1508,8 +1517,16 @@ local REF_TYPE_NAMES = {
 --- @param opts table Merged options
 --- @return pandoc.Para Para containing the image
 local function create_image_element(img_path, opts)
+  -- Without an explicit alt, a labelled block's caption already describes the
+  -- figure, so it gets no alt, as Quarto's own figures do. An unlabelled
+  -- caption is shown nowhere else, so it becomes the alt as plain text.
   local caption_text = cell.resolve_caption(opts)
-  local fallback = caption_text ~= '' and caption_text or opts._source or ''
+  local fallback = opts._source or ''
+  if caption_text ~= '' and cell.ref_type(opts.label) then
+    fallback = ''
+  elseif caption_text ~= '' then
+    fallback = pandoc.utils.stringify(pandoc.read(caption_text, 'markdown').blocks)
+  end
   local alt_text = cell.resolve_alt(opts, fallback)
 
   local classes = {}
@@ -1537,13 +1554,27 @@ local function create_image_element(img_path, opts)
     kvpairs[#kvpairs + 1] = { 'fig-alt', alt_text }
   end
 
+  -- HTML and Typst take the alt from `fig-alt`, so the description stays empty
+  -- there: at `pre-ast`, a lone image with a description becomes an implicit
+  -- figure captioned by it. Other formats (docx, LaTeX) read the alt from the
+  -- description only.
+  local description = { pandoc.Str(alt_text) }
+  if alt_text == '' or quarto.format.is_html_output() or quarto.format.is_typst_output() then
+    description = {}
+  end
+
   local img = pandoc.Image(
-    { pandoc.Str(alt_text) },
+    description,
     img_path,
     '',
     pandoc.Attr('', classes, kvpairs)
   )
 
+  -- Quarto only promotes a Para holding a lone image with a description, so
+  -- a Plain keeps the description as alt without the implicit figure.
+  if not quarto_reader_ready and #description > 0 then
+    return pandoc.Plain({ img })
+  end
   return pandoc.Para({ img })
 end
 
@@ -1791,6 +1822,14 @@ local function get_configuration(meta)
   local code_annotations_meta = meta['code-annotations']
   code_annotations_disabled = code_annotations_meta ~= nil
     and pandoc.utils.stringify(code_annotations_meta) == 'false'
+
+  -- Quarto removes `quarto_pandoc_reader_opts` from the metadata when it
+  -- captures its reader options, so the key is only present at `pre-ast`.
+  quarto_reader_ready = meta['quarto_pandoc_reader_opts'] == nil
+  pre_ast_reader_options = nil
+  if not quarto_reader_ready then
+    pre_ast_reader_options = require('readqmd').meta_to_options(meta['quarto_pandoc_reader_opts'])
+  end
 
   checker:options(meta)
 
@@ -2117,7 +2156,7 @@ local function process_codeblock(el)
     if opts.align and opts.align ~= 'default' and VALID_ALIGN_SET[opts.align] then
       scoped_code = '#align(' .. opts.align .. ')[\n' .. scoped_code .. '\n]'
     end
-    local result = cell.wrap_crossref(pandoc.RawBlock('typst', scoped_code), opts, REF_TYPE_NAMES)
+    local result = cell.wrap_crossref(pandoc.RawBlock('typst', scoped_code), opts, REF_TYPE_NAMES, pre_ast_reader_options)
     if do_echo then
       -- Native Typst pass-through does not support annotations; strip markers.
       return cell.create_echo_block(code, is_fenced, option_lines, fold, result, false, line_numbers)
@@ -2200,7 +2239,7 @@ local function process_codeblock(el)
         pandoc.Attr('', { 'dark-content' }, {})
       )
     end
-    result = cell.wrap_crossref(pandoc.Div(blocks), opts, REF_TYPE_NAMES)
+    result = cell.wrap_crossref(pandoc.Div(blocks), opts, REF_TYPE_NAMES, pre_ast_reader_options)
   else
     -- Single-mode: resolve colours to brand mode
     local resolved_opts = has_dual_mode_colours(opts)
@@ -2241,7 +2280,7 @@ local function process_codeblock(el)
       end
     end
 
-    result = cell.wrap_crossref(content, opts, REF_TYPE_NAMES)
+    result = cell.wrap_crossref(content, opts, REF_TYPE_NAMES, pre_ast_reader_options)
   end
 
   -- Compilation and file-save side effects have run; suppress embedding if include is false.
@@ -2302,20 +2341,20 @@ local function create_inline_image_element(img_path, opts)
     )
   end
 
-  if quarto.format.is_docx_output() then
+  if not quarto.format.is_html_output() then
     local img = pandoc.Image(
       { pandoc.Str(opts._alt or '') },
       img_path
     )
-    img.attr = pandoc.Attr('', {}, { { 'height', '1em' } })
+    if quarto.format.is_docx_output() then
+      img.attr = pandoc.Attr('', {}, { { 'height', '1em' } })
+    end
+    -- At `pre-ast`, Quarto promotes a Para holding only this image to a figure
+    -- captioned by its alt; the Span keeps the image out of that pattern.
+    if not quarto_reader_ready then
+      return pandoc.Span({ img })
+    end
     return img
-  end
-
-  if not quarto.format.is_html_output() then
-    return pandoc.Image(
-      { pandoc.Str(opts._alt or '') },
-      img_path
-    )
   end
 
   local extra_classes = ''

@@ -360,8 +360,9 @@ function M.new(config)
   --- @param content pandoc.Block The content block
   --- @param opts table Merged options
   --- @param ref_type_names table Map from prefix to Quarto FloatRefTarget type name
+  --- @param pre_ast_reader_options pandoc.ReaderOptions|nil Quarto's reader options at `pre-ast`, nil once Quarto's reader is ready
   --- @return pandoc.Block FloatRefTarget or the original content block
-  function cell.wrap_crossref(content, opts, ref_type_names)
+  function cell.wrap_crossref(content, opts, ref_type_names, pre_ast_reader_options)
     local label = opts.label or ''
     local prefix = cell.ref_type(label)
 
@@ -371,8 +372,14 @@ function M.new(config)
 
     local caption_text = cell.resolve_caption(opts)
     local caption_inlines = {}
-    if caption_text ~= '' then
+    if caption_text ~= '' and pre_ast_reader_options == nil then
       caption_inlines = quarto.utils.string_to_inlines(caption_text)
+    elseif caption_text ~= '' then
+      -- `string_to_inlines` fails before Quarto captures its reader options.
+      -- Its reader encodes shortcodes, which Quarto expands after `pre-ast`.
+      caption_inlines = pandoc.utils.blocks_to_inlines(
+        require('readqmd').readqmd(caption_text, pre_ast_reader_options).blocks
+      )
     end
 
     local ref_type_name = ref_type_names[prefix]
