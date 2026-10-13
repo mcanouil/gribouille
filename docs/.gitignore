@@ -4,6 +4,7 @@
 
 # Rendered by the typst-render Quarto filter during `quarto render`.
 /assets/typst-render/
+/.typst-packages/
 /assets/examples/
 
 # Intermediate figure produced by assets/social-card/build.sh (the PNG it feeds is committed).
