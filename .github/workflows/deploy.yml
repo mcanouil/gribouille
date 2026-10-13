@@ -236,12 +236,19 @@ jobs:
         shell: bash
         run: echo "DEV_VERSION=$(date -u +%Y.%-m.%-d)" >> "${GITHUB_ENV}"
 
-      # docs/_scripts/typst-render-check.sh fails the render on a failed Typst block.
+      # docs/_scripts/typst-render-check.sh fails the render on a failed Typst block,
+      # but the release profile renders a tag that may predate that script, so the
+      # rendered site is checked here as well, whatever ref it came from.
       - name: Render site
         shell: bash
         run: |
           set -euo pipefail
           quarto render docs --profile "${{ matrix.profile }}"
+          if failed=$(grep -rl 'typst-render-error' docs/_site --include='*.html'); then
+            echo "::error::Typst blocks failed to compile on these pages:"
+            echo "${failed}"
+            exit 1
+          fi
 
       - name: Set up Lua
         if: ${{ matrix.assets_dir != '' }}

@@ -53,7 +53,7 @@ The examples under [`examples/`](examples) import `@preview/gribouille` as a rea
 To compile one against your working tree, link the package first with [`tools/package-path.sh`](tools/package-path.sh):
 
 ```sh
-typst compile examples/<name>.typ --root . --package-path "$(tools/package-path.sh /tmp/gribouille-packages)"
+typst compile examples/<name>.typ --root . --package-path "$(tools/package-path.sh "$(mktemp -d)")"
 ```
 
 Without `--package-path`, Typst uses the published release, and your changes under `src/` do not show.

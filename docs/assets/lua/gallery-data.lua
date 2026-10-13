@@ -78,7 +78,11 @@ local function library_digest()
       table.sort(entries)
       for _, name in ipairs(entries) do add(rel .. '/' .. name) end
     else
-      parts[#parts + 1] = rel .. '\n' .. (read_file(path) or '')
+      local body = read_file(path)
+      if not body then
+        error('gallery-data: cannot read ' .. path .. ' for the library digest; check that lib.typ and src/ exist under ' .. root)
+      end
+      parts[#parts + 1] = rel .. '\n' .. body
     end
   end
   add('lib.typ')
@@ -87,14 +91,14 @@ local function library_digest()
   return library_digest_cache
 end
 
--- typst-render resolves a leading `/` against docs/ and a relative path against
--- the page folder, docs/gallery/, so the examples are two levels up.
+-- typst-render resolves a leading `/` against docs/, so `/../examples/` is the
+-- repository's examples folder whatever the page folder or working directory.
 local function build_typst_block(slug, alt, output_name)
   local quoted_alt = "'" .. (alt or ''):gsub("'", "''") .. "'"
   local text = table.concat({
     "//| output-filename: '" .. (output_name or slug) .. ".svg'",
     '//| alt: ' .. quoted_alt,
-    "//| file: '../../examples/" .. slug .. ".typ'",
+    "//| file: '/../examples/" .. slug .. ".typ'",
     "//| input: 'gribouille-library=" .. library_digest() .. "'",
   }, '\n')
   return pandoc.CodeBlock(text, pandoc.Attr('', { '{typst}' }, {}))
