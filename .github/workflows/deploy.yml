@@ -154,7 +154,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       QUARTO_TYPST: typst
-      # Drives the navbar label and the example `@preview` import rewrite.
+      # Drives the navbar label and the `{{< env VERSION >}}` imports on the pages.
       VERSION: ${{ matrix.version }}
 
     steps:
