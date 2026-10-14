@@ -199,10 +199,14 @@ card_unavailable() {
 		"${reason}" >&2
 }
 
-mkdir -p "$(dirname "${CARD_PATH}")"
-if [[ -n "$(find "${CARD_PATH}" -mtime -1 2>/dev/null)" ]]; then
+# A site whose configuration never names the card uses a social image of its
+# own, so the card is neither fetched nor required, and a rate-limited fetch
+# cannot fail a render that would not publish it.
+if ! grep -q 'assets/social/og-image\.png' "${DOCS_DIR}/_quarto.yml"; then
+	printf '[pre-render] _quarto.yml does not use assets/social/og-image.png; not fetching the social card\n'
+elif [[ -n "$(find "${CARD_PATH}" -mtime -1 2>/dev/null)" ]]; then
 	printf '[pre-render] Social card cached under a day ago; not refetching\n'
-elif ! curl -fsSL --max-time 20 --retry 3 --retry-delay 2 \
+elif ! curl -fsSL --max-time 20 --retry 3 --retry-delay 2 --create-dirs \
 	"${CARD_URL}" -o "${CARD_PATH}.tmp"; then
 	rm -f "${CARD_PATH}.tmp"
 	card_unavailable "could not fetch ${CARD_URL}"
