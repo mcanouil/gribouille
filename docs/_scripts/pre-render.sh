@@ -135,7 +135,8 @@ fi
 # `--retry` covers that rate limiting: curl counts HTTP 429 as a transient
 # error, alongside 408 and the 5xx family, and honours any Retry-After.
 CARD_URL="https://opengraph.githubassets.com/1/${REPO_SLUG}"
-CARD_PATH="${DOCS_DIR}/assets/social/og-image.png"
+CARD_REL="assets/social/og-image.png"
+CARD_PATH="${DOCS_DIR}/${CARD_REL}"
 
 # GitHub answers 200 with a generic Octocat placeholder, rather than 404, when
 # the repository is private or does not exist. That placeholder must never be
@@ -177,13 +178,12 @@ card_unavailable() {
 		"${reason}" >&2
 }
 
-# A site whose configuration never names the card as an image uses a social
-# image of its own, so the card is neither fetched nor required, and a
-# rate-limited fetch cannot fail a render that would not publish it. Only an
-# `image:` key counts, so a comment that mentions the path does not.
-if ! grep -qE '^[[:space:]]*image:[[:space:]]*["'\'']?/?assets/social/og-image\.png' \
-	"${DOCS_DIR}/_quarto.yml"; then
-	printf '[pre-render] _quarto.yml does not use assets/social/og-image.png; not fetching the social card\n'
+# A site whose configuration never names the card uses a social image of its
+# own, so the card is neither fetched nor required, and a rate-limited fetch
+# cannot fail a render that would not publish it. Comments are stripped first,
+# so a comment that mentions the path does not count.
+if ! sed 's/#.*//' "${DOCS_DIR}/_quarto.yml" | grep -qF "${CARD_REL}"; then
+	printf '[pre-render] _quarto.yml does not use %s; not fetching the social card\n' "${CARD_REL}"
 elif [[ -n "$(find "${CARD_PATH}" -mtime -1 2>/dev/null)" ]]; then
 	printf '[pre-render] Social card cached under a day ago; not refetching\n'
 elif ! curl -fsSL --max-time 20 --retry 3 --retry-delay 2 --create-dirs \
