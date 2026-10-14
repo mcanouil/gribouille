@@ -1,0 +1,59 @@
+<script id="ordinal-dates" type="text/javascript">
+	/**
+	 * @license MIT
+	 * @copyright 2026 Mickaël Canouil
+	 * @author Mickaël Canouil
+	 */
+	document.addEventListener("DOMContentLoaded", function () {
+		const SELECTOR = [".date", ".date-modified", ".listing-date", ".listing-file-modified"].join(", ");
+		const PATTERN = /(\d+)(st|nd|rd|th)\b/g;
+
+		function wrapTextNode(node) {
+			const text = node.nodeValue;
+			const fragment = document.createDocumentFragment();
+			let cursor = 0;
+			let match;
+			PATTERN.lastIndex = 0;
+			while ((match = PATTERN.exec(text)) !== null) {
+				const [full, digits, suffix] = match;
+				const start = match.index;
+				if (start > cursor) {
+					fragment.appendChild(document.createTextNode(text.slice(cursor, start)));
+				}
+				fragment.appendChild(document.createTextNode(digits));
+				const sup = document.createElement("sup");
+				sup.className = "ordinal-suffix";
+				sup.textContent = suffix;
+				fragment.appendChild(sup);
+				cursor = start + full.length;
+			}
+			if (cursor === 0) return;
+			if (cursor < text.length) {
+				fragment.appendChild(document.createTextNode(text.slice(cursor)));
+			}
+			node.parentNode.replaceChild(fragment, node);
+		}
+
+		const elements = document.querySelectorAll(SELECTOR);
+		if (elements.length === 0) return;
+		elements.forEach(function (el) {
+			if (el.dataset.ordinalDates === "wrapped") return;
+			const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+				acceptNode: function (node) {
+					if (node.parentNode && node.parentNode.classList && node.parentNode.classList.contains("ordinal-suffix")) {
+						return NodeFilter.FILTER_REJECT;
+					}
+					return NodeFilter.FILTER_ACCEPT;
+				},
+			});
+			const targets = [];
+			let current = walker.nextNode();
+			while (current) {
+				targets.push(current);
+				current = walker.nextNode();
+			}
+			targets.forEach(wrapTextNode);
+			el.dataset.ordinalDates = "wrapped";
+		});
+	});
+</script>

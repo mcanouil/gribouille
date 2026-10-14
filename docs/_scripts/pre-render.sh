@@ -1,0 +1,317 @@
+#!/usr/bin/env bash
+#
+# Documentation Pre-render Script
+# Generates the project variables and the changelog page, and caches the social
+# card.
+#
+# @license MIT License
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+#
+# Both generated files, _variables.yml and changelog.qmd, are ignored by Git and
+# removed by post-render.sh.
+#
+# A repository that publishes a Quarto extension also has _scripts/sync-extension.sh
+# beside this script. That copy cannot be made here: Quarto resolves extensions
+# before any pre-render script runs, so the sync is a separate step, run before
+# the render rather than during it.
+#
+# assets/social/og-image.png is ignored by Git as well, but it is a cache rather
+# than a transient, so post-render.sh leaves it in place. It is GitHub's own
+# preview card for this repository, which the endpoint serves for public
+# repositories only: for anything else it answers 200 with a generic Octocat
+# placeholder rather than an error, so the card is checked as well as fetched.
+# A local render and a pull request check both carry on without one; only the
+# render that publishes refuses to. See assets/social/README.md.
+#
+# _variables.yml carries the repository and the version the site documents, so a
+# page can name the release it was built from rather than a slug that resolves to
+# whatever is on the default branch. Quarto re-reads the project configuration
+# after pre-render, which is what makes a generated variables file work at all.
+#
+# Every site gets a `repository` block. A repository that publishes a Quarto
+# extension gets an `extension` block as well, carrying the reference a reader
+# installs, so the pages can write `quarto add {{< var extension.reference >}}`.
+# The version comes from the extension manifest, which the release workflow
+# bumps; without a manifest it comes from the newest version tag, which is the
+# tag the Docs workflow renders at the site root.
+#
+# Version headings are restructured into a three-level hierarchy:
+#
+#   ## X.Y.Z (date)          (in CHANGELOG.md)
+#
+# becomes:
+#
+#   ## X {#version-X}
+#   ### X.Y {#version-X-Y}
+#   #### X.Y.Z (date) {#version-X-Y-Z}
+#
+# A version heading is promoted by two levels, so every heading nested under it
+# shifts by the same two: "### New Features" becomes "##### New Features".
+# Without the shift a subsection closes the version it belongs to, and the
+# document outline stops matching the page.
+#
+# The "Unreleased" section is omitted, so the page describes released versions
+# only.
+#
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOCS_DIR="$(dirname "${SCRIPT_DIR}")"
+ROOT_DIR="$(dirname "${DOCS_DIR}")"
+
+# The extension the site documents, if it documents one, named by the directory
+# that holds it, which is the name its shortcodes and filters are registered
+# under. Deriving it keeps this script identical in every repository, and an
+# empty value is what tells the rest of the script this is not an extension
+# repository.
+EXTENSION_NAME=""
+for extension_dir in "${ROOT_DIR}"/_extensions/*/; do
+	[[ -f "${extension_dir}_extension.yml" ]] || continue
+	EXTENSION_NAME="$(basename "${extension_dir}")"
+	break
+done
+
+# What the changelog page calls the thing it lists versions of: the extension
+# where there is one, and otherwise the repository itself.
+PROJECT_NAME="${EXTENSION_NAME:-$(basename "${ROOT_DIR}")}"
+
+# The repository the project is published from. Taken from the website
+# configuration rather than the Git remote, so a fork documents the repository
+# it publishes as, and a checkout with no remote still renders.
+REPO_SLUG="$(sed -n \
+	's|^[[:space:]]*repo-url:[[:space:]]*https://github.com/\([^[:space:]]*\)|\1|p' \
+	"${DOCS_DIR}/_quarto.yml" | head -n 1)"
+REPO_SLUG="${REPO_SLUG%/}"
+if [[ -z "${REPO_SLUG}" ]]; then
+	# `|| true` covers the whole pipeline: `git remote get-url` exits 2 when there
+	# is no origin, and under `pipefail` that would end the render here rather
+	# than at the error below, which says what is actually missing.
+	REPO_SLUG="$(git -C "${ROOT_DIR}" remote get-url origin 2>/dev/null |
+		sed -n 's|.*github\.com[:/]\(.*\)|\1|p' | sed 's|\.git$||' || true)"
+fi
+if [[ -z "${REPO_SLUG}" ]]; then
+	printf '[pre-render] No repo-url in _quarto.yml and no origin remote\n' >&2
+	exit 1
+fi
+
+VERSION=""
+if [[ -n "${EXTENSION_NAME}" ]]; then
+	MANIFEST="${ROOT_DIR}/_extensions/${EXTENSION_NAME}/_extension.yml"
+	VERSION="$(sed -n \
+		's/^version:[[:space:]]*["'\'']\{0,1\}\([^"'\''[:space:]]*\).*/\1/p' \
+		"${MANIFEST}" | head -n 1)"
+	if [[ -z "${VERSION}" ]]; then
+		printf '[pre-render] No version in %s\n' "${MANIFEST}" >&2
+		exit 1
+	fi
+	if ! git -C "${ROOT_DIR}" rev-parse -q --verify "refs/tags/${VERSION}" >/dev/null; then
+		# Expected before a first release, and a warning rather than an error: the
+		# workflow renders from a tag, so this only fires on a local preview.
+		printf '[pre-render] warning: %s is not tagged; the install commands name an unreleased version\n' \
+			"${VERSION}" >&2
+	fi
+else
+	# No manifest to read, so the version is the newest version tag, which is the
+	# one the Docs workflow checks out to render the site root. An untagged
+	# repository has no version to name, and the pages have to stand without one.
+	VERSION="$(git -C "${ROOT_DIR}" tag -l --sort=-v:refname '[0-9]*' 2>/dev/null |
+		head -n 1 || true)"
+	if [[ -z "${VERSION}" ]]; then
+		printf '[pre-render] No version tag; the pages have no version to name\n' >&2
+	fi
+fi
+
+{
+	printf '# Generated by _scripts/pre-render.sh. Do not edit.\n'
+	printf 'repository:\n'
+	printf '  slug: "%s"\n' "${REPO_SLUG}"
+	printf '  name: "%s"\n' "${REPO_SLUG##*/}"
+	if [[ -n "${VERSION}" ]]; then
+		printf '  version: "%s"\n' "${VERSION}"
+	fi
+	if [[ -n "${EXTENSION_NAME}" ]]; then
+		printf 'extension:\n'
+		printf '  name: "%s"\n' "${EXTENSION_NAME}"
+		printf '  repo: "%s"\n' "${REPO_SLUG}"
+		printf '  version: "%s"\n' "${VERSION}"
+		printf '  reference: "%s@%s"\n' "${REPO_SLUG}" "${VERSION}"
+		# The same reference, encoded for the repo query parameter of a Quarto
+		# Wizard URI.
+		printf '  wizard-reference: "%s%%40%s"\n' "${REPO_SLUG//\//%2F}" "${VERSION}"
+	fi
+} >"${DOCS_DIR}/_variables.yml"
+
+printf '[pre-render] _variables.yml (%s@%s)\n' "${REPO_SLUG}" "${VERSION:-none}"
+
+# The Open Graph card, cached from GitHub's own repository preview. The first
+# path segment is a cache key GitHub accepts any value for. Written through a
+# temporary file so a failed fetch cannot truncate a good cache.
+#
+# A card under a day old is left alone. The endpoint rate-limits, and a preview
+# session re-runs this script on every full render, so refetching each time
+# earns a 429 rather than a fresher card. CI checks out a fresh tree, where
+# nothing is cached, so it always fetches.
+#
+# `--retry` covers that rate limiting: curl counts HTTP 429 as a transient
+# error, alongside 408 and the 5xx family, and honours any Retry-After.
+CARD_URL="https://opengraph.githubassets.com/1/${REPO_SLUG}"
+CARD_PATH="${DOCS_DIR}/assets/social/og-image.png"
+
+# GitHub answers 200 with a generic Octocat placeholder, rather than 404, when
+# the repository is private or does not exist. That placeholder must never be
+# published: it carries none of the repository name, description, avatar, or
+# counts that `website.image-alt` tells a screen reader are in the picture.
+#
+# It is told apart by its shape. GitHub renders the placeholder at 1200x630 and
+# a real card at 1200x600, and a PNG carries its height as a big-endian 32-bit
+# integer at byte offset 20, inside the IHDR chunk, which `od` reads without
+# adding an image tool to the render. The placeholder has also been
+# byte-identical across repositories, but a re-encode would change that while
+# the height held, so the height is the more durable of the two signals.
+PLACEHOLDER_HEIGHT="00000276" # 630, against 00000258 for the 600 of a real card
+
+card_height() {
+	od -An -tx1 -j20 -N4 "$1" 2>/dev/null | tr -d ' \n'
+}
+
+# Shared triage for a render with no real card to show. Anything already cached
+# is better than nothing, a publishing render must not go ahead without one, and
+# a local render or a pull request check is not worth failing.
+#
+# Refusing to publish matters because nothing else would notice: Quarto reports
+# a missing include as FATAL and renders the page anyway, and says nothing at
+# all about a `website.image` that does not resolve, so a missing card would
+# reach the live site as an og:image pointing at a 404, behind a green check.
+card_unavailable() {
+	local reason="$1"
+	if [[ -f "${CARD_PATH}" ]]; then
+		printf '[pre-render] warning: %s; keeping the cached card\n' "${reason}" >&2
+		return 0
+	fi
+	if [[ -n "${CI:-}" && "${GITHUB_EVENT_NAME:-}" != "pull_request" ]]; then
+		printf '[pre-render] %s, and nothing is cached; refusing to publish a broken og:image\n' \
+			"${reason}" >&2
+		exit 1
+	fi
+	printf '[pre-render] warning: %s, and nothing is cached; og:image will point at a missing file\n' \
+		"${reason}" >&2
+}
+
+mkdir -p "$(dirname "${CARD_PATH}")"
+if [[ -n "$(find "${CARD_PATH}" -mtime -1 2>/dev/null)" ]]; then
+	printf '[pre-render] Social card cached under a day ago; not refetching\n'
+elif ! curl -fsSL --max-time 20 --retry 3 --retry-delay 2 \
+	"${CARD_URL}" -o "${CARD_PATH}.tmp"; then
+	rm -f "${CARD_PATH}.tmp"
+	card_unavailable "could not fetch ${CARD_URL}"
+elif [[ "$(card_height "${CARD_PATH}.tmp")" == "${PLACEHOLDER_HEIGHT}" ]]; then
+	rm -f "${CARD_PATH}.tmp"
+	card_unavailable "${CARD_URL} returned GitHub's placeholder, so the repository is private or does not exist yet"
+else
+	mv "${CARD_PATH}.tmp" "${CARD_PATH}"
+	printf '[pre-render] %s -> assets/social/og-image.png\n' "${CARD_URL}"
+fi
+
+if [[ ! -f "${ROOT_DIR}/CHANGELOG.md" ]]; then
+	cat >"${DOCS_DIR}/changelog.qmd" <<'EOF'
+---
+title: "Changelog"
+description: "No changelog is available for this project."
+---
+
+No changelog available.
+EOF
+	printf '[pre-render] No CHANGELOG.md; wrote a placeholder changelog.qmd\n'
+	exit 0
+fi
+
+awk -v name="${PROJECT_NAME}" '
+BEGIN {
+  in_unreleased = 0
+  in_version    = 0
+  cur_major     = -1
+  cur_minor     = -1
+  prev_blank    = 1
+  printf "---\ntitle: \"Changelog\"\nsubtitle: \"What changed, and when.\"\n"
+  printf "description: \"Every released version of %s, and what each one changed.\"\n---\n\n", name
+}
+
+# Emit a line, collapsing consecutive blank lines and suppressing leading ones.
+function emit(line,    is_blank) {
+  is_blank = (line == "")
+  if (is_blank) {
+    if (!prev_blank) { print ""; prev_blank = 1 }
+  } else {
+    print line
+    prev_blank = 0
+  }
+}
+
+/^# /             { next }
+/^## Unreleased$/ { in_unreleased = 1; next }
+
+# Inside the Unreleased block: skip content, stop on next versioned heading.
+in_unreleased && !/^## [0-9]/ { next }
+in_unreleased                  { in_unreleased = 0 }
+
+/^## [0-9]+\.[0-9]+\.[0-9]+ \(/ {
+  # Fields: $1="##"  $2="X.Y.Z"  $3="(date)"
+  ver   = $2
+  date  = substr($3, 2, length($3) - 2)   # strip surrounding parens
+  split(ver, v, ".")
+  major = int(v[1])
+  minor = int(v[2])
+  patch = int(v[3])
+
+  if (major != cur_major) {
+    emit("")
+    emit("## " major " {#version-" major "}")
+    emit("")
+    cur_major = major
+    cur_minor = -1
+  }
+
+  if (minor != cur_minor) {
+    emit("### " major "." minor " {#version-" major "-" minor "}")
+    emit("")
+    cur_minor = minor
+  }
+
+  emit("#### " major "." minor "." patch " (" date ") " \
+       "{#version-" major "-" minor "-" patch "}")
+  in_version = 1
+  next
+}
+
+# Headings nested under a version follow it down by two levels, so they stay
+# inside the version they document.
+in_version && /^#+ / {
+  if (length($1) + 2 > 6) {
+    printf "[pre-render] heading too deep to nest: %s\n", $0 > "/dev/stderr"
+    emit($0)
+  } else {
+    emit("##" $0)
+  }
+  next
+}
+
+# A changelog entry naming one of the shortcodes the extension provides, as
+# `{{< bam >}}`, is expanded by Quarto rather than shown. The site is not
+# rendered by that format, so the expansion fails the render outright.
+# Escaping to the Quarto literal form leaves the text visible.
+function escape_shortcodes(line) {
+  gsub(/{{{</, "\001", line)
+  gsub(/>}}}/, "\002", line)
+  gsub(/{{</, "{{{<", line)
+  gsub(/>}}/, ">}}}", line)
+  gsub(/\001/, "{{{<", line)
+  gsub(/\002/, ">}}}", line)
+  return line
+}
+
+{ emit(escape_shortcodes($0)) }
+' "${ROOT_DIR}/CHANGELOG.md" >"${DOCS_DIR}/changelog.qmd"
+
+printf '[pre-render] CHANGELOG.md -> changelog.qmd\n'

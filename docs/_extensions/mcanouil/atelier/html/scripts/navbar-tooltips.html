@@ -1,0 +1,85 @@
+<script id="navbar-tooltips" type="text/javascript">
+	/**
+	 * @license MIT
+	 * @copyright 2026 Mickaël Canouil
+	 * @author Mickaël Canouil
+	 */
+	document.addEventListener("DOMContentLoaded", function () {
+		var hasTippy = typeof window.tippy === "function";
+		var config = {
+			theme: "atelier",
+			placement: "bottom",
+			arrow: false,
+			delay: [100, 0],
+			offset: [0, 6],
+			allowHTML: false,
+			appendTo: function () {
+				return document.body;
+			},
+		};
+
+		function bind(el, content, extra) {
+			if (!el || !content || el.dataset.tippyBound === "1") return;
+			el.removeAttribute("title");
+			if (hasTippy) {
+				window.tippy(el, Object.assign({ content: content }, config, extra || {}));
+				el.dataset.tippyBound = "1";
+			}
+		}
+
+		// An icon-only link carries its name on the glyph. Iconify puts it on an
+		// <iconify-icon>, but a glyph is just as often an empty element painted
+		// with a CSS mask or holding an inline SVG, so fall back to the first
+		// empty labelled descendant instead of assuming one element type.
+		// Emptiness is what distinguishes a glyph from a labelled control that
+		// happens to sit inside the link.
+		function glyphOf(link) {
+			var icon = link.querySelector("iconify-icon");
+			if (icon) return icon;
+			var candidates = link.querySelectorAll("[aria-label], [title]");
+			for (var i = 0; i < candidates.length; i++) {
+				if (!candidates[i].textContent.replace(/\s+/g, " ").trim()) return candidates[i];
+			}
+			return null;
+		}
+
+		document.querySelectorAll("#quarto-header .navbar a.nav-link").forEach(function (link) {
+			var icon = glyphOf(link);
+			var visibleText = link.textContent.replace(/\s+/g, " ").trim();
+			var label = (icon && (icon.getAttribute("aria-label") || icon.getAttribute("title"))) || visibleText;
+			// The icon is decorative once the link is named; hiding it avoids a
+			// doubled screen-reader announcement (e.g. "Credits Credits").
+			// Dropping its title also suppresses the browser's own tooltip, which
+			// would otherwise appear unstyled alongside the themed one.
+			if (icon) {
+				icon.removeAttribute("title");
+				icon.setAttribute("aria-hidden", "true");
+				icon.setAttribute("role", "presentation");
+				icon.removeAttribute("aria-label");
+			}
+			if (!visibleText && label) {
+				// Icon-only control: give the link a name and a styled tooltip.
+				var ariaLabel = label;
+				if (link.target === "_blank" && !/new tab/i.test(ariaLabel)) {
+					ariaLabel += " (opens in a new tab)";
+				}
+				if (!link.getAttribute("aria-label")) link.setAttribute("aria-label", ariaLabel);
+				bind(link, label);
+			} else if (visibleText && !link.getAttribute("aria-label")) {
+				link.setAttribute("aria-label", visibleText);
+			}
+		});
+
+		document.querySelectorAll("a.quarto-color-scheme-toggle").forEach(function (toggle) {
+			// Hover-only and hide on click, so the tooltip does not linger after toggling.
+			bind(toggle, toggle.getAttribute("aria-label") || toggle.getAttribute("title") || "Toggle dark mode", {
+				trigger: "mouseenter",
+				hideOnClick: true,
+			});
+		});
+
+		document.querySelectorAll("a.navbar-brand, a.navbar-brand-logo").forEach(function (logo) {
+			bind(logo, "Home");
+		});
+	});
+</script>
