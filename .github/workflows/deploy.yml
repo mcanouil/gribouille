@@ -189,9 +189,9 @@ jobs:
         run: echo "sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
 
       # Read after the ref switch: each site compiles with the compiler its own
-      # `typst.toml` pins. Inline rather than `./.github/actions/typst-version`,
-      # since a local composite action is loaded from the workspace, which is the
-      # tag's tree here and need not carry that action.
+      # `typst.toml` pins. Inline rather than a local composite action, which is
+      # loaded from the workspace: that is the tag's tree here, and need not carry
+      # the action.
       - name: Read Typst version from typst.toml
         id: typst-version
         shell: bash
