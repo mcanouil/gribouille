@@ -324,7 +324,8 @@ local function main(argv)
     return 0
   end
 
-  util.write_file(opts.variables, deps.render(deps_info))
+  local existing = util.file_exists(opts.variables) and util.read_file(opts.variables) or nil
+  util.write_file(opts.variables, deps.merge(existing, deps.render(deps_info)))
   local written = write_reference(opts, all_functions, modules, lib_info)
 
   util.log_info(string.format("wrote %d function page(s) under %s", written, opts.out))
