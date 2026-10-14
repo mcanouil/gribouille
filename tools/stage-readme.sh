@@ -13,8 +13,14 @@ SRC="${1:?source README path required}"
 DEST_DIR="${2:?destination directory required}"
 DEST="${DEST_DIR}/README.md"
 
-[[ -f "${SRC}" ]] || { echo "stage-readme: source not found: ${SRC}" >&2; exit 1; }
-[[ -d "${DEST_DIR}" ]] || { echo "stage-readme: destination directory not found: ${DEST_DIR}" >&2; exit 1; }
+[[ -f "${SRC}" ]] || {
+  echo "stage-readme: source not found: ${SRC}" >&2
+  exit 1
+}
+[[ -d "${DEST_DIR}" ]] || {
+  echo "stage-readme: destination directory not found: ${DEST_DIR}" >&2
+  exit 1
+}
 
 # Refuse if source and destination resolve to the same file; the shell
 # redirect below would truncate the source before perl could read it.
@@ -30,4 +36,4 @@ perl -0777 -pe '
   s{^\[!\[Ask DeepWiki\]\([^\n]*\n\n?}{}gm;
   s{^> \[![A-Z]+\][ \t]*\n(?:> [^\n]*\n)*\n?}{}gm;
   s{(^## Quick look\b[^\n]*\n.*?\n)^## Dependencies\b.*\z}{$1}ms;
-' "${SRC}" > "${DEST}"
+' "${SRC}" >"${DEST}"

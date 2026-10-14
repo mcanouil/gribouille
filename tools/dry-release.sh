@@ -12,15 +12,21 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPO_ROOT}"
 
 VERSION="$(awk -F'"' '/^version[[:space:]]*=/ { print $2; exit }' typst.toml)"
-[[ -n "${VERSION}" ]] || { echo "version not found in typst.toml" >&2; exit 1; }
+[[ -n "${VERSION}" ]] || {
+  echo "version not found in typst.toml" >&2
+  exit 1
+}
 
 STAGE_ROOT="/tmp/gribouille-dry-release"
 STAGE="${STAGE_ROOT}/gribouille/${VERSION}"
 
 case "$(uname -s)" in
-  Darwin) DATA_DIR="${HOME}/Library/Application Support/typst" ;;
-  Linux)  DATA_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}/typst" ;;
-  *) echo "unsupported OS: $(uname -s)" >&2; exit 1 ;;
+Darwin) DATA_DIR="${HOME}/Library/Application Support/typst" ;;
+Linux) DATA_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}/typst" ;;
+*)
+  echo "unsupported OS: $(uname -s)" >&2
+  exit 1
+  ;;
 esac
 INSTALL_DIR="${DATA_DIR}/packages/preview/gribouille"
 INSTALL_LINK="${INSTALL_DIR}/${VERSION}"

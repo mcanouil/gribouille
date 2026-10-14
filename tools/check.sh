@@ -68,14 +68,14 @@ else
   printf 'skill inventory: SKIP (lua not installed)\n'
 fi
 
-compile_glob "unit"     "tests/unit/*.typ"
+compile_glob "unit" "tests/unit/*.typ"
 compile_glob "examples" "examples/*.typ .github/star-history/star-history.typ"
 
 if ! tools/version-check.sh; then
   failures=$((failures + 1))
 fi
 
-compile_glob "visual"   "tests/visual/*.typ"
+compile_glob "visual" "tests/visual/*.typ"
 
 # The error fixtures assert the opposite of the globs above: each one must fail,
 # with the message it declares. Run unconditionally, because a suite whose whole

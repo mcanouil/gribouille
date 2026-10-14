@@ -50,7 +50,7 @@ stage() {
     rm -f "${dest}/typst.toml.bak"
     printf '# dev build: %s (%s)\n%s' \
       "${commit}" "${date_utc}" "$(cat "${dest}/typst.toml")" \
-      > "${dest}/typst.toml"
+      >"${dest}/typst.toml"
   fi
 }
 
@@ -63,7 +63,10 @@ archive() {
   # dev-build rewrite); the resolved default just names the archive.
   local version="${override}"
   [[ -n "${version}" ]] || version="$(read_version)"
-  [[ -n "${version}" ]] || { echo "archive: version not found in typst.toml" >&2; exit 1; }
+  [[ -n "${version}" ]] || {
+    echo "archive: version not found in typst.toml" >&2
+    exit 1
+  }
   [[ -n "${basename}" ]] || basename="gribouille-${version}"
 
   local tmp leaf
@@ -81,10 +84,16 @@ archive() {
 
 cmd="${1:-}"
 case "${cmd}" in
-  stage)   shift; stage "$@" ;;
-  archive) shift; archive "$@" ;;
-  *)
-    echo "usage: package.sh {stage <dest-dir> [version] | archive <out-dir> [basename] [version]}" >&2
-    exit 1
-    ;;
+stage)
+  shift
+  stage "$@"
+  ;;
+archive)
+  shift
+  archive "$@"
+  ;;
+*)
+  echo "usage: package.sh {stage <dest-dir> [version] | archive <out-dir> [basename] [version]}" >&2
+  exit 1
+  ;;
 esac

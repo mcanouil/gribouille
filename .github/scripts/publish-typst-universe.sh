@@ -32,23 +32,23 @@ VERSION=""
 REPLACE_PR=""
 for arg in "$@"; do
   case "${arg}" in
-    --dry-run) DRY_RUN=1 ;;
-    --pr=*) REPLACE_PR="${arg#--pr=}" ;;
-    -h | --help)
-      awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "${BASH_SOURCE[0]}"
-      exit 0
-      ;;
-    -*)
-      echo "unknown option: ${arg}" >&2
+  --dry-run) DRY_RUN=1 ;;
+  --pr=*) REPLACE_PR="${arg#--pr=}" ;;
+  -h | --help)
+    awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "${BASH_SOURCE[0]}"
+    exit 0
+    ;;
+  -*)
+    echo "unknown option: ${arg}" >&2
+    exit 1
+    ;;
+  *)
+    if [[ -n "${VERSION}" ]]; then
+      echo "unexpected extra argument: ${arg}" >&2
       exit 1
-      ;;
-    *)
-      if [[ -n "${VERSION}" ]]; then
-        echo "unexpected extra argument: ${arg}" >&2
-        exit 1
-      fi
-      VERSION="${arg}"
-      ;;
+    fi
+    VERSION="${arg}"
+    ;;
   esac
 done
 
@@ -132,8 +132,8 @@ printf 'Staged payload at %s\n' "${STAGE}"
 # path is ever touched, so avoid checking out the rest.
 gh repo clone "${FORK}" "${CLONE}" -- --filter=blob:none --no-checkout --depth 1
 # gh repo clone auto-adds `upstream` for forks; only add it when missing.
-git -C "${CLONE}" remote get-url upstream >/dev/null 2>&1 \
-  || git -C "${CLONE}" remote add upstream https://github.com/typst/packages.git
+git -C "${CLONE}" remote get-url upstream >/dev/null 2>&1 ||
+  git -C "${CLONE}" remote add upstream https://github.com/typst/packages.git
 git -C "${CLONE}" fetch upstream main --depth 1
 git -C "${CLONE}" sparse-checkout init --cone
 git -C "${CLONE}" sparse-checkout set "${PKG_PATH}"
