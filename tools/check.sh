@@ -43,6 +43,21 @@ compile_glob() {
   local glob="$2"
   local label_passed=0
   local label_total=0
+  local word
+  local -a words matched
+
+  # nullglob is set, so a glob that matches nothing would vanish and the group
+  # would still pass on what the other globs found. Each glob must match.
+  read -r -a words <<<"${glob}"
+  for word in "${words[@]}"; do
+    # shellcheck disable=SC2206 # the word is a glob to expand.
+    matched=(${word})
+    if [[ ${#matched[@]} -eq 0 ]]; then
+      printf '%s: nothing matched %s\n' "${label}" "${word}" >&2
+      failures=$((failures + 1))
+      return
+    fi
+  done
 
   for f in ${glob}; do
     label_total=$((label_total + 1))
@@ -55,13 +70,6 @@ compile_glob() {
       typst compile "${f}" --root "${REPO_ROOT}" "${OUT_DIR}/$(basename "${f%.typ}").pdf" || true
     fi
   done
-
-  # nullglob is set, so a group that holds nothing would print 0/0 and pass.
-  if [[ ${label_total} -eq 0 ]]; then
-    printf '%s: nothing matched %s\n' "${label}" "${glob}" >&2
-    failures=$((failures + 1))
-    return
-  fi
 
   printf '%-9s %d/%d\n' "${label}:" "${label_passed}" "${label_total}"
 }
