@@ -20,7 +20,7 @@ Import _Gribouille_ from Typst Universe, from the published archives, or from a 
 ### From Typst Universe
 
 ```typst
-#import "@preview/gribouille:{{< env VERSION >}}": *
+#import "@preview/gribouille:{{< var package.version >}}": *
 ```
 
 ::: {.content-visible when-profile="release"}
@@ -28,11 +28,11 @@ Import _Gribouille_ from Typst Universe, from the published archives, or from a 
 ### From release assets
 
 Download the `.tar.gz` or `.zip` attached to a [GitHub release](https://github.com/mcanouil/gribouille/releases).
-Unpack it into Typst's local package directory under `gribouille/{{< env VERSION >}}`.
+Unpack it into Typst's local package directory under `gribouille/{{< var package.version >}}`.
 Then import it.
 
 ```typst
-#import "@local/gribouille:{{< env VERSION >}}": *
+#import "@local/gribouille:{{< var package.version >}}": *
 ```
 
 :::

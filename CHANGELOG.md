@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- docs: Show the package version from `typst.toml` in the documentation import lines, rather than `dev` on the development site. (#316)
+
 ## 0.7.0 (2026-08-24)
 
 ### Breaking changes

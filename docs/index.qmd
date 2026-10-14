@@ -208,7 +208,7 @@ Stack geoms, scales, facets, and a theme until the plot is right.
 ::: {.showcase-code}
 
 ```typst
-#import "@preview/gribouille:{{< env VERSION >}}": *
+#import "@preview/gribouille:{{< var package.version >}}": *
 
 #plot(
   data: penguins,
@@ -332,7 +332,7 @@ Everything is data you can `let`, extend, and reuse across a Typst document.
 ## Install.
 
 ```typst
-#import "@preview/gribouille:{{< env VERSION >}}": *
+#import "@preview/gribouille:{{< var package.version >}}": *
 ```
 
 [Read the getting-started guide](get-started/index.qmd){.btn .btn-primary}

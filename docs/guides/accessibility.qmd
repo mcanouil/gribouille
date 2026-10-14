@@ -57,7 +57,7 @@ For a numbered, cross-referenceable figure, pair it with `cap` and `label: fig-â
 //| cap: "Penguin body mass against flipper length, coloured by species."
 //| alt: "Body mass rises with flipper length for all three penguin species."
 //| output-filename: "/assets/typst-render/my-page/penguins.svg"
-#import "@preview/gribouille:{{< env VERSION >}}": *
+#import "@preview/gribouille:{{< var package.version >}}": *
 #plot(
   data: penguins,
   mapping: aes(x: "flipper-len", y: "body-mass", colour: "species"),
@@ -108,7 +108,7 @@ Gribouille also marks the plot's text labels as PDF artifacts, so a screen reade
 Two lines at the top of the document turn the [example above](#alt-text-on-a-plot) into a complete, PDF/UA-1-ready file:
 
 ```typst
-#import "@preview/gribouille:{{< env VERSION >}}": *
+#import "@preview/gribouille:{{< var package.version >}}": *
 #set document(title: "Penguin body mass")
 ```
 
