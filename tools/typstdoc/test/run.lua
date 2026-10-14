@@ -1922,6 +1922,38 @@ describe("scale_keys: bind key tuples match builder signatures", function()
 end)
 
 -- -----------------------------------------------------------------------
+describe("deps: documentation variables", function()
+  local deps = require("deps")
+
+  it("reads the package version from typst.toml and renders it", function()
+    local src = string.format("%s/_tmp_deps_src", TEST_DIR)
+    os.execute(string.format("mkdir -p %q", src))
+    local toml = tmpfile("deps_toml", [[
+[package]
+name = "demo"
+version = "1.2.3"
+compiler = "0.15.0"
+]])
+    local deps_file = tmpfile("deps_file", '#import "@preview/cetz:0.5.2"\n')
+    local info = deps.collect({ toml = toml, deps_file = deps_file, src = src })
+    os.execute(string.format("rm -rf %q", src))
+    assert_eq(info.package_version, "1.2.3")
+    assert_contains(deps.render(info), 'package:\n  version: "1.2.3"\n')
+  end)
+
+  it("fails when typst.toml has no package version", function()
+    local toml = tmpfile("deps_toml_nover", [[
+[package]
+name = "demo"
+compiler = "0.15.0"
+]])
+    assert_throws(function()
+      deps.collect({ toml = toml, deps_file = toml, src = TEST_DIR })
+    end, "missing package.version")
+  end)
+end)
+
+-- -----------------------------------------------------------------------
 cleanup()
 
 io.write(string.format("\n%d passed, %d failed\n", T.passed, T.failed))
