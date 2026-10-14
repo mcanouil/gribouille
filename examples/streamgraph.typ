@@ -1,6 +1,6 @@
 // streamgraph: stacked geom-area on a silhouette baseline (ThemeRiver).
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

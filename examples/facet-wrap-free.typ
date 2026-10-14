@@ -1,6 +1,6 @@
 // Facet wrap with free y: each panel trains its own y axis on its own subset.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

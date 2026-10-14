@@ -1,7 +1,7 @@
 // geom-count: scatter where each unique (x, y) is drawn once and the count
 // is exposed as the size aesthetic via stat-sum.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

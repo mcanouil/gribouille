@@ -1,6 +1,6 @@
 // annotate() adds ad-hoc text labels and reference lines to a base plot.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

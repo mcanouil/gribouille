@@ -1,6 +1,6 @@
 // Scatter with an OLS smoother and 95% CI band.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

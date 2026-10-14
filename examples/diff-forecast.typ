@@ -1,6 +1,6 @@
 // diff-forecast: shade the band between forecast and actuals by which leads.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

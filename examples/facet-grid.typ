@@ -1,6 +1,6 @@
 // facet-grid: panels arranged on a row × column grid of two discrete variables.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // guide-legend(): customise per-aesthetic legends; pass `none` to suppress one.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

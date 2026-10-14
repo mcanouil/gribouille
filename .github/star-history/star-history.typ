@@ -5,7 +5,7 @@
 //                           .github/star-history/release-history.sh
 // Compile with: typst compile .github/star-history/star-history.typ --root .
 
-#import "../../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: 16cm, height: 18cm, margin: 0cm)
 // #set page("a4", margin: 2.5cm)

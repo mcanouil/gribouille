@@ -1,6 +1,6 @@
 // Facet labellers: strip text driven by label-both() prefixes the variable name.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

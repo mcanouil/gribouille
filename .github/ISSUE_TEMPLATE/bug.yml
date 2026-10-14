@@ -70,7 +70,7 @@ body:
         Import Gribouille via `#import "@preview/gribouille:<version>": *` and keep the example as small as possible.
       render: typst
       placeholder: |
-        #import "@preview/gribouille:0.0.1": *
+        #import "@preview/gribouille:x.y.z": *
 
         // Minimal example that reproduces the bug.
     validations:

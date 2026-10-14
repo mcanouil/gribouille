@@ -1,6 +1,6 @@
 // coord-fixed locks the panel so one x unit equals `ratio` y units.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

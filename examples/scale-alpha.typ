@@ -1,6 +1,6 @@
 // scale-alpha family: continuous, manual per-level opacities, and binned.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

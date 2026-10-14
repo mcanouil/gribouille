@@ -2,7 +2,7 @@
 // literal glyphs. Values may be a plain character or a Typst `sym.` symbol,
 // mixed freely across levels.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

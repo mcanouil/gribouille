@@ -2,7 +2,7 @@
 // on each scale. Equivalent to scale-continuous(transform: ...) in the
 // current implementation; provided as a coord-level entry point.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,7 +1,7 @@
 // Reference lines on a log10 y axis: yintercept values land at the correct
 // log positions because hline routes through the axis transform.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

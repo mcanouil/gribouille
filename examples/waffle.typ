@@ -1,6 +1,6 @@
 // waffle: per-group counts turned into unit grid cells via stat-waffle.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

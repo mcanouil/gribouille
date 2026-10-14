@@ -12,10 +12,15 @@ on:
       - "src/**"
       - "lib.typ"
       - "examples/**"
+      - ".github/star-history/star-history.typ"
+      - ".github/star-history/*.csv"
       - "tests/**"
       - "typst.toml"
       - "tools/**"
       - "README.md"
+      - "CITATION.cff"
+      - ".claude-plugin/plugin.json"
+      - "skills/gribouille/SKILL.md"
       - "LICENSE"
       - ".github/actions/**"
       - ".github/workflows/checks.yml"
@@ -25,10 +30,15 @@ on:
       - "src/**"
       - "lib.typ"
       - "examples/**"
+      - ".github/star-history/star-history.typ"
+      - ".github/star-history/*.csv"
       - "tests/**"
       - "typst.toml"
       - "tools/**"
       - "README.md"
+      - "CITATION.cff"
+      - ".claude-plugin/plugin.json"
+      - "skills/gribouille/SKILL.md"
       - "LICENSE"
       - ".github/actions/**"
       - ".github/workflows/checks.yml"
@@ -139,13 +149,20 @@ jobs:
           label: unit
           glob: "tests/unit/*.typ"
 
-      - name: Compile examples
+      - name: Compile examples and the star history chart
         id: examples
         if: always()
         uses: ./.github/actions/typst-compile
         with:
           label: example
-          glob: "examples/*.typ"
+          glob: "examples/*.typ .github/star-history/star-history.typ"
+
+      - name: Check versions
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools/version-check.sh
 
       # The error fixtures assert the opposite of the globs above: each one must
       # fail, with the message it declares. The typst-compile composite action

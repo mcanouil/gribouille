@@ -2,7 +2,7 @@
 // crossbar / boxplot all render polar wedges, radial spines and arc caps
 // instead of cartesian rectangles.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

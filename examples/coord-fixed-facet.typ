@@ -1,6 +1,6 @@
 // coord-fixed combined with facet-wrap: every panel keeps a 1:1 unit ratio.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

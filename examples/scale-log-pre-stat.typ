@@ -1,7 +1,7 @@
 // scale_x_log10 pre-transforms data: stats fit a line in log space, so a
 // power-law dataset comes out straight.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

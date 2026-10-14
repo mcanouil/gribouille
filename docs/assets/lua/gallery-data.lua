@@ -6,7 +6,7 @@
 -- `gallery-intent` metadata: `hub` injects one hidden `{typst}` chunk per
 -- `hub.yml` hero so `typst-render` writes `hero-<slug>` SVGs; any other value
 -- filters `gallery.yml` to that intent, prepending one hidden `{typst}` chunk
--- per item and appending a `#modal-<slug>` div carrying the rewritten `.typ`
+-- per item and appending a `#modal-<slug>` div carrying the `.typ`
 -- source for the `modal` extension to wrap as a Bootstrap modal.
 --
 -- The hub renders its heroes under a `hero-` prefix rather than reusing the
@@ -23,28 +23,6 @@ local function read_file(path)
   local body = f:read('*a')
   f:close()
   return body
-end
-
-local function rewrite_lib_import(source)
-  local version = os.getenv('VERSION') or '?.?.?'
-  local replacement = '#import "@preview/gribouille:' .. version .. '": *'
-  local rewritten, n = source:gsub('#import%s+"[^"]*lib%.typ"%s*:[^\n]*', replacement, 1)
-  if n > 0 then return rewritten end
-  local header_lines = {}
-  local rest_start = 1
-  for line, next_pos in source:gmatch('([^\n]*)\n()') do
-    if line:match('^%s*//') or line:match('^%s*$') then
-      header_lines[#header_lines + 1] = line
-      rest_start = next_pos
-    else
-      break
-    end
-  end
-  local rest = source:sub(rest_start):gsub('^\n+', '')
-  if #header_lines > 0 then
-    return table.concat(header_lines, '\n') .. '\n' .. replacement .. '\n\n' .. rest
-  end
-  return replacement .. '\n\n' .. rest
 end
 
 local function strip_quotes(v)
@@ -83,12 +61,68 @@ local function parse_yaml_list(text)
   return items
 end
 
+-- Digest of lib.typ and every file under src/, keyed by path relative to the
+-- repository so it matches across machines. typst-render's cache key does not
+-- read `/lib.typ` or the nested src/ imports, so each gallery block carries this
+-- digest as an input: a figure recompiles when the library changes and comes
+-- from the cache otherwise.
+local library_digest_cache = nil
+local function library_digest()
+  if library_digest_cache then return library_digest_cache end
+  local root = (quarto.project.directory or '.') .. '/..'
+  local parts = {}
+  local function add(rel)
+    local path = root .. '/' .. rel
+    local ok, entries = pcall(pandoc.system.list_directory, path)
+    if ok then
+      table.sort(entries)
+      for _, name in ipairs(entries) do add(rel .. '/' .. name) end
+    else
+      local body = read_file(path)
+      if not body then
+        error('gallery-data: cannot read ' .. path .. ' for the library digest; check that lib.typ and src/ exist under ' .. root)
+      end
+      parts[#parts + 1] = rel .. '\n' .. body
+    end
+  end
+  add('lib.typ')
+  add('src')
+  library_digest_cache = pandoc.utils.sha1(table.concat(parts, '\n'))
+  return library_digest_cache
+end
+
+-- The examples import the working tree with `#import "/lib.typ"`. A reader
+-- types the published package instead, so the modal shows that line, with the
+-- version typst.toml declares.
+local package_import_cache = nil
+local function package_import()
+  if package_import_cache then return package_import_cache end
+  local toml_path = (quarto.project.directory or '.') .. '/../typst.toml'
+  local version = (read_file(toml_path) or ''):match('\nversion%s*=%s*"([^"]+)"')
+  if not version then
+    error('gallery-data: no version = "x.y.z" line in ' .. toml_path)
+  end
+  package_import_cache = '#import "@preview/gribouille:' .. version .. '"'
+  return package_import_cache
+end
+
+local function shown_source(source)
+  local shown, n = source:gsub('#import%s+"/lib%.typ"', package_import(), 1)
+  if n == 0 then
+    error('gallery-data: example has no #import "/lib.typ" line to show as the package import')
+  end
+  return shown
+end
+
+-- typst-render resolves a leading `/` against docs/, so `/../examples/` is the
+-- repository's examples folder whatever the page folder or working directory.
 local function build_typst_block(slug, alt, output_name)
   local quoted_alt = "'" .. (alt or ''):gsub("'", "''") .. "'"
   local text = table.concat({
     "//| output-filename: '" .. (output_name or slug) .. ".svg'",
     '//| alt: ' .. quoted_alt,
-    "//| file: '/assets/examples/" .. slug .. ".typ'",
+    "//| file: '/../examples/" .. slug .. ".typ'",
+    "//| input: 'gribouille-library=" .. library_digest() .. "'",
   }, '\n')
   return pandoc.CodeBlock(text, pandoc.Attr('', { '{typst}' }, {}))
 end
@@ -139,10 +173,10 @@ local function intent_blocks(input_dir, project_dir, intent)
     if slug and slug ~= '' and it.intent == intent then
       table.insert(typst_blocks, build_typst_block(slug, it.alt))
 
-      local typ_path = project_dir .. '/assets/examples/' .. slug .. '.typ'
+      local typ_path = project_dir .. '/../examples/' .. slug .. '.typ'
       local source = read_file(typ_path)
       if source then
-        source = rewrite_lib_import(source):gsub('\n+$', '')
+        source = shown_source(source):gsub('\n+$', '')
       else
         quarto.log.warning('gallery-data: cannot read ' .. typ_path)
         source = '// File not found: ' .. typ_path

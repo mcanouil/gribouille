@@ -1,6 +1,6 @@
 // geom-spoke: vector field of unit-length arrows on a small grid.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

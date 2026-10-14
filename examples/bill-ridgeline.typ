@@ -1,7 +1,7 @@
 // Showcase: ridgeline of bill length per species; stacked densities read as
 // small multiples of the same distribution without a shared-legend detour.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // coord-radial(theta: "y") + geom-col + position-stack produces a pie chart.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

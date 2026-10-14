@@ -1,6 +1,6 @@
 // geom-text and geom-label: annotate points with their name.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

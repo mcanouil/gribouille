@@ -1,6 +1,6 @@
 // position-jitterdodge: dodge groups apart, then jitter within each group.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

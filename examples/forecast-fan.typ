@@ -1,7 +1,7 @@
 // Showcase: fan chart with graded 50/80/95% ribbons around a forecast;
 // each band is labelled in-plot so the reader knows what the shading means.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

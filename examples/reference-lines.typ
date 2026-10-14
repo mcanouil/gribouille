@@ -1,6 +1,6 @@
 // Reference lines: hline, vline, and abline overlaid on a scatter plot.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

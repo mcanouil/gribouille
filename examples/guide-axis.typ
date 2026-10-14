@@ -1,6 +1,6 @@
 // guide-axis customises tick label rotation and dodging on a discrete axis.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

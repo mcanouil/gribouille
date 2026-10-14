@@ -4,7 +4,7 @@
 // `direction` flips the swatch flow between vertical and horizontal;
 // `byrow` switches the grid fill from column-major to row-major.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

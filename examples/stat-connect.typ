@@ -2,7 +2,7 @@
 // Two layers compare "hv" (default, step) and "mid" (midpoint corner)
 // connection modes against the same dataset.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

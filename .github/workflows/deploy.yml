@@ -154,7 +154,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       QUARTO_TYPST: typst
-      # Drives the navbar label and the example `@preview` import rewrite.
+      # Drives the navbar label and the `{{< env VERSION >}}` imports on the pages.
       VERSION: ${{ matrix.version }}
 
     steps:
@@ -236,22 +236,22 @@ jobs:
         shell: bash
         run: echo "DEV_VERSION=$(date -u +%Y.%-m.%-d)" >> "${GITHUB_ENV}"
 
-      # typst-render swaps a placeholder in for a Typst block that fails to compile
-      # and the render still exits 0, so a broken figure ships with every job green.
-      # Match the failures in the log: they arrive as INFO records, so --log-level
-      # cannot select them, and --fail-if-warnings would trip on benign warnings.
+      # docs/_scripts/typst-render-check.sh fails the render on a failed Typst block,
+      # but the release profile renders a tag that may predate that script, so the
+      # rendered site is checked here as well, whatever ref it came from.
       - name: Render site
         shell: bash
-        env:
-          RENDER_LOG: ${{ runner.temp }}/render.log
         run: |
           set -euo pipefail
-          quarto render docs --profile "${{ matrix.profile }}" \
-            --log "${RENDER_LOG}" --log-format json-stream
-          failures=$(jq -r '.msg' "${RENDER_LOG}" | grep '\[typst-render\] Compilation failed' || true)
-          if [ -n "${failures}" ]; then
-            echo "::error::Typst blocks failed to compile; see the failures below."
-            echo "${failures}"
+          quarto render docs --profile "${{ matrix.profile }}"
+          pages=$(find docs/_site -name '*.html' | wc -l)
+          if [[ "${pages}" -eq 0 ]]; then
+            echo "::error::No rendered page found under docs/_site; the failed-block check read nothing."
+            exit 1
+          fi
+          if failed=$(grep -rl 'typst-render-error' docs/_site --include='*.html'); then
+            echo "::error::Typst blocks failed to compile on these pages:"
+            echo "${failed}"
             exit 1
           fi
 

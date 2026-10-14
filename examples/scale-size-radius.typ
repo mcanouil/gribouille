@@ -1,6 +1,6 @@
 // scale-manual and scale-radius alongside the existing area variant.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

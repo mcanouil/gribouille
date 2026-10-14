@@ -1,6 +1,6 @@
 // stat-ellipse: per-group covariance ellipse drawn through geom-ellipse.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

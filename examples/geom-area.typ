@@ -1,6 +1,6 @@
 // geom-area: filled polygon from y = 0 up to y along x.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -2,7 +2,7 @@
 // contribute filled rectangles, so the `colour` and `fill` aesthetics each
 // resolve to the right glyph automatically.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

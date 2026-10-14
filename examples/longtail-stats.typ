@@ -1,6 +1,6 @@
 // stat-ecdf and stat-unique: ECDF curve plus a deduplicated scatter.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -15,7 +15,7 @@ body:
         Provide a minimal reproducible Typst example that shows the problem, for instance:
 
         ```typst
-        #import "@preview/gribouille:0.0.1": *
+        #import "@preview/gribouille:x.y.z": *
 
         // Minimal example illustrating the question.
         ```

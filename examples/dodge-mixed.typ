@@ -1,6 +1,6 @@
 // Mixed-width dodge: per-row `width` column makes one product wider than the others.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

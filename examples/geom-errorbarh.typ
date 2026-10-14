@@ -1,6 +1,6 @@
 // geom-errorbarh: horizontal error bars per category, plus point estimates.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

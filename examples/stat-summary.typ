@@ -1,6 +1,6 @@
 // stat-summary collapses each x bucket to a summary statistic per layer.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -2,7 +2,7 @@
 // point-ranges; intervals over "dynamite" bars, and the caption says what
 // the range is.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

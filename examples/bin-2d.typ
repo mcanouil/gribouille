@@ -1,7 +1,7 @@
 // Two-dimensional rectangular binning. Every (x, y) sample is dropped into a
 // uniform grid; cell counts colour the rectangles via the fill scale.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

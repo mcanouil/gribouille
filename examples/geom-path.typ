@@ -1,6 +1,6 @@
 // geom-path: connects rows in input order, not sorted by x.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

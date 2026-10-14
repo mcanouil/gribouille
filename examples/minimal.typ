@@ -1,6 +1,6 @@
 // Minimal scatter plot with inline data.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

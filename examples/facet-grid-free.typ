@@ -1,6 +1,6 @@
 // facet-grid with free scales: x is free per column, y is free per row.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

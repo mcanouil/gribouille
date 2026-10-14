@@ -1,6 +1,6 @@
 // ColorBrewer plus gradient/gradient2 scales.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

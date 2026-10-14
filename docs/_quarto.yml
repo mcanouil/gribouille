@@ -4,6 +4,8 @@ project:
   output-dir: _site
   pre-render:
     - ../tools/typstdoc/main.lua
+  post-render:
+    - ./_scripts/typst-render-check.sh
   resources:
     - assets/fonts/
     - assets/images/logo.svg

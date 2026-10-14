@@ -1,6 +1,6 @@
 // Q-Q plots against three reference distributions: normal, uniform, exponential.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

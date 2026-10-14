@@ -1,6 +1,6 @@
 // geom-mark: enclose each cluster with a chosen shape.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

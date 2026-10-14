@@ -1,6 +1,6 @@
 // geom-polygon: closed filled polygons, one per group.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // shape and linetype aesthetics: one mark and one dash style per group.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

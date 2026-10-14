@@ -10,7 +10,7 @@
 #   1. Render the homepage penguins figure in the light scheme, mirroring how the
 #      typst-render filter renders it for the docs: light colour bindings + the
 #      contents of docs/_typst-preamble.typ + examples/gribouille.typ (without its
-#      own "#import "../lib.typ": *", which the preamble already provides and which
+#      own "#import "/lib.typ": *", which the preamble already provides and which
 #      would otherwise un-shadow the wrapped theme functions).
 #   2. Screenshot social-card.html (1200x630) with headless Chromium via Playwright.
 #
@@ -43,7 +43,7 @@ trap cleanup EXIT
 	printf '#set page(fill: _typst_render_background)\n'
 	printf '#set text(fill: _typst_render_foreground)\n'
 	cat "${REPO_ROOT}/docs/_typst-preamble.typ"
-	grep -vxF '#import "../lib.typ": *' "${REPO_ROOT}/examples/gribouille.typ"
+	grep -vxF '#import "/lib.typ": *' "${REPO_ROOT}/examples/gribouille.typ"
 } >"${TMP_TYP}"
 
 echo "Rendering penguins figure -> ${FIGURE_SVG}"

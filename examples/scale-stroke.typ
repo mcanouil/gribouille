@@ -1,6 +1,6 @@
 // scale-stroke: marker outline thickness driven by the stroke aesthetic.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

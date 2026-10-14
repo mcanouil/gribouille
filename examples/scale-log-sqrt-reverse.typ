@@ -1,6 +1,6 @@
 // Continuous axis transformations: log10, sqrt, and reverse on the y axis.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

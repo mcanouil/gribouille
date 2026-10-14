@@ -1,6 +1,6 @@
 // scale-*-continuous(limits:) sets explicit data domains; guide-axis tweaks tick text.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

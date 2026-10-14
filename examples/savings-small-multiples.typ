@@ -1,7 +1,7 @@
 // Showcase: three economic series as small multiples with free y scales;
 // separate panels beat spaghetti when units and ranges differ.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

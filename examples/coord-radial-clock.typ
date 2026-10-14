@@ -1,6 +1,6 @@
 // Clock-face layout: hourly observations wrapped to a circle via coord-radial.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // Same scatter rendered in three contrasting themes side-by-side.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

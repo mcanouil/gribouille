@@ -1,6 +1,6 @@
 // Line plus point layers sharing discrete colour and fill mappings.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

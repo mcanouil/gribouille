@@ -1,6 +1,6 @@
 // dup-axis duplicates an axis; sec-axis derives a transformed companion.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

@@ -1,6 +1,6 @@
 // Promoted alpha and linewidth aesthetics, both mapped to numeric columns.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

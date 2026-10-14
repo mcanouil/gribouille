@@ -3,8 +3,8 @@
 # Stages the same payload as `tools/package.sh stage` (the submitter in
 # .github/scripts/publish-typst-universe.sh), installs it locally as
 # @preview/gribouille:<version> via a symlink under Typst's data dir, compiles
-# a smoke file, then removes the symlink. No git tag, no GitHub Release, no
-# upstream PR.
+# every example and the star history chart against it, then removes the
+# symlink. No git tag, no GitHub Release, no upstream PR.
 
 set -euo pipefail
 
@@ -44,21 +44,33 @@ fi
 ln -sfn "${STAGE}" "${INSTALL_LINK}"
 printf 'Linked @preview/gribouille:%s -> %s\n' "${VERSION}" "${STAGE}"
 
-SMOKE="${STAGE_ROOT}/smoke.typ"
-cat > "${SMOKE}" <<TYP
-#import "@preview/gribouille:${VERSION}": plot, aes, geom-point, penguins
-
-#plot(
-  data: penguins,
-  mapping: aes(x: "flipper-len", y: "body-mass"),
-  layers: (geom-point(),),
-  width: 8cm,
-  height: 6cm,
-)
-TYP
-
-typst compile "${SMOKE}" "${STAGE_ROOT}/smoke.pdf"
-printf 'Smoke compile OK: %s\n' "${STAGE_ROOT}/smoke.pdf"
+# The examples import the working tree with `#import "/lib.typ"`. A copy of each
+# one gets the import a reader types instead, as the documentation shows it, and
+# compiles against the staged payload above. The copies sit in their own root,
+# with no lib.typ, so nothing can resolve to the working tree. A file the payload
+# leaves out fails here rather than for the first user.
+SHOWN="${STAGE_ROOT}/shown"
+mkdir -p "${SHOWN}/.github" "${SHOWN}/docs/assets"
+cp -R examples "${SHOWN}/"
+cp -R .github/star-history "${SHOWN}/.github/"
+cp -R docs/assets/images "${SHOWN}/docs/assets/"
+compiled=0
+failed=()
+for f in examples/*.typ .github/star-history/star-history.typ; do
+  sed 's|^#import "/lib.typ": \*$|#import "@preview/gribouille:'"${VERSION}"'": *|' "${f}" >"${SHOWN}/${f}"
+  if typst compile --root "${SHOWN}" "${SHOWN}/${f}" "${STAGE_ROOT}/$(basename "${f%.typ}").pdf"; then
+    compiled=$((compiled + 1))
+  else
+    failed+=("${f}")
+  fi
+done
+if [[ ${#failed[@]} -gt 0 ]]; then
+  printf '\n%d file(s) failed against the staged payload at %s:\n' "${#failed[@]}" "${STAGE}" >&2
+  printf '  %s\n' "${failed[@]}" >&2
+  printf 'Check that tools/package.sh stage copies every file these need.\n' >&2
+  exit 1
+fi
+printf 'Compiled %d file(s) against the staged payload\n' "${compiled}"
 
 if command -v typst-package-check >/dev/null 2>&1; then
   typst-package-check check "${STAGE}"

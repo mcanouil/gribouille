@@ -1,6 +1,6 @@
 // Facet-wrap with a per-panel smoother fitted only on each panel's subset.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

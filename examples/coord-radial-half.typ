@@ -1,7 +1,7 @@
 // Partial radial sweep: `end: π` keeps the panel as a half-circle so the
 // domain endpoints render at distinct angles instead of stacking.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

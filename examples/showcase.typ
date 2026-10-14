@@ -1,6 +1,6 @@
 // Showcase used by docs/index.qmd: faceted penguins with a linear smoother.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

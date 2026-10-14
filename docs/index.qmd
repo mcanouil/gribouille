@@ -244,6 +244,7 @@ Stack geoms, scales, facets, and a theme until the plot is right.
 
 ```{typst}
 //| output-filename: "/assets/typst-render/index/showcase.svg"
+//| cache: false
 //| alt: "Faceted scatter plot of flipper length versus body mass for Adelie, Chinstrap, and Gentoo penguins, split by island, with a linear smoother fitted per species."
 #include "/examples/showcase.typ"
 ```

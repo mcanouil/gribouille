@@ -4,7 +4,7 @@
 // rather than relying on the geom's implicit y default. With no `labels(y:)`
 // override, the y-axis title is derived from the marker: `_count` -> `Count`.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

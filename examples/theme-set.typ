@@ -1,7 +1,7 @@
 // theme-set installs a global default once; subsequent plots inherit it
 // unless they pass an explicit `theme:` argument.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

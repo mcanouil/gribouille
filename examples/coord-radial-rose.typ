@@ -1,6 +1,6 @@
 // Rose chart: discrete categories distributed around the circle, height as r.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

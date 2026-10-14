@@ -4,7 +4,7 @@
 // drives initial training; the `after-scale` closure runs per row
 // after the colour scale resolves the source.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 

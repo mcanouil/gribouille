@@ -1,7 +1,7 @@
 // Showcase: boxplots ordered by median with the raw observations jittered
 // behind them; summaries never hide the data they summarise.
 
-#import "../lib.typ": *
+#import "/lib.typ": *
 
 #set page(width: auto, height: auto, margin: 0cm)
 
