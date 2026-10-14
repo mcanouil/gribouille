@@ -181,8 +181,10 @@ card_unavailable() {
 # A site whose configuration never names the card uses a social image of its
 # own, so the card is neither fetched nor required, and a rate-limited fetch
 # cannot fail a render that would not publish it. Comments are stripped first,
-# so a comment that mentions the path does not count.
-if ! sed 's/#.*//' "${DOCS_DIR}/_quarto.yml" | grep -qF "${CARD_REL}"; then
+# so a comment that mentions the path does not count. The process substitution
+# keeps sed out of the exit status: `grep -q` stops at the first match, and
+# under pipefail the SIGPIPE that sed then gets would read as no match.
+if ! grep -qF "${CARD_REL}" < <(sed 's/#.*//' "${DOCS_DIR}/_quarto.yml"); then
 	printf '[pre-render] _quarto.yml does not use %s; not fetching the social card\n' "${CARD_REL}"
 elif [[ -n "$(find "${CARD_PATH}" -mtime -1 2>/dev/null)" ]]; then
 	printf '[pre-render] Social card cached under a day ago; not refetching\n'

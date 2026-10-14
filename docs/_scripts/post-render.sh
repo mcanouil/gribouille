@@ -7,9 +7,12 @@
 # @copyright 2026 Mickaël Canouil
 # @author Mickaël Canouil
 #
-# assets/social/og-image.png is left alone. It is ignored by Git like the two
-# files below, but pre-render.sh caches it rather than generating it, and a
-# render with no network reuses whatever is there.
+# changelog.qmd is always removed. _variables.yml is removed only when its
+# first line marks it as generated, so a hand-written one stays.
+#
+# assets/social/og-image.png is left alone. It is ignored by Git, but
+# pre-render.sh caches it rather than generating it, and a render with no
+# network reuses whatever is there.
 #
 
 set -euo pipefail
