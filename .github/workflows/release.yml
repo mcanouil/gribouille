@@ -364,7 +364,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: ./.github/workflows/deploy.yml
+    uses: ./.github/workflows/docs.yml
     # Build the bump commit, not the release-triggering ref: the latter predates
     # the version bump, so its CHANGELOG still reads "Unreleased" and the release
     # site would hide the new version. Empty when no bump ran (deploy-only run).
