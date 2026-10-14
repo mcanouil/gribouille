@@ -208,11 +208,14 @@ if [[ -n "${REPLACE_PR}" ]]; then
     --body-file "${BODY_FILE}"
   PR_URL="$(gh pr view "${REPLACE_PR}" --repo typst/packages --json url --jq '.url')"
 else
+  # --head takes a bare branch name here, unlike gh pr create, so the owner is
+  # matched separately.
   PR_URL="$(gh pr list \
     --repo typst/packages \
-    --head "${FORK_OWNER}:${BRANCH}" \
+    --head "${BRANCH}" \
     --state open \
-    --json url --jq '.[0].url // empty')"
+    --json url,headRepositoryOwner \
+    --jq "[.[] | select(.headRepositoryOwner.login == \"${FORK_OWNER}\")][0].url // empty")"
 
   if [[ -n "${PR_URL}" ]]; then
     echo "Reusing existing PR: ${PR_URL}"
