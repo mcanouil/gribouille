@@ -154,7 +154,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       QUARTO_TYPST: typst
-      # Drives the navbar label and the `{{< env VERSION >}}` imports on the pages.
+      # Drives the navbar label; the pages take their import version from typst.toml.
       VERSION: ${{ matrix.version }}
 
     steps:

@@ -31,7 +31,7 @@ Options:
   --docs <dir>        Quarto project directory to patch (default: <root>/docs)
   --toml <file>       Package manifest to read (default: <root>/typst.toml)
   --deps <file>       Typst dependency entry file (default: <root>/src/deps.typ)
-  --variables <file>  YAML output with compiler + dependency versions (default: <root>/docs/_variables.yml)
+  --variables <file>  YAML output with package, compiler + dependency versions (default: <root>/docs/_variables.yml)
   --news <file>       Release announcement data feeding changelog links (default: <root>/docs/_news.yml)
   --strict            Treat unresolved @refs as errors
   --check             Parse and validate without writing
