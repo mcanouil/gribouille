@@ -71,9 +71,12 @@ jobs:
         with:
           luaVersion: "5.4"
 
+      - name: Set up typst-package-check
+        uses: mcanouil/typst-workflows/actions/setup-package-check@v1
+
       # Stages the payload Typst Universe receives, installs it as the published
-      # package, and compiles every example and the star history chart against it
-      # with the import a reader types.
+      # package, compiles every example and the star history chart against it
+      # with the import a reader types, and lints the payload.
       - name: Rehearse the release
         shell: bash
         run: |

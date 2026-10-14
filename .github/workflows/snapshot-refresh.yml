@@ -61,25 +61,33 @@ jobs:
           app-slug: ${{ steps.app-token.outputs.app-slug }}
           gh-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Read Typst version from typst.toml
-        id: typst-version
-        uses: ./.github/actions/typst-version
-
       - name: Set up Typst
-        uses: typst-community/setup-typst@v5
-        with:
-          typst-version: ${{ steps.typst-version.outputs.version }}
+        uses: mcanouil/typst-workflows/actions/setup-typst@v1
 
       - name: Set up Lua
         uses: leafo/gh-actions-lua@v13
         with:
           luaVersion: "5.4"
 
+      - name: Install ImageMagick
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v compare >/dev/null || {
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends imagemagick
+          }
+
       - name: Regenerate goldens
-        uses: ./.github/actions/typst-snapshot
-        with:
-          mode: update
-          force: ${{ inputs.force }}
+        shell: bash
+        env:
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          if [[ "${FORCE}" == "true" ]]; then
+            rm -rf tests/visual/golden
+          fi
+          lua tools/snapshot/run.lua --update
 
       - name: Commit goldens (PR or direct)
         env:

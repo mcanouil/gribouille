@@ -49,6 +49,8 @@ Source modules live under [`src/`](src/).
 Tests live under [`tests/unit/`](tests/unit), [`tests/visual/`](tests/visual), and [`tests/errors/`](tests/errors).
 Every file under `tests/errors/` must fail to compile, and declares the phrases its message has to carry on `// expect:` lines, because Typst has no `try`/`catch` for a unit test to use.
 Helper scripts live under [`tools/`](tools), in particular [`tools/check.sh`](tools/check.sh) for local checks.
+`tools/check.sh` runs the same suite as CI and needs Lua 5.4.
+[`tools/dry-release.sh`](tools/dry-release.sh) rehearses a release against the staged package and needs [`typst-package-check`](https://github.com/typst/package-check), which you install with `cargo install --git https://github.com/typst/package-check --locked`.
 The examples under [`examples/`](examples) import the working tree with `#import "/lib.typ": *`, so compile one from the repository root:
 
 ```sh

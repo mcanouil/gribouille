@@ -12,6 +12,7 @@ keywords = ["plot", "chart", "grammar-of-graphics", "visualization"]
 categories = ["visualization"]
 exclude = [
   ".claude-plugin",
+  ".editorconfig",
   ".github",
   ".gitignore",
   "docs",
