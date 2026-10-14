@@ -1,0 +1,174 @@
+/*-- scss:functions --*/
+
+// Mix $color towards black or white, as Quarto's `theme-contrast()` does, until
+// it reads at 4.5:1 on its own soft tint: $color at $alpha over $bg. The tint
+// darkens with the colour, so it is recomputed at every step.
+@function atelier-contrast-on-tint($color, $bg, $alpha) {
+  $toward: if(tone($bg) == "light", #000, #fff);
+  @for $step from 0 through 100 {
+    $candidate: mix($toward, $color, $step * 1%);
+    @if quarto-contrast($candidate, mix($candidate, $bg, $alpha * 100%)) >= 4.5 {
+      @return $candidate;
+    }
+  }
+  @return $toward;
+}
+
+/*-- scss:defaults --*/
+
+// ===========================================================================
+// CHROME PALETTE
+// ===========================================================================
+// This file is listed before `brand` in the format's theme lists, which is
+// what lets it read the brand palette. Quarto emits user layer defaults in
+// reverse list order, so a file placed before brand has its defaults evaluated
+// after brand's, where $body-bg, $body-color, and $primary are all resolved,
+// and still ahead of every Quarto and Bootstrap `!default`. That is the only
+// point in the cascade where the chrome can be derived from the page and still
+// be handed to Quarto's own $navbar-*, $sidebar-*, and $footer-* variables.
+//
+// The chrome is the navbar, the page footer, and the sidebar: the bars that
+// frame the page rather than carry it.
+
+// How the chrome follows the colour scheme.
+//
+//   auto   Derived from the brand palette, so each bundle gets its own chrome
+//          and the bars follow the colour-scheme toggle.
+//   light  Pinned to the light palette below in both schemes.
+//   dark   Pinned to the dark palette below in both schemes.
+$atelier-chrome: auto !default;
+
+@if not index((auto, light, dark), $atelier-chrome) {
+  @error "$atelier-chrome must be auto, light, or dark, but was #{$atelier-chrome}.";
+}
+
+// The pinned palettes, each a background, a foreground, and an accent that
+// every other chrome colour is derived from. Only the palette matching
+// $atelier-chrome is used, so pinning light leaves the dark values inert.
+$atelier-chrome-dark-bg: #1b242e !default;
+$atelier-chrome-dark-fg: #e8edf2 !default;
+$atelier-chrome-dark-accent: #7fa8c4 !default;
+
+$atelier-chrome-light-bg: #eef1f5 !default;
+$atelier-chrome-light-fg: #1b242e !default;
+$atelier-chrome-light-accent: #1f5f80 !default;
+
+// A project can drop `brand` from its theme list, in which case the page
+// variables are only defined in the Bootstrap layer that follows this one;
+// fall back to the Bootstrap defaults so `auto` still resolves.
+$atelier-chrome-page-bg: if(variable-exists(body-bg), $body-bg, #fff);
+$atelier-chrome-page-fg: if(variable-exists(body-color), $body-color, #212529);
+$atelier-chrome-page-accent: if(variable-exists(primary), $primary, #0d6efd);
+
+// In `auto` the bar is a light tint of the page rather than the page colour
+// itself, so it still reads as a bar without a hard colour break, and the
+// mix resolves per bundle: a paler paper in the light one, a lifted slate in
+// the dark one.
+$atelier-chrome-bg: if(
+  $atelier-chrome == dark,
+  $atelier-chrome-dark-bg,
+  if(
+    $atelier-chrome == light,
+    $atelier-chrome-light-bg,
+    mix($atelier-chrome-page-bg, $atelier-chrome-page-fg, 94%)
+  )
+) !default;
+
+// Both inks are mixed towards black or white only until they clear 4.5:1, and
+// returned untouched when they already do; a ratio that cannot be met ends at
+// black or white. In `auto` the bar is a tint of the page, so a brand colour
+// sitting just above 4.5:1 on the page can fall under it here.
+// Setting either variable in a project skips the correction, since a `!default`
+// assignment is not evaluated at all once the variable is set.
+$atelier-chrome-fg: theme-contrast(
+  if(
+    $atelier-chrome == dark,
+    $atelier-chrome-dark-fg,
+    if(
+      $atelier-chrome == light,
+      $atelier-chrome-light-fg,
+      $atelier-chrome-page-fg
+    )
+  ),
+  $atelier-chrome-bg,
+  "AA"
+) !default;
+
+// The surface of dropdown menus, a step from the bar towards the ink.
+$atelier-chrome-surface: mix($atelier-chrome-bg, $atelier-chrome-fg, 90%) !default;
+
+// The accent sits on the bar, and on the accent-soft pill of the active sidebar
+// item and of a hovered dropdown item. The pill over the surface is the closest
+// of these to the accent, so holding the accent to AA there covers the rest.
+$atelier-chrome-accent-soft-alpha: 0.16 !default;
+$atelier-chrome-accent: atelier-contrast-on-tint(
+  if(
+    $atelier-chrome == dark,
+    $atelier-chrome-dark-accent,
+    if(
+      $atelier-chrome == light,
+      $atelier-chrome-light-accent,
+      $atelier-chrome-page-accent
+    )
+  ),
+  $atelier-chrome-surface,
+  $atelier-chrome-accent-soft-alpha
+) !default;
+
+// Everything else follows from that triple, so a project re-points three
+// colours rather than eight.
+$atelier-chrome-muted: theme-contrast(
+  mix($atelier-chrome-fg, $atelier-chrome-bg, 65%),
+  $atelier-chrome-bg,
+  "AA"
+) !default;
+$atelier-chrome-accent-soft: rgba($atelier-chrome-accent, $atelier-chrome-accent-soft-alpha) !default;
+
+// ===========================================================================
+// PAGE VARIABLES
+// ===========================================================================
+// The website listing layer pins $text-muted to a fixed #6c757d ahead of this
+// file, which is under 4.5:1 on most pages; derive it from the page instead,
+// held to AA. A `!default` would lose to that layer, so it is handed over by
+// plain assignment, like the chrome variables below; a project sets
+// $atelier-text-muted instead.
+$atelier-text-muted: theme-contrast(
+  mix($atelier-chrome-page-fg, $atelier-chrome-page-bg, 65%),
+  $atelier-chrome-page-bg,
+  "AA"
+) !default;
+$text-muted: $atelier-text-muted;
+
+// A hairline between two surfaces, which is what the bar edges and the section
+// dividers want.
+$atelier-chrome-border: rgba($atelier-chrome-fg, 0.2) !default;
+
+// The boundary of a boxed control, which WCAG 1.4.11 asks 3:1 of. The weight
+// has to hold on a light bar as well as a dark one: at 0.4 it is 3.3:1 on the
+// dark palette but only 2.4:1 on the light one.
+$atelier-chrome-control-border: rgba($atelier-chrome-fg, 0.55) !default;
+
+// ===========================================================================
+// QUARTO CHROME VARIABLES
+// ===========================================================================
+// Handing the palette to Quarto's own variables is what makes the parts this
+// theme cannot reach from CSS come out right: the collapsed navbar's toggler
+// icon and the reader-mode toggle are SVGs with the foreground baked into the
+// markup, and the sidebar link, hover, and disabled colours are contrasted
+// against $sidebar-bg. These are plain assignments rather than defaults
+// because Quarto's own layer, which they have to beat, uses `!default`.
+$navbar-bg: $atelier-chrome-bg;
+$navbar-fg: $atelier-chrome-fg;
+$navbar-hl: $atelier-chrome-accent;
+
+// Quarto fades a hovered navbar link to `rgba($navbar-hl, 0.8)`, which mixes
+// the accent back into the bar and costs it about a third of its contrast;
+// hover at full strength instead, which is also what the sidebar does.
+$navbar-hover-color: $atelier-chrome-accent;
+
+$sidebar-bg: $atelier-chrome-bg;
+$sidebar-fg: $atelier-chrome-fg;
+
+$footer-bg: $atelier-chrome-bg;
+$footer-fg: $atelier-chrome-fg;
+$footer-border-color: $atelier-chrome-border;

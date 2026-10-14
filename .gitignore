@@ -17,7 +17,6 @@
 # Quarto build artefacts
 /.quarto/
 /docs/_site/
-/docs/_variables.yml
 **/*.quarto_ipynb
 /.luarc.json
 

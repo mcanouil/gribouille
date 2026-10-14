@@ -1,0 +1,116 @@
+<script id="a11y-fixes" type="text/javascript">
+	/**
+	 * @license MIT
+	 * @copyright 2026 Mickaël Canouil
+	 * @author Mickaël Canouil
+	 */
+	document.addEventListener("DOMContentLoaded", () => {
+		// Logo link: Quarto emits <a class="navbar-brand"> with an inner <img alt>,
+		// but the accessible name is lost when the image is styled away.
+		const siteName = (
+			document.querySelector(".navbar-title")?.textContent ||
+			document.title ||
+			"Site"
+		).trim();
+		document
+			.querySelectorAll("a.navbar-brand:not([aria-label]), a.navbar-brand-logo:not([aria-label])")
+			.forEach((a) => {
+				a.setAttribute("aria-label", `${siteName} — home`);
+			});
+
+		// Colour scheme toggle: Quarto adds title= but no aria-label.
+		document.querySelectorAll("a.quarto-color-scheme-toggle:not([aria-label])").forEach((a) => {
+			a.setAttribute("aria-label", a.getAttribute("title") || "Toggle dark mode");
+		});
+
+		// Search input: Quarto's inline control has no visible label.
+		const searchInput = document.querySelector(
+			".aa-Input, input.aa-Input, input[placeholder='Search'], input[type='search']",
+		);
+		if (searchInput && !searchInput.getAttribute("aria-label")) {
+			searchInput.setAttribute("aria-label", "Search the site");
+		}
+
+		// CSL bibliography: Quarto emits role="listitem" without a role="list" parent.
+		document.querySelectorAll('[role="listitem"]').forEach((el) => {
+			el.removeAttribute("role");
+		});
+
+		// Disambiguate landmarks. The page title-block is also a <header>, which is a
+		// duplicate banner alongside the site navbar; demote it and label the rest.
+		const siteHeader = document.getElementById("quarto-header");
+		if (siteHeader && !siteHeader.getAttribute("aria-label")) {
+			siteHeader.setAttribute("aria-label", "Site banner");
+		}
+		const titleHeader = document.querySelector("header#title-block-header, header.quarto-title-block");
+		if (titleHeader) {
+			titleHeader.setAttribute("role", "presentation");
+		}
+		const navbarPrimary = document.querySelector(".navbar");
+		if (navbarPrimary && !navbarPrimary.getAttribute("aria-label")) {
+			navbarPrimary.setAttribute("aria-label", "Primary");
+		}
+		const tocNav = document.querySelector("#TOC, nav#TOC, .sidebar-toc nav");
+		if (tocNav && !tocNav.getAttribute("aria-label")) {
+			tocNav.setAttribute("aria-label", "On this page");
+		}
+
+		// Listing category sidebar: Quarto emits <h5>Categories</h5> after the page
+		// <h1>, breaking heading order. Re-tag to <h2> so the outline stays monotonic.
+		document.querySelectorAll("h5.quarto-listing-category-title").forEach((h5) => {
+			const h2 = document.createElement("h2");
+			for (const attr of h5.attributes) h2.setAttribute(attr.name, attr.value);
+			h2.innerHTML = h5.innerHTML;
+			h5.replaceWith(h2);
+		});
+
+		// Wrap orphan listing landmarks so the region rule passes; skip nodes already
+		// inside a landmark, and the mobile sidebar-toggle clones (non-unique).
+		const insideLandmark = (el) =>
+			el &&
+			el.closest(
+				'main, [role="main"], aside, [role="complementary"], nav, [role="navigation"], section[aria-label], section[aria-labelledby]',
+			);
+		const inToggleClone = (el) => el && el.closest(".quarto-sidebar-toggle-contents, .quarto-sidebar-toggle");
+		const labelOnce = (el, role, label) => {
+			if (!el || el.getAttribute("role") || insideLandmark(el.parentElement)) return;
+			el.setAttribute("role", role);
+			if (!el.getAttribute("aria-label")) el.setAttribute("aria-label", label);
+		};
+
+		document.querySelectorAll(".quarto-listing-category-title").forEach((title) => {
+			const next = title.nextElementSibling;
+			if (next && next.classList.contains("quarto-listing-category") && !insideLandmark(title.parentElement)) {
+				const wrap = document.createElement("div");
+				wrap.setAttribute("role", "complementary");
+				wrap.setAttribute("aria-label", "Listing filters");
+				title.parentNode.insertBefore(wrap, title);
+				wrap.appendChild(title);
+				wrap.appendChild(next);
+			}
+		});
+		document.querySelectorAll(".quarto-listing-category").forEach((el) => {
+			if (inToggleClone(el)) return;
+			labelOnce(el, "complementary", "Listing filters");
+		});
+		document.querySelectorAll(".quarto-title-meta").forEach((el) => labelOnce(el, "region", "Page metadata"));
+
+		// Quarto clones labelled landmarks into a mobile-only container after our
+		// handlers run; suffix the clones so axe sees them as unique.
+		const dedupeCloneLandmarks = () => {
+			document
+				.querySelectorAll(
+					'.quarto-sidebar-toggle-contents [role="complementary"], .quarto-sidebar-toggle-contents [role="region"], .quarto-sidebar-toggle-contents aside',
+				)
+				.forEach((el) => {
+					const label = el.getAttribute("aria-label");
+					if (label && !/\(mobile\)$/.test(label)) {
+						el.setAttribute("aria-label", `${label} (mobile)`);
+					}
+				});
+		};
+		dedupeCloneLandmarks();
+		setTimeout(dedupeCloneLandmarks, 50);
+		setTimeout(dedupeCloneLandmarks, 250);
+	});
+</script>

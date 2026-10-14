@@ -1,10 +1,18 @@
 project:
-  type: website
-  # lib-dir: lib
+  # Atelier gives the project plumbing only. The format below stays `html`,
+  # which replaces atelier's `atelier-html` format, so atelier's chrome and theme
+  # SCSS, scripts and filter never reach the site and gribouille keeps its look.
+  type: atelier
   output-dir: _site
+  # pre-render.sh is shared with keisen and writes a changelog.qmd. typstdoc
+  # runs after it, writes the reference pages and _variables.yml, and replaces
+  # changelog.qmd with its own page (news links, footer, dev-only Unreleased
+  # block). post-render.sh removes both generated files.
   pre-render:
+    - ./_scripts/pre-render.sh
     - ../tools/typstdoc/main.lua
   post-render:
+    - ./_scripts/post-render.sh
     - ./_scripts/typst-render-check.sh
   resources:
     - assets/fonts/
