@@ -1,0 +1,23 @@
+name: Quarto Extensions Updates
+
+# Keeps the documentation website's own extensions under docs/_extensions/
+# current.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 00 12 1 * *
+
+permissions:
+  contents: read
+
+jobs:
+  updates:
+    uses: mcanouil/quarto-workflows/.github/workflows/quarto-extensions-updates.yml@v2
+    secrets: inherit
+    permissions:
+      contents: write
+      pull-requests: write
+    with:
+      gh-app-id: ${{ vars.APP_ID }}
+      scan-directories: |
+        docs

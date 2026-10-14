@@ -1,0 +1,72 @@
+# @license MIT
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+
+name: Docs
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "docs/**"
+      - "lib.typ"
+      - "src/**"
+      - "examples/**"
+      - "tools/typstdoc/**"
+      - "tools/package.sh"
+      - "typst.toml"
+      - "CHANGELOG.md"
+      - ".github/workflows/docs.yml"
+  # Build (but never deploy) on pull requests: rendering the site is the only thing
+  # that compiles the Typst blocks in the docs, so without this a broken block is
+  # only caught once it has already landed on main.
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "docs/**"
+      - "lib.typ"
+      - "src/**"
+      - "examples/**"
+      - "tools/typstdoc/**"
+      - "tools/package.sh"
+      - "typst.toml"
+      - "CHANGELOG.md"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit or ref to build (defaults to the triggering ref)."
+        type: string
+        required: false
+        default: ""
+
+# Only the deploy job touches Pages; it raises its own permissions. Everything else,
+# including the pull-request build of unreviewed content, stays read-only.
+permissions:
+  contents: read
+
+# GitHub Pages only accepts one deployment at a time, so every deploying run shares
+# a single repository-wide group; the group cannot be per-ref without letting two
+# refs deploy at once. Pull requests never deploy, so give them a per-ref group: they
+# can run in parallel with each other and with a deploy.
+# A new push supersedes the run it overtakes rather than queueing behind it: the site
+# is rebuilt in full from the newest sources, so the older build would publish content
+# that is already stale. Release and manual runs queue instead, so a tag is never
+# published without its docs.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('docs-pr-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+
+jobs:
+  docs:
+    uses: mcanouil/typst-workflows/.github/workflows/docs.yml@v1
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    with:
+      ref: ${{ inputs.ref }}
+      needs-lua: true
+      figure-cache: docs/.quarto/typst-render
+      dev-archive: true
