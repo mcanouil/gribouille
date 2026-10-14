@@ -8,8 +8,8 @@
 # @copyright 2026 Mickaël Canouil
 # @author Mickaël Canouil
 #
-# Both generated files, _variables.yml and changelog.qmd, are ignored by Git and
-# removed by post-render.sh.
+# The generated files, changelog.qmd and, in an extension repository,
+# _variables.yml, are ignored by Git and removed by post-render.sh.
 #
 # A repository that publishes a Quarto extension also has _scripts/sync-extension.sh
 # beside this script. That copy cannot be made here: Quarto resolves extensions
@@ -177,10 +177,12 @@ card_unavailable() {
 		"${reason}" >&2
 }
 
-# A site whose configuration never names the card uses a social image of its
-# own, so the card is neither fetched nor required, and a rate-limited fetch
-# cannot fail a render that would not publish it.
-if ! grep -q 'assets/social/og-image\.png' "${DOCS_DIR}/_quarto.yml"; then
+# A site whose configuration never names the card as an image uses a social
+# image of its own, so the card is neither fetched nor required, and a
+# rate-limited fetch cannot fail a render that would not publish it. Only an
+# `image:` key counts, so a comment that mentions the path does not.
+if ! grep -qE '^[[:space:]]*image:[[:space:]]*["'\'']?/?assets/social/og-image\.png' \
+	"${DOCS_DIR}/_quarto.yml"; then
 	printf '[pre-render] _quarto.yml does not use assets/social/og-image.png; not fetching the social card\n'
 elif [[ -n "$(find "${CARD_PATH}" -mtime -1 2>/dev/null)" ]]; then
 	printf '[pre-render] Social card cached under a day ago; not refetching\n'
