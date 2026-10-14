@@ -62,11 +62,6 @@ concurrency:
 jobs:
   checks:
     uses: mcanouil/typst-workflows/.github/workflows/checks.yml@v1
-    # Serialised against the refresh workflow on the same ref, so a refresh
-    # push and a check run do not read the goldens at the same time.
-    concurrency:
-      group: snapshot-refresh-${{ github.ref }}
-      cancel-in-progress: false
     with:
       needs-lua: true
       needs-imagemagick: true
