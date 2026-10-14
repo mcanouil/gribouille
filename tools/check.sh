@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Compiles every Typst example and unit test from the project root.
-# Mirrors the .github/actions/typst-compile composite action so local runs
-# match CI exactly. Exits non-zero on the first failure across all targets.
+# Runs the whole local suite from the project root, the same one CI runs:
+# the typstdoc tests and docstring check, the skill inventory, the unit tests,
+# the examples and the star history chart, the version check, the visual tests,
+# and the error fixtures. Exits non-zero when any of them fails, when a group
+# matches no file, or when Lua is not installed.
 #
 # Flags:
 #   --snapshot       Also run the visual snapshot harness in --check mode.
@@ -54,18 +56,24 @@ compile_glob() {
     fi
   done
 
+  # nullglob is set, so a group that holds nothing would print 0/0 and pass.
+  if [[ ${label_total} -eq 0 ]]; then
+    printf '%s: nothing matched %s\n' "${label}" "${glob}" >&2
+    failures=$((failures + 1))
+    return
+  fi
+
   printf '%-9s %d/%d\n' "${label}:" "${label_passed}" "${label_total}"
 }
 
-if command -v lua5.4 >/dev/null 2>&1; then
-  lua5.4 tools/typstdoc/test/run.lua
-  lua5.4 tools/skill-inventory.lua --check
-elif command -v lua >/dev/null 2>&1; then
-  lua tools/typstdoc/test/run.lua
-  lua tools/skill-inventory.lua --check
+lua_bin="$(command -v lua5.4 || command -v lua || true)"
+if [[ -z "${lua_bin}" ]]; then
+  printf 'lua: not installed; the typstdoc and skill inventory checks need Lua 5.4\n' >&2
+  failures=$((failures + 1))
 else
-  printf 'typstdoc tests: SKIP (lua not installed)\n'
-  printf 'skill inventory: SKIP (lua not installed)\n'
+  "${lua_bin}" tools/typstdoc/test/run.lua || failures=$((failures + 1))
+  "${lua_bin}" tools/typstdoc/main.lua --check || failures=$((failures + 1))
+  "${lua_bin}" tools/skill-inventory.lua --check || failures=$((failures + 1))
 fi
 
 compile_glob "unit" "tests/unit/*.typ"
@@ -87,7 +95,7 @@ fi
 if [[ -n "${snapshot_mode}" ]]; then
   printf '\nsnapshots:\n'
   # shellcheck disable=SC2086  # snapshot_args is intentionally word-split
-  if lua tools/snapshot/run.lua --check ${snapshot_args}; then
+  if "${lua_bin}" tools/snapshot/run.lua --check ${snapshot_args}; then
     :
   else
     failures=$((failures + 1))

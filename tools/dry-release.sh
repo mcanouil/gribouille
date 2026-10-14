@@ -3,8 +3,9 @@
 # Stages the same payload as `tools/package.sh stage` (the submitter in
 # .github/scripts/publish-typst-universe.sh), installs it locally as
 # @preview/gribouille:<version> via a symlink under Typst's data dir, compiles
-# every example and the star history chart against it, then removes the
-# symlink. No git tag, no GitHub Release, no upstream PR.
+# every example and the star history chart against it, lints the payload with
+# typst-package-check, then removes the symlink. It refuses a payload that holds
+# a dotfile. No git tag, no GitHub Release, no upstream PR.
 
 set -euo pipefail
 
@@ -17,7 +18,15 @@ VERSION="$(awk -F'"' '/^version[[:space:]]*=/ { print $2; exit }' typst.toml)"
   exit 1
 }
 
-STAGE_ROOT="/tmp/gribouille-dry-release"
+# Checked before any work, so a missing linter fails in seconds rather than
+# after the compiles.
+if ! command -v typst-package-check >/dev/null 2>&1; then
+  printf 'manifest: typst-package-check is not installed\n' >&2
+  printf '  install it with: cargo install --git https://github.com/typst/package-check --locked\n' >&2
+  exit 1
+fi
+
+STAGE_ROOT="${STAGE_ROOT:-/tmp/gribouille-dry-release}"
 STAGE="${STAGE_ROOT}/gribouille/${VERSION}"
 
 case "$(uname -s)" in
@@ -41,6 +50,12 @@ trap cleanup EXIT
 rm -rf "${STAGE_ROOT}"
 tools/package.sh stage "${STAGE}"
 printf 'Staged payload at %s\n' "${STAGE}"
+
+dotfiles="$(find "${STAGE}" -mindepth 1 -name '.*')"
+if [[ -n "${dotfiles}" ]]; then
+  printf 'payload: the staged package holds dotfiles\n%s\n' "${dotfiles}" >&2
+  exit 1
+fi
 
 mkdir -p "${INSTALL_DIR}"
 if [[ -e "${INSTALL_LINK}" && ! -L "${INSTALL_LINK}" ]]; then
@@ -78,10 +93,9 @@ if [[ ${#failed[@]} -gt 0 ]]; then
 fi
 printf 'Compiled %d file(s) against the staged payload\n' "${compiled}"
 
-if command -v typst-package-check >/dev/null 2>&1; then
-  typst-package-check check "${STAGE}"
-else
-  printf 'typst-package-check not installed; skipping manifest lint.\n'
+if ! typst-package-check check "${STAGE}"; then
+  printf '\nmanifest: typst-package-check reported the above\n' >&2
+  exit 1
 fi
 
 printf '\nDry-run OK for gribouille:%s\n' "${VERSION}"
