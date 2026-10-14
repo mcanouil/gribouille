@@ -61,36 +61,6 @@ local function parse_yaml_list(text)
   return items
 end
 
--- Digest of lib.typ and every file under src/, keyed by path relative to the
--- repository so it matches across machines. typst-render's cache key does not
--- read `/lib.typ` or the nested src/ imports, so each gallery block carries this
--- digest as an input: a figure recompiles when the library changes and comes
--- from the cache otherwise.
-local library_digest_cache = nil
-local function library_digest()
-  if library_digest_cache then return library_digest_cache end
-  local root = (quarto.project.directory or '.') .. '/..'
-  local parts = {}
-  local function add(rel)
-    local path = root .. '/' .. rel
-    local ok, entries = pcall(pandoc.system.list_directory, path)
-    if ok then
-      table.sort(entries)
-      for _, name in ipairs(entries) do add(rel .. '/' .. name) end
-    else
-      local body = read_file(path)
-      if not body then
-        error('gallery-data: cannot read ' .. path .. ' for the library digest; check that lib.typ and src/ exist under ' .. root)
-      end
-      parts[#parts + 1] = rel .. '\n' .. body
-    end
-  end
-  add('lib.typ')
-  add('src')
-  library_digest_cache = pandoc.utils.sha1(table.concat(parts, '\n'))
-  return library_digest_cache
-end
-
 -- The examples import the working tree with `#import "/lib.typ"`. A reader
 -- types the published package instead, so the modal shows that line, with the
 -- version typst.toml declares.
@@ -122,7 +92,6 @@ local function build_typst_block(slug, alt, output_name)
     "//| output-filename: '" .. (output_name or slug) .. ".svg'",
     '//| alt: ' .. quoted_alt,
     "//| file: '/../examples/" .. slug .. ".typ'",
-    "//| input: 'gribouille-library=" .. library_digest() .. "'",
   }, '\n')
   return pandoc.CodeBlock(text, pandoc.Attr('', { '{typst}' }, {}))
 end
