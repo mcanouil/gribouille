@@ -7,6 +7,7 @@
 	document.addEventListener("DOMContentLoaded", () => {
 		// Logo link: Quarto emits <a class="navbar-brand"> with an inner <img alt>,
 		// but the accessible name is lost when the image is styled away.
+		// Related upstream: https://github.com/quarto-dev/quarto-cli/issues/14660
 		const siteName = (
 			document.querySelector(".navbar-title")?.textContent ||
 			document.title ||
@@ -19,25 +20,54 @@
 			});
 
 		// Colour scheme toggle: Quarto adds title= but no aria-label.
+		// Fixed upstream in Quarto 1.11.2: https://github.com/quarto-dev/quarto-cli/issues/13463
 		document.querySelectorAll("a.quarto-color-scheme-toggle:not([aria-label])").forEach((a) => {
 			a.setAttribute("aria-label", a.getAttribute("title") || "Toggle dark mode");
 		});
 
-		// Search input: Quarto's inline control has no visible label.
-		const searchInput = document.querySelector(
-			".aa-Input, input.aa-Input, input[placeholder='Search'], input[type='search']",
-		);
-		if (searchInput && !searchInput.getAttribute("aria-label")) {
-			searchInput.setAttribute("aria-label", "Search the site");
-		}
+		// Search input: Quarto labels the field through aria-labelledby, which
+		// names it "Submit" (textbox) or nothing (overlay), and that label wins
+		// over an aria-label on the input. Name the referenced label with Quarto's
+		// own localised search label, and again when a search host or the overlay
+		// renders a new one.
+		// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15062
+		const searchName = (() => {
+			try {
+				const options = document.getElementById("quarto-search-options");
+				return (options && JSON.parse(options.textContent).language?.["search-label"]) || "Search";
+			} catch {
+				return "Search";
+			}
+		})();
+		const setSearchName = (element) => {
+			if (element.getAttribute("aria-label") !== searchName) {
+				element.setAttribute("aria-label", searchName);
+			}
+		};
+		const nameSearchInputs = () => {
+			document.querySelectorAll(".aa-Input").forEach((input) => {
+				const labelId = (input.getAttribute("aria-labelledby") || "").trim().split(/\s+/)[0];
+				setSearchName((labelId && document.getElementById(labelId)) || input);
+			});
+			// The overlay trigger carries autocomplete's English "Search" title.
+			document.querySelectorAll(".aa-DetachedSearchButton").forEach(setSearchName);
+		};
+		nameSearchInputs();
+		const searchObserver = new MutationObserver(nameSearchInputs);
+		searchObserver.observe(document.body, { childList: true });
+		document.querySelectorAll('[id="quarto-search"]').forEach((host) => {
+			searchObserver.observe(host, { childList: true, subtree: true });
+		});
 
 		// CSL bibliography: Quarto emits role="listitem" without a role="list" parent.
+		// Upstream: https://github.com/quarto-dev/quarto-cli/issues/14755
 		document.querySelectorAll('[role="listitem"]').forEach((el) => {
 			el.removeAttribute("role");
 		});
 
 		// Disambiguate landmarks. The page title-block is also a <header>, which is a
 		// duplicate banner alongside the site navbar; demote it and label the rest.
+		// Upstream: https://github.com/quarto-dev/quarto-cli/issues/14375 (banner), closed https://github.com/quarto-dev/quarto-cli/issues/14376 (nav labels)
 		const siteHeader = document.getElementById("quarto-header");
 		if (siteHeader && !siteHeader.getAttribute("aria-label")) {
 			siteHeader.setAttribute("aria-label", "Site banner");
@@ -57,6 +87,7 @@
 
 		// Listing category sidebar: Quarto emits <h5>Categories</h5> after the page
 		// <h1>, breaking heading order. Re-tag to <h2> so the outline stays monotonic.
+		// Upstream: https://github.com/quarto-dev/quarto-cli/issues/14384
 		document.querySelectorAll("h5.quarto-listing-category-title").forEach((h5) => {
 			const h2 = document.createElement("h2");
 			for (const attr of h5.attributes) h2.setAttribute(attr.name, attr.value);
@@ -66,6 +97,7 @@
 
 		// Wrap orphan listing landmarks so the region rule passes; skip nodes already
 		// inside a landmark, and the mobile sidebar-toggle clones (non-unique).
+		// Related upstream: https://github.com/quarto-dev/quarto-cli/issues/14377
 		const insideLandmark = (el) =>
 			el &&
 			el.closest(
