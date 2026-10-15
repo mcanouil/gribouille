@@ -24,7 +24,6 @@ on:
       - "LICENSE"
       - ".editorconfig"
       - "docs/_scripts/**.sh"
-      - ".github/scripts/**.sh"
       - ".github/actions/**"
       - ".github/workflows/checks.yml"
   pull_request:
@@ -45,7 +44,6 @@ on:
       - "LICENSE"
       - ".editorconfig"
       - "docs/_scripts/**.sh"
-      - ".github/scripts/**.sh"
       - ".github/actions/**"
       - ".github/workflows/checks.yml"
   workflow_dispatch:
@@ -69,3 +67,5 @@ jobs:
       failure-artifacts: |
         build/snapshot/diff/
         build/snapshot/png/
+      shellcheck-paths: "tools/*.sh docs/_scripts/*.sh"
+      shfmt-paths: "tools/*.sh"
