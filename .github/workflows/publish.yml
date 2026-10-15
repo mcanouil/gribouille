@@ -1,0 +1,30 @@
+# @license MIT
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+
+name: Publish
+
+# Publishes the draft release once Typst Universe serves its version, then
+# deploys the documentation: the new tag at the root, and main at /dev/.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    uses: mcanouil/typst-workflows/.github/workflows/publish.yml@v1
+    secrets: inherit
+
+  docs:
+    needs: publish
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml

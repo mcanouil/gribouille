@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Local dry-run of the Typst Universe release pipeline.
-# Stages the same payload as `tools/package.sh stage` (the submitter in
-# .github/scripts/publish-typst-universe.sh), installs it locally as
+# Stages the same payload as `tools/package.sh stage` (the archive that the
+# Release workflow submits to Typst Universe), installs it locally as
 # @preview/gribouille:<version> via a symlink under Typst's data dir, compiles
 # every example and the star history chart against it, lints the payload with
 # typst-package-check, then removes the symlink. It refuses a payload that holds
