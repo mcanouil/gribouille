@@ -59,7 +59,7 @@ concurrency:
 
 jobs:
   checks:
-    uses: mcanouil/typst-workflows/.github/workflows/checks.yml@v1
+    uses: mcanouil/typst-workflows/.github/workflows/checks.yml@v2
     with:
       needs-lua: true
       needs-imagemagick: true

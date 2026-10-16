@@ -2,10 +2,10 @@
 # Holds every written version to the one typst.toml publishes, and refuses a
 # version written anywhere else.
 #
-# tools/bump-version.sh rewrites a fixed set of files: typst.toml,
+# The Release workflow rewrites a fixed set of files: typst.toml,
 # CITATION.cff, the CHANGELOG.md heading, the README.md and SKILL.md imports,
 # and .claude-plugin/plugin.json. This check reads each of them back, so a bump
-# that misses one fails in its own pull request.
+# that misses one fails the release before anything is pushed.
 #
 # Every other file is version-free. The examples import the working tree with
 # `#import "/lib.typ"`, and the documentation shows them with the published

@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   publish:
-    uses: mcanouil/typst-workflows/.github/workflows/publish.yml@v1
+    uses: mcanouil/typst-workflows/.github/workflows/publish.yml@v2
     secrets: inherit
 
   docs:
