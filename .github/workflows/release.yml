@@ -35,11 +35,23 @@ concurrency:
 
 jobs:
   release:
-    uses: mcanouil/typst-workflows/.github/workflows/release.yml@v1
+    uses: mcanouil/typst-workflows/.github/workflows/release.yml@v2
     secrets: inherit
     with:
       bump: ${{ inputs.bump }}
       dry-run: ${{ inputs.dry-run }}
+      targets: |
+        - file: CITATION.cff
+          pattern: '^version: {version}$'
+        - file: CITATION.cff
+          pattern: '^date-released: "{date}"$'
+        - file: README.md
+          pattern: '@preview/gribouille:{version}'
+        - file: skills/gribouille/SKILL.md
+          pattern: '@preview/gribouille:{version}'
+        - file: .claude-plugin/plugin.json
+          pattern: '"version": "{version}"'
+      after-bump: tools/version-check.sh
       needs-lua: true
       needs-imagemagick: true
       check-args: --snapshot

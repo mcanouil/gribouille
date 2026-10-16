@@ -62,7 +62,7 @@ jobs:
           gh-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Typst
-        uses: mcanouil/typst-workflows/actions/setup-typst@v1
+        uses: mcanouil/typst-workflows/actions/setup-typst@v2
 
       - name: Set up Lua
         uses: leafo/gh-actions-lua@v13

@@ -60,7 +60,7 @@ concurrency:
 
 jobs:
   docs:
-    uses: mcanouil/typst-workflows/.github/workflows/docs.yml@v1
+    uses: mcanouil/typst-workflows/.github/workflows/docs.yml@v2
     permissions:
       contents: read
       pages: write

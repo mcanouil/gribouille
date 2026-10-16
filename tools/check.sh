@@ -91,12 +91,6 @@ if ! tools/version-check.sh; then
   failures=$((failures + 1))
 fi
 
-# The Release workflow writes the next version with this, and a release is the
-# one time it runs on the real files, so it runs against fixtures here.
-if ! tools/bump-version.sh --self-test; then
-  failures=$((failures + 1))
-fi
-
 compile_glob "visual" "tests/visual/*.typ"
 
 # The error fixtures assert the opposite of the globs above: each one must fail,
