@@ -24,29 +24,19 @@ jobs:
       contents: write
       pull-requests: write
 
-    env:
-      BRANCH: ci/bump-typst-deps
-
     steps:
-      - name: Create GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
+      - name: Get the App token
+        id: token
+        uses: mcanouil/release-actions/token@v1
         with:
-          client-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_KEY }}
+          app-id: ${{ vars.APP_ID }}
+          app-key: ${{ secrets.APP_KEY }}
+          require-app: true
 
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          token: ${{ steps.app-token.outputs.token }}
-
-      - name: Set up Git user
-        id: setup-git
-        uses: ./.github/actions/setup-git-user
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          app-slug: ${{ steps.app-token.outputs.app-slug }}
-          gh-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.token.outputs.token }}
 
       - name: Read current pinned versions
         id: current
@@ -65,7 +55,7 @@ jobs:
       - name: Fetch latest upstream versions
         id: latest
         env:
-          GH_TOKEN: ${{ steps.setup-git.outputs.token }}
+          GH_TOKEN: ${{ steps.token.outputs.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -89,33 +79,39 @@ jobs:
           CURRENT_CETZ: ${{ steps.current.outputs.cetz }}
           LATEST_TYPST: ${{ steps.latest.outputs.typst }}
           LATEST_CETZ: ${{ steps.latest.outputs.cetz }}
+          LATEST_TYPST_TAG: ${{ steps.latest.outputs.typst_tag }}
+          LATEST_CETZ_TAG: ${{ steps.latest.outputs.cetz_tag }}
         shell: bash
         run: |
           set -euo pipefail
-          typst_changed=false
-          cetz_changed=false
-          [[ "$CURRENT_TYPST" != "$LATEST_TYPST" ]] && typst_changed=true
-          [[ "$CURRENT_CETZ" != "$LATEST_CETZ" ]] && cetz_changed=true
-          any=false
-          { [[ "$typst_changed" == "true" ]] || [[ "$cetz_changed" == "true" ]]; } && any=true
+          bumps=()
+          lines=()
+          if [[ "$CURRENT_TYPST" != "$LATEST_TYPST" ]]; then
+            bumps+=("typst to ${LATEST_TYPST}")
+            lines+=("- typst ${CURRENT_TYPST} → ${LATEST_TYPST} (https://github.com/typst/typst/releases/tag/${LATEST_TYPST_TAG})")
+          fi
+          if [[ "$CURRENT_CETZ" != "$LATEST_CETZ" ]]; then
+            bumps+=("cetz to ${LATEST_CETZ}")
+            lines+=("- cetz ${CURRENT_CETZ} → ${LATEST_CETZ} (https://github.com/cetz-package/cetz/releases/tag/${LATEST_CETZ_TAG})")
+          fi
+          if [[ ${#bumps[@]} -eq 0 ]]; then
+            echo "No updates. Already on typst ${CURRENT_TYPST} and cetz ${CURRENT_CETZ}."
+            echo "any=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          subject="ci: bump ${bumps[0]}"
+          if [[ ${#bumps[@]} -eq 2 ]]; then
+            subject+=", ${bumps[1]}"
+          fi
           {
-            echo "typst_changed=${typst_changed}"
-            echo "cetz_changed=${cetz_changed}"
-            echo "any=${any}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: No-op summary
-        if: ${{ steps.diff.outputs.any != 'true' }}
-        env:
-          CURRENT_TYPST: ${{ steps.current.outputs.typst }}
-          CURRENT_CETZ: ${{ steps.current.outputs.cetz }}
-        shell: bash
-        run: |
-          {
-            echo "## Typst dependency check"
+            echo "any=true"
+            echo "subject=${subject}"
+            echo "body<<EOF"
+            echo "Automated bump of Typst toolchain dependencies."
             echo ""
-            echo "No updates. Already on \`typst ${CURRENT_TYPST}\` and \`cetz ${CURRENT_CETZ}\`."
-          } >> "${GITHUB_STEP_SUMMARY}"
+            printf '%s\n' "${lines[@]}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
 
       - name: Apply bumps
         if: ${{ steps.diff.outputs.any == 'true' }}
@@ -129,109 +125,16 @@ jobs:
           sed -E -i 's|(@preview/cetz:)[0-9][0-9A-Za-z.+-]*|\1'"${LATEST_CETZ}"'|' src/deps.typ
           git --no-pager diff -- typst.toml src/deps.typ
 
-      - name: Create branch, commit, push
+      - name: Open the pull request
         if: ${{ steps.diff.outputs.any == 'true' }}
-        id: push
-        env:
-          GH_TOKEN: ${{ steps.setup-git.outputs.token }}
-          CURRENT_TYPST: ${{ steps.current.outputs.typst }}
-          CURRENT_CETZ: ${{ steps.current.outputs.cetz }}
-          LATEST_TYPST: ${{ steps.latest.outputs.typst }}
-          LATEST_CETZ: ${{ steps.latest.outputs.cetz }}
-          TYPST_CHANGED: ${{ steps.diff.outputs.typst_changed }}
-          CETZ_CHANGED: ${{ steps.diff.outputs.cetz_changed }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git show-ref --quiet "refs/heads/${BRANCH}"; then
-            git branch -D "${BRANCH}"
-          fi
-          if git ls-remote --exit-code --heads origin "${BRANCH}" >/dev/null 2>&1; then
-            git push origin --delete "${BRANCH}"
-          fi
-          git checkout -b "${BRANCH}"
-
-          git add typst.toml src/deps.typ
-
-          if [[ "$TYPST_CHANGED" == "true" && "$CETZ_CHANGED" == "true" ]]; then
-            SUBJECT="ci: bump typst to ${LATEST_TYPST}, cetz to ${LATEST_CETZ}"
-          elif [[ "$TYPST_CHANGED" == "true" ]]; then
-            SUBJECT="ci: bump typst to ${LATEST_TYPST}"
-          else
-            SUBJECT="ci: bump cetz to ${LATEST_CETZ}"
-          fi
-
-          git commit -m "${SUBJECT}"
-          git push --force origin "${BRANCH}"
-
-          {
-            echo "subject=${SUBJECT}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Open pull request
-        if: ${{ steps.diff.outputs.any == 'true' }}
-        id: pr
-        env:
-          GH_TOKEN: ${{ steps.setup-git.outputs.token }}
-          SUBJECT: ${{ steps.push.outputs.subject }}
-          CURRENT_TYPST: ${{ steps.current.outputs.typst }}
-          CURRENT_CETZ: ${{ steps.current.outputs.cetz }}
-          LATEST_TYPST: ${{ steps.latest.outputs.typst }}
-          LATEST_CETZ: ${{ steps.latest.outputs.cetz }}
-          LATEST_TYPST_TAG: ${{ steps.latest.outputs.typst_tag }}
-          LATEST_CETZ_TAG: ${{ steps.latest.outputs.cetz_tag }}
-          TYPST_CHANGED: ${{ steps.diff.outputs.typst_changed }}
-          CETZ_CHANGED: ${{ steps.diff.outputs.cetz_changed }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          BODY_FILE="$(mktemp)"
-          {
-            echo "Automated bump of Typst toolchain dependencies."
-            echo ""
-            if [[ "$TYPST_CHANGED" == "true" ]]; then
-              printf -- '- typst %s → %s (https://github.com/typst/typst/releases/tag/%s)\n' \
-                "$CURRENT_TYPST" "$LATEST_TYPST" "$LATEST_TYPST_TAG"
-            fi
-            if [[ "$CETZ_CHANGED" == "true" ]]; then
-              printf -- '- cetz %s → %s (https://github.com/cetz-package/cetz/releases/tag/%s)\n' \
-                "$CURRENT_CETZ" "$LATEST_CETZ" "$LATEST_CETZ_TAG"
-            fi
-          } > "${BODY_FILE}"
-
-          PR_URL=$(gh pr create \
-            --title "${SUBJECT}" \
-            --body-file "${BODY_FILE}" \
-            --base "${GITHUB_REF_NAME}" \
-            --head "${BRANCH}" \
-            --label "Type: Dependencies :arrow_up:")
-          echo "url=${PR_URL}" >> "${GITHUB_OUTPUT}"
-
-      - name: Summary
-        if: ${{ steps.diff.outputs.any == 'true' }}
-        env:
-          CURRENT_TYPST: ${{ steps.current.outputs.typst }}
-          CURRENT_CETZ: ${{ steps.current.outputs.cetz }}
-          LATEST_TYPST: ${{ steps.latest.outputs.typst }}
-          LATEST_CETZ: ${{ steps.latest.outputs.cetz }}
-          LATEST_TYPST_TAG: ${{ steps.latest.outputs.typst_tag }}
-          LATEST_CETZ_TAG: ${{ steps.latest.outputs.cetz_tag }}
-          TYPST_CHANGED: ${{ steps.diff.outputs.typst_changed }}
-          CETZ_CHANGED: ${{ steps.diff.outputs.cetz_changed }}
-          PR_URL: ${{ steps.pr.outputs.url }}
-        shell: bash
-        run: |
-          {
-            echo "## Typst dependency bump"
-            echo ""
-            echo "| Dependency | From | To | Release |"
-            echo "| ---------- | ---- | -- | ------- |"
-            if [[ "$TYPST_CHANGED" == "true" ]]; then
-              echo "| typst | \`${CURRENT_TYPST}\` | \`${LATEST_TYPST}\` | https://github.com/typst/typst/releases/tag/${LATEST_TYPST_TAG} |"
-            fi
-            if [[ "$CETZ_CHANGED" == "true" ]]; then
-              echo "| cetz | \`${CURRENT_CETZ}\` | \`${LATEST_CETZ}\` | https://github.com/cetz-package/cetz/releases/tag/${LATEST_CETZ_TAG} |"
-            fi
-            echo ""
-            echo "- PR: ${PR_URL}"
-          } >> "${GITHUB_STEP_SUMMARY}"
+        uses: mcanouil/release-actions/land@v1
+        with:
+          mode: pull-request
+          files: |
+            typst.toml
+            src/deps.typ
+          message: ${{ steps.diff.outputs.subject }}
+          branch: ci/bump-typst-deps
+          body: ${{ steps.diff.outputs.body }}
+          merge: none
+          token: ${{ steps.token.outputs.token }}

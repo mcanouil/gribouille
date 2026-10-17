@@ -33,33 +33,21 @@ jobs:
       contents: write
       pull-requests: write
 
-    env:
-      BRANCH: ci/snapshot-refresh
-      COMMIT: "chore(tests): refresh visual snapshots"
-
     steps:
-      # Mint the App token first so checkout can use it; that way every
-      # subsequent `git push` authenticates as the App and the
-      # `mcanouil-dev` bypass on branch protection applies. No need for
-      # per-push extraheader overrides.
-      - name: Create GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
+      # Checkout uses the App token, so every push acts as the App and the
+      # mcanouil-dev bypass on branch protection applies.
+      - name: Get the App token
+        id: token
+        uses: mcanouil/release-actions/token@v1
         with:
-          client-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_KEY }}
+          app-id: ${{ vars.APP_ID }}
+          app-key: ${{ secrets.APP_KEY }}
+          require-app: true
 
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          token: ${{ steps.app-token.outputs.token }}
-
-      - name: Set up Git user
-        uses: ./.github/actions/setup-git-user
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          app-slug: ${{ steps.app-token.outputs.app-slug }}
-          gh-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.token.outputs.token }}
 
       - name: Set up Typst
         uses: mcanouil/typst-workflows/actions/setup-typst@v2
@@ -89,55 +77,14 @@ jobs:
           fi
           lua tools/snapshot/run.lua --update
 
-      - name: Commit goldens (PR or direct)
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          DIRECT: ${{ inputs.direct }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add tests/visual/golden
-          if git diff --cached --quiet; then
-            echo "No golden changes." >> "${GITHUB_STEP_SUMMARY}"
-            exit 0
-          fi
-
-          git commit -m "${COMMIT}"
-
-          if [[ "${DIRECT}" == "true" ]]; then
-            # Checkout was performed with the App token, so the App
-            # identity drives this push and the `mcanouil-dev` bypass on
-            # the branch protection rule applies.
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-            {
-              echo "## Visual snapshots refreshed (direct push)"
-              echo ""
-              git diff --stat HEAD~1 HEAD || true
-            } >> "${GITHUB_STEP_SUMMARY}"
-            exit 0
-          fi
-
-          if git show-ref --quiet "refs/heads/${BRANCH}"; then
-            git branch -D "${BRANCH}"
-          fi
-          if git ls-remote --exit-code --heads origin "${BRANCH}" >/dev/null 2>&1; then
-            git push origin --delete "${BRANCH}"
-          fi
-          git checkout -b "${BRANCH}"
-          git push --force origin "${BRANCH}"
-
-          sleep 5
-          PR_URL=$(gh pr create \
-            --fill-first \
-            --base "${GITHUB_REF_NAME}" \
-            --head "${BRANCH}" \
-            --label "Type: CI/CD :robot:")
-          sleep 5
-          gh pr merge --auto --merge --delete-branch "${BRANCH}"
-
-          {
-            echo "## Visual snapshots refreshed"
-            echo ""
-            echo "- PR: ${PR_URL}"
-            git diff --stat "origin/${GITHUB_REF_NAME}" HEAD || true
-          } >> "${GITHUB_STEP_SUMMARY}"
+      - name: Land the goldens
+        uses: mcanouil/release-actions/land@v1
+        with:
+          mode: ${{ inputs.direct && 'push' || 'pull-request' }}
+          files: tests/visual/golden
+          message: "chore(tests): refresh visual snapshots"
+          branch: ci/snapshot-refresh
+          merge-method: merge
+          wait: false
+          allow-unchanged: true
+          token: ${{ steps.token.outputs.token }}

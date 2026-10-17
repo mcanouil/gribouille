@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       days:
-        description: "Lock threads closed more than this many days ago."
+        description: "Lock closed threads with no activity for more than this many days."
         type: number
         required: false
         default: 7
@@ -31,76 +31,9 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Create GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_KEY }}
-
-      - name: Compute threshold date
-        id: threshold
-        env:
-          DAYS: ${{ inputs.days || 7 }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          date=$(date -u -d "${DAYS} days ago" +%Y-%m-%d)
-          echo "date=${date}" >> "${GITHUB_OUTPUT}"
-          echo "Locking issues and pull requests closed before ${date}."
-
       - name: Lock stale threads
-        id: lock
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          REPO: ${{ github.repository }}
-          THRESHOLD: ${{ steps.threshold.outputs.date }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          LOCKED_FILE="$(mktemp)"
-
-          lock_kind() {
-            local kind="$1" subcommand="$2" number
-            while IFS= read -r number; do
-              [[ -n "$number" ]] || continue
-              gh api --method PUT "repos/${REPO}/issues/${number}/lock" \
-                -f lock_reason=resolved
-              echo "${kind} #${number}" >> "${LOCKED_FILE}"
-              echo "Locked ${kind} #${number}."
-            done < <(gh search "${subcommand}" \
-              --repo "${REPO}" \
-              --closed "<${THRESHOLD}" \
-              --limit 1000 \
-              --json number,isLocked \
-              --jq '.[] | select(.isLocked | not) | .number')
-          }
-
-          lock_kind "issue" "issues"
-          lock_kind "pull request" "prs"
-
-          count=$(wc -l < "${LOCKED_FILE}" | tr -d ' ')
-          echo "count=${count}" >> "${GITHUB_OUTPUT}"
-          echo "locked-file=${LOCKED_FILE}" >> "${GITHUB_OUTPUT}"
-
-      - name: Summary
-        if: always()
-        env:
-          THRESHOLD: ${{ steps.threshold.outputs.date }}
-          COUNT: ${{ steps.lock.outputs.count }}
-          LOCKED_FILE: ${{ steps.lock.outputs.locked-file }}
-        shell: bash
-        run: |
-          {
-            echo "## Locked threads"
-            echo ""
-            echo "Threshold: closed before \`${THRESHOLD:-n/a}\`."
-            echo ""
-            echo "Locked ${COUNT:-0} thread(s)."
-            if [[ -n "${LOCKED_FILE:-}" && -s "${LOCKED_FILE}" ]]; then
-              echo ""
-              while IFS= read -r line; do
-                echo "- ${line}"
-              done < "${LOCKED_FILE}"
-            fi
-          } >> "${GITHUB_STEP_SUMMARY}"
+        uses: dessant/lock-threads@v6
+        with:
+          issue-inactive-days: ${{ inputs.days || 7 }}
+          pr-inactive-days: ${{ inputs.days || 7 }}
+          process-only: issues, prs
