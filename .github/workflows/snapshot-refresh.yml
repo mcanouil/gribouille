@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   refresh:
-    uses: mcanouil/typst-workflows/.github/workflows/snapshot-refresh.yml@feat/snapshot-and-dependency-workflows
+    uses: mcanouil/typst-workflows/.github/workflows/snapshot-refresh.yml@v2
     secrets: inherit
     permissions:
       contents: write
