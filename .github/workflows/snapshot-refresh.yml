@@ -21,70 +21,14 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: snapshot-refresh-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   refresh:
-    name: Recompile and open PR
-    runs-on: ubuntu-latest
+    uses: mcanouil/typst-workflows/.github/workflows/snapshot-refresh.yml@v2
+    secrets: inherit
     permissions:
       contents: write
       pull-requests: write
-
-    steps:
-      # Checkout uses the App token, so every push acts as the App and the
-      # mcanouil-dev bypass on branch protection applies.
-      - name: Get the App token
-        id: token
-        uses: mcanouil/release-actions/token@v1
-        with:
-          app-id: ${{ vars.APP_ID }}
-          app-key: ${{ secrets.APP_KEY }}
-          require-app: true
-
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          token: ${{ steps.token.outputs.token }}
-
-      - name: Set up Typst
-        uses: mcanouil/typst-workflows/actions/setup-typst@v2
-
-      - name: Set up Lua
-        uses: leafo/gh-actions-lua@v13
-        with:
-          luaVersion: "5.4"
-
-      - name: Install ImageMagick
-        shell: bash
-        run: |
-          set -euo pipefail
-          command -v compare >/dev/null || {
-            sudo apt-get update
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends imagemagick
-          }
-
-      - name: Regenerate goldens
-        shell: bash
-        env:
-          FORCE: ${{ inputs.force }}
-        run: |
-          set -euo pipefail
-          if [[ "${FORCE}" == "true" ]]; then
-            rm -rf tests/visual/golden
-          fi
-          lua tools/snapshot/run.lua --update
-
-      - name: Land the goldens
-        uses: mcanouil/release-actions/land@v1
-        with:
-          mode: ${{ inputs.direct && 'push' || 'pull-request' }}
-          files: tests/visual/golden
-          message: "chore(tests): refresh visual snapshots"
-          branch: ci/snapshot-refresh
-          merge-method: merge
-          wait: false
-          allow-unchanged: true
-          token: ${{ steps.token.outputs.token }}
+    with:
+      direct: ${{ inputs.direct }}
+      force: ${{ inputs.force }}
+      merge-method: merge

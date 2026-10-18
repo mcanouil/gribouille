@@ -12,129 +12,15 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: deps-update-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   bump:
-    name: Check and bump Typst + cetz
-    runs-on: ubuntu-latest
+    uses: mcanouil/typst-workflows/.github/workflows/dependency-update.yml@v2
+    secrets: inherit
     permissions:
       contents: write
       pull-requests: write
-
-    steps:
-      - name: Get the App token
-        id: token
-        uses: mcanouil/release-actions/token@v1
-        with:
-          app-id: ${{ vars.APP_ID }}
-          app-key: ${{ secrets.APP_KEY }}
-          require-app: true
-
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          token: ${{ steps.token.outputs.token }}
-
-      - name: Read current pinned versions
-        id: current
-        shell: bash
-        run: |
-          set -euo pipefail
-          typst=$(awk -F'"' '/^compiler[[:space:]]*=/ { print $2; exit }' typst.toml)
-          [[ -n "$typst" ]] || { echo "::error::compiler not found in typst.toml"; exit 1; }
-          cetz=$(grep -oE '@preview/cetz:[0-9][0-9A-Za-z.+-]*' src/deps.typ | head -n1 | cut -d: -f2)
-          [[ -n "$cetz" ]] || { echo "::error::@preview/cetz pin not found in src/deps.typ"; exit 1; }
-          {
-            echo "typst=${typst}"
-            echo "cetz=${cetz}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Fetch latest upstream versions
-        id: latest
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          typst_tag=$(gh api repos/typst/typst/releases/latest --jq '.tag_name')
-          cetz_tag=$(gh api repos/cetz-package/cetz/releases/latest --jq '.tag_name')
-          typst="${typst_tag#v}"
-          cetz="${cetz_tag#v}"
-          [[ -n "$typst" ]] || { echo "::error::empty tag from typst/typst"; exit 1; }
-          [[ -n "$cetz" ]] || { echo "::error::empty tag from cetz-package/cetz"; exit 1; }
-          {
-            echo "typst=${typst}"
-            echo "cetz=${cetz}"
-            echo "typst_tag=${typst_tag}"
-            echo "cetz_tag=${cetz_tag}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Decide whether a bump is needed
-        id: diff
-        env:
-          CURRENT_TYPST: ${{ steps.current.outputs.typst }}
-          CURRENT_CETZ: ${{ steps.current.outputs.cetz }}
-          LATEST_TYPST: ${{ steps.latest.outputs.typst }}
-          LATEST_CETZ: ${{ steps.latest.outputs.cetz }}
-          LATEST_TYPST_TAG: ${{ steps.latest.outputs.typst_tag }}
-          LATEST_CETZ_TAG: ${{ steps.latest.outputs.cetz_tag }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          bumps=()
-          lines=()
-          if [[ "$CURRENT_TYPST" != "$LATEST_TYPST" ]]; then
-            bumps+=("typst to ${LATEST_TYPST}")
-            lines+=("- typst ${CURRENT_TYPST} → ${LATEST_TYPST} (https://github.com/typst/typst/releases/tag/${LATEST_TYPST_TAG})")
-          fi
-          if [[ "$CURRENT_CETZ" != "$LATEST_CETZ" ]]; then
-            bumps+=("cetz to ${LATEST_CETZ}")
-            lines+=("- cetz ${CURRENT_CETZ} → ${LATEST_CETZ} (https://github.com/cetz-package/cetz/releases/tag/${LATEST_CETZ_TAG})")
-          fi
-          if [[ ${#bumps[@]} -eq 0 ]]; then
-            echo "No updates. Already on typst ${CURRENT_TYPST} and cetz ${CURRENT_CETZ}."
-            echo "any=false" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-          subject="ci: bump ${bumps[0]}"
-          if [[ ${#bumps[@]} -eq 2 ]]; then
-            subject+=", ${bumps[1]}"
-          fi
-          {
-            echo "any=true"
-            echo "subject=${subject}"
-            echo "body<<EOF"
-            echo "Automated bump of Typst toolchain dependencies."
-            echo ""
-            printf '%s\n' "${lines[@]}"
-            echo "EOF"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Apply bumps
-        if: ${{ steps.diff.outputs.any == 'true' }}
-        env:
-          LATEST_TYPST: ${{ steps.latest.outputs.typst }}
-          LATEST_CETZ: ${{ steps.latest.outputs.cetz }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          sed -E -i 's/^(compiler[[:space:]]*=[[:space:]]*")[^"]+/\1'"${LATEST_TYPST}"'/' typst.toml
-          sed -E -i 's|(@preview/cetz:)[0-9][0-9A-Za-z.+-]*|\1'"${LATEST_CETZ}"'|' src/deps.typ
-          git --no-pager diff -- typst.toml src/deps.typ
-
-      - name: Open the pull request
-        if: ${{ steps.diff.outputs.any == 'true' }}
-        uses: mcanouil/release-actions/land@v1
-        with:
-          mode: pull-request
-          files: |
-            typst.toml
-            src/deps.typ
-          message: ${{ steps.diff.outputs.subject }}
-          branch: ci/bump-typst-deps
-          body: ${{ steps.diff.outputs.body }}
-          merge: none
-          token: ${{ steps.token.outputs.token }}
+    with:
+      packages: |
+        - name: cetz
+          repository: cetz-package/cetz
+          file: src/deps.typ
