@@ -216,8 +216,9 @@ A silent workaround hides the bug, and then nobody fixes it.
    - Open pull requests: `gh search prs --repo mcanouil/gribouille --state open "<keywords>"`.
    - Discussions: <https://github.com/mcanouil/gribouille/discussions>.
 
-   If an open issue matches, draft a comment with only the facts that the thread does not have yet, such as a newer version or a smaller reproduction.
-   If there are no new facts, suggest a thumbs-up reaction and post nothing.
+   If an open issue matches, do not file a new issue.
+   Draft a comment with only the facts that the thread does not have yet, such as a newer version or a smaller reproduction, then go to step 6.
+   If there are no new facts, suggest a thumbs-up reaction, post nothing, and go to step 8.
    If a closed issue was fixed and the bug is back, write "Regression of #N." in the new issue.
 4. Route the report.
    Blank issues are turned off.
@@ -239,8 +240,12 @@ A silent workaround hides the bug, and then nobody fixes it.
      Do not add headings of your own.
      Keep code and error output unchanged.
    - Do not mention the agent or the tools that wrote the text.
+
+   For Discussions, use the fields of that form with the same rules.
+   Ideas: "Before posting", "What problem does this solve?", "Proposed solution or desired behaviour", and the optional "Alternatives considered".
+   Q&A: "Description".
 6. Show the draft to the user.
-   Put the line `**Issue draft for mcanouil/gribouille, not posted.**` above it.
+   Put the line `**Draft for mcanouil/gribouille, not posted.**` above it.
    Put the title and the body in one `markdown` code block, with a fence longer than any fence in the body.
 7. Post only after a clear go-ahead from the user, such as "post".
    - If `gh auth status` succeeds, write the body to a file and run `gh issue create --repo mcanouil/gribouille --title "<title>" --body-file <file>`.
@@ -249,6 +254,7 @@ A silent workaround hides the bug, and then nobody fixes it.
      If not, tell the user that the issue has no label.
      Do not add assignees.
      Give the user the URL of the new issue.
+   - For a comment on an open issue, run `gh issue comment <n> --repo mcanouil/gribouille --body-file <file>`.
    - If `gh` is not available, or the report goes to Discussions, give the user the draft and the link from step 4.
 8. Write a workaround only if the user agrees.
    Put a comment next to it that links the issue, so that the workaround can be removed when the bug is fixed:
