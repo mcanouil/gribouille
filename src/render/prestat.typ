@@ -173,9 +173,12 @@
   let mapping = layer.at("mapping", default: none)
   if factor-levels.len() == 0 or mapping == none { return data }
   let out = data
+  // x and y mapped to one source column share one spine column; shift it once.
+  let done = ()
   for (axis, drawn-on) in (("x", "y"), ("y", "x")) {
     let pos-col = mapping-ref-col(mapping.at(axis, default: none))
-    if type(pos-col) != str { continue }
+    if type(pos-col) != str or pos-col in done { continue }
+    done.push(pos-col)
     let levels = factor-levels.at(pos-col, default: none)
     if levels == none { continue }
     let axis-trained = trained.at(

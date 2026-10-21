@@ -57,6 +57,20 @@
 )
 #assert.eq(flipped.map(r => r.at(pos-col)), (2.2, 2.9, 1.0))
 
+// --- x and y on one source column share one spine, shifted once -------------
+#let shared = _rebase-level-spine(
+  data,
+  (
+    mapping: (x: pos-col, y: pos-col),
+    _factor-levels: ((pos-col): ("a", "b", "c")),
+  ),
+  (
+    x: (type: "discrete", domain: ("c", "a", "b")),
+    y: (type: "discrete", domain: ("c", "a", "b")),
+  ),
+)
+#assert.eq(shared.map(r => r.at(pos-col)), (2.2, 2.9, 1.0))
+
 // --- a layer without a spine is returned as is --------------------------------
 #let plain = (mapping: (x: "g", y: "v"))
 #assert.eq(
