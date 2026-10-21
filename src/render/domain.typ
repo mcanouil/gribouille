@@ -280,11 +280,8 @@
   if mapping == none { return none }
   let out = mapping
   for (x-side, y-side) in _FLIP-PAIRS {
-    let x-col = mapping.at(x-side, default: none)
-    let y-col = mapping.at(y-side, default: none)
-    if x-col == none and y-col == none { continue }
-    out.insert(x-side, y-col)
-    out.insert(y-side, x-col)
+    out.insert(x-side, mapping.at(y-side, default: none))
+    out.insert(y-side, mapping.at(x-side, default: none))
   }
   out
 }
