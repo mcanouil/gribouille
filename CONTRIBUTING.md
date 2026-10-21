@@ -48,9 +48,7 @@ The library entry point is [`lib.typ`](lib.typ).
 Source modules live under [`src/`](src/).
 Tests live under [`tests/unit/`](tests/unit), [`tests/visual/`](tests/visual), and [`tests/errors/`](tests/errors).
 Every file under `tests/errors/` must fail to compile, and declares the phrases its message has to carry on `// expect:` lines, because Typst has no `try`/`catch` for a unit test to use.
-Helper scripts live under [`tools/`](tools), in particular [`tools/check.sh`](tools/check.sh) for local checks.
-`tools/check.sh` runs the same suite as CI and needs Lua 5.4.
-[`tools/dry-release.sh`](tools/dry-release.sh) rehearses a release against the staged package and needs [`typst-package-check`](https://github.com/typst/package-check), which you install with `cargo install --git https://github.com/typst/package-check --locked`.
+Helper scripts live under [`tools/`](tools).
 The examples under [`examples/`](examples) import the working tree with `#import "/lib.typ": *`, so compile one from the repository root:
 
 ```sh
@@ -62,20 +60,6 @@ Do not write a version number in an example.
 Short identifiers used across the source tree (`ctx`, `spec`, `mapping`, `cx`, `cy`, `lo`, `hi`, …) are catalogued in [`GLOSSARY.md`](GLOSSARY.md).
 Consult that glossary before you introduce new short identifiers.
 [`ARCHITECTURE.md`](ARCHITECTURE.md) maps the rendering pipeline, module boundaries, and where to add a geom, stat, scale, or position.
-
-### Visual snapshots
-
-Figures under [`tests/visual/golden/`](tests/visual/golden) are minted by CI and never committed from a working copy.
-Install the compiler [`typst.toml`](typst.toml) pins before you read a snapshot result, because a different Typst release renders the same source differently and reports diffs that have nothing to do with your change.
-
-Run `lua tools/snapshot/run.lua --check` locally to see which snapshots your change moves.
-When a change is meant to move them, dispatch the `Refresh visual snapshots` workflow on your branch and let CI write the goldens:
-
-```sh
-gh workflow run snapshot-refresh.yml --ref <branch> -f direct=true
-```
-
-The harness refuses `--update` outside CI, so there is nothing to remember beyond running the workflow.
 
 ### Documenting unreleased API
 
@@ -95,6 +79,55 @@ In return, a documentation fix reaches the stable site only at the next release.
 
 Never inline a panic string.
 Route every validation through [`src/utils/errors.typ`](src/utils/errors.typ) (`fail`, `fail-enum`, `fail-type`, `fail-range`, `check`), which enforces the message grammar `<scope>: <problem>; got <repr(value)>. <hint>`.
+
+## Checks
+
+[`tools/check.sh`](tools/check.sh) runs the same suite as CI and needs Lua 5.4.
+Run it before you commit:
+
+```sh
+tools/check.sh
+```
+
+Add `--snapshot` to also compare the visual snapshots, as CI does.
+The Checks workflow runs the suite through the shared [typst-workflows](https://github.com/mcanouil/typst-workflows#checks), together with the release rehearsal and the lint of the shell scripts.
+
+### Visual snapshots
+
+Figures under [`tests/visual/golden/`](tests/visual/golden) are minted by CI and never committed from a working copy.
+Install the compiler [`typst.toml`](typst.toml) pins before you read a snapshot result, because a different Typst release renders the same source differently and reports diffs that have nothing to do with your change.
+
+Run `lua tools/snapshot/run.lua --check` locally to see which snapshots your change moves.
+When a change is meant to move them, dispatch the `Refresh visual snapshots` workflow on your branch and let CI write the goldens:
+
+```sh
+gh workflow run snapshot-refresh.yml --ref <branch> -f direct=true
+```
+
+The harness refuses `--update` outside CI, so there is nothing to remember beyond running the workflow.
+
+## Rehearsing a release
+
+```sh
+tools/dry-release.sh
+```
+
+[`tools/dry-release.sh`](tools/dry-release.sh) rehearses a release against the staged package and needs [`typst-package-check`](https://github.com/typst/package-check), which you install with `cargo install --git https://github.com/typst/package-check --locked`.
+It publishes nothing.
+
+## Releasing
+
+A release takes two workflows, both run from the Actions tab.
+Their runbook, and the way to submit from a clone if CI cannot, are in the [typst-workflows README](https://github.com/mcanouil/typst-workflows#release-runbook).
+
+Run Release first, and choose `patch`, `minor` or `major`.
+It runs the checks, writes the version on `main`, and drafts a GitHub Release with the package archives.
+It then waits for approval on the `typst-universe` environment, and opens the pull request on `typst/packages`.
+Tick `dry-run` to rehearse all of it without a push, a draft or a pull request.
+If the reviewers on `typst/packages` ask for a change, fix it on `main` and run Release again with `none`.
+
+Run Publish when Typst Universe serves the new version.
+It publishes the draft, which creates the tag, and then publishes the site from that tag.
 
 ## Commit conventions
 
