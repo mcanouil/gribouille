@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Typst Universe does not honour <picture>/<source>; strip the element so
 # typst-package-check and the published package do not carry dead HTML.
-# Also strip the "Ask DeepWiki" badge, which is repo-only, and GitHub-flavoured
-# alert blocks (e.g. "> [!WARNING]") that render as plain blockquotes outside
-# GitHub.
+# Also strip GitHub-flavoured alert blocks (e.g. "> [!WARNING]") that render as
+# plain blockquotes outside GitHub.
 # Trim everything from the "## Dependencies" section onward so the published
 # README keeps usage and the "## AI assistants" section but omits repo-only
 # sections (Dependencies, Contributing, Citation, License).
@@ -33,7 +32,6 @@ fi
 
 perl -0777 -pe '
   s{[ \t]*<picture\b[^>]*>.*?</picture>}{}gs;
-  s{^\[!\[Ask DeepWiki\]\([^\n]*\n\n?}{}gm;
   s{^> \[![A-Z]+\][ \t]*\n(?:> [^\n]*\n)*\n?}{}gm;
   s{(^## Quick look\b[^\n]*\n.*?\n)^## Dependencies\b.*\z}{$1}ms;
 ' "${SRC}" >"${DEST}"
