@@ -217,7 +217,8 @@ A silent workaround hides the bug, and then nobody fixes it.
    - Discussions: <https://github.com/mcanouil/gribouille/discussions>.
 
    If an open issue matches, do not file a new issue.
-   Draft a comment with only the facts that the thread does not have yet, such as a newer version or a smaller reproduction, then go to step 6.
+   Draft a comment with only the facts that the thread does not have yet, such as a newer version or a smaller reproduction.
+   Use the prose rules of step 5, then go to step 6.
    If there are no new facts, suggest a thumbs-up reaction, post nothing, and go to step 8.
    If a closed issue was fixed and the bug is back, write "Regression of #N." in the new issue.
 4. Route the report.
@@ -232,7 +233,8 @@ A silent workaround hides the bug, and then nobody fixes it.
    - Run `typst --version` yourself.
      Ask the user for the facts that you cannot find.
      Never post a placeholder.
-   - Write each checkbox as `- [x]` or `- [ ]`.
+   - Copy the "Before submitting" checkbox labels exactly from <https://github.com/mcanouil/gribouille/blob/main/.github/ISSUE_TEMPLATE/bug.yml>.
+     Write each checkbox as `- [x]` or `- [ ]`.
      Tick a box only when it is true, and tick the search box only after step 3.
      Under the draft, list each box that you could not verify.
    - Claim only what you ran or what the user told you.
@@ -247,6 +249,7 @@ A silent workaround hides the bug, and then nobody fixes it.
 6. Show the draft to the user.
    Put the line `**Draft for mcanouil/gribouille, not posted.**` above it.
    Put the title and the body in one `markdown` code block, with a fence longer than any fence in the body.
+   For a comment, put the issue number in place of the title.
 7. Post only after a clear go-ahead from the user, such as "post".
    - If `gh auth status` succeeds, write the body to a file and run `gh issue create --repo mcanouil/gribouille --title "<title>" --body-file <file>`.
      `gh issue create` does not apply the label of the form.
