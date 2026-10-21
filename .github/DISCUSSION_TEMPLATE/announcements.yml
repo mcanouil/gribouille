@@ -6,3 +6,10 @@ body:
     attributes:
       value: |
         This category is reserved for maintainer announcements such as releases, major changes, and project updates.
+
+  - type: textarea
+    attributes:
+      label: Announcement
+      description: What changed, and what readers need to do about it.
+    validations:
+      required: true
