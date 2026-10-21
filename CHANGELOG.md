@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- fix: `geom-rect()` and `geom-bin-2d()` under `coord-flip()` draw their extents on the flipped axes. (#337)
+- fix: `geom-rect()` and `geom-bin-2d()` under `coord-flip()` draw their extents on the flipped axes. `geom-ribbon()`, `geom-linerange()`, `geom-pointrange()` and `geom-crossbar()` do not follow the flip yet, and now draw nothing under it rather than marks on the wrong axes. (#337)
 - fix: `geom-segment()` and `geom-curve()` under `coord-flip()` draw their end point on the flipped axes, as they already did for their start point. (#336)
 - fix: `position-beeswarm()`, `position-jitter()`, `position-jitterdodge()` and `position-nudge()` put each mark on the slot of its level on the discrete scale. They now follow the scale `limits` and the levels that other layers add. (#334)
 - docs: The feature matrix lists the geoms that do not follow `coord-flip()` yet. (#337)
