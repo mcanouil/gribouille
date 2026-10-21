@@ -1,7 +1,7 @@
 // coord-flip: spec dictionary shape and renderer detection.
 
 #import "../../src/coord/flip.typ": coord-flip
-#import "../../src/render/domain.typ": _apply-flip, _is-flipped
+#import "../../src/render/domain.typ": _apply-flip, _flip-mapping, _is-flipped
 
 #let c1 = coord-flip()
 #assert.eq(c1.kind, "coord")
@@ -68,5 +68,18 @@
 #let untouched = _apply-flip(trained, (kind: "coord", coord: "cartesian"))
 #assert.eq(untouched.x.type, "discrete")
 #assert.eq(untouched.y.type, "continuous")
+
+// `_flip-mapping` moves every positional pair onto the swapped trained axes,
+// so a segment end follows its start.
+#assert.eq(
+  _flip-mapping((x: "a", y: "b", xend: "c", yend: "d", colour: "k")),
+  (x: "b", y: "a", xend: "d", yend: "c", colour: "k"),
+)
+// A pair with one side unmapped moves that side across and leaves `none`.
+#assert.eq(
+  _flip-mapping((x: "a", xend: "c")),
+  (x: none, y: "a", xend: none, yend: "c"),
+)
+#assert.eq(_flip-mapping(none), none)
 
 coord-flip tests passed.

@@ -269,6 +269,26 @@
   coord != none and coord.at("name", default: none) == "flip"
 )
 
+// The positional aesthetics that `_apply-flip` moves to the other axis, as
+// `(x-side, y-side)` pairs. A geom reads its mapping against the swapped
+// trained scales, so every pair must swap with them, not only `x` and `y`.
+#let _FLIP-PAIRS = (("x", "y"), ("xend", "yend"))
+
+// Swap each `_FLIP-PAIRS` entry of a layer mapping. A side that was not mapped
+// comes back as `none`, so a geom reading it with a default sees it unmapped.
+#let _flip-mapping(mapping) = {
+  if mapping == none { return none }
+  let out = mapping
+  for (x-side, y-side) in _FLIP-PAIRS {
+    let x-col = mapping.at(x-side, default: none)
+    let y-col = mapping.at(y-side, default: none)
+    if x-col == none and y-col == none { continue }
+    out.insert(x-side, y-col)
+    out.insert(y-side, x-col)
+  }
+  out
+}
+
 // Swap the trained x and y scales so the renderer's bottom axis shows the
 // user's original y scale and the left axis shows the user's original x
 // scale. Called after `_apply-coord` so any cartesian x-limits/y-limits overrides
