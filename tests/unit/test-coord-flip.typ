@@ -75,6 +75,11 @@
   _flip-mapping((x: "a", y: "b", xend: "c", yend: "d", colour: "k")),
   (x: "b", y: "a", xend: "d", yend: "c", colour: "k"),
 )
+// The range channels swap too, so a rectangle follows the trained axes.
+#assert.eq(
+  _flip-mapping((xmin: "a", xmax: "b", ymin: "c", ymax: "d")),
+  (xmin: "c", xmax: "d", ymin: "a", ymax: "b"),
+)
 // A pair with one side unmapped moves that side across and leaves no key, so
 // a geom reading the empty side with `default:` still gets its default.
 #assert.eq(_flip-mapping((x: "a", xend: "c")), (y: "a", yend: "c"))

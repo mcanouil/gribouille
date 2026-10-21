@@ -274,7 +274,12 @@
 // trained scales, so each pair listed here swaps with them. A channel left out
 // stays in user space, so its geom draws correctly only if it branches on
 // `ctx.flipped` itself.
-#let _FLIP-PAIRS = (("x", "y"), ("xend", "yend"))
+#let _FLIP-PAIRS = (
+  ("x", "y"),
+  ("xend", "yend"),
+  ("xmin", "ymin"),
+  ("xmax", "ymax"),
+)
 
 // Swap each `_FLIP-PAIRS` entry of a layer mapping, keys and all: a key is
 // present after the swap only if its partner was present before. A geom that
