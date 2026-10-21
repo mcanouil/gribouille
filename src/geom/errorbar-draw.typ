@@ -22,6 +22,11 @@
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let _draw-errorbar-axis(layer, ctx, axis, cap-extent) = {
+  // Under coord-flip the mapping swap carries the span onto the other axis,
+  // so an errorbar draws as a horizontal bar and an errorbarh as a vertical one.
+  if ctx.at("flipped", default: false) {
+    axis = if axis == "y" { "x" } else { "y" }
+  }
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
