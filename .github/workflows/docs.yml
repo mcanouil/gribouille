@@ -33,7 +33,8 @@ on:
       - "CHANGELOG.md"
       - ".github/workflows/docs.yml"
   # A docs-only change reaches the site root without a release by dispatching
-  # this with main-as-latest. The next push to main puts the tag back.
+  # this with main-as-latest. The next push to main that matches the paths
+  # above, or the next release, puts the tag back.
   workflow_dispatch:
     inputs:
       main-as-latest:
