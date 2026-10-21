@@ -178,7 +178,6 @@
   for (axis, drawn-on) in (("x", "y"), ("y", "x")) {
     let pos-col = mapping-ref-col(mapping.at(axis, default: none))
     if type(pos-col) != str or pos-col in done { continue }
-    done.push(pos-col)
     let levels = factor-levels.at(pos-col, default: none)
     if levels == none { continue }
     let axis-trained = trained.at(
@@ -186,6 +185,7 @@
       default: none,
     )
     if axis-trained == none or axis-trained.type != "discrete" { continue }
+    done.push(pos-col)
     let src-col = pos-col.slice(_POS-COL-PREFIX.len())
     let shift = (:)
     for (i, level) in levels.enumerate() {

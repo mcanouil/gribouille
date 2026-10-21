@@ -71,6 +71,17 @@
 )
 #assert.eq(shared.map(r => r.at(pos-col)), (2.2, 2.9, 1.0))
 
+// --- a shared spine column is shifted by the first axis that is discrete -----
+#let shared-y = _rebase-level-spine(
+  data,
+  (
+    mapping: (x: pos-col, y: pos-col),
+    _factor-levels: ((pos-col): ("a", "b", "c")),
+  ),
+  (x: continuous, y: (type: "discrete", domain: ("c", "a", "b"))),
+)
+#assert.eq(shared-y.map(r => r.at(pos-col)), (2.2, 2.9, 1.0))
+
 // --- a layer without a spine is returned as is --------------------------------
 #let plain = (mapping: (x: "g", y: "v"))
 #assert.eq(
