@@ -174,7 +174,7 @@
   if factor-levels.len() == 0 or mapping == none { return data }
   let out = data
   for (axis, drawn-on) in (("x", "y"), ("y", "x")) {
-    let pos-col = mapping.at(axis, default: none)
+    let pos-col = mapping-ref-col(mapping.at(axis, default: none))
     if type(pos-col) != str { continue }
     let levels = factor-levels.at(pos-col, default: none)
     if levels == none { continue }
@@ -189,6 +189,7 @@
       let slot = level-position(axis-trained, level)
       shift.insert(level, if slot == none { none } else { slot - (i + 1) })
     }
+    if shift.values().all(by => by == 0) { continue }
     out = out.map(row => {
       let v = row.at(src-col, default: none)
       let spine = row.at(pos-col, default: none)
