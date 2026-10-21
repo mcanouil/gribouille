@@ -79,6 +79,9 @@
 // a geom reading the empty side with `default:` still gets its default.
 #assert.eq(_flip-mapping((x: "a", xend: "c")), (y: "a", yend: "c"))
 #assert.eq(_flip-mapping((colour: "k")), (colour: "k"))
+// A key that `aes()` holds as `none` stays present on the other side, so a
+// geom that reads `mapping.x` directly still finds the key.
+#assert.eq(_flip-mapping((x: "a", y: none)), (x: none, y: "a"))
 #assert.eq(_flip-mapping(none), none)
 
 coord-flip tests passed.
