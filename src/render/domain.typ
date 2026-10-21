@@ -276,14 +276,17 @@
 // `ctx.flipped` itself.
 #let _FLIP-PAIRS = (("x", "y"), ("xend", "yend"))
 
-// Swap each `_FLIP-PAIRS` entry of a layer mapping. A side that was not mapped
-// comes back as `none`, so a geom reading it with a default sees it unmapped.
+// Swap each `_FLIP-PAIRS` entry of a layer mapping. Only a mapped side moves:
+// the other side gets no key, so a geom that reads it with `default:` still
+// gets its default.
 #let _flip-mapping(mapping) = {
   if mapping == none { return none }
   let out = mapping
   for (x-side, y-side) in _FLIP-PAIRS {
-    out.insert(x-side, mapping.at(y-side, default: none))
-    out.insert(y-side, mapping.at(x-side, default: none))
+    let x-col = out.remove(x-side, default: none)
+    let y-col = out.remove(y-side, default: none)
+    if y-col != none { out.insert(x-side, y-col) }
+    if x-col != none { out.insert(y-side, x-col) }
   }
   out
 }

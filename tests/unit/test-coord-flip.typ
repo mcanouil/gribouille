@@ -75,11 +75,10 @@
   _flip-mapping((x: "a", y: "b", xend: "c", yend: "d", colour: "k")),
   (x: "b", y: "a", xend: "d", yend: "c", colour: "k"),
 )
-// A pair with one side unmapped moves that side across and leaves `none`.
-#assert.eq(
-  _flip-mapping((x: "a", xend: "c")),
-  (x: none, y: "a", xend: none, yend: "c"),
-)
+// A pair with one side unmapped moves that side across and leaves no key, so
+// a geom reading the empty side with `default:` still gets its default.
+#assert.eq(_flip-mapping((x: "a", xend: "c")), (y: "a", yend: "c"))
+#assert.eq(_flip-mapping((colour: "k")), (colour: "k"))
 #assert.eq(_flip-mapping(none), none)
 
 coord-flip tests passed.
