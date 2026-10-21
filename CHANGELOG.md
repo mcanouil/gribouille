@@ -2,8 +2,8 @@
 
 ## Unreleased
 
+- docs: The agent skill tells agents to stop at a Gribouille bug, reduce it to a minimal plot, and draft an issue for the user. A workaround comes only with the user's consent and a link to the issue. (#335)
 - docs: Show the package version from `typst.toml` in the documentation import lines, rather than `dev` on the development site. (#316)
-- docs: The agent skill tells agents to stop at a Gribouille bug, reduce it to a minimal plot, and draft an issue for the user. A workaround comes only with the user's consent and a link to the issue. (ab353707)
 
 ## 0.7.0 (2026-08-24)
 
