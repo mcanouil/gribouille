@@ -226,6 +226,7 @@ A silent workaround hides the bug, and then nobody fixes it.
    - Usage question: Discussions, Q&A, <https://github.com/mcanouil/gribouille/discussions/new?category=q-a>.
 5. Draft a bug report with the fields of the bug template, each as a `### <label>` heading followed by the answer:
    "Before submitting", "Gribouille version", "Typst compiler version", "Installation source", "Bug description", "Minimal reproducible example", "Steps to reproduce", "Expected behaviour", "Actual behaviour", "Your environment", and the optional "Additional context".
+   - For "Installation source", copy one option exactly: "Typst Universe", "Local package directory", "Git clone / source checkout", or "Other".
    - Put the reproduction in a `typst` code block, with the `@preview/gribouille:<version>` import.
    - Run `typst --version` yourself.
      Ask the user for the facts that you cannot find.
@@ -243,7 +244,10 @@ A silent workaround hides the bug, and then nobody fixes it.
    Put the title and the body in one `markdown` code block, with a fence longer than any fence in the body.
 7. Post only after a clear go-ahead from the user, such as "post".
    - If `gh auth status` succeeds, write the body to a file and run `gh issue create --repo mcanouil/gribouille --title "<title>" --body-file <file>`.
-     Do not add labels or assignees.
+     `gh issue create` does not apply the label of the form.
+     If `gh repo view mcanouil/gribouille --json viewerPermission` reports `TRIAGE` or higher, add `--label "Type: Bug :bug:"`.
+     If not, tell the user that the issue has no label.
+     Do not add assignees.
      Give the user the URL of the new issue.
    - If `gh` is not available, or the report goes to Discussions, give the user the draft and the link from step 4.
 8. Write a workaround only if the user agrees.
