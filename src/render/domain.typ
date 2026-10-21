@@ -272,7 +272,8 @@
 // The positional aesthetics that move to the other axis with `_apply-flip`, as
 // `(x-side, y-side)` pairs. A geom reads these names against the swapped
 // trained scales, so each pair listed here swaps with them. A channel left out
-// stays in user space, and its geom branches on `ctx.flipped` itself.
+// stays in user space, so its geom draws correctly only if it branches on
+// `ctx.flipped` itself.
 #let _FLIP-PAIRS = (("x", "y"), ("xend", "yend"))
 
 // Swap each `_FLIP-PAIRS` entry of a layer mapping. A side that was not mapped
