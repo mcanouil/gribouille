@@ -47,7 +47,7 @@ body:
       label: Installation source
       description: How Gribouille was installed in the failing setup.
       options:
-        - Typst Universe (`@preview`)
+        - Typst Universe
         - Local package directory
         - Git clone / source checkout
         - Other
