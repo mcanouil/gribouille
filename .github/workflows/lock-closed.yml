@@ -18,22 +18,11 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: lock-closed-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   lock:
-    name: Lock stale closed threads
-    runs-on: ubuntu-latest
+    uses: mcanouil/typst-workflows/.github/workflows/lock-closed.yml@v2
     permissions:
       issues: write
       pull-requests: write
-
-    steps:
-      - name: Lock stale threads
-        uses: dessant/lock-threads@v6
-        with:
-          issue-inactive-days: ${{ inputs.days || 7 }}
-          pr-inactive-days: ${{ inputs.days || 7 }}
-          process-only: issues, prs
+    with:
+      days: ${{ inputs.days || 7 }}
