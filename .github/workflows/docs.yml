@@ -32,7 +32,14 @@ on:
       - "typst.toml"
       - "CHANGELOG.md"
       - ".github/workflows/docs.yml"
+  # A docs-only change reaches the site root without a release by dispatching
+  # this with main-as-latest. The next push to main puts the tag back.
   workflow_dispatch:
+    inputs:
+      main-as-latest:
+        description: "Build the latest-version site from main, keeping the latest tag's version number"
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       ref:
@@ -67,6 +74,7 @@ jobs:
       id-token: write
     with:
       ref: ${{ inputs.ref }}
+      main-as-latest: ${{ inputs.main-as-latest || false }}
       needs-lua: true
       figure-cache: docs/.quarto/typst-render
       dev-archive: true
