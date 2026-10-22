@@ -9,17 +9,18 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
 #import "../utils/radial.typ": project-point, shift-point
+#import "../utils/flip.typ": user-axes, user-columns
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 // Sort rows by their x value: numeric for continuous scales, domain index
-// for discrete ones. Drops rows whose x value can't be resolved. Under
-// coord-flip the mapping swap carries x onto y, so the sort reads y.
+// for discrete ones. Drops rows whose x value can't be resolved. Sorts by
+// the user's x, which coord-flip draws vertically.
 #let sort-rows-by-x(rows, mapping, ctx) = {
-  let x-key = if ctx.at("flipped", default: false) { "y" } else { "x" }
-  let x-col = mapping.at(x-key, default: none)
-  let x-trained = ctx.trained.at(x-key, default: none)
-  if x-col == none or x-trained == none { return () }
+  let x-col = user-columns(mapping, ctx).x
+  let axes = user-axes(ctx)
+  if x-col == none or axes == none { return () }
+  let x-trained = axes.x-trained
   rows
     .map(row => {
       let xv = row.at(x-col, default: none)
@@ -60,8 +61,6 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none or mapping.x == none or mapping.y == none { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  if x-trained == none { return }
 
   // theme.geom.colour fills in for unmapped lines so a brand colour propagates;
   // resolve-channel("linewidth", ...) folds the auto/theme/per-geom-default

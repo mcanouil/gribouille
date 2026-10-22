@@ -15,7 +15,7 @@
 #import "../utils/group.typ": partition-by-group
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/aes-pair.typ": aes-set
-#import "../utils/flip.typ": project-range-point, range-axes, range-columns
+#import "../utils/flip.typ": project-user-point, user-axes, user-columns
 #import "../utils/band.typ": band-polygon
 #import "../utils/late-binding.typ": after-scale-source, apply-after-scale
 #import "../scale/train.typ": mapping-ref-col
@@ -182,12 +182,9 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let cols = range-columns(mapping, ctx.at("flipped", default: false))
-  if cols.pos == none or cols.value == none { return }
-  if range-axes(ctx) == none { return }
-  // An unmapped band column reads as the empty key, which no row holds.
-  let lo-col = if cols.min == none { "" } else { cols.min }
-  let hi-col = if cols.max == none { "" } else { cols.max }
+  let cols = user-columns(mapping, ctx)
+  if cols.x == none or cols.y == none { return }
+  if user-axes(ctx) == none { return }
 
   let colour-spec = mapping.at("colour", default: none)
   let fill-spec = mapping.at("fill", default: none)
@@ -213,10 +210,14 @@
     let rows = g.data
     let sorted = rows
       .map(row => (
-        x: parse-number(row.at(cols.pos, default: none)),
-        y: parse-number(row.at(cols.value, default: none)),
-        lo: parse-number(row.at(lo-col, default: none)),
-        hi: parse-number(row.at(hi-col, default: none)),
+        x: parse-number(row.at(cols.x, default: none)),
+        y: parse-number(row.at(cols.y, default: none)),
+        lo: if cols.ymin == none { none } else {
+          parse-number(row.at(cols.ymin, default: none))
+        },
+        hi: if cols.ymax == none { none } else {
+          parse-number(row.at(cols.ymax, default: none))
+        },
       ))
       .filter(p => p.x != none and p.y != none)
       .sorted(key: p => p.x)
@@ -263,7 +264,7 @@
     }
 
     let line-pts = sorted
-      .map(p => project-range-point(ctx, p.x, p.y))
+      .map(p => project-user-point(ctx, p.x, p.y))
       .filter(p => p != none)
     if line-pts.len() >= 2 and not suppress-line {
       let thickness = resolve-channel(

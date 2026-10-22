@@ -16,7 +16,7 @@
   polar-canvas, radial-arc, radial-axis-ranges, radial-category-span,
   radial-wedge,
 )
-#import "../utils/flip.typ": range-axes, range-canvas-point, range-columns
+#import "../utils/flip.typ": user-axes, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke
 #import "../theme/theme.typ": (
@@ -145,22 +145,23 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let flipped = ctx.at("flipped", default: false)
-  let cols = range-columns(mapping, flipped)
+  let cols = user-columns(mapping, ctx)
   let lower-col = mapping.at("lower", default: none)
   let middle-col = mapping.at("middle", default: none)
   let upper-col = mapping.at("upper", default: none)
   if (
-    cols.pos == none
+    cols.x == none
       or lower-col == none
       or middle-col == none
       or upper-col == none
-      or cols.min == none
-      or cols.max == none
+      or cols.ymin == none
+      or cols.ymax == none
   ) { return }
 
-  let axes = range-axes(ctx)
+  let axes = user-axes(ctx)
   if axes == none { return }
+  let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
+  let (x-range, y-range) = (axes.x-range, axes.y-range)
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // Box outline, median, and whiskers carry the boxplot's structure, so
@@ -177,12 +178,10 @@
 
   let radial = ctx.at("radial", default: none)
   if radial != none {
-    let x-trained = axes.pos-trained
-    let y-trained = axes.value-trained
     let cat-trained = if radial.cat-is-theta { x-trained } else { y-trained }
     let val-trained = if radial.cat-is-theta { y-trained } else { x-trained }
     if val-trained.type != "continuous" { return }
-    let cat-col = if radial.cat-is-theta { cols.pos } else {
+    let cat-col = if radial.cat-is-theta { cols.x } else {
       mapping.at("y", default: none)
     }
     let (cat-range, value-range) = radial-axis-ranges(radial)
@@ -198,8 +197,8 @@
       let lower = parse-number(row.at(lower-col, default: none))
       let middle = parse-number(row.at(middle-col, default: none))
       let upper = parse-number(row.at(upper-col, default: none))
-      let ymin = parse-number(row.at(cols.min, default: none))
-      let ymax = parse-number(row.at(cols.max, default: none))
+      let ymin = parse-number(row.at(cols.ymin, default: none))
+      let ymax = parse-number(row.at(cols.ymax, default: none))
       if (
         cat-c == none
           or lower == none
@@ -335,21 +334,21 @@
     return
   }
 
-  if axes.value-trained.type != "continuous" { return }
+  if y-trained.type != "continuous" { return }
 
   let position-name = layer-position-name(layer)
-  let pt = range-canvas-point.with(flipped)
+  let pt = user-point.with(ctx)
 
   for row in data {
-    let raw-pos = row.at(cols.pos, default: none)
-    let pos-c = map-position(axes.pos-trained, raw-pos, axes.pos-range)
-    if pos-c == none { continue }
+    let raw-x = row.at(cols.x, default: none)
+    let cx = map-position(x-trained, raw-x, x-range)
+    if cx == none { continue }
 
     let lower = parse-number(row.at(lower-col, default: none))
     let middle = parse-number(row.at(middle-col, default: none))
     let upper = parse-number(row.at(upper-col, default: none))
-    let ymin = parse-number(row.at(cols.min, default: none))
-    let ymax = parse-number(row.at(cols.max, default: none))
+    let ymin = parse-number(row.at(cols.ymin, default: none))
+    let ymax = parse-number(row.at(cols.ymax, default: none))
     if (
       lower == none
         or middle == none
@@ -366,37 +365,26 @@
     if whisker-lo == none { whisker-lo = ymin }
     if whisker-hi == none { whisker-hi = ymax }
 
-    let (value-trained, value-range) = (axes.value-trained, axes.value-range)
-    let v-lower = map-axis(value-trained, lower, value-range)
-    let v-middle = map-axis(value-trained, middle, value-range)
-    let v-upper = map-axis(value-trained, upper, value-range)
-    let v-whisker-lo = map-axis(value-trained, whisker-lo, value-range)
-    let v-whisker-hi = map-axis(value-trained, whisker-hi, value-range)
+    let cy-lower = map-axis(y-trained, lower, y-range)
+    let cy-middle = map-axis(y-trained, middle, y-range)
+    let cy-upper = map-axis(y-trained, upper, y-range)
+    let cy-whisker-lo = map-axis(y-trained, whisker-lo, y-range)
+    let cy-whisker-hi = map-axis(y-trained, whisker-hi, y-range)
 
-    let box-band = axis-band(
-      axes.pos-trained,
-      raw-pos,
-      half-width,
-      axes.pos-range,
-    )
-    let cap-band = axis-band(
-      axes.pos-trained,
-      raw-pos,
-      cap-half,
-      axes.pos-range,
-    )
-    if box-band == none or cap-band == none { continue }
-    let (pos-lo, pos-hi) = box-band
+    let boaxis-band = axis-band(x-trained, raw-x, half-width, x-range)
+    let cap-band = axis-band(x-trained, raw-x, cap-half, x-range)
+    if boaxis-band == none or cap-band == none { continue }
+    let (cx-lo, cx-hi) = boaxis-band
     let (cap-lo, cap-hi) = cap-band
 
-    let centre = pos-c
+    let centre = cx
     if position-name == "dodge" {
-      let span = pos-hi - pos-lo
-      centre = dodge-centre(row, pos-c, span)
+      let span = cx-hi - cx-lo
+      centre = dodge-centre(row, cx, span)
       let box-half = dodge-half(row, span / 2)
       let cap-half-shrunk = dodge-half(row, (cap-hi - cap-lo) / 2)
-      pos-lo = centre - box-half
-      pos-hi = centre + box-half
+      cx-lo = centre - box-half
+      cx-hi = centre + box-half
       cap-lo = centre - cap-half-shrunk
       cap-hi = centre + cap-half-shrunk
     }
@@ -420,38 +408,38 @@
     let stroke-spec = build-stroke(stroke-thickness, resolved-stroke)
 
     cetz.draw.rect(
-      pt(pos-lo, v-lower),
-      pt(pos-hi, v-upper),
+      pt(cx-lo, cy-lower),
+      pt(cx-hi, cy-upper),
       fill: final-fill,
       stroke: stroke-spec,
     )
 
     cetz.draw.line(
-      pt(pos-lo, v-middle),
-      pt(pos-hi, v-middle),
+      pt(cx-lo, cy-middle),
+      pt(cx-hi, cy-middle),
       stroke: stroke-spec,
     )
 
     cetz.draw.line(
-      pt(centre, v-whisker-lo),
-      pt(centre, v-lower),
+      pt(centre, cy-whisker-lo),
+      pt(centre, cy-lower),
       stroke: stroke-spec,
     )
     cetz.draw.line(
-      pt(centre, v-upper),
-      pt(centre, v-whisker-hi),
+      pt(centre, cy-upper),
+      pt(centre, cy-whisker-hi),
       stroke: stroke-spec,
     )
 
     if layer.params.whisker-cap > 0 {
       cetz.draw.line(
-        pt(cap-lo, v-whisker-lo),
-        pt(cap-hi, v-whisker-lo),
+        pt(cap-lo, cy-whisker-lo),
+        pt(cap-hi, cy-whisker-lo),
         stroke: stroke-spec,
       )
       cetz.draw.line(
-        pt(cap-lo, v-whisker-hi),
-        pt(cap-hi, v-whisker-hi),
+        pt(cap-lo, cy-whisker-hi),
+        pt(cap-hi, cy-whisker-hi),
         stroke: stroke-spec,
       )
     }
@@ -461,8 +449,9 @@
     for ov in outliers {
       let v = parse-number(ov)
       if v == none { continue }
+      let cy = map-axis(y-trained, v, y-range)
       cetz.draw.circle(
-        pt(centre, map-axis(value-trained, v, value-range)),
+        pt(centre, cy),
         radius: layer.params.outlier-size,
         fill: outlier-paint,
         stroke: none,

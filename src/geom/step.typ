@@ -7,7 +7,7 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
 #import "../utils/errors.typ": fail-enum
-#import "../utils/flip.typ": range-stair-direction
+#import "../utils/flip.typ": user-stair-direction
 #import "../utils/stair.typ": stair
 #import "grouped-path.typ": draw-grouped-paths, rows-to-points, sort-rows-by-x
 
@@ -120,13 +120,7 @@
     ctx,
     dodge,
   )
-  stair(
-    pts,
-    range-stair-direction(
-      params.direction,
-      ctx.at("flipped", default: false),
-    ),
-  )
+  stair(pts, user-stair-direction(params.direction, ctx))
 }
 
 #let draw(layer, ctx) = draw-grouped-paths(layer, ctx, _build-pts)

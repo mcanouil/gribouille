@@ -7,7 +7,7 @@
 #import "../utils/radial.typ": shift-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 #import "../position/dodge.typ": dodge-geometry
-#import "../utils/flip.typ": project-range-point, range-columns
+#import "../utils/flip.typ": project-user-point, user-axes, user-columns
 #import "linerange.typ": range-line-row
 
 /// Pointrange layer: a marker at `(x, y)` plus a linerange from `ymin` to `ymax`.
@@ -119,34 +119,29 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let cols = range-columns(mapping, ctx.at("flipped", default: false))
+  let cols = user-columns(mapping, ctx)
   if (
-    cols.pos == none
-      or cols.value == none
-      or cols.min == none
-      or cols.max == none
+    cols.x == none or cols.y == none or cols.ymin == none or cols.ymax == none
   ) { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
+  if user-axes(ctx) == none { return }
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
   let dodge = dodge-geometry(ctx, layer)
 
   for row in data {
-    let pos = row.at(cols.pos, default: none)
-    let mid = parse-number(row.at(cols.value, default: none))
-    if pos == none or mid == none { continue }
-    let p-mid = project-range-point(ctx, pos, mid)
+    let xv = row.at(cols.x, default: none)
+    let mid = parse-number(row.at(cols.y, default: none))
+    if xv == none or mid == none { continue }
+    let p-mid = project-user-point(ctx, xv, mid)
     if p-mid == none { continue }
     let res = range-line-row(
       layer.params,
       mapping,
       ctx,
       row,
-      cols.pos,
-      cols.min,
-      cols.max,
+      cols.x,
+      cols.ymin,
+      cols.ymax,
       theme-colour,
       dodge,
       line-alpha: false,

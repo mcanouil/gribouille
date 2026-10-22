@@ -12,7 +12,7 @@
 #import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/band.typ": band-polygon
-#import "../utils/flip.typ": range-axes, range-columns
+#import "../utils/flip.typ": user-axes, user-columns
 #import "../position/apply.typ": layer-marks-abut
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
@@ -137,9 +137,9 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let cols = range-columns(mapping, ctx.at("flipped", default: false))
-  if cols.pos == none or cols.min == none or cols.max == none { return }
-  if range-axes(ctx) == none { return }
+  let cols = user-columns(mapping, ctx)
+  if cols.x == none or cols.ymin == none or cols.ymax == none { return }
+  if user-axes(ctx) == none { return }
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   let default-thickness = resolve-geom-linewidth(g-defaults)
@@ -157,9 +157,9 @@
     let rows = g.data
     let sorted = sort-rows-by-x(rows, mapping, ctx)
       .map(row => (
-        x: row.at(cols.pos, default: none),
-        lo: parse-number(row.at(cols.min, default: none)),
-        hi: parse-number(row.at(cols.max, default: none)),
+        x: row.at(cols.x, default: none),
+        lo: parse-number(row.at(cols.ymin, default: none)),
+        hi: parse-number(row.at(cols.ymax, default: none)),
       ))
       .filter(p => p.lo != none and p.hi != none)
     if sorted.len() < 2 { continue }

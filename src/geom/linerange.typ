@@ -6,7 +6,7 @@
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": shift-point
-#import "../utils/flip.typ": project-range-point, range-columns
+#import "../utils/flip.typ": project-user-point, user-axes, user-columns
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -101,7 +101,8 @@
   inherit-aes: inherit-aes,
 )
 
-// Build one row's range line; shared with geom-pointrange. Returns
+// Build one row's vertical range line, horizontal under coord-flip; shared
+// with geom-pointrange. Returns
 // `(elem, dd, colour)` — the cetz line element to emit, the row's dodge
 // shift, and the resolved line colour for follow-up marks — or `none` when
 // the row does not resolve. `line-alpha: true` folds the alpha channel into
@@ -116,19 +117,19 @@
   mapping,
   ctx,
   row,
-  pos-col,
-  min-col,
-  max-col,
+  x-col,
+  ymin-col,
+  ymax-col,
   theme-colour,
   dodge,
   line-alpha: true,
 ) = {
-  let pos = row.at(pos-col, default: none)
-  let lo = parse-number(row.at(min-col, default: none))
-  let hi = parse-number(row.at(max-col, default: none))
-  if pos == none or lo == none or hi == none { return none }
-  let p-lo = project-range-point(ctx, pos, lo)
-  let p-hi = project-range-point(ctx, pos, hi)
+  let xv = row.at(x-col, default: none)
+  let lo = parse-number(row.at(ymin-col, default: none))
+  let hi = parse-number(row.at(ymax-col, default: none))
+  if xv == none or lo == none or hi == none { return none }
+  let p-lo = project-user-point(ctx, xv, lo)
+  let p-hi = project-user-point(ctx, xv, hi)
   if p-lo == none or p-hi == none { return none }
   let dd = dodge-delta(dodge, row)
   let (cx-lo, cy-lo) = shift-point(p-lo, dd)
@@ -180,11 +181,9 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let cols = range-columns(mapping, ctx.at("flipped", default: false))
-  if cols.pos == none or cols.min == none or cols.max == none { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
+  let cols = user-columns(mapping, ctx)
+  if cols.x == none or cols.ymin == none or cols.ymax == none { return }
+  if user-axes(ctx) == none { return }
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
   let dodge = dodge-geometry(ctx, layer)
@@ -195,9 +194,9 @@
       mapping,
       ctx,
       row,
-      cols.pos,
-      cols.min,
-      cols.max,
+      cols.x,
+      cols.ymin,
+      cols.ymax,
       theme-colour,
       dodge,
     )

@@ -11,7 +11,7 @@
 #import "../stat/bindot.typ": stat-bindot
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../utils/flip.typ": range-axes, range-columns
+#import "../utils/flip.typ": user-axes, user-columns
 #import "../utils/radial.typ": project-point
 #import "../utils/types.typ": parse-number
 #import "../theme/theme.typ": (
@@ -115,9 +115,10 @@
   if mapping == none or mapping.x == none or mapping.y == none { return }
   // The bin width runs along the user's x axis, which coord-flip draws
   // vertically.
-  let axes = range-axes(ctx)
+  let axes = user-axes(ctx)
   if axes == none { return }
-  let x-col = range-columns(mapping, ctx.at("flipped", default: false)).pos
+  let (x-trained, x-range) = (axes.x-trained, axes.x-range)
+  let x-col = user-columns(mapping, ctx).x
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   let (default-colour, default-fill) = resolve-pair-defaults(
@@ -135,11 +136,11 @@
   if bin-width == none { return }
   let first-x = parse-number(first.at(x-col))
   if first-x == none { return }
-  let cx-anchor = map-position(axes.pos-trained, first-x, axes.pos-range)
+  let cx-anchor = map-position(x-trained, first-x, x-range)
   let cx-edge = map-position(
-    axes.pos-trained,
+    x-trained,
     first-x + bin-width / 2,
-    axes.pos-range,
+    x-range,
   )
   if cx-anchor == none or cx-edge == none { return }
   let radius-cm = (cx-edge - cx-anchor) * layer.params.dotsize

@@ -1,58 +1,55 @@
-// Axis roles of the geoms that draw a range at a position: a vertical range
-// at each x, or under coord-flip a horizontal range at each y. The renderer
-// swaps the mapping keys and the trained scales under flip, so these geoms
-// read the position from y and the range from x, and swap each canvas point.
+// The user's x/y axes under coord-flip. The renderer swaps the mapping keys
+// and the trained scales, so a geom that draws in the user's x/y space reads
+// its columns and scales through these helpers and swaps each canvas point
+// back: the user's x runs vertically and the user's y horizontally.
 
 #import "radial.typ": project-point
 
-// Position, value, minimum, and maximum columns, read from the mapping keys
-// that hold them on the drawn axes.
-#let range-columns(mapping, flipped) = {
-  let (pos, span) = if flipped { ("y", "x") } else { ("x", "y") }
+#let _flipped(ctx) = ctx.at("flipped", default: false)
+
+// The user's x, y, ymin, and ymax columns, read from the mapping keys that
+// hold them on the drawn axes.
+#let user-columns(mapping, ctx) = {
+  let (x, y) = if _flipped(ctx) { ("y", "x") } else { ("x", "y") }
   (
-    pos: mapping.at(pos, default: none),
-    value: mapping.at(span, default: none),
-    min: mapping.at(span + "min", default: none),
-    max: mapping.at(span + "max", default: none),
+    x: mapping.at(x, default: none),
+    y: mapping.at(y, default: none),
+    ymin: mapping.at(y + "min", default: none),
+    ymax: mapping.at(y + "max", default: none),
   )
 }
 
-// Trained scales and canvas ranges of the position and value axes, or `none`
+// Trained scales and canvas ranges of the user's x and y axes, or `none`
 // when either scale is missing.
-#let range-axes(ctx) = {
-  let flipped = ctx.at("flipped", default: false)
-  let (pos, span) = if flipped { ("y", "x") } else { ("x", "y") }
-  let pos-trained = ctx.trained.at(pos, default: none)
-  let value-trained = ctx.trained.at(span, default: none)
-  if pos-trained == none or value-trained == none { return none }
+#let user-axes(ctx) = {
+  let flipped = _flipped(ctx)
+  let (x, y) = if flipped { ("y", "x") } else { ("x", "y") }
+  let x-trained = ctx.trained.at(x, default: none)
+  let y-trained = ctx.trained.at(y, default: none)
+  if x-trained == none or y-trained == none { return none }
   (
-    pos-trained: pos-trained,
-    value-trained: value-trained,
-    pos-range: if flipped { ctx.py-range } else { ctx.px-range },
-    value-range: if flipped { ctx.px-range } else { ctx.py-range },
+    x-trained: x-trained,
+    y-trained: y-trained,
+    x-range: if flipped { ctx.py-range } else { ctx.px-range },
+    y-range: if flipped { ctx.px-range } else { ctx.py-range },
   )
 }
 
-// Canvas `(cx, cy)` of a point given in canvas units along the position and
-// value axes.
-#let range-canvas-point(flipped, pos-c, value-c) = if flipped {
-  (value-c, pos-c)
-} else {
-  (pos-c, value-c)
+// Canvas `(cx, cy)` of a point given in canvas units along the user's x and
+// y axes.
+#let user-point(ctx, ux, uy) = if _flipped(ctx) { (uy, ux) } else {
+  (ux, uy)
 }
 
-// Stair direction on the canvas for a direction given along the position
-// axis: under flip the position axis is vertical, so `"hv"` becomes `"vh"`.
-#let range-stair-direction(direction, flipped) = if (
-  not flipped or direction == none
+// Canvas point of the data point `(ux, uy)` in the user's x/y space.
+#let project-user-point(ctx, ux, uy) = if _flipped(ctx) {
+  project-point(ctx, uy, ux)
+} else {
+  project-point(ctx, ux, uy)
+}
+
+// Canvas stair direction for a direction given in the user's x/y space:
+// under flip the user's x runs vertically, so `"hv"` becomes `"vh"`.
+#let user-stair-direction(direction, ctx) = if (
+  not _flipped(ctx) or direction == none
 ) { direction } else if direction == "hv" { "vh" } else { "hv" }
-
-// Canvas point of data `value` at data position `pos`.
-#let project-range-point(ctx, pos, value) = if ctx.at(
-  "flipped",
-  default: false,
-) {
-  project-point(ctx, value, pos)
-} else {
-  project-point(ctx, pos, value)
-}

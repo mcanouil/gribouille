@@ -8,7 +8,7 @@
 #import "../stat/bin-hex.typ": stat-bin-hex
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/hex.typ": hex-vertices
-#import "../utils/flip.typ": project-range-point, range-columns
+#import "../utils/flip.typ": project-user-point, user-axes, user-columns
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../utils/types.typ": parse-number
 #import "../theme/theme.typ": (
@@ -106,16 +106,14 @@
   if mapping == none { return }
   // The binned centres and the `_hex-dx`/`_hex-dy` spacings are in the
   // user's x/y space, which coord-flip draws along the y/x axes.
-  let cols = range-columns(mapping, ctx.at("flipped", default: false))
-  let (x-col, y-col) = (cols.pos, cols.value)
+  let cols = user-columns(mapping, ctx)
+  let (x-col, y-col) = (cols.x, cols.y)
   if x-col == none or y-col == none { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
+  let axes = user-axes(ctx)
   if (
-    x-trained == none
-      or y-trained == none
-      or x-trained.type != "continuous"
-      or y-trained.type != "continuous"
+    axes == none
+      or axes.x-trained.type != "continuous"
+      or axes.y-trained.type != "continuous"
   ) { return }
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
@@ -134,7 +132,7 @@
     let dy = row.at("_hex-dy", default: none)
     if cx == none or cy == none or dx == none or dy == none { continue }
     let pts = hex-vertices(cx, cy, dx, dy).map(((vx, vy)) => (
-      project-range-point(ctx, vx, vy)
+      project-user-point(ctx, vx, vy)
     ))
     if pts.any(p => p == none) { continue }
 

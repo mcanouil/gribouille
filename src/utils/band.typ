@@ -4,7 +4,7 @@
 
 #import "../scale/train.typ": discrete-slot-width, map-axis, map-position
 #import "types.typ": parse-number
-#import "flip.typ": project-range-point, range-stair-direction
+#import "flip.typ": project-user-point, user-stair-direction
 #import "stair.typ": stair
 
 /// Compute the panel coordinate range of a band centred on `raw`.
@@ -44,16 +44,17 @@
 
 /// Build a closed filled-band polygon from points already sorted by x: the
 /// upper edge forward followed by the lower edge reversed. Under coord-flip
-/// the band runs along the vertical axis and spans the horizontal one. `hi`/`lo` read the
-/// upper/lower value off each point. Unmappable points project to `none` and
-/// pass through unchanged, so callers guard with `pts.any(p => p == none)`.
+/// the band runs along the vertical axis and spans the horizontal one.
+/// `hi`/`lo` read the upper/lower value off each point. Unmappable points
+/// project to `none` and pass through unchanged, so callers guard with
+/// `pts.any(p => p == none)`.
 /// A non-`none` `direction` (`"hv"` or `"vh"`) steps both edges into a
 /// staircase, leaving the closed shape intact; the step is skipped when an
 /// edge holds an unmappable point so the guard still fires.
 ///
 /// \@internal
 ///
-/// \@param ctx Per-draw context forwarded to `project-range-point`.
+/// \@param ctx Per-draw context forwarded to `project-user-point`.
 ///
 /// \@param sorted Points sorted by x, each carrying an `x` field.
 ///
@@ -65,12 +66,9 @@
 ///
 /// \@returns Array of projected `(x, y)` points forming the closed polygon.
 #let band-polygon(ctx, sorted, hi, lo, direction: none) = {
-  let upper = sorted.map(p => project-range-point(ctx, p.x, hi(p)))
-  let lower = sorted.rev().map(p => project-range-point(ctx, p.x, lo(p)))
-  direction = range-stair-direction(
-    direction,
-    ctx.at("flipped", default: false),
-  )
+  let upper = sorted.map(p => project-user-point(ctx, p.x, hi(p)))
+  let lower = sorted.rev().map(p => project-user-point(ctx, p.x, lo(p)))
+  direction = user-stair-direction(direction, ctx)
   if (
     direction != none
       and not upper.any(p => p == none)
