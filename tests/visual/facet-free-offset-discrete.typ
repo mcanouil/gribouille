@@ -22,11 +22,11 @@
   )
 })
 
-#let wrapped(layer) = plot(
+#let faceted(layer, facet: facet-wrap("f", scales: "free_x")) = plot(
   data: data,
   mapping: aes(x: "g", y: "v"),
   layers: (layer,),
-  facet: facet-wrap("f", scales: "free_x"),
+  facet: facet,
   width: 7cm,
   height: 4cm,
 )
@@ -34,16 +34,12 @@
 #stack(
   dir: ttb,
   spacing: 0.6cm,
-  wrapped(geom-point()),
-  wrapped(geom-point(position: position-beeswarm())),
-  wrapped(geom-point(position: position-jitter(seed: 1))),
-  wrapped(geom-point(position: position-nudge(x: 0.1))),
-  plot(
-    data: data,
-    mapping: aes(x: "g", y: "v"),
-    layers: (geom-point(position: position-beeswarm()),),
+  faceted(geom-point()),
+  faceted(geom-point(position: position-beeswarm())),
+  faceted(geom-point(position: position-jitter(seed: 1))),
+  faceted(geom-point(position: position-nudge(x: 0.1))),
+  faceted(
+    geom-point(position: position-beeswarm()),
     facet: facet-grid(columns: "f", scales: "free_x"),
-    width: 7cm,
-    height: 4cm,
   ),
 )
