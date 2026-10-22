@@ -5,6 +5,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../scale/train.typ": mapping-ref-col
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": radial-wedge
@@ -17,9 +18,37 @@
   resolve-geom-linewidth,
 )
 
+// Outer edges of the drawn tiles, `(lo, hi)` per position axis, or `none`
+// for an axis with no numeric centre. A row is skipped when its width or
+// height is missing, the same as in `draw`.
+#let _extents(params, mapping, data) = {
+  let col(key) = mapping-ref-col(mapping.at(key, default: none))
+  let (x-col, y-col) = (col("x"), col("y"))
+  if x-col == none or y-col == none { return (x: none, y: none) }
+  let (width-col, height-col) = (col("width"), col("height"))
+  let size(row, size-col, fallback) = if size-col == none {
+    parse-number(fallback)
+  } else { parse-number(row.at(size-col, default: none)) }
+  let fold(acc, centre, size) = {
+    if centre == none { return acc }
+    let (lo, hi) = (centre - size / 2, centre + size / 2)
+    if acc == none { return (calc.min(lo, hi), calc.max(lo, hi)) }
+    (calc.min(acc.at(0), lo, hi), calc.max(acc.at(1), lo, hi))
+  }
+  let (x-ext, y-ext) = (none, none)
+  for row in data {
+    let w = size(row, width-col, params.at("width", default: 1))
+    let h = size(row, height-col, params.at("height", default: 1))
+    if w == none or h == none { continue }
+    x-ext = fold(x-ext, parse-number(row.at(x-col, default: none)), w)
+    y-ext = fold(y-ext, parse-number(row.at(y-col, default: none)), h)
+  }
+  (x: x-ext, y: y-ext)
+}
+
 #let spec = (
   reads: ("x", "y", "width", "height", "colour", "fill", "alpha", "stroke"),
-  extents: none,
+  extents: _extents,
 )
 
 /// Tile layer: filled rectangle centred at `(x, y)` per row.

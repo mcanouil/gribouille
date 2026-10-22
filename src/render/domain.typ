@@ -6,6 +6,7 @@
 #import "../utils/radial.typ": radial-axis-of
 #import "../utils/types.typ": parse-number
 #import "common.typ": _track-min-max
+#import "../geom/registry.typ": GEOMS
 
 // Bounding box of every ellipse layer's data, accounting for rotation.
 // Axis-aligned bbox of an ellipse with semi-axes (a, b) and major-axis
@@ -453,7 +454,7 @@
   trained
 }
 
-// Apply post-training domain fix-ups (bar-zero floor, bin width padding,
+// Apply post-training domain fix-ups (bar-zero floor, geom extents, bin width padding,
 // ribbon ymin/ymax padding). Called once globally and once per panel under
 // free scales so each panel's domain reflects its own subset.
 #let _post-train(trained, layers) = {
@@ -478,6 +479,32 @@
       } else { none }
       if anchor != none { new-y.insert("anchor-zero", anchor) }
       trained.insert("y", new-y)
+    }
+  }
+
+  // Each geom with a `spec.extents` hook widens the continuous position
+  // domains to the outer edges of its marks. The hook runs once per layer
+  // on values in the trained-domain space; discrete axes ignore it.
+  for layer in layers {
+    let extents = GEOMS
+      .at(layer.at("name", default: ""), default: (spec: (extents: none)))
+      .spec
+      .extents
+    let mapping = layer.at("mapping", default: none)
+    if extents == none or mapping == none { continue }
+    let ext = extents(
+      layer.at("params", default: (:)),
+      mapping,
+      layer.at("data", default: ()),
+    )
+    for axis in ("x", "y") {
+      let range = ext.at(axis, default: none)
+      if range == none { continue }
+      let (ext-lo, ext-hi) = range
+      trained = _rewrite-continuous-domain(trained, axis, ((lo, hi)) => (
+        calc.min(lo, ext-lo),
+        calc.max(hi, ext-hi),
+      ))
     }
   }
 
