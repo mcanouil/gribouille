@@ -4,7 +4,8 @@
 // vertically, and spans the user's y axis, which runs horizontally: ranges,
 // crossbars, boxplots, and violins lie on their level rows, and ribbons,
 // areas, steps, smooth bands, and densities run up the panel. A dotplot keeps
-// its dots on a reversed flip.
+// its dots on a reversed flip, and dodged pointranges on a continuous x keep
+// their slots.
 
 #import "../../lib.typ": *
 
@@ -53,6 +54,11 @@
   flipped(s, aes(x: "x", y: "y"), geom-hex()),
   flipped(s, aes(x: "y"), geom-dotplot()),
 
+  flipped(
+    s.map(row => row + (lo: row.y - 0.3, hi: row.y + 0.3)),
+    aes(x: "x", y: "y", ymin: "lo", ymax: "hi", colour: "g"),
+    geom-pointrange(position: position-dodge(width: 0.4)),
+  ),
   plot(
     data: s,
     mapping: aes(x: "y"),
