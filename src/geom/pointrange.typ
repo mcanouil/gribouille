@@ -4,10 +4,10 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
-#import "../utils/radial.typ": project-point, shift-point
+#import "../utils/radial.typ": shift-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 #import "../position/dodge.typ": dodge-geometry
-#import "linerange.typ": range-line-row
+#import "linerange.typ": project-range-point, range-columns, range-line-row
 
 /// Pointrange layer: a marker at `(x, y)` plus a linerange from `ymin` to `ymax`.
 ///
@@ -118,12 +118,12 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
-  let ymin-col = mapping.at("ymin", default: none)
-  let ymax-col = mapping.at("ymax", default: none)
+  let cols = range-columns(mapping, ctx.at("flipped", default: false))
   if (
-    x-col == none or y-col == none or ymin-col == none or ymax-col == none
+    cols.pos == none
+      or cols.value == none
+      or cols.min == none
+      or cols.max == none
   ) { return }
   let x-trained = ctx.trained.at("x", default: none)
   let y-trained = ctx.trained.at("y", default: none)
@@ -133,19 +133,19 @@
   let dodge = dodge-geometry(ctx, layer)
 
   for row in data {
-    let xv = row.at(x-col, default: none)
-    let mid = parse-number(row.at(y-col, default: none))
-    if xv == none or mid == none { continue }
-    let p-mid = project-point(ctx, xv, mid)
+    let pos = row.at(cols.pos, default: none)
+    let mid = parse-number(row.at(cols.value, default: none))
+    if pos == none or mid == none { continue }
+    let p-mid = project-range-point(ctx, pos, mid)
     if p-mid == none { continue }
     let res = range-line-row(
       layer.params,
       mapping,
       ctx,
       row,
-      x-col,
-      ymin-col,
-      ymax-col,
+      cols.pos,
+      cols.min,
+      cols.max,
       theme-colour,
       dodge,
       line-alpha: false,

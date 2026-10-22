@@ -100,7 +100,7 @@
   inherit-aes: inherit-aes,
 )
 
-// Build one row's vertical range line; shared with geom-pointrange. Returns
+// Build one row's range line; shared with geom-pointrange. Returns
 // `(elem, dd, colour)` — the cetz line element to emit, the row's dodge
 // shift, and the resolved line colour for follow-up marks — or `none` when
 // the row does not resolve. `line-alpha: true` folds the alpha channel into
@@ -110,24 +110,45 @@
 // `params` and `dodge` both arrive resolved, and for the same reason: this runs
 // once a row, so it takes the layer's parameters and its dodge slot rather than
 // the layer, which reaches every row of the plot.
+// Canvas point of a range geom's `value` at position `pos`. The range spans
+// the y axis, or the x axis under coord-flip, where the mapping swap carries
+// the position onto y and the range onto x.
+#let project-range-point(ctx, pos, value) = if ctx.at("flipped", default: false) {
+  project-point(ctx, value, pos)
+} else {
+  project-point(ctx, pos, value)
+}
+
+// Position, minimum, and maximum columns of a range geom, read from the
+// mapping keys that hold them on the drawn axes.
+#let range-columns(mapping, flipped) = {
+  let (pos, span) = if flipped { ("y", "x") } else { ("x", "y") }
+  (
+    pos: mapping.at(pos, default: none),
+    value: mapping.at(span, default: none),
+    min: mapping.at(span + "min", default: none),
+    max: mapping.at(span + "max", default: none),
+  )
+}
+
 #let range-line-row(
   params,
   mapping,
   ctx,
   row,
-  x-col,
-  ymin-col,
-  ymax-col,
+  pos-col,
+  min-col,
+  max-col,
   theme-colour,
   dodge,
   line-alpha: true,
 ) = {
-  let xv = row.at(x-col, default: none)
-  let lo = parse-number(row.at(ymin-col, default: none))
-  let hi = parse-number(row.at(ymax-col, default: none))
-  if xv == none or lo == none or hi == none { return none }
-  let p-lo = project-point(ctx, xv, lo)
-  let p-hi = project-point(ctx, xv, hi)
+  let pos = row.at(pos-col, default: none)
+  let lo = parse-number(row.at(min-col, default: none))
+  let hi = parse-number(row.at(max-col, default: none))
+  if pos == none or lo == none or hi == none { return none }
+  let p-lo = project-range-point(ctx, pos, lo)
+  let p-hi = project-range-point(ctx, pos, hi)
   if p-lo == none or p-hi == none { return none }
   let dd = dodge-delta(dodge, row)
   let (cx-lo, cy-lo) = shift-point(p-lo, dd)
@@ -179,10 +200,8 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let ymin-col = mapping.at("ymin", default: none)
-  let ymax-col = mapping.at("ymax", default: none)
-  if x-col == none or ymin-col == none or ymax-col == none { return }
+  let cols = range-columns(mapping, ctx.at("flipped", default: false))
+  if cols.pos == none or cols.min == none or cols.max == none { return }
   let x-trained = ctx.trained.at("x", default: none)
   let y-trained = ctx.trained.at("y", default: none)
   if x-trained == none or y-trained == none { return }
@@ -196,9 +215,9 @@
       mapping,
       ctx,
       row,
-      x-col,
-      ymin-col,
-      ymax-col,
+      cols.pos,
+      cols.min,
+      cols.max,
       theme-colour,
       dodge,
     )
