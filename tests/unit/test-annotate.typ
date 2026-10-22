@@ -1,7 +1,8 @@
 // annotate(geom, ..fields) builds a one-row layer with an aesthetic mapping
 // pointing each kwarg name at the matching column, and inherit-aes: false.
 
-#import "../../src/annotate.typ": _aes-keys-for, _geom-reads, annotate
+#import "../../src/annotate.typ": _aes-keys-for, annotate
+#import "../../src/geom/registry.typ": GEOMS
 
 // Text annotation: x, y, label all become aesthetics with matching columns.
 #let lt = annotate("text", x: 1, y: 2, label: "hi")
@@ -173,8 +174,8 @@
 // annotate routes only the keys that the target geom reads. No annotate geom
 // reads `width`, so it never lands in the inline row, where a `width` column
 // pads the x domain; `geom-point` then rejects it as a constant.
-#assert("width" not in _aes-keys-for("point", _geom-reads.point))
-#assert("label" in _aes-keys-for("text", _geom-reads.text))
-#assert("label" not in _aes-keys-for("point", _geom-reads.point))
+#assert("width" not in _aes-keys-for("point", GEOMS.point.spec.reads))
+#assert("label" in _aes-keys-for("text", GEOMS.text.spec.reads))
+#assert("label" not in _aes-keys-for("point", GEOMS.point.spec.reads))
 
 Annotate tests passed.

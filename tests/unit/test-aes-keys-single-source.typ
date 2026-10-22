@@ -5,7 +5,8 @@
 
 #import "../../src/aes-keys.typ": AES-KEYS
 #import "../../src/aes.typ": aes
-#import "../../src/annotate.typ": _aes-keys-for, _geom-reads
+#import "../../src/annotate.typ": _aes-keys-for, _geom-table, _params-only
+#import "../../src/geom/registry.typ": GEOMS
 
 // `aes()` exposes exactly the canonical keys (its return dict also carries the
 // `kind` tag, which is not an aesthetic).
@@ -13,7 +14,8 @@
 #assert.eq(aes-keys.sorted(), AES-KEYS.sorted())
 
 // Every key annotate routes to its inline dataset is a real aesthetic.
-#for (geom, reads) in _geom-reads {
+#for geom in _geom-table.keys().filter(g => g not in _params-only) {
+  let reads = GEOMS.at(geom).spec.reads
   assert(_aes-keys-for(geom, reads).all(k => k in AES-KEYS), message: geom)
 }
 

@@ -7,16 +7,17 @@
 ///! should not be driven by the plot-level data or mapping.
 
 #import "aes.typ": aes
-#import "geom/text.typ": geom-text, spec as text-spec
+#import "geom/text.typ": geom-text
 #import "utils/errors.typ": fail, fail-enum
-#import "geom/typst.typ": geom-typst, spec as typst-spec
-#import "geom/point.typ": geom-point, spec as point-spec
-#import "geom/label.typ": geom-label, spec as label-spec
-#import "geom/segment.typ": geom-segment, spec as segment-spec
-#import "geom/rect.typ": geom-rect, spec as rect-spec
+#import "geom/typst.typ": geom-typst
+#import "geom/point.typ": geom-point
+#import "geom/label.typ": geom-label
+#import "geom/segment.typ": geom-segment
+#import "geom/rect.typ": geom-rect
 #import "geom/vline.typ": geom-vline
 #import "geom/hline.typ": geom-hline
 #import "geom/abline.typ": geom-abline
+#import "geom/registry.typ": GEOMS
 #import "utils/typst-markup.typ": is-typst-markup, typst
 
 // Keys that the geoms read but that annotate forwards to the constructor as
@@ -32,16 +33,6 @@
 #let _aes-keys-for(geom, reads) = reads.filter(k => (
   k not in _annotate-param-keys and not (k == "size" and geom in _text-geoms)
 ))
-
-// Geoms that read their keys from the mapping, with their `spec.reads`.
-#let _geom-reads = (
-  text: text-spec.reads,
-  typst: typst-spec.reads,
-  point: point-spec.reads,
-  label: label-spec.reads,
-  segment: segment-spec.reads,
-  rect: rect-spec.reads,
-)
 
 #let _geom-table = (
   text: geom-text,
@@ -89,9 +80,9 @@
 ///   `xmax`, `ymin`, `ymax`, `fill` for `"rect"`. For `"text"`, `"label"`, and
 ///   `"typst"`, `size` is a layer parameter (the text size, a Typst length),
 ///   not an aesthetic. `stroke` and `linewidth` are always layer parameters.
-///   Anything else (e.g., `fontsize`, `xintercept`, `yintercept`) is forwarded
-///   to the geom constructor as a layer parameter, and the constructor fails
-///   for a name it does not know. A `none` or `auto` value on an aesthetic
+///   Anything else (e.g., `font` or `repel` for `"text"`, `arrow` for
+///   `"segment"`) is forwarded to the geom constructor as a layer parameter,
+///   and the constructor fails for a name it does not know. A `none` or `auto` value on an aesthetic
 ///   name is also forwarded as a layer parameter, so it reaches the geom as
 ///   the disable / scale-resolve sentinel (e.g., `fill: none` draws an
 ///   unfilled shape) instead of being stored as a data cell.
@@ -167,7 +158,7 @@
     return with-clip(constructor(..named, inherit-aes: false))
   }
 
-  let aes-keys = _aes-keys-for(geom, _geom-reads.at(geom))
+  let aes-keys = _aes-keys-for(geom, GEOMS.at(geom).spec.reads)
   let row = (:)
   let mapping-args = (:)
   let layer-args = (:)
