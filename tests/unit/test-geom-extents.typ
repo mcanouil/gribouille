@@ -1,12 +1,21 @@
 // `spec.extents` of `geom-tile` reports the tile edges, and `_post-train`
 // folds them into the continuous position domains so edge tiles stay inside
 // the panel. Discrete axes keep their trained domain, and under free facet
-// scales each panel pads from its own tiles only.
+// scales each panel pads from its own tiles only. The col, ellipse, and
+// binned-row padding go through the same hook, and keep the domains that
+// `_post-train` produced before they moved there.
 
 #import "../../src/scale/train.typ": train
 #import "../../src/render/domain.typ": _post-train
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/geom/tile.typ": geom-tile, spec as tile-spec
+#import "../../src/geom/col.typ": geom-col, spec as col-spec
+#import "../../src/geom/ellipse.typ": geom-ellipse, spec as ellipse-spec
+#import "../../src/geom/histogram.typ": geom-histogram
+#import "../../src/geom/freqpoly.typ": geom-freqpoly
+#import "../../src/geom/dotplot.typ": geom-dotplot, spec as dotplot-spec
+#import "../../src/geom/line.typ": spec as line-spec
+#import "../../src/geom/point.typ": geom-point
 #import "../../src/aes.typ": aes
 #import "../../src/data.typ": as-factor
 #import "../../src/scales.typ": scales
@@ -180,6 +189,105 @@
 ))
 #assert(approx-pair(right-post.x.domain, (10.75, 12.25)), message: repr(
   right-post.x.domain,
+))
+
+// --- col, ellipse, and binned layers pad through their extents hook ---
+
+#for (name, s) in (
+  ("col", col-spec),
+  ("ellipse", ellipse-spec),
+  ("dotplot", dotplot-spec),
+  ("line", line-spec),
+) {
+  assert(type(s.extents) == function, message: name + " has no extents hook")
+}
+
+#let post-domains(layers, mapping, data) = {
+  let prepared = layers.map(l => _prepare-layer(l, mapping, data))
+  let trained = train(layers: prepared, mapping: mapping, data: data)
+  _post-train(trained, prepared)
+}
+
+// The values below are the `_post-train` domains from before the move.
+
+#let col-data = ((x: 1, y: 3), (x: 2, y: 5), (x: 4, y: 2))
+#let col-mapping = aes(x: "x", y: "y")
+#let col-post = post-domains((geom-col(),), col-mapping, col-data)
+#assert(approx-pair(col-post.x.domain, (0.55, 4.45)), message: repr(
+  col-post.x.domain,
+))
+#assert(approx-pair(col-post.y.domain, (0, 5)), message: repr(
+  col-post.y.domain,
+))
+#assert.eq(col-post.y.anchor-zero, "lo")
+#let narrow-post = post-domains((geom-col(width: 0.5),), col-mapping, col-data)
+#assert(approx-pair(narrow-post.x.domain, (0.75, 4.25)), message: repr(
+  narrow-post.x.domain,
+))
+
+#let factor-col = post-domains(
+  (geom-col(),),
+  aes(x: as-factor("x"), y: "y"),
+  col-data,
+)
+#assert.eq(factor-col.x.type, "discrete")
+#assert(approx(factor-col.x.geom-min-pad, 0.45), message: repr(factor-col.x))
+
+#let ell-data = (
+  (x0: 0, y0: 0, a: 2, b: 1, angle: 0.5),
+  (x0: 3, y0: 1, a: 1, b: 0.5, angle: 0),
+)
+#let ell-post = post-domains(
+  (geom-ellipse(),),
+  aes(x0: "x0", y0: "y0", a: "a", b: "b", angle: "angle"),
+  ell-data,
+)
+#assert(approx-pair(ell-post.x.domain, (-1.8194651573476779, 4)), message: repr(
+  ell-post.x.domain,
+))
+#assert(
+  approx-pair(ell-post.y.domain, (-1.2998255810676256, 1.5)),
+  message: repr(
+    ell-post.y.domain,
+  ),
+)
+
+#let bin-data = range(20).map(i => (v: calc.rem(i * 7, 13) * 0.5))
+#let bin-mapping = aes(x: "v")
+#let hist-post = post-domains((geom-histogram(bins: 5),), bin-mapping, bin-data)
+#assert(approx-pair(hist-post.x.domain, (-0.6, 6.6)), message: repr(
+  hist-post.x.domain,
+))
+#assert(approx-pair(hist-post.y.domain, (0, 6)), message: repr(
+  hist-post.y.domain,
+))
+#let freq-post = post-domains((geom-freqpoly(bins: 5),), bin-mapping, bin-data)
+#assert(approx-pair(freq-post.x.domain, (0, 6)), message: repr(
+  freq-post.x.domain,
+))
+#assert(approx-pair(freq-post.y.domain, (3, 6)), message: repr(
+  freq-post.y.domain,
+))
+#let dot-post = post-domains((geom-dotplot(bins: 5),), bin-mapping, bin-data)
+#assert(approx-pair(dot-post.x.domain, (0, 6)), message: repr(
+  dot-post.x.domain,
+))
+#assert(approx-pair(dot-post.y.domain, (0.5, 5.5)), message: repr(
+  dot-post.y.domain,
+))
+
+// --- a col layer pads from its own bars, not the whole domain ---
+
+#let wide-post = post-domains(
+  (
+    geom-col(),
+    geom-point(data: ((x: 1, y: 3), (x: 8, y: 2))),
+  ),
+  col-mapping,
+  col-data,
+)
+#assert(approx-pair(wide-post.x.domain, (0.55, 8)), message: repr(
+  wide-post.x.domain,
 ))
 
 geom extents tests passed.

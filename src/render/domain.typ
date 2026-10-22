@@ -1,7 +1,7 @@
 // Domain scanning, coordinate-system application, and post-training domain
-// fix-ups (bar-zero floor, bin/ribbon/ellipse padding, expansion, flip).
+// fix-ups (bar-zero floor, geom extents, ribbon padding, expansion, flip).
 
-#import "../scale/train.typ": mapping-ref-col, transform-fwd
+#import "../scale/train.typ": transform-fwd
 #import "../scale/expansion.typ": DISCRETE-AUTO-DATA-PAD, normalise-expansion
 #import "../utils/radial.typ": radial-axis-of
 #import "../utils/types.typ": parse-number
@@ -9,97 +9,16 @@
 #import "../geom/registry.typ": GEOMS
 #import "../stat/apply.typ": stat-flush
 
-// Bounding box of every ellipse layer's data, accounting for rotation.
-// Axis-aligned bbox of an ellipse with semi-axes (a, b) and major-axis
-// rotation theta — using `max(|a|, |b|)` instead would inflate the box by
-// an order of magnitude when units differ between axes (e.g., flipper-length
-// in mm vs body-mass in g).
-#let _scan-ellipse(layer, mapping, layer-data, acc) = {
-  if mapping == none { return acc }
-  let x0-col = mapping.at("x0", default: none)
-  let y0-col = mapping.at("y0", default: none)
-  if x0-col == none or y0-col == none { return acc }
-  let a-col = mapping.at("a", default: none)
-  let b-col = mapping.at("b", default: none)
-  let angle-col = mapping.at("angle", default: none)
-  let params = layer.at("params", default: (:))
-  let a-fb = params.at("a", default: 1)
-  let b-fb = params.at("b", default: 1)
-  let angle-fb = params.at("angle", default: 0)
-  let _read(row, col, fallback) = if col == none { fallback } else {
-    let v = parse-number(row.at(col, default: none))
-    if v == none { fallback } else { v }
-  }
-  for row in layer-data {
-    let x0 = parse-number(row.at(x0-col, default: none))
-    let y0 = parse-number(row.at(y0-col, default: none))
-    if x0 == none or y0 == none { continue }
-    let a = _read(row, a-col, a-fb)
-    let b = _read(row, b-col, b-fb)
-    let theta = _read(row, angle-col, angle-fb)
-    let cos-t = calc.cos(theta)
-    let sin-t = calc.sin(theta)
-    let x-half = calc.sqrt(
-      (a * cos-t) * (a * cos-t) + (b * sin-t) * (b * sin-t),
-    )
-    let y-half = calc.sqrt(
-      (a * sin-t) * (a * sin-t) + (b * cos-t) * (b * cos-t),
-    )
-    let (xlo, xhi) = _track-min-max(acc.x-min, acc.x-max, x0 - x-half)
-    acc.x-min = xlo
-    acc.x-max = if acc.x-max == none { x0 + x-half } else {
-      calc.max(acc.x-max, x0 + x-half)
-    }
-    let (ylo, yhi) = _track-min-max(acc.y-min, acc.y-max, y0 - y-half)
-    acc.y-min = ylo
-    acc.y-max = if acc.y-max == none { y0 + y-half } else {
-      calc.max(acc.y-max, y0 + y-half)
-    }
-  }
-  acc
-}
-
-// Project `geom-col` layer x values + bar-fraction into the panel-level
-// `cols` accumulator.
-#let _scan-col(layer, mapping, layer-data) = {
-  let x-col = if mapping == none { none } else {
-    mapping-ref-col(mapping.at("x", default: none))
-  }
-  let xs = if x-col != none {
-    layer-data
-      .map(r => parse-number(r.at(x-col, default: none)))
-      .filter(v => v != none)
-  } else { () }
-  (
-    bar-frac: layer.at("params", default: (:)).at("width", default: 0.9),
-    xs: xs,
-  )
-}
-
-// Fold per-row width / ymin / ymax aggregates: the panel-level bin half-max
-// (so outer bins stay inside the panel) and the ribbon y-range (so ymin/ymax
-// extend the trained y domain). A geom with a `spec.extents` hook passes
-// `with-width: false`, because its hook already covers its widths.
-#let _scan-rows(mapping, layer-data, acc, with-width: true) = {
+// Fold the ribbon y-range, so `ymin`/`ymax` extend the trained y domain.
+#let _scan-rows(mapping, layer-data, acc) = {
   let ymin-col = if mapping == none { none } else {
     mapping.at("ymin", default: none)
   }
   let ymax-col = if mapping == none { none } else {
     mapping.at("ymax", default: none)
   }
-  let scan-width = (
-    with-width
-      and layer-data.len() > 0
-      and layer-data.first().at("width", default: none) != none
-  )
-  if not (scan-width or ymin-col != none or ymax-col != none) { return acc }
+  if ymin-col == none and ymax-col == none { return acc }
   for row in layer-data {
-    if scan-width {
-      let w = row.at("width", default: none)
-      if w != none and (type(w) == int or type(w) == float) {
-        acc.bin-half-max = calc.max(acc.bin-half-max, w / 2)
-      }
-    }
     for col in (ymin-col, ymax-col) {
       if col == none { continue }
       let v = parse-number(row.at(col, default: none))
@@ -112,89 +31,35 @@
   acc
 }
 
-// Single-pass classifier feeding `_post-train`. Per layer it picks the
-// minimal row scan needed (col layers project parsed x values; binned and
-// ribbon layers fold per-row aggregates) so non-col, non-binned, non-ribbon
-// layers skip the row loop entirely.
+// Single-pass classifier feeding `_post-train`. Only ribbon layers need a
+// row scan; every other layer is classified from its name and parameters.
 #let _post-train-scan(layers) = {
   let acc = (
     needs-y-zero: false,
     flush: false,
     any-fill: false,
-    cols: (),
-    bin-half-max: 0.0,
+    bar-half: 0,
     ribbon-y-min: none,
     ribbon-y-max: none,
-    x-min: none,
-    x-max: none,
-    y-min: none,
-    y-max: none,
   )
   for layer in layers {
     let geom = layer.at("name", default: "")
     let mapping = layer.at("mapping", default: none)
-    let layer-data = layer.at("data", default: ())
 
     if geom == "col" or geom == "area" { acc.needs-y-zero = true }
     if stat-flush(layer.at("stat-source", default: "identity")) {
       acc.flush = true
     }
-    if geom == "ellipse" {
-      acc = _scan-ellipse(layer, mapping, layer-data, acc)
-    }
     if geom == "col" {
       if layer.at("position", default: "identity") == "fill" {
         acc.any-fill = true
       }
-      acc.cols.push(_scan-col(layer, mapping, layer-data))
+      let bar-frac = layer.at("params", default: (:)).at("width", default: 0.9)
+      acc.bar-half = calc.max(acc.bar-half, bar-frac / 2)
     }
-    let has-extents = (
-      GEOMS.at(geom, default: (spec: (extents: none))).spec.extents != none
-    )
-    acc = _scan-rows(mapping, layer-data, acc, with-width: not has-extents)
+    acc = _scan-rows(mapping, layer.at("data", default: ()), acc)
   }
-  (
-    needs-y-zero: acc.needs-y-zero,
-    flush: acc.flush,
-    any-fill: acc.any-fill,
-    cols: acc.cols,
-    bin-half-max: acc.bin-half-max,
-    ribbon-y-min: acc.ribbon-y-min,
-    ribbon-y-max: acc.ribbon-y-max,
-    ellipse-x-min: acc.x-min,
-    ellipse-x-max: acc.x-max,
-    ellipse-y-min: acc.y-min,
-    ellipse-y-max: acc.y-max,
-  )
-}
-
-// `geom-col` centres each bar on its category value and draws it from
-// `centre ± min-gap * bar-frac / 2`. On a continuous category axis the
-// trained domain is `(min, max)` of the raw values, so the outer bars hang
-// off the panel by half a bar width. Mirror the geom's minimum-gap heuristic
-// to compute the half-width in domain units and pad the trained domain on
-// both sides. The renderer applies coord-flip after `_post-train`, so
-// padding pre-flip x covers both orientations.
-#let _col-half-width-x(cols) = {
-  let max-half = 0.0
-  for layer in cols {
-    // Sorted first, then walked: `dedup` scans everything it has kept for each
-    // element, so deduplicating a column of n values before sorting costs n^2.
-    // Sorted values put the duplicates side by side, where a zero gap is the
-    // same thing and is skipped.
-    let sorted = layer.xs.sorted()
-    if sorted.len() < 2 { continue }
-    let min-gap = none
-    for i in range(sorted.len() - 1) {
-      let gap = sorted.at(i + 1) - sorted.at(i)
-      if gap == 0 { continue }
-      if min-gap == none or gap < min-gap { min-gap = gap }
-    }
-    if min-gap == none { continue }
-    let half = min-gap * layer.bar-frac / 2
-    if half > max-half { max-half = half }
-  }
-  max-half
+  acc
 }
 
 // Inject labels `x`/`y`/... names into trained scale specs so axis and legend
@@ -477,8 +342,28 @@
   trained
 }
 
-// Apply post-training domain fix-ups (bar-zero floor, geom extents, bin
-// width padding, ribbon ymin/ymax padding). Called once globally and once
+// Widen a continuous axis to cover `(ext-lo, ext-hi)`. A missing axis is
+// seeded as continuous with that range, for a geom such as ellipse that maps
+// no `x`/`y` of its own; a discrete axis is left as is.
+#let _extend-domain(trained, axis, ext-lo, ext-hi) = {
+  if trained.at(axis, default: none) == none {
+    trained.insert(axis, (
+      type: "continuous",
+      domain: (ext-lo, ext-hi),
+      spec: none,
+      transform: "identity",
+      typst-mark: false,
+    ))
+    return trained
+  }
+  _rewrite-continuous-domain(trained, axis, ((lo, hi)) => (
+    calc.min(lo, ext-lo),
+    calc.max(hi, ext-hi),
+  ))
+}
+
+// Apply post-training domain fix-ups (bar-zero floor, geom extents, ribbon
+// ymin/ymax padding, discrete bar padding). Called once globally and once
 // per panel under free scales so each panel's domain reflects its own subset.
 #let _post-train(trained, layers) = {
   let scan = _post-train-scan(layers)
@@ -507,8 +392,9 @@
 
   // Each geom with a `spec.extents` hook widens the continuous position
   // domains to the outer edges of its marks. The hook runs once per layer
-  // on values in the trained-domain space; discrete axes ignore it, and an
-  // axis with user `limits` keeps them, reversed or narrow alike.
+  // on values in the trained-domain space; discrete axes ignore it, an
+  // axis with user `limits` keeps them, reversed or narrow alike, and a
+  // missing axis is seeded from the extents.
   let has-limits = (:)
   for axis in ("x", "y") {
     let t = trained.at(axis, default: none)
@@ -534,31 +420,7 @@
       let range = ext.at(axis, default: none)
       if range == none or has-limits.at(axis) { continue }
       let (ext-lo, ext-hi) = range
-      trained = _rewrite-continuous-domain(trained, axis, ((lo, hi)) => (
-        calc.min(lo, ext-lo),
-        calc.max(hi, ext-hi),
-      ))
-    }
-  }
-
-  if scan.bin-half-max > 0 {
-    let pad = scan.bin-half-max
-    trained = _rewrite-continuous-domain(trained, "x", ((lo, hi)) => (
-      lo - pad,
-      hi + pad,
-    ))
-  }
-
-  // `geom-col` mirrors its own min-gap heuristic: pad the continuous category
-  // axis by half a bar width so outer bars stay inside the panel. Coord-flip
-  // is applied later, so padding pre-flip x covers both orientations.
-  if scan.cols.len() > 0 {
-    let max-half = _col-half-width-x(scan.cols)
-    if max-half > 0 {
-      trained = _rewrite-continuous-domain(trained, "x", ((lo, hi)) => (
-        lo - max-half,
-        hi + max-half,
-      ))
+      trained = _extend-domain(trained, axis, ext-lo, ext-hi)
     }
   }
 
@@ -571,55 +433,14 @@
     ))
   }
 
-  let _seed-or-extend(t, axis, lo-extra, hi-extra) = {
-    if t.at(axis, default: none) == none {
-      t.insert(axis, (
-        type: "continuous",
-        domain: (lo-extra, hi-extra),
-        spec: none,
-        transform: "identity",
-        typst-mark: false,
-      ))
-      t
-    } else {
-      _rewrite-continuous-domain(t, axis, ((lo, hi)) => (
-        calc.min(lo, lo-extra),
-        calc.max(hi, hi-extra),
-      ))
-    }
-  }
-  if scan.ellipse-x-min != none {
-    trained = _seed-or-extend(
-      trained,
-      "x",
-      scan.ellipse-x-min,
-      scan.ellipse-x-max,
-    )
-  }
-  if scan.ellipse-y-min != none {
-    trained = _seed-or-extend(
-      trained,
-      "y",
-      scan.ellipse-y-min,
-      scan.ellipse-y-max,
-    )
-  }
-
   // Discrete category axes get `geom-min-pad` so `_apply-expand` keeps outer
-  // bars inside the panel; the continuous case is already covered above.
-  if scan.cols.len() > 0 {
-    let bar-half = 0
-    for layer in scan.cols {
-      let half = layer.bar-frac / 2
-      if half > bar-half { bar-half = half }
-    }
-    if bar-half > 0 {
-      let xt = trained.at("x", default: none)
-      if xt != none and xt.type == "discrete" {
-        let new-x = xt
-        new-x.insert("geom-min-pad", bar-half)
-        trained.insert("x", new-x)
-      }
+  // bars inside the panel; the continuous case is col's extents hook.
+  if scan.bar-half > 0 {
+    let xt = trained.at("x", default: none)
+    if xt != none and xt.type == "discrete" {
+      let new-x = xt
+      new-x.insert("geom-min-pad", scan.bar-half)
+      trained.insert("x", new-x)
     }
   }
 
