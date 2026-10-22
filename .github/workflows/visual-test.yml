@@ -8,7 +8,15 @@ name: Visual test
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened, ready_for_review, labeled, unlabeled]
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
+      - labeled
+      - unlabeled
     paths:
       - "src/**"
 
