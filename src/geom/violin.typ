@@ -14,6 +14,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../scale/train.typ": map-axis, map-position
 #import "../utils/band.typ": axis-band
+#import "../utils/flip.typ": user-axes, user-columns, user-point
 #import "../utils/group.typ": partition-by-group
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke
@@ -150,15 +151,15 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
-  if x-col == none or y-col == none { return }
+  let cols = user-columns(mapping, ctx)
+  if cols.x == none or cols.y == none { return }
 
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
-  if y-trained.type != "continuous" { return }
+  let axes = user-axes(ctx)
+  if axes == none or axes.y-trained.type != "continuous" { return }
   if ctx.at("radial", default: none) != none { return }
+  let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
+  let (x-range, y-range) = (axes.x-range, axes.y-range)
+  let pt = user-point.with(ctx)
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // The outline carries the violin's structure, so the stroke default
@@ -172,15 +173,15 @@
     // One silhouette per distinct x bucket within the group, in
     // first-appearance order.
     let bucket-rows = bucket-index(g.data, row => {
-      let key = str(row.at(x-col, default: ""))
+      let key = str(row.at(cols.x, default: ""))
       if key == "" { none } else { key }
     }).buckets
 
     for rows in bucket-rows {
-      let raw-x = rows.first().at(x-col, default: none)
-      let cx = map-position(x-trained, raw-x, ctx.px-range)
+      let raw-x = rows.first().at(cols.x, default: none)
+      let cx = map-position(x-trained, raw-x, x-range)
       if cx == none { continue }
-      let band = axis-band(x-trained, raw-x, half-width, ctx.px-range)
+      let band = axis-band(x-trained, raw-x, half-width, x-range)
       if band == none { continue }
       let (band-lo, band-hi) = band
 
@@ -194,7 +195,7 @@
 
       let side = rows
         .map(r => {
-          let yv = parse-number(r.at(y-col, default: none))
+          let yv = parse-number(r.at(cols.y, default: none))
           let vw = parse-number(r.at("violinwidth", default: none))
           if yv == none or vw == none { return none }
           (y: yv, vw: vw)
@@ -203,18 +204,16 @@
         .sorted(key: p => p.y)
       if side.len() < 2 { continue }
 
-      let left = side.map(p => (
-        centre - canvas-half * p.vw,
-        map-axis(y-trained, p.y, ctx.py-range),
-      ))
+      let cys = side.map(p => map-axis(y-trained, p.y, y-range))
+      if cys.any(cy => cy == none) { continue }
+      let left = side
+        .zip(cys)
+        .map(((p, cy)) => pt(centre - canvas-half * p.vw, cy))
       let right = side
+        .zip(cys)
         .rev()
-        .map(p => (
-          centre + canvas-half * p.vw,
-          map-axis(y-trained, p.y, ctx.py-range),
-        ))
+        .map(((p, cy)) => pt(centre + canvas-half * p.vw, cy))
       let pts = left + right
-      if pts.any(p => p.at(1) == none) { continue }
 
       let leader = rows.first()
       let final-fill = resolve-channel(

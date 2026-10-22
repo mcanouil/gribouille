@@ -2,7 +2,7 @@
 ///!
 ///! Requires the aesthetic mapping to provide `x`, `ymin`, and `ymax`. Useful
 ///! for uncertainty envelopes and shaded ranges under a line.
-///! The band does not draw under \@coord-flip yet.
+///! Under \@coord-flip the band runs along the vertical axis.
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
@@ -12,6 +12,7 @@
 #import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/band.typ": band-polygon
+#import "../utils/flip.typ": user-axes, user-columns
 #import "../position/apply.typ": layer-marks-abut
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
@@ -136,13 +137,9 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let lo-col = mapping.at("ymin", default: none)
-  let hi-col = mapping.at("ymax", default: none)
-  if x-col == none or lo-col == none or hi-col == none { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
+  let cols = user-columns(mapping, ctx)
+  if cols.x == none or cols.ymin == none or cols.ymax == none { return }
+  if user-axes(ctx) == none { return }
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   let default-thickness = resolve-geom-linewidth(g-defaults)
@@ -158,11 +155,11 @@
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     let rows = g.data
-    let sorted = sort-rows-by-x(rows, mapping, x-trained)
+    let sorted = sort-rows-by-x(rows, mapping, ctx)
       .map(row => (
-        x: row.at(x-col, default: none),
-        lo: parse-number(row.at(lo-col, default: none)),
-        hi: parse-number(row.at(hi-col, default: none)),
+        x: row.at(cols.x, default: none),
+        lo: parse-number(row.at(cols.ymin, default: none)),
+        hi: parse-number(row.at(cols.ymax, default: none)),
       ))
       .filter(p => p.lo != none and p.hi != none)
     if sorted.len() < 2 { continue }

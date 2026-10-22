@@ -4,9 +4,10 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
-#import "../utils/radial.typ": project-point, shift-point
+#import "../utils/radial.typ": shift-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 #import "../position/dodge.typ": dodge-geometry
+#import "../utils/flip.typ": project-user-point, user-axes, user-columns
 #import "linerange.typ": range-line-row
 
 /// Pointrange layer: a marker at `(x, y)` plus a linerange from `ymin` to `ymax`.
@@ -118,34 +119,29 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
-  let ymin-col = mapping.at("ymin", default: none)
-  let ymax-col = mapping.at("ymax", default: none)
+  let cols = user-columns(mapping, ctx)
   if (
-    x-col == none or y-col == none or ymin-col == none or ymax-col == none
+    cols.x == none or cols.y == none or cols.ymin == none or cols.ymax == none
   ) { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
+  if user-axes(ctx) == none { return }
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
   let dodge = dodge-geometry(ctx, layer)
 
   for row in data {
-    let xv = row.at(x-col, default: none)
-    let mid = parse-number(row.at(y-col, default: none))
+    let xv = row.at(cols.x, default: none)
+    let mid = parse-number(row.at(cols.y, default: none))
     if xv == none or mid == none { continue }
-    let p-mid = project-point(ctx, xv, mid)
+    let p-mid = project-user-point(ctx, xv, mid)
     if p-mid == none { continue }
     let res = range-line-row(
       layer.params,
       mapping,
       ctx,
       row,
-      x-col,
-      ymin-col,
-      ymax-col,
+      cols.x,
+      cols.ymin,
+      cols.ymax,
       theme-colour,
       dodge,
       line-alpha: false,

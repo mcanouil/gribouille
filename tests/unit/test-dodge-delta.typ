@@ -98,6 +98,18 @@
 #assert.eq(df.at(0), 0.0)
 #assert-close(df.at(1), -0.25 * (8 / 2) * 0.9)
 
+// A flipped continuous category axis infers its slot from the category
+// column, which the flip swap moved onto y, not from the value column on x.
+#let flip-cont-ctx = (
+  trained: (x: y-cont, y: cont-x),
+  px-range: (0, 6),
+  py-range: (0, 10),
+  flipped: true,
+  resolve-data: _ => ((x: 0.5, y: 0), (x: 0.6, y: 2), (x: 0.7, y: 6)),
+  resolve-mapping: _ => (x: "x", y: "y"),
+)
+#assert-close(dodge-geometry(flip-cont-ctx, layer-dodge).span, 2 * 0.9)
+
 // A position dict carries its own width, scaling the span accordingly.
 #let dw = dodge-delta(
   dodge-geometry(ctx, (position: (name: "dodge", params: (width: 0.5)))),

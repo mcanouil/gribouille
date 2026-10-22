@@ -2,6 +2,9 @@
 
 #import "../../src/coord/flip.typ": coord-flip
 #import "../../src/render/domain.typ": _apply-flip, _flip-mapping, _is-flipped
+#import "../../src/utils/flip.typ": (
+  user-axes, user-columns, user-point, user-stair-direction,
+)
 
 #let c1 = coord-flip()
 #assert.eq(c1.kind, "coord")
@@ -88,5 +91,44 @@
 // geom that reads `mapping.x` directly still finds the key.
 #assert.eq(_flip-mapping((x: "a", y: none)), (x: none, y: "a"))
 #assert.eq(_flip-mapping(none), none)
+
+// A geom that draws in the user's x/y space reads its columns from the keys
+// the flip swap moved them to, so a flipped range mapping still resolves.
+#let flat = (flipped: false)
+#let flip = (flipped: true)
+#let range-aes = (x: "g", y: "v", ymin: "lo", ymax: "hi")
+#assert.eq(user-columns(range-aes, flat), range-aes)
+#assert.eq(user-columns(_flip-mapping(range-aes), flip), range-aes)
+#assert.eq(
+  user-columns((x: "g"), flat),
+  (x: "g", y: none, ymin: none, ymax: none),
+)
+
+// The user's x axis takes the trained y scale and the vertical canvas range
+// under flip.
+#let axes-ctx = (
+  trained: (x: "tx", y: "ty"),
+  px-range: (0, 10),
+  py-range: (0, 5),
+)
+#assert.eq(
+  user-axes(axes-ctx + flip),
+  (x-trained: "ty", y-trained: "tx", x-range: (0, 5), y-range: (0, 10)),
+)
+#assert.eq(
+  user-axes(axes-ctx),
+  (x-trained: "tx", y-trained: "ty", x-range: (0, 10), y-range: (0, 5)),
+)
+#assert.eq(user-axes(axes-ctx + (trained: (x: "tx"))), none)
+
+#assert.eq(user-point(flat, 1, 2), (1, 2))
+#assert.eq(user-point(flip, 1, 2), (2, 1))
+
+// A step along the user's x turns into the other corner order once that
+// axis is vertical.
+#assert.eq(user-stair-direction("hv", flat), "hv")
+#assert.eq(user-stair-direction("hv", flip), "vh")
+#assert.eq(user-stair-direction("vh", flip), "hv")
+#assert.eq(user-stair-direction(none, flip), none)
 
 coord-flip tests passed.

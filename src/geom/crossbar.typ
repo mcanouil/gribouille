@@ -11,6 +11,7 @@
   polar-canvas, radial-arc, radial-axis-ranges, radial-category-span,
   radial-wedge,
 )
+#import "../utils/flip.typ": user-axes, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke
 #import "../theme/theme.typ": (
@@ -125,16 +126,14 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
-  let ymin-col = mapping.at("ymin", default: none)
-  let ymax-col = mapping.at("ymax", default: none)
+  let cols = user-columns(mapping, ctx)
   if (
-    x-col == none or y-col == none or ymin-col == none or ymax-col == none
+    cols.x == none or cols.y == none or cols.ymin == none or cols.ymax == none
   ) { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
+  let axes = user-axes(ctx)
+  if axes == none { return }
+  let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
+  let (x-range, y-range) = (axes.x-range, axes.y-range)
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // Box outline and median bar carry the crossbar's structure, so the
@@ -144,12 +143,13 @@
 
   let half-width = layer.params.width / 2
   let position-name = layer-position-name(layer)
+  let pt = user-point.with(ctx)
 
   let radial = ctx.at("radial", default: none)
   if radial != none {
     let cat-trained = if radial.cat-is-theta { x-trained } else { y-trained }
     let val-trained = if radial.cat-is-theta { y-trained } else { x-trained }
-    let cat-col = if radial.cat-is-theta { x-col } else { y-col }
+    let cat-col = if radial.cat-is-theta { cols.x } else { cols.y }
     let (cat-range, value-range) = radial-axis-ranges(radial)
     let half = (
       radial-category-span(cat-trained, cat-col, cat-range, data)
@@ -158,12 +158,12 @@
     )
     for row in data {
       let raw-cat = if radial.cat-is-theta {
-        row.at(x-col, default: none)
-      } else { row.at(y-col, default: none) }
+        row.at(cols.x, default: none)
+      } else { row.at(cols.y, default: none) }
       let cat-c = map-position(cat-trained, raw-cat, cat-range)
-      let mid = parse-number(row.at(y-col, default: none))
-      let lo = parse-number(row.at(ymin-col, default: none))
-      let hi = parse-number(row.at(ymax-col, default: none))
+      let mid = parse-number(row.at(cols.y, default: none))
+      let lo = parse-number(row.at(cols.ymin, default: none))
+      let hi = parse-number(row.at(cols.ymax, default: none))
       if cat-c == none or mid == none or lo == none or hi == none { continue }
       let v-mid = map-axis(val-trained, mid, value-range)
       let v-lo = map-axis(val-trained, lo, value-range)
@@ -219,18 +219,18 @@
   }
 
   for row in data {
-    let raw-x = row.at(x-col, default: none)
-    let cx = map-position(x-trained, raw-x, ctx.px-range)
-    let mid = parse-number(row.at(y-col, default: none))
-    let lo = parse-number(row.at(ymin-col, default: none))
-    let hi = parse-number(row.at(ymax-col, default: none))
+    let raw-x = row.at(cols.x, default: none)
+    let cx = map-position(x-trained, raw-x, x-range)
+    let mid = parse-number(row.at(cols.y, default: none))
+    let lo = parse-number(row.at(cols.ymin, default: none))
+    let hi = parse-number(row.at(cols.ymax, default: none))
     if cx == none or mid == none or lo == none or hi == none { continue }
-    let cy-mid = map-position(y-trained, mid, ctx.py-range)
-    let cy-lo = map-position(y-trained, lo, ctx.py-range)
-    let cy-hi = map-position(y-trained, hi, ctx.py-range)
+    let cy-mid = map-position(y-trained, mid, y-range)
+    let cy-lo = map-position(y-trained, lo, y-range)
+    let cy-hi = map-position(y-trained, hi, y-range)
     if cy-mid == none or cy-lo == none or cy-hi == none { continue }
 
-    let band = axis-band(x-trained, raw-x, half-width, ctx.px-range)
+    let band = axis-band(x-trained, raw-x, half-width, x-range)
     let (cx-lo, cx-hi) = if band == none { (cx, cx) } else { band }
 
     if position-name == "dodge" {
@@ -264,14 +264,14 @@
     )
 
     cetz.draw.rect(
-      (cx-lo, cy-lo),
-      (cx-hi, cy-hi),
+      pt(cx-lo, cy-lo),
+      pt(cx-hi, cy-hi),
       fill: final-fill,
       stroke: stroke-spec,
     )
     cetz.draw.line(
-      (cx-lo, cy-mid),
-      (cx-hi, cy-mid),
+      pt(cx-lo, cy-mid),
+      pt(cx-hi, cy-mid),
       stroke: middle-stroke-spec,
     )
   }

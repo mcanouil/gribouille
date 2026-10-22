@@ -107,7 +107,7 @@
   )
 }
 
-#let _build-pts(rows, params, mapping, x-trained, ctx, dodge) = (
+#let _build-pts(rows, params, mapping, ctx, dodge) = (
   rows-to-points(rows, mapping, ctx, dodge)
 )
 
