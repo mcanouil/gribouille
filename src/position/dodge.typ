@@ -11,6 +11,7 @@
 
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
+#import "../utils/flip.typ": user-columns
 #import "../utils/types.typ": parse-number
 #import "../scale/train.typ": discrete-slot-width, map-axis
 
@@ -149,8 +150,8 @@
     if resolve-data == none or resolve-mapping == none { return none }
     let data = resolve-data(layer)
     let mapping = resolve-mapping(layer)
-    // resolve-mapping is flip-aware: mapping.at("x") is always the category column.
-    let x-col = mapping.at("x", default: none)
+    // The category column is the user's x, which the flip swap moves onto y.
+    let x-col = user-columns(mapping, ctx).x
     if x-col == none { return none }
     let (d-lo, d-hi) = cat-trained.domain
     if d-hi == d-lo { return none }

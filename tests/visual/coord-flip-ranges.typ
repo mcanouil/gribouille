@@ -3,7 +3,8 @@
 // Under coord-flip each geom draws along the user's x axis, which runs
 // vertically, and spans the user's y axis, which runs horizontally: ranges,
 // crossbars, boxplots, and violins lie on their level rows, and ribbons,
-// areas, steps, smooth bands, and densities run up the panel.
+// areas, steps, smooth bands, and densities run up the panel. A dotplot keeps
+// its dots on a reversed flip.
 
 #import "../../lib.typ": *
 
@@ -51,4 +52,13 @@
   flipped(s, aes(x: "y"), geom-density()),
   flipped(s, aes(x: "x", y: "y"), geom-hex()),
   flipped(s, aes(x: "y"), geom-dotplot()),
+
+  plot(
+    data: s,
+    mapping: aes(x: "y"),
+    layers: (geom-dotplot(),),
+    coord: coord-flip(reverse: true),
+    width: 5cm,
+    height: 4cm,
+  ),
 )

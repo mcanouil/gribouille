@@ -103,7 +103,9 @@
     dotsize: dotsize,
   )
     + split-aes-params("geom-dotplot", args),
-  stat: if stat == auto { stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio) } else { stat },
+  stat: if stat == auto {
+    stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
+  } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
@@ -143,7 +145,8 @@
     x-range,
   )
   if cx-anchor == none or cx-edge == none { return }
-  let radius-cm = (cx-edge - cx-anchor) * layer.params.dotsize
+  // A reversed x axis maps the bin edge below its centre.
+  let radius-cm = calc.abs(cx-edge - cx-anchor) * layer.params.dotsize
   if radius-cm <= 0 { return }
   let dot-radius = radius-cm * 1cm
 
