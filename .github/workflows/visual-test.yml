@@ -1,0 +1,58 @@
+# @license MIT
+# @copyright 2026 Mickaël Canouil
+# @author Mickaël Canouil
+
+name: Visual test
+
+# Enforces the visual test rule in tests/visual/README.md.
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
+      - labeled
+      - unlabeled
+    paths:
+      - "src/**"
+      - "lib.typ"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  visual-test:
+    name: Require a visual test on a fix
+    # Each condition reads the pull request as it is now, so a skipped run never
+    # hides the failure of an earlier run on the same commit.
+    if: >-
+      github.event.pull_request.draft == false
+      && (startsWith(github.event.pull_request.title, 'fix:')
+        || startsWith(github.event.pull_request.title, 'fix(')
+        || startsWith(github.event.pull_request.title, 'fix!:'))
+      && !contains(github.event.pull_request.labels.*.name, 'Status: No Visual Change :see_no_evil:')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Look for a visual test in the changed files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          files="$(gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/files?per_page=100" \
+            --jq '.[] | select(.status != "removed") | .filename')"
+          if grep -E '^tests/visual/[^/]+\.typ$' <<<"${files}"; then
+            exit 0
+          fi
+          echo "::error title=No visual test::Add or change a tests/visual/*.typ file, or add the label 'Status: No Visual Change :see_no_evil:' if the fix does not change what a plot draws. See tests/visual/README.md."
+          exit 1
