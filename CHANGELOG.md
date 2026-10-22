@@ -12,7 +12,8 @@
 
 ### Changes
 
-- fix: Explicit x `limits` on `geom-col()` and `geom-histogram()` are kept as given, rather than widened by half a bar. Bars outside the limits are dropped. (#PR)
+- fix: Explicit position `limits` are kept as given by the geoms that pad the scale to fit their marks: `geom-col()`, `geom-histogram()`, `geom-freqpoly()`, `geom-dotplot()`, `geom-ellipse()`, and a line, path or step on `stat-bin()` rows. They used to widen the limits by half a bar or bin, or to fit the whole ellipse. (#352)
+- fix: A data column named `width` no longer pads the x scale of a geom that draws no bars, such as `geom-point()` or `geom-text()`. The half-bar padding of bars and bins now follows each layer, so it adds no margin past the range of a wider layer. (#352)
 - fix: `stat-waffle()` grids sit flush with the panel, without the automatic expansion margin. An `expand` set on a scale still applies. (#351)
 - fix: `geom-tile()` widens the position scales to the edges of its tiles, so edge tiles no longer clip at the panel border. (#351)
 - fix: `aes()` accepts `lower`, `middle` and `upper`, so `geom-boxplot(stat: "identity")` draws boxes from pre-computed summaries. (#348)
