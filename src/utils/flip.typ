@@ -20,9 +20,9 @@
 }
 
 // The mapping and trained key, `"x"` or `"y"`, that holds the user's `axis`.
-#let user-axis-key(axis, ctx) = if not _flipped(ctx) { axis } else if (
-  axis == "x"
-) { "y" } else { "x" }
+#let user-axis-key(axis, ctx) = if not _flipped(ctx) { axis } else {
+  if axis == "x" { "y" } else { "x" }
+}
 
 // Trained scales and canvas ranges of the user's x and y axes, or `none`
 // when either scale is missing.

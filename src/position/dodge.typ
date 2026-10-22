@@ -11,7 +11,7 @@
 
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
-#import "../utils/flip.typ": user-axes, user-columns
+#import "../utils/flip.typ": user-axes, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../scale/train.typ": discrete-slot-width, map-axis
 
@@ -120,7 +120,7 @@
 ///
 /// \@param layer Layer dictionary; its `position` field selects dodge and its width.
 ///
-/// \@returns `(span, flipped)`, or `none` when dodge does not apply.
+/// \@returns `(span, direction)`, or `none` when dodge does not apply. `direction` is the canvas unit vector of the user's x axis.
 #let dodge-geometry(ctx, layer) = {
   let pos = layer.at("position", default: "identity")
   let name = if type(pos) == str { pos } else if pos == none {
@@ -168,7 +168,7 @@
     }
   }
 
-  (span: span, flipped: ctx.at("flipped", default: false))
+  (span: span, direction: user-point(ctx, 1.0, 0.0))
 }
 
 /// Canvas-cm shift that puts one row on its dodge slot.
@@ -185,7 +185,8 @@
 #let dodge-delta(geometry, row) = {
   if geometry == none { return (0.0, 0.0) }
   let shift = row.at("_dodge-offset", default: 0) * geometry.span
-  if geometry.flipped { (0.0, shift) } else { (shift, 0.0) }
+  let (ux, uy) = geometry.direction
+  (shift * ux, shift * uy)
 }
 
 #let _row-width(row, default-width) = {
