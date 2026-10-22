@@ -25,6 +25,7 @@ Every build regenerates these files, so they always match the released API.
 
 The skill teaches an agent the grammar-of-graphics model and the `#plot()` call shape.
 It also gives a protocol to confirm every argument against the `.llms.md` reference before writing code.
+When a plot hits a Gribouille bug, the agent stops, reduces the bug to a minimal plot, and drafts an issue for you instead of working around it in silence.
 It works with any agent that supports the [Agent Skills](https://code.claude.com/docs/en/skills) format.
 
 ### With `npx skills`
