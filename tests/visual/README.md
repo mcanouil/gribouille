@@ -12,6 +12,8 @@ Two layers:
 
 Gribouille is a visual library, so a test that only compiles does not check the behaviour.
 Every behaviour fix adds or extends a visual test here, and the snapshot harness compares its render with a golden.
+The `Visual test` workflow fails a `fix` pull request that changes `src/` without adding or changing a `tests/visual/*.typ` file.
+If the fix does not change what a plot draws, add the label `Status: No Visual Change :see_no_evil:` to the pull request.
 
 Use the smallest plot that shows the behaviour: synthetic inline data, single layer, no theme override unless theming is the subject.
 The harness gives each file an `auto` page with no margin, and stores one PNG for each file.
