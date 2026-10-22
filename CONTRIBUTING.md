@@ -94,6 +94,8 @@ The Checks workflow runs the suite through the shared [typst-workflows](https://
 
 ### Visual snapshots
 
+A fix to what a plot draws needs a visual test with a golden, not only a test that compiles.
+See [`tests/visual/README.md`](tests/visual/README.md).
 Figures under [`tests/visual/golden/`](tests/visual/golden) are minted by CI and never committed from a working copy.
 Install the compiler [`typst.toml`](typst.toml) pins before you read a snapshot result, because a different Typst release renders the same source differently and reports diffs that have nothing to do with your change.
 

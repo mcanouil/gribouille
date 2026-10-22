@@ -173,9 +173,7 @@ local function main()
   local golden_root = opts.root .. "/tests/visual/golden"
 
   util.remove_dir(build_root)
-  for _, sub in ipairs({ "src", "png/examples", "png/docstrings", "diff/examples", "diff/docstrings" }) do
-    util.make_dir(build_root .. "/" .. sub)
-  end
+  util.make_dir(build_root .. "/src")
 
   local sources = extract.collect({
     root = opts.root,
@@ -189,9 +187,15 @@ local function main()
     os.exit(1)
   end
 
-  if opts.update then
-    util.make_dir(golden_root .. "/examples")
-    util.make_dir(golden_root .. "/docstrings")
+  -- One output directory per source group, the first segment of each key.
+  local made = {}
+  for _, s in ipairs(sources) do
+    local group = s.key:match("^[^/]+")
+    if not made[group] then
+      made[group] = true
+      util.make_dir(build_root .. "/png/" .. group)
+      util.make_dir(build_root .. "/diff/" .. group)
+    end
   end
 
   opts.build_root = build_root
@@ -203,6 +207,9 @@ local function main()
     if r.code ~= 0 then
       compile_fail[#compile_fail + 1] = s.key
       io.write(string.format("COMPILE-FAIL %s\n%s\n", s.key, r.log))
+      if r.log:find("cannot export multiple images", 1, true) then
+        io.write("  A snapshot holds one page: remove the page breaks and let the page grow.\n")
+      end
     elseif opts.update then
       util.copy_file(r.png, s.golden)
       ok = ok + 1

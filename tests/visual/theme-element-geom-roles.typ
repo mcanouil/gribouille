@@ -37,7 +37,6 @@
   width: 8cm,
   height: 4cm,
 )
-#pagebreak()
 
 #plot(
   data: bd,
@@ -47,7 +46,6 @@
   width: 8cm,
   height: 4cm,
 )
-#pagebreak()
 
 #plot(
   data: d,
