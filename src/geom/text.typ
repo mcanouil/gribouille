@@ -18,7 +18,9 @@
 /// One text block is drawn per row at the mapped `(x, y)`. Offsets are mapped
 /// via the `nudge-x` and `nudge-y` aesthetics: a number shifts in data units
 /// on a continuous scale and in level units on a discrete one, a Typst length
-/// shifts in canvas units. Setting `segment: true` draws a
+/// shifts in canvas units. Under \@coord-flip, `nudge-x` still moves along
+/// the user's x axis and `nudge-y` along the user's y axis, for both kinds of
+/// offset. Setting `segment: true` draws a
 /// connector back to the anchor point, routed to avoid the other labels of
 /// the same layer.
 ///

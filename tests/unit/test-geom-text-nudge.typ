@@ -117,6 +117,20 @@
 // A `length` nudge stays in canvas units on a categorical axis, unchanged.
 #assert.eq(nudge-cm(cat-ctx, "a", 4, 0.7cm, 0), (0.7, 0.0))
 
+// Under coord-flip the renderer swaps the scales, so the canvas x carries the
+// user's y and the canvas y the user's x. `nudge-x` still moves along the
+// user's x, now vertical, and `nudge-y` along the user's y, now horizontal,
+// for a number and for a length alike.
+#let flip-ctx = (
+  trained: (x: cat-ctx.trained.y, y: cat-ctx.trained.x),
+  px-range: cat-ctx.py-range,
+  py-range: cat-ctx.px-range,
+  flipped: true,
+)
+#assert.eq(nudge-cm(flip-ctx, 4, "a", 1, 0), (0.0, 3.0))
+#assert.eq(nudge-cm(flip-ctx, 4, "a", 0, 1), (0.5, 0.0))
+#assert.eq(nudge-cm(flip-ctx, 4, "a", 0.7cm, 0.2cm), (0.2, 0.7))
+
 #let cat = ((g: "a", v: 3), (g: "b", v: 5))
 
 // Discrete x, nudge on the continuous axis.
