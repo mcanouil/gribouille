@@ -80,6 +80,22 @@
   mapped-post.x.domain,
 ))
 
+// --- a column literally named `width` pads x once, not twice ---
+
+#let literal-data = (
+  (x: 0, y: 0, width: 0.8),
+  (x: 2, y: 0, width: 0.8),
+)
+#let literal = trained-for(
+  geom-tile(),
+  aes(x: "x", y: "y", width: "width"),
+  literal-data,
+)
+#let literal-post = _post-train(literal.trained, literal.prepared)
+#assert(approx-pair(literal-post.x.domain, (-0.4, 2.4)), message: repr(
+  literal-post.x.domain,
+))
+
 // --- a row whose mapped width is `none` or not a number is skipped ---
 
 #let gap-data = (

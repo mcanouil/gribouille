@@ -77,8 +77,9 @@
 
 // Fold per-row width / ymin / ymax aggregates: the panel-level bin half-max
 // (so outer bins stay inside the panel) and the ribbon y-range (so ymin/ymax
-// extend the trained y domain).
-#let _scan-rows(mapping, layer-data, acc) = {
+// extend the trained y domain). A geom with a `spec.extents` hook passes
+// `with-width: false`, because its hook already covers its widths.
+#let _scan-rows(mapping, layer-data, acc, with-width: true) = {
   let ymin-col = if mapping == none { none } else {
     mapping.at("ymin", default: none)
   }
@@ -86,7 +87,8 @@
     mapping.at("ymax", default: none)
   }
   let scan-width = (
-    layer-data.len() > 0
+    with-width
+      and layer-data.len() > 0
       and layer-data.first().at("width", default: none) != none
   )
   if not (scan-width or ymin-col != none or ymax-col != none) { return acc }
@@ -127,7 +129,7 @@
     y-max: none,
   )
   for layer in layers {
-    let geom = layer.at("name", default: none)
+    let geom = layer.at("name", default: "")
     let mapping = layer.at("mapping", default: none)
     let layer-data = layer.at("data", default: ())
 
@@ -141,7 +143,10 @@
       }
       acc.cols.push(_scan-col(layer, mapping, layer-data))
     }
-    acc = _scan-rows(mapping, layer-data, acc)
+    let has-extents = (
+      GEOMS.at(geom, default: (spec: (extents: none))).spec.extents != none
+    )
+    acc = _scan-rows(mapping, layer-data, acc, with-width: not has-extents)
   }
   (
     needs-y-zero: acc.needs-y-zero,
@@ -454,9 +459,9 @@
   trained
 }
 
-// Apply post-training domain fix-ups (bar-zero floor, geom extents, bin width padding,
-// ribbon ymin/ymax padding). Called once globally and once per panel under
-// free scales so each panel's domain reflects its own subset.
+// Apply post-training domain fix-ups (bar-zero floor, geom extents, bin
+// width padding, ribbon ymin/ymax padding). Called once globally and once
+// per panel under free scales so each panel's domain reflects its own subset.
 #let _post-train(trained, layers) = {
   let scan = _post-train-scan(layers)
 
