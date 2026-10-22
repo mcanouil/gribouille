@@ -15,6 +15,7 @@ Every behaviour fix adds or extends a visual test here, and the snapshot harness
 
 Use the smallest plot that shows the behaviour: synthetic inline data, single layer, no theme override unless theming is the subject.
 The harness gives each file an `auto` page with no margin, and stores one PNG for each file.
+A file can set its own page, for example to add a margin, or to render on its own at the right size.
 Do not use `#pagebreak()`: a file with more than one page fails the snapshot run.
 
 ### Naming
@@ -58,7 +59,8 @@ See [Bootstrap and refresh](#bootstrap-and-refresh).
 
 The harness renders with `--ignore-system-fonts`, so output depends only on the pinned Typst version (read from `typst.toml`) and Typst's embedded fonts.
 The deterministic face is the embedded Libertinus Serif.
-A local `--check` matches CI only when the local Typst version is the pinned one.
+A local `--check` matches CI only on the pinned Typst version and on the CPU architecture that minted the goldens (the Linux runner in CI).
+On another architecture, read a diff as advice, not as a failure of the change.
 
 ### Bootstrap and refresh
 
