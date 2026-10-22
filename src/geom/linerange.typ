@@ -5,7 +5,8 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
-#import "../utils/radial.typ": project-point, shift-point
+#import "../utils/radial.typ": shift-point
+#import "../utils/flip.typ": project-range-point, range-columns
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -110,27 +111,6 @@
 // `params` and `dodge` both arrive resolved, and for the same reason: this runs
 // once a row, so it takes the layer's parameters and its dodge slot rather than
 // the layer, which reaches every row of the plot.
-// Canvas point of a range geom's `value` at position `pos`. The range spans
-// the y axis, or the x axis under coord-flip, where the mapping swap carries
-// the position onto y and the range onto x.
-#let project-range-point(ctx, pos, value) = if ctx.at("flipped", default: false) {
-  project-point(ctx, value, pos)
-} else {
-  project-point(ctx, pos, value)
-}
-
-// Position, minimum, and maximum columns of a range geom, read from the
-// mapping keys that hold them on the drawn axes.
-#let range-columns(mapping, flipped) = {
-  let (pos, span) = if flipped { ("y", "x") } else { ("x", "y") }
-  (
-    pos: mapping.at(pos, default: none),
-    value: mapping.at(span, default: none),
-    min: mapping.at(span + "min", default: none),
-    max: mapping.at(span + "max", default: none),
-  )
-}
-
 #let range-line-row(
   params,
   mapping,

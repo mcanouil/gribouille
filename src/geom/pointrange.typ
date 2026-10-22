@@ -7,7 +7,8 @@
 #import "../utils/radial.typ": shift-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 #import "../position/dodge.typ": dodge-geometry
-#import "linerange.typ": project-range-point, range-columns, range-line-row
+#import "../utils/flip.typ": project-range-point, range-columns
+#import "linerange.typ": range-line-row
 
 /// Pointrange layer: a marker at `(x, y)` plus a linerange from `ymin` to `ymax`.
 ///
