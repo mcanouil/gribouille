@@ -44,6 +44,12 @@
   for (key, value) in args.named().pairs() {
     if key in keys {
       aes-params.insert(key, value)
+    } else if keys.len() == 0 {
+      fail(
+        scope,
+        "takes no aesthetic constants; got " + repr(key),
+        hint: "Map the key in aes() instead.",
+      )
     } else {
       fail-enum(
         scope,
