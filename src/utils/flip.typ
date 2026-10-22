@@ -41,6 +41,12 @@
   (pos-c, value-c)
 }
 
+// Stair direction on the canvas for a direction given along the position
+// axis: under flip the position axis is vertical, so `"hv"` becomes `"vh"`.
+#let range-stair-direction(direction, flipped) = if (
+  not flipped or direction == none
+) { direction } else if direction == "hv" { "vh" } else { "hv" }
+
 // Canvas point of data `value` at data position `pos`.
 #let project-range-point(ctx, pos, value) = if ctx.at(
   "flipped",

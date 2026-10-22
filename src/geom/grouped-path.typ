@@ -13,11 +13,16 @@
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 // Sort rows by their x value: numeric for continuous scales, domain index
-// for discrete ones. Drops rows whose x value can't be resolved.
-#let sort-rows-by-x(rows, mapping, x-trained) = {
+// for discrete ones. Drops rows whose x value can't be resolved. Under
+// coord-flip the mapping swap carries x onto y, so the sort reads y.
+#let sort-rows-by-x(rows, mapping, ctx) = {
+  let x-key = if ctx.at("flipped", default: false) { "y" } else { "x" }
+  let x-col = mapping.at(x-key, default: none)
+  let x-trained = ctx.trained.at(x-key, default: none)
+  if x-col == none or x-trained == none { return () }
   rows
     .map(row => {
-      let xv = row.at(mapping.x, default: none)
+      let xv = row.at(x-col, default: none)
       let xn = if x-trained.type == "continuous" {
         parse-number(xv)
       } else {
@@ -72,7 +77,7 @@
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     let rows = g.data
-    let pts = build-pts(rows, params, mapping, x-trained, ctx, dodge)
+    let pts = build-pts(rows, params, mapping, ctx, dodge)
     if pts.len() < 2 { continue }
 
     let leader = rows.first()

@@ -14,6 +14,7 @@
 #import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/band.typ": band-polygon
+#import "../utils/flip.typ": range-axes, range-columns
 #import "../position/apply.typ": layer-marks-abut
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
@@ -145,10 +146,9 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none or mapping.x == none or mapping.y == none { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
-  if y-trained.type != "continuous" { return }
+  let cols = range-columns(mapping, ctx.at("flipped", default: false))
+  let axes = range-axes(ctx)
+  if axes == none or axes.value-trained.type != "continuous" { return }
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   let default-thickness = resolve-geom-linewidth(g-defaults)
@@ -167,7 +167,6 @@
     ),
   )
 
-  let ymin-col = mapping.at("ymin", default: none)
   let direction = layer.params.direction
   // Only stacked bands share an edge; a lone area would just be painted
   // wider than the polygon it was given.
@@ -175,12 +174,12 @@
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     let rows = g.data
-    let sorted = sort-rows-by-x(rows, mapping, x-trained)
+    let sorted = sort-rows-by-x(rows, mapping, ctx)
       .map(row => (
-        x: row.at(mapping.x, default: none),
-        y: parse-number(row.at(mapping.y, default: none)),
-        ymin: if ymin-col != none {
-          parse-number(row.at(ymin-col, default: 0))
+        x: row.at(cols.pos, default: none),
+        y: parse-number(row.at(cols.value, default: none)),
+        ymin: if cols.min != none {
+          parse-number(row.at(cols.min, default: 0))
         } else { 0.0 },
       ))
       .filter(p => p.y != none)
