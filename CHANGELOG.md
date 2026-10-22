@@ -5,11 +5,11 @@
 ### Breaking changes
 
 - fix!: Under `coord-flip()`, `nudge-x` moves a `geom-text()`, `geom-label()` or `geom-typst()` label along the original x axis and `nudge-y` along the original y axis, for a number and for a length alike. They used to move it along the screen axes, so swap `nudge-x` and `nudge-y` on a flipped plot to keep the old placement. (#344)
+- fix!: Under `coord-flip()`, the `width` of `geom-tile()` spans the original x axis and its `height` the original y axis. The tile used to keep its sizes on the screen axes, so swap `width` and `height` on a flipped plot to keep the old shape. (#344)
 
 ### Changes
 
 - fix: Under `coord-flip()`, `geom-ellipse()` and `geom-spoke()` draw on the flipped axes, and their angle mirrors across the diagonal as in ggplot2. They used to read the swapped scales, so ellipses landed off their centres and spokes pointed the wrong way. (#344)
-- fix: Under `coord-flip()`, the `width` of `geom-tile()` spans the original x axis and its `height` the original y axis. The tile used to keep its sizes on the screen axes. (#344)
 - fix: Under `coord-flip()`, `geom-linerange()`, `geom-pointrange()`, `geom-crossbar()`, `geom-boxplot()`, `geom-violin()`, `geom-ribbon()`, `geom-hex()` and `geom-dotplot()` draw along the flipped axes, and so do stacked areas and the band of `geom-smooth()`. Most of them used to draw nothing. (#341)
 - fix: Under `coord-flip()`, `geom-line()`, `geom-step()`, `geom-area()` and `geom-density()` join their points in x order, so the path runs up the panel. They used to join them in the order of the horizontal axis, and the path zigzagged. (#341)
 - fix: Under free facet scales, a discrete axis moved by `position-beeswarm()`, `position-jitter()` or `position-nudge()` keeps its level names in each panel. It used to turn into a continuous axis. (#340)

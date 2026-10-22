@@ -55,8 +55,8 @@ Run the survey command at the bottom before extending the table.
 | `py`      | panel y                   | panel y range.                                                                        |
 | `dx`      | delta x                   | local x-offset delta in draw and layout helpers.                                      |
 | `dy`      | delta y                   | local y-offset delta in draw and layout helpers.                                      |
-| `nudge-x` | x offset                  | aesthetic on `geom-text`/`label`/`typst`. A number means data units (continuous) or level units (discrete). A length means canvas units. |
-| `nudge-y` | y offset                  | aesthetic on `geom-text`/`label`/`typst`. A number means data units (continuous) or level units (discrete). A length means canvas units. |
+| `nudge-x` | x offset                  | aesthetic on `geom-text`/`label`/`typst`. A number means data units (continuous) or level units (discrete). A length means canvas units. Follows the user's x axis under `coord-flip`. |
+| `nudge-y` | y offset                  | aesthetic on `geom-text`/`label`/`typst`. A number means data units (continuous) or level units (discrete). A length means canvas units. Follows the user's y axis under `coord-flip`. |
 | `aabb`    | axis-aligned bounding box | `(x-lo, y-lo, x-hi, y-hi)` dict from `utils/segment-route.typ`.                       |
 | `lo`      | lower bound               | endpoint of an interval (whisker, error bar, axis range).                             |
 | `hi`      | upper bound               | endpoint of an interval.                                                              |

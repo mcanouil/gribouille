@@ -30,9 +30,9 @@
 ///
 /// \@param data Layer-specific dataset, or a function applied to the plot data returning the layer frame. Falls back to the plot data when `none`.
 ///
-/// \@param width Default tile width in data units when not mapped.
+/// \@param width Default tile width in data units when not mapped. Under \@coord-flip, the width still spans the user's x axis.
 ///
-/// \@param height Default tile height in data units when not mapped.
+/// \@param height Default tile height in data units when not mapped. Under \@coord-flip, the height still spans the user's y axis.
 ///
 /// \@param colour Fixed outline colour. `auto` resolves via the colour scale, falling back to the theme `ink` only when neither `colour` nor `fill` is set.
 ///
