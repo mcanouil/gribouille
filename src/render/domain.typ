@@ -489,7 +489,17 @@
 
   // Each geom with a `spec.extents` hook widens the continuous position
   // domains to the outer edges of its marks. The hook runs once per layer
-  // on values in the trained-domain space; discrete axes ignore it.
+  // on values in the trained-domain space; discrete axes ignore it, and an
+  // axis with user `limits` keeps them, reversed or narrow alike.
+  let has-limits = (:)
+  for axis in ("x", "y") {
+    let t = trained.at(axis, default: none)
+    let spec = if t == none { none } else { t.at("spec", default: none) }
+    has-limits.insert(
+      axis,
+      spec != none and spec.at("limits", default: none) != none,
+    )
+  }
   for layer in layers {
     let extents = GEOMS
       .at(layer.at("name", default: ""), default: (spec: (extents: none)))
@@ -504,7 +514,7 @@
     )
     for axis in ("x", "y") {
       let range = ext.at(axis, default: none)
-      if range == none { continue }
+      if range == none or has-limits.at(axis) { continue }
       let (ext-lo, ext-hi) = range
       trained = _rewrite-continuous-domain(trained, axis, ((lo, hi)) => (
         calc.min(lo, ext-lo),

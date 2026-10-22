@@ -9,6 +9,8 @@
 #import "../../src/geom/tile.typ": geom-tile, spec as tile-spec
 #import "../../src/aes.typ": aes
 #import "../../src/data.typ": as-factor
+#import "../../src/scales.typ": scales
+#import "../../src/scale/constructors.typ": scale-continuous
 
 #let approx(a, b) = calc.abs(a - b) < 1e-9
 #let approx-pair(got, want) = (
@@ -95,6 +97,22 @@
 #assert(approx-pair(literal-post.x.domain, (-0.4, 2.4)), message: repr(
   literal-post.x.domain,
 ))
+
+// --- user `limits` win over the tile edges, reversed ones included ---
+
+#let wide-data = range(0, 5).map(i => (x: i, y: 0))
+#for limits in ((2, 3), (-5, 10), (5, 0)) {
+  let mapping = aes(x: "x", y: "y")
+  let prepared = (_prepare-layer(geom-tile(), mapping, wide-data),)
+  let trained = train(
+    scales: scales(x: scale-continuous(limits: limits)),
+    layers: prepared,
+    mapping: mapping,
+    data: wide-data,
+  )
+  let post = _post-train(trained, prepared)
+  assert.eq(post.x.domain, limits, message: "limits " + repr(limits))
+}
 
 // --- a row whose mapped width is `none` or not a number is skipped ---
 
