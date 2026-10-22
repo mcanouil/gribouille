@@ -8,7 +8,7 @@
 #import "../stat/bin-hex.typ": stat-bin-hex
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/hex.typ": hex-vertices
-#import "../utils/radial.typ": project-point
+#import "../utils/flip.typ": project-range-point, range-columns
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../utils/types.typ": parse-number
 #import "../theme/theme.typ": (
@@ -104,8 +104,10 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
+  // The binned centres and the `_hex-dx`/`_hex-dy` spacings are in the
+  // user's x/y space, which coord-flip draws along the y/x axes.
+  let cols = range-columns(mapping, ctx.at("flipped", default: false))
+  let (x-col, y-col) = (cols.pos, cols.value)
   if x-col == none or y-col == none { return }
   let x-trained = ctx.trained.at("x", default: none)
   let y-trained = ctx.trained.at("y", default: none)
@@ -132,7 +134,7 @@
     let dy = row.at("_hex-dy", default: none)
     if cx == none or cy == none or dx == none or dy == none { continue }
     let pts = hex-vertices(cx, cy, dx, dy).map(((vx, vy)) => (
-      project-point(ctx, vx, vy)
+      project-range-point(ctx, vx, vy)
     ))
     if pts.any(p => p == none) { continue }
 
