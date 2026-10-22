@@ -173,8 +173,12 @@ local function main()
   local golden_root = opts.root .. "/tests/visual/golden"
 
   util.remove_dir(build_root)
-  for _, sub in ipairs({ "src", "png/examples", "png/docstrings", "diff/examples", "diff/docstrings" }) do
-    util.make_dir(build_root .. "/" .. sub)
+  local groups = { "docstrings" }
+  for _, group in ipairs(extract.FILE_GROUPS) do groups[#groups + 1] = group.name end
+  util.make_dir(build_root .. "/src")
+  for _, group in ipairs(groups) do
+    util.make_dir(build_root .. "/png/" .. group)
+    util.make_dir(build_root .. "/diff/" .. group)
   end
 
   local sources = extract.collect({
@@ -190,8 +194,7 @@ local function main()
   end
 
   if opts.update then
-    util.make_dir(golden_root .. "/examples")
-    util.make_dir(golden_root .. "/docstrings")
+    for _, group in ipairs(groups) do util.make_dir(golden_root .. "/" .. group) end
   end
 
   opts.build_root = build_root
