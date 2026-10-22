@@ -121,6 +121,11 @@
   inherit-aes: inherit-aes,
 )
 
+#let spec = (
+  reads: ("xintercept", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 #let draw(layer, ctx) = {
   _draw-axis-lines(layer.params.xintercept, "x", layer, ctx)
 }

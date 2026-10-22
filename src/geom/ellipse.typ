@@ -114,6 +114,11 @@
   if v == none { fallback } else { v }
 }
 
+#let spec = (
+  reads: ("x0", "y0", "a", "b", "angle", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)

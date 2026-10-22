@@ -6,7 +6,7 @@
 
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
-#import "grouped-path.typ": draw-grouped-paths, rows-to-points
+#import "grouped-path.typ": draw-grouped-paths, rows-to-points, spec
 
 /// Path layer connecting observations in row order, one path per group.
 ///

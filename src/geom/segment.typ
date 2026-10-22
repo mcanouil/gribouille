@@ -130,6 +130,11 @@
   )
 }
 
+#let spec = (
+  reads: ("x", "y", "xend", "yend", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)

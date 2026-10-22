@@ -43,3 +43,9 @@
   "nudge-x",
   "nudge-y",
 )
+
+// Mapping keys that core code reads for every layer, whatever its geom, stat,
+// or position: the layer grouping in `src/utils/group.typ` reads `x` and `y`
+// and its grouping aesthetics. Geom, stat, and position modules declare the
+// rest of their reads next to their code.
+#let CORE-READS = ("x", "y", "group", "colour", "fill", "linetype", "shape")

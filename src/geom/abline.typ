@@ -133,6 +133,11 @@
   inherit-aes: inherit-aes,
 )
 
+#let spec = (
+  reads: ("slope", "intercept", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 #let draw(layer, ctx) = {
   // Under flip, the renderer has already swapped trained.x and trained.y so
   // the user's original x scale lives on trained.y and vice versa. The

@@ -105,6 +105,11 @@
   inherit-aes: inherit-aes,
 )
 
+#let spec = (
+  reads: ("x", "ymin", "ymax", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 #let draw(layer, ctx) = {
   _draw-errorbar-axis(layer, ctx, "y", layer.params.width)
 }

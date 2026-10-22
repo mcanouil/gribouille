@@ -106,6 +106,11 @@
   inherit-aes: inherit-aes,
 )
 
+#let spec = (
+  reads: ("xmin", "xmax", "ymin", "ymax", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)

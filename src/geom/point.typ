@@ -178,6 +178,11 @@
   inherit-aes: inherit-aes,
 )
 
+#let spec = (
+  reads: ("x", "y", "colour", "fill", "alpha", "size", "stroke", "shape"),
+  extents: none,
+)
+
 #let draw(layer, ctx) = {
   if layer.params.shape == none { return }
   let mapping = (ctx.resolve-mapping)(layer)

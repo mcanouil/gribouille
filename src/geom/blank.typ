@@ -78,4 +78,6 @@
   inherit-aes: inherit-aes,
 )
 
+#let spec = (reads: (), extents: none)
+
 #let draw(layer, ctx) = {}

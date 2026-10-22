@@ -13,6 +13,13 @@
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
+// The `spec` record of line, path, and step: the draw path below reads the
+// same keys for all three.
+#let spec = (
+  reads: ("x", "y", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 // Sort rows by their x value: numeric for continuous scales, domain index
 // for discrete ones. Drops rows whose x value can't be resolved. Sorts by
 // the user's x, which coord-flip draws vertically.

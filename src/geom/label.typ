@@ -211,6 +211,21 @@
   )
 }
 
+#let spec = (
+  reads: (
+    "x",
+    "y",
+    "label",
+    "colour",
+    "fill",
+    "alpha",
+    "size",
+    "nudge-x",
+    "nudge-y",
+  ),
+  extents: none,
+)
+
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)

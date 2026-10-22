@@ -113,6 +113,11 @@
   )
 }
 
+#let spec = (
+  reads: ("alpha", "linewidth"),
+  extents: none,
+)
+
 #let draw(layer, ctx) = {
   let fun = layer.params.fun
   if fun == none { return }

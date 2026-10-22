@@ -170,6 +170,8 @@
   )
 }
 
+#let spec = text-geom.spec
+
 #let draw(layer, ctx) = {
   let new = layer
   let marks = layer.at("typst-marks", default: (:))
