@@ -258,6 +258,10 @@
 #let _scale-type-from-cache(cols) = {
   for col in cols {
     if col.forced-type != none { return col.forced-type }
+    // Only a discrete column rewritten to its numeric level spine records its
+    // levels. Its mapping ref may be stripped by now (the free-scale retrain of
+    // a facet panel), so the levels alone keep it discrete.
+    if col.at("levels", default: none) != none { return "discrete" }
     let t = infer-column-type(col.values)
     if t == "numeric" { return "continuous" }
     if t == "colour" or t == "length" { return "identity" }
