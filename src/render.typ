@@ -97,32 +97,17 @@
   trained = _apply-labels(trained, labels)
 
   // Once training is done, mapping-ref annotations have served their purpose;
-  // flatten them so geoms receive plain column names.
+  // flatten them so geoms receive plain column names. The per-panel layers
+  // keep theirs until the free-scale retrain below has read them.
   prepared = prepared.map(l => {
     let new = l
     new.mapping = _strip-mapping-refs(l.mapping)
     new
   })
-  panels = panels.map(p => {
-    let new = p
-    new.layers = p.layers.map(l => {
-      let ll = l
-      ll.mapping = _strip-mapping-refs(l.mapping)
-      ll
-    })
-    new
-  })
 
-  // Faceted plots render the per-panel copies under `panels`; single plots
-  // render `prepared` directly. Only the path that the canvas dispatch will
-  // touch needs label sizes.
-  if facet-wrap-mode or facet-grid-mode {
-    panels = panels.map(p => {
-      let new = p
-      new.layers = p.layers.map(_measure-label-sizes)
-      new
-    })
-  } else {
+  // Single plots render `prepared` directly; faceted plots measure their
+  // per-panel copies once those are flattened.
+  if not (facet-wrap-mode or facet-grid-mode) {
     prepared = prepared.map(_measure-label-sizes)
   }
 
@@ -193,6 +178,18 @@
   } else {
     _train-panels(spec, panels, trained, coord, labels, free-x, free-y)
   }
+
+  // The retrain reads the forced `discrete` type a numeric-offset position
+  // puts on its synthetic level column, so flatten the panels only now.
+  panels = panels.map(p => {
+    let new = p
+    new.layers = p.layers.map(l => {
+      let ll = l
+      ll.mapping = _strip-mapping-refs(l.mapping)
+      _measure-label-sizes(ll)
+    })
+    new
+  })
 
   let width-units = width-units-early - deco.left - deco.right
   let height-units = height-units-early - deco.top - deco.bottom
