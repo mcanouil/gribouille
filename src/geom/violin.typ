@@ -14,6 +14,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../scale/train.typ": map-axis, map-position
 #import "../utils/band.typ": axis-band
+#import "../utils/flip.typ": range-axes, range-canvas-point, range-columns
 #import "../utils/group.typ": partition-by-group
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke
@@ -150,15 +151,15 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
-  if x-col == none or y-col == none { return }
+  let flipped = ctx.at("flipped", default: false)
+  let cols = range-columns(mapping, flipped)
+  if cols.pos == none or cols.value == none { return }
 
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
-  if y-trained.type != "continuous" { return }
+  let axes = range-axes(ctx)
+  if axes == none or axes.value-trained.type != "continuous" { return }
   if ctx.at("radial", default: none) != none { return }
+  let (pos-trained, pos-range) = (axes.pos-trained, axes.pos-range)
+  let pt = range-canvas-point.with(flipped)
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // The outline carries the violin's structure, so the stroke default
@@ -172,29 +173,29 @@
     // One silhouette per distinct x bucket within the group, in
     // first-appearance order.
     let bucket-rows = bucket-index(g.data, row => {
-      let key = str(row.at(x-col, default: ""))
+      let key = str(row.at(cols.pos, default: ""))
       if key == "" { none } else { key }
     }).buckets
 
     for rows in bucket-rows {
-      let raw-x = rows.first().at(x-col, default: none)
-      let cx = map-position(x-trained, raw-x, ctx.px-range)
-      if cx == none { continue }
-      let band = axis-band(x-trained, raw-x, half-width, ctx.px-range)
+      let raw-pos = rows.first().at(cols.pos, default: none)
+      let pos-c = map-position(pos-trained, raw-pos, pos-range)
+      if pos-c == none { continue }
+      let band = axis-band(pos-trained, raw-pos, half-width, pos-range)
       if band == none { continue }
       let (band-lo, band-hi) = band
 
-      let centre = cx
+      let centre = pos-c
       let canvas-half = (band-hi - band-lo) / 2
       if position-name == "dodge" {
         let leader = rows.first()
-        centre = dodge-centre(leader, cx, band-hi - band-lo)
+        centre = dodge-centre(leader, pos-c, band-hi - band-lo)
         canvas-half = dodge-half(leader, canvas-half)
       }
 
       let side = rows
         .map(r => {
-          let yv = parse-number(r.at(y-col, default: none))
+          let yv = parse-number(r.at(cols.value, default: none))
           let vw = parse-number(r.at("violinwidth", default: none))
           if yv == none or vw == none { return none }
           (y: yv, vw: vw)
@@ -203,18 +204,13 @@
         .sorted(key: p => p.y)
       if side.len() < 2 { continue }
 
-      let left = side.map(p => (
-        centre - canvas-half * p.vw,
-        map-axis(y-trained, p.y, ctx.py-range),
-      ))
+      let value-c(p) = map-axis(axes.value-trained, p.y, axes.value-range)
+      if side.any(p => value-c(p) == none) { continue }
+      let left = side.map(p => pt(centre - canvas-half * p.vw, value-c(p)))
       let right = side
         .rev()
-        .map(p => (
-          centre + canvas-half * p.vw,
-          map-axis(y-trained, p.y, ctx.py-range),
-        ))
+        .map(p => pt(centre + canvas-half * p.vw, value-c(p)))
       let pts = left + right
-      if pts.any(p => p.at(1) == none) { continue }
 
       let leader = rows.first()
       let final-fill = resolve-channel(
