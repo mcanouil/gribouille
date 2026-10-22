@@ -35,7 +35,7 @@
 // Two groups at the same category shift equal and opposite on x only.
 #let geom = dodge-geometry(ctx, layer-dodge)
 #assert-close(geom.span, 4.5)
-#assert.eq(geom.flipped, false)
+#assert.eq(geom.direction, (1.0, 0.0))
 #let da = dodge-delta(geom, row-a)
 #let db = dodge-delta(geom, row-b)
 #assert-close(da.at(0), -0.25 * 4.5)
@@ -93,7 +93,7 @@
   flipped: true,
 )
 #let flipped-geom = dodge-geometry(ctx-flip, layer-dodge)
-#assert.eq(flipped-geom.flipped, true)
+#assert.eq(flipped-geom.direction, (0.0, 1.0))
 #let df = dodge-delta(flipped-geom, row-a)
 #assert.eq(df.at(0), 0.0)
 #assert-close(df.at(1), -0.25 * (8 / 2) * 0.9)
