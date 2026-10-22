@@ -198,6 +198,74 @@ Legend swatches render the pattern:
 - CSV string-numeric columns stay discrete.
   For a continuous scale, call `as-numeric(data, "col")`.
 
+## When Gribouille misbehaves
+
+Do not work around a Gribouille bug in silence.
+A silent workaround hides the bug, and then nobody fixes it.
+
+1. Isolate the problem.
+   Reduce the plot to a minimal `#plot()` that still shows it.
+   Add a control: the same data with a simpler layer such as `geom-point`, or the same plot without the coord, facet, or theme.
+   Check each argument against its `.llms.md` page, so that a misuse is not reported as a bug.
+   Reproduce the problem on the latest release from Typst Universe.
+2. Stop and tell the user before you write a workaround.
+   Give the minimal reproduction, the expected output, and the actual output.
+3. Search `mcanouil/gribouille` for a duplicate.
+   Start with one or two distinctive words, such as the geom name or the error text, then vary them.
+   - Issues, open and closed: `gh search issues --repo mcanouil/gribouille "<keywords>"`.
+   - Open pull requests: `gh search prs --repo mcanouil/gribouille --state open "<keywords>"`.
+   - Discussions: <https://github.com/mcanouil/gribouille/discussions>.
+
+   If an open issue matches, do not file a new issue.
+   Draft a comment with only the facts that the thread does not have yet, such as a newer version or a smaller reproduction.
+   Use the prose rules of step 5, then go to step 6.
+   If there are no new facts, suggest a thumbs-up reaction, post nothing, and go to step 8.
+   If a closed issue was fixed and the bug is back, write "Regression of #N." in the new issue.
+4. Route the report.
+   Blank issues are turned off.
+   - Bug: an issue from the bug template, <https://github.com/mcanouil/gribouille/issues/new?template=bug.yml>.
+   - Missing feature: Discussions, Ideas, <https://github.com/mcanouil/gribouille/discussions/new?category=ideas>.
+   - Usage question: Discussions, Q&A, <https://github.com/mcanouil/gribouille/discussions/new?category=q-a>.
+5. Draft a bug report with the fields of the bug template, each as a `### <label>` heading followed by the answer:
+   "Before submitting", "Gribouille version", "Typst compiler version", "Installation source", "Bug description", "Minimal reproducible example", "Steps to reproduce", "Expected behaviour", "Actual behaviour", "Your environment", and the optional "Additional context".
+   - For "Installation source", copy one option exactly: "Typst Universe", "Local package directory", "Git clone / source checkout", or "Other".
+   - Put the reproduction in a `typst` code block, with the `@preview/gribouille:<version>` import.
+   - Run `typst --version` yourself.
+     Ask the user for the facts that you cannot find.
+     Never post a placeholder.
+   - Copy the "Before submitting" checkbox labels exactly from <https://github.com/mcanouil/gribouille/blob/main/.github/ISSUE_TEMPLATE/bug.yml>.
+     Write each checkbox as `- [x]` or `- [ ]`.
+     Tick a box only when it is true, and tick the search box only after step 3.
+     Under the draft, list each box that you could not verify.
+   - Claim only what you ran or what the user told you.
+   - Keep the prose short and plain.
+     Do not add headings of your own.
+     Keep code and error output unchanged.
+   - Do not mention the agent or the tools that wrote the text.
+
+   For Discussions, use the fields of that form with the same rules.
+   Ideas: "Before posting", "What problem does this solve?", "Proposed solution or desired behaviour", and the optional "Alternatives considered".
+   Q&A: "Description".
+6. Show the draft to the user.
+   Put the line `**Draft for mcanouil/gribouille, not posted.**` above it.
+   Put the title and the body in one `markdown` code block, with a fence longer than any fence in the body.
+   For a comment, put the issue number in place of the title.
+7. Post only after a clear go-ahead from the user, such as "post".
+   - If `gh auth status` succeeds, write the body to a file and run `gh issue create --repo mcanouil/gribouille --title "<title>" --body-file <file>`.
+     `gh issue create` does not apply the label of the form.
+     If `gh repo view mcanouil/gribouille --json viewerPermission` reports `TRIAGE` or higher, add `--label "Type: Bug :bug:"`.
+     If not, tell the user that the issue has no label.
+     Do not add assignees.
+     Give the user the URL of the new issue.
+   - For a comment on an open issue, run `gh issue comment <n> --repo mcanouil/gribouille --body-file <file>`.
+   - If `gh` is not available, or the report goes to Discussions, give the user the draft and the link from step 4.
+8. Write a workaround only if the user agrees.
+   Put a comment next to it that links the issue, so that the workaround can be removed when the bug is fixed:
+
+   ```typst
+   // Workaround for https://github.com/mcanouil/gribouille/issues/<n>: remove when fixed.
+   ```
+
 ## Reference protocol
 
 The API is pre-1.0.
