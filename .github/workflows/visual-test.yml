@@ -40,9 +40,9 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          if gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/files?per_page=100" \
-            --jq '.[] | select(.status != "removed") | .filename' \
-            | grep -E '^tests/visual/[^/]+\.typ$'; then
+          files="$(gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/files?per_page=100" \
+            --jq '.[] | select(.status != "removed") | .filename')"
+          if grep -E '^tests/visual/[^/]+\.typ$' <<<"${files}"; then
             exit 0
           fi
           echo "::error title=No visual test::Add or change a tests/visual/*.typ file, or add the label 'Status: No Visual Change :see_no_evil:' if the fix does not change what a plot draws. See tests/visual/README.md."
