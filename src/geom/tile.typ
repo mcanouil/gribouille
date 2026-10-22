@@ -10,6 +10,7 @@
 #import "../utils/radial.typ": radial-wedge
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../utils/band.typ": axis-band
+#import "../utils/flip.typ": user-axes, user-columns, user-point
 #import "../utils/resolution.typ": resolution
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -29,9 +30,9 @@
 ///
 /// \@param data Layer-specific dataset, or a function applied to the plot data returning the layer frame. Falls back to the plot data when `none`.
 ///
-/// \@param width Default tile width in data units when not mapped.
+/// \@param width Default tile width in data units when not mapped. Under \@coord-flip, the width still spans the user's x axis.
 ///
-/// \@param height Default tile height in data units when not mapped.
+/// \@param height Default tile height in data units when not mapped. Under \@coord-flip, the height still spans the user's y axis.
 ///
 /// \@param colour Fixed outline colour. `auto` resolves via the colour scale, falling back to the theme `ink` only when neither `colour` nor `fill` is set.
 ///
@@ -146,12 +147,15 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
+  // `width` spans the user's x axis and `height` the user's y axis, so the
+  // tile reads its columns and scales in the user's x/y space, which
+  // coord-flip draws along the y/x axes.
+  let cols = user-columns(mapping, ctx)
+  let (x-col, y-col) = (cols.x, cols.y)
   if x-col == none or y-col == none { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
+  let axes = user-axes(ctx)
+  if axes == none { return }
+  let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
 
   let width-col = mapping.at("width", default: none)
   let height-col = mapping.at("height", default: none)
@@ -240,14 +244,12 @@
         stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
       )
     } else {
-      let xe = axis-band(x-trained, x, w / 2, ctx.px-range)
-      let ye = axis-band(y-trained, y, h / 2, ctx.py-range)
+      let xe = axis-band(x-trained, x, w / 2, axes.x-range)
+      let ye = axis-band(y-trained, y, h / 2, axes.y-range)
       if xe == none or ye == none { continue }
-      let (cx0, cx1) = xe
-      let (cy0, cy1) = ye
       cetz.draw.rect(
-        (cx0, cy0),
-        (cx1, cy1),
+        user-point(ctx, xe.at(0), ye.at(0)),
+        user-point(ctx, xe.at(1), ye.at(1)),
         fill: final-fill,
         stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
       )

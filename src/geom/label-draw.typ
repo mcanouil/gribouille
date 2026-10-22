@@ -6,6 +6,7 @@
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/aes-resolve.typ": aes-col
 #import "../utils/arrow.typ": draw-arrow-heads
+#import "../utils/flip.typ": user-point
 #import "../utils/radial.typ": axis-numeric, project-point, shift-point
 #import "../utils/repel.typ": repel
 #import "../utils/segment-route.typ": aabb-from-centre, route-segment
@@ -18,11 +19,13 @@
 // Renderer-owned key; geoms never reach into the layer dict directly.
 #let label-sizes-of(layer) = layer.at("_label-sizes", default: ())
 
-// Convert a row's `(nx, ny)` nudge to canvas-cm deltas. `x-val` and `y-val` are
-// the row's raw cells. A `length` nudge is already canvas units; a number is
-// data units on a continuous scale and level units on a discrete one, matching
+// Convert a row's nudge to canvas-cm deltas. `x-val` and `y-val` are the row's
+// raw cells on the canvas axes; `user-nx` and `user-ny` move along the user's
+// x and y. A `length` nudge is already canvas units; a number is data units on
+// a continuous scale and level units on a discrete one, matching
 // `position-nudge`. Each axis falls back to `0` when its point fails to project.
-#let nudge-cm(ctx, x-val, y-val, nx, ny) = {
+#let nudge-cm(ctx, x-val, y-val, user-nx, user-ny) = {
+  let (nx, ny) = user-point(ctx, user-nx, user-ny)
   let dx = 0.0
   let dy = 0.0
   // A `length` nudge is in canvas units: convert directly and skip

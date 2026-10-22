@@ -21,7 +21,9 @@
 /// One boxed text block is drawn per row at the mapped `(x, y)`. The box
 /// takes its own fill, stroke, inset, and corner radius. Offsets are read
 /// from the `nudge-x` and `nudge-y` aesthetics: a number shifts in data
-/// units, a Typst length shifts in canvas units. Setting `segment: true`
+/// units, a Typst length shifts in canvas units. Under \@coord-flip,
+/// `nudge-x` still moves along the user's x axis and `nudge-y` along the
+/// user's y axis, for both kinds of offset. Setting `segment: true`
 /// draws a connector back to the anchor that avoids the other label boxes of
 /// the same layer.
 ///

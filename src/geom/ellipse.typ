@@ -5,7 +5,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../utils/radial.typ": project-point
+#import "../utils/flip.typ": project-user-point, user-axes
 #import "../utils/stroke.typ": resolve-stroke-spec
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -17,7 +17,8 @@
 /// `x0`/`y0` give the centre in data units; `a`/`b` are the semi-major and
 /// semi-minor radii in data units; `angle` is the rotation in radians from
 /// the x axis. Each row is sampled into a 64-vertex polygon and rendered
-/// through the polygon draw path.
+/// through the polygon draw path. Under \@coord-flip, the angle still runs
+/// from the user's x axis, so the ellipse mirrors across the diagonal.
 ///
 /// \@category Geoms
 /// \@subcategory Polygons and shapes
@@ -120,9 +121,7 @@
   let x0-col = mapping.at("x0", default: none)
   let y0-col = mapping.at("y0", default: none)
   if x0-col == none or y0-col == none { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
+  if user-axes(ctx) == none { return }
 
   let a-col = mapping.at("a", default: none)
   let b-col = mapping.at("b", default: none)
@@ -158,7 +157,7 @@
       let su = calc.sin(u)
       let dx = a * cu * cos-t - b * su * sin-t
       let dy = a * cu * sin-t + b * su * cos-t
-      let p = project-point(ctx, x0 + dx, y0 + dy)
+      let p = project-user-point(ctx, x0 + dx, y0 + dy)
       if p == none { continue }
       pts.push(p)
     }

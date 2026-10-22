@@ -9,6 +9,8 @@
 /// Sibling of \@geom-text. Use this when every label string must be
 /// interpreted as Typst markup at the call site, without wrapping each
 /// column reference in \@typst.
+/// Under \@coord-flip, `nudge-x` still moves along the user's x axis and
+/// `nudge-y` along the user's y axis, for a number and for a length alike.
 ///
 /// \@category Geoms
 /// \@subcategory Text and annotations
