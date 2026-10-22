@@ -305,6 +305,12 @@
     message: layer.name + " limits (auto, 3): " + repr(half),
   )
 }
+#let ell-mapping = aes(x0: "x0", y0: "y0", a: "a", b: "b", angle: "angle")
+#assert.eq(limited(geom-ellipse(), ell-mapping, ell-data, (0, 3)), (0, 3))
+#let ell-half = limited(geom-ellipse(), ell-mapping, ell-data, (auto, 3))
+#assert(approx-pair(ell-half, (-1.8194651573476779, 3)), message: repr(
+  ell-half,
+))
 #let tile-half = limited(
   geom-tile(),
   aes(x: "x", y: "y"),
