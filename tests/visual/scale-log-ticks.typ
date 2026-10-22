@@ -5,6 +5,8 @@
 
 #import "../../lib.typ": *
 
+#set page(width: auto, height: auto, margin: 0cm)
+
 #let d = (
   (x: 1, y: 3),
   (x: 2, y: 12),

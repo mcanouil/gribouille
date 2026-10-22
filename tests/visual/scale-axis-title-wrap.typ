@@ -6,6 +6,8 @@
 
 #import "/lib.typ": *
 
+#set page(width: auto, height: auto, margin: 0cm)
+
 #let d = ((x: 1, y: 1), (x: 2, y: 4), (x: 3, y: 9))
 
 #let framed(body) = box(stroke: 0.4pt + red, body)

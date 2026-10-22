@@ -7,6 +7,8 @@
   plot, scale-continuous, scales,
 )
 
+#set page(width: auto, height: auto, margin: 0cm)
+
 #let hops = (
   (x: 0, y: 0, xend: 3, yend: 2, yr: 1),
   (x: 3, y: 2, xend: 3.2, yend: 2.1, yr: 2),
