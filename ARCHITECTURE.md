@@ -89,7 +89,8 @@ Typst cannot catch a panic, so the message *builders* (`error-text`, `enum-text`
 
 - [`tests/unit/`](tests/unit) holds pure-function assertions compiled by `typst compile`.
   Add unit tests here for any new helper.
-- [`tests/visual/`](tests/visual) holds PNG snapshot goldens checked via `tools/snapshot/run.lua`.
+- [`tests/visual/`](tests/visual) holds the visual tests and the PNG snapshot goldens checked via `tools/snapshot/run.lua`.
+  A behaviour fix adds a visual test there, so its render gets a golden.
   Goldens are CPU-architecture sensitive.
   Refresh them through the Linux snapshot workflow, not locally.
 - Run [`tools/check.sh`](tools/check.sh) to mirror CI (compiles every unit test and example; `--snapshot` adds the visual check).

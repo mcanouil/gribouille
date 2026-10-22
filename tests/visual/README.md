@@ -2,14 +2,20 @@
 
 Two layers:
 
-1. **Eyeball plots** (this directory, top-level `*.typ`).
-   One file per geom or slice when the change is not adequately covered by `examples/`.
+1. **Visual tests** (this directory, top-level `*.typ`).
+   One file per behaviour that `examples/` and the docstring examples do not cover.
 2. **Golden snapshots** (`golden/`).
-   PNGs committed under `golden/examples/` and `golden/docstrings/`, diffed in CI against fresh compiles of `examples/*.typ` and `/// @examples` fences extracted from `src/`.
+   PNGs committed under `golden/examples/`, `golden/docstrings/`, and `golden/visual/`.
+   CI compares them with fresh compiles of `examples/*.typ`, the `/// @examples` fences in `src/`, and the visual tests in this directory.
 
-## Eyeball plots
+## Visual tests
 
-Smallest plot that exercises the new behaviour: synthetic inline data, single layer, no theme override unless theming is the subject.
+Gribouille is a visual library, so a test that only compiles does not check the behaviour.
+Every behaviour fix adds or extends a visual test here, and the snapshot harness compares its render with a golden.
+
+Use the smallest plot that shows the behaviour: synthetic inline data, single layer, no theme override unless theming is the subject.
+Each file renders one page: set `#set page(width: auto, height: auto, margin: 0cm)` and do not use `#pagebreak()`.
+The harness stores one PNG for each file and fails on a file with more than one page.
 
 ### Naming
 
@@ -20,17 +26,19 @@ For example: `geom-jitter.typ`, `position-dodge-variable-width.typ`, `scale-brew
 
 1. Add the `.typ` file under `tests/visual/`.
 2. Compile locally with `tools/check.sh` (or `typst compile <path>`).
-3. Open the resulting PDF and visually verify against the matching plotnine reference plot.
-4. Note in the slice's worker report what was checked and against which reference.
+3. Open the resulting render and compare it with the matching plotnine reference plot.
+4. Run `lua tools/snapshot/run.lua --check --only visual/<name>`.
+   The new file reports `MISSING` until CI mints its golden.
+5. Dispatch the `Refresh visual snapshots` workflow on your branch to mint the golden.
 
 PDFs are not committed; they are build artefacts and ignored.
 
 ## Golden snapshots
 
 Harness: `tools/snapshot/run.lua`.
-Reuses the typstdoc parser to extract every renderable `/// @examples` fence into a temporary wrapped `.typ`, compiles each file (plus every `examples/*.typ`) to a PNG at 144 ppi with `--ignore-system-fonts`, and diffs the result against the committed golden with `compare -metric AE -fuzz 1%` (ImageMagick).
+Reuses the typstdoc parser to extract every renderable `/// @examples` fence into a temporary wrapped `.typ`, compiles each file (plus every `examples/*.typ` and `tests/visual/*.typ`) to a PNG at 144 ppi with `--ignore-system-fonts`, and diffs the result against the committed golden with `compare -metric AE -fuzz 1%` (ImageMagick).
 
-Goldens live under `golden/examples/<name>.png` and `golden/docstrings/<fn>-<idx>.png`.
+Goldens live under `golden/examples/<name>.png`, `golden/docstrings/<fn>-<idx>.png`, and `golden/visual/<name>.png`.
 
 ### Check mode (CI default)
 
