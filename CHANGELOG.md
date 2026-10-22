@@ -2,9 +2,11 @@
 
 ## Unreleased
 
+- fix: Under `coord-flip()`, `geom-linerange()`, `geom-pointrange()`, `geom-crossbar()`, `geom-boxplot()`, `geom-violin()`, `geom-ribbon()`, `geom-hex()` and `geom-dotplot()` draw along the flipped axes, and so do stacked areas and the band of `geom-smooth()`. Most of them used to draw nothing. (#341)
+- fix: Under `coord-flip()`, `geom-line()`, `geom-step()`, `geom-area()` and `geom-density()` join their points in x order, so the path runs up the panel. They used to join them in the order of the horizontal axis, and the path zigzagged. (#341)
 - fix: Under free facet scales, a discrete axis moved by `position-beeswarm()`, `position-jitter()` or `position-nudge()` keeps its level names in each panel. It used to turn into a continuous axis. (#340)
 - fix: `geom-errorbar()` and `geom-errorbarh()` under `coord-flip()` draw their bar and caps along the flipped axes. A flipped errorbar used to draw nothing. (#338)
-- fix: `geom-rect()` and `geom-bin-2d()` under `coord-flip()` draw their extents on the flipped axes. `geom-ribbon()`, `geom-linerange()`, `geom-pointrange()` and `geom-crossbar()` do not follow the flip yet, and now draw nothing under it rather than marks on the wrong axes. (#337)
+- fix: `geom-rect()` and `geom-bin-2d()` under `coord-flip()` draw their extents on the flipped axes. (#337)
 - fix: `geom-segment()` and `geom-curve()` under `coord-flip()` draw their end point on the flipped axes, as they already did for their start point. (#336)
 - fix: `position-beeswarm()`, `position-jitter()`, `position-jitterdodge()` and `position-nudge()` put each mark on the slot of its level on the discrete scale. They now follow the scale `limits` and the levels that other layers add. (#334)
 - docs: The feature matrix lists the geoms that do not follow `coord-flip()` yet. (#337)
