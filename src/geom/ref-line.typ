@@ -12,16 +12,13 @@
 
 #import "../deps.typ": cetz
 #import "../utils/aes-resolve.typ": resolve-channel
+#import "../utils/flip.typ": user-axis-key
 #import "../utils/types.typ": parse-number
 #import "../scale/train.typ": map-axis-data
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let _draw-axis-lines(intercepts, user-axis, layer, ctx) = {
-  let flipped = ctx.at("flipped", default: false)
-  let trained-axis = if flipped {
-    if user-axis == "x" { "y" } else { "x" }
-  } else { user-axis }
-  let trained = ctx.trained.at(trained-axis, default: none)
+  let trained = ctx.trained.at(user-axis-key(user-axis, ctx), default: none)
   if trained == none or trained.type != "continuous" { return }
 
   let raw-mapping = (ctx.resolve-mapping)(layer)
@@ -110,7 +107,7 @@
   // Cartesian: hline draws horizontal segments unless flipped; vline draws
   // vertical segments unless flipped. Either way, the drawn axis matches the
   // user's mental model after coord-flip.
-  let horizontal = (user-axis == "y") != flipped
+  let horizontal = user-axis-key(user-axis, ctx) == "y"
   if horizontal {
     let (px-lo, px-hi) = ctx.px-range
     for line in lines {

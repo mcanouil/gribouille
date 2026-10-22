@@ -14,6 +14,7 @@
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../scale/train.typ": map-position
 #import "../utils/band.typ": axis-band
+#import "../utils/flip.typ": user-axis-key
 #import "../utils/radial.typ": (
   RADIAL-DEFAULT-CAP-HALF, project-point, radial-tangent-cap,
 )
@@ -24,9 +25,7 @@
 #let _draw-errorbar-axis(layer, ctx, axis, cap-extent) = {
   // Under coord-flip the mapping swap carries the span onto the other axis,
   // so an errorbar draws as a horizontal bar and an errorbarh as a vertical one.
-  if ctx.at("flipped", default: false) {
-    axis = if axis == "y" { "x" } else { "y" }
-  }
+  axis = user-axis-key(axis, ctx)
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
