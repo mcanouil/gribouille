@@ -2,6 +2,9 @@
 
 #import "../../src/coord/flip.typ": coord-flip
 #import "../../src/render/domain.typ": _apply-flip, _flip-mapping, _is-flipped
+#import "../../src/utils/flip.typ": (
+  range-axes, range-canvas-point, range-columns, range-stair-direction,
+)
 
 #let c1 = coord-flip()
 #assert.eq(c1.kind, "coord")
@@ -88,5 +91,58 @@
 // geom that reads `mapping.x` directly still finds the key.
 #assert.eq(_flip-mapping((x: "a", y: none)), (x: none, y: "a"))
 #assert.eq(_flip-mapping(none), none)
+
+// A range geom reads its position and range from the keys the flip swap
+// moved them to, so a flipped errorbar-like mapping still resolves.
+#let range-aes = (x: "g", y: "v", ymin: "lo", ymax: "hi")
+#assert.eq(
+  range-columns(range-aes, false),
+  (pos: "g", value: "v", min: "lo", max: "hi"),
+)
+#assert.eq(
+  range-columns(_flip-mapping(range-aes), true),
+  (pos: "g", value: "v", min: "lo", max: "hi"),
+)
+#assert.eq(
+  range-columns((x: "g"), false),
+  (pos: "g", value: none, min: none, max: none),
+)
+
+// The position axis takes the trained y scale and the vertical canvas range
+// under flip.
+#let axes-ctx = (
+  trained: (x: "tx", y: "ty"),
+  px-range: (0, 10),
+  py-range: (0, 5),
+)
+#assert.eq(
+  range-axes(axes-ctx + (flipped: true)),
+  (
+    pos-trained: "ty",
+    value-trained: "tx",
+    pos-range: (0, 5),
+    value-range: (0, 10),
+  ),
+)
+#assert.eq(
+  range-axes(axes-ctx),
+  (
+    pos-trained: "tx",
+    value-trained: "ty",
+    pos-range: (0, 10),
+    value-range: (0, 5),
+  ),
+)
+#assert.eq(range-axes(axes-ctx + (trained: (x: "tx"))), none)
+
+#assert.eq(range-canvas-point(false, 1, 2), (1, 2))
+#assert.eq(range-canvas-point(true, 1, 2), (2, 1))
+
+// A step along the position axis turns into the other corner order once
+// that axis is vertical.
+#assert.eq(range-stair-direction("hv", false), "hv")
+#assert.eq(range-stair-direction("hv", true), "vh")
+#assert.eq(range-stair-direction("vh", true), "hv")
+#assert.eq(range-stair-direction(none, true), none)
 
 coord-flip tests passed.
