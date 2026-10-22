@@ -10,6 +10,7 @@
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../scale/train.typ": discrete-slot-width, map-axis, map-position
+#import "../utils/flip.typ": user-axes, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": (
@@ -229,9 +230,8 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none or mapping.x == none or mapping.y == none { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
+  let axes = user-axes(ctx)
+  if axes == none { return }
 
   let radial = ctx.at("radial", default: none)
   if radial != none {
@@ -239,16 +239,15 @@
     return
   }
 
-  let flipped = ctx.at("flipped", default: false)
-  // Under flip, the value axis is x and the category axis is y; otherwise
-  // the value axis is y and the category axis is x. Bind local aliases so
-  // the rest of the routine reads the same regardless of orientation.
-  let value-trained = if flipped { x-trained } else { y-trained }
-  let cat-trained = if flipped { y-trained } else { x-trained }
-  let value-col = if flipped { mapping.x } else { mapping.y }
-  let cat-col = if flipped { mapping.y } else { mapping.x }
-  let value-range = if flipped { ctx.px-range } else { ctx.py-range }
-  let cat-range = if flipped { ctx.py-range } else { ctx.px-range }
+  // The value axis is the user's y and the category axis the user's x, which
+  // the flip swap moves onto the other canvas axes.
+  let value-trained = axes.y-trained
+  let cat-trained = axes.x-trained
+  let columns = user-columns(mapping, ctx)
+  let value-col = columns.y
+  let cat-col = columns.x
+  let value-range = axes.y-range
+  let cat-range = axes.x-range
   if value-trained.type != "continuous" { return }
 
   let position = layer-position-name(layer)
@@ -258,14 +257,8 @@
   // Stacked/filled bars receive ymin/ymax from the position adjustment under
   // either orientation; the position writes them under the y keys, and under
   // flip the renderer's mapping swap routes them onto x.
-  let vmin-col = mapping.at(
-    if flipped { "xmin" } else { "ymin" },
-    default: none,
-  )
-  let vmax-col = mapping.at(
-    if flipped { "xmax" } else { "ymax" },
-    default: none,
-  )
+  let vmin-col = columns.ymin
+  let vmax-col = columns.ymax
   let use-minmax = (
     (position == "stack" or position == "fill")
       and vmin-col != none
@@ -360,11 +353,8 @@
       default-thickness: default-thickness,
     )
 
-    let (a, b) = if flipped {
-      ((v-lo-c, centre - bar-half), (v-hi-c, centre + bar-half))
-    } else {
-      ((centre - bar-half, v-lo-c), (centre + bar-half, v-hi-c))
-    }
+    let a = user-point(ctx, centre - bar-half, v-lo-c)
+    let b = user-point(ctx, centre + bar-half, v-hi-c)
 
     cetz.draw.rect(
       a,
