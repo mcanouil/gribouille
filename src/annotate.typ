@@ -29,6 +29,7 @@
   "xintercept",
   "yintercept",
   "weight",
+  "sample",
   "stroke",
   "x0",
   "y0",

@@ -27,6 +27,7 @@
   "slope",
   "intercept",
   "weight",
+  "sample",
   "stroke",
   "x0",
   "y0",
