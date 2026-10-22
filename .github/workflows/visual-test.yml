@@ -4,10 +4,7 @@
 
 name: Visual test
 
-# A fix to what a plot draws ships a visual test under tests/visual/, so the
-# snapshot harness compares its render with a golden. This check fails a `fix`
-# pull request that changes src/ without adding or changing one. A fix with no
-# visual effect opts out with the label below.
+# Enforces the visual test rule in tests/visual/README.md.
 
 on:
   pull_request:
@@ -23,15 +20,17 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  OPT_OUT_LABEL: "Status: No Visual Change :see_no_evil:"
-
 jobs:
   visual-test:
     name: Require a visual test on a fix
+    # Each condition reads the pull request as it is now, so a skipped run never
+    # hides the failure of an earlier run on the same commit.
     if: >-
       github.event.pull_request.draft == false
-      && (github.event.action != 'edited' || github.event.changes.title != null)
+      && (startsWith(github.event.pull_request.title, 'fix:')
+        || startsWith(github.event.pull_request.title, 'fix(')
+        || startsWith(github.event.pull_request.title, 'fix!:'))
+      && !contains(github.event.pull_request.labels.*.name, 'Status: No Visual Change :see_no_evil:')
     runs-on: ubuntu-latest
     steps:
       - name: Look for a visual test in the changed files
@@ -39,25 +38,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
         run: |
           set -euo pipefail
-          if ! [[ "${PR_TITLE}" =~ ^fix(\([^\)]*\))?!?: ]]; then
-            echo "Not a fix pull request: no visual test required."
+          if gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/files?per_page=100" \
+            --jq '.[] | select(.status != "removed") | .filename' \
+            | grep -E '^tests/visual/[^/]+\.typ$'; then
             exit 0
           fi
-          if jq -e --arg label "${OPT_OUT_LABEL}" 'index($label) != null' <<<"${PR_LABELS}" >/dev/null; then
-            echo "Labelled '${OPT_OUT_LABEL}': no visual test required."
-            exit 0
-          fi
-          files="$(gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/files" \
-            --jq '.[] | select(.status != "removed") | .filename')"
-          visual="$(grep -E '^tests/visual/[^/]+\.typ$' <<<"${files}" || true)"
-          if [[ -n "${visual}" ]]; then
-            echo "Visual tests changed:"
-            echo "${visual}"
-            exit 0
-          fi
-          echo "::error title=No visual test::A fix pull request that changes src/ must add or change a visual test under tests/visual/. See tests/visual/README.md. If the fix does not change what a plot draws, add the label '${OPT_OUT_LABEL}'."
+          echo "::error title=No visual test::Add or change a tests/visual/*.typ file, or add the label 'Status: No Visual Change :see_no_evil:' if the fix does not change what a plot draws. See tests/visual/README.md."
           exit 1
