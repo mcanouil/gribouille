@@ -11,7 +11,7 @@
 
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
-#import "../utils/flip.typ": user-columns
+#import "../utils/flip.typ": user-axes, user-columns
 #import "../utils/types.typ": parse-number
 #import "../scale/train.typ": discrete-slot-width, map-axis
 
@@ -133,13 +133,10 @@
     pos.at("params", default: (:)).at("width", default: 0.9)
   } else { 0.9 }
 
-  let flipped = ctx.at("flipped", default: false)
-  let cat-trained = ctx.trained.at(
-    if flipped { "y" } else { "x" },
-    default: none,
-  )
-  let cat-range = if flipped { ctx.py-range } else { ctx.px-range }
-  if cat-trained == none { return none }
+  let axes = user-axes(ctx)
+  if axes == none { return none }
+  let cat-trained = axes.x-trained
+  let cat-range = axes.x-range
 
   let span = if cat-trained.type == "discrete" {
     discrete-slot-width(cat-trained, cat-range) * width
@@ -171,7 +168,7 @@
     }
   }
 
-  (span: span, flipped: flipped)
+  (span: span, flipped: ctx.at("flipped", default: false))
 }
 
 /// Canvas-cm shift that puts one row on its dodge slot.

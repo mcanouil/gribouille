@@ -10,6 +10,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../scale/train.typ": map-axis-data, transform-inv
+#import "../utils/flip.typ": user-axes, user-point
 #import "../utils/radial.typ": radial-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
@@ -133,21 +134,13 @@
 )
 
 #let draw(layer, ctx) = {
-  let flipped = ctx.at("flipped", default: false)
   // Under flip, the renderer has already swapped trained.x and trained.y so
   // the user's original x scale lives on trained.y and vice versa. The
-  // slope/intercept are in user-space, so user_x is sampled along the
-  // user's original x domain (which is now `trained.y.domain`) and the
-  // resulting user_y is mapped through the user's y scale (now trained.x).
-  let user-x-trained = ctx.trained.at(
-    if flipped { "y" } else { "x" },
-    default: none,
-  )
-  let user-y-trained = ctx.trained.at(
-    if flipped { "x" } else { "y" },
-    default: none,
-  )
-  if user-x-trained == none or user-y-trained == none { return }
+  // slope/intercept are in user-space, so `user-axes` hands back the scales
+  // and ranges of the user's own x and y.
+  let axes = user-axes(ctx)
+  if axes == none { return }
+  let (x-trained: user-x-trained, y-trained: user-y-trained) = axes
   if (
     user-x-trained.type != "continuous" or user-y-trained.type != "continuous"
   ) {
@@ -215,20 +208,12 @@
   }
   if lines.len() == 0 { return }
 
-  // user_x maps to the horizontal axis when not flipped, and to the vertical
-  // axis when flipped; `_pos` returns the cetz `(cx, cy)` for a user-space
-  // point and routes each coordinate to the right pixel range.
-  let _pos(ux, uy) = if flipped {
-    (
-      map-axis-data(user-y-trained, uy, ctx.px-range),
-      map-axis-data(user-x-trained, ux, ctx.py-range),
-    )
-  } else {
-    (
-      map-axis-data(user-x-trained, ux, ctx.px-range),
-      map-axis-data(user-y-trained, uy, ctx.py-range),
-    )
-  }
+  // `_pos` returns the cetz `(cx, cy)` for a user-space point.
+  let _pos(ux, uy) = user-point(
+    ctx,
+    map-axis-data(user-x-trained, ux, axes.x-range),
+    map-axis-data(user-y-trained, uy, axes.y-range),
+  )
   let radial = ctx.at("radial", default: none)
   let x-transform = user-x-trained.at("transform", default: "identity")
   let y-transform = user-y-trained.at("transform", default: "identity")
