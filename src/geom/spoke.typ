@@ -17,7 +17,9 @@
 ///
 /// `angle` is a Typst angle (e.g., `45deg`) when supplied as a layer
 /// parameter; mapped values are read as numbers in radians from the data.
-/// `radius` is the segment length in data units.
+/// `radius` is the segment length in data units. Under \@coord-flip, the
+/// angle still runs from the user's x axis, so the spoke mirrors across the
+/// diagonal.
 ///
 /// \@category Geoms
 /// \@subcategory Lines and paths

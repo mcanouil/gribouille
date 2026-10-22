@@ -17,7 +17,8 @@
 /// `x0`/`y0` give the centre in data units; `a`/`b` are the semi-major and
 /// semi-minor radii in data units; `angle` is the rotation in radians from
 /// the x axis. Each row is sampled into a 64-vertex polygon and rendered
-/// through the polygon draw path.
+/// through the polygon draw path. Under \@coord-flip, the angle still runs
+/// from the user's x axis, so the ellipse mirrors across the diagonal.
 ///
 /// \@category Geoms
 /// \@subcategory Polygons and shapes
