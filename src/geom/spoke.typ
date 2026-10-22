@@ -10,7 +10,7 @@
 #import "../utils/arrow.typ": assert-arrow, draw-arrow-heads
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
-#import "../utils/radial.typ": project-point
+#import "../utils/flip.typ": project-user-point, user-axes, user-columns
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 /// Spoke layer: one segment from `(x, y)` along `(angle, radius)` per row.
@@ -146,12 +146,12 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
+  // The endpoint offset resolves in the user's x/y space, so under
+  // coord-flip the spoke mirrors across the diagonal.
+  let cols = user-columns(mapping, ctx)
+  let (x-col, y-col) = (cols.x, cols.y)
   if x-col == none or y-col == none { return }
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
+  if user-axes(ctx) == none { return }
 
   let angle-col = mapping.at("angle", default: none)
   let radius-col = mapping.at("radius", default: none)
@@ -178,8 +178,8 @@
     }
     let x1 = x0 + r * cos-t
     let y1 = y0 + r * sin-t
-    let p0 = project-point(ctx, x0, y0)
-    let p1 = project-point(ctx, x1, y1)
+    let p0 = project-user-point(ctx, x0, y0)
+    let p1 = project-user-point(ctx, x1, y1)
     if p0 == none or p1 == none { continue }
     let (cx0, cy0) = p0
     let (cx1, cy1) = p1
