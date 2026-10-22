@@ -7,56 +7,41 @@
 ///! should not be driven by the plot-level data or mapping.
 
 #import "aes.typ": aes
-#import "aes-keys.typ": AES-KEYS
-#import "geom/text.typ": geom-text
+#import "geom/text.typ": geom-text, spec as text-spec
 #import "utils/errors.typ": fail, fail-enum
-#import "geom/typst.typ": geom-typst
-#import "geom/point.typ": geom-point
-#import "geom/label.typ": geom-label
-#import "geom/segment.typ": geom-segment
-#import "geom/rect.typ": geom-rect
+#import "geom/typst.typ": geom-typst, spec as typst-spec
+#import "geom/point.typ": geom-point, spec as point-spec
+#import "geom/label.typ": geom-label, spec as label-spec
+#import "geom/segment.typ": geom-segment, spec as segment-spec
+#import "geom/rect.typ": geom-rect, spec as rect-spec
 #import "geom/vline.typ": geom-vline
 #import "geom/hline.typ": geom-hline
 #import "geom/abline.typ": geom-abline
 #import "utils/typst-markup.typ": is-typst-markup, typst
 
-// Aesthetic keys that annotate does NOT route to its single-row inline
-// dataset: reference-line scalars and ellipse/spoke shape parameters, and the
-// tile width, which it forwards to the geom constructor as layer params instead.
-#let _annotate-excluded = (
-  "z",
-  "linewidth",
-  "xintercept",
-  "yintercept",
-  "weight",
-  "sample",
-  "lower",
-  "middle",
-  "upper",
-  "stroke",
-  "x0",
-  "y0",
-  "a",
-  "b",
-  "angle",
-  "radius",
-  "width",
+// Keys that the geoms read but that annotate forwards to the constructor as
+// constant layer params, so that no scale maps them.
+#let _annotate-param-keys = ("linewidth", "stroke")
+
+// `text`, `label`, and `typst` take `size` as the text size, a Typst length
+// layer param, not an aesthetic mapping.
+#let _text-geoms = ("text", "label", "typst")
+
+// Kwargs that annotate routes to its one-row inline dataset: the keys that the
+// target geom reads, less the keys that stay constant layer params.
+#let _aes-keys-for(geom, reads) = reads.filter(k => (
+  k not in _annotate-param-keys and not (k == "size" and geom in _text-geoms)
+))
+
+// Geoms that read their keys from the mapping, with their `spec.reads`.
+#let _geom-reads = (
+  text: text-spec.reads,
+  typst: typst-spec.reads,
+  point: point-spec.reads,
+  label: label-spec.reads,
+  segment: segment-spec.reads,
+  rect: rect-spec.reads,
 )
-
-// Default kwarg names treated as aesthetic mappings (everything else is
-// forwarded to the geom constructor as a layer parameter, e.g., `stroke`,
-// `fontsize`). Derived from the canonical key list so the two stay in step.
-#let _default-aes-keys = AES-KEYS.filter(k => k not in _annotate-excluded)
-
-// `text` and `label` geoms take `size` as a Typst length layer parameter
-// (the text size), not an aesthetic mapping; route it accordingly.
-#let _aes-keys-for(geom) = {
-  if geom == "text" or geom == "label" or geom == "typst" {
-    _default-aes-keys.filter(k => k != "size")
-  } else {
-    _default-aes-keys
-  }
-}
 
 #let _geom-table = (
   text: geom-text,
@@ -77,7 +62,7 @@
 /// Build a one-row annotation layer dispatching to a named geom.
 ///
 /// Splits keyword arguments into two groups: those whose names match an
-/// aesthetic channel (see `_aes-keys`) become a single-row inline dataset
+/// aesthetic that the target geom reads become a single-row inline dataset
 /// plus an aesthetic mapping pointing each channel at the matching column,
 /// and the remainder are forwarded verbatim to the geom constructor as
 /// layer parameters. The resulting layer always has `inherit-aes: false`
@@ -99,16 +84,16 @@
 ///   a position outside the scale `limits` is kept instead of dropped.
 ///
 /// \@param ..fields Named arguments split between aesthetics and layer
-///   parameters. Aesthetic names are `x`, `y`, `xend`, `yend`, `xmin`,
-///   `xmax`, `ymin`, `ymax`, `colour`, `fill`, `size`, `alpha`, `shape`,
-///   `linetype`, `label`, `group`, `slope`, `intercept`, `nudge-x`,
-///   `nudge-y`. For `geom = "text"`
-///   and `geom = "label"`, `size` is treated as a layer parameter (the text
-///   size, a Typst length) rather than an aesthetic. Anything else (e.g.,
-///   `stroke`, `fontsize`, `xintercept`, `yintercept`) is forwarded to the
-///   geom constructor as a layer parameter. A `none` or `auto` value on an
-///   aesthetic name is also forwarded as a layer parameter, so it reaches the
-///   geom as the disable / scale-resolve sentinel (e.g., `fill: none` draws an
+///   parameters. An aesthetic name is a key that the target geom reads, for
+///   example `x`, `y`, `label`, `colour`, `nudge-x` for `"text"`, or `xmin`,
+///   `xmax`, `ymin`, `ymax`, `fill` for `"rect"`. For `"text"`, `"label"`, and
+///   `"typst"`, `size` is a layer parameter (the text size, a Typst length),
+///   not an aesthetic. `stroke` and `linewidth` are always layer parameters.
+///   Anything else (e.g., `fontsize`, `xintercept`, `yintercept`) is forwarded
+///   to the geom constructor as a layer parameter, and the constructor fails
+///   for a name it does not know. A `none` or `auto` value on an aesthetic
+///   name is also forwarded as a layer parameter, so it reaches the geom as
+///   the disable / scale-resolve sentinel (e.g., `fill: none` draws an
 ///   unfilled shape) instead of being stored as a data cell.
 ///
 /// \@returns Layer dictionary consumed by \@plot.
@@ -182,7 +167,7 @@
     return with-clip(constructor(..named, inherit-aes: false))
   }
 
-  let aes-keys = _aes-keys-for(geom)
+  let aes-keys = _aes-keys-for(geom, _geom-reads.at(geom))
   let row = (:)
   let mapping-args = (:)
   let layer-args = (:)

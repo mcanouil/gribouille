@@ -13,6 +13,11 @@
   resolve-geom-linewidth,
 )
 
+#let spec = (
+  reads: ("xmin", "xmax", "ymin", "ymax", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Rectangle layer drawing one filled box per row from the four corners.
 ///
 /// Mapping must provide `xmin`, `xmax`, `ymin`, `ymax`. Fill resolves via
@@ -99,16 +104,11 @@
   mapping: mapping,
   data: data,
   params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-rect", args),
+    + split-aes-params("geom-rect", args, keys: spec.reads),
   stat: stat,
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("xmin", "xmax", "ymin", "ymax", "colour", "fill", "alpha", "stroke"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

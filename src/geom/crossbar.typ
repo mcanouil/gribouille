@@ -18,6 +18,11 @@
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
 )
 
+#let spec = (
+  reads: ("x", "y", "ymin", "ymax", "colour", "fill", "alpha"),
+  extents: none,
+)
+
 /// Crossbar layer: a box from `ymin` to `ymax` with a horizontal bar at `y`.
 ///
 /// Mapping must provide `x`, `y`, `ymin`, `ymax`. The `width` parameter sets
@@ -115,16 +120,11 @@
     middle-stroke: middle-stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-crossbar", args),
+    + split-aes-params("geom-crossbar", args, keys: spec.reads),
   stat: stat,
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("x", "y", "ymin", "ymax", "colour", "fill", "alpha"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

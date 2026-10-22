@@ -14,6 +14,11 @@
 #import "../utils/radial.typ": radial-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
+#let spec = (
+  reads: ("slope", "intercept", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 /// Straight reference line described by slope and intercept.
 ///
 /// The line runs across the full trained x domain. Requires continuous x
@@ -128,14 +133,9 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-abline", args),
+    + split-aes-params("geom-abline", args, keys: spec.reads),
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("slope", "intercept", "colour", "alpha", "linewidth", "linetype"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

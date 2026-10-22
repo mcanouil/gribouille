@@ -17,6 +17,11 @@
   resolve-geom-linewidth,
 )
 
+#let spec = (
+  reads: ("x", "y", "width", "height", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Tile layer: filled rectangle centred at `(x, y)` per row.
 ///
 /// `width` and `height` default to 1 in data units; both may be mapped
@@ -117,7 +122,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-tile", args),
+    + split-aes-params("geom-tile", args, keys: spec.reads),
   stat: stat,
   position: position,
   key: key,
@@ -142,11 +147,6 @@
   if nums.len() < 2 { return none }
   resolution(nums, zero: false)
 }
-
-#let spec = (
-  reads: ("x", "y", "width", "height", "colour", "fill", "alpha", "stroke"),
-  extents: none,
-)
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

@@ -22,6 +22,11 @@
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
 )
 
+#let spec = (
+  reads: ("x", "y", "colour", "fill", "alpha"),
+  extents: none,
+)
+
 /// Violin layer: mirrored density silhouette of y per x bucket.
 ///
 /// Defaults to `stat = "ydensity"`, so the layer accepts raw observations
@@ -138,18 +143,13 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-violin", args),
+    + split-aes-params("geom-violin", args, keys: spec.reads),
   stat: if stat == auto {
     stat-ydensity(bw: bw, adjust: adjust, n: n, trim: trim, scale: scale)
   } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("x", "y", "colour", "fill", "alpha"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

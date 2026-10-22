@@ -5,6 +5,8 @@
 
 #import "../layer.typ": make-layer, split-aes-params
 
+#let spec = (reads: (), extents: none)
+
 /// Invisible layer used to extend trained scales without drawing marks.
 ///
 /// Typical mappings are `x` and / or `y`; any aesthetic in the mapping
@@ -71,13 +73,11 @@
   "blank",
   mapping: mapping,
   data: data,
-  params: split-aes-params("geom-blank", args),
+  params: split-aes-params("geom-blank", args, keys: spec.reads),
   stat: stat,
   position: position,
   key: key,
   inherit-aes: inherit-aes,
 )
-
-#let spec = (reads: (), extents: none)
 
 #let draw(layer, ctx) = {}

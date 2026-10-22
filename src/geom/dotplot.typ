@@ -18,6 +18,11 @@
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
 )
 
+#let spec = (
+  reads: ("x", "y", "colour", "fill", "alpha"),
+  extents: none,
+)
+
 /// Dotplot layer: one dot per observation, stacked within bins.
 ///
 /// Bins observations along x (default 30 bins), then stacks them upward
@@ -102,18 +107,13 @@
     alpha: alpha,
     dotsize: dotsize,
   )
-    + split-aes-params("geom-dotplot", args),
+    + split-aes-params("geom-dotplot", args, keys: spec.reads),
   stat: if stat == auto {
     stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
   } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("x", "y", "colour", "fill", "alpha"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

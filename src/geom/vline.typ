@@ -8,6 +8,11 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "ref-line.typ": _draw-axis-lines
 
+#let spec = (
+  reads: ("xintercept", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 /// Vertical reference line at one or more x intercepts.
 ///
 /// `xintercept` can be a scalar or an array drawing one line per value. To
@@ -116,14 +121,9 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-vline", args),
+    + split-aes-params("geom-vline", args, keys: spec.reads),
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("xintercept", "colour", "alpha", "linewidth", "linetype"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

@@ -16,6 +16,11 @@
   resolve-geom-linewidth,
 )
 
+#let spec = (
+  reads: ("x", "y", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Hex bin layer: counts (x, y) into a pointy-top hex grid and draws one
 /// hexagon per non-empty cell. Default fill encodes count via the fill
 /// scale.
@@ -93,16 +98,11 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-hex", args),
+    + split-aes-params("geom-hex", args, keys: spec.reads),
   stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("x", "y", "colour", "fill", "alpha", "stroke"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

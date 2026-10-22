@@ -129,6 +129,11 @@
   })
 }
 
+#let spec = (
+  reads: ("x", "y", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Annotation layer enclosing each group with a chosen shape.
 ///
 /// Splits rows by group (via `colour`/`fill`/`group` aesthetic), then draws
@@ -233,7 +238,7 @@
       stroke: stroke,
       alpha: alpha,
     )
-      + split-aes-params("geom-mark", args),
+      + split-aes-params("geom-mark", args, keys: spec.reads),
     stat: stat,
     position: position,
     key: key,
@@ -256,11 +261,6 @@
   }
   ()
 }
-
-#let spec = (
-  reads: ("x", "y", "colour", "fill", "alpha", "stroke"),
-  extents: none,
-)
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

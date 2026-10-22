@@ -11,6 +11,11 @@
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
+#let spec = (
+  reads: ("x", "y", "colour", "alpha", "linewidth"),
+  extents: none,
+)
+
 /// Marginal rug ticks at each row's x and / or y position.
 ///
 /// `sides` selects which panel edges receive ticks: any combination of `b`
@@ -109,16 +114,11 @@
     colour: colour,
     alpha: alpha,
   )
-    + split-aes-params("geom-rug", args),
+    + split-aes-params("geom-rug", args, keys: spec.reads),
   stat: stat,
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("x", "y", "colour", "alpha", "linewidth"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

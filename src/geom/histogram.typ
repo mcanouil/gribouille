@@ -1,4 +1,5 @@
 #import "../layer.typ": make-layer, split-aes-params
+#import "col.typ": spec as col-spec
 #import "../stat/bin.typ": stat-bin
 
 ///! Histogram of a continuous variable.
@@ -115,7 +116,7 @@
     alpha: alpha,
     width: width,
   )
-    + split-aes-params("geom-histogram", args),
+    + split-aes-params("geom-histogram", args, keys: col-spec.reads),
   stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else {
     stat
   },

@@ -19,6 +19,11 @@
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
 )
 
+#let spec = (
+  reads: ("x", "y", "height", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Ridgeline layer: overlapping filled density curves of x per y bucket.
 ///
 /// Mapping must provide `x` and `y`. The `scale` parameter sets the tallest
@@ -130,18 +135,13 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-density-ridges", args),
+    + split-aes-params("geom-density-ridges", args, keys: spec.reads),
   stat: if stat == auto {
     stat-density-ridges(bw: bw, adjust: adjust, n: n, trim: trim)
   } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("x", "y", "height", "colour", "fill", "alpha", "stroke"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

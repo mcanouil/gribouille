@@ -23,6 +23,22 @@
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
 )
 
+#let spec = (
+  reads: (
+    "x",
+    "y",
+    "ymin",
+    "ymax",
+    "lower",
+    "middle",
+    "upper",
+    "colour",
+    "fill",
+    "alpha",
+  ),
+  extents: none,
+)
+
 /// Boxplot layer: draws a Tukey box, whiskers, and outlier points per group.
 ///
 /// Defaults to `stat = "boxplot"`, so the layer accepts raw observations and
@@ -134,27 +150,11 @@
     outlier-colour: outlier-colour,
     whisker-cap: whisker-cap,
   )
-    + split-aes-params("geom-boxplot", args),
+    + split-aes-params("geom-boxplot", args, keys: spec.reads),
   stat: stat,
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: (
-    "x",
-    "y",
-    "ymin",
-    "ymax",
-    "lower",
-    "middle",
-    "upper",
-    "colour",
-    "fill",
-    "alpha",
-  ),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {

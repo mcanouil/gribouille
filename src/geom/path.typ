@@ -99,7 +99,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-path", args),
+      + split-aes-params("geom-path", args, keys: spec.reads),
     key: key,
     stat: stat,
     position: position,

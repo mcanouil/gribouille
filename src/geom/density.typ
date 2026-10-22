@@ -1,4 +1,5 @@
 #import "../layer.typ": make-layer, split-aes-params
+#import "area.typ": spec as area-spec
 #import "../stat/density.typ": stat-density
 
 ///! Smoothed density curve of the x sample.
@@ -113,7 +114,7 @@
     outline-role: "ink",
     fill-role: none,
   )
-    + split-aes-params("geom-density", args),
+    + split-aes-params("geom-density", args, keys: area-spec.reads),
   stat: if stat == auto {
     stat-density(bw: bw, adjust: adjust, n: n, trim: trim)
   } else { stat },

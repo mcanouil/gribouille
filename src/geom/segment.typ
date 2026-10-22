@@ -8,6 +8,11 @@
 #import "../utils/radial.typ": project-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
+#let spec = (
+  reads: ("x", "y", "xend", "yend", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 /// Segment layer: one line from `(x, y)` to `(xend, yend)` per row.
 ///
 /// Mapping must provide `x`, `y`, `xend`, `yend`. Colour and linetype may
@@ -122,18 +127,13 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-segment", args),
+      + split-aes-params("geom-segment", args, keys: spec.reads),
     stat: stat,
     position: position,
     key: key,
     inherit-aes: inherit-aes,
   )
 }
-
-#let spec = (
-  reads: ("x", "y", "xend", "yend", "colour", "alpha", "linewidth", "linetype"),
-  extents: none,
-)
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

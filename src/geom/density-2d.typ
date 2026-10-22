@@ -1,4 +1,5 @@
 #import "../layer.typ": make-layer, split-aes-params
+#import "path.typ": spec as path-spec
 #import "../stat/density-2d.typ": stat-density-2d
 
 ///! Density contour lines of an `(x, y)` sample.
@@ -103,7 +104,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-density-2d", args),
+    + split-aes-params("geom-density-2d", args, keys: path-spec.reads),
   stat: if stat == auto {
     stat-density-2d(
       bw: bw,

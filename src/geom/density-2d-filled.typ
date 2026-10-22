@@ -1,4 +1,5 @@
 #import "../layer.typ": make-layer, split-aes-params
+#import "polygon.typ": spec as polygon-spec
 #import "../stat/density-2d-filled.typ": stat-density-2d-filled
 
 ///! Filled density bands of an `(x, y)` sample.
@@ -105,7 +106,11 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-density-2d-filled", args),
+    + split-aes-params(
+      "geom-density-2d-filled",
+      args,
+      keys: polygon-spec.reads,
+    ),
   stat: if stat == auto {
     stat-density-2d-filled(
       bw: bw,

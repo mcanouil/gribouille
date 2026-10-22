@@ -22,6 +22,11 @@
   resolve-geom-linewidth,
 )
 
+#let spec = (
+  reads: ("x", "y", "ymin", "ymax", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Bar layer with heights taken from the y aesthetic.
 ///
 /// Each row becomes one bar centred at its x value. Use \@geom-bar (stat-count)
@@ -119,7 +124,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-col", args),
+    + split-aes-params("geom-col", args, keys: spec.reads),
   key: key,
   stat: stat,
   position: position,
@@ -225,11 +230,6 @@
     )
   }
 }
-
-#let spec = (
-  reads: ("x", "y", "ymin", "ymax", "colour", "fill", "alpha", "stroke"),
-  extents: none,
-)
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

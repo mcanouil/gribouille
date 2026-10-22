@@ -12,6 +12,11 @@
   resolve-geom-linewidth,
 )
 
+#let spec = (
+  reads: ("x0", "y0", "a", "b", "angle", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Ellipse layer: draws one closed ellipse per row from `(x0, y0, a, b, angle)`.
 ///
 /// `x0`/`y0` give the centre in data units; `a`/`b` are the semi-major and
@@ -101,7 +106,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-ellipse", args),
+    + split-aes-params("geom-ellipse", args, keys: spec.reads),
   stat: stat,
   position: position,
   key: key,
@@ -113,11 +118,6 @@
   let v = parse-number(row.at(col, default: none))
   if v == none { fallback } else { v }
 }
-
-#let spec = (
-  reads: ("x0", "y0", "a", "b", "angle", "colour", "fill", "alpha", "stroke"),
-  extents: none,
-)
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

@@ -16,6 +16,21 @@
   resolve-geom-font,
 )
 
+#let spec = (
+  reads: (
+    "x",
+    "y",
+    "label",
+    "colour",
+    "fill",
+    "alpha",
+    "size",
+    "nudge-x",
+    "nudge-y",
+  ),
+  extents: none,
+)
+
 /// Boxed text label layer reading strings from the `label` aesthetic.
 ///
 /// One boxed text block is drawn per row at the mapped `(x, y)`. The box
@@ -203,28 +218,13 @@
       force-segment: force-segment,
       seed: seed,
     )
-      + split-aes-params("geom-label", args),
+      + split-aes-params("geom-label", args, keys: spec.reads),
     stat: stat,
     position: position,
     key: key,
     inherit-aes: inherit-aes,
   )
 }
-
-#let spec = (
-  reads: (
-    "x",
-    "y",
-    "label",
-    "colour",
-    "fill",
-    "alpha",
-    "size",
-    "nudge-x",
-    "nudge-y",
-  ),
-  extents: none,
-)
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

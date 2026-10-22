@@ -20,6 +20,11 @@
   resolve-geom-linewidth,
 )
 
+#let spec = (
+  reads: ("x", "ymin", "ymax", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Filled band between `ymin` and `ymax` along the x aesthetic, per group.
 ///
 /// The mapping must provide `x`, `ymin`, and `ymax`. Within each group rows are
@@ -126,16 +131,11 @@
   mapping: mapping,
   data: data,
   params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-ribbon", args),
+    + split-aes-params("geom-ribbon", args, keys: spec.reads),
   stat: stat,
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-)
-
-#let spec = (
-  reads: ("x", "ymin", "ymax", "colour", "fill", "alpha", "stroke"),
-  extents: none,
 )
 
 #let draw(layer, ctx) = {
