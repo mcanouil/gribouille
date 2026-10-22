@@ -155,5 +155,4 @@
 #assert.eq(lw.data, ((x: 1, y: 2),))
 #assert.eq(lw.params.width, 3)
 
-
 Annotate tests passed.
