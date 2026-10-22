@@ -5,8 +5,6 @@
 
 #import "../../lib.typ": *
 
-#set page(width: auto, height: auto, margin: 0cm)
-
 #let d = range(0, 20).map(i => (
   x: i,
   y: i * 0.5 + calc.sin(i * 0.5) * 2,

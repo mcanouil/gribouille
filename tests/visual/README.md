@@ -14,8 +14,8 @@ Gribouille is a visual library, so a test that only compiles does not check the 
 Every behaviour fix adds or extends a visual test here, and the snapshot harness compares its render with a golden.
 
 Use the smallest plot that shows the behaviour: synthetic inline data, single layer, no theme override unless theming is the subject.
-Each file renders one page: set `#set page(width: auto, height: auto, margin: 0cm)` and do not use `#pagebreak()`.
-The harness stores one PNG for each file and fails on a file with more than one page.
+The harness gives each file an `auto` page with no margin, and stores one PNG for each file.
+Do not use `#pagebreak()`: a file with more than one page fails the snapshot run.
 
 ### Naming
 
@@ -26,17 +26,16 @@ For example: `geom-jitter.typ`, `position-dodge-variable-width.typ`, `scale-brew
 
 1. Add the `.typ` file under `tests/visual/`.
 2. Compile locally with `tools/check.sh` (or `typst compile <path>`).
+   The PDF output is a build artefact and is ignored.
 3. Open the resulting render and compare it with the matching plotnine reference plot.
 4. Run `lua tools/snapshot/run.lua --check --only visual/<name>`.
    The new file reports `MISSING` until CI mints its golden.
 5. Dispatch the `Refresh visual snapshots` workflow on your branch to mint the golden.
 
-PDFs are not committed; they are build artefacts and ignored.
-
 ## Golden snapshots
 
 Harness: `tools/snapshot/run.lua`.
-Reuses the typstdoc parser to extract every renderable `/// @examples` fence into a temporary wrapped `.typ`, compiles each file (plus every `examples/*.typ` and `tests/visual/*.typ`) to a PNG at 144 ppi with `--ignore-system-fonts`, and diffs the result against the committed golden with `compare -metric AE -fuzz 1%` (ImageMagick).
+Reuses the typstdoc parser to extract every renderable `/// @examples` fence into a temporary wrapped `.typ`, compiles each file (plus every `examples/*.typ` and `tests/visual/*.typ`) to a PNG at 144 ppi with `--ignore-system-fonts`, and diffs the result against the committed golden with `compare -metric AE -fuzz 2%` (ImageMagick).
 
 Goldens live under `golden/examples/<name>.png`, `golden/docstrings/<fn>-<idx>.png`, and `golden/visual/<name>.png`.
 
@@ -51,18 +50,15 @@ Diff PNGs are written to `build/snapshot/diff/` (gitignored).
 
 ### Update mode
 
-```bash
-lua tools/snapshot/run.lua --update
-```
-
-Recompiles everything and overwrites the goldens.
-Run this when the visual change is intentional; commit the updated PNGs in the same commit as the code change.
+`--update` recompiles everything and overwrites the goldens.
+It runs only in CI: outside CI the harness exits with an error.
+See [Bootstrap and refresh](#bootstrap-and-refresh).
 
 ### Reproducibility
 
 The harness renders with `--ignore-system-fonts`, so output depends only on the pinned Typst version (read from `typst.toml`) and Typst's embedded fonts.
 The deterministic face is the embedded Libertinus Serif.
-Renders are byte-identical on Linux, macOS, and Windows; local `--check` and `--update` are authoritative and match CI.
+A local `--check` matches CI only when the local Typst version is the pinned one.
 
 ### Bootstrap and refresh
 
@@ -77,7 +73,7 @@ It runs `--update` and pushes the refreshed PNGs back to the dispatched branch.
 | `--update`       | off     | Overwrite goldens with fresh compile.                                         |
 | `--ppi <n>`      | 144     | Raster density passed to `typst compile`.                                     |
 | `--tolerance <n>`| 0       | Max AE pixel count tolerated per image.                                       |
-| `--fuzz <pct>`   | 1%      | ImageMagick `-fuzz` value; absorbs sub-byte rasterisation noise per pixel.    |
+| `--fuzz <pct>`   | 2%      | ImageMagick `-fuzz` value; absorbs sub-byte rasterisation noise per pixel.    |
 | `--only <key>`   | none    | Only run sources whose key contains the substring (e.g., `--only geom-bar`).  |
 
 ## Reviewing diffs between commits
