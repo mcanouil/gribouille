@@ -149,10 +149,11 @@
 #assert.eq(lvc.params.at("clip", default: none), none)
 #assert.eq(lvc.params.xintercept, 5)
 
-Annotate tests passed.
-
 // No annotate geom reads a mapped `width`, so it stays a layer parameter and
 // never lands in the inline row, where a `width` column pads the x domain.
 #let lw = annotate("point", x: 1, y: 2, width: 3)
 #assert.eq(lw.data, ((x: 1, y: 2),))
 #assert.eq(lw.params.width, 3)
+
+
+Annotate tests passed.
