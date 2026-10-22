@@ -9,6 +9,7 @@
 
 ### Changes
 
+- fix: `aes()` accepts `width`, so `geom-tile()` can map its tile width from a column as its documentation says. `aes(width: ...)` used to fail as an unknown aesthetic. (#346)
 - fix: Under `coord-flip()`, `geom-ellipse()` and `geom-spoke()` draw on the flipped axes, and their angle mirrors across the diagonal as in ggplot2. They used to read the swapped scales, so ellipses landed off their centres and spokes pointed the wrong way. (#344)
 - fix: Under `coord-flip()`, `geom-linerange()`, `geom-pointrange()`, `geom-crossbar()`, `geom-boxplot()`, `geom-violin()`, `geom-ribbon()`, `geom-hex()` and `geom-dotplot()` draw along the flipped axes, and so do stacked areas and the band of `geom-smooth()`. Most of them used to draw nothing. (#341)
 - fix: Under `coord-flip()`, `geom-line()`, `geom-step()`, `geom-area()` and `geom-density()` join their points in x order, so the path runs up the panel. They used to join them in the order of the horizontal axis, and the path zigzagged. (#341)

@@ -21,8 +21,8 @@
 #import "utils/typst-markup.typ": is-typst-markup, typst
 
 // Aesthetic keys that annotate does NOT route to its single-row inline
-// dataset: reference-line scalars and ellipse/spoke shape parameters, which
-// it forwards to the geom constructor as layer params instead.
+// dataset: reference-line scalars and ellipse/spoke shape parameters, and the
+// tile width, which it forwards to the geom constructor as layer params instead.
 #let _annotate-excluded = (
   "z",
   "linewidth",
@@ -36,6 +36,7 @@
   "b",
   "angle",
   "radius",
+  "width",
 )
 
 // Default kwarg names treated as aesthetic mappings (everything else is

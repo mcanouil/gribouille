@@ -34,6 +34,7 @@
   "b",
   "angle",
   "radius",
+  "width",
   "height",
   "nudge-x",
   "nudge-y",
