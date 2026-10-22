@@ -75,7 +75,9 @@
 ///
 /// \@param radius Column name for the spoke length in data units (\@geom-spoke).
 ///
-/// \@param height Column name for the ridge height above its baseline (\@geom-density-ridges).
+/// \@param width Column name for the tile width in data units (\@geom-tile).
+///
+/// \@param height Column name for the ridge height above its baseline (\@geom-density-ridges) or the tile height in data units (\@geom-tile).
 ///
 /// \@param z Column name for the value summarised over a 2D grid (\@stat-summary-2d, \@stat-summary-hex).
 ///
@@ -191,6 +193,7 @@
   b: none,
   angle: none,
   radius: none,
+  width: none,
   height: none,
   z: none,
   nudge-x: none,
@@ -251,6 +254,7 @@
     b: b,
     angle: angle,
     radius: radius,
+    width: width,
     height: height,
     nudge-x: nudge-x,
     nudge-y: nudge-y,

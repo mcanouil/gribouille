@@ -44,7 +44,7 @@ Legend for **Priority** (used to order future work):
 | ggplot2                   | gribouille symbol | Status | Priority | Notes                                                            |
 | ------------------------- | ----------------- | ------ | -------- | ---------------------------------------------------------------- |
 | `ggplot()`                | `plot(...)`.      | ✅     | —        | —                                                                |
-| `aes()`                   | `aes(...)`.       | ✅     | —        | Accepts `x`, `y`, `colour`, `fill`, `size`, `alpha`, `linewidth`, `stroke`, `shape`, `linetype`, `group`, `label`, `xmin`/`xmax`/`ymin`/`ymax`, `xend`/`yend`, `xintercept`/`yintercept`/`slope`, plus ggforce-style `x0`/`y0`/`a`/`b`/`angle` for `geom-ellipse` and `height` for `geom-density-ridges`. |
+| `aes()`                   | `aes(...)`.       | ✅     | —        | Accepts `x`, `y`, `colour`, `fill`, `size`, `alpha`, `linewidth`, `stroke`, `shape`, `linetype`, `group`, `label`, `xmin`/`xmax`/`ymin`/`ymax`, `xend`/`yend`, `xintercept`/`yintercept`/`slope`, plus ggforce-style `x0`/`y0`/`a`/`b`/`angle` for `geom-ellipse` `height` for `geom-density-ridges`, and `width`/`height` for `geom-tile`. |
 | `%+%` / `add_gg()`        | —                 | ❌     | ∅        | Typst has no lazy plot object; composition is via function args. |
 | `ggsave()`                | —                 | ❌     | ∅        | Typst owns the output pipeline.                                  |
 | `qplot()` / `quickplot()` | —                 | ❌     | ∅        | Deprecated upstream.                                             |
