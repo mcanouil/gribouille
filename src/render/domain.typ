@@ -344,8 +344,9 @@
 
 // Widen a continuous axis to cover `(ext-lo, ext-hi)`. A missing axis is
 // seeded as continuous with that range, for a geom such as ellipse that maps
-// no `x`/`y` of its own; a discrete axis is left as is.
-#let _extend-domain(trained, axis, ext-lo, ext-hi) = {
+// no `x`/`y` of its own; a discrete axis is left as is. A side in `pinned`
+// (`(lo, hi)` booleans) is a user limit and never moves.
+#let _extend-domain(trained, axis, ext-lo, ext-hi, pinned: (false, false)) = {
   if trained.at(axis, default: none) == none {
     trained.insert(axis, (
       type: "continuous",
@@ -356,10 +357,24 @@
     ))
     return trained
   }
+  let (lo-pinned, hi-pinned) = pinned
   _rewrite-continuous-domain(trained, axis, ((lo, hi)) => (
-    calc.min(lo, ext-lo),
-    calc.max(hi, ext-hi),
+    if lo-pinned { lo } else { calc.min(lo, ext-lo) },
+    if hi-pinned { hi } else { calc.max(hi, ext-hi) },
   ))
+}
+
+// The sides of a continuous axis that the user pinned with a non-`auto`
+// scale limit, as `(lo, hi)` booleans. Reversed limits pin both sides.
+#let _pinned-sides(trained, axis) = {
+  let t = trained.at(axis, default: none)
+  if t == none or t.type != "continuous" { return (false, false) }
+  let spec = t.at("spec", default: none)
+  let limits = if spec == none { none } else {
+    spec.at("limits", default: none)
+  }
+  if limits == none { return (false, false) }
+  (limits.at(0) != auto, limits.at(1) != auto)
 }
 
 // Apply post-training domain fix-ups (bar-zero floor, geom extents, ribbon
@@ -392,18 +407,10 @@
 
   // Each geom with a `spec.extents` hook widens the continuous position
   // domains to the outer edges of its marks. The hook runs once per layer
-  // on values in the trained-domain space; discrete axes ignore it, an
-  // axis with user `limits` keeps them, reversed or narrow alike, and a
+  // on values in the trained-domain space; discrete axes ignore it, a side
+  // pinned by user `limits` keeps its value, reversed or narrow alike, and a
   // missing axis is seeded from the extents.
-  let has-limits = (:)
-  for axis in ("x", "y") {
-    let t = trained.at(axis, default: none)
-    let spec = if t == none { none } else { t.at("spec", default: none) }
-    has-limits.insert(
-      axis,
-      spec != none and spec.at("limits", default: none) != none,
-    )
-  }
+  let pinned = (x: _pinned-sides(trained, "x"), y: _pinned-sides(trained, "y"))
   for layer in layers {
     let extents = GEOMS
       .at(layer.at("name", default: ""), default: (spec: (extents: none)))
@@ -418,9 +425,15 @@
     )
     for axis in ("x", "y") {
       let range = ext.at(axis, default: none)
-      if range == none or has-limits.at(axis) { continue }
+      if range == none { continue }
       let (ext-lo, ext-hi) = range
-      trained = _extend-domain(trained, axis, ext-lo, ext-hi)
+      trained = _extend-domain(
+        trained,
+        axis,
+        ext-lo,
+        ext-hi,
+        pinned: pinned.at(axis),
+      )
     }
   }
 

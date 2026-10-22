@@ -276,6 +276,43 @@
   dot-post.y.domain,
 ))
 
+// --- user `limits` keep every pinned side; an `auto` side takes extents ---
+
+#let limited(layer, mapping, data, limits) = {
+  let prepared = (_prepare-layer(layer, mapping, data),)
+  let trained = train(
+    scales: scales(x: scale-continuous(limits: limits)),
+    layers: prepared,
+    mapping: mapping,
+    data: data,
+  )
+  _post-train(trained, prepared).x.domain
+}
+#for (layer, mapping, data, lo-auto) in (
+  (geom-col(), col-mapping, col-data, 0.55),
+  (geom-histogram(bins: 5), bin-mapping, bin-data, -0.6),
+) {
+  for limits in ((2, 3), (0, 10), (5, 0)) {
+    assert.eq(
+      limited(layer, mapping, data, limits),
+      limits,
+      message: layer.name + " limits " + repr(limits),
+    )
+  }
+  let half = limited(layer, mapping, data, (auto, 3))
+  assert(
+    approx-pair(half, (lo-auto, 3)),
+    message: layer.name + " limits (auto, 3): " + repr(half),
+  )
+}
+#let tile-half = limited(
+  geom-tile(),
+  aes(x: "x", y: "y"),
+  wide-data,
+  (auto, 3),
+)
+#assert(approx-pair(tile-half, (-0.5, 3)), message: repr(tile-half))
+
 // --- a col layer pads from its own bars, not the whole domain ---
 
 #let wide-post = post-domains(

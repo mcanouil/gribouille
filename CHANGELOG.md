@@ -12,6 +12,7 @@
 
 ### Changes
 
+- fix: Explicit x `limits` on `geom-col()` and `geom-histogram()` are kept as given, rather than widened by half a bar. Bars outside the limits are dropped. (#PR)
 - fix: `stat-waffle()` grids sit flush with the panel, without the automatic expansion margin. An `expand` set on a scale still applies. (#351)
 - fix: `geom-tile()` widens the position scales to the edges of its tiles, so edge tiles no longer clip at the panel border. (#351)
 - fix: `aes()` accepts `lower`, `middle` and `upper`, so `geom-boxplot(stat: "identity")` draws boxes from pre-computed summaries. (#348)
