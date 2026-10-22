@@ -9,6 +9,7 @@
 
 ### Changes
 
+- fix: `aes()` accepts `lower`, `middle` and `upper`, so `geom-boxplot(stat: "identity")` draws boxes from pre-computed summaries. (#PR)
 - fix: `aes()` accepts `sample`, so `geom-qq()` and `geom-qq-line()` can read the sample column as their documentation says. (#347)
 - fix: `aes()` accepts `width`, so `geom-tile()` can map its tile width from a column as its documentation says. `aes(width: ...)` used to fail as an unknown aesthetic. (#346)
 - fix: Under `coord-flip()`, `geom-ellipse()` and `geom-spoke()` draw on the flipped axes, and their angle mirrors across the diagonal as in ggplot2. They used to read the swapped scales, so ellipses landed off their centres and spokes pointed the wrong way. (#344)
