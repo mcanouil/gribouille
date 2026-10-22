@@ -19,6 +19,7 @@ on:
       - unlabeled
     paths:
       - "src/**"
+      - "lib.typ"
 
 permissions:
   contents: read
