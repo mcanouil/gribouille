@@ -22,6 +22,7 @@
   _tick-cm-sides,
 )
 #import "colour.typ": _make-resolve-colour
+#import "prestat.typ": _rebase-level-spine
 #import "panel-radial.typ": (
   _draw-radial-panel, _draw-radial-r-labels, theta-band,
 )
@@ -212,7 +213,12 @@
     py-range: py-range,
     palette: resolve-theme-palette(theme),
     resolve-mapping: layer => _resolve-mapping-flipped(layer),
-    resolve-data: layer => _resolve-data(layer, spec.data),
+    resolve-data: layer => _rebase-level-spine(
+      _resolve-data(layer, spec.data),
+      layer,
+      trained,
+      flipped: flipped,
+    ),
     resolve-colour: _make-resolve-colour(_ink),
     theme: theme,
     flipped: flipped,

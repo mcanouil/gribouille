@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: `position-beeswarm()`, `position-jitter()`, `position-jitterdodge()` and `position-nudge()` put each mark on the slot of its level on the discrete scale. They now follow the scale `limits` and the levels that other layers add. (#334)
 - docs: The agent skill tells agents to stop at a Gribouille bug, reduce it to a minimal plot, and draft an issue for the user. A workaround comes only with the user's consent and a link to the issue. (#335)
 - docs: Show the package version from `typst.toml` in the documentation import lines, rather than `dev` on the development site. (#316)
 

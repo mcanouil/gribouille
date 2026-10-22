@@ -2,8 +2,8 @@
 // run, raw facet-level collection, and discrete-column factor rewriting.
 
 #import "../scale/train.typ": (
-  _SYNTHETIC-FEEDERS, _find-user-scale, _resolve-forced-type, mapping-ref-col,
-  transform-fwd,
+  _SYNTHETIC-FEEDERS, _find-user-scale, _resolve-forced-type, level-position,
+  mapping-ref-col, transform-fwd,
 )
 #import "../utils/types.typ": infer-column-type, parse-number
 #import "../utils/aes-resolve.typ": merge-mapping
@@ -159,4 +159,49 @@
     repoint.insert(axis, pos-col)
   }
   (data: new-data, factor-levels: factor-levels, repoint: repoint)
+}
+
+// Move each row of a rewritten layer from its spine slot to the slot its level
+// holds on the trained scale of the panel. `_rewrite-factor-cols` numbers the
+// levels in the layer's own sorted order, but `map-discrete` reads a number as
+// a slot of the trained domain, which follows the scale `limits` and the
+// levels of every other layer. The offset the position added is kept. A level
+// the trained scale does not carry gets no slot, so its row is not drawn.
+// Under `coord-flip` the layer's x is drawn on the trained y, and its y on x.
+#let _rebase-level-spine(data, layer, trained, flipped: false) = {
+  let factor-levels = layer.at("_factor-levels", default: (:))
+  let mapping = layer.at("mapping", default: none)
+  if factor-levels.len() == 0 or mapping == none { return data }
+  let out = data
+  // x and y mapped to one source column share one spine column; shift it once.
+  let done = ()
+  for (axis, drawn-on) in (("x", "y"), ("y", "x")) {
+    let pos-col = mapping-ref-col(mapping.at(axis, default: none))
+    if type(pos-col) != str or pos-col in done { continue }
+    let levels = factor-levels.at(pos-col, default: none)
+    if levels == none { continue }
+    let axis-trained = trained.at(
+      if flipped { drawn-on } else { axis },
+      default: none,
+    )
+    if axis-trained == none or axis-trained.type != "discrete" { continue }
+    done.push(pos-col)
+    let src-col = pos-col.slice(_POS-COL-PREFIX.len())
+    let shift = (:)
+    for (i, level) in levels.enumerate() {
+      let slot = level-position(axis-trained, level)
+      shift.insert(level, if slot == none { none } else { slot - (i + 1) })
+    }
+    if shift.values().all(by => by == 0) { continue }
+    out = out.map(row => {
+      let v = row.at(src-col, default: none)
+      let spine = row.at(pos-col, default: none)
+      if v == none or spine == none { return row }
+      let by = shift.at(str(v), default: none)
+      let r = row
+      r.insert(pos-col, if by == none { none } else { spine + by })
+      r
+    })
+  }
+  out
 }
