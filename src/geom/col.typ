@@ -255,6 +255,9 @@
   // Only stacked segments share an edge; a bar that stands on its own would
   // lose part of its category gap to the seal.
   let abutting = layer-marks-abut(layer)
+  // Stacked/filled bars receive ymin/ymax from the position adjustment under
+  // either orientation; the position writes them under the y keys, and under
+  // flip the renderer's mapping swap routes them onto x.
   let vmin-col = mapping.at(
     if flipped { "xmin" } else { "ymin" },
     default: none,
@@ -263,13 +266,6 @@
     if flipped { "xmax" } else { "ymax" },
     default: none,
   )
-  // Stacked/filled bars receive ymin/ymax from the position adjustment under
-  // either orientation; the position writes them under the y keys, and under
-  // flip the renderer's mapping swap routes them onto x.
-  if flipped and vmin-col == none and vmax-col == none {
-    vmin-col = mapping.at("ymin", default: none)
-    vmax-col = mapping.at("ymax", default: none)
-  }
   let use-minmax = (
     (position == "stack" or position == "fill")
       and vmin-col != none

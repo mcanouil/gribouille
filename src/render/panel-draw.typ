@@ -22,6 +22,7 @@
   _tick-cm-sides,
 )
 #import "colour.typ": _make-resolve-colour
+#import "domain.typ": _flip-mapping
 #import "prestat.typ": _rebase-level-spine
 #import "panel-radial.typ": (
   _draw-radial-panel, _draw-radial-r-labels, theta-band,
@@ -191,13 +192,7 @@
 
   let _resolve-mapping-flipped(layer) = {
     let m = _resolve-mapping(layer, spec.mapping)
-    if not flipped or m == none { return m }
-    let x = m.at("x", default: none)
-    let y = m.at("y", default: none)
-    let out = m
-    out.insert("x", y)
-    out.insert("y", x)
-    out
+    if flipped { _flip-mapping(m) } else { m }
   }
 
   // Canonical per-draw context handed to every geom's `draw(layer, ctx)`

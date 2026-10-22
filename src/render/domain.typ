@@ -269,6 +269,36 @@
   coord != none and coord.at("name", default: none) == "flip"
 )
 
+// The positional aesthetics that move to the other axis with `_apply-flip`, as
+// `(x-side, y-side)` pairs. A geom reads these names against the swapped
+// trained scales, so each pair listed here swaps with them. A channel left out
+// stays in user space, so its geom draws correctly only if it branches on
+// `ctx.flipped` itself.
+#let _FLIP-PAIRS = (
+  ("x", "y"),
+  ("xend", "yend"),
+  ("xmin", "ymin"),
+  ("xmax", "ymax"),
+)
+
+// Swap each `_FLIP-PAIRS` entry of a layer mapping, keys and all: a key is
+// present after the swap only if its partner was present before. A geom that
+// reads `mapping.x` directly still finds the key `aes()` held as `none`, and a
+// geom that reads an absent key with `default:` still gets its default.
+#let _flip-mapping(mapping) = {
+  if mapping == none { return none }
+  let out = mapping
+  for (x-side, y-side) in _FLIP-PAIRS {
+    let has-x = x-side in mapping
+    let has-y = y-side in mapping
+    let x-col = out.remove(x-side, default: none)
+    let y-col = out.remove(y-side, default: none)
+    if has-y { out.insert(x-side, y-col) }
+    if has-x { out.insert(y-side, x-col) }
+  }
+  out
+}
+
 // Swap the trained x and y scales so the renderer's bottom axis shows the
 // user's original y scale and the left axis shows the user's original x
 // scale. Called after `_apply-coord` so any cartesian x-limits/y-limits overrides

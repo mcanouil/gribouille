@@ -2,9 +2,7 @@
 ///!
 ///! Requires the aesthetic mapping to provide `x`, `ymin`, and `ymax`. Useful
 ///! for uncertainty envelopes and shaded ranges under a line.
-///! Under \@coord-flip the band currently keeps its `ymin`/`ymax` semantics
-///! against the user's original y axis; the visual result may not match a
-///! sideways ribbon and should be inspected per use.
+///! The band does not draw under \@coord-flip yet.
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
