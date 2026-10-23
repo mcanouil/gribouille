@@ -18,6 +18,8 @@
 /// aesthetic) occupy consecutive runs in first-appearance order, so the
 /// grid reads as a whole made of parts. The stat emits integer `x`/`y`
 /// centres for \@geom-tile; no input `x`/`y` mapping is needed.
+/// The grid sits flush with the panel; an `expand` on a position scale
+/// adds a margin back.
 ///
 /// \@category Stats
 /// \@subcategory Distributions and summaries
