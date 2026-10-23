@@ -79,10 +79,13 @@
 ///   example `x`, `y`, `label`, `colour`, `nudge-x` for `"text"`, or `xmin`,
 ///   `xmax`, `ymin`, `ymax`, `fill` for `"rect"`. For `"text"`, `"label"`, and
 ///   `"typst"`, `size` is a layer parameter (the text size, a Typst length),
-///   not an aesthetic. `stroke` and `linewidth` are always layer parameters.
+///   not an aesthetic. `stroke` and `linewidth` never go to the inline row.
+///   They go to the geom as layer parameters, so a geom that does not take
+///   them, for example `"text"` or `"typst"`, fails on them.
 ///   Anything else (e.g., `font` or `repel` for `"text"`, `arrow` for
 ///   `"segment"`) is forwarded to the geom constructor as a layer parameter,
-///   and the constructor fails for a name it does not know. A `none` or `auto` value on an aesthetic
+///   and the constructor fails for a name it does not know.
+///   A `none` or `auto` value on an aesthetic
 ///   name is also forwarded as a layer parameter, so it reaches the geom as
 ///   the disable / scale-resolve sentinel (e.g., `fill: none` draws an
 ///   unfilled shape) instead of being stored as a data cell.
