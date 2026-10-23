@@ -15,8 +15,9 @@
 #import "render/validate.typ": validate-spec
 #import "render/domain.typ": (
   _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
-  _apply-labels, _post-train,
+  _apply-labels, _is-flipped, _post-train,
 )
+#import "geom/registry.typ": GEOM-CENTRES
 #import "render/extents.typ": _text-margin-cm
 #import "render/facet.typ": (
   _measure-label-sizes, _render-prepare, _render-style, _wrap-tracks,
@@ -148,11 +149,26 @@
   // same trained dict, so a plot with twenty panels would otherwise resolve
   // each limited scale twenty-one times.
   let oob-plan = oob-plans(trained)
-  let oob-pass = filter-oob(prepared, oob-plan, strict: strict)
+  // A centre key such as ellipse `x0` is not in the flip swap, so it follows
+  // the trained scales to the other axis here.
+  let centres = if _is-flipped(coord) {
+    GEOM-CENTRES.pairs().map(((name, c)) => (name, (x: c.y, y: c.x))).to-dict()
+  } else { GEOM-CENTRES }
+  let oob-pass = filter-oob(
+    prepared,
+    oob-plan,
+    strict: strict,
+    centres: centres,
+  )
   prepared = oob-pass.layers
   if facet-wrap-mode or facet-grid-mode {
     panels = panels.map(p => {
-      let pass = filter-oob(p.layers, oob-plan, strict: strict)
+      let pass = filter-oob(
+        p.layers,
+        oob-plan,
+        strict: strict,
+        centres: centres,
+      )
       let new = p
       new.layers = pass.layers
       new

@@ -6,7 +6,9 @@
 // `_post-train` produced before they moved there.
 
 #import "../../src/scale/train.typ": train
-#import "../../src/render/domain.typ": _post-train
+#import "../../src/render/domain.typ": _apply-expand, _post-train
+#import "../../src/scale/oob.typ": filter-oob, oob-plans
+#import "../../src/geom/registry.typ": GEOM-CENTRES
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/geom/tile.typ": geom-tile, spec as tile-spec
 #import "../../src/geom/col.typ": geom-col, spec as col-spec
@@ -107,10 +109,14 @@
   literal-post.x.domain,
 ))
 
-// --- user `limits` win over the tile edges, reversed ones included ---
+// --- user `limits` keep the tiles centred inside them, drawn whole ---
 
 #let wide-data = range(0, 5).map(i => (x: i, y: 0))
-#for limits in ((2, 3), (-5, 10), (5, 0)) {
+#for (limits, want) in (
+  ((2, 3), (1.5, 3.5)),
+  ((-5, 10), (-5, 10)),
+  ((5, 0), (5, -0.5)),
+) {
   let mapping = aes(x: "x", y: "y")
   let prepared = (_prepare-layer(geom-tile(), mapping, wide-data),)
   let trained = train(
@@ -120,7 +126,10 @@
     data: wide-data,
   )
   let post = _post-train(trained, prepared)
-  assert.eq(post.x.domain, limits, message: "limits " + repr(limits))
+  assert(
+    approx-pair(post.x.domain, want),
+    message: "limits " + repr(limits) + ": " + repr(post.x.domain),
+  )
 }
 
 // --- a row whose mapped width is `none` or not a number is skipped ---
@@ -276,9 +285,9 @@
   dot-post.y.domain,
 ))
 
-// --- user `limits` keep every pinned side; an `auto` side takes extents ---
+// --- user `limits` choose the marks by centre; the axis covers them whole ---
 
-#let limited(layer, mapping, data, limits) = {
+#let limited-post(layer, mapping, data, limits) = {
   let prepared = (_prepare-layer(layer, mapping, data),)
   let trained = train(
     scales: scales(x: scale-continuous(limits: limits)),
@@ -286,29 +295,99 @@
     mapping: mapping,
     data: data,
   )
-  _post-train(trained, prepared).x.domain
+  (trained: _post-train(trained, prepared), prepared: prepared)
 }
-#for (layer, mapping, data, lo-auto) in (
-  (geom-col(), col-mapping, col-data, 0.55),
-  (geom-histogram(bins: 5), bin-mapping, bin-data, -0.6),
+#let limited(layer, mapping, data, limits) = (
+  limited-post(layer, mapping, data, limits).trained.x.domain
+)
+
+#let six-data = range(1, 7).map(i => (x: i, y: i))
+#let dodge-data = (
+  range(1, 7)
+    .map(i => ((x: i, y: i, g: "a"), (x: i, y: i + 1, g: "b")))
+    .join()
+)
+#let dodge-mapping = aes(x: "x", y: "y", fill: "g")
+#for (layer, mapping, data, cases) in (
+  (
+    geom-col(),
+    col-mapping,
+    six-data,
+    (
+      ((2, 5), (1.55, 5.45)),
+      ((0, 10), (0, 10)),
+      ((5, 2), (5.45, 1.55)),
+      ((auto, 3), (0.55, 3.45)),
+    ),
+  ),
+  (
+    geom-col(position: "dodge"),
+    dodge-mapping,
+    dodge-data,
+    (
+      ((2, 5), (1.55, 5.45)),
+      ((0, 10), (0, 10)),
+      ((5, 2), (5.45, 1.55)),
+    ),
+  ),
+  (
+    geom-histogram(bins: 5),
+    bin-mapping,
+    bin-data,
+    (
+      ((2, 5), (1.8, 5.4)),
+      ((0, 10), (-0.6, 10)),
+      ((5, 2), (5.4, 1.8)),
+      ((auto, 3), (-0.6, 4.2)),
+    ),
+  ),
 ) {
-  for limits in ((2, 3), (0, 10), (5, 0)) {
-    assert.eq(
-      limited(layer, mapping, data, limits),
-      limits,
-      message: layer.name + " limits " + repr(limits),
+  for (limits, want) in cases {
+    let got = limited(layer, mapping, data, limits)
+    assert(
+      approx-pair(got, want),
+      message: layer.name + " limits " + repr(limits) + ": " + repr(got),
     )
   }
-  let half = limited(layer, mapping, data, (auto, 3))
+}
+
+// A dodged bar keeps the full width of its slot, inside the col extents.
+#let dodged = limited-post(
+  geom-col(position: "dodge"),
+  dodge-mapping,
+  dodge-data,
+  (2, 5),
+)
+#for row in dodged.prepared.first().data.filter(r => r.x >= 2 and r.x <= 5) {
+  let centre = row.x + row.at("_dodge-offset") * 0.9
+  let half = 0.9 / 2 / row.at("_dodge-n")
   assert(
-    approx-pair(half, (lo-auto, 3)),
-    message: layer.name + " limits (auto, 3): " + repr(half),
+    centre - half >= dodged.trained.x.domain.at(0)
+      and centre + half <= dodged.trained.x.domain.at(1),
+    message: "dodged bar " + repr(row) + " outside " + repr(
+      dodged.trained.x.domain,
+    ),
   )
 }
+
 #let ell-mapping = aes(x0: "x0", y0: "y0", a: "a", b: "b", angle: "angle")
-#assert.eq(limited(geom-ellipse(), ell-mapping, ell-data, (0, 3)), (0, 3))
+#assert(
+  approx-pair(
+    limited(geom-ellipse(), ell-mapping, ell-data, (0, 3)),
+    (-1.8194651573476779, 4),
+  ),
+  message: repr(limited(geom-ellipse(), ell-mapping, ell-data, (0, 3))),
+)
+// The ellipse centred at x0 = 0 is outside (1, 3.5): it feeds neither axis.
+#let ell-narrow = limited-post(geom-ellipse(), ell-mapping, ell-data, (1, 3.5))
+#assert(approx-pair(ell-narrow.trained.x.domain, (1, 4)), message: repr(
+  ell-narrow.trained.x.domain,
+))
+#assert(approx-pair(ell-narrow.trained.y.domain, (0.5, 1.5)), message: repr(
+  ell-narrow.trained.y.domain,
+))
 #let ell-half = limited(geom-ellipse(), ell-mapping, ell-data, (auto, 3))
-#assert(approx-pair(ell-half, (-1.8194651573476779, 3)), message: repr(
+#assert(approx-pair(ell-half, (-1.8194651573476779, 4)), message: repr(
   ell-half,
 ))
 #let tile-half = limited(
@@ -317,7 +396,37 @@
   wide-data,
   (auto, 3),
 )
-#assert(approx-pair(tile-half, (-0.5, 3)), message: repr(tile-half))
+#assert(approx-pair(tile-half, (-0.5, 3.5)), message: repr(tile-half))
+
+// --- a mark centred just outside the limits feeds no extents ---
+
+#let near-data = ((x: 1.6, y: 1),) + range(2, 7).map(i => (x: i, y: i))
+#let near = limited-post(geom-col(), col-mapping, near-data, (2, 5))
+#assert(approx-pair(near.trained.x.domain, (1.55, 5.45)), message: repr(
+  near.trained.x.domain,
+))
+
+// The out-of-bounds cutoff stays at the limits, not at the widened view: the
+// bar at 1.6 sits inside the widened domain but is still dropped.
+#let near-view = _apply-expand(near.trained, none)
+#let near-kept = filter-oob(near.prepared, oob-plans(near-view))
+#assert.eq(
+  near-kept.layers.first().data.map(r => r.x),
+  (2, 3, 4, 5),
+  message: repr(near-kept.layers.first().data),
+)
+// An ellipse is kept or dropped by its centre `x0`.
+#let ell-view = _apply-expand(ell-narrow.trained, none)
+#let ell-kept = filter-oob(
+  ell-narrow.prepared,
+  oob-plans(ell-view),
+  centres: GEOM-CENTRES,
+)
+#assert.eq(
+  ell-kept.layers.first().data.map(r => r.x0),
+  (3,),
+  message: repr(ell-kept.layers.first().data),
+)
 
 // --- a col layer pads from its own bars, not the whole domain ---
 

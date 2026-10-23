@@ -1,7 +1,7 @@
 // Domain scanning, coordinate-system application, and post-training domain
 // fix-ups (bar-zero floor, geom extents, ribbon padding, expansion, flip).
 
-#import "../scale/train.typ": transform-fwd
+#import "../scale/train.typ": mapping-ref-col, transform-fwd
 #import "../scale/expansion.typ": DISCRETE-AUTO-DATA-PAD, normalise-expansion
 #import "../utils/radial.typ": radial-axis-of
 #import "../utils/types.typ": parse-number
@@ -126,6 +126,7 @@
   ) {
     let new-x = trained.x
     new-x.insert("domain", _coord-limits-to-domain(trained.x, x-limits))
+    let _ = new-x.remove("oob-cutoff", default: none)
     trained.insert("x", new-x)
   }
   let y-limits = coord.at("y-limits", default: none)
@@ -136,6 +137,7 @@
   ) {
     let new-y = trained.y
     new-y.insert("domain", _coord-limits-to-domain(trained.y, y-limits))
+    let _ = new-y.remove("oob-cutoff", default: none)
     trained.insert("y", new-y)
   }
   trained
@@ -344,9 +346,9 @@
 
 // Widen a continuous axis to cover `(ext-lo, ext-hi)`. A missing axis is
 // seeded as continuous with that range, for a geom such as ellipse that maps
-// no `x`/`y` of its own; a discrete axis is left as is. A side in `pinned`
-// (`(lo, hi)` booleans) is a user limit and never moves.
-#let _extend-domain(trained, axis, ext-lo, ext-hi, pinned: (false, false)) = {
+// no `x`/`y` of its own; a discrete axis is left as is. A reversed domain
+// keeps its direction and widens outward on each side.
+#let _extend-domain(trained, axis, ext-lo, ext-hi) = {
   if trained.at(axis, default: none) == none {
     trained.insert(axis, (
       type: "continuous",
@@ -357,24 +359,41 @@
     ))
     return trained
   }
-  let (lo-pinned, hi-pinned) = pinned
-  _rewrite-continuous-domain(trained, axis, ((lo, hi)) => (
-    if lo-pinned { lo } else { calc.min(lo, ext-lo) },
-    if hi-pinned { hi } else { calc.max(hi, ext-hi) },
-  ))
+  _rewrite-continuous-domain(trained, axis, ((lo, hi)) => if lo <= hi {
+    (calc.min(lo, ext-lo), calc.max(hi, ext-hi))
+  } else {
+    (calc.max(lo, ext-hi), calc.min(hi, ext-lo))
+  })
 }
 
-// The sides of a continuous axis that the user pinned with a non-`auto`
-// scale limit, as `(lo, hi)` booleans. Reversed limits pin both sides.
-#let _pinned-sides(trained, axis) = {
+// The user limits of a continuous axis, in domain order, with `none` on a
+// side left at `auto`, or `none` when the axis has no limits. Read from the
+// trained domain, so the values are in the space the layer rows use.
+#let _limit-cutoff(trained, axis) = {
   let t = trained.at(axis, default: none)
-  if t == none or t.type != "continuous" { return (false, false) }
+  if t == none or t.type != "continuous" { return none }
   let spec = t.at("spec", default: none)
   let limits = if spec == none { none } else {
     spec.at("limits", default: none)
   }
-  if limits == none { return (false, false) }
-  (limits.at(0) != auto, limits.at(1) != auto)
+  if limits == none { return none }
+  let (lo, hi) = t.domain
+  (
+    if limits.at(0) == auto { none } else { lo },
+    if limits.at(1) == auto { none } else { hi },
+  )
+}
+
+// Whether `value` lies inside a `_limit-cutoff` span. A `none` side is open,
+// and a value that is not a number is kept, for the hook to skip.
+#let _within-cutoff(value, cutoff) = {
+  let v = parse-number(value)
+  if v == none { return true }
+  let (c-lo, c-hi) = cutoff
+  if c-lo != none and c-hi != none and c-lo > c-hi {
+    (c-lo, c-hi) = (c-hi, c-lo)
+  }
+  (c-lo == none or v >= c-lo) and (c-hi == none or v <= c-hi)
 }
 
 // Apply post-training domain fix-ups (bar-zero floor, geom extents, ribbon
@@ -406,34 +425,48 @@
   }
 
   // Each geom with a `spec.extents` hook widens the continuous position
-  // domains to the outer edges of its marks. The hook runs once per layer
-  // on values in the trained-domain space; discrete axes ignore it, a side
-  // pinned by user `limits` keeps its value, reversed or narrow alike, and a
-  // missing axis is seeded from the extents.
-  let pinned = (x: _pinned-sides(trained, "x"), y: _pinned-sides(trained, "y"))
+  // domains to the outer edges of its marks. On an axis with user `limits`,
+  // only the rows whose centre lies inside the limits reach the hook, and the
+  // axis becomes the union of the limits and those extents, so every kept
+  // mark is drawn whole. The limits are recorded as `oob-cutoff`, so the
+  // out-of-bounds pass still cuts at them once the domain is wider. The hook
+  // runs once per layer on values in the trained-domain space; discrete axes
+  // ignore it, and a missing axis is seeded from the extents.
+  let cutoffs = (x: _limit-cutoff(trained, "x"), y: _limit-cutoff(trained, "y"))
   for layer in layers {
-    let extents = GEOMS
+    let spec = GEOMS
       .at(layer.at("name", default: ""), default: (spec: (extents: none)))
       .spec
-      .extents
     let mapping = layer.at("mapping", default: none)
-    if extents == none or mapping == none { continue }
-    let ext = extents(
-      layer.at("params", default: (:)),
-      mapping,
-      layer.at("data", default: ()),
-    )
+    if spec.extents == none or mapping == none { continue }
+    let centre = spec.at("centre", default: (x: "x", y: "y"))
+    let bounds = ()
+    for axis in ("x", "y") {
+      let cutoff = cutoffs.at(axis)
+      if cutoff == none { continue }
+      let col = mapping-ref-col(mapping.at(centre.at(axis), default: none))
+      if col == none { continue }
+      bounds.push((col: col, cutoff: cutoff))
+    }
+    let data = layer.at("data", default: ())
+    if bounds.len() > 0 {
+      data = data.filter(row => bounds.all(b => _within-cutoff(
+        row.at(b.col, default: none),
+        b.cutoff,
+      )))
+    }
+    let ext = (spec.extents)(layer.at("params", default: (:)), mapping, data)
     for axis in ("x", "y") {
       let range = ext.at(axis, default: none)
       if range == none { continue }
       let (ext-lo, ext-hi) = range
-      trained = _extend-domain(
-        trained,
-        axis,
-        ext-lo,
-        ext-hi,
-        pinned: pinned.at(axis),
-      )
+      trained = _extend-domain(trained, axis, ext-lo, ext-hi)
+      let cutoff = cutoffs.at(axis)
+      if cutoff != none and trained.at(axis).type == "continuous" {
+        let t = trained.at(axis)
+        t.insert("oob-cutoff", cutoff)
+        trained.insert(axis, t)
+      }
     }
   }
 

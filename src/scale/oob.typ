@@ -33,16 +33,22 @@
     // The expanded view in stat space, rather than the raw `limits`, so a value
     // sitting in the expansion headroom -- which still maps inside the visible
     // panel -- survives instead of being dropped.
+    //
+    // `oob-cutoff` holds the user limits when the extents fold of `_post-train`
+    // widened the domain to fit whole marks. A side it gives cuts at the limit
+    // itself, so the wider domain does not let a mark centred outside the
+    // limits back in.
     let (t-lo, t-hi) = view-bounds-stat(trained)
+    let to-stat = to-stat-fn(trained)
+    let cutoff = trained.at("oob-cutoff", default: (none, none))
+    if cutoff.at(0) != none { t-lo = to-stat(cutoff.at(0)) }
+    if cutoff.at(1) != none { t-hi = to-stat(cutoff.at(1)) }
     // `t-lo`/`t-hi` follow the domain order, which runs high-to-low when the
     // user supplies reversed `limits` to flip the axis; the in-range test reads
     // the sorted span so it holds either way.
     let span-lo = calc.min(t-lo, t-hi)
     let span-hi = calc.max(t-lo, t-hi)
     let domain = trained.domain
-    // The scale's stat-space warp, captured so the row path does not reach back
-    // into the trained scale for it.
-    let to-stat = to-stat-fn(trained)
     return raw => {
       let v = parse-number(raw)
       if v == none { return ("in", raw) }
@@ -58,6 +64,8 @@
         // a scale whose domain is not a pair fails only where the clamp needs
         // them, as it did before the check was hoisted out of the row walk.
         let (lo, hi) = domain
+        if cutoff.at(0) != none { lo = cutoff.at(0) }
+        if cutoff.at(1) != none { hi = cutoff.at(1) }
         let to-lo = calc.abs(sv - t-lo) <= calc.abs(sv - t-hi)
         return ("squish", if to-lo { lo } else { hi })
       }
@@ -124,8 +132,10 @@
 
 // Filter rows of every layer through the plans `oob-plans` resolved. Returns
 // the rewritten layers and a per-aesthetic dropped-row count. `strict: true`
-// converts the first drop into a `panic` instead.
-#let filter-oob(layers, plans, strict: false) = {
+// converts the first drop into a `panic` instead. `centres` maps a layer
+// name to the mapping key that holds its centre per position aesthetic, for
+// a geom such as ellipse whose centre is not `x`/`y`.
+#let filter-oob(layers, plans, strict: false, centres: (:)) = {
   if plans.len() == 0 { return (layers: layers, counts: (:)) }
 
   let counts = (:)
@@ -148,9 +158,11 @@
     // Which column each limited aesthetic reads is a property of the layer, not
     // of the row, and `mapping-ref-col` walks the wrapper chain to find it.
     // Resolve it once per layer so the row walk only reads the cell.
+    let centre = centres.at(layer.at("name", default: ""), default: (:))
     let bound = ()
     for entry in plans {
-      let raw = mapping.at(entry.aes, default: none)
+      let key = centre.at(entry.aes, default: entry.aes)
+      let raw = mapping.at(key, default: none)
       if raw == none { continue }
       if is-late-binding(raw) { continue }
       bound.push((col: mapping-ref-col(raw), ..entry))

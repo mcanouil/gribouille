@@ -12,7 +12,7 @@
 
 ### Changes
 
-- fix: Explicit position `limits` are kept as given by the geoms that pad the scale to fit their marks: `geom-col()`, `geom-histogram()`, `geom-freqpoly()`, `geom-dotplot()`, `geom-ellipse()`, and a line, path or step on `stat-bin()` rows. They used to widen the limits by half a bar or bin, or to fit the whole ellipse. (#352)
+- fix: Explicit position `limits` now choose which marks of `geom-col()`, `geom-histogram()`, `geom-freqpoly()`, `geom-dotplot()`, `geom-tile()`, `geom-ellipse()`, or a line, path or step on `stat-bin()` rows are drawn, by the centre of each mark. The marks that stay are drawn in full, and the axis widens to fit them. (#352)
 - fix: A data column named `width` no longer pads the x scale of a geom that draws no bars, such as `geom-point()` or `geom-text()`. The half-bar padding of bars and bins now follows each layer, so it adds no margin past the range of a wider layer. (#352)
 - fix: `stat-waffle()` grids sit flush with the panel, without the automatic expansion margin. An `expand` set on a scale still applies. (#351)
 - fix: `geom-tile()` widens the position scales to the edges of its tiles, so edge tiles no longer clip at the panel border. (#351)

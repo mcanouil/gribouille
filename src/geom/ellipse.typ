@@ -59,6 +59,7 @@
 #let spec = (
   reads: ("x0", "y0", "a", "b", "angle", "colour", "fill", "alpha", "stroke"),
   extents: _extents,
+  centre: (x: "x0", y: "y0"),
 )
 
 /// Ellipse layer: draws one closed ellipse per row from `(x0, y0, a, b, angle)`.

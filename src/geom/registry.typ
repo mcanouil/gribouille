@@ -82,3 +82,15 @@
   dotplot: (draw: dotplot-geom.draw, spec: dotplot-geom.spec),
   hex: (draw: hex-geom.draw, spec: hex-geom.spec),
 )
+
+// The mapping keys that hold the centre of a mark on `x` and `y`, for each
+// geom whose `spec.centre` names keys other than `x` and `y`. The
+// out-of-bounds pass reads them, so such a mark is kept or dropped by its
+// centre, the same as in the extents fold of `_post-train`.
+#let GEOM-CENTRES = (
+  GEOMS
+    .pairs()
+    .filter(((name, g)) => "centre" in g.spec)
+    .map(((name, g)) => (name, g.spec.centre))
+    .to-dict()
+)
