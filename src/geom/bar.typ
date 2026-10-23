@@ -4,7 +4,8 @@
 ///! `position` to `"stack"`. Use this when you want counts; use \@geom-col for
 ///! pre-aggregated heights.
 
-#import "col.typ": geom-col
+#import "../layer.typ": split-aes-params
+#import "col.typ": geom-col, spec as col-spec
 
 /// Bar layer that counts rows per x level (stat-count).
 ///
@@ -121,5 +122,5 @@
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-  ..args,
+  ..split-aes-params("geom-bar", args, keys: col-spec.reads),
 )

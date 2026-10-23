@@ -48,7 +48,7 @@
       fail(
         scope,
         "takes no aesthetic constants; got " + repr(key),
-        hint: "Map the key in aes() instead.",
+        hint: "Remove the argument, or map the key in aes() if it is an aesthetic.",
       )
     } else {
       fail-enum(
