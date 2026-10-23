@@ -6,7 +6,9 @@
 
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
-#import "grouped-path.typ": draw-grouped-paths, rows-to-points, sort-rows-by-x
+#import "grouped-path.typ": (
+  draw-grouped-paths, rows-to-points, sort-rows-by-x, spec,
+)
 
 /// Line layer connecting observations in x order, one path per group.
 ///
@@ -110,7 +112,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-line", args),
+      + split-aes-params("geom-line", args, spec.reads),
     key: key,
     stat: stat,
     position: position,

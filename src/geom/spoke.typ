@@ -13,6 +13,20 @@
 #import "../utils/flip.typ": project-user-point, user-axes, user-columns
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
+#let spec = (
+  reads: (
+    "x",
+    "y",
+    "angle",
+    "radius",
+    "colour",
+    "alpha",
+    "linewidth",
+    "linetype",
+  ),
+  extents: none,
+)
+
 /// Spoke layer: one segment from `(x, y)` along `(angle, radius)` per row.
 ///
 /// `angle` is a Typst angle (e.g., `45deg`) when supplied as a layer
@@ -121,7 +135,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-spoke", args),
+      + split-aes-params("geom-spoke", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

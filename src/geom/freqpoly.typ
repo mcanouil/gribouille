@@ -1,4 +1,5 @@
 #import "../layer.typ": make-layer, split-aes-params
+#import "line.typ": spec as line-spec
 #import "../stat/bin.typ": stat-bin
 
 ///! Line connecting binned counts along x.
@@ -98,7 +99,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-freqpoly", args),
+    + split-aes-params("geom-freqpoly", args, line-spec.reads),
   stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else {
     stat
   },

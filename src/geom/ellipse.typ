@@ -12,6 +12,56 @@
   resolve-geom-linewidth,
 )
 
+// Bounding box of the ellipses, taking the rotation into account. The box of
+// an ellipse with semi-axes `(a, b)` and major-axis rotation `theta` is used,
+// not `max(|a|, |b|)`, which inflates the box by an order of magnitude when
+// the units differ between the axes (for example mm against g).
+#let _extents(params, mapping, data) = {
+  let none-ext = (x: none, y: none)
+  let x0-col = mapping.at("x0", default: none)
+  let y0-col = mapping.at("y0", default: none)
+  if x0-col == none or y0-col == none { return none-ext }
+  let a-col = mapping.at("a", default: none)
+  let b-col = mapping.at("b", default: none)
+  let angle-col = mapping.at("angle", default: none)
+  let a-fb = params.at("a", default: 1)
+  let b-fb = params.at("b", default: 1)
+  let angle-fb = params.at("angle", default: 0)
+  let read(row, col, fallback) = if col == none { fallback } else {
+    let v = parse-number(row.at(col, default: none))
+    if v == none { fallback } else { v }
+  }
+  let fold(acc, lo, hi) = if acc == none { (lo, hi) } else {
+    (calc.min(acc.at(0), lo), calc.max(acc.at(1), hi))
+  }
+  let (x-ext, y-ext) = (none, none)
+  for row in data {
+    let x0 = parse-number(row.at(x0-col, default: none))
+    let y0 = parse-number(row.at(y0-col, default: none))
+    if x0 == none or y0 == none { continue }
+    let a = read(row, a-col, a-fb)
+    let b = read(row, b-col, b-fb)
+    let theta = read(row, angle-col, angle-fb)
+    let cos-t = calc.cos(theta)
+    let sin-t = calc.sin(theta)
+    let x-half = calc.sqrt(
+      (a * cos-t) * (a * cos-t) + (b * sin-t) * (b * sin-t),
+    )
+    let y-half = calc.sqrt(
+      (a * sin-t) * (a * sin-t) + (b * cos-t) * (b * cos-t),
+    )
+    x-ext = fold(x-ext, x0 - x-half, x0 + x-half)
+    y-ext = fold(y-ext, y0 - y-half, y0 + y-half)
+  }
+  (x: x-ext, y: y-ext)
+}
+
+#let spec = (
+  reads: ("x0", "y0", "a", "b", "angle", "colour", "fill", "alpha", "stroke"),
+  extents: _extents,
+  centre: (x: "x0", y: "y0"),
+)
+
 /// Ellipse layer: draws one closed ellipse per row from `(x0, y0, a, b, angle)`.
 ///
 /// `x0`/`y0` give the centre in data units; `a`/`b` are the semi-major and
@@ -101,7 +151,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-ellipse", args),
+    + split-aes-params("geom-ellipse", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

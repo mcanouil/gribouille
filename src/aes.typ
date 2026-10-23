@@ -61,6 +61,14 @@
 ///
 /// \@param weight Column name carrying per-row statistical weights.
 ///
+/// \@param sample Column name for the observed values compared with a theoretical distribution (\@geom-qq, \@geom-qq-line).
+///
+/// \@param lower Column name for the lower hinge of a pre-computed box (\@geom-boxplot).
+///
+/// \@param middle Column name for the median of a pre-computed box (\@geom-boxplot).
+///
+/// \@param upper Column name for the upper hinge of a pre-computed box (\@geom-boxplot).
+///
 /// \@param stroke Column name driving marker outline thickness (\@geom-point).
 ///
 /// \@param x0 Column name for the x centre of an ellipse (\@geom-ellipse).
@@ -186,6 +194,10 @@
   slope: none,
   intercept: none,
   weight: none,
+  sample: none,
+  lower: none,
+  middle: none,
+  upper: none,
   stroke: none,
   x0: none,
   y0: none,
@@ -247,6 +259,10 @@
     slope: slope,
     intercept: intercept,
     weight: weight,
+    sample: sample,
+    lower: lower,
+    middle: middle,
+    upper: upper,
     stroke: stroke,
     x0: x0,
     y0: y0,

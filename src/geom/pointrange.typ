@@ -10,6 +10,22 @@
 #import "../utils/flip.typ": project-user-point, user-axes, user-columns
 #import "linerange.typ": range-line-row
 
+#let spec = (
+  reads: (
+    "x",
+    "y",
+    "ymin",
+    "ymax",
+    "colour",
+    "fill",
+    "alpha",
+    "size",
+    "linewidth",
+    "linetype",
+  ),
+  extents: none,
+)
+
 /// Pointrange layer: a marker at `(x, y)` plus a linerange from `ymin` to `ymax`.
 ///
 /// Mapping must provide `x`, `y`, `ymin`, `ymax`. `colour` paints the range
@@ -108,7 +124,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-pointrange", args),
+    + split-aes-params("geom-pointrange", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

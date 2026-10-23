@@ -21,6 +21,11 @@
   resolve-geom-linewidth,
 )
 
+#let spec = (
+  reads: ("x", "y", "colour", "fill", "alpha", "size", "stroke", "shape"),
+  extents: none,
+)
+
 /// Scatterplot layer drawing a marker for each row at `(x, y)`.
 ///
 /// Default `stat` is `"identity"` and default `position` is `"identity"`.
@@ -171,7 +176,7 @@
     alpha: alpha,
     shape: shape,
   )
-    + split-aes-params("geom-point", args),
+    + split-aes-params("geom-point", args, spec.reads),
   key: key,
   stat: stat,
   position: position,

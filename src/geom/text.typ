@@ -13,6 +13,11 @@
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-font,
 )
 
+#let spec = (
+  reads: ("x", "y", "label", "colour", "alpha", "size", "nudge-x", "nudge-y"),
+  extents: none,
+)
+
 /// Text label layer reading strings from the `label` aesthetic.
 ///
 /// One text block is drawn per row at the mapped `(x, y)`. Offsets are mapped
@@ -178,7 +183,7 @@
       force-segment: force-segment,
       seed: seed,
     )
-      + split-aes-params("geom-text", args),
+      + split-aes-params("geom-text", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

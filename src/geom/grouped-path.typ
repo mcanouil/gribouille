@@ -7,11 +7,24 @@
 #import "../utils/arrow.typ": draw-arrow-heads
 #import "../utils/level-resolve.typ": discrete-index
 #import "../utils/types.typ": parse-number
+#import "../utils/bin.typ": bin-x-extents
+#import "../scale/train.typ": mapping-ref-col
 #import "../utils/group.typ": partition-by-group
 #import "../utils/radial.typ": project-point, shift-point
 #import "../utils/flip.typ": user-axes, user-columns
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
+
+// The `spec` record of line, path, and step: the draw path below reads the
+// same keys for all three. Rows from stat-bin (as in `geom-freqpoly`) widen
+// `x` by half a bin, so the outer bins stay inside the panel.
+#let spec = (
+  reads: ("x", "y", "colour", "alpha", "linewidth", "linetype"),
+  extents: (params, mapping, data) => (
+    x: bin-x-extents(data, mapping-ref-col(mapping.at("x", default: none))),
+    y: none,
+  ),
+)
 
 // Sort rows by their x value: numeric for continuous scales, domain index
 // for discrete ones. Drops rows whose x value can't be resolved. Sorts by

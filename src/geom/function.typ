@@ -12,6 +12,11 @@
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
+#let spec = (
+  reads: ("alpha", "linewidth"),
+  extents: none,
+)
+
 /// Polyline of `fun(x)` sampled uniformly across the x-range.
 ///
 /// The trained x-domain is used by default; pass `x-limits` to override it.
@@ -107,7 +112,7 @@
       alpha: alpha,
       linetype: linetype,
     )
-      + split-aes-params("geom-function", args),
+      + split-aes-params("geom-function", args, spec.reads),
     key: key,
     inherit-aes: inherit-aes,
   )

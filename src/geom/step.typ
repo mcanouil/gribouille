@@ -9,7 +9,9 @@
 #import "../utils/errors.typ": fail-enum
 #import "../utils/flip.typ": user-stair-direction
 #import "../utils/stair.typ": stair
-#import "grouped-path.typ": draw-grouped-paths, rows-to-points, sort-rows-by-x
+#import "grouped-path.typ": (
+  draw-grouped-paths, rows-to-points, sort-rows-by-x, spec,
+)
 
 /// Step layer connecting observations as a stair-step path, one per group.
 ///
@@ -105,7 +107,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-step", args),
+      + split-aes-params("geom-step", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

@@ -1,6 +1,7 @@
 ///! Contour-line geom. Wraps \@stat-contour over the grouped-path renderer.
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "path.typ": spec as path-spec
 #import "../stat/contour.typ": stat-contour
 
 /// Contour-line layer: marching-squares iso-lines over a regular `(x, y, z)`
@@ -87,7 +88,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-contour", args),
+    + split-aes-params("geom-contour", args, path-spec.reads),
   stat: if stat == auto {
     stat-contour(bins: bins, binwidth: binwidth, breaks: breaks)
   } else { stat },

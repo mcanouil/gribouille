@@ -3,6 +3,7 @@
 ///! Thin wrapper around \@geom-line that computes its data via \@stat-qq-line.
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "line.typ": spec as line-spec
 
 /// Q-Q reference line layer fitted through the IQR of the sample.
 ///
@@ -94,7 +95,7 @@
     linetype: linetype,
     distribution: distribution,
   )
-    + split-aes-params("geom-qq-line", args),
+    + split-aes-params("geom-qq-line", args, line-spec.reads),
   stat: stat,
   position: position,
   key: key,

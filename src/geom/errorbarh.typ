@@ -3,6 +3,11 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "errorbar-draw.typ": _draw-errorbar-axis
 
+#let spec = (
+  reads: ("y", "xmin", "xmax", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 /// Horizontal errorbar layer: range with a vertical cap at each end.
 ///
 /// Mapping must provide `y`, `xmin`, `xmax`. The `height` parameter sets the
@@ -98,7 +103,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-errorbarh", args),
+    + split-aes-params("geom-errorbarh", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

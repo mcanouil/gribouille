@@ -4,6 +4,8 @@
 #import "../utils/arrow.typ": assert-arrow
 #import "./text.typ" as text-geom
 
+#let spec = text-geom.spec
+
 /// Text label layer whose `label` aesthetic is always evaluated as Typst markup.
 ///
 /// Sibling of \@geom-text. Use this when every label string must be
@@ -162,7 +164,7 @@
       force-segment: force-segment,
       seed: seed,
     )
-      + split-aes-params("geom-typst", args),
+      + split-aes-params("geom-typst", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

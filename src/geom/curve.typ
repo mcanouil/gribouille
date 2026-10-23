@@ -14,6 +14,11 @@
 #import "../utils/radial.typ": project-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
+#let spec = (
+  reads: ("x", "y", "xend", "yend", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 /// Curved segment layer: one quadratic bezier from `(x, y)` to `(xend, yend)` per row.
 ///
 /// `curvature` chooses the magnitude and side of the bow:
@@ -172,7 +177,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-curve", args),
+      + split-aes-params("geom-curve", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

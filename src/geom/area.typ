@@ -22,6 +22,11 @@
   resolve-geom-linewidth,
 )
 
+#let spec = (
+  reads: ("x", "y", "ymin", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Area layer: filled polygon from `y = 0` up to `y` along x, per group.
 ///
 /// Mapping must provide `x` and `y`. Discrete colour, fill, or `group`
@@ -134,7 +139,7 @@
       alpha: alpha,
       direction: direction,
     )
-      + split-aes-params("geom-area", args),
+      + split-aes-params("geom-area", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

@@ -14,6 +14,7 @@
 #import "jitterdodge.typ" as jitterdodge-pos
 #import "beeswarm.typ" as beeswarm-pos
 #import "nudge.typ" as nudge-pos
+#import "../utils/group.typ": group-aesthetics
 
 #let _POSITIONS = (
   identity: identity-pos.apply,
@@ -24,6 +25,20 @@
   jitterdodge: jitterdodge-pos.apply,
   beeswarm: beeswarm-pos.apply,
   nudge: nudge-pos.apply,
+)
+
+// Mapping keys each position reads. `stack`, `fill`, `dodge`, and `jitterdodge`
+// (through dodge) group rows with `group-plan`, so they also read the grouping
+// aesthetics.
+#let POSITION-READS = (
+  identity: (),
+  stack: ("x", "y") + group-aesthetics,
+  dodge: ("x",) + group-aesthetics,
+  fill: ("x", "y") + group-aesthetics,
+  jitter: ("x", "y"),
+  jitterdodge: ("x", "y") + group-aesthetics,
+  beeswarm: ("x", "y"),
+  nudge: ("x", "y"),
 )
 
 #let apply-position(name, data, mapping, params: (:), coord: none) = {

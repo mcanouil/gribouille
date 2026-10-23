@@ -1,6 +1,7 @@
 ///! Filled-contour geom. Wraps \@stat-contour-filled over polygon fills.
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "polygon.typ": spec as polygon-spec
 #import "../stat/contour-filled.typ": stat-contour-filled
 
 /// Filled iso-band layer: marching-squares cell clipping over a regular
@@ -93,7 +94,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-contour-filled", args),
+    + split-aes-params("geom-contour-filled", args, polygon-spec.reads),
   stat: if stat == auto {
     stat-contour-filled(bins: bins, binwidth: binwidth, breaks: breaks)
   } else { stat },

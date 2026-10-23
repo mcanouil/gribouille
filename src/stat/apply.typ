@@ -40,131 +40,165 @@
 
 // Single source of truth for every stat. `setup:` is the optional panel-level
 // pre-pass invoked before per-group `apply()`; it is `none` when the stat
-// has no shared partition.
+// has no shared partition. `reads:` lists the mapping keys the stat computes
+// from; the grouping keys it copies to its output are in `CORE-READS`.
+// `flush: true` (default `false`) turns off the automatic position expansion
+// on both axes, so a grid of whole cells sits flush with the panel; an
+// explicit scale `expand` still wins on the side the user set.
 #let _STATS = (
   identity: (
     apply: identity-stat.apply,
+    reads: (),
     ctor: none,
   ),
   bin: (
     apply: bin-stat.apply,
+    reads: ("x", "weight"),
     ctor: bin-stat.stat-bin,
     setup: panel-bin-grid,
   ),
   "bin-2d": (
     apply: bin-2d-stat.apply,
+    reads: ("x", "y", "weight"),
     ctor: bin-2d-stat.stat-bin-2d,
     setup: panel-bin-grid-2d,
   ),
   "bin-hex": (
     apply: bin-hex-stat.apply,
+    reads: ("x", "y", "weight"),
     ctor: bin-hex-stat.stat-bin-hex,
     setup: panel-hex-grid,
   ),
   bindot: (
     apply: bindot-stat.apply,
+    reads: ("x",),
     ctor: bindot-stat.stat-bindot,
     setup: panel-bin-grid,
   ),
   contour: (
     apply: contour-stat.apply,
+    reads: ("x", "y", "z"),
     ctor: contour-stat.stat-contour,
   ),
   "contour-filled": (
     apply: contour-filled-stat.apply,
+    reads: ("x", "y", "z"),
     ctor: contour-filled-stat.stat-contour-filled,
   ),
   count: (
     apply: count-stat.apply,
+    reads: ("x", "weight"),
     ctor: count-stat.stat-count,
   ),
   density: (
     apply: density-stat.apply,
+    reads: ("x", "weight"),
     ctor: density-stat.stat-density,
   ),
   "density-2d": (
     apply: density-2d-stat.apply,
+    reads: ("x", "y", "weight"),
     ctor: density-2d-stat.stat-density-2d,
   ),
   "density-2d-filled": (
     apply: density-2d-filled-stat.apply,
+    reads: ("x", "y", "weight"),
     ctor: density-2d-filled-stat.stat-density-2d-filled,
   ),
   "density-ridges": (
     apply: density-ridges-stat.apply,
+    reads: ("x", "y", "weight"),
     ctor: density-ridges-stat.stat-density-ridges,
   ),
   ydensity: (
     apply: ydensity-stat.apply,
+    reads: ("x", "y", "weight"),
     ctor: ydensity-stat.stat-ydensity,
   ),
   sum: (
     apply: sum-stat.apply,
+    reads: ("x", "y", "weight"),
     ctor: sum-stat.stat-sum,
   ),
   smooth: (
     apply: smooth-stat.apply,
+    reads: ("x", "y", "weight"),
     ctor: smooth-stat.stat-smooth,
   ),
   boxplot: (
     apply: boxplot-stat.apply,
+    reads: ("x", "y"),
     ctor: boxplot-stat.stat-boxplot,
   ),
   summary: (
     apply: summary-stat.apply,
+    reads: ("x", "y", "weight", "label"),
     ctor: summary-stat.stat-summary,
   ),
   "summary-bin": (
     apply: summary-bin-stat.apply,
+    reads: ("x", "y", "weight"),
     ctor: summary-bin-stat.stat-summary-bin,
     setup: panel-bin-grid,
   ),
   "summary-2d": (
     apply: summary-2d-stat.apply,
+    reads: ("x", "y", "z"),
     ctor: summary-2d-stat.stat-summary-2d,
   ),
   "summary-hex": (
     apply: summary-hex-stat.apply,
+    reads: ("x", "y", "z"),
     ctor: summary-hex-stat.stat-summary-hex,
   ),
   ecdf: (
     apply: ecdf-stat.apply,
+    reads: ("x", "weight"),
     ctor: ecdf-stat.stat-ecdf,
   ),
   unique: (
     apply: unique-stat.apply,
+    reads: ("x", "y"),
     ctor: unique-stat.stat-unique,
   ),
   qq: (
     apply: qq-stat.apply,
+    reads: ("y", "sample"),
     ctor: qq-stat.stat-qq,
   ),
   "qq-line": (
     apply: qq-line-stat.apply,
+    reads: ("y", "sample"),
     ctor: qq-line-stat.stat-qq-line,
   ),
   function: (
     apply: function-stat.apply,
+    reads: ("x",),
     ctor: function-stat.stat-function,
   ),
   ellipse: (
     apply: ellipse-stat.apply,
+    reads: ("x", "y"),
     ctor: ellipse-stat.stat-ellipse,
   ),
   quantile: (
     apply: quantile-stat.apply,
+    reads: ("x", "y"),
     ctor: quantile-stat.stat-quantile,
   ),
   manual: (
     apply: manual-stat.apply,
+    reads: (),
     ctor: manual-stat.stat-manual,
   ),
   connect: (
     apply: connect-stat.apply,
+    reads: ("x", "y"),
     ctor: connect-stat.stat-connect,
   ),
   align: (
     apply: align-stat.apply,
+    reads: ("x", "y"),
     ctor: align-stat.stat-align,
     setup: (data, mapping, params) => align-stat.setup(
       data,
@@ -174,11 +208,14 @@
   ),
   difference: (
     apply: difference-stat.apply,
+    reads: ("x", "ymin", "ymax"),
     ctor: difference-stat.stat-difference,
   ),
   waffle: (
     apply: waffle-stat.apply,
+    reads: ("weight",),
     ctor: waffle-stat.stat-waffle,
+    flush: true,
     setup: (data, mapping, params) => waffle-stat.setup(
       data,
       mapping,
@@ -186,6 +223,11 @@
     ),
   ),
 )
+
+// Whether the stat `name` asks for a flush panel (see `flush` above).
+#let stat-flush(name) = {
+  _STATS.at(name, default: (:)).at("flush", default: false)
+}
 
 #let stat-default-params(name) = {
   let entry = _STATS.at(name, default: none)

@@ -277,7 +277,12 @@
   if factor-levels.len() > 0 {
     new.insert("_factor-levels", factor-levels)
   }
-  if not stat-identity { new.stat = "identity" }
+  // The stat has run, so the layer reads as identity from here on;
+  // `stat-source` keeps the name for the stat's renderer-facing flags.
+  if not stat-identity {
+    new.insert("stat-source", stat-name)
+    new.stat = "identity"
+  }
   new
 }
 

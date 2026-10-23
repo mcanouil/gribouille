@@ -4,25 +4,28 @@
 ///! Centralising it here keeps the record's keys discoverable in one place
 ///! and stops drift between geoms when fields are added or renamed.
 
-#import "aes-keys.typ": AES-KEYS
 #import "utils/errors.typ": fail, fail-enum
 #import "utils/types.typ": split-stroke-shorthand
 
 /// Collect a geom's trailing `..args` into a constant-aesthetic param dict.
 ///
 /// \@internal
-/// Geoms forward their `..args` here so any aesthetic key can be pinned as a
-/// constant directly on the geom (e.g. `geom-label(nudge-x: 0.5)`), matching
-/// the param-first precedence the scale channels already enjoy. A declared
-/// parameter binds before `..args`, so this only ever captures keys the geom
-/// does not name. A positional or unknown-named arg is a user error.
+/// Geoms forward their `..args` here so an aesthetic the geom reads can be
+/// pinned as a constant directly on the geom (e.g. `geom-label(nudge-x: 0.5)`),
+/// matching the param-first precedence the scale channels already enjoy. A
+/// declared parameter binds before `..args`, so this only ever captures keys
+/// the geom does not name. A positional arg, or a key the geom does not read,
+/// is a user error.
 ///
 /// \@param scope Geom name used in error messages (e.g. `"geom-label"`).
 ///
 /// \@param args The geom's captured `arguments` value.
 ///
+/// \@param keys The mapping keys the geom reads: `spec.reads` of the draw
+///   module that renders the layer.
+///
 /// \@returns Dict of aesthetic key to constant value, to merge into `params`.
-#let split-aes-params(scope, args) = {
+#let split-aes-params(scope, args, keys) = {
   if args.pos().len() != 0 {
     fail(
       scope,
@@ -32,15 +35,21 @@
   }
   let aes-params = (:)
   for (key, value) in args.named().pairs() {
-    if key in AES-KEYS {
+    if key in keys {
       aes-params.insert(key, value)
+    } else if keys.len() == 0 {
+      fail(
+        scope,
+        "takes no aesthetic constants; got " + repr(key),
+        hint: "Remove the argument, or map the key in aes() if it is an aesthetic.",
+      )
     } else {
       fail-enum(
         scope,
         "argument",
         key,
-        AES-KEYS,
-        hint: "Pass geom knobs as declared parameters; only aesthetic keys may be set as ad-hoc constants.",
+        keys,
+        hint: "Pass geom knobs as declared parameters; only the aesthetics this geom draws may be set as constants.",
       )
     }
   }

@@ -7,7 +7,8 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-position
+#import "../scale/train.typ": map-position, mapping-ref-col
+#import "../utils/bin.typ": bin-x-extents
 #import "../stat/bindot.typ": stat-bindot
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/aes-pair.typ": resolve-pair-defaults
@@ -16,6 +17,15 @@
 #import "../utils/types.typ": parse-number
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
+)
+
+// The dots fill their bins, so `x` widens by half a bin on each side.
+#let spec = (
+  reads: ("x", "y", "colour", "fill", "alpha"),
+  extents: (params, mapping, data) => (
+    x: bin-x-extents(data, mapping-ref-col(mapping.at("x", default: none))),
+    y: none,
+  ),
 )
 
 /// Dotplot layer: one dot per observation, stacked within bins.
@@ -102,7 +112,7 @@
     alpha: alpha,
     dotsize: dotsize,
   )
-    + split-aes-params("geom-dotplot", args),
+    + split-aes-params("geom-dotplot", args, spec.reads),
   stat: if stat == auto {
     stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
   } else { stat },

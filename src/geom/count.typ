@@ -5,6 +5,7 @@
 ///! and exposes the count via the `size` aesthetic.
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "point.typ": spec as point-spec
 
 /// Count layer drawing one marker per unique `(x, y)`, sized by frequency.
 ///
@@ -107,7 +108,7 @@
     alpha: alpha,
     shape: shape,
   )
-    + split-aes-params("geom-count", args),
+    + split-aes-params("geom-count", args, point-spec.reads),
   stat: stat,
   position: position,
   key: key,

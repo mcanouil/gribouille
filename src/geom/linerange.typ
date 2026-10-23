@@ -11,6 +11,11 @@
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
+#let spec = (
+  reads: ("x", "ymin", "ymax", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 /// Linerange layer: one vertical line from `ymin` to `ymax` at each `x`.
 ///
 /// Mapping must provide `x`, `ymin`, `ymax`. Colour and linetype may be
@@ -94,7 +99,7 @@
   mapping: mapping,
   data: data,
   params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
-    + split-aes-params("geom-linerange", args),
+    + split-aes-params("geom-linerange", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

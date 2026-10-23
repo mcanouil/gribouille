@@ -1,4 +1,5 @@
-#import "point.typ": geom-point
+#import "../layer.typ": split-aes-params
+#import "point.typ": geom-point, spec as point-spec
 
 ///! Point wrapper that defaults `position` to `"beeswarm"`.
 ///!
@@ -108,5 +109,5 @@
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-  ..args,
+  ..split-aes-params("geom-beeswarm", args, point-spec.reads),
 )

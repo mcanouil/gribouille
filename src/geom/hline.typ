@@ -8,6 +8,11 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "ref-line.typ": _draw-axis-lines
 
+#let spec = (
+  reads: ("yintercept", "colour", "alpha", "linewidth", "linetype"),
+  extents: none,
+)
+
 /// Horizontal reference line at one or more y intercepts.
 ///
 /// `yintercept` can be a scalar or an array drawing one line per value. To
@@ -113,7 +118,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-hline", args),
+    + split-aes-params("geom-hline", args, spec.reads),
   key: key,
   inherit-aes: inherit-aes,
 )

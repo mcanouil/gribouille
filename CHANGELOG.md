@@ -4,11 +4,20 @@
 
 ### Breaking changes
 
+- fix!: A geom fails when it gets a constant for an aesthetic it does not draw, for example `geom-point(xend: 3)`. The value never had an effect, so remove it. (#350)
+- fix!: `scales()` fails for an aesthetic that has no scale, for example `width`. The entry never had an effect, so remove it. (#350)
+- fix!: `annotate()` puts a keyword argument in its inline row only when the target geom reads it, and passes any other to the geom, which rejects a name it does not know. `annotate("text", x: 1, y: 1, label: "a", xmin: 0)` now fails. (#350)
 - fix!: Under `coord-flip()`, `nudge-x` moves a `geom-text()`, `geom-label()` or `geom-typst()` label along the original x axis and `nudge-y` along the original y axis, for a number and for a length alike. They used to move it along the screen axes, so swap `nudge-x` and `nudge-y` on a flipped plot to keep the old placement. (#344)
 - fix!: Under `coord-flip()`, the `width` of `geom-tile()` spans the original x axis and its `height` the original y axis. The tile used to keep its sizes on the screen axes, so swap `width` and `height` on a flipped plot to keep the old shape. (#344)
 
 ### Changes
 
+- fix: Explicit position `limits` now choose which marks of `geom-col()`, `geom-histogram()`, `geom-freqpoly()`, `geom-dotplot()`, `geom-tile()`, `geom-ellipse()`, or a line, path or step on `stat-bin()` rows are drawn, by the centre of each mark. The marks that stay are drawn in full, and the axis widens to fit them. (#352)
+- fix: A data column named `width` no longer pads the x scale of a geom that draws no bars, such as `geom-point()` or `geom-text()`. The half-bar padding of bars and bins now follows each layer, so it adds no margin past the range of a wider layer. (#352)
+- fix: `stat-waffle()` grids sit flush with the panel, without the automatic expansion margin. An `expand` set on a scale still applies. (#351)
+- fix: `geom-tile()` widens the position scales to the edges of its tiles, so edge tiles no longer clip at the panel border. (#351)
+- fix: `aes()` accepts `lower`, `middle` and `upper`, so `geom-boxplot(stat: "identity")` draws boxes from pre-computed summaries. (#348)
+- fix: `aes()` accepts `sample`, so `geom-qq()` and `geom-qq-line()` can read the sample column as their documentation says. (#347)
 - fix: `aes()` accepts `width`, so `geom-tile()` can map its tile width from a column as its documentation says. `aes(width: ...)` used to fail as an unknown aesthetic. (#346)
 - fix: Under `coord-flip()`, `geom-ellipse()` and `geom-spoke()` draw on the flipped axes, and their angle mirrors across the diagonal as in ggplot2. They used to read the swapped scales, so ellipses landed off their centres and spokes pointed the wrong way. (#344)
 - fix: Under `coord-flip()`, `geom-linerange()`, `geom-pointrange()`, `geom-crossbar()`, `geom-boxplot()`, `geom-violin()`, `geom-ribbon()`, `geom-hex()` and `geom-dotplot()` draw along the flipped axes, and so do stacked areas and the band of `geom-smooth()`. Most of them used to draw nothing. (#341)

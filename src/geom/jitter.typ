@@ -2,7 +2,8 @@
 ///!
 ///! Thin wrapper around \@geom-point that defaults `position` to `"jitter"`.
 
-#import "point.typ": geom-point
+#import "../layer.typ": split-aes-params
+#import "point.typ": geom-point, spec as point-spec
 
 /// Scatter layer with \@position-jitter applied by default.
 ///
@@ -98,5 +99,5 @@
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-  ..args,
+  ..split-aes-params("geom-jitter", args, point-spec.reads),
 )

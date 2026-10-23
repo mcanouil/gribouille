@@ -9,7 +9,10 @@
 #import "../position/apply.typ": layer-marks-abut, layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": discrete-slot-width, map-axis, map-position
+#import "../scale/train.typ": (
+  discrete-slot-width, map-axis, map-position, mapping-ref-col,
+)
+#import "../utils/bin.typ": bin-half-width
 #import "../utils/flip.typ": user-axes, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
@@ -20,6 +23,43 @@
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
   resolve-geom-linewidth,
+)
+
+// Outer edges of the bars on a continuous `x` axis. A bar spans
+// `width` times the smallest gap between distinct `x` values, the same rule
+// as `draw`, and rows from stat-bin also widen `x` by half a bin. `none`
+// when the layer has no numeric `x` or nothing to pad.
+#let _extents(params, mapping, data) = {
+  let none-ext = (x: none, y: none)
+  let x-col = mapping-ref-col(mapping.at("x", default: none))
+  if x-col == none { return none-ext }
+  // Sorted first, then walked: duplicates sit side by side as a zero gap,
+  // which is skipped, so no `dedup` pass is needed.
+  let xs = data
+    .map(r => parse-number(r.at(x-col, default: none)))
+    .filter(v => v != none)
+    .sorted()
+  if xs.len() == 0 { return none-ext }
+  let min-gap = none
+  for i in range(xs.len() - 1) {
+    let gap = xs.at(i + 1) - xs.at(i)
+    if gap == 0 { continue }
+    if min-gap == none or gap < min-gap { min-gap = gap }
+  }
+  let bar-half = if min-gap == none { 0.0 } else {
+    min-gap * params.at("width", default: 0.9) / 2
+  }
+  let bin-half = bin-half-width(data)
+  if bar-half <= 0 and bin-half <= 0 { return none-ext }
+  (
+    x: (xs.first() - bin-half - bar-half, xs.last() + bin-half + bar-half),
+    y: none,
+  )
+}
+
+#let spec = (
+  reads: ("x", "y", "ymin", "ymax", "colour", "fill", "alpha", "stroke"),
+  extents: _extents,
 )
 
 /// Bar layer with heights taken from the y aesthetic.
@@ -119,7 +159,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-col", args),
+    + split-aes-params("geom-col", args, spec.reads),
   key: key,
   stat: stat,
   position: position,

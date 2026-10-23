@@ -20,6 +20,21 @@
 #import "../utils/late-binding.typ": after-scale-source, apply-after-scale
 #import "../scale/train.typ": mapping-ref-col
 
+#let spec = (
+  reads: (
+    "x",
+    "y",
+    "ymin",
+    "ymax",
+    "colour",
+    "fill",
+    "alpha",
+    "linewidth",
+    "linetype",
+  ),
+  extents: none,
+)
+
 /// Fitted trend line with an optional confidence ribbon.
 ///
 /// Fits a smoother to `(x, y)` and draws the prediction as a line. When
@@ -163,7 +178,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-smooth", args),
+    + split-aes-params("geom-smooth", args, spec.reads),
   stat: if stat == auto {
     stat-smooth(
       method: method,

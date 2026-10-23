@@ -13,6 +13,11 @@
   resolve-geom-linewidth,
 )
 
+#let spec = (
+  reads: ("x", "y", "colour", "fill", "alpha", "stroke"),
+  extents: none,
+)
+
 /// Polygon layer: one closed filled polygon per group.
 ///
 /// Rows are connected in input order and the polygon is closed back to
@@ -106,7 +111,7 @@
   mapping: mapping,
   data: data,
   params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-polygon", args),
+    + split-aes-params("geom-polygon", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

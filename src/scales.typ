@@ -6,7 +6,7 @@
 ///! for the same aesthetic overrides an earlier one.
 
 #import "utils/errors.typ": fail, fail-enum
-#import "aes-keys.typ": AES-KEYS
+#import "scale/train.typ": all-aesthetics
 #import "scale/bind.typ": bind-scale
 
 /// Bind scale specifications to aesthetics.
@@ -61,13 +61,13 @@
   }
   let out = (:)
   for (k, v) in args.named() {
-    if not AES-KEYS.contains(k) {
+    if not all-aesthetics.contains(k) {
       fail-enum(
         "scales",
         "aesthetic",
         k,
-        AES-KEYS,
-        hint: "Key each scale by a known aesthetic name.",
+        all-aesthetics,
+        hint: "Key each scale by an aesthetic that has a scale.",
       )
     }
     if v == auto or v == none { continue }

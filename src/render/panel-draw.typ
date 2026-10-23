@@ -39,82 +39,7 @@
   _title-extent-cm, _x-title-place, _y-title-place,
 )
 
-#import "../geom/point.typ" as point-geom
-#import "../geom/line.typ" as line-geom
-#import "../geom/path.typ" as path-geom
-#import "../geom/step.typ" as step-geom
-#import "../geom/area.typ" as area-geom
-#import "../geom/rect.typ" as rect-geom
-#import "../geom/tile.typ" as tile-geom
-#import "../geom/segment.typ" as segment-geom
-#import "../geom/curve.typ" as curve-geom
-#import "../geom/spoke.typ" as spoke-geom
-#import "../geom/polygon.typ" as polygon-geom
-#import "../geom/ellipse.typ" as ellipse-geom
-#import "../geom/mark.typ" as mark-geom
-#import "../geom/col.typ" as col-geom
-#import "../geom/ribbon.typ" as ribbon-geom
-#import "../geom/smooth.typ" as smooth-geom
-#import "../geom/hline.typ" as hline-geom
-#import "../geom/vline.typ" as vline-geom
-#import "../geom/abline.typ" as abline-geom
-#import "../geom/text.typ" as text-geom
-#import "../geom/typst.typ" as typst-geom
-#import "../geom/label.typ" as label-geom
-#import "../geom/boxplot.typ" as boxplot-geom
-#import "../geom/violin.typ" as violin-geom
-#import "../geom/density-ridges.typ" as density-ridges-geom
-#import "../geom/errorbar.typ" as errorbar-geom
-#import "../geom/errorbarh.typ" as errorbarh-geom
-#import "../geom/linerange.typ" as linerange-geom
-#import "../geom/crossbar.typ" as crossbar-geom
-#import "../geom/pointrange.typ" as pointrange-geom
-#import "../geom/blank.typ" as blank-geom
-#import "../geom/rug.typ" as rug-geom
-#import "../geom/function.typ" as function-geom
-#import "../geom/dotplot.typ" as dotplot-geom
-#import "../geom/hex.typ" as hex-geom
-
-// Single source of truth for layer dispatch in `_draw-axis-and-layers`.
-// Each entry maps a layer's `geom` string to its `draw(layer, ctx)` function.
-// Adding a new geom only requires importing it above and adding an entry here.
-#let _geom-draw = (
-  point: point-geom.draw,
-  line: line-geom.draw,
-  path: path-geom.draw,
-  step: step-geom.draw,
-  area: area-geom.draw,
-  rect: rect-geom.draw,
-  tile: tile-geom.draw,
-  segment: segment-geom.draw,
-  curve: curve-geom.draw,
-  spoke: spoke-geom.draw,
-  polygon: polygon-geom.draw,
-  ellipse: ellipse-geom.draw,
-  mark: mark-geom.draw,
-  col: col-geom.draw,
-  ribbon: ribbon-geom.draw,
-  smooth: smooth-geom.draw,
-  hline: hline-geom.draw,
-  vline: vline-geom.draw,
-  abline: abline-geom.draw,
-  text: text-geom.draw,
-  typst: typst-geom.draw,
-  label: label-geom.draw,
-  boxplot: boxplot-geom.draw,
-  violin: violin-geom.draw,
-  "density-ridges": density-ridges-geom.draw,
-  errorbar: errorbar-geom.draw,
-  errorbarh: errorbarh-geom.draw,
-  linerange: linerange-geom.draw,
-  crossbar: crossbar-geom.draw,
-  pointrange: pointrange-geom.draw,
-  blank: blank-geom.draw,
-  rug: rug-geom.draw,
-  function: function-geom.draw,
-  dotplot: dotplot-geom.draw,
-  hex: hex-geom.draw,
-)
+#import "../geom/registry.typ": GEOMS
 
 // Layers whose `geom` is missing from this set panic under `coord-radial`
 // rather than silently falling back to cartesian rendering. Every registered
@@ -123,7 +48,7 @@
 // membership tests are O(1) instead of an array scan.
 #let _RADIAL-AWARE = {
   let s = (:)
-  for k in _geom-draw.keys() { s.insert(k, true) }
+  for k in GEOMS.keys() { s.insert(k, true) }
   s
 }
 
@@ -669,9 +594,9 @@
     import cetz.draw: floating, hide, rect
     hide(rect((0, 0), (panel-w, panel-h)), bounds: true)
     for layer in subset {
-      let draw = _geom-draw.at(layer.name, default: none)
-      if draw != none {
-        floating({ draw(layer, inner-ctx) })
+      let entry = GEOMS.at(layer.name, default: none)
+      if entry != none {
+        floating({ (entry.draw)(layer, inner-ctx) })
       }
     }
   })

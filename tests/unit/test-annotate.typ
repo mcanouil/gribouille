@@ -1,7 +1,8 @@
 // annotate(geom, ..fields) builds a one-row layer with an aesthetic mapping
 // pointing each kwarg name at the matching column, and inherit-aes: false.
 
-#import "../../src/annotate.typ": annotate
+#import "../../src/annotate.typ": _aes-keys-for, annotate
+#import "../../src/geom/registry.typ": GEOMS
 
 // Text annotation: x, y, label all become aesthetics with matching columns.
 #let lt = annotate("text", x: 1, y: 2, label: "hi")
@@ -49,6 +50,27 @@
 #let ll-size = annotate("label", x: 0, y: 0, label: "boxed", size: 9pt)
 #assert.eq(ll-size.params.size, 9pt)
 #assert.eq(ll-size.mapping.at("size", default: none), none)
+
+// Same routing for `geom-typst`.
+#let ly-size = annotate("typst", x: 0, y: 0, label: "$x$", size: 10pt)
+#assert.eq(ly-size.params.size, 10pt)
+#assert.eq(ly-size.mapping.at("size", default: none), none)
+
+// `stroke` and `linewidth` are read by the geom, but stay constant layer
+// params, so no scale maps them.
+#let lr-stroke = annotate(
+  "rect",
+  xmin: 0,
+  xmax: 1,
+  ymin: 0,
+  ymax: 1,
+  stroke: 2pt,
+)
+#assert.eq(lr-stroke.params.stroke, 2pt)
+#assert.eq(lr-stroke.mapping.at("stroke", default: none), none)
+#let ls-lw = annotate("segment", x: 0, y: 0, xend: 1, yend: 1, linewidth: 2pt)
+#assert.eq(ls-lw.params.linewidth, 2pt)
+#assert.eq(ls-lw.mapping.at("linewidth", default: none), none)
 
 // `size` on `geom-point` stays an aesthetic mapping (default behaviour).
 #let lp-size = annotate("point", x: 3, y: 4, size: 5)
@@ -149,10 +171,11 @@
 #assert.eq(lvc.params.at("clip", default: none), none)
 #assert.eq(lvc.params.xintercept, 5)
 
-// No annotate geom reads a mapped `width`, so it stays a layer parameter and
-// never lands in the inline row, where a `width` column pads the x domain.
-#let lw = annotate("point", x: 1, y: 2, width: 3)
-#assert.eq(lw.data, ((x: 1, y: 2),))
-#assert.eq(lw.params.width, 3)
+// annotate routes only the keys that the target geom reads. No annotate geom
+// reads `width`, so it never lands in the inline row, where a `width` column
+// pads the x domain; `geom-point` then rejects it as a constant.
+#assert("width" not in _aes-keys-for("point", GEOMS.point.spec.reads))
+#assert("label" in _aes-keys-for("text", GEOMS.text.spec.reads))
+#assert("label" not in _aes-keys-for("point", GEOMS.point.spec.reads))
 
 Annotate tests passed.

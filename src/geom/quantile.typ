@@ -5,6 +5,7 @@
 ///! lines; otherwise all lines share the layer's `colour` parameter.
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "line.typ": spec as line-spec
 #import "../stat/quantile.typ": stat-quantile
 
 /// Quantile-regression layer: a fitted line per requested τ.
@@ -93,7 +94,7 @@
     linetype: linetype,
     linewidth: linewidth,
   )
-    + split-aes-params("geom-quantile", args),
+    + split-aes-params("geom-quantile", args, line-spec.reads),
   stat: if stat == auto {
     stat-quantile(quantiles: quantiles, n-samples: n-samples)
   } else { stat },
