@@ -4,7 +4,7 @@
 
 ### Breaking changes
 
-- fix!: A geom fails when it gets a constant for an aesthetic it does not draw, for example `geom-point(xend: 3)`, and `scales()` fails for an aesthetic that has no scale, for example `width`. These values never had an effect, so remove them. `annotate()` now puts a keyword argument in its inline row only when the target geom reads it, and otherwise passes it to the geom, which rejects a name it does not know: `annotate("text", x: 1, y: 1, label: "a", xmin: 0)` now fails. (#PR)
+- fix!: A geom fails when it gets a constant for an aesthetic it does not draw, for example `geom-point(xend: 3)`, and `scales()` fails for an aesthetic that has no scale, for example `width`. These values never had an effect, so remove them. `annotate()` now puts a keyword argument in its inline row only when the target geom reads it, and otherwise passes it to the geom, which rejects a name it does not know: `annotate("text", x: 1, y: 1, label: "a", xmin: 0)` now fails. (#350)
 - fix!: Under `coord-flip()`, `nudge-x` moves a `geom-text()`, `geom-label()` or `geom-typst()` label along the original x axis and `nudge-y` along the original y axis, for a number and for a length alike. They used to move it along the screen axes, so swap `nudge-x` and `nudge-y` on a flipped plot to keep the old placement. (#344)
 - fix!: Under `coord-flip()`, the `width` of `geom-tile()` spans the original x axis and its `height` the original y axis. The tile used to keep its sizes on the screen axes, so swap `width` and `height` on a flipped plot to keep the old shape. (#344)
 
