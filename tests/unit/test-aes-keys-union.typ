@@ -17,12 +17,6 @@
     + CORE-READS
 ).dedup()
 #assert.eq(declared.sorted(), AES-KEYS.sorted())
-#for (name, g) in GEOMS {
-  assert(g.spec.reads.all(k => k in AES-KEYS), message: name)
-}
-#for (name, s) in _STATS {
-  assert(s.reads.all(k => k in AES-KEYS), message: name)
-}
 
 // Grouping reads its aesthetics for every layer, so CORE-READS holds them.
 #assert(group-aesthetics.all(k => k in CORE-READS))
