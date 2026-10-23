@@ -183,7 +183,7 @@
       force-segment: force-segment,
       seed: seed,
     )
-      + split-aes-params("geom-text", args, keys: spec.reads),
+      + split-aes-params("geom-text", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

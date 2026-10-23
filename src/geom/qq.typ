@@ -101,7 +101,7 @@
     shape: shape,
     distribution: distribution,
   )
-    + split-aes-params("geom-qq", args, keys: point-spec.reads),
+    + split-aes-params("geom-qq", args, point-spec.reads),
   stat: stat,
   position: position,
   key: key,

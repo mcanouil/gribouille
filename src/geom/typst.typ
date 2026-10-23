@@ -164,7 +164,7 @@
       force-segment: force-segment,
       seed: seed,
     )
-      + split-aes-params("geom-typst", args, keys: spec.reads),
+      + split-aes-params("geom-typst", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

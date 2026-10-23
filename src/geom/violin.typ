@@ -143,7 +143,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-violin", args, keys: spec.reads),
+    + split-aes-params("geom-violin", args, spec.reads),
   stat: if stat == auto {
     stat-ydensity(bw: bw, adjust: adjust, n: n, trim: trim, scale: scale)
   } else { stat },

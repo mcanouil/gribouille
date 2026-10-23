@@ -99,7 +99,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-freqpoly", args, keys: line-spec.reads),
+    + split-aes-params("geom-freqpoly", args, line-spec.reads),
   stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else {
     stat
   },

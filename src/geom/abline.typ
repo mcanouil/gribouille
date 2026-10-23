@@ -133,7 +133,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-abline", args, keys: spec.reads),
+    + split-aes-params("geom-abline", args, spec.reads),
   key: key,
   inherit-aes: inherit-aes,
 )

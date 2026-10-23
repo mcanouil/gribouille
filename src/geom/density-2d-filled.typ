@@ -109,7 +109,7 @@
     + split-aes-params(
       "geom-density-2d-filled",
       args,
-      keys: polygon-spec.reads,
+      polygon-spec.reads,
     ),
   stat: if stat == auto {
     stat-density-2d-filled(

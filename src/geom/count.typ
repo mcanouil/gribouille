@@ -108,7 +108,7 @@
     alpha: alpha,
     shape: shape,
   )
-    + split-aes-params("geom-count", args, keys: point-spec.reads),
+    + split-aes-params("geom-count", args, point-spec.reads),
   stat: stat,
   position: position,
   key: key,

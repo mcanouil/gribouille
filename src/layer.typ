@@ -25,14 +25,7 @@
 ///   module that renders the layer.
 ///
 /// \@returns Dict of aesthetic key to constant value, to merge into `params`.
-#let split-aes-params(scope, args, keys: none) = {
-  if type(keys) != array {
-    fail(
-      "split-aes-params",
-      "`keys` must be an array of mapping keys; got " + repr(keys),
-      hint: "Pass the `spec.reads` of the geom's draw module.",
-    )
-  }
+#let split-aes-params(scope, args, keys) = {
   if args.pos().len() != 0 {
     fail(
       scope,

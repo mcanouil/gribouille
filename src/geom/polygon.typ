@@ -111,7 +111,7 @@
   mapping: mapping,
   data: data,
   params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-polygon", args, keys: spec.reads),
+    + split-aes-params("geom-polygon", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

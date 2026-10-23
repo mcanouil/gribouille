@@ -114,7 +114,7 @@
     colour: colour,
     alpha: alpha,
   )
-    + split-aes-params("geom-rug", args, keys: spec.reads),
+    + split-aes-params("geom-rug", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

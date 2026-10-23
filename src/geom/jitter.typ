@@ -99,5 +99,5 @@
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-  ..split-aes-params("geom-jitter", args, keys: point-spec.reads),
+  ..split-aes-params("geom-jitter", args, point-spec.reads),
 )

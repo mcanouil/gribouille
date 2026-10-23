@@ -104,7 +104,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-density-2d", args, keys: path-spec.reads),
+    + split-aes-params("geom-density-2d", args, path-spec.reads),
   stat: if stat == auto {
     stat-density-2d(
       bw: bw,

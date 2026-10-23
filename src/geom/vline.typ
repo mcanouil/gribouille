@@ -121,7 +121,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-vline", args, keys: spec.reads),
+    + split-aes-params("geom-vline", args, spec.reads),
   key: key,
   inherit-aes: inherit-aes,
 )

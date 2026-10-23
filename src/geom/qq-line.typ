@@ -95,7 +95,7 @@
     linetype: linetype,
     distribution: distribution,
   )
-    + split-aes-params("geom-qq-line", args, keys: line-spec.reads),
+    + split-aes-params("geom-qq-line", args, line-spec.reads),
   stat: stat,
   position: position,
   key: key,

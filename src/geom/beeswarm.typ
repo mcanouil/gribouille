@@ -109,5 +109,5 @@
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-  ..split-aes-params("geom-beeswarm", args, keys: point-spec.reads),
+  ..split-aes-params("geom-beeswarm", args, point-spec.reads),
 )

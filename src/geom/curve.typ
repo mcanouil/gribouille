@@ -177,7 +177,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-curve", args, keys: spec.reads),
+      + split-aes-params("geom-curve", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

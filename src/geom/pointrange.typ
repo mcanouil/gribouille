@@ -124,7 +124,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-pointrange", args, keys: spec.reads),
+    + split-aes-params("geom-pointrange", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

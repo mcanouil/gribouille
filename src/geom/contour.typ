@@ -88,7 +88,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-contour", args, keys: path-spec.reads),
+    + split-aes-params("geom-contour", args, path-spec.reads),
   stat: if stat == auto {
     stat-contour(bins: bins, binwidth: binwidth, breaks: breaks)
   } else { stat },

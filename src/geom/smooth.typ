@@ -178,7 +178,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-smooth", args, keys: spec.reads),
+    + split-aes-params("geom-smooth", args, spec.reads),
   stat: if stat == auto {
     stat-smooth(
       method: method,

@@ -103,7 +103,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-errorbar", args, keys: spec.reads),
+    + split-aes-params("geom-errorbar", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

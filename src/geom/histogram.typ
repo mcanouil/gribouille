@@ -116,7 +116,7 @@
     alpha: alpha,
     width: width,
   )
-    + split-aes-params("geom-histogram", args, keys: col-spec.reads),
+    + split-aes-params("geom-histogram", args, col-spec.reads),
   stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else {
     stat
   },

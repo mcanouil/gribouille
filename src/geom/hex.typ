@@ -98,8 +98,10 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-hex", args, keys: spec.reads),
-  stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else { stat },
+    + split-aes-params("geom-hex", args, spec.reads),
+  stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else {
+    stat
+  },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

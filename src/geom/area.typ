@@ -139,7 +139,7 @@
       alpha: alpha,
       direction: direction,
     )
-      + split-aes-params("geom-area", args, keys: spec.reads),
+      + split-aes-params("geom-area", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

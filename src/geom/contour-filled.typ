@@ -94,7 +94,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-contour-filled", args, keys: polygon-spec.reads),
+    + split-aes-params("geom-contour-filled", args, polygon-spec.reads),
   stat: if stat == auto {
     stat-contour-filled(bins: bins, binwidth: binwidth, breaks: breaks)
   } else { stat },

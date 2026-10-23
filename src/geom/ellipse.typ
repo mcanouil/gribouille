@@ -106,7 +106,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-ellipse", args, keys: spec.reads),
+    + split-aes-params("geom-ellipse", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

@@ -122,5 +122,5 @@
   position: position,
   key: key,
   inherit-aes: inherit-aes,
-  ..split-aes-params("geom-bar", args, keys: col-spec.reads),
+  ..split-aes-params("geom-bar", args, col-spec.reads),
 )

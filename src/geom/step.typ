@@ -107,7 +107,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-step", args, keys: spec.reads),
+      + split-aes-params("geom-step", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

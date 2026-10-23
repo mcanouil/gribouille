@@ -99,7 +99,7 @@
   mapping: mapping,
   data: data,
   params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
-    + split-aes-params("geom-linerange", args, keys: spec.reads),
+    + split-aes-params("geom-linerange", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

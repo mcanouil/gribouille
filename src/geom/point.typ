@@ -176,7 +176,7 @@
     alpha: alpha,
     shape: shape,
   )
-    + split-aes-params("geom-point", args, keys: spec.reads),
+    + split-aes-params("geom-point", args, spec.reads),
   key: key,
   stat: stat,
   position: position,

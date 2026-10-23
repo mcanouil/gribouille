@@ -124,7 +124,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-col", args, keys: spec.reads),
+    + split-aes-params("geom-col", args, spec.reads),
   key: key,
   stat: stat,
   position: position,

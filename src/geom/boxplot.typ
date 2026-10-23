@@ -150,7 +150,7 @@
     outlier-colour: outlier-colour,
     whisker-cap: whisker-cap,
   )
-    + split-aes-params("geom-boxplot", args, keys: spec.reads),
+    + split-aes-params("geom-boxplot", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

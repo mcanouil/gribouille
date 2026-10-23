@@ -238,7 +238,7 @@
       stroke: stroke,
       alpha: alpha,
     )
-      + split-aes-params("geom-mark", args, keys: spec.reads),
+      + split-aes-params("geom-mark", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

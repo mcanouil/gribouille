@@ -135,7 +135,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-density-ridges", args, keys: spec.reads),
+    + split-aes-params("geom-density-ridges", args, spec.reads),
   stat: if stat == auto {
     stat-density-ridges(bw: bw, adjust: adjust, n: n, trim: trim)
   } else { stat },

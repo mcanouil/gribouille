@@ -120,7 +120,7 @@
     middle-stroke: middle-stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-crossbar", args, keys: spec.reads),
+    + split-aes-params("geom-crossbar", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

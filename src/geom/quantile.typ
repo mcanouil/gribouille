@@ -94,7 +94,7 @@
     linetype: linetype,
     linewidth: linewidth,
   )
-    + split-aes-params("geom-quantile", args, keys: line-spec.reads),
+    + split-aes-params("geom-quantile", args, line-spec.reads),
   stat: if stat == auto {
     stat-quantile(quantiles: quantiles, n-samples: n-samples)
   } else { stat },

@@ -135,7 +135,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-spoke", args, keys: spec.reads),
+      + split-aes-params("geom-spoke", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

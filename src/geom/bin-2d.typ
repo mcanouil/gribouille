@@ -83,7 +83,7 @@
     stroke: stroke,
     alpha: alpha,
   )
-    + split-aes-params("geom-bin-2d", args, keys: rect-spec.reads),
+    + split-aes-params("geom-bin-2d", args, rect-spec.reads),
   stat: if stat == auto { stat-bin-2d(bins: bins, binwidth: binwidth) } else {
     stat
   },

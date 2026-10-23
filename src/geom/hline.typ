@@ -118,7 +118,7 @@
     alpha: alpha,
     linetype: linetype,
   )
-    + split-aes-params("geom-hline", args, keys: spec.reads),
+    + split-aes-params("geom-hline", args, spec.reads),
   key: key,
   inherit-aes: inherit-aes,
 )

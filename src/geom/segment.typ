@@ -127,7 +127,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-segment", args, keys: spec.reads),
+      + split-aes-params("geom-segment", args, spec.reads),
     stat: stat,
     position: position,
     key: key,

@@ -73,7 +73,7 @@
   "blank",
   mapping: mapping,
   data: data,
-  params: split-aes-params("geom-blank", args, keys: spec.reads),
+  params: split-aes-params("geom-blank", args, spec.reads),
   stat: stat,
   position: position,
   key: key,

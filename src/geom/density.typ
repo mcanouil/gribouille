@@ -114,7 +114,7 @@
     outline-role: "ink",
     fill-role: none,
   )
-    + split-aes-params("geom-density", args, keys: area-spec.reads),
+    + split-aes-params("geom-density", args, area-spec.reads),
   stat: if stat == auto {
     stat-density(bw: bw, adjust: adjust, n: n, trim: trim)
   } else { stat },

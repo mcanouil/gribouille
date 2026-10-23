@@ -112,7 +112,7 @@
       linetype: linetype,
       arrow: arrow,
     )
-      + split-aes-params("geom-line", args, keys: spec.reads),
+      + split-aes-params("geom-line", args, spec.reads),
     key: key,
     stat: stat,
     position: position,
