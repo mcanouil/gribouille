@@ -7,6 +7,7 @@
 #import "../utils/types.typ": parse-number
 #import "common.typ": _track-min-max
 #import "../geom/registry.typ": GEOMS
+#import "../stat/apply.typ": stat-flush
 
 // Bounding box of every ellipse layer's data, accounting for rotation.
 // Axis-aligned bbox of an ellipse with semi-axes (a, b) and major-axis
@@ -118,6 +119,7 @@
 #let _post-train-scan(layers) = {
   let acc = (
     needs-y-zero: false,
+    flush: false,
     any-fill: false,
     cols: (),
     bin-half-max: 0.0,
@@ -134,6 +136,9 @@
     let layer-data = layer.at("data", default: ())
 
     if geom == "col" or geom == "area" { acc.needs-y-zero = true }
+    if stat-flush(layer.at("stat-source", default: "identity")) {
+      acc.flush = true
+    }
     if geom == "ellipse" {
       acc = _scan-ellipse(layer, mapping, layer-data, acc)
     }
@@ -150,6 +155,7 @@
   }
   (
     needs-y-zero: acc.needs-y-zero,
+    flush: acc.flush,
     any-fill: acc.any-fill,
     cols: acc.cols,
     bin-half-max: acc.bin-half-max,
@@ -409,6 +415,18 @@
       if (anchor == "lo" or anchor == "both") and lo-auto { mult-lo = 0 }
       if (anchor == "hi" or anchor == "both") and hi-auto { mult-hi = 0 }
     }
+    // A `flush` axis drops the automatic expansion on each side left at
+    // `auto`, the same as `coord-cartesian(expand: false)` there.
+    if entry.at("flush", default: false) {
+      if lo-auto {
+        mult-lo = 0
+        add-cm-lo = 0
+      }
+      if hi-auto {
+        mult-hi = 0
+        add-cm-hi = 0
+      }
+    }
     let radial-zero-lo = axis == radial-axis and lo-auto
     if radial-zero-lo {
       mult-lo = 0
@@ -602,6 +620,17 @@
         new-x.insert("geom-min-pad", bar-half)
         trained.insert("x", new-x)
       }
+    }
+  }
+
+  // A `flush` stat tags both position axes so `_apply-expand` drops their
+  // automatic expansion.
+  if scan.flush {
+    for axis in ("x", "y") {
+      let t = trained.at(axis, default: none)
+      if t == none { continue }
+      t.insert("flush", true)
+      trained.insert(axis, t)
     }
   }
 

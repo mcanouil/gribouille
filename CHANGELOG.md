@@ -12,6 +12,7 @@
 
 ### Changes
 
+- fix: `stat-waffle()` grids sit flush with the panel, without the automatic expansion margin. An `expand` set on a scale still applies. (#PR)
 - fix: `geom-tile()` widens the position scales to the edges of its tiles, so edge tiles no longer clip at the panel border. (#PR)
 - fix: `aes()` accepts `lower`, `middle` and `upper`, so `geom-boxplot(stat: "identity")` draws boxes from pre-computed summaries. (#348)
 - fix: `aes()` accepts `sample`, so `geom-qq()` and `geom-qq-line()` can read the sample column as their documentation says. (#347)

@@ -42,6 +42,9 @@
 // pre-pass invoked before per-group `apply()`; it is `none` when the stat
 // has no shared partition. `reads:` lists the mapping keys the stat computes
 // from; the grouping keys it copies to its output are in `CORE-READS`.
+// `flush: true` (default `false`) turns off the automatic position expansion
+// on both axes, so a grid of whole cells sits flush with the panel; an
+// explicit scale `expand` still wins on the side the user set.
 #let _STATS = (
   identity: (
     apply: identity-stat.apply,
@@ -212,6 +215,7 @@
     apply: waffle-stat.apply,
     reads: ("weight",),
     ctor: waffle-stat.stat-waffle,
+    flush: true,
     setup: (data, mapping, params) => waffle-stat.setup(
       data,
       mapping,
@@ -219,6 +223,11 @@
     ),
   ),
 )
+
+// Whether the stat `name` asks for a flush panel (see `flush` above).
+#let stat-flush(name) = {
+  _STATS.at(name, default: (:)).at("flush", default: false)
+}
 
 #let stat-default-params(name) = {
   let entry = _STATS.at(name, default: none)
