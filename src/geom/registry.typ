@@ -1,5 +1,7 @@
 // Geom registry: maps each layer `geom` string to its draw entry point and
 // its `spec` record. `spec.reads` lists the mapping keys the draw path reads.
+// It names the user-space keys: under `coord-flip()` the renderer swaps the
+// `_FLIP-PAIRS` twins before the draw path reads them.
 // Adding a new geom only requires importing it here and adding an entry.
 // No geom module imports from `src/render/`, so the renderer can import this
 // file without a cycle.

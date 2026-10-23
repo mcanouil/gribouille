@@ -16,7 +16,16 @@
     + POSITION-READS.values().flatten()
     + CORE-READS
 ).dedup()
-#assert.eq(declared.sorted(), AES-KEYS.sorted())
+#let unread = AES-KEYS.filter(k => k not in declared)
+#let rejected = declared.filter(k => k not in AES-KEYS)
+#assert(
+  unread == (),
+  message: "aes() accepts keys nothing reads: " + unread.join(", "),
+)
+#assert(
+  rejected == (),
+  message: "code reads keys aes() rejects: " + rejected.join(", "),
+)
 
 // Grouping reads its aesthetics for every layer, so CORE-READS holds them.
 #assert(group-aesthetics.all(k => k in CORE-READS))
