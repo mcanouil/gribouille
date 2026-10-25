@@ -11,7 +11,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/arrow.typ": assert-arrow, draw-arrow-heads
 #import "../utils/linetype-resolve.typ": resolve-linetype
-#import "../utils/radial.typ": project-point
+#import "../coord/project.typ": project-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let spec = (

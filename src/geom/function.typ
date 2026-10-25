@@ -8,7 +8,7 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/errors.typ": fail
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../utils/radial.typ": project-point
+#import "../coord/project.typ": project-point
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 

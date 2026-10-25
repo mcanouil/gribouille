@@ -12,12 +12,10 @@
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/linetype-resolve.typ": resolve-linetype
-#import "../coord/project.typ": axis-mapper
+#import "../coord/project.typ": axis-mapper, project-point
 #import "../utils/band.typ": axis-band
 #import "../utils/flip.typ": user-axis-key
-#import "../utils/radial.typ": (
-  RADIAL-DEFAULT-CAP-HALF, project-point, radial-tangent-cap,
-)
+#import "../utils/radial.typ": RADIAL-DEFAULT-CAP-HALF, radial-tangent-cap
 #import "../utils/types.typ": parse-number
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults

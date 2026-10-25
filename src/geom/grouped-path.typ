@@ -10,7 +10,8 @@
 #import "../utils/bin.typ": bin-x-extents
 #import "../scale/train.typ": mapping-ref-col
 #import "../utils/group.typ": partition-by-group
-#import "../utils/radial.typ": project-point, shift-point
+#import "../utils/radial.typ": shift-point
+#import "../coord/project.typ": project-point
 #import "../utils/flip.typ": user-axes, user-columns
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults

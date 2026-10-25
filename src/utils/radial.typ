@@ -1,12 +1,7 @@
 ///! Joint `(x, y) → (cx, cy)` projection helpers for `coord-radial`.
 
-#import "../scale/train.typ": (
-  discrete-slot-width, level-position, map-axis, map-position,
-)
+#import "../scale/train.typ": discrete-slot-width, level-position, map-position
 #import "types.typ": parse-number
-// Re-exported, so the geoms that import `project-point` from here keep working
-// now that the coord owns the projection.
-#import "../coord/project.typ": project-point
 
 // Gap (cm) between the outer theta arc and the tick labels ringing it. The
 // draw site offsets the labels by it and the chrome stage reserves the band

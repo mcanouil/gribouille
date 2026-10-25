@@ -14,9 +14,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
-#import "../utils/flip.typ": (
-  user-axes, user-axis-key, user-columns, user-point,
-)
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/group.typ": partition-by-group
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke

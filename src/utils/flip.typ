@@ -3,7 +3,7 @@
 // its columns and scales through these helpers and swaps each canvas point
 // back: the user's x runs vertically and the user's y horizontally.
 
-#import "radial.typ": project-point
+#import "../coord/project.typ": project-point
 
 #let _flipped(ctx) = ctx.at("flipped", default: false)
 

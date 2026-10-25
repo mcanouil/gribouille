@@ -7,14 +7,13 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../coord/project.typ": axis-mapper
+#import "../coord/project.typ": axis-mapper, project-point
 #import "../scale/train.typ": mapping-ref-col
 #import "../utils/bin.typ": bin-x-extents
 #import "../stat/bindot.typ": stat-bindot
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/flip.typ": user-axes, user-axis-key, user-columns
-#import "../utils/radial.typ": project-point
 #import "../utils/types.typ": parse-number
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
