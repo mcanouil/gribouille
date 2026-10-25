@@ -11,9 +11,10 @@
 
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
-#import "../utils/flip.typ": user-axes, user-columns, user-point
+#import "../coord/project.typ": axis-mapper
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/types.typ": parse-number
-#import "../scale/train.typ": discrete-slot-width, map-axis
+#import "../scale/train.typ": discrete-slot-width
 
 /// Dodge position adjustment: place grouped marks side by side.
 ///
@@ -136,7 +137,8 @@
   let axes = user-axes(ctx)
   if axes == none { return none }
   let cat-trained = axes.x-trained
-  let cat-range = axes.x-range
+  let cat-key = user-axis-key("x", ctx)
+  let cat-range = (ctx.coord.axis-range)(ctx, cat-key)
 
   let span = if cat-trained.type == "discrete" {
     discrete-slot-width(cat-trained, cat-range) * width
@@ -160,7 +162,8 @@
     if sorted.len() < 2 {
       (cat-hi - cat-lo) / 10 * width
     } else {
-      let mapped = sorted.map(v => map-axis(cat-trained, v, cat-range))
+      let map-cat = axis-mapper(ctx, cat-key, space: "stat")
+      let mapped = sorted.map(map-cat)
       let gaps = range(mapped.len() - 1).map(i => (
         calc.abs(mapped.at(i + 1) - mapped.at(i))
       ))

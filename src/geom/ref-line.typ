@@ -14,7 +14,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/flip.typ": user-axis-key
 #import "../utils/types.typ": parse-number
-#import "../scale/train.typ": map-axis-data
+#import "../coord/project.typ": axis-mapper
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let _draw-axis-lines(intercepts, user-axis, layer, ctx) = {
@@ -75,6 +75,11 @@
       .filter(entry => entry != none)
   }
   if lines.len() == 0 { return }
+  let map-value = axis-mapper(
+    ctx,
+    user-axis-key(user-axis, ctx),
+    space: "data",
+  )
 
   let radial = ctx.at("radial", default: none)
   if radial != none {
@@ -83,14 +88,14 @@
     let on-theta = radial.theta-axis == user-axis
     for line in lines {
       if on-theta {
-        let theta = map-axis-data(trained, line.value, radial.theta-range)
+        let theta = map-value(line.value)
         cetz.draw.line(
           (cx, cy),
           (cx + r-max * calc.cos(theta), cy + r-max * calc.sin(theta)),
           stroke: line.stroke,
         )
       } else {
-        let r = map-axis-data(trained, line.value, radial.r-range)
+        let r = map-value(line.value)
         if r > 0 and r <= r-max {
           cetz.draw.circle(
             (cx, cy),
@@ -111,13 +116,13 @@
   if horizontal {
     let (px-lo, px-hi) = ctx.px-range
     for line in lines {
-      let cy = map-axis-data(trained, line.value, ctx.py-range)
+      let cy = map-value(line.value)
       cetz.draw.line((px-lo, cy), (px-hi, cy), stroke: line.stroke)
     }
   } else {
     let (py-lo, py-hi) = ctx.py-range
     for line in lines {
-      let cx = map-axis-data(trained, line.value, ctx.px-range)
+      let cx = map-value(line.value)
       cetz.draw.line((cx, py-lo), (cx, py-hi), stroke: line.stroke)
     }
   }
