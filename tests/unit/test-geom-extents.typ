@@ -6,7 +6,8 @@
 // `_post-train` produced before they moved there.
 
 #import "../../src/scale/train.typ": train
-#import "../../src/render/domain.typ": _apply-expand, _post-train
+#import "../../src/coord/expand.typ": apply-expand
+#import "../../src/render/domain.typ": _post-train
 #import "../../src/scale/oob.typ": filter-oob, oob-plans
 #import "../../src/geom/registry.typ": GEOM-CENTRES
 #import "../../src/render/layer-prep.typ": _prepare-layer
@@ -408,7 +409,7 @@
 
 // The out-of-bounds cutoff stays at the limits, not at the widened view: the
 // bar at 1.6 sits inside the widened domain but is still dropped.
-#let near-view = _apply-expand(near.trained, none)
+#let near-view = apply-expand(near.trained)
 #let near-kept = filter-oob(near.prepared, oob-plans(near-view))
 #assert.eq(
   near-kept.layers.first().data.map(r => r.x),
@@ -416,7 +417,7 @@
   message: repr(near-kept.layers.first().data),
 )
 // An ellipse is kept or dropped by its centre `x0`.
-#let ell-view = _apply-expand(ell-narrow.trained, none)
+#let ell-view = apply-expand(ell-narrow.trained)
 #let ell-kept = filter-oob(
   ell-narrow.prepared,
   oob-plans(ell-view),

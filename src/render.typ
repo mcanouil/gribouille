@@ -13,10 +13,8 @@
 #import "render/chrome.typ": _chrome-margins
 #import "render/prestat.typ": _preprocess-data
 #import "render/validate.typ": validate-spec
-#import "render/domain.typ": (
-  _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
-  _apply-labels, _is-flipped, _post-train,
-)
+#import "render/domain.typ": _apply-labels, _post-train
+#import "coord/resolve.typ": resolve-coord
 #import "geom/registry.typ": GEOM-CENTRES
 #import "render/extents.typ": _text-margin-cm
 #import "render/facet.typ": (
@@ -129,16 +127,12 @@
 
   trained = _post-train(trained, prepared)
 
-  // coord-cartesian zooms the view: override trained domains with the user's
-  // clip limits so axis ticks and marks follow them. Data outside the limits
-  // is preserved for stats and training but may render outside the panel.
-  let coord = spec.at("coord", default: none)
-  trained = _apply-coord-transform(trained, coord)
-  trained = _apply-coord(trained, coord)
-  trained = _apply-expand(trained, coord)
-  // coord-flip swaps trained x and y so axis labels swap automatically;
-  // direction-sensitive geoms branch on `ctx.flipped` inside their draw.
-  trained = _apply-flip(trained, coord)
+  // The coord rewrites the trained scales: coord-cartesian zooms the view to
+  // its clip limits, every coord applies the scale expansion, and coord-flip
+  // swaps trained x and y so axis labels swap automatically.
+  // Direction-sensitive geoms branch on `ctx.flipped` inside their draw.
+  let coord = resolve-coord(spec.at("coord", default: none))
+  trained = (coord.train)(trained)
 
   // Drop (or clamp under `oob: "squish"`) rows whose value falls outside any
   // user-supplied scale `limits`. Runs after training so the trained domain
@@ -151,7 +145,7 @@
   let oob-plan = oob-plans(trained)
   // A centre key such as ellipse `x0` is not in the flip swap, so it follows
   // the trained scales to the other axis here.
-  let centres = if _is-flipped(coord) {
+  let centres = if coord.flipped {
     GEOM-CENTRES.pairs().map(((name, c)) => (name, (x: c.y, y: c.x))).to-dict()
   } else { GEOM-CENTRES }
   let oob-pass = filter-oob(

@@ -4,6 +4,7 @@
 // donates panel area to a margin nothing ever draws in: an empty right margin
 // for a secondary y, an empty top margin for a secondary x.
 
+#import "../../src/coord/cartesian.typ": coord-cartesian
 #import "../../src/coord/radial.typ": coord-radial
 #import "../../src/render/chrome.typ": _chrome-margins
 #import "../../src/scale/secondary.typ": sec-axis
@@ -52,7 +53,7 @@
 #context {
   for (kind, sec) in (("titled", titled), ("titleless", sec-axis())) {
     // Cartesian is the control: this chrome is both reserved and drawn.
-    let cartesian = chrome-of(none, secondary: sec)
+    let cartesian = chrome-of(coord-cartesian(), secondary: sec)
     for axis in ("x", "y") {
       assert(
         cartesian.at("sec-" + axis + "-extent") > 0,

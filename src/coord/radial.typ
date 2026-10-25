@@ -1,5 +1,9 @@
 ///! Radial coordinate system.
 
+#import "../utils/radial.typ": radial-axis-of
+#import "contract.typ": coord-base
+#import "expand.typ": apply-expand
+
 /// Radial coordinate system.
 ///
 /// `theta = "x"` (default) distributes categories around the circle for
@@ -52,12 +56,20 @@
   end: none,
   direction: 1,
   clip: false,
-) = (
-  kind: "coord",
-  name: "radial",
-  theta: theta,
-  start: start,
-  end: end,
-  direction: direction,
-  clip: clip,
-)
+) = {
+  let coord = (
+    coord-base("radial")
+      + (
+        theta: theta,
+        start: start,
+        end: end,
+        direction: direction,
+        clip: clip,
+      )
+  )
+  coord.insert("train", trained => apply-expand(
+    trained,
+    zero-lo-axis: radial-axis-of(coord),
+  ))
+  coord
+}

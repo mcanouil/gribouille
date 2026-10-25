@@ -5,26 +5,25 @@
 )
 #import "types.typ": parse-number
 
-// True when the coord is any flavour of `coord-radial`.
-#let is-radial(coord) = (
-  coord != none and coord.at("name", default: none) == "radial"
-)
-
 // Gap (cm) between the outer theta arc and the tick labels ringing it. The
 // draw site offsets the labels by it and the chrome stage reserves the band
 // they land in, so the two cannot drift apart.
 #let THETA-LABEL-PAD = 0.2
 
-// The axis the sweep runs along. `none` off a radial coord, so callers can
-// compare an axis key against it unguarded.
-#let theta-axis-of(coord) = if is-radial(coord) {
-  coord.at("theta", default: "x")
-} else { none }
+// The axis the sweep runs along, read from the `theta` field only a radial
+// coord carries. `none` off a radial coord, so callers can compare an axis key
+// against it unguarded.
+#let theta-axis-of(coord) = if coord == none { none } else {
+  coord.at("theta", default: none)
+}
 
-// Its complement, the axis the radius runs along: "y" when theta is "x"
-// (rose/radar) and "x" when theta is "y" (pie). Used during scale expansion,
-// which runs before trained scales exist and so cannot route through
-// `radial-ctx`.
+// True when the coord is any flavour of `coord-radial`.
+#let is-radial(coord) = theta-axis-of(coord) != none
+
+// The complement of `theta-axis-of`, the axis the radius runs along: "y" when
+// theta is "x" (rose/radar) and "x" when theta is "y" (pie). Used during scale
+// expansion, which runs before trained scales exist and so cannot route
+// through `radial-ctx`.
 #let radial-axis-of(coord) = {
   let theta = theta-axis-of(coord)
   if theta == none { none } else if theta == "x" { "y" } else { "x" }

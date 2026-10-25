@@ -10,19 +10,18 @@
 #import "../../src/render/axis-format.typ": (
   _axis-breaks, _sec-spec, _secondary-breaks, _shared-axis-breaks,
 )
-#import "../../src/render/domain.typ": _apply-expand
+#import "../../src/coord/expand.typ": apply-expand
 
 #let layers = (geom-point(),)
 #let d = range(0, 21).map(i => (x: i, y: i * 2))
 
-#let trained-with(scale-set) = _apply-expand(
+#let trained-with(scale-set) = apply-expand(
   train(
     scales: scale-set,
     layers: layers,
     mapping: aes(x: "x", y: "y"),
     data: d,
   ),
-  none,
 )
 
 // --- an explicit secondary array wins over the primary grid ---

@@ -6,6 +6,31 @@
 ///! post-flip y axis is discrete its direction is reversed by default so
 ///! the first level sits at the top, matching reading order top-to-bottom.
 
+#import "contract.typ": coord-base
+#import "expand.typ": apply-expand
+
+// Swap the trained x and y scales so the renderer's bottom axis shows the
+// user's original y scale and the left axis shows the user's original x
+// scale. Runs after expansion, so the expansion of each axis follows it across.
+#let _apply-flip(trained, policy) = {
+  let x = trained.at("x", default: none)
+  let y = trained.at("y", default: none)
+  trained.insert("x", y)
+  trained.insert("y", x)
+  if x == none { return trained }
+
+  let do-reverse = if policy == auto { x.type == "discrete" } else { policy }
+  if not do-reverse { return trained }
+  let new-y = x
+  if x.type == "discrete" {
+    new-y.insert("reverse", true)
+  } else if x.type == "continuous" {
+    new-y.insert("reverse", not new-y.at("reverse", default: false))
+  }
+  trained.insert("y", new-y)
+  trained
+}
+
 /// Cartesian coordinate system with the x and y axes swapped at render time.
 ///
 /// Use this to turn a vertical bar chart into a horizontal one without
@@ -65,7 +90,10 @@
 ///
 /// \@see \@plot, \@coord-cartesian, \@geom-col
 #let coord-flip(reverse: auto) = (
-  kind: "coord",
-  name: "flip",
-  reverse: reverse,
+  coord-base("flip")
+    + (
+      flipped: true,
+      reverse: reverse,
+      train: trained => _apply-flip(apply-expand(trained), reverse),
+    )
 )
