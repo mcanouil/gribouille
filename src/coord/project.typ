@@ -16,8 +16,10 @@
 // that maps many values off one axis. `space` names what the values are:
 // `"row"` takes raw row cells and discrete levels (`map-position`), `"stat"`
 // takes numbers already in stat space (`map-axis`), and `"data"` takes numbers
-// in data space (`map-axis-data`).
-#let axis-mapper(ctx, axis, space: "row") = {
+// in data space (`map-axis-data`). `range` is `auto` for the coord's range of
+// the axis, or an explicit `(lo, hi)` for a caller that measures a canvas
+// length off the axis instead.
+#let axis-mapper(ctx, axis, space: "row", range: auto) = {
   let map = if space == "row" { map-position } else if space == "stat" {
     map-axis
   } else if space == "data" { map-axis-data } else {
@@ -25,6 +27,8 @@
   }
   let trained = ctx.trained.at(axis, default: none)
   if trained == none { return value => none }
-  let axis-range = (ctx.coord.axis-range)(ctx, axis)
+  let axis-range = if range == auto { (ctx.coord.axis-range)(ctx, axis) } else {
+    range
+  }
   value => map(trained, value, axis-range)
 }

@@ -7,12 +7,13 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-position, mapping-ref-col
+#import "../coord/project.typ": axis-mapper
+#import "../scale/train.typ": mapping-ref-col
 #import "../utils/bin.typ": bin-x-extents
 #import "../stat/bindot.typ": stat-bindot
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../utils/flip.typ": user-axes, user-columns
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns
 #import "../utils/radial.typ": project-point
 #import "../utils/types.typ": parse-number
 #import "../theme/theme.typ": (
@@ -129,7 +130,6 @@
   // vertically.
   let axes = user-axes(ctx)
   if axes == none { return }
-  let (x-trained, x-range) = (axes.x-trained, axes.x-range)
   let x-col = user-columns(mapping, ctx).x
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
@@ -148,12 +148,9 @@
   if bin-width == none { return }
   let first-x = parse-number(first.at(x-col))
   if first-x == none { return }
-  let cx-anchor = map-position(x-trained, first-x, x-range)
-  let cx-edge = map-position(
-    x-trained,
-    first-x + bin-width / 2,
-    x-range,
-  )
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx), range: axes.x-range)
+  let cx-anchor = map-x(first-x)
+  let cx-edge = map-x(first-x + bin-width / 2)
   if cx-anchor == none or cx-edge == none { return }
   // A reversed x axis maps the bin edge below its centre.
   let radius-cm = calc.abs(cx-edge - cx-anchor) * layer.params.dotsize

@@ -74,3 +74,9 @@
   ),
   pie-expected,
 )
+
+// An explicit range overrides the coord's range, also under radial.
+#assert.eq(
+  axis-mapper(radial-ctx, "x", range: (0, 2))(5),
+  map-position(tx, 5, (0, 2)),
+)
