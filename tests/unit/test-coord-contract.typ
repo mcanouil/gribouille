@@ -74,13 +74,13 @@
       },
     )
 )
-#context assert.eq(
-  render-plot-deferred(
+#context {
+  let pass = render-plot-deferred(
     halve-plot(pinned, as-spec: true),
     layout-only: true,
-  ).trained.x.domain,
-  (0, 100),
-)
+  )
+  assert.eq(pass.trained.x.domain, (0, 100))
+}
 
 #assert.eq(resolve-coord(none).name, "cartesian")
 
