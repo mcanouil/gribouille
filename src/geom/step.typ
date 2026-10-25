@@ -8,7 +8,6 @@
 #import "../utils/arrow.typ": assert-arrow
 #import "../utils/errors.typ": fail-enum
 #import "../utils/flip.typ": user-stair-direction
-#import "../utils/stair.typ": stair
 #import "grouped-path.typ": (
   draw-grouped-paths, rows-to-points, sort-rows-by-x, spec,
 )
@@ -115,14 +114,12 @@
   )
 }
 
-#let _build-pts(rows, params, mapping, ctx, dodge) = {
-  let pts = rows-to-points(
-    sort-rows-by-x(rows, mapping, ctx),
-    mapping,
-    ctx,
-    dodge,
-  )
-  stair(pts, user-stair-direction(params.direction, ctx))
-}
+#let _build-pts(rows, params, mapping, ctx, dodge) = rows-to-points(
+  sort-rows-by-x(rows, mapping, ctx),
+  mapping,
+  ctx,
+  dodge,
+  direction: user-stair-direction(params.direction, ctx),
+)
 
 #let draw(layer, ctx) = draw-grouped-paths(layer, ctx, _build-pts)

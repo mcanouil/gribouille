@@ -32,3 +32,33 @@
   }
   value => map(trained, value, axis-range)
 }
+
+// The `(u, v)` axis positions of data `(xv, yv)` pairs, in order, with `none`
+// for a pair that does not resolve on either trained scale. A caller that
+// carries something per pair keeps it aligned before it drops the `none`s.
+#let path-uvs(ctx, pairs) = {
+  let map-x = axis-mapper(ctx, "x")
+  let map-y = axis-mapper(ctx, "y")
+  pairs.map(((xv, yv)) => {
+    let u = map-x(xv)
+    let v = map-y(yv)
+    if u == none or v == none { none } else { (u, v) }
+  })
+}
+
+// Canvas points of a path through `(u, v)` axis positions, with the points
+// the coord's `densify` adds so that each edge follows its grid. `closed`
+// names the edge from the last point back to the first.
+#let project-uvs(ctx, uvs, closed: false) = (ctx.coord.densify)(
+  ctx,
+  uvs,
+  closed: closed,
+).map(((u, v)) => (ctx.coord.to-canvas)(ctx, u, v))
+
+// Canvas points of a path through data `(xv, yv)` pairs. A pair that does not
+// resolve is dropped, and its neighbours join each other directly.
+#let project-path(ctx, pairs, closed: false) = project-uvs(
+  ctx,
+  path-uvs(ctx, pairs).filter(uv => uv != none),
+  closed: closed,
+)

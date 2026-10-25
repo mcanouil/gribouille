@@ -22,6 +22,7 @@
   (
     "axis-range",
     "clip",
+    "densify",
     "draw-background",
     "draw-foreground",
     "flipped",

@@ -264,7 +264,7 @@
     )
     if has-band {
       let pts = band-polygon(ctx, sorted, p => p.hi, p => p.lo)
-      if pts.all(p => p != none) {
+      if pts != none {
         let alpha = resolve-channel(
           "alpha",
           layer.params,

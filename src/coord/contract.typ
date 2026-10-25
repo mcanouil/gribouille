@@ -17,6 +17,11 @@
 // `ctx.py-range` directly rather than calling `axis-range` and `to-canvas`.
 // A coord that overrides either of them must override `project` too.
 //
+// `densify` takes the `(u, v)` axis positions of a path, before `to-canvas`,
+// and returns them with the points the coord needs between them for each edge
+// to follow its grid. A linear coord needs none, so the default is the
+// identity. `closed` names the edge from the last point back to the first.
+//
 // `prepare` runs on the panel record (GLOSSARY.md "panel") before `frame`, and
 // returns the `label-bounds` and `tick-cm` that `frame` takes. A coord may add
 // its own fields for its draws; the panel merges the whole result into the
@@ -49,6 +54,7 @@
     ctx.py-range
   },
   to-canvas: (ctx, u, v) => (u, v),
+  densify: (ctx, uvs, closed: false) => uvs,
   project: (ctx, xv, yv) => {
     let xt = ctx.trained.at("x", default: none)
     let yt = ctx.trained.at("y", default: none)

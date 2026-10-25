@@ -6,7 +6,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../coord/project.typ": project-point
+#import "../coord/project.typ": path-uvs, project-uvs
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -137,17 +137,12 @@
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     let rows = g.data
-    let pts = ()
-    for row in rows {
-      let p = project-point(
-        ctx,
-        row.at(mapping.x, default: none),
-        row.at(mapping.y, default: none),
-      )
-      if p == none { continue }
-      pts.push(p)
-    }
-    if pts.len() < 3 { continue }
+    let uvs = path-uvs(ctx, rows.map(row => (
+      row.at(mapping.x, default: none),
+      row.at(mapping.y, default: none),
+    ))).filter(uv => uv != none)
+    if uvs.len() < 3 { continue }
+    let pts = project-uvs(ctx, uvs, closed: true)
 
     let leader = rows.first()
     let final-fill = resolve-channel(

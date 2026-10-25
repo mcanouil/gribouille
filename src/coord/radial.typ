@@ -3,10 +3,42 @@
 #import "../utils/errors.typ": fail-enum
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
-#import "../utils/radial.typ": polar-canvas, radial-ctx, radial-point
+#import "../utils/radial.typ": arc-steps, polar-canvas, radial-ctx, radial-point
 #import "../render/panel-radial.typ": (
   draw-radial-background, draw-radial-foreground, prepare-radial,
 )
+
+// Below this theta sweep an edge stays one chord: it is already as short as
+// one step of `arc-steps`.
+#let _CHORD-SWEEP = calc.pi / 36
+
+// The `(u, v)` axis positions with points inserted along each edge whose theta
+// sweep reaches `_CHORD-SWEEP`, linear in `(u, v)` as ggplot2 munches in
+// transformed space: at constant radius the edge becomes an arc. `t` is the
+// index of the theta position in each pair. `closed` also densifies the edge
+// from the last point back to the first, whose points come last.
+#let _densify(uvs, t, closed) = {
+  let n = uvs.len()
+  if n < 2 { return uvs }
+  let out = ()
+  for i in range(if closed { n } else { n - 1 }) {
+    let a = uvs.at(i)
+    let b = uvs.at(calc.rem(i + 1, n))
+    out.push(a)
+    let sweep = b.at(t) - a.at(t)
+    if calc.abs(sweep) < _CHORD-SWEEP { continue }
+    let steps = arc-steps(sweep)
+    for k in range(1, steps) {
+      let f = k / steps
+      out.push((
+        a.at(0) + (b.at(0) - a.at(0)) * f,
+        a.at(1) + (b.at(1) - a.at(1)) * f,
+      ))
+    }
+  }
+  if not closed { out.push(uvs.last()) }
+  out
+}
 
 /// Radial coordinate system.
 ///
@@ -110,6 +142,11 @@
           let (t, r) = if ctx.radial.cat-is-theta { (u, v) } else { (v, u) }
           polar-canvas(ctx.radial, t, r)
         },
+        densify: (ctx, uvs, closed: false) => _densify(
+          uvs,
+          if theta == "x" { 0 } else { 1 },
+          closed,
+        ),
         // Kept on `radial-point` rather than the generic route, so the radial
         // float path stays the one every golden was drawn with.
         project: (ctx, xv, yv) => radial-point(xv, yv, ctx.radial),

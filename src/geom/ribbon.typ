@@ -170,7 +170,7 @@
     if sorted.len() < 2 { continue }
 
     let pts = band-polygon(ctx, sorted, p => p.hi, p => p.lo)
-    if pts.any(p => p == none) { continue }
+    if pts == none { continue }
 
     let leader = rows.first()
     let final-fill = resolve-channel(
