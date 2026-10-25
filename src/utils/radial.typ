@@ -20,15 +20,6 @@
 // True when the coord is any flavour of `coord-radial`.
 #let is-radial(coord) = theta-axis-of(coord) != none
 
-// The complement of `theta-axis-of`, the axis the radius runs along: "y" when
-// theta is "x" (rose/radar) and "x" when theta is "y" (pie). Used during scale
-// expansion, which runs before trained scales exist and so cannot route
-// through `radial-ctx`.
-#let radial-axis-of(coord) = {
-  let theta = theta-axis-of(coord)
-  if theta == none { none } else if theta == "x" { "y" } else { "x" }
-}
-
 // The `(theta-lo, theta-hi)` sweep in canvas radians. It falls out of the
 // coord alone, with no panel rect in sight, which is what lets the chrome
 // stage project theta breaks before the panel it will draw them in exists.

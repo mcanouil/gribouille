@@ -3,6 +3,8 @@
 
 #import "../../lib.typ": aes, geom-point, plot
 #import "../../src/coord/contract.typ": coord-base
+#import "../../src/coord/expand.typ": apply-expand
+#import "../../src/render.typ": render-plot-deferred
 #import "../../src/coord/resolve.typ": resolve-coord
 #import "../../src/coord/cartesian.typ": coord-cartesian
 #import "../../src/coord/fixed.typ": coord-fixed
@@ -44,14 +46,40 @@
 #assert.eq((coord-fixed(ratio: 1).panel-size)(wide, 10, 6), (10, 2.0))
 
 // A coord built from `coord-base` reaches the renderer through its functions.
+// The plot is placed, so it lays out and calls `train` and `panel-size`; a
+// discarded `plot()` never does. `tests/errors/coord-custom-panel-size.typ`
+// proves that the renderer calls a custom `panel-size`.
 #let halve = coord-base("halve") + (panel-size: (t, w, h) => (w / 2, h))
-#let _ = plot(
+#let halve-plot(coord, ..rest) = plot(
   data: ((x: 1, y: 1), (x: 2, y: 3)),
   mapping: aes(x: "x", y: "y"),
   layers: (geom-point(),),
-  coord: halve,
+  coord: coord,
   width: 6cm,
   height: 4cm,
+  ..rest,
+)
+#halve-plot(halve)
+
+// The renderer uses what a custom `train` returns: the layout pass sees the
+// x domain that `train` pinned.
+#let pinned = (
+  halve
+    + (
+      train: trained => {
+        let x = trained.x
+        x.insert("domain", (0, 100))
+        trained.insert("x", x)
+        apply-expand(trained)
+      },
+    )
+)
+#context assert.eq(
+  render-plot-deferred(
+    halve-plot(pinned, as-spec: true),
+    layout-only: true,
+  ).trained.x.domain,
+  (0, 100),
 )
 
 #assert.eq(resolve-coord(none).name, "cartesian")

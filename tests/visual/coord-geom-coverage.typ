@@ -1,12 +1,12 @@
-// Smoke render: each geom under each non-cartesian coord.
+// Smoke render: geoms under coord-radial, coord-flip, and coord-fixed.
 //
-// The first panels draw abline, boxplot, stacked and dodged col, crossbar,
-// dotplot, errorbar, hex, rect, hline plus vline, rug, path, polygon, segment,
-// and area under coord-radial. The next draw col, boxplot, violin, and
-// density-ridges under coord-flip. The last three are a free-scale facet-wrap
-// under coord-flip, the same under coord-radial, and a coord-fixed ratio 2
-// scatter. Violin and density-ridges draw nothing under coord-radial, so they
-// have no radial panel.
+// The first fifteen panels draw abline, boxplot, stacked col, dodged col,
+// crossbar, dotplot, errorbar, hex, rect, hline plus vline, rug, path, polygon,
+// segment, and area under coord-radial. The next four draw stacked col,
+// boxplot, violin, and density-ridges under coord-flip. The last three are a
+// free-scale facet-wrap under coord-flip, the same under coord-radial, and a
+// coord-fixed ratio 2 scatter. Violin and density-ridges draw nothing under
+// coord-radial, so they have no radial panel.
 
 #import "../../lib.typ": *
 

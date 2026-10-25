@@ -1,6 +1,5 @@
 ///! Radial coordinate system.
 
-#import "../utils/radial.typ": radial-axis-of
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
 
@@ -57,7 +56,11 @@
   direction: 1,
   clip: false,
 ) = {
-  let coord = (
+  // The radial axis, the one theta does not run along: "y" for rose/radar and
+  // "x" for pie. Expansion runs before trained scales exist, so it cannot
+  // route through `radial-ctx`.
+  let radial-axis = if theta == "x" { "y" } else { "x" }
+  (
     coord-base("radial")
       + (
         theta: theta,
@@ -65,11 +68,7 @@
         end: end,
         direction: direction,
         clip: clip,
+        train: trained => apply-expand(trained, zero-lo-axis: radial-axis),
       )
   )
-  coord.insert("train", trained => apply-expand(
-    trained,
-    zero-lo-axis: radial-axis-of(coord),
-  ))
-  coord
 }

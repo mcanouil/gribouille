@@ -70,6 +70,9 @@
   let style = _render-style(theme)
 
   let spec = _preprocess-data(spec)
+  // Resolved before any stage reads it, so every reader of `spec.coord` gets
+  // the full coord contract, `none` included.
+  spec.insert("coord", resolve-coord(spec.at("coord", default: none)))
 
   // Faceted plots prepare layers per panel so stats (smooth, bin, count) fit
   // each panel's own row subset, following grammar-of-graphics semantics.
@@ -131,7 +134,7 @@
   // its clip limits, every coord applies the scale expansion, and coord-flip
   // swaps trained x and y so axis labels swap automatically.
   // Direction-sensitive geoms branch on `ctx.flipped` inside their draw.
-  let coord = resolve-coord(spec.at("coord", default: none))
+  let coord = spec.coord
   trained = (coord.train)(trained)
 
   // Drop (or clamp under `oob: "squish"`) rows whose value falls outside any

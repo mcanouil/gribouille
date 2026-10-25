@@ -149,7 +149,7 @@
   let x-trained = trained.at("x", default: none)
   let y-trained = trained.at("y", default: none)
 
-  let coord = spec.at("coord", default: none)
+  let coord = spec.coord
   // How a scale's own `labels` and its typst marking reach the tick labels of
   // every axis the panel draws, angular and radial included.
   let _axis-display(trained) = (
@@ -608,9 +608,7 @@
   let unclipped = prepared.filter(l => not l.at("clip", default: true))
   let clip-on = if inner-radial != none {
     inner-radial.clip
-  } else if coord != none {
-    coord.at("clip", default: true)
-  } else { true }
+  } else { coord.at("clip", default: true) }
   let clipped-geoms = _draw-subset(clipped)
   content(
     (px-lo, py-lo),
