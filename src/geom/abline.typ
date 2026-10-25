@@ -9,9 +9,9 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
-#import "../scale/train.typ": map-axis-data, transform-inv
-#import "../utils/flip.typ": user-axes, user-point
-#import "../utils/radial.typ": radial-point
+#import "../coord/project.typ": axis-mapper, project-point
+#import "../scale/train.typ": transform-inv
+#import "../utils/flip.typ": user-axes, user-axis-key, user-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let spec = (
@@ -214,11 +214,9 @@
   if lines.len() == 0 { return }
 
   // `_pos` returns the cetz `(cx, cy)` for a user-space point.
-  let _pos(ux, uy) = user-point(
-    ctx,
-    map-axis-data(user-x-trained, ux, axes.x-range),
-    map-axis-data(user-y-trained, uy, axes.y-range),
-  )
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx), space: "data")
+  let map-y = axis-mapper(ctx, user-axis-key("y", ctx), space: "data")
+  let _pos(ux, uy) = user-point(ctx, map-x(ux), map-y(uy))
   let radial = ctx.at("radial", default: none)
   let x-transform = user-x-trained.at("transform", default: "identity")
   let y-transform = user-y-trained.at("transform", default: "identity")
@@ -235,7 +233,7 @@
           let t = i / (n - 1)
           let x = x-lo + t * (x-hi - x-lo)
           let y = slope * x + intercept
-          radial-point(x, y, radial)
+          project-point(ctx, x, y)
         })
         .filter(p => p != none)
       if pts.len() >= 2 {

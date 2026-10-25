@@ -12,7 +12,7 @@
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/linetype-resolve.typ": resolve-linetype
-#import "../scale/train.typ": map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
 #import "../utils/flip.typ": user-axis-key
 #import "../utils/radial.typ": (
@@ -50,17 +50,18 @@
   let centre-range = if centre-axis == "x" { ctx.px-range } else {
     ctx.py-range
   }
-  let span-range = if axis == "y" { ctx.py-range } else { ctx.px-range }
   let position-name = layer-position-name(layer)
+  let map-centre = axis-mapper(ctx, centre-axis)
+  let map-span = axis-mapper(ctx, axis)
 
   for row in data {
     let raw-centre = row.at(centre-col, default: none)
-    let centre-c = map-position(centre-trained, raw-centre, centre-range)
+    let centre-c = map-centre(raw-centre)
     let lo = parse-number(row.at(span-min-col, default: none))
     let hi = parse-number(row.at(span-max-col, default: none))
     if centre-c == none or lo == none or hi == none { continue }
-    let span-lo = map-position(span-trained, lo, span-range)
-    let span-hi = map-position(span-trained, hi, span-range)
+    let span-lo = map-span(lo)
+    let span-hi = map-span(hi)
     if span-lo == none or span-hi == none { continue }
 
     let (cap-lo, cap-hi) = if extent-is-length {

@@ -5,13 +5,13 @@
 #import "../position/apply.typ": layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-axis, map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
 #import "../utils/radial.typ": (
   polar-canvas, radial-arc, radial-axis-ranges, radial-category-span,
   radial-wedge,
 )
-#import "../utils/flip.typ": user-axes, user-columns, user-point
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke
 #import "../theme/theme.typ": (
@@ -153,11 +153,30 @@
   let radial = ctx.at("radial", default: none)
   if radial != none {
     let cat-trained = if radial.cat-is-theta { x-trained } else { y-trained }
-    let val-trained = if radial.cat-is-theta { y-trained } else { x-trained }
     let cat-col = if radial.cat-is-theta { cols.x } else { cols.y }
     let (cat-range, value-range) = radial-axis-ranges(radial)
+    let (cat-key, value-key) = if radial.cat-is-theta { ("x", "y") } else {
+      ("y", "x")
+    }
+    let map-cat = axis-mapper(
+      ctx,
+      user-axis-key(cat-key, ctx),
+      range: cat-range,
+    )
+    let map-cat-stat = axis-mapper(
+      ctx,
+      user-axis-key(cat-key, ctx),
+      space: "stat",
+      range: cat-range,
+    )
+    let map-value = axis-mapper(
+      ctx,
+      user-axis-key(value-key, ctx),
+      space: "stat",
+      range: value-range,
+    )
     let half = (
-      radial-category-span(cat-trained, cat-col, cat-range, data)
+      radial-category-span(cat-trained, cat-col, cat-range, map-cat-stat, data)
         * layer.params.width
         / 2
     )
@@ -165,14 +184,14 @@
       let raw-cat = if radial.cat-is-theta {
         row.at(cols.x, default: none)
       } else { row.at(cols.y, default: none) }
-      let cat-c = map-position(cat-trained, raw-cat, cat-range)
+      let cat-c = map-cat(raw-cat)
       let mid = parse-number(row.at(cols.y, default: none))
       let lo = parse-number(row.at(cols.ymin, default: none))
       let hi = parse-number(row.at(cols.ymax, default: none))
       if cat-c == none or mid == none or lo == none or hi == none { continue }
-      let v-mid = map-axis(val-trained, mid, value-range)
-      let v-lo = map-axis(val-trained, lo, value-range)
-      let v-hi = map-axis(val-trained, hi, value-range)
+      let v-mid = map-value(mid)
+      let v-lo = map-value(lo)
+      let v-hi = map-value(hi)
       let (theta-lo, theta-hi, r-lo, r-hi, r-mid) = if radial.cat-is-theta {
         (cat-c - half, cat-c + half, v-lo, v-hi, v-mid)
       } else {
@@ -223,16 +242,19 @@
     return
   }
 
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx))
+  let map-y = axis-mapper(ctx, user-axis-key("y", ctx))
+
   for row in data {
     let raw-x = row.at(cols.x, default: none)
-    let cx = map-position(x-trained, raw-x, x-range)
+    let cx = map-x(raw-x)
     let mid = parse-number(row.at(cols.y, default: none))
     let lo = parse-number(row.at(cols.ymin, default: none))
     let hi = parse-number(row.at(cols.ymax, default: none))
     if cx == none or mid == none or lo == none or hi == none { continue }
-    let cy-mid = map-position(y-trained, mid, y-range)
-    let cy-lo = map-position(y-trained, lo, y-range)
-    let cy-hi = map-position(y-trained, hi, y-range)
+    let cy-mid = map-y(mid)
+    let cy-lo = map-y(lo)
+    let cy-hi = map-y(hi)
     if cy-mid == none or cy-lo == none or cy-hi == none { continue }
 
     let band = axis-band(x-trained, raw-x, half-width, x-range)

@@ -192,8 +192,9 @@
 
 // Bar-width category span derived from a trained scale. Discrete scales use
 // `discrete-slot-width`; continuous scales fall back to the smallest gap
-// between sorted unique x values, mirroring `geom-col`'s heuristic.
-#let radial-category-span(cat-trained, cat-col, cat-range, data) = {
+// between sorted unique x values, mirroring `geom-col`'s heuristic. `map-cat`
+// maps a stat-space category value into `cat-range`.
+#let radial-category-span(cat-trained, cat-col, cat-range, map-cat, data) = {
   if cat-trained.type == "discrete" {
     return discrete-slot-width(cat-trained, cat-range)
   }
@@ -206,8 +207,7 @@
   }
   let sorted = xs.dedup().sorted()
   let panel-gaps = range(sorted.len() - 1).map(i => calc.abs(
-    map-axis(cat-trained, sorted.at(i + 1), cat-range)
-      - map-axis(cat-trained, sorted.at(i), cat-range),
+    map-cat(sorted.at(i + 1)) - map-cat(sorted.at(i)),
   ))
   calc.min(..panel-gaps)
 }
