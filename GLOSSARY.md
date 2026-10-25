@@ -13,9 +13,9 @@ Run the survey command at the bottom before extending the table.
 | `aes`     | aesthetic mapping                      | `aes()` constructor; `(channel: column-name-or-marker, ...)`.                                                                           |
 | `stat`    | statistical transform                  | `stat_*` namespace; dispatched via `src/stat/apply.typ`.                                                                                |
 | `pos`     | position adjustment                    | `position_*` namespace (stack, dodge, fill, jitter, …).                                                                                 |
-| `coord`   | coordinate system                      | `coord-*` namespace; a dict of functions from `coord-base` (src/coord/contract.typ): `name`, `flipped`, `train(trained)`, `panel-size(trained, w, h)`, plus the constructor's own fields. |
+| `coord`   | coordinate system                      | `coord-*` namespace; a dict of functions from `coord-base` (src/coord/contract.typ): `name`, `flipped`, `train(trained)`, `panel-size(trained, w, h)`, `frame`, `axis-range`, `to-canvas`, `project(ctx, xv, yv)`, plus the constructor's own fields. |
 | `spec`    | plot specification dict                | the user-built dict consumed by `render-plot`.                                                                                          |
-| `ctx`     | per-draw context                       | dict passed to every geom's `draw(layer, ctx)`. Built once in render/panel-draw.typ (`trained`, `px-range`/`py-range`, `palette`, resolver closures, `theme`, `flipped`, `canvas-w`/`canvas-h`, + `radial` on the geom-dispatch copy).      |
+| `ctx`     | per-draw context                       | dict passed to every geom's `draw(layer, ctx)`. Built once in render/panel-draw.typ (`trained`, `px-range`/`py-range`, `palette`, resolver closures, `theme`, `flipped`, `canvas-w`/`canvas-h`, `coord`, + `radial` on the geom-dispatch copy).      |
 | `mapping` | column-name dict                       | flattened `aes` (`(x: "col", y: "col", colour: "col", ...)`).                                                                           |
 | `layer`   | one entry of `spec.layers`             | dict tagged `kind: "layer"` carrying `name` (the geom), `mapping`, `data`, …                                                                       |
 | `map`     | mapping (when shortened)               | local variable name; same shape as `mapping`.                                                                                           |
@@ -53,6 +53,9 @@ Run the survey command at the bottom before extending the table.
 | `cy`      | canvas y                  | post-scale pixel y in the panel coordinate system.                                    |
 | `px`      | panel x                   | panel x range (the `px-range` tuple in `ctx`).                                        |
 | `py`      | panel y                   | panel y range.                                                                        |
+| `frame`   | coord panel frame         | `coord.frame(x-trained, y-trained, px-range, py-range, label-bounds:, tick-cm:)` builds the bundle stored as `ctx.radial`; `none` off `coord-radial`. |
+| `axis-range` | coord range of one axis | `coord.axis-range(ctx, axis)`: the canvas range an axis maps into (`px-range`/`py-range`; theta or radius range under `coord-radial`). |
+| `to-canvas` | mapped pair to canvas   | `coord.to-canvas(ctx, u, v)` turns two positions mapped by `axis-mapper` (src/coord/project.typ) into a canvas `(cx, cy)`. |
 | `dx`      | delta x                   | local x-offset delta in draw and layout helpers.                                      |
 | `dy`      | delta y                   | local y-offset delta in draw and layout helpers.                                      |
 | `nudge-x` | x offset                  | aesthetic on `geom-text`/`label`/`typst`. A number means data units (continuous) or level units (discrete). A length means canvas units. Follows the user's x axis under `coord-flip`. |

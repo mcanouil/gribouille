@@ -16,7 +16,18 @@
 
 // The dict shape must stay stable so the faceted draw paths can call
 // `panel-size` exactly like the non-faceted path.
-#let keys-fixed = ("flipped", "kind", "name", "panel-size", "ratio", "train")
+#let keys-fixed = (
+  "axis-range",
+  "flipped",
+  "frame",
+  "kind",
+  "name",
+  "panel-size",
+  "project",
+  "ratio",
+  "to-canvas",
+  "train",
+)
 #assert.eq(c1.keys().sorted(), keys-fixed)
 #assert.eq(c2.keys().sorted(), keys-fixed)
 

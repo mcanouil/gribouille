@@ -10,7 +10,7 @@
   _line-stroke, _rect-style, _text-args, resolve-theme-palette,
   surface-set-below,
 )
-#import "../utils/radial.typ": radial-ctx, theta-axis-of
+#import "../utils/radial.typ": theta-axis-of
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
 #import "../utils/format.typ": format-break
@@ -123,10 +123,10 @@
   // Canonical per-draw context handed to every geom's `draw(layer, ctx)`
   // (GLOSSARY.md "ctx"): `trained`, `px-range`/`py-range` (panel extents in
   // canvas cm), `palette`, the `resolve-mapping`/`resolve-data`/
-  // `resolve-colour` closures, `theme`, `flipped`, `canvas-w`/`canvas-h`.
-  // The geom-dispatch copy (`inner-ctx`, below) additionally carries
-  // `radial` (`none` on cartesian panels); read optional keys with
-  // `ctx.at(key, default: ...)`.
+  // `resolve-colour` closures, `theme`, `flipped`, `canvas-w`/`canvas-h`, and
+  // the resolved `coord` that projects points. The geom-dispatch copy
+  // (`inner-ctx`, below) additionally carries `radial` (`none` on cartesian
+  // panels); read optional keys with `ctx.at(key, default: ...)`.
   let ctx = (
     trained: trained,
     px-range: px-range,
@@ -144,6 +144,7 @@
     flipped: flipped,
     canvas-w: canvas-w,
     canvas-h: canvas-h,
+    coord: spec.coord,
   )
 
   let x-trained = trained.at("x", default: none)
@@ -200,8 +201,7 @@
       if _theta-y { _ax-text.yl.size } else { _ax-text.xb.size },
     ),
   )
-  let outer-radial = radial-ctx(
-    coord,
+  let outer-radial = (coord.frame)(
     x-trained,
     y-trained,
     px-range,
@@ -569,8 +569,7 @@
   let inner-ctx = ctx
   inner-ctx.px-range = (x-pad-lo, panel-w - x-pad-hi)
   inner-ctx.py-range = (y-pad-lo, panel-h - y-pad-hi)
-  let inner-radial = radial-ctx(
-    coord,
+  let inner-radial = (coord.frame)(
     x-trained,
     y-trained,
     inner-ctx.px-range,

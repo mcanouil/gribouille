@@ -19,7 +19,18 @@
 #let keys-c1 = c1.keys().sorted()
 #assert.eq(
   keys-c1,
-  ("flipped", "kind", "name", "panel-size", "reverse", "train"),
+  (
+    "axis-range",
+    "flipped",
+    "frame",
+    "kind",
+    "name",
+    "panel-size",
+    "project",
+    "reverse",
+    "to-canvas",
+    "train",
+  ),
 )
 
 // Explicit reverse values carry through the spec.

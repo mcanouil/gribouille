@@ -3,6 +3,7 @@
 #import "../utils/errors.typ": fail-enum
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
+#import "../utils/radial.typ": polar-canvas, radial-ctx, radial-point
 
 /// Radial coordinate system.
 ///
@@ -64,15 +65,46 @@
   // "x" for pie. Expansion runs before trained scales exist, so it cannot
   // route through `radial-ctx`.
   let radial-axis = if theta == "x" { "y" } else { "x" }
+  // The keys `radial-ctx` reads off a radial coord. `frame` closes over them
+  // because the coord dict is not yet built when its closures are.
+  let own = (
+    theta: theta,
+    start: start,
+    end: end,
+    direction: direction,
+    clip: clip,
+  )
   (
     coord-base("radial")
+      + own
       + (
-        theta: theta,
-        start: start,
-        end: end,
-        direction: direction,
-        clip: clip,
         train: trained => apply-expand(trained, zero-lo-axis: radial-axis),
+        frame: (
+          x-trained,
+          y-trained,
+          px-range,
+          py-range,
+          label-bounds: (),
+          tick-cm: 0.0,
+        ) => radial-ctx(
+          own,
+          x-trained,
+          y-trained,
+          px-range,
+          py-range,
+          label-bounds: label-bounds,
+          tick-cm: tick-cm,
+        ),
+        axis-range: (ctx, axis) => if axis == theta {
+          ctx.radial.theta-range
+        } else { ctx.radial.r-range },
+        to-canvas: (ctx, u, v) => {
+          let (t, r) = if ctx.radial.cat-is-theta { (u, v) } else { (v, u) }
+          polar-canvas(ctx.radial, t, r)
+        },
+        // Kept on `radial-point` rather than the generic route, so the radial
+        // float path stays the one every golden was drawn with.
+        project: (ctx, xv, yv) => radial-point(xv, yv, ctx.radial),
       )
   )
 }

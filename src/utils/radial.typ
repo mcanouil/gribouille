@@ -4,6 +4,9 @@
   discrete-slot-width, level-position, map-axis, map-position,
 )
 #import "types.typ": parse-number
+// Re-exported, so the geoms that import `project-point` from here keep working
+// now that the coord owns the projection.
+#import "../coord/project.typ": project-point
 
 // Gap (cm) between the outer theta arc and the tick labels ringing it. The
 // draw site offsets the labels by it and the chrome stage reserves the band
@@ -132,23 +135,8 @@
   (cx + r * calc.cos(theta), cy + r * calc.sin(theta))
 }
 
-// Single entry point for geoms: projects a row's `(x, y)` to canvas units
-// via either the trained scales or the active radial bundle. Returns `none`
-// when either coordinate fails to resolve.
-#let project-point(ctx, xv, yv) = {
-  let radial = ctx.at("radial", default: none)
-  if radial != none { return radial-point(xv, yv, radial) }
-  let xt = ctx.trained.at("x", default: none)
-  let yt = ctx.trained.at("y", default: none)
-  if xt == none or yt == none { return none }
-  let cx = map-position(xt, xv, ctx.px-range)
-  let cy = map-position(yt, yv, ctx.py-range)
-  if cx == none or cy == none { return none }
-  (cx, cy)
-}
-
 // Trained scale for one axis, taken from the radial bundle when a radial coord
-// is active and from `ctx.trained` otherwise. Mirrors `project-point`'s split.
+// is active and from `ctx.trained` otherwise.
 #let _axis-trained(ctx, axis) = {
   let radial = ctx.at("radial", default: none)
   if radial != none { return radial.at(axis + "-trained", default: none) }
