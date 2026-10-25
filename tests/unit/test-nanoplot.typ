@@ -26,12 +26,22 @@
 #assert.eq((renderer.readings)(none), ())
 #assert.eq((renderer.readings)(3), ())
 #assert.eq((renderer.readings)(()), ())
+// A value that is not a finite number would make the column domain unusable.
+#assert.eq(
+  (renderer.readings)((
+    (salary: float.nan),
+    (salary: float.inf),
+    (salary: -float.inf),
+    (salary: 2),
+  )),
+  (2.0,),
+)
 
-// The shared domain becomes the x limits, with no expansion unless the user
-// scale sets one, and the other arguments of the user scale stay.
+// The shared domain becomes the x limits, the expansion stays at Gribouille's
+// default unless the user scale sets one, and the other arguments stay.
 #let bare = _x-scale((:), (0, 10))
 #assert.eq(bare.limits, (0, 10))
-#assert.eq(bare.expand, (0%, 0%))
+#assert.eq(bare.expand, auto)
 #let user = _x-scale(
   scales(x: scale-continuous(
     breaks: (2, 4),

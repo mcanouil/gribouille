@@ -2,8 +2,8 @@
 // scale, with the column axis above the first row and below the last.
 //
 // The labels of both axes must sit over the dashed guides drawn in every cell
-// at the same breaks, and the centres of the points at 0 and 115000 must sit on
-// the left and right edges of the column content.
+// at the same breaks. The default expansion keeps the points at 0 and 115000
+// whole, inside the left and right edges of the column content.
 //
 // keisen has no release with the nanoplot protocol yet, so this test imports
 // the local checkout; it moves to @preview/keisen once that release is out.

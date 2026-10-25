@@ -35,7 +35,9 @@
   "panel-grid-minor-y",
 )
 
-// A cell holds an array of records; anything else holds no readings.
+// A cell holds an array of records; anything else holds no readings. A value
+// that is not a finite number is no reading either, since keisen takes the
+// minimum and the maximum of every reading for the column domain.
 #let _readings(value, field) = {
   if type(value) != array { return () }
   value
@@ -43,16 +45,18 @@
     .map(record => record.at(field, default: none))
     .filter(reading => type(reading) in (int, float, decimal))
     .map(float)
+    .filter(reading => (
+      not float.is-nan(reading) and not float.is-infinite(reading)
+    ))
 }
 
 // The x scale the cells and the axis share: the user's scale with the column
-// domain as its limits. The expansion defaults to none, so the domain fills the
-// column width, but a user `expand` stays.
+// domain as its limits. Its other fields stay, the expansion included, so a mark
+// at the end of the domain is drawn whole under Gribouille's default expansion.
 #let _x-scale(scales, domain) = {
   let x = scales.at("x", default: none)
   if x == none { x = _continuous-scale("x") }
   if domain != none { x.insert("limits", (domain.first(), domain.last())) }
-  if x.at("expand", default: auto) == auto { x.insert("expand", (0%, 0%)) }
   x
 }
 
@@ -62,7 +66,7 @@
 // keeps no margin for it that would narrow the data area.
 #let _axis-scale(x, pad, side) = {
   let (mult-lo, add-lo, mult-hi, add-hi) = normalise-expansion(
-    x.expand,
+    x.at("expand", default: auto),
     "continuous",
   )
   x.insert("expand", (
@@ -118,11 +122,15 @@
 /// keisen reads the `domain-field` of every record in the column and computes one domain.
 /// Each cell then uses that domain as the `limits` of its x scale, so all cells share one x scale.
 /// The other arguments of the x scale in `scales` stay as given.
-/// The x scale has no expansion unless the x scale in `scales` sets `expand`.
+/// The x scale keeps the default expansion of Gribouille unless the x scale in `scales` sets `expand`.
 /// Cells draw no axes, no axis titles and no legends.
 ///
 /// When `axis` is `true`, keisen draws the x axis of the column below the column labels and again after the last row.
 /// The axis uses the same x scale and theme as the cells, so each break lines up with the cells.
+/// This is not true for a geom that widens the x scale past its limits to draw whole marks, such as \@geom-col, \@geom-tile or \@geom-histogram: it widens the scale of the cells, but not the scale of the axis.
+/// For these geoms, give keisen's `format-nanoplot` a `domain` that holds the whole marks, for example half a bar width past each end, as in `domain: (-0.5, 10.5)` for bars at 0 to 10.
+/// A wider `expand` does not help, because the cells widen their scale past the limits all the same.
+/// A tick label at the end of the domain is centred on the end, so half of it can go past the column content into the cell inset.
 /// It draws the tick labels even when the theme hides them, as \@theme-void does.
 /// Gribouille does not import keisen: the renderer is a plain dictionary.
 ///
@@ -145,6 +153,8 @@
 /// \@param axis `true` (default) gives the column an x axis; `false` gives it none.
 ///
 /// \@param axis-height Height of the axis, as a length; default `1.4em`.
+///   The axis text takes its size from the theme, not from the table.
+///   If the theme text is larger than the table text, increase `axis-height` so the tick labels fit.
 ///
 /// \@returns A keisen nanoplot renderer, `(kind: "nanoplot-renderer", draw, readings, axis)`.
 ///
