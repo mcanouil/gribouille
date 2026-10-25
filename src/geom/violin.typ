@@ -2,8 +2,8 @@
 ///!
 ///! The default `stat = "ydensity"` smooths each x bucket's y sample into a
 ///! density curve; the geom mirrors that curve around the bucket's x slot
-///! as a closed silhouette. Under \@coord-radial the layer degrades to a
-///! no-op (mirrored silhouettes do not translate to polar wedges yet).
+///! as a closed silhouette. \@coord-radial fails for this layer, as
+///! mirrored silhouettes do not translate to polar wedges.
 
 #import "../utils/bucket.typ": bucket-index
 #import "../deps.typ": cetz
@@ -161,7 +161,6 @@
 
   let axes = user-axes(ctx)
   if axes == none or axes.y-trained.type != "continuous" { return }
-  if ctx.at("radial", default: none) != none { return }
   let x-trained = axes.x-trained
   let x-range = axes.x-range
   let pt = user-point.with(ctx)

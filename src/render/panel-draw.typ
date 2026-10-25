@@ -25,17 +25,6 @@
 
 #import "../geom/registry.typ": GEOMS
 
-// Layers whose `geom` is missing from this set panic under `coord-radial`
-// rather than silently falling back to cartesian rendering. Every registered
-// geom is currently radial-aware; the check below guards against typos and
-// future geoms that intentionally opt out. Stored as a dict-set so per-layer
-// membership tests are O(1) instead of an array scan.
-#let _RADIAL-AWARE = {
-  let s = (:)
-  for k in GEOMS.keys() { s.insert(k, true) }
-  s
-}
-
 #let _draw-axis-and-layers(
   prepared,
   trained,
@@ -234,11 +223,13 @@
     tick-cm: prep.tick-cm,
   )
   inner-ctx.radial = inner-radial
-  if inner-radial != none {
-    for layer in prepared {
-      if not _RADIAL-AWARE.at(layer.name, default: false) {
-        fail("coord-radial", "does not support geom-" + layer.name)
-      }
+  for layer in prepared {
+    if not (coord.supports)(layer.name) {
+      fail(
+        "coord-" + coord.name,
+        "does not support geom-" + layer.name,
+        hint: "Draw this layer without coord-radial, or use geom-boxplot, which draws under coord-radial.",
+      )
     }
   }
   // Every geom is drawn `floating`, so it never contributes to the canvas

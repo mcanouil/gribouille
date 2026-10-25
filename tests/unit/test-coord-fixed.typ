@@ -29,6 +29,7 @@
   "prepare",
   "project",
   "ratio",
+  "supports",
   "to-canvas",
   "train",
 )

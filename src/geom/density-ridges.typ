@@ -3,8 +3,7 @@
 ///! The default `stat = "density-ridges"` smooths each y bucket's x sample
 ///! into a density curve; the geom draws every curve as a filled ridge
 ///! rising from its bucket's baseline, back to front so ridges lower on
-///! the plot overlap the ones behind them. Under \@coord-radial the layer
-///! degrades to a no-op.
+///! the plot overlap the ones behind them. \@coord-radial fails for this layer.
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
@@ -157,7 +156,6 @@
   let y-trained = ctx.trained.at("y", default: none)
   if x-trained == none or y-trained == none { return }
   if x-trained.type != "continuous" { return }
-  if ctx.at("radial", default: none) != none { return }
   let map-x = axis-mapper(ctx, "x", space: "stat")
   let map-y = axis-mapper(ctx, "y")
 

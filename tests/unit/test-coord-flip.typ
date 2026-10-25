@@ -32,6 +32,7 @@
     "prepare",
     "project",
     "reverse",
+    "supports",
     "to-canvas",
     "train",
   ),

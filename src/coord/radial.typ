@@ -99,6 +99,7 @@
           tick-cm: tick-cm,
         ),
         prepare: prepare-radial,
+        supports: geom-name => geom-name not in ("violin", "density-ridges"),
         draw-background: draw-radial-background,
         draw-foreground: draw-radial-foreground,
         axis-range: (ctx, axis) => if axis == theta {

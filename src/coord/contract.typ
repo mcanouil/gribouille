@@ -23,7 +23,8 @@
 // record, so `ctx.radial` keeps its own shape.
 // `draw-background` draws the furniture under the geoms, `draw-foreground`
 // what sits above them, and `clip` says whether the geoms are clipped to the
-// panel.
+// panel. `supports` says whether the coord can draw the geom of that name, and
+// the panel fails for a layer it refuses.
 #let coord-base(name) = (
   kind: "coord",
   name: name,
@@ -42,6 +43,7 @@
   draw-background: draw-cartesian-background,
   draw-foreground: panel => none,
   clip: true,
+  supports: geom-name => true,
   axis-range: (ctx, axis) => if axis == "x" { ctx.px-range } else {
     ctx.py-range
   },
