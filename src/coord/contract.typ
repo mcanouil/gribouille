@@ -18,8 +18,9 @@
 // A coord that overrides either of them must override `project` too.
 //
 // `prepare` runs on the panel record (GLOSSARY.md "panel") before `frame`, and
-// returns the `label-bounds` and `tick-cm` that `frame` takes plus the
-// `theta-band` the background draws, so `ctx.radial` keeps its own shape.
+// returns the `label-bounds` and `tick-cm` that `frame` takes. A coord may add
+// its own fields for its draws; the panel merges the whole result into the
+// record, so `ctx.radial` keeps its own shape.
 // `draw-background` draws the furniture under the geoms, `draw-foreground`
 // what sits above them, and `clip` says whether the geoms are clipped to the
 // panel.
@@ -37,7 +38,7 @@
     label-bounds: (),
     tick-cm: 0.0,
   ) => none,
-  prepare: panel => (label-bounds: (), tick-cm: 0.0, theta-band: none),
+  prepare: panel => (label-bounds: (), tick-cm: 0.0),
   draw-background: draw-cartesian-background,
   draw-foreground: panel => none,
   clip: true,

@@ -209,7 +209,7 @@
     label-bounds: prep.label-bounds,
     tick-cm: prep.tick-cm,
   )
-  panel += (theta-band: prep.theta-band, outer-radial: outer-radial)
+  panel += prep + (outer-radial: outer-radial)
 
   (coord.draw-background)(panel)
 
