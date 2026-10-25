@@ -12,6 +12,7 @@
 
 ### Changes
 
+- feat: Add `nanoplot`, which draws a Gribouille plot in each cell of a keisen column, with a shared axis.
 - fix: Explicit position `limits` now choose which marks of `geom-col()`, `geom-histogram()`, `geom-freqpoly()`, `geom-dotplot()`, `geom-tile()`, `geom-ellipse()`, or a line, path or step on `stat-bin()` rows are drawn, by the centre of each mark. The marks that stay are drawn in full, and the axis widens to fit them. (#352)
 - fix: A data column named `width` no longer pads the x scale of a geom that draws no bars, such as `geom-point()` or `geom-text()`. The half-bar padding of bars and bins now follows each layer, so it adds no margin past the range of a wider layer. (#352)
 - fix: `stat-waffle()` grids sit flush with the panel, without the automatic expansion margin. An `expand` set on a scale still applies. (#351)
