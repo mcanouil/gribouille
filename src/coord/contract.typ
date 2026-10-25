@@ -3,6 +3,7 @@
 // that differ from the cartesian defaults.
 
 #import "../scale/train.typ": map-position
+#import "../render/panel-cartesian.typ": draw-cartesian-background
 #import "expand.typ": apply-expand
 
 // `train` rewrites the trained positional scales once scale training is done,
@@ -15,6 +16,13 @@
 // `project` runs once per row, so the default reads `ctx.px-range` and
 // `ctx.py-range` directly rather than calling `axis-range` and `to-canvas`.
 // A coord that overrides either of them must override `project` too.
+//
+// `prepare` runs on the panel record (GLOSSARY.md "panel") before `frame`, and
+// returns the `label-bounds` and `tick-cm` that `frame` takes plus the
+// `theta-band` the background draws, so `ctx.radial` keeps its own shape.
+// `draw-background` draws the furniture under the geoms, `draw-foreground`
+// what sits above them, and `clip` says whether the geoms are clipped to the
+// panel.
 #let coord-base(name) = (
   kind: "coord",
   name: name,
@@ -29,6 +37,10 @@
     label-bounds: (),
     tick-cm: 0.0,
   ) => none,
+  prepare: panel => (label-bounds: (), tick-cm: 0.0, theta-band: none),
+  draw-background: draw-cartesian-background,
+  draw-foreground: panel => none,
+  clip: true,
   axis-range: (ctx, axis) => if axis == "x" { ctx.px-range } else {
     ctx.py-range
   },

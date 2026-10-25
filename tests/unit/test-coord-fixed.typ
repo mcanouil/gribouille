@@ -18,11 +18,15 @@
 // `panel-size` exactly like the non-faceted path.
 #let keys-fixed = (
   "axis-range",
+  "clip",
+  "draw-background",
+  "draw-foreground",
   "flipped",
   "frame",
   "kind",
   "name",
   "panel-size",
+  "prepare",
   "project",
   "ratio",
   "to-canvas",

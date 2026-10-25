@@ -4,6 +4,9 @@
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
 #import "../utils/radial.typ": polar-canvas, radial-ctx, radial-point
+#import "../render/panel-radial.typ": (
+  _draw-radial-r-labels, draw-radial-background, prepare-radial,
+)
 
 /// Radial coordinate system.
 ///
@@ -95,6 +98,9 @@
           label-bounds: label-bounds,
           tick-cm: tick-cm,
         ),
+        prepare: prepare-radial,
+        draw-background: draw-radial-background,
+        draw-foreground: _draw-radial-r-labels,
         axis-range: (ctx, axis) => if axis == theta {
           ctx.radial.theta-range
         } else { ctx.radial.r-range },
