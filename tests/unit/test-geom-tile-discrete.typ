@@ -34,12 +34,12 @@
 #assert.eq(dd-trained.x.domain, ("a", "b"))
 #assert.eq(dd-trained.y.domain, ("p", "q"))
 
-// `discrete-slot-width` honours the `view-index` produced by `_apply-expand`:
+// `discrete-slot-width` honours the `view-index` produced by `apply-expand`:
 // the panel range is divided by `(n - 1) + 2 * DISCRETE-AUTO-DATA-PAD` rather
 // than `n - 1`, since the auto pad widens the view-index window symmetrically.
-#import "../../src/render/domain.typ": _apply-expand
+#import "../../src/coord/expand.typ": apply-expand
 #import "../../src/scale/expansion.typ": DISCRETE-AUTO-DATA-PAD
-#let dd-expanded = _apply-expand(dd-trained, none)
+#let dd-expanded = apply-expand(dd-trained)
 #let slot = discrete-slot-width(dd-expanded.x, (0.0, 10.0))
 #let view-span = (dd-expanded.x.domain.len() - 1) + 2 * DISCRETE-AUTO-DATA-PAD
 #assert.eq(slot, 10.0 / view-span)

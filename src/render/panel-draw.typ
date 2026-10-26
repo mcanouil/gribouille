@@ -1,56 +1,29 @@
 // Panel renderer: the geom-dispatch table and `_draw-axis-and-layers`, which
-// draws one panel's background, gridlines, axes (cartesian + radial), geom
-// marks, axis titles, and any panel-local legend.
+// draws one panel: the coord's background (panel fill, gridlines, axes), the
+// geom marks, the coord's foreground, the axis titles, and any panel-local
+// legend.
 
 #import "../deps.typ": cetz
-#import "../utils/errors.typ": fail
-#import "../scale/train.typ": map-axis-data, map-break, mapping-display-name
+#import "../utils/errors.typ": fail, fail-enum
+#import "../scale/train.typ": mapping-display-name
 #import "../theme/defaults.typ": resolve-colour
-#import "../theme/theme.typ": (
-  _line-stroke, _rect-style, _text-args, resolve-theme-palette,
-  surface-set-below,
-)
-#import "../utils/radial.typ": radial-ctx, theta-axis-of
-#import "../utils/typst-markup.typ": resolve-prose
-#import "../utils/aes-resolve.typ": resolve-label
-#import "../utils/format.typ": format-break
+#import "../theme/theme.typ": _line-stroke, resolve-theme-palette
 #import "../utils/palette.typ": spec-attr
-#import "../scale/secondary.typ" as secondary-mod
 #import "legend.typ" as legend-mod
 #import "common.typ": (
-  _per-side, _resolve-data, _resolve-mapping, _should-draw-tick, _text-sides,
-  _tick-cm-sides,
+  _per-side, _resolve-data, _resolve-mapping, _text-sides, _tick-cm-sides,
 )
 #import "colour.typ": _make-resolve-colour
 #import "domain.typ": _flip-mapping
 #import "prestat.typ": _rebase-level-spine
-#import "panel-radial.typ": (
-  _draw-radial-panel, _draw-radial-r-labels, theta-band,
-)
-#import "axis-format.typ": (
-  _axis-breaks, _axis-minor-breaks, _axis-tick-values, _axis-title, _sec-spec,
-  _secondary-breaks, _tick-label-fallback,
-)
-#import "axis-parts.typ": axis-entries, draw-axis-band
-#import "guides.typ": _axis-text-angle, _read-axis-guide, _read-theta-guide
+#import "axis-format.typ": _axis-title
+#import "guides.typ": _axis-text-angle, _read-axis-guide
 #import "extents.typ": (
-  _AX-TITLE-LABEL-GAP, _TICK-LABEL-GAP, _resolve-extents, _sec-title-offset-cm,
-  _text-margin-cm, _theta-label-bounds, _title-angle, _title-body,
+  _AX-TITLE-LABEL-GAP, _text-margin-cm, _title-angle, _title-body,
   _title-extent-cm, _x-title-place, _y-title-place,
 )
 
 #import "../geom/registry.typ": GEOMS
-
-// Layers whose `geom` is missing from this set panic under `coord-radial`
-// rather than silently falling back to cartesian rendering. Every registered
-// geom is currently radial-aware; the check below guards against typos and
-// future geoms that intentionally opt out. Stored as a dict-set so per-layer
-// membership tests are O(1) instead of an array scan.
-#let _RADIAL-AWARE = {
-  let s = (:)
-  for k in GEOMS.keys() { s.insert(k, true) }
-  s
-}
 
 #let _draw-axis-and-layers(
   prepared,
@@ -123,10 +96,10 @@
   // Canonical per-draw context handed to every geom's `draw(layer, ctx)`
   // (GLOSSARY.md "ctx"): `trained`, `px-range`/`py-range` (panel extents in
   // canvas cm), `palette`, the `resolve-mapping`/`resolve-data`/
-  // `resolve-colour` closures, `theme`, `flipped`, `canvas-w`/`canvas-h`.
-  // The geom-dispatch copy (`inner-ctx`, below) additionally carries
-  // `radial` (`none` on cartesian panels); read optional keys with
-  // `ctx.at(key, default: ...)`.
+  // `resolve-colour` closures, `theme`, `flipped`, `canvas-w`/`canvas-h`, and
+  // the resolved `coord` that projects points. The geom-dispatch copy
+  // (`inner-ctx`, below) additionally carries `radial` (`none` on cartesian
+  // panels); read optional keys with `ctx.at(key, default: ...)`.
   let ctx = (
     trained: trained,
     px-range: px-range,
@@ -144,12 +117,13 @@
     flipped: flipped,
     canvas-w: canvas-w,
     canvas-h: canvas-h,
+    coord: spec.coord,
   )
 
   let x-trained = trained.at("x", default: none)
   let y-trained = trained.at("y", default: none)
 
-  let coord = spec.at("coord", default: none)
+  let coord = spec.coord
   // How a scale's own `labels` and its typst marking reach the tick labels of
   // every axis the panel draws, angular and radial included.
   let _axis-display(trained) = (
@@ -161,401 +135,72 @@
   let _x-disp = _axis-display(x-trained)
   let _y-disp = _axis-display(y-trained)
 
-  // The theta tick labels ring the circle just outside it, so the circle has
-  // to leave them room inside the panel: the panel is all the room the chrome
-  // granted, and a label past its edge grows the whole figure past the
-  // requested `width`/`height`. Gate the band on the same conditions the draw
-  // does, so a suppressed or blank theta axis gives it back.
-  let _theta-guide = _read-theta-guide(spec)
-  let _theta-key = theta-axis-of(coord)
-  let _label-bounds = if _theta-key == none { () } else {
-    let _theta-text = if _theta-key == "x" { _ax-text.xb } else { _ax-text.yl }
-    if (
-      _theta-text.size > 0pt
-        and not (_theta-guide != none and _theta-guide.suppress)
-    ) {
-      _theta-label-bounds(
-        _resolve-extents(
-          if _theta-key == "x" { x-extents } else { y-extents },
-          _theta-text.size,
-        ).at("groups", default: ()),
-        if _theta-guide == none { 0 } else { _theta-guide.angle },
-      )
-    } else { () }
-  }
-  // The theta ticks sit between the circle and those labels, so the angular
-  // axis is laid out here rather than with the cartesian sides below: the
-  // radius owes its ticks their length before either can be placed.
-  let _theta-y = _theta-key == "y"
-  let _theta-band = theta-band(
-    theme,
-    coord,
-    _theta-guide,
-    if _theta-y { y-trained } else { x-trained },
-    _theta-key,
-    if _theta-y { _y-disp } else { _x-disp },
-    if _theta-y { _ax-text.yl } else { _ax-text.xb },
-    _resolve-extents(
-      if _theta-y { y-extents } else { x-extents },
-      if _theta-y { _ax-text.yl.size } else { _ax-text.xb.size },
-    ),
-  )
-  let outer-radial = radial-ctx(
-    coord,
-    x-trained,
-    y-trained,
-    px-range,
-    py-range,
-    label-bounds: _label-bounds,
-    tick-cm: _theta-band.reach,
-  )
-  let is-radial = outer-radial != none
-
-  let _panel = _rect-style(
-    theme,
-    "panel-background",
-    fallback-fill: theme.paper,
-    outset-ref-w: canvas-w,
-    outset-ref-h: canvas-h,
-  )
-  // Panel rect stays glued to the natural panel canvas so a themed `inset`
-  // cannot bleed past adjacent facets or chrome. Visible breathing room
-  // around a panel is the job of `outset` (chrome reservation upstream).
-  if _panel.fill != none or _panel.stroke != none {
-    if is-radial {
-      cetz.draw.circle(
-        outer-radial.centre,
-        radius: outer-radial.r-max,
-        fill: _panel.fill,
-        stroke: _panel.stroke,
-      )
-    } else {
-      rect(
-        (px-lo, py-lo),
-        (px-hi, py-hi),
-        fill: _panel.fill,
-        stroke: _panel.stroke,
-      )
-    }
-  }
-
-  let _grid-stroke = surface => _line-stroke(
-    theme,
-    surface,
-    fallback-colour: _ink,
-  )
-  let _grid-major = (
-    x: _grid-stroke("panel-grid-major-x"),
-    y: _grid-stroke("panel-grid-major-y"),
-  )
-  let _grid-minor = (
-    x: _grid-stroke("panel-grid-minor-x"),
-    y: _grid-stroke("panel-grid-minor-y"),
-  )
-  // A discrete axis draws no gridlines by default, since its ticks already mark
-  // every level. A grid element set on the major weight or on one axis is a
-  // deliberate request, so it wins; an inherited `panel-grid` is not.
-  let _grid-discrete = (
-    x: surface-set-below(theme, "panel-grid-major-x", "panel-grid"),
-    y: surface-set-below(theme, "panel-grid-major-y", "panel-grid"),
-  )
-  // Radial panels draw one grid weight for both circles and spokes; the
-  // per-axis split and minor lines apply to cartesian panels only.
-  let _grid-radial = _grid-stroke("panel-grid-major")
-  let _grid-radial-discrete = surface-set-below(
-    theme,
-    "panel-grid-major",
-    "panel-grid",
-  )
   let _stroke-side = (p, s, _) => _line-stroke(
     theme,
     p + "-" + s,
     fallback-colour: _ink,
   )
-  let _ax-line = _per-side(_stroke-side, "axis-line")
-  let _ax-ticks = _per-side(_stroke-side, "axis-ticks")
-  let _tick-len = _tick-cm-sides(theme)
 
-  let x-guide = _read-axis-guide(spec, "x", default-angle: _axis-text-angle(
-    theme,
-    "x",
-  ))
-  let y-guide = _read-axis-guide(spec, "y", default-angle: _axis-text-angle(
-    theme,
-    "y",
-  ))
-  // What one cartesian axis walks: the breaks, where they map to, and whether
-  // the guide suppressed the band. `none` where the panel draws no cartesian
-  // axis at all, which is every radial panel and every axis without a scale.
-  //
-  // Continuous and discrete axes share everything except where the breaks come
-  // from, so only that branches here.
-  let _cartesian-walk(axis, trained) = {
-    if is-radial or trained == none { return none }
-    let is-continuous = trained.type == "continuous"
-    if not is-continuous and trained.type != "discrete" { return none }
-    let cached = if axis-breaks == none { none } else {
-      axis-breaks.at(axis, default: none)
-    }
-    (
-      is-continuous: is-continuous,
-      breaks: if is-continuous and cached != none {
-        cached
-      } else { _axis-tick-values(trained) },
-      range: if axis == "x" { px-range } else { py-range },
-      suppress: if axis == "x" { x-guide.suppress } else { y-guide.suppress },
-    )
-  }
-
-  // Gridlines for one axis. They are panel furniture rather than part of the
-  // axis band: they mark where a break crosses the panel, so they stay with the
-  // panel whatever draws the ticks and the labels outside it.
-  //
-  // A discrete axis draws majors only when the theme asks for them per weight or
-  // per axis, and never draws minors: a gap between levels has no subdivision.
-  let _draw-cartesian-grid(axis, trained, walk) = {
-    if walk == none { return }
-    let major-stroke = if axis == "x" { _grid-major.x } else { _grid-major.y }
-    let minor-stroke = if axis == "x" { _grid-minor.x } else { _grid-minor.y }
-    let major-discrete = if axis == "x" {
-      _grid-discrete.x
-    } else { _grid-discrete.y }
-    // Minor gridlines sit under the majors, so draw them first.
-    if walk.is-continuous and minor-stroke != none {
-      for mb in _axis-minor-breaks(trained, walk.breaks) {
-        let mc = map-axis-data(trained, mb, walk.range)
-        if axis == "x" {
-          line((mc, py-lo), (mc, py-hi), stroke: minor-stroke)
-        } else {
-          line((px-lo, mc), (px-hi, mc), stroke: minor-stroke)
-        }
-      }
-    }
-    if major-stroke == none or not (walk.is-continuous or major-discrete) {
-      return
-    }
-    for b in walk.breaks {
-      let c = map-break(trained, b, walk.range)
-      if axis == "x" {
-        line((c, py-lo), (c, py-hi), stroke: major-stroke)
-      } else {
-        line((px-lo, c), (px-hi, c), stroke: major-stroke)
-      }
-    }
-  }
-
-  // The label one break reads, or nothing where the band draws no labels at
-  // all: a facet cell that leaves them to the edge panel, or a theme that
-  // blanked `axis-text`. An entry with no label still ticks.
-  let _band-labels(trained, walk, disp, style, shown) = {
-    if not shown or style.size == 0pt { return () }
-    walk
-      .breaks
-      .enumerate()
-      .map(((idx, b)) => resolve-prose(
-        resolve-label(
-          disp.labels,
-          b,
-          idx,
-          _tick-label-fallback(trained, b),
-          typst-mark: disp.typst-mark,
-        ),
-        eval-strings: style.typst,
-      ))
-  }
-
-  // The entry table one axis band annotates: one row per break, plus the
-  // sub-decade rows a log axis ticks. Every row carries the widest label the
-  // chrome stage measured, which is the figure the band it reserved was sized
-  // from, so the panel draws inside the room it was given.
-  let _band-entries(axis, trained, walk, guide, disp, style, shown, extents) = {
-    if walk == none { return () }
-    let ext = _resolve-extents(extents, style.size)
-    let labels = _band-labels(trained, walk, disp, style, shown)
-    axis-entries(
-      trained,
-      guide,
-      walk.breaks,
-      labels: labels,
-      extent: if labels.len() == 0 { (0.0, 0.0) } else {
-        (ext.width, ext.height)
-      },
-    )
-  }
-  let _x-walk = _cartesian-walk("x", x-trained)
-  let _y-walk = _cartesian-walk("y", y-trained)
-  _draw-cartesian-grid("x", x-trained, _x-walk)
-  draw-axis-band(
-    theme,
-    "x",
-    x-guide,
-    _band-entries(
+  // The panel record (GLOSSARY.md "panel") the coord's `prepare`,
+  // `draw-background`, and `draw-foreground` read: the panel state the
+  // furniture around the geoms is drawn from.
+  let panel = (
+    theme: theme,
+    spec: spec,
+    coord: coord,
+    trained: trained,
+    x-trained: x-trained,
+    y-trained: y-trained,
+    px-lo: px-lo,
+    px-hi: px-hi,
+    py-lo: py-lo,
+    py-hi: py-hi,
+    px-range: px-range,
+    py-range: py-range,
+    canvas-w: canvas-w,
+    canvas-h: canvas-h,
+    ink: _ink,
+    x-guide: _read-axis-guide(spec, "x", default-angle: _axis-text-angle(
+      theme,
       "x",
-      x-trained,
-      _x-walk,
-      x-guide,
-      _x-disp,
-      _ax-text.xb,
-      show-x-labels,
-      x-extents,
-    ),
-    px-range,
-    (py-lo, py-hi),
-  )
-  _draw-cartesian-grid("y", y-trained, _y-walk)
-  draw-axis-band(
-    theme,
-    "y",
-    y-guide,
-    _band-entries(
+    )),
+    y-guide: _read-axis-guide(spec, "y", default-angle: _axis-text-angle(
+      theme,
       "y",
-      y-trained,
-      _y-walk,
-      y-guide,
-      _y-disp,
-      _ax-text.yl,
-      show-y-labels,
-      y-extents,
-    ),
-    py-range,
-    (px-lo, px-hi),
+    )),
+    x-disp: _x-disp,
+    y-disp: _y-disp,
+    ax-text: _ax-text,
+    ax-title: _ax-title,
+    ax-line: _per-side(_stroke-side, "axis-line"),
+    ax-ticks: _per-side(_stroke-side, "axis-ticks"),
+    tick-len: _tick-cm-sides(theme),
+    axis-breaks: axis-breaks,
+    x-extents: x-extents,
+    y-extents: y-extents,
+    x-sec-extents: x-sec-extents,
+    y-sec-extents: y-sec-extents,
+    x-sec-title-extents: x-sec-title-extents,
+    y-sec-title-extents: y-sec-title-extents,
+    show-x-labels: show-x-labels,
+    show-y-labels: show-y-labels,
+    show-x-sec: show-x-sec,
+    show-y-sec: show-y-sec,
+    show-x-sec-title: show-x-sec-title,
+    show-y-sec-title: show-y-sec-title,
   )
+  let prep = (coord.prepare)(panel)
+  let outer-radial = (coord.frame)(
+    x-trained,
+    y-trained,
+    px-range,
+    py-range,
+    label-bounds: prep.label-bounds,
+    tick-cm: prep.tick-cm,
+  )
+  panel += prep + (outer-radial: outer-radial)
 
-  // Secondary x-axis: draw on top edge if the trained x scale carries a
-  // secondary spec. Breaks are its own when set, else the primary axis grid;
-  // their labels go through the user's transformation function.
-  let _x-sec = _sec-spec(x-trained, coord: coord)
-  if _x-sec != none and show-x-sec {
-    let breaks = if axis-breaks != none and axis-breaks.x-sec != none {
-      axis-breaks.x-sec
-    } else {
-      _secondary-breaks(x-trained, _x-sec, _axis-breaks(x-trained))
-    }
-    for (idx, b) in breaks.enumerate() {
-      let cx = map-axis-data(x-trained, b, px-range)
-      if _should-draw-tick(_ax-ticks.xt, _tick-len.xt) {
-        line((cx, py-hi), (cx, py-hi + _tick-len.xt), stroke: _ax-ticks.xt)
-      }
-      if _ax-text.xt.size > 0pt {
-        let mapped = secondary-mod.apply-transform(_x-sec, b)
-        content(
-          (cx, py-hi + _tick-len.xt + _TICK-LABEL-GAP),
-          text(.._text-args(_ax-text.xt))[#resolve-prose(
-            resolve-label(
-              _x-sec.at("labels", default: auto),
-              mapped,
-              idx,
-              format-break(mapped),
-              typst-mark: _x-disp.typst-mark,
-            ),
-            eval-strings: _ax-text.xt.typst,
-          )],
-          anchor: "south",
-        )
-      }
-    }
-    if _ax-line.xt != none {
-      line((px-lo, py-hi), (px-hi, py-hi), stroke: _ax-line.xt)
-    }
-    if show-x-sec-title and _x-sec.name != none and _ax-title.xt.size > 0pt {
-      let x-sec-offset = _sec-title-offset-cm(
-        _tick-len.xt,
-        _resolve-extents(x-sec-extents, _ax-text.xt.size),
-        _ax-title.xt,
-        "x",
-      )
-      let (cx, x-anchor) = _x-title-place(_ax-title.xt.align, px-lo, px-hi)
-      content(
-        (cx, py-hi + x-sec-offset),
-        _title-body(
-          _x-sec.name,
-          _ax-title.xt,
-          x-sec-title-extents,
-        ),
-        anchor: x-anchor,
-        angle: _title-angle(_ax-title.xt, 0),
-      )
-    }
-  }
-
-  // Secondary y-axis: draw on right edge if the trained y scale carries a
-  // secondary spec.
-  let _y-sec = _sec-spec(y-trained, coord: coord)
-  if _y-sec != none and show-y-sec {
-    let breaks = if axis-breaks != none and axis-breaks.y-sec != none {
-      axis-breaks.y-sec
-    } else {
-      _secondary-breaks(y-trained, _y-sec, _axis-breaks(y-trained))
-    }
-    for (idx, b) in breaks.enumerate() {
-      let cy = map-axis-data(y-trained, b, py-range)
-      if _should-draw-tick(_ax-ticks.yr, _tick-len.yr) {
-        line((px-hi, cy), (px-hi + _tick-len.yr, cy), stroke: _ax-ticks.yr)
-      }
-      if _ax-text.yr.size > 0pt {
-        let mapped = secondary-mod.apply-transform(_y-sec, b)
-        content(
-          (px-hi + _tick-len.yr + _TICK-LABEL-GAP, cy),
-          text(.._text-args(_ax-text.yr))[#resolve-prose(
-            resolve-label(
-              _y-sec.at("labels", default: auto),
-              mapped,
-              idx,
-              format-break(mapped),
-              typst-mark: _y-disp.typst-mark,
-            ),
-            eval-strings: _ax-text.yr.typst,
-          )],
-          anchor: "mid-west",
-        )
-      }
-    }
-    if _ax-line.yr != none {
-      line((px-hi, py-lo), (px-hi, py-hi), stroke: _ax-line.yr)
-    }
-    if show-y-sec-title and _y-sec.name != none and _ax-title.yr.size > 0pt {
-      let y-sec-offset = _sec-title-offset-cm(
-        _tick-len.yr,
-        _resolve-extents(y-sec-extents, _ax-text.yr.size),
-        _ax-title.yr,
-        "y",
-      )
-      let title-text-cm = _title-extent-cm(
-        _ax-title.yr,
-        y-sec-title-extents,
-        "y",
-      )
-      let (cy, y-anchor) = _y-title-place(_ax-title.yr.align, py-lo, py-hi)
-      content(
-        (px-hi + y-sec-offset + title-text-cm / 2, cy),
-        _title-body(
-          _y-sec.name,
-          _ax-title.yr,
-          y-sec-title-extents,
-        ),
-        angle: _title-angle(_ax-title.yr, 90),
-        anchor: y-anchor,
-      )
-    }
-  }
-
-  if not is-radial and _ax-line.xb != none {
-    line((px-lo, py-lo), (px-hi, py-lo), stroke: _ax-line.xb)
-  }
-  if not is-radial and _ax-line.yl != none {
-    line((px-lo, py-lo), (px-lo, py-hi), stroke: _ax-line.yl)
-  }
-
-  if is-radial {
-    _draw-radial-panel((
-      outer-radial: outer-radial,
-      x-trained: x-trained,
-      y-trained: y-trained,
-      grid-radial: _grid-radial,
-      grid-radial-discrete: _grid-radial-discrete,
-      theta: _theta-band,
-    ))
-  }
+  (coord.draw-background)(panel)
 
   // Render geoms into a sibling cetz canvas whose origin is (0, 0) and whose
   // bounds match the panel rectangle, then clip via Typst's `box(clip: true)`
@@ -569,21 +214,25 @@
   let inner-ctx = ctx
   inner-ctx.px-range = (x-pad-lo, panel-w - x-pad-hi)
   inner-ctx.py-range = (y-pad-lo, panel-h - y-pad-hi)
-  let inner-radial = radial-ctx(
-    coord,
+  let inner-radial = (coord.frame)(
     x-trained,
     y-trained,
     inner-ctx.px-range,
     inner-ctx.py-range,
-    label-bounds: _label-bounds,
-    tick-cm: _theta-band.reach,
+    label-bounds: prep.label-bounds,
+    tick-cm: prep.tick-cm,
   )
   inner-ctx.radial = inner-radial
-  if inner-radial != none {
-    for layer in prepared {
-      if not _RADIAL-AWARE.at(layer.name, default: false) {
-        fail("coord-radial", "does not support geom-" + layer.name)
-      }
+  for layer in prepared {
+    if layer.name not in GEOMS {
+      fail-enum("plot", "geom", layer.name, GEOMS.keys())
+    }
+    if not (coord.supports)(layer.name) {
+      fail(
+        "coord-" + coord.name,
+        "does not support geom-" + layer.name,
+        hint: coord.unsupported-hint,
+      )
     }
   }
   // Every geom is drawn `floating`, so it never contributes to the canvas
@@ -594,10 +243,7 @@
     import cetz.draw: floating, hide, rect
     hide(rect((0, 0), (panel-w, panel-h)), bounds: true)
     for layer in subset {
-      let entry = GEOMS.at(layer.name, default: none)
-      if entry != none {
-        floating({ (entry.draw)(layer, inner-ctx) })
-      }
+      floating({ (GEOMS.at(layer.name).draw)(layer, inner-ctx) })
     }
   })
   // `annotate(clip: false)` opts a layer out of the panel clip; render it in a
@@ -606,15 +252,10 @@
   // sit above clipped layers (documented on `annotate`'s `clip`).
   let clipped = prepared.filter(l => l.at("clip", default: true))
   let unclipped = prepared.filter(l => not l.at("clip", default: true))
-  let clip-on = if inner-radial != none {
-    inner-radial.clip
-  } else if coord != none {
-    coord.at("clip", default: true)
-  } else { true }
   let clipped-geoms = _draw-subset(clipped)
   content(
     (px-lo, py-lo),
-    if clip-on {
+    if coord.clip {
       box(
         clip: true,
         width: panel-w * 1cm,
@@ -628,22 +269,9 @@
     content((px-lo, py-lo), _draw-subset(unclipped), anchor: "south-west")
   }
 
-  // Radial-axis tick labels render after geoms so filled wedges, lines, and
-  // points cannot mask them.
-  if is-radial {
-    _draw-radial-r-labels((
-      spec: spec,
-      theme: theme,
-      outer-radial: outer-radial,
-      x-trained: x-trained,
-      y-trained: y-trained,
-      x-disp: _x-disp,
-      y-disp: _y-disp,
-      ax-text: _ax-text,
-      x-extents: x-extents,
-      y-extents: y-extents,
-    ))
-  }
+  // Coord furniture that sits above the geoms, such as the radial-axis tick
+  // labels, renders after them so filled marks cannot mask it.
+  (coord.draw-foreground)(panel)
 
   // When flipped, the bottom axis shows the user's original y mapping and
   // the left axis shows the user's original x mapping; trained.x and
@@ -708,4 +336,3 @@
     )
   }
 }
-

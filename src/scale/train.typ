@@ -598,9 +598,9 @@
   // Canonical trained-scale shape (GLOSSARY.md "trained"). Later pipeline
   // stages extend it in place:
   //   - `temporal` / `date-format` just below, on date/datetime/time scales;
-  //   - `reverse` in `_apply-flip` (render/domain.typ), discrete-axis flip;
+  //   - `reverse` in `_apply-flip` (coord/flip.typ), discrete-axis flip;
   //   - `view-transform` (continuous) / `view-index` (discrete) and
-  //     `view-pad-cm` in `_apply-expand` (render/domain.typ), the expanded
+  //     `view-pad-cm` in `apply-expand` (coord/expand.typ), the expanded
   //     view window that axis breaks and panel mapping read.
   // `integer` records that every trained value was a whole number, so the
   // automatic breaks stay whole (`_axis-breaks`, continuous guides).
@@ -822,7 +822,7 @@
 }
 
 // Expanded scale bounds in stat space: the `view-transform` set by
-// `_apply-expand` when present, else the raw domain warped through `_to-stat`.
+// `apply-expand` when present, else the raw domain warped through `_to-stat`.
 // Shared by coordinate mapping and the out-of-range pre-pass so both honour the
 // same expanded view.
 #let view-bounds-stat(trained) = {

@@ -19,7 +19,11 @@
 
 #let trained-axis = (type: "continuous", domain: (0, 100), spec: (:))
 
-#let chrome-of(theme: none, coord: none, guides: (:)) = _chrome-margins((
+#let chrome-of(
+  theme: none,
+  coord: coord-cartesian(),
+  guides: (:),
+) = _chrome-margins((
   spec: (mapping: none, guides: guides, coord: coord),
   theme: merge-theme(theme),
   trained: (x: trained-axis, y: trained-axis),

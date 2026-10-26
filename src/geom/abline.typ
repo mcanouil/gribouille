@@ -3,15 +3,16 @@
 ///! Requires continuous x and y scales. The line is drawn across the full
 ///! trained x domain using `y = slope * x + intercept`. Under non-identity
 ///! axis transformations the line is sampled as a 64-point polyline so it
-///! follows the warped axis correctly.
+///! follows the warped axis correctly. Under `coord-radial` the line follows the
+///! polar grid as a curve.
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
-#import "../scale/train.typ": map-axis-data, transform-inv
-#import "../utils/flip.typ": user-axes, user-point
-#import "../utils/radial.typ": radial-point
+#import "../coord/project.typ": axis-mapper, project-path
+#import "../scale/train.typ": transform-inv
+#import "../utils/flip.typ": user-axes, user-axis-key, user-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let spec = (
@@ -19,10 +20,11 @@
   extents: none,
 )
 
-/// Straight reference line described by slope and intercept.
+/// Reference line described by slope and intercept.
 ///
 /// The line runs across the full trained x domain. Requires continuous x
-/// and y scales; discrete scales are skipped silently. To drive several lines
+/// and y scales; discrete scales are skipped silently. Under \@coord-radial
+/// the line follows the polar grid as a curve. To drive several lines
 /// from data, bind `slope` and/or `intercept` (and optionally `colour`,
 /// `alpha`, `linewidth`, `linetype`) through \@aes and pass `data`; one line is
 /// then drawn per row, with aesthetics resolved per row. Unlike \@geom-vline
@@ -214,50 +216,32 @@
   if lines.len() == 0 { return }
 
   // `_pos` returns the cetz `(cx, cy)` for a user-space point.
-  let _pos(ux, uy) = user-point(
-    ctx,
-    map-axis-data(user-x-trained, ux, axes.x-range),
-    map-axis-data(user-y-trained, uy, axes.y-range),
-  )
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx), space: "data")
+  let map-y = axis-mapper(ctx, user-axis-key("y", ctx), space: "data")
+  let _pos(ux, uy) = user-point(ctx, map-x(ux), map-y(uy))
   let radial = ctx.at("radial", default: none)
   let x-transform = user-x-trained.at("transform", default: "identity")
   let y-transform = user-y-trained.at("transform", default: "identity")
   let warped = x-transform != "identity" or y-transform != "identity"
+  let _samples(slope, intercept) = if warped {
+    range(0, 64).map(i => {
+      let x = x-lo + i / 63 * (x-hi - x-lo)
+      (x, slope * x + intercept)
+    })
+  } else {
+    ((x-lo, slope * x-lo + intercept), (x-hi, slope * x-hi + intercept))
+  }
 
   for line in lines {
     let slope = line.slope
     let intercept = line.intercept
     let stroke-spec = line.stroke
-    if radial != none {
-      let n = 128
-      let pts = range(0, n)
-        .map(i => {
-          let t = i / (n - 1)
-          let x = x-lo + t * (x-hi - x-lo)
-          let y = slope * x + intercept
-          radial-point(x, y, radial)
-        })
-        .filter(p => p != none)
-      if pts.len() >= 2 {
-        cetz.draw.line(..pts, stroke: stroke-spec)
-      }
-    } else if warped {
-      let n = 64
-      let pts = range(0, n).map(i => {
-        let t = i / (n - 1)
-        let x = x-lo + t * (x-hi - x-lo)
-        let y = slope * x + intercept
-        _pos(x, y)
-      })
+    let samples = _samples(slope, intercept)
+    let pts = if radial != none {
+      project-path(ctx, samples, space: "data")
+    } else { samples.map(((x, y)) => _pos(x, y)) }
+    if pts.len() >= 2 {
       cetz.draw.line(..pts, stroke: stroke-spec)
-    } else {
-      let y-at-lo = slope * x-lo + intercept
-      let y-at-hi = slope * x-hi + intercept
-      cetz.draw.line(
-        _pos(x-lo, y-at-lo),
-        _pos(x-hi, y-at-hi),
-        stroke: stroke-spec,
-      )
     }
   }
 }

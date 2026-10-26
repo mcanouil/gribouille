@@ -6,7 +6,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/types.typ": parse-number
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -136,6 +136,8 @@
   let y-col = mapping.at("y", default: none)
   let x-trained = ctx.trained.at("x", default: none)
   let y-trained = ctx.trained.at("y", default: none)
+  let map-x = axis-mapper(ctx, "x")
+  let map-y = axis-mapper(ctx, "y")
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
 
@@ -170,11 +172,7 @@
     let stroke-spec = (paint: final-colour, thickness: thickness)
 
     if (want-bottom or want-top) and x-col != none and x-trained != none {
-      let cx = map-position(
-        x-trained,
-        row.at(x-col, default: none),
-        ctx.px-range,
-      )
+      let cx = map-x(row.at(x-col, default: none))
       if cx != none {
         if want-bottom {
           cetz.draw.line((cx, py-lo), (cx, py-lo + len), stroke: stroke-spec)
@@ -185,11 +183,7 @@
       }
     }
     if (want-left or want-right) and y-col != none and y-trained != none {
-      let cy = map-position(
-        y-trained,
-        row.at(y-col, default: none),
-        ctx.py-range,
-      )
+      let cy = map-y(row.at(y-col, default: none))
       if cy != none {
         if want-left {
           cetz.draw.line((px-lo, cy), (px-lo + len, cy), stroke: stroke-spec)

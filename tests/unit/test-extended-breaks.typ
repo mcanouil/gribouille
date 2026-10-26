@@ -10,7 +10,7 @@
 #import "../../src/utils/pretty.typ": pretty
 #import "../../src/scale/train.typ": train
 #import "../../src/render/axis-format.typ": _axis-breaks
-#import "../../src/render/domain.typ": _apply-expand
+#import "../../src/coord/expand.typ": apply-expand
 
 // --- round numbers over familiar ranges ---
 
@@ -85,13 +85,12 @@
 
 // --- it is the automatic axis placement ---
 
-#let trained = _apply-expand(
+#let trained = apply-expand(
   train(
     layers: (geom-point(),),
     mapping: aes(x: "x", y: "y"),
     data: range(0, 101).map(i => (x: i, y: i)),
   ),
-  none,
 )
 #assert.eq(_axis-breaks(trained.x), extended(-5.0, 105.0, m: 5, integer: true))
 // The previous `pretty` ladder would have stepped by 20 over this range.

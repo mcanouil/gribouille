@@ -10,7 +10,9 @@
 #import "../utils/bin.typ": bin-x-extents
 #import "../scale/train.typ": mapping-ref-col
 #import "../utils/group.typ": partition-by-group
-#import "../utils/radial.typ": project-point, shift-point
+#import "../utils/radial.typ": shift-point
+#import "../coord/project.typ": path-uvs, project-uvs, to-canvas
+#import "../utils/stair.typ": stair
 #import "../utils/flip.typ": user-axes, user-columns
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -49,24 +51,43 @@
     .map(p => p.row)
 }
 
-// Map rows to (cx, cy) screen positions via `project-point`, which routes
-// through `ctx.radial` when active. Skips rows whose mapped position fails
-// to resolve.
+// Map rows to (cx, cy) screen positions through the coord, which curves each
+// edge along its grid (`project-uvs`). Skips rows whose mapped position fails
+// to resolve, so their neighbours join directly. A non-`none` `direction`
+// (`"hv"` or `"vh"`) steps the mapped positions into a staircase first, so
+// under `coord-radial` the treads follow the circles.
 //
 // `dodge` is the slot `dodge-geometry` answered for the whole layer. It is
 // resolved once there and handed down because resolving it costs a pass over
-// every row on a continuous category axis, and this runs once a group.
-#let rows-to-points(rows, mapping, ctx, dodge) = {
-  let pts = ()
-  for row in rows {
-    let p = project-point(
-      ctx,
-      row.at(mapping.x, default: none),
-      row.at(mapping.y, default: none),
-    )
-    if p == none { continue }
-    pts.push(shift-point(p, dodge-delta(dodge, row)))
+// every row on a continuous category axis, and this runs once a group. Each
+// offset is stepped with the positions, so a corner takes the same offset as
+// the canvas point it stands for, and a point the coord adds along an edge
+// takes the offset of the edge's start. With no dodge every offset is zero, so
+// the whole path is projected in one call rather than edge by edge.
+#let rows-to-points(rows, mapping, ctx, dodge, direction: none) = {
+  let uvs = ()
+  let deltas = ()
+  let mapped = path-uvs(ctx, rows.map(row => (
+    row.at(mapping.x, default: none),
+    row.at(mapping.y, default: none),
+  )))
+  for (row, uv) in rows.zip(mapped) {
+    if uv == none { continue }
+    uvs.push(uv)
+    if dodge != none { deltas.push(dodge-delta(dodge, row)) }
   }
+  if uvs.len() == 0 { return () }
+  if direction != none { uvs = stair(uvs, direction) }
+  if dodge == none { return project-uvs(ctx, uvs) }
+  if direction != none { deltas = stair(deltas, direction) }
+  let pts = ()
+  for i in range(uvs.len() - 1) {
+    let edge = project-uvs(ctx, (uvs.at(i), uvs.at(i + 1)))
+    for p in edge.slice(0, -1) {
+      pts.push(shift-point(p, deltas.at(i)))
+    }
+  }
+  pts.push(shift-point(to-canvas(ctx, ..uvs.last()), deltas.last()))
   pts
 }
 

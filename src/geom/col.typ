@@ -9,15 +9,14 @@
 #import "../position/apply.typ": layer-marks-abut, layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": (
-  discrete-slot-width, map-axis, map-position, mapping-ref-col,
-)
+#import "../coord/project.typ": axis-mapper
+#import "../scale/train.typ": discrete-slot-width, mapping-ref-col
 #import "../utils/bin.typ": bin-half-width
-#import "../utils/flip.typ": user-axes, user-columns, user-point
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": (
-  radial-axis-ranges, radial-category-span, radial-wedge,
+  radial-category-span, radial-mappers, radial-wedge,
 )
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
@@ -198,38 +197,23 @@
   let baseline = calc.max(0.0, value-trained.domain.at(0))
   let bar-width-fraction = layer.params.width
 
-  let (cat-range, value-range) = radial-axis-ranges(radial)
-  let category-span = radial-category-span(
-    cat-trained,
-    cat-col,
-    cat-range,
-    data,
-  )
+  let (cat: map-cat, value: map-value) = radial-mappers(ctx, "x")
+  let category-span = radial-category-span(ctx, "x", cat-col, data)
   let half = category-span * bar-width-fraction / 2
 
   for row in data {
-    let cat-c = map-position(
-      cat-trained,
-      row.at(cat-col, default: none),
-      cat-range,
-    )
+    let cat-c = map-cat(row.at(cat-col, default: none))
     if cat-c == none { continue }
 
     let (v-lo, v-hi) = if use-minmax {
       let lo-v = parse-number(row.at(vmin-col, default: none))
       let hi-v = parse-number(row.at(vmax-col, default: none))
       if lo-v == none or hi-v == none { continue }
-      (
-        map-axis(value-trained, lo-v, value-range),
-        map-axis(value-trained, hi-v, value-range),
-      )
+      (map-value(lo-v), map-value(hi-v))
     } else {
       let raw = parse-number(row.at(value-col, default: none))
       if raw == none { continue }
-      (
-        map-axis(value-trained, baseline, value-range),
-        map-axis(value-trained, raw, value-range),
-      )
+      (map-value(baseline), map-value(raw))
     }
 
     let final-fill = resolve-channel(
@@ -286,7 +270,6 @@
   let columns = user-columns(mapping, ctx)
   let value-col = columns.y
   let cat-col = columns.x
-  let value-range = axes.y-range
   let cat-range = axes.x-range
   if value-trained.type != "continuous" { return }
 
@@ -314,11 +297,14 @@
     resolve-geom-fill(g-defaults, role: "tint"),
   )
 
-  let baseline-vc = map-axis(
-    value-trained,
-    calc.max(0.0, value-trained.domain.at(0)),
-    value-range,
+  let map-cat = axis-mapper(ctx, user-axis-key("x", ctx))
+  let map-cat-stat = axis-mapper(ctx, user-axis-key("x", ctx), space: "stat")
+  let map-value = axis-mapper(
+    ctx,
+    user-axis-key("y", ctx),
+    space: "stat",
   )
+  let baseline-vc = map-value(calc.max(0.0, value-trained.domain.at(0)))
 
   let (cat-lo, cat-hi) = cat-range
   let category-span = if (
@@ -336,8 +322,7 @@
       (cat-hi - cat-lo) / 10
     } else {
       let panel-gaps = range(sorted.len() - 1).map(i => calc.abs(
-        map-axis(cat-trained, sorted.at(i + 1), cat-range)
-          - map-axis(cat-trained, sorted.at(i), cat-range),
+        map-cat-stat(sorted.at(i + 1)) - map-cat-stat(sorted.at(i)),
       ))
       calc.min(..panel-gaps)
     }
@@ -346,25 +331,18 @@
   let half = category-span * bar-width-fraction / 2
 
   for row in data {
-    let cat-c = map-position(
-      cat-trained,
-      row.at(cat-col, default: none),
-      cat-range,
-    )
+    let cat-c = map-cat(row.at(cat-col, default: none))
     if cat-c == none { continue }
 
     let (v-lo-c, v-hi-c) = if use-minmax {
       let lo-v = parse-number(row.at(vmin-col, default: none))
       let hi-v = parse-number(row.at(vmax-col, default: none))
       if lo-v == none or hi-v == none { continue }
-      (
-        map-axis(value-trained, lo-v, value-range),
-        map-axis(value-trained, hi-v, value-range),
-      )
+      (map-value(lo-v), map-value(hi-v))
     } else {
       let raw = parse-number(row.at(value-col, default: none))
       if raw == none { continue }
-      let vc = map-axis(value-trained, raw, value-range)
+      let vc = map-value(raw)
       if vc >= baseline-vc { (baseline-vc, vc) } else { (vc, baseline-vc) }
     }
 

@@ -4,7 +4,7 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/errors.typ": fail-enum, fail-type
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../utils/radial.typ": project-point
+#import "../coord/project.typ": project-point
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults

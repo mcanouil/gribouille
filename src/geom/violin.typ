@@ -2,8 +2,8 @@
 ///!
 ///! The default `stat = "ydensity"` smooths each x bucket's y sample into a
 ///! density curve; the geom mirrors that curve around the bucket's x slot
-///! as a closed silhouette. Under \@coord-radial the layer degrades to a
-///! no-op (mirrored silhouettes do not translate to polar wedges yet).
+///! as a closed silhouette. \@coord-radial fails for this layer, as
+///! mirrored silhouettes do not translate to polar wedges.
 
 #import "../utils/bucket.typ": bucket-index
 #import "../deps.typ": cetz
@@ -12,9 +12,9 @@
 #import "../position/apply.typ": layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-axis, map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
-#import "../utils/flip.typ": user-axes, user-columns, user-point
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/group.typ": partition-by-group
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke
@@ -161,10 +161,11 @@
 
   let axes = user-axes(ctx)
   if axes == none or axes.y-trained.type != "continuous" { return }
-  if ctx.at("radial", default: none) != none { return }
-  let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
-  let (x-range, y-range) = (axes.x-range, axes.y-range)
+  let x-trained = axes.x-trained
+  let x-range = axes.x-range
   let pt = user-point.with(ctx)
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx))
+  let map-y = axis-mapper(ctx, user-axis-key("y", ctx), space: "stat")
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // The outline carries the violin's structure, so the stroke default
@@ -184,7 +185,7 @@
 
     for rows in bucket-rows {
       let raw-x = rows.first().at(cols.x, default: none)
-      let cx = map-position(x-trained, raw-x, x-range)
+      let cx = map-x(raw-x)
       if cx == none { continue }
       let band = axis-band(x-trained, raw-x, half-width, x-range)
       if band == none { continue }
@@ -209,7 +210,7 @@
         .sorted(key: p => p.y)
       if side.len() < 2 { continue }
 
-      let cys = side.map(p => map-axis(y-trained, p.y, y-range))
+      let cys = side.map(p => map-y(p.y))
       if cys.any(cy => cy == none) { continue }
       let left = side
         .zip(cys)

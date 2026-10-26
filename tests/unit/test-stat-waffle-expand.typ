@@ -3,7 +3,8 @@
 // on a scale still wins on the side the user set.
 
 #import "../../src/scale/train.typ": train
-#import "../../src/render/domain.typ": _apply-expand, _post-train
+#import "../../src/coord/expand.typ": apply-expand
+#import "../../src/render/domain.typ": _post-train
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/geom/tile.typ": geom-tile, spec as tile-spec
 #import "../../src/stat/waffle.typ": stat-waffle
@@ -36,7 +37,7 @@
     prepared.first().mapping,
     prepared.first().data,
   )
-  (view: _apply-expand(post, none), ext: ext)
+  (view: apply-expand(post), ext: ext)
 }
 
 // --- automatic expansion is off on both axes ---

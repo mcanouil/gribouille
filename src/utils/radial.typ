@@ -1,34 +1,23 @@
 ///! Joint `(x, y) → (cx, cy)` projection helpers for `coord-radial`.
 
-#import "../scale/train.typ": (
-  discrete-slot-width, level-position, map-axis, map-position,
-)
+#import "../coord/project.typ": axis-mapper
+#import "../scale/train.typ": discrete-slot-width, level-position, map-position
 #import "types.typ": parse-number
-
-// True when the coord is any flavour of `coord-radial`.
-#let is-radial(coord) = (
-  coord != none and coord.at("name", default: none) == "radial"
-)
 
 // Gap (cm) between the outer theta arc and the tick labels ringing it. The
 // draw site offsets the labels by it and the chrome stage reserves the band
 // they land in, so the two cannot drift apart.
 #let THETA-LABEL-PAD = 0.2
 
-// The axis the sweep runs along. `none` off a radial coord, so callers can
-// compare an axis key against it unguarded.
-#let theta-axis-of(coord) = if is-radial(coord) {
-  coord.at("theta", default: "x")
-} else { none }
-
-// Its complement, the axis the radius runs along: "y" when theta is "x"
-// (rose/radar) and "x" when theta is "y" (pie). Used during scale expansion,
-// which runs before trained scales exist and so cannot route through
-// `radial-ctx`.
-#let radial-axis-of(coord) = {
-  let theta = theta-axis-of(coord)
-  if theta == none { none } else if theta == "x" { "y" } else { "x" }
+// The axis the sweep runs along, read from the `theta` field only a radial
+// coord carries. `none` off a radial coord, so callers can compare an axis key
+// against it unguarded.
+#let theta-axis-of(coord) = if coord == none { none } else {
+  coord.at("theta", default: none)
 }
+
+// True when the coord is any flavour of `coord-radial`.
+#let is-radial(coord) = theta-axis-of(coord) != none
 
 // The `(theta-lo, theta-hi)` sweep in canvas radians. It falls out of the
 // coord alone, with no panel rect in sight, which is what lets the chrome
@@ -142,23 +131,8 @@
   (cx + r * calc.cos(theta), cy + r * calc.sin(theta))
 }
 
-// Single entry point for geoms: projects a row's `(x, y)` to canvas units
-// via either the trained scales or the active radial bundle. Returns `none`
-// when either coordinate fails to resolve.
-#let project-point(ctx, xv, yv) = {
-  let radial = ctx.at("radial", default: none)
-  if radial != none { return radial-point(xv, yv, radial) }
-  let xt = ctx.trained.at("x", default: none)
-  let yt = ctx.trained.at("y", default: none)
-  if xt == none or yt == none { return none }
-  let cx = map-position(xt, xv, ctx.px-range)
-  let cy = map-position(yt, yv, ctx.py-range)
-  if cx == none or cy == none { return none }
-  (cx, cy)
-}
-
 // Trained scale for one axis, taken from the radial bundle when a radial coord
-// is active and from `ctx.trained` otherwise. Mirrors `project-point`'s split.
+// is active and from `ctx.trained` otherwise.
 #let _axis-trained(ctx, axis) = {
   let radial = ctx.at("radial", default: none)
   if radial != none { return radial.at(axis + "-trained", default: none) }
@@ -212,13 +186,42 @@
   (cx + r * calc.cos(theta), cy + r * calc.sin(theta))
 }
 
-// Bar-width category span derived from a trained scale. Discrete scales use
-// `discrete-slot-width`; continuous scales fall back to the smallest gap
-// between sorted unique x values, mirroring `geom-col`'s heuristic.
-#let radial-category-span(cat-trained, cat-col, cat-range, data) = {
+// Resolve `cat-range` and `value-range` from a radial bundle so callers
+// don't repeat the `cat-is-theta` ternary.
+#let radial-axis-ranges(radial) = {
+  if radial.cat-is-theta {
+    (cat-range: radial.theta-range, value-range: radial.r-range)
+  } else {
+    (cat-range: radial.r-range, value-range: radial.theta-range)
+  }
+}
+
+// The mappers a radial bar-like geom reads, with `cat-key` the axis that holds
+// its categories and the other axis its values. `cat` maps a row cell into
+// the category range and `value` a stat-space number into the value range.
+// Both ranges come from `radial-axis-ranges` rather than the coord, so the
+// categories take the polar axis that `theta` names for x, whichever axis
+// holds them.
+#let radial-mappers(ctx, cat-key) = {
+  let value-key = if cat-key == "x" { "y" } else { "x" }
+  let (cat-range, value-range) = radial-axis-ranges(ctx.radial)
+  (
+    cat: axis-mapper(ctx, cat-key, range: cat-range),
+    value: axis-mapper(ctx, value-key, space: "stat", range: value-range),
+  )
+}
+
+// Bar-width category span on the `cat-key` axis, in the category range of
+// `radial-axis-ranges`. Discrete scales use `discrete-slot-width`; continuous
+// scales fall back to the smallest gap between the sorted unique values of
+// `cat-col`, mirroring `geom-col`'s heuristic.
+#let radial-category-span(ctx, cat-key, cat-col, data) = {
+  let cat-trained = ctx.trained.at(cat-key)
+  let cat-range = radial-axis-ranges(ctx.radial).cat-range
   if cat-trained.type == "discrete" {
     return discrete-slot-width(cat-trained, cat-range)
   }
+  let map-cat = axis-mapper(ctx, cat-key, space: "stat", range: cat-range)
   let xs = data
     .map(r => parse-number(r.at(cat-col, default: none)))
     .filter(v => v != none)
@@ -228,20 +231,9 @@
   }
   let sorted = xs.dedup().sorted()
   let panel-gaps = range(sorted.len() - 1).map(i => calc.abs(
-    map-axis(cat-trained, sorted.at(i + 1), cat-range)
-      - map-axis(cat-trained, sorted.at(i), cat-range),
+    map-cat(sorted.at(i + 1)) - map-cat(sorted.at(i)),
   ))
   calc.min(..panel-gaps)
-}
-
-// Resolve `cat-range` and `value-range` from a radial bundle so callers
-// don't repeat the `cat-is-theta` ternary.
-#let radial-axis-ranges(radial) = {
-  if radial.cat-is-theta {
-    (cat-range: radial.theta-range, value-range: radial.r-range)
-  } else {
-    (cat-range: radial.r-range, value-range: radial.theta-range)
-  }
 }
 
 // Tangent-cap offset for composite-bar geoms (errorbar, errorbarh).
@@ -262,13 +254,14 @@
 // polar.
 #let RADIAL-DEFAULT-CAP-HALF = 0.15
 
-// Samples one polyline takes over `span` radians: one step per five degrees,
+// The sweep of one sample along an arc: five degrees.
+#let ARC-STEP = calc.pi / 36
+
+// Samples one polyline takes over `span` radians: one step per `ARC-STEP`,
 // with a floor of eight so even a narrow arc looks round. Every curve drawn at
 // a constant radius reads it, so a swept axis is sampled as finely as the
 // wedges and whiskers beside it.
-#let arc-steps(span) = calc.max(8, int(calc.ceil(
-  calc.abs(span) / (calc.pi / 36),
-)))
+#let arc-steps(span) = calc.max(8, int(calc.ceil(calc.abs(span) / ARC-STEP)))
 
 // Polyline samples along an arc at constant radius between `theta-lo` and
 // `theta-hi`. Used by composite geoms (boxplot, crossbar) to draw a median

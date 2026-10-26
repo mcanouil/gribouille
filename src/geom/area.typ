@@ -197,7 +197,7 @@
       p => p.ymin,
       direction: direction,
     )
-    if pts.any(p => p == none) { continue }
+    if pts == none { continue }
 
     let leader = rows.first()
     let final-fill = resolve-channel(

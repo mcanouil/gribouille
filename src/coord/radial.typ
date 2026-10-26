@@ -1,10 +1,55 @@
 ///! Radial coordinate system.
 
+#import "../utils/errors.typ": fail-enum
+#import "contract.typ": coord-base
+#import "expand.typ": apply-expand
+#import "../utils/radial.typ": (
+  ARC-STEP, arc-steps, polar-canvas, radial-ctx, radial-point,
+)
+#import "../render/panel-radial.typ": (
+  draw-radial-background, draw-radial-foreground, prepare-radial,
+)
+
+// The `(u, v)` axis positions with points inserted along each edge whose theta
+// sweep reaches `ARC-STEP`, linear in `(u, v)` as ggplot2 munches in
+// transformed space: at constant radius the edge becomes an arc. `t` is the
+// index of the theta position in each pair. `closed` also densifies the edge
+// from the last point back to the first, whose points come last.
+#let _densify(uvs, t, closed) = {
+  let n = uvs.len()
+  if n < 2 { return uvs }
+  let out = ()
+  for i in range(if closed { n } else { n - 1 }) {
+    let a = uvs.at(i)
+    let b = uvs.at(calc.rem(i + 1, n))
+    out.push(a)
+    let sweep = b.at(t) - a.at(t)
+    if calc.abs(sweep) < ARC-STEP { continue }
+    let steps = arc-steps(sweep)
+    for k in range(1, steps) {
+      let f = k / steps
+      out.push((
+        a.at(0) + (b.at(0) - a.at(0)) * f,
+        a.at(1) + (b.at(1) - a.at(1)) * f,
+      ))
+    }
+  }
+  if not closed { out.push(uvs.last()) }
+  out
+}
+
 /// Radial coordinate system.
 ///
 /// `theta = "x"` (default) distributes categories around the circle for
 /// rose / radar layouts; `theta = "y"` turns stacked y values into wedges
 /// for pie / donut layouts.
+///
+/// Lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline`, and
+/// the lines of `geom-smooth` and `geom-function` curve along the polar grid.
+/// Polygons keep straight edges.
+/// `geom-violin` and `geom-density-ridges` fail under this coord.
+/// An edge that crosses the seam at `start` (12 o'clock by default) sweeps the
+/// long way round the circle, as in ggplot2.
 ///
 /// \@category Coord
 /// \@stability stable
@@ -52,12 +97,64 @@
   end: none,
   direction: 1,
   clip: false,
-) = (
-  kind: "coord",
-  name: "radial",
-  theta: theta,
-  start: start,
-  end: end,
-  direction: direction,
-  clip: clip,
-)
+) = {
+  if theta not in ("x", "y") {
+    fail-enum("coord-radial", "theta", theta, ("x", "y"))
+  }
+  // The radial axis, the one theta does not run along: "y" for rose/radar and
+  // "x" for pie. Expansion runs before trained scales exist, so it cannot
+  // route through `radial-ctx`.
+  let radial-axis = if theta == "x" { "y" } else { "x" }
+  // The keys `radial-ctx` reads off a radial coord. `frame` closes over them
+  // because the coord dict is not yet built when its closures are.
+  let own = (
+    theta: theta,
+    start: start,
+    end: end,
+    direction: direction,
+    clip: clip,
+  )
+  (
+    coord-base("radial")
+      + own
+      + (
+        train: trained => apply-expand(trained, zero-lo-axis: radial-axis),
+        frame: (
+          x-trained,
+          y-trained,
+          px-range,
+          py-range,
+          label-bounds: (),
+          tick-cm: 0.0,
+        ) => radial-ctx(
+          own,
+          x-trained,
+          y-trained,
+          px-range,
+          py-range,
+          label-bounds: label-bounds,
+          tick-cm: tick-cm,
+        ),
+        prepare: prepare-radial,
+        supports: geom-name => geom-name not in ("violin", "density-ridges"),
+        unsupported-hint: "Draw this layer under coord-cartesian or coord-flip.",
+        draw-background: draw-radial-background,
+        draw-foreground: draw-radial-foreground,
+        axis-range: (ctx, axis) => if axis == theta {
+          ctx.radial.theta-range
+        } else { ctx.radial.r-range },
+        to-canvas: (ctx, u, v) => {
+          let (t, r) = if ctx.radial.cat-is-theta { (u, v) } else { (v, u) }
+          polar-canvas(ctx.radial, t, r)
+        },
+        densify: (ctx, uvs, closed: false) => _densify(
+          uvs,
+          if theta == "x" { 0 } else { 1 },
+          closed,
+        ),
+        // Kept on `radial-point` rather than the generic route, so the radial
+        // float path stays the one every golden was drawn with.
+        project: (ctx, xv, yv) => radial-point(xv, yv, ctx.radial),
+      )
+  )
+}

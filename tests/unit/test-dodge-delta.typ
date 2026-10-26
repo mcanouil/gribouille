@@ -6,6 +6,7 @@
 // `dodge-delta`, so these assert the pair: what the geometry answers for a
 // layer, and what a row does with it.
 
+#import "../../src/coord/cartesian.typ": coord-cartesian
 #import "../../src/position/dodge.typ": dodge-delta, dodge-geometry
 
 #let assert-close(a, b, tol: 1e-9) = {
@@ -21,6 +22,7 @@
   trained: (x: x-trained, y: y-cont),
   px-range: (0, 10),
   py-range: (0, 6),
+  coord: coord-cartesian(),
 )
 
 #let layer-dodge = (position: "dodge")
@@ -58,6 +60,7 @@
   trained: (x: cont-x, y: y-cont),
   px-range: (0, 10),
   py-range: (0, 6),
+  coord: coord-cartesian(),
   resolve-data: _ => rows,
   resolve-mapping: _ => (x: "x"),
 )
@@ -82,6 +85,7 @@
   trained: (x: cont-x, y: y-cont),
   px-range: (0, 10),
   py-range: (0, 6),
+  coord: coord-cartesian(),
 )
 #assert.eq(dodge-geometry(ctx-cont, layer-dodge), none)
 
@@ -91,6 +95,7 @@
   px-range: (0, 10),
   py-range: (0, 8),
   flipped: true,
+  coord: coord-cartesian(),
 )
 #let flipped-geom = dodge-geometry(ctx-flip, layer-dodge)
 #assert.eq(flipped-geom.direction, (0.0, 1.0))
@@ -105,6 +110,7 @@
   px-range: (0, 6),
   py-range: (0, 10),
   flipped: true,
+  coord: coord-cartesian(),
   resolve-data: _ => ((x: 0.5, y: 0), (x: 0.6, y: 2), (x: 0.7, y: 6)),
   resolve-mapping: _ => (x: "x", y: "y"),
 )

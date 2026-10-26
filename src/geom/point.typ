@@ -11,7 +11,8 @@
 #import "../utils/level-resolve.typ": bin-index, discrete-index
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../utils/radial.typ": project-point, shift-point
+#import "../utils/radial.typ": shift-point
+#import "../coord/project.typ": project-point
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/stroke.typ": resolve-stroke-spec
 #import "../guide/draw-marker.typ": draw-marker

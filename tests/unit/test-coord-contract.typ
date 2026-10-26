@@ -1,0 +1,140 @@
+// The coord contract: every constructor carries `train` and `panel-size`, and
+// the renderer calls them instead of branching on the coord name.
+
+#import "../../lib.typ": aes, compose, defer, geom-col, geom-point, plot
+#import "../../src/coord/contract.typ": coord-base
+#import "../../src/coord/expand.typ": apply-expand
+#import "../../src/render.typ": render-plot-deferred
+#import "../../src/coord/resolve.typ": resolve-coord
+#import "../../src/coord/cartesian.typ": coord-cartesian
+#import "../../src/coord/fixed.typ": coord-fixed
+#import "../../src/coord/flip.typ": coord-flip
+#import "../../src/coord/radial.typ": coord-radial
+#import "../../src/coord/transform.typ": coord-transform
+
+#for c in (
+  coord-cartesian(),
+  coord-fixed(),
+  coord-flip(),
+  coord-radial(),
+  coord-transform(),
+) {
+  assert.eq(type(c.train), function, message: c.name)
+  assert.eq(type(c.panel-size), function, message: c.name)
+}
+
+#assert.eq(coord-flip().flipped, true)
+#assert.eq(coord-cartesian().flipped, false)
+
+// The flip swaps x and y and reverses a discrete post-flip y.
+#let trained = (
+  x: (type: "discrete", domain: ("a", "b", "c")),
+  y: (type: "continuous", domain: (0, 10)),
+)
+#let flipped = (coord-flip().train)(trained)
+#assert.eq(flipped.x.type, "continuous")
+#assert.eq(flipped.x.domain, (0, 10))
+#assert.eq(flipped.y.type, "discrete")
+#assert.eq(flipped.y.domain, ("a", "b", "c"))
+#assert.eq(flipped.y.reverse, true)
+
+// `coord-cartesian` limits replace the trained domain and drop its
+// `oob-cutoff`; `coord-transform` sets the transform of the axis.
+#let continuous = (
+  x: (type: "continuous", domain: (1, 10), oob-cutoff: (1, 10)),
+  y: (type: "continuous", domain: (0, 1)),
+)
+#let limited = (coord-cartesian(x-limits: (2, 4)).train)(continuous)
+#assert.eq(limited.x.domain, (2, 4))
+#assert("oob-cutoff" not in limited.x)
+#assert.eq(
+  (coord-transform(x: "log10").train)(continuous).x.transform,
+  "log10",
+)
+
+// The base `train` expands the scales, so a coord that keeps it still pads.
+#assert.eq(
+  (coord-base("bare").train)(continuous).x.view-transform,
+  apply-expand(continuous).x.view-transform,
+)
+
+// Pinned against `_fixed-inner-size` before the move into `coord-fixed`.
+#let wide = (
+  x: (type: "continuous", domain: (0, 20)),
+  y: (type: "continuous", domain: (0, 4)),
+)
+#assert.eq((coord-fixed(ratio: 1).panel-size)(wide, 10, 6), (10, 2.0))
+
+// A coord built from `coord-base` reaches the renderer through its functions.
+// The plot is placed, so it lays out and calls `train` and `panel-size`; a
+// discarded `plot()` never does. `tests/errors/coord-custom-panel-size.typ`
+// proves that the renderer calls a custom `panel-size`.
+#let halve = coord-base("halve") + (panel-size: (t, w, h) => (w / 2, h))
+#let halve-plot(coord, ..rest) = plot(
+  data: ((x: 1, y: 1), (x: 2, y: 3)),
+  mapping: aes(x: "x", y: "y"),
+  layers: (geom-point(),),
+  coord: coord,
+  width: 6cm,
+  height: 4cm,
+  ..rest,
+)
+#halve-plot(halve)
+
+// The renderer uses what a custom `train` returns: the layout pass sees the
+// x domain that `train` pinned.
+#let pinned = (
+  halve
+    + (
+      train: trained => {
+        let x = trained.x
+        x.insert("domain", (0, 100))
+        trained.insert("x", x)
+        apply-expand(trained)
+      },
+    )
+)
+#context {
+  let pass = render-plot-deferred(
+    halve-plot(pinned, as-spec: true),
+    layout-only: true,
+  )
+  assert.eq(pass.trained.x.domain, (0, 100))
+}
+
+// `compose()` draws each spec through `render-plot`, so a flipped spec and a
+// spec with no coord both get a resolved coord.
+#let parts = (
+  (q: "Q1", k: "u", n: 3),
+  (q: "Q1", k: "w", n: 2),
+  (q: "Q2", k: "u", n: 4),
+  (q: "Q2", k: "w", n: 1),
+)
+#let dodged(coord) = defer(
+  plot,
+  data: parts,
+  mapping: aes(x: "q", y: "n", fill: "k"),
+  layers: (geom-col(position: "dodge"),),
+  coord: coord,
+)
+#compose(
+  dodged(coord-flip()),
+  dodged(none),
+  ncolumn: 2,
+  width: 10cm,
+  height: 4cm,
+)
+
+#assert.eq(resolve-coord(none).name, "cartesian")
+#for c in (
+  coord-cartesian(),
+  coord-fixed(),
+  coord-flip(),
+  coord-radial(),
+  coord-transform(),
+  coord-base("bare"),
+) {
+  assert.eq(resolve-coord(c), c)
+}
+
+Coord contract tests passed.

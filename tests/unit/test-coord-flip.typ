@@ -1,7 +1,10 @@
 // coord-flip: spec dictionary shape and renderer detection.
 
+#import "../../src/coord/cartesian.typ": coord-cartesian
+#import "../../src/coord/fixed.typ": coord-fixed
 #import "../../src/coord/flip.typ": coord-flip
-#import "../../src/render/domain.typ": _apply-flip, _flip-mapping, _is-flipped
+#import "../../src/coord/resolve.typ": resolve-coord
+#import "../../src/render/domain.typ": _flip-mapping
 #import "../../src/utils/flip.typ": (
   user-axes, user-columns, user-point, user-stair-direction,
 )
@@ -14,25 +17,46 @@
 // The dict shape must stay stable so the renderer can route the spec into
 // the flip swap without touching positional or fixed-aspect coords.
 #let keys-c1 = c1.keys().sorted()
-#assert.eq(keys-c1, ("kind", "name", "reverse"))
+#assert.eq(
+  keys-c1,
+  (
+    "axis-range",
+    "clip",
+    "densify",
+    "draw-background",
+    "draw-foreground",
+    "flipped",
+    "frame",
+    "kind",
+    "name",
+    "panel-size",
+    "prepare",
+    "project",
+    "reverse",
+    "supports",
+    "to-canvas",
+    "train",
+    "unsupported-hint",
+  ),
+)
 
 // Explicit reverse values carry through the spec.
 #assert.eq(coord-flip(reverse: true).reverse, true)
 #assert.eq(coord-flip(reverse: false).reverse, false)
 
-// `_is-flipped` recognises the flip coord and rejects everything else.
-#assert.eq(_is-flipped(c1), true)
-#assert.eq(_is-flipped((kind: "coord", coord: "cartesian")), false)
-#assert.eq(_is-flipped((kind: "coord", coord: "fixed", ratio: 1)), false)
-#assert.eq(_is-flipped(none), false)
+// `flipped` marks the flip coord and no other.
+#assert.eq(c1.flipped, true)
+#assert.eq(coord-cartesian().flipped, false)
+#assert.eq(coord-fixed(ratio: 1).flipped, false)
+#assert.eq(resolve-coord(none).flipped, false)
 
-// `_apply-flip` swaps trained.x and trained.y when the coord is flip,
-// and is a no-op otherwise.
+// The flip `train` swaps trained.x and trained.y, and the other coords leave
+// them in place.
 #let trained = (
   x: (type: "discrete", domain: ("a", "b", "c")),
   y: (type: "continuous", domain: (0, 10)),
 )
-#let flipped = _apply-flip(trained, c1)
+#let flipped = (c1.train)(trained)
 #assert.eq(flipped.x.type, "continuous")
 #assert.eq(flipped.x.domain, (0, 10))
 #assert.eq(flipped.y.type, "discrete")
@@ -41,7 +65,7 @@
 #assert.eq(flipped.y.reverse, true)
 
 // `reverse: false` opts out even when post-flip y is discrete.
-#let opt-out = _apply-flip(trained, coord-flip(reverse: false))
+#let opt-out = (coord-flip(reverse: false).train)(trained)
 #assert.eq(opt-out.y.at("reverse", default: false), false)
 
 // Continuous x flipped to continuous y under default `auto` stays put.
@@ -49,26 +73,27 @@
   x: (type: "continuous", domain: (0, 10)),
   y: (type: "continuous", domain: (0, 1)),
 )
-#let cc-flipped = _apply-flip(cc, c1)
+#let cc-flipped = (c1.train)(cc)
 #assert.eq(cc-flipped.y.at("transform", default: "identity"), "identity")
 
 // Explicit `reverse: true` reverses a continuous post-flip y via a `reverse`
 // flag, leaving any numeric transform intact.
-#let cc-rev = _apply-flip(cc, coord-flip(reverse: true))
+#let cc-rev = (coord-flip(reverse: true).train)(cc)
 #assert.eq(cc-rev.y.reverse, true)
 #assert.eq(cc-rev.y.at("transform", default: "identity"), "identity")
 
 // A log10 x keeps its transform under flip + reverse (regression: the
-// reverse used to overwrite the numeric transform with "reverse").
+// reverse used to overwrite the numeric transform with "reverse"). The domain
+// is positive because the flip `train` expands it through the log first.
 #let cc-log = (
-  x: (type: "continuous", domain: (0, 3), transform: "log10"),
+  x: (type: "continuous", domain: (1, 1000), transform: "log10"),
   y: (type: "continuous", domain: (0, 1)),
 )
-#let cc-log-rev = _apply-flip(cc-log, coord-flip(reverse: true))
+#let cc-log-rev = (coord-flip(reverse: true).train)(cc-log)
 #assert.eq(cc-log-rev.y.transform, "log10")
 #assert.eq(cc-log-rev.y.reverse, true)
 
-#let untouched = _apply-flip(trained, (kind: "coord", coord: "cartesian"))
+#let untouched = (coord-cartesian().train)(trained)
 #assert.eq(untouched.x.type, "discrete")
 #assert.eq(untouched.y.type, "continuous")
 

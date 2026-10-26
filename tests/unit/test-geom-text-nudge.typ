@@ -3,6 +3,8 @@
 // end-to-end renders compile (the assertion is the compile itself).
 
 #import "../../src/aes.typ": aes
+#import "../../src/coord/cartesian.typ": coord-cartesian
+#import "../../src/coord/flip.typ": coord-flip
 #import "../../src/geom/label-draw.typ": nudge-cm
 #import "../../src/geom/text.typ": geom-text
 #import "../../src/geom/label.typ": geom-label
@@ -103,6 +105,7 @@
   ),
   px-range: (0.0, 12.0),
   py-range: (0.0, 5.0),
+  coord: coord-cartesian(),
 )
 #assert.eq(nudge-cm(cat-ctx, "a", 4, 1, 0), (3.0, 0.0))
 #assert.eq(nudge-cm(cat-ctx, "a", 4, 0.5, 0), (1.5, 0.0))
@@ -126,6 +129,7 @@
   px-range: cat-ctx.py-range,
   py-range: cat-ctx.px-range,
   flipped: true,
+  coord: coord-flip(),
 )
 #assert.eq(nudge-cm(flip-ctx, 4, "a", 1, 0), (0.0, 3.0))
 #assert.eq(nudge-cm(flip-ctx, 4, "a", 0, 1), (0.5, 0.0))

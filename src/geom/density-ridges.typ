@@ -3,14 +3,13 @@
 ///! The default `stat = "density-ridges"` smooths each y bucket's x sample
 ///! into a density curve; the geom draws every curve as a filled ridge
 ///! rising from its bucket's baseline, back to front so ridges lower on
-///! the plot overlap the ones behind them. Under \@coord-radial the layer
-///! degrades to a no-op.
+///! the plot overlap the ones behind them. \@coord-radial fails for this layer.
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../stat/density-ridges.typ": stat-density-ridges
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-axis, map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
 #import "../utils/group.typ": bucket-by-col, partition-by-group
 #import "../utils/types.typ": parse-number
@@ -157,7 +156,8 @@
   let y-trained = ctx.trained.at("y", default: none)
   if x-trained == none or y-trained == none { return }
   if x-trained.type != "continuous" { return }
-  if ctx.at("radial", default: none) != none { return }
+  let map-x = axis-mapper(ctx, "x", space: "stat")
+  let map-y = axis-mapper(ctx, "y")
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // The outline separates overlapping ridges, so the stroke default stands
@@ -172,7 +172,7 @@
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     for rows in bucket-by-col(g.data, y-col) {
       let raw-y = rows.first().at(y-col, default: none)
-      let baseline = map-position(y-trained, raw-y, ctx.py-range)
+      let baseline = map-y(raw-y)
       if baseline == none { continue }
       let band = axis-band(y-trained, raw-y, 0.5, ctx.py-range)
       if band == none { continue }
@@ -198,7 +198,7 @@
 
   for ridge in ridges.sorted(key: r => -r.baseline) {
     let top = ridge.side.map(p => (
-      map-axis(x-trained, p.x, ctx.px-range),
+      map-x(p.x),
       ridge.baseline + ridge.span * scale * p.height,
     ))
     let base = (

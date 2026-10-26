@@ -15,7 +15,7 @@
 #import "../utils/group.typ": partition-by-group
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/aes-pair.typ": aes-set
-#import "../utils/flip.typ": project-user-point, user-axes, user-columns
+#import "../utils/flip.typ": project-user-path, user-axes, user-columns
 #import "../utils/band.typ": band-polygon
 #import "../utils/late-binding.typ": after-scale-source, apply-after-scale
 #import "../scale/train.typ": mapping-ref-col
@@ -264,7 +264,7 @@
     )
     if has-band {
       let pts = band-polygon(ctx, sorted, p => p.hi, p => p.lo)
-      if pts.all(p => p != none) {
+      if pts != none {
         let alpha = resolve-channel(
           "alpha",
           layer.params,
@@ -278,9 +278,7 @@
       }
     }
 
-    let line-pts = sorted
-      .map(p => project-user-point(ctx, p.x, p.y))
-      .filter(p => p != none)
+    let line-pts = project-user-path(ctx, sorted.map(p => (p.x, p.y)))
     if line-pts.len() >= 2 and not suppress-line {
       let thickness = resolve-channel(
         "linewidth",

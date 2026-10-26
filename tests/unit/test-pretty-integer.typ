@@ -4,7 +4,7 @@
 #import "../../lib.typ": aes, geom-point, scale-date, scales
 #import "../../src/scale/train.typ": train
 #import "../../src/render/axis-format.typ": _axis-breaks
-#import "../../src/render/domain.typ": _apply-expand
+#import "../../src/coord/expand.typ": apply-expand
 #import "../../src/render/legend.typ": guides-for
 #import "../../src/utils/pretty.typ": pretty
 
@@ -33,9 +33,8 @@
   (x: 2022, y: 60),
   (x: 2023, y: 65),
 )
-#let trained-years = _apply-expand(
+#let trained-years = apply-expand(
   train(layers: layers, mapping: aes(x: "x", y: "y"), data: years),
-  none,
 )
 #assert(trained-years.x.integer)
 #assert.eq(_axis-breaks(trained-years.x), (2020.0, 2021.0, 2022.0, 2023.0))

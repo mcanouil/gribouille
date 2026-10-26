@@ -23,7 +23,7 @@
 #assert.eq(normalise-expansion((0%, auto), "continuous"), (0, 0, 0.05, 0))
 #assert.eq(normalise-expansion((auto, 10%), "continuous"), (0.05, 0, 0.1, 0))
 // Discrete defaults have no mult; the slot pad is added later in
-// `_apply-expand`, so a per-side `auto` resolves to zero mult here.
+// `apply-expand`, so a per-side `auto` resolves to zero mult here.
 #assert.eq(normalise-expansion((auto, 0%), "discrete"), (0, 0, 0, 0))
 
 // Lengths resolve to canvas-cm-only.
@@ -69,10 +69,11 @@
 #assert.eq(map-discrete("b", ("a", "b"), (0.0, 10.0)), 7.5)
 
 // Bar layers anchor y=0 at the axis line. With `geom-col`, `_post-train`
-// tags the y trained entry with `anchor-zero: "lo"`, and `_apply-expand`
+// tags the y trained entry with `anchor-zero: "lo"`, and `apply-expand`
 // collapses the lower-side multiplicative expansion. The y=0 baseline maps
 // to the panel bottom, not 4.5% above it.
-#import "../../src/render/domain.typ": _apply-expand, _post-train
+#import "../../src/coord/expand.typ": apply-expand
+#import "../../src/render/domain.typ": _post-train
 #import "../../src/render/layer-prep.typ": _prepare-layer
 #import "../../src/geom/col.typ": geom-col
 #import "../../src/aes.typ": aes
@@ -97,7 +98,7 @@
 #let bar-trained = _post-train(bar-trained, bar-prepared)
 #assert.eq(bar-trained.y.at("anchor-zero", default: none), "lo")
 
-#let bar-trained = _apply-expand(bar-trained, none)
+#let bar-trained = apply-expand(bar-trained)
 // Lower-side mult collapsed to 0; upper side still gets the 5% default.
 #let (vt-lo, vt-hi) = bar-trained.y.view-transform
 #assert.eq(vt-lo, 0)
@@ -115,7 +116,7 @@
   data: bar-data,
 )
 #let bar-side-trained = _post-train(bar-side-trained, bar-prepared)
-#let bar-side-trained = _apply-expand(bar-side-trained, none)
+#let bar-side-trained = apply-expand(bar-side-trained)
 #assert.eq(bar-side-trained.y.view-transform, (0, 5.5))
 
 // `_map-transform` places y=0 exactly at the start of the panel range.
@@ -144,7 +145,7 @@
 #let fill-trained = _post-train(fill-trained, fill-prepared)
 #assert.eq(fill-trained.y.at("anchor-zero"), "both")
 
-#let fill-trained = _apply-expand(fill-trained, none)
+#let fill-trained = apply-expand(fill-trained)
 #assert.eq(fill-trained.y.view-transform, (0, 1))
 
 // Length on a continuous axis lands in view-pad-cm; view-transform collapses to
@@ -160,7 +161,7 @@
   mapping: pt-mapping,
   data: pt-data,
 )
-#let pt-trained = _apply-expand(pt-trained, none)
+#let pt-trained = apply-expand(pt-trained)
 #assert.eq(pt-trained.x.view-transform, (1, 5))
 #assert.eq(pt-trained.x.at("view-pad-cm"), (5pt / 1cm, 5pt / 1cm))
 
@@ -185,7 +186,7 @@
   data: pie-data,
 )
 #let pie-trained = _post-train(pie-trained, pie-prepared)
-#let pie-trained = _apply-expand(pie-trained, coord-radial(theta: "y"))
+#let pie-trained = (coord-radial(theta: "y").train)(pie-trained)
 // Pie shape (theta: "y"): radial x drops the lo data pad; the geom-min-pad
 // floor (= half the bar width) keeps the inner edge at radius 0.
 #assert.eq(pie-trained.x.view-index, (-0.5, DISCRETE-AUTO-DATA-PAD))
@@ -209,7 +210,7 @@
   mapping: rose-mapping,
   data: rose-data,
 )
-#let rose-trained = _apply-expand(rose-trained, coord-radial())
+#let rose-trained = (coord-radial().train)(rose-trained)
 #let (rvt-lo, rvt-hi) = rose-trained.y.view-transform
 #assert.eq(rvt-lo, 10)
 #assert(rvt-hi > 50)
@@ -221,10 +222,7 @@
   mapping: rose-mapping,
   data: rose-data,
 )
-#let pinned-trained = _apply-expand(
-  pinned-trained,
-  coord-radial(theta: "y"),
-)
+#let pinned-trained = (coord-radial(theta: "y").train)(pinned-trained)
 #let (pvt-lo, pvt-hi) = pinned-trained.x.view-transform
 #assert(pvt-lo < 0)
 

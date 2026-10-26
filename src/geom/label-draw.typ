@@ -7,7 +7,8 @@
 #import "../utils/aes-resolve.typ": aes-col
 #import "../utils/arrow.typ": draw-arrow-heads
 #import "../utils/flip.typ": user-point
-#import "../utils/radial.typ": axis-numeric, project-point, shift-point
+#import "../utils/radial.typ": axis-numeric, shift-point
+#import "../coord/project.typ": project-point
 #import "../utils/repel.typ": repel
 #import "../utils/segment-route.typ": aabb-from-centre, route-segment
 #import "../utils/types.typ": parse-number
