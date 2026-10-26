@@ -141,12 +141,8 @@
       or project-user-point(ctx, xv, hi) == none
   ) { return none }
   let dd = dodge-delta(dodge, row)
-  let points = project-user-path(ctx, ((xv, lo), (xv, hi))).map(
-    p => shift-point(
-      p,
-      dd,
-    ),
-  )
+  let path = project-user-path(ctx, ((xv, lo), (xv, hi)))
+  let points = path.map(p => shift-point(p, dd))
 
   let colour = resolve-channel(
     "colour",
