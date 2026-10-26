@@ -35,6 +35,7 @@
     "supports",
     "to-canvas",
     "train",
+    "unsupported-hint",
   ),
 )
 

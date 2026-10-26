@@ -32,6 +32,7 @@
   "supports",
   "to-canvas",
   "train",
+  "unsupported-hint",
 )
 #assert.eq(c1.keys().sorted(), keys-fixed)
 #assert.eq(c2.keys().sorted(), keys-fixed)
