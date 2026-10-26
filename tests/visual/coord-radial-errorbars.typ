@@ -3,8 +3,8 @@
 //
 // When the bar sweeps theta, its spine is an arc at constant radius and each
 // cap points at the centre. When the bar runs along the radius, its spine
-// stays a straight spoke and each cap is tangent to the circle. A cap near the
-// centre stops at the centre and does not cross it.
+// stays a straight spoke and each cap is an arc across the slot. A Typst
+// length cap near the centre stops at the centre and does not cross it.
 
 #import "../../lib.typ": *
 
@@ -43,5 +43,5 @@
   cell(horizontal, (geom-errorbarh(),), "x"),
   cell(vertical, (geom-errorbar(),), "x"),
   cell(horizontal, (geom-errorbarh(),), "y"),
-  cell(vertical, (geom-errorbar(),), "y", data: near-centre),
+  cell(vertical, (geom-errorbar(width: 0.3cm),), "y", data: near-centre),
 )

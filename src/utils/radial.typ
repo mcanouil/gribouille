@@ -250,11 +250,6 @@
   (-dy / len * half, dx / len * half)
 }
 
-// Default canvas-unit half-cap for radial composite-bar geoms when the user
-// supplied a relative cap width that has no meaningful pixel mapping under
-// polar.
-#let RADIAL-DEFAULT-CAP-HALF = 0.15
-
 // The sweep of one sample along an arc: five degrees.
 #let ARC-STEP = calc.pi / 36
 

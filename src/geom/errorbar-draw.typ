@@ -15,10 +15,49 @@
 #import "../coord/project.typ": axis-mapper, project-path
 #import "../utils/band.typ": axis-band
 #import "../utils/flip.typ": user-axis-key
-#import "../utils/radial.typ": RADIAL-DEFAULT-CAP-HALF, radial-tangent-cap
+#import "../utils/radial.typ": radial-arc, radial-tangent-cap
 #import "../utils/types.typ": parse-number
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
+
+// Caps for a numeric cap extent under coord-radial. The band spans `half` on
+// the centre axis, as on a Cartesian panel, measured in the polar range of
+// that axis. A centre on theta gives a spoke spine, so each cap is an arc at
+// the radius of its end. A centre on the radius gives an arc spine, so each
+// cap is a radial tick at the angle of its end, and stops at the centre.
+#let _draw-radial-band-caps(
+  radial,
+  centre-trained,
+  raw-centre,
+  half,
+  centre-axis,
+  ends,
+  stroke-spec,
+) = {
+  let centre-is-theta = radial.theta-axis == centre-axis
+  let range = if centre-is-theta { radial.theta-range } else {
+    radial.r-range
+  }
+  let band = axis-band(centre-trained, raw-centre, half, range)
+  if band == none { return }
+  let (lo, hi) = band
+  let (cx, cy) = radial.centre
+  for (ex, ey) in ends {
+    let (dx, dy) = (ex - cx, ey - cy)
+    let r = calc.sqrt(dx * dx + dy * dy)
+    if centre-is-theta {
+      cetz.draw.line(..radial-arc(lo, hi, r, radial), stroke: stroke-spec)
+    } else if r > 0 {
+      let (ux, uy) = (dx / r, dy / r)
+      let (r-lo, r-hi) = (calc.max(0, lo), calc.max(0, hi))
+      cetz.draw.line(
+        (cx + ux * r-lo, cy + uy * r-lo),
+        (cx + ux * r-hi, cy + uy * r-hi),
+        stroke: stroke-spec,
+      )
+    }
+  }
+}
 
 #let _draw-errorbar-axis(layer, ctx, axis, cap-extent) = {
   // Under coord-flip the mapping swap carries the span onto the other axis,
@@ -115,18 +154,27 @@
       let path = project-path(ctx, pairs)
       if path.len() < 2 { continue }
       cetz.draw.line(..path, stroke: stroke-spec)
+      let (cx, cy) = ctx.radial.centre
+      if not extent-is-length {
+        _draw-radial-band-caps(
+          ctx.radial,
+          centre-trained,
+          raw-centre,
+          half,
+          centre-axis,
+          (path.first(), path.last()),
+          stroke-spec,
+        )
+        continue
+      }
       // Each cap is perpendicular to the spine at its own end: radial on an
       // arc, tangent on a spoke. A radial cap stops at the centre rather than
       // cross it.
-      let cap-half = if extent-is-length { half } else {
-        RADIAL-DEFAULT-CAP-HALF
-      }
-      let (cx, cy) = ctx.radial.centre
       for (end, next) in (
         (path.first(), path.at(1)),
         (path.last(), path.at(-2)),
       ) {
-        let cap = radial-tangent-cap(end, next, cap-half)
+        let cap = radial-tangent-cap(end, next, half)
         if cap == none { continue }
         let (sx, sy) = end
         let (nx, ny) = cap
