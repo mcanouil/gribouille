@@ -116,10 +116,12 @@
       if path.len() < 2 { continue }
       cetz.draw.line(..path, stroke: stroke-spec)
       // Each cap is perpendicular to the spine at its own end: radial on an
-      // arc, tangent on a spoke.
+      // arc, tangent on a spoke. A radial cap stops at the centre rather than
+      // cross it.
       let cap-half = if extent-is-length { half } else {
         RADIAL-DEFAULT-CAP-HALF
       }
+      let (cx, cy) = ctx.radial.centre
       for (end, next) in (
         (path.first(), path.at(1)),
         (path.last(), path.at(-2)),
@@ -128,11 +130,11 @@
         if cap == none { continue }
         let (sx, sy) = end
         let (nx, ny) = cap
-        cetz.draw.line(
-          (sx - nx, sy - ny),
-          (sx + nx, sy + ny),
-          stroke: stroke-spec,
-        )
+        let tips = ((sx - nx, sy - ny), (sx + nx, sy + ny)).map(((px, py)) => {
+          let crosses = (px - cx) * (sx - cx) + (py - cy) * (sy - cy) < 0
+          if crosses { (cx, cy) } else { (px, py) }
+        })
+        cetz.draw.line(..tips, stroke: stroke-spec)
       }
       continue
     }
