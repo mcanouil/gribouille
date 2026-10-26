@@ -12,8 +12,9 @@
 // `frame` builds the bundle the panel hands geoms as `ctx.radial`, `none` on a
 // cartesian panel. `axis-range` is the canvas range one axis maps into, and
 // `to-canvas` turns a pair of mapped axis positions into a canvas point.
-// `project` reads both through `ctx.coord`, so a coord that overrides them
-// reshapes `project` without overriding it too.
+// `project` runs once per row, so the default reads `ctx.px-range` and
+// `ctx.py-range` directly rather than calling `axis-range` and `to-canvas`.
+// A coord that overrides either of them must override `project` too.
 #let coord-base(name) = (
   kind: "coord",
   name: name,
@@ -36,9 +37,9 @@
     let xt = ctx.trained.at("x", default: none)
     let yt = ctx.trained.at("y", default: none)
     if xt == none or yt == none { return none }
-    let u = map-position(xt, xv, (ctx.coord.axis-range)(ctx, "x"))
-    let v = map-position(yt, yv, (ctx.coord.axis-range)(ctx, "y"))
-    if u == none or v == none { return none }
-    (ctx.coord.to-canvas)(ctx, u, v)
+    let cx = map-position(xt, xv, ctx.px-range)
+    let cy = map-position(yt, yv, ctx.py-range)
+    if cx == none or cy == none { return none }
+    (cx, cy)
   },
 )
