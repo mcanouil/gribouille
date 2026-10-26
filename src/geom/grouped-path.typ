@@ -62,7 +62,8 @@
 // every row on a continuous category axis, and this runs once a group. Each
 // offset is stepped with the positions, so a corner takes the same offset as
 // the canvas point it stands for, and a point the coord adds along an edge
-// takes the offset of the edge's start.
+// takes the offset of the edge's start. With no dodge every offset is zero, so
+// the whole path is projected in one call rather than edge by edge.
 #let rows-to-points(rows, mapping, ctx, dodge, direction: none) = {
   let uvs = ()
   let deltas = ()
@@ -73,13 +74,12 @@
   for (row, uv) in rows.zip(mapped) {
     if uv == none { continue }
     uvs.push(uv)
-    deltas.push(dodge-delta(dodge, row))
+    if dodge != none { deltas.push(dodge-delta(dodge, row)) }
   }
   if uvs.len() == 0 { return () }
-  if direction != none {
-    uvs = stair(uvs, direction)
-    deltas = stair(deltas, direction)
-  }
+  if direction != none { uvs = stair(uvs, direction) }
+  if dodge == none { return project-uvs(ctx, uvs) }
+  if direction != none { deltas = stair(deltas, direction) }
   let pts = ()
   for i in range(uvs.len() - 1) {
     let edge = project-uvs(ctx, (uvs.at(i), uvs.at(i + 1)))
