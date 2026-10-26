@@ -14,6 +14,11 @@
 /// cap span in y data units for continuous y, and as a fraction of the
 /// per-category slot height for discrete y.
 ///
+/// Under \@coord-radial a bar that sweeps theta follows the polar grid as an
+/// arc, with each cap pointing at the centre.
+/// There, `height` sets the cap span only when it is a length.
+/// A number gives a fixed cap span.
+///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
 /// \@stability stable

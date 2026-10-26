@@ -45,8 +45,8 @@
 /// for pie / donut layouts.
 ///
 /// Lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline`,
-/// `geom-linerange`, `geom-pointrange`, and the lines of `geom-smooth` and
-/// `geom-function` curve along the polar grid.
+/// `geom-errorbar`, `geom-errorbarh`, `geom-linerange`, `geom-pointrange`, and
+/// the lines of `geom-smooth` and `geom-function` curve along the polar grid.
 /// Polygons keep straight edges.
 /// `geom-violin` and `geom-density-ridges` fail under this coord.
 /// An edge that crosses the seam at `start` (12 o'clock by default) sweeps the

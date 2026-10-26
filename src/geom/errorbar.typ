@@ -14,6 +14,11 @@
 /// cap span in x data units for continuous x, and as a fraction of the
 /// per-category slot width for discrete x.
 ///
+/// Under \@coord-radial a bar that sweeps theta follows the polar grid as an
+/// arc, with each cap pointing at the centre.
+/// There, `width` sets the cap span only when it is a length.
+/// A number gives a fixed cap span.
+///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
 /// \@stability stable

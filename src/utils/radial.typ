@@ -236,14 +236,15 @@
   calc.min(..panel-gaps)
 }
 
-// Tangent-cap offset for composite-bar geoms (errorbar, errorbarh).
-// Returns `(nx, ny)` perpendicular to the chord `(p-lo, p-hi)` with length
-// `half`, or `none` when the chord is degenerate.
-#let radial-tangent-cap(p-lo, p-hi, half) = {
-  let (sx-lo, sy-lo) = p-lo
-  let (sx-hi, sy-hi) = p-hi
-  let dx = sx-hi - sx-lo
-  let dy = sy-hi - sy-lo
+// Cap offset for composite-bar geoms (errorbar, errorbarh). Returns `(nx, ny)`
+// perpendicular to the segment from `end` to `next` with length `half`, or
+// `none` when the segment is degenerate. The segment is the last piece of the
+// projected spine, so the offset is radial on an arc and tangent on a spoke.
+#let radial-tangent-cap(end, next, half) = {
+  let (sx-end, sy-end) = end
+  let (sx-next, sy-next) = next
+  let dx = sx-next - sx-end
+  let dy = sy-next - sy-end
   let len = calc.sqrt(dx * dx + dy * dy)
   if len == 0 { return none }
   (-dy / len * half, dx / len * half)
