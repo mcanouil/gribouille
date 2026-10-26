@@ -214,10 +214,9 @@
 // requested `width`/`height`. Gate the band on the same conditions the draw
 // does, so a suppressed or blank theta axis gives it back.
 #let prepare-radial(panel) = {
-  let _theta-key = theta-axis-of(panel.coord)
-  if _theta-key == none { return (label-bounds: (), tick-cm: 0.0) }
   let _ax-text = panel.ax-text
   let _theta-guide = _read-theta-guide(panel.spec)
+  let _theta-key = theta-axis-of(panel.coord)
   let _theta-text = if _theta-key == "x" { _ax-text.xb } else { _ax-text.yl }
   let _label-bounds = if (
     _theta-text.size > 0pt
