@@ -100,6 +100,7 @@
         ),
         prepare: prepare-radial,
         supports: geom-name => geom-name not in ("violin", "density-ridges"),
+        unsupported-hint: "Draw this layer without coord-radial, or use geom-boxplot, which draws under coord-radial.",
         draw-background: draw-radial-background,
         draw-foreground: draw-radial-foreground,
         axis-range: (ctx, axis) => if axis == theta {

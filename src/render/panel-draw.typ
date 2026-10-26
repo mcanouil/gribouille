@@ -228,7 +228,7 @@
       fail(
         "coord-" + coord.name,
         "does not support geom-" + layer.name,
-        hint: "Draw this layer without coord-radial, or use geom-boxplot, which draws under coord-radial.",
+        hint: coord.unsupported-hint,
       )
     }
   }

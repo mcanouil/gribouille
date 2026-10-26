@@ -24,7 +24,7 @@
 // `draw-background` draws the furniture under the geoms, `draw-foreground`
 // what sits above them, and `clip` says whether the geoms are clipped to the
 // panel. `supports` says whether the coord can draw the geom of that name, and
-// the panel fails for a layer it refuses.
+// the panel fails for a layer it refuses, with `unsupported-hint` as the hint.
 #let coord-base(name) = (
   kind: "coord",
   name: name,
@@ -44,6 +44,7 @@
   draw-foreground: panel => none,
   clip: true,
   supports: geom-name => true,
+  unsupported-hint: none,
   axis-range: (ctx, axis) => if axis == "x" { ctx.px-range } else {
     ctx.py-range
   },
