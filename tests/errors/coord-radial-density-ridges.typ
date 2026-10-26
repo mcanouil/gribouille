@@ -13,14 +13,14 @@
 
 #plot(
   data: (
-    (x: "a", y: 1),
-    (x: "a", y: 2),
-    (x: "a", y: 4),
-    (x: "b", y: 2),
-    (x: "b", y: 3),
-    (x: "b", y: 5),
+    (x: 1, grp: "a"),
+    (x: 2, grp: "a"),
+    (x: 4, grp: "a"),
+    (x: 2, grp: "b"),
+    (x: 3, grp: "b"),
+    (x: 5, grp: "b"),
   ),
-  mapping: aes(x: "x", y: "y"),
+  mapping: aes(x: "x", y: "grp"),
   layers: (geom-density-ridges(),),
   coord: coord-radial(),
   width: 6cm,
