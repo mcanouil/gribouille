@@ -4,7 +4,6 @@
 ///! Scale training is unchanged; only the inner panel pixel size is adjusted.
 
 #import "contract.typ": coord-base
-#import "expand.typ": apply-expand
 
 // Shrink the inner panel along the longer axis so that one x data unit
 // projects to `ratio` y data units. Returns the adjusted (width, height).
@@ -82,7 +81,6 @@
   coord-base("fixed")
     + (
       ratio: ratio,
-      train: apply-expand,
       panel-size: (trained, w, h) => _fixed-inner-size(ratio, trained, w, h),
     )
 )
