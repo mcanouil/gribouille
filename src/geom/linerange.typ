@@ -6,9 +6,7 @@
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": shift-point
-#import "../utils/flip.typ": (
-  project-user-path, project-user-point, user-axes, user-columns,
-)
+#import "../utils/flip.typ": project-user-path, user-axes, user-columns
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -22,6 +20,9 @@
 ///
 /// Mapping must provide `x`, `ymin`, `ymax`. Colour and linetype may be
 /// mapped or set as fixed layer parameters.
+///
+/// Under \@coord-radial a range that sweeps theta follows the polar grid as an
+/// arc.
 ///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
@@ -136,12 +137,9 @@
   let lo = parse-number(row.at(ymin-col, default: none))
   let hi = parse-number(row.at(ymax-col, default: none))
   if xv == none or lo == none or hi == none { return none }
-  if (
-    project-user-point(ctx, xv, lo) == none
-      or project-user-point(ctx, xv, hi) == none
-  ) { return none }
-  let dd = dodge-delta(dodge, row)
   let path = project-user-path(ctx, ((xv, lo), (xv, hi)))
+  if path.len() < 2 { return none }
+  let dd = dodge-delta(dodge, row)
   let points = path.map(p => shift-point(p, dd))
 
   let colour = resolve-channel(

@@ -31,6 +31,9 @@
 /// Mapping must provide `x`, `y`, `ymin`, `ymax`. `colour` paints the range
 /// line and the point outline; `fill` paints the point body.
 ///
+/// Under \@coord-radial a range that sweeps theta follows the polar grid as an
+/// arc.
+///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
 /// \@stability stable
