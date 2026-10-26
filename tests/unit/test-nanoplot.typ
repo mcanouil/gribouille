@@ -4,7 +4,7 @@
 
 #import "../../lib.typ": *
 #import "../../src/integration/nanoplot.typ": _axis-theme, _x-scale
-#import "../../src/theme/theme.typ": resolve-element
+#import "../../src/theme/theme.typ": _rect-style, resolve-element
 
 #let renderer = nanoplot(
   mapping: aes(x: "salary", y: "y"),
@@ -67,13 +67,16 @@
     resolve-element(_axis-theme(theme-bw(), side), "axis-line-x-" + side).kind,
     "element-blank",
   )
-  let background = resolve-element(
-    _axis-theme(theme-minimal(paper: luma(90%)), side),
-    "plot-background",
-  )
-  assert.eq(background.kind, "element-rect")
-  assert.eq(background.at("fill", default: none), none)
-  assert.eq(background.at("stroke", default: none), none)
+  // A colour with no thickness strokes at the default thickness, and a fill
+  // or colour on `rect` reaches `plot-background` through the cascade.
+  for theme in (
+    theme-minimal(paper: luma(90%)),
+    theme-minimal(plot-background: element-rect(colour: black)),
+    theme-bw(rect: element-rect(fill: red, colour: black)),
+  ) {
+    let background = _rect-style(_axis-theme(theme, side), "plot-background")
+    assert.eq((background.fill, background.stroke), (none, none))
+  }
 }
 
 // The drawers return content at the size keisen asks for.

@@ -16,7 +16,9 @@
 #import "../scale/secondary.typ": dup-axis
 #import "../theme/void.typ": theme-void
 #import "../theme/theme.typ": _normalise-margin, resolve-element
-#import "../theme/elements.typ": element-blank, element-text, margin
+#import "../theme/elements.typ": (
+  element-blank, element-rect, element-text, margin,
+)
 #import "../utils/errors.typ": fail-enum, fail-type
 
 #let _SIDES = ("top", "bottom")
@@ -96,16 +98,19 @@
   for key in _PANEL-SURFACES { out.insert(key, element-blank()) }
   let background = resolve-element(out, "plot-background")
   if background.at("kind", default: none) == "element-rect" {
+    // A `none` field inherits from `rect`, so the record keeps the padding
+    // only, and `rect` is blank so it gives no paint.
     let inset = _normalise-margin(background.at("inset", default: none))
-    background.insert("fill", none)
-    background.insert("stroke", none)
-    background.insert("inset", margin(
-      top: 0pt,
-      right: inset.right,
-      bottom: 0pt,
-      left: inset.left,
+    out.insert("rect", element-blank())
+    out.insert("plot-background", element-rect(
+      inset: margin(
+        top: 0pt,
+        right: inset.right,
+        bottom: 0pt,
+        left: inset.left,
+      ),
+      outset: background.at("outset", default: none),
     ))
-    out.insert("plot-background", background)
   }
   for family in ("axis-text", "axis-ticks") {
     out.insert(family + "-x-" + other, element-blank())
@@ -151,6 +156,7 @@
 ///
 /// \@param scales Scales from \@scales.
 ///   The x scale gets the column domain as its `limits`.
+///   It must be continuous, because the column domain is numeric.
 ///
 /// \@param theme Theme for the cells and the axis; `none` (default) uses \@theme-void.
 ///
@@ -234,6 +240,16 @@
       scales,
       "a dictionary from scales()",
       hint: "Build it with scales(x: scale-continuous(...)).",
+    )
+  }
+  let x-type = scales.at("x", default: (:)).at("type", default: "continuous")
+  if x-type != "continuous" {
+    fail-type(
+      "nanoplot",
+      "scales.x",
+      x-type,
+      "a continuous scale",
+      hint: "The column domain is numeric. Use scale-continuous() for x.",
     )
   }
   if type(axis) != bool {
