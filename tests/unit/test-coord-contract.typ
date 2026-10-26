@@ -1,7 +1,7 @@
 // The coord contract: every constructor carries `train` and `panel-size`, and
 // the renderer calls them instead of branching on the coord name.
 
-#import "../../lib.typ": aes, geom-point, plot
+#import "../../lib.typ": aes, compose, defer, geom-col, geom-point, plot
 #import "../../src/coord/contract.typ": coord-base
 #import "../../src/coord/expand.typ": apply-expand
 #import "../../src/render.typ": render-plot-deferred
@@ -81,6 +81,29 @@
   )
   assert.eq(pass.trained.x.domain, (0, 100))
 }
+
+// `compose()` draws each spec through `render-plot`, so a flipped spec and a
+// spec with no coord both get a resolved coord.
+#let parts = (
+  (q: "Q1", k: "u", n: 3),
+  (q: "Q1", k: "w", n: 2),
+  (q: "Q2", k: "u", n: 4),
+  (q: "Q2", k: "w", n: 1),
+)
+#let dodged(coord) = defer(
+  plot,
+  data: parts,
+  mapping: aes(x: "q", y: "n", fill: "k"),
+  layers: (geom-col(position: "dodge"),),
+  coord: coord,
+)
+#compose(
+  dodged(coord-flip()),
+  dodged(none),
+  ncolumn: 2,
+  width: 10cm,
+  height: 4cm,
+)
 
 #assert.eq(resolve-coord(none).name, "cartesian")
 
