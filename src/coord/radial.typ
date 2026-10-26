@@ -5,7 +5,7 @@
 #import "expand.typ": apply-expand
 #import "../utils/radial.typ": polar-canvas, radial-ctx, radial-point
 #import "../render/panel-radial.typ": (
-  _draw-radial-r-labels, draw-radial-background, prepare-radial,
+  draw-radial-background, draw-radial-foreground, prepare-radial,
 )
 
 /// Radial coordinate system.
@@ -100,7 +100,7 @@
         ),
         prepare: prepare-radial,
         draw-background: draw-radial-background,
-        draw-foreground: _draw-radial-r-labels,
+        draw-foreground: draw-radial-foreground,
         axis-range: (ctx, axis) => if axis == theta {
           ctx.radial.theta-range
         } else { ctx.radial.r-range },

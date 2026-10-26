@@ -404,7 +404,7 @@
 // `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`, and
 // `x-extents`/`y-extents` off `panel`. Like the angular labels, these stay on
 // every faceted panel.
-#let _draw-radial-r-labels(panel) = {
+#let draw-radial-foreground(panel) = {
   let outer-radial = panel.outer-radial
   if _read-r-guide(panel.spec).suppress { return }
   let cat-is-theta = outer-radial.cat-is-theta
