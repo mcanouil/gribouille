@@ -5,9 +5,9 @@
 // segment, and area under coord-radial. The next five draw stacked col,
 // dodged col, boxplot, violin, and density-ridges under coord-flip. The last
 // three are a free-scale facet-wrap under coord-flip, the same under
-// coord-radial, and a coord-fixed ratio 2 scatter. Rug, violin, and
-// density-ridges draw nothing under coord-radial. The rug panel checks that
-// rug is a no-op there and shows points only. Violin and density-ridges have no
+// coord-radial, and a coord-fixed ratio 2 scatter. Rug draws nothing under
+// coord-radial, and its panel checks that it is a no-op there and shows points
+// only. Violin and density-ridges fail under coord-radial, so they have no
 // radial panel.
 
 #import "../../lib.typ": *
