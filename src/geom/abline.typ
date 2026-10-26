@@ -20,10 +20,11 @@
   extents: none,
 )
 
-/// Straight reference line described by slope and intercept.
+/// Reference line described by slope and intercept.
 ///
 /// The line runs across the full trained x domain. Requires continuous x
-/// and y scales; discrete scales are skipped silently. To drive several lines
+/// and y scales; discrete scales are skipped silently. Under \@coord-radial
+/// the line follows the polar grid as a curve. To drive several lines
 /// from data, bind `slope` and/or `intercept` (and optionally `colour`,
 /// `alpha`, `linewidth`, `linetype`) through \@aes and pass `data`; one line is
 /// then drawn per row, with aesthetics resolved per row. Unlike \@geom-vline
