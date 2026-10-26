@@ -224,6 +224,9 @@
   )
   inner-ctx.radial = inner-radial
   for layer in prepared {
+    if layer.name not in GEOMS {
+      fail("plot", "unknown geom " + repr(layer.name))
+    }
     if not (coord.supports)(layer.name) {
       fail(
         "coord-" + coord.name,
