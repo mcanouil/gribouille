@@ -20,26 +20,12 @@
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
-// Caps for a numeric cap extent under coord-radial. The band spans `half` on
-// the centre axis, as on a Cartesian panel, measured in the polar range of
-// that axis. A centre on theta gives a spoke spine, so each cap is an arc at
-// the radius of its end. A centre on the radius gives an arc spine, so each
-// cap is a radial tick at the angle of its end, and stops at the centre.
-#let _draw-radial-band-caps(
-  radial,
-  centre-trained,
-  raw-centre,
-  half,
-  centre-axis,
-  ends,
-  stroke-spec,
-) = {
-  let centre-is-theta = radial.theta-axis == centre-axis
-  let range = if centre-is-theta { radial.theta-range } else {
-    radial.r-range
-  }
-  let band = axis-band(centre-trained, raw-centre, half, range)
-  if band == none { return }
+// Caps for a numeric cap extent under coord-radial. `band` is the cap span on
+// the centre axis, in the polar range of that axis. A centre on theta gives a
+// spoke spine, so each cap is an arc at the radius of its end. A centre on the
+// radius gives an arc spine, so each cap is a radial tick at the angle of its
+// end, and stops at the centre.
+#let _draw-radial-band-caps(radial, band, centre-is-theta, ends, stroke-spec) = {
   let (lo, hi) = band
   let (cx, cy) = radial.centre
   for (ex, ey) in ends {
@@ -90,6 +76,11 @@
   let position-name = layer-position-name(layer)
   let map-centre = axis-mapper(ctx, centre-axis)
   let map-span = axis-mapper(ctx, axis)
+  let radial = ctx.at("radial", default: none)
+  let centre-is-theta = radial != none and radial.theta-axis == centre-axis
+  let polar-range = if radial == none { none } else if centre-is-theta {
+    radial.theta-range
+  } else { radial.r-range }
 
   for row in data {
     let raw-centre = row.at(centre-col, default: none)
@@ -100,25 +91,6 @@
     let span-lo = map-span(lo)
     let span-hi = map-span(hi)
     if span-lo == none or span-hi == none { continue }
-
-    let (cap-lo, cap-hi) = if extent-is-length {
-      (centre-c - half, centre-c + half)
-    } else {
-      let band = axis-band(centre-trained, raw-centre, half, centre-range)
-      if band == none { (centre-c, centre-c) } else { band }
-    }
-
-    // Dodge shifts the centre and shrinks the cap by the dodge slot count.
-    // Only the band-derived path has a meaningful "bucket" to dodge within;
-    // a pinned Typst-length cap has no relation to the discrete slot, so
-    // dodge is left as a no-op there.
-    if position-name == "dodge" and not extent-is-length {
-      let cap-span = cap-hi - cap-lo
-      centre-c = dodge-centre(row, centre-c, cap-span)
-      let half = dodge-half(row, cap-span / 2)
-      cap-lo = centre-c - half
-      cap-hi = centre-c + half
-    }
 
     let colour = resolve-channel(
       "colour",
@@ -145,7 +117,7 @@
       dash: resolve-linetype(layer.params, mapping, ctx, row),
     )
 
-    if ctx.at("radial", default: none) != none {
+    if radial != none {
       let pairs = if axis == "y" {
         ((raw-centre, lo), (raw-centre, hi))
       } else {
@@ -154,19 +126,20 @@
       let path = project-path(ctx, pairs)
       if path.len() < 2 { continue }
       cetz.draw.line(..path, stroke: stroke-spec)
-      let (cx, cy) = ctx.radial.centre
       if not extent-is-length {
-        _draw-radial-band-caps(
-          ctx.radial,
-          centre-trained,
-          raw-centre,
-          half,
-          centre-axis,
-          (path.first(), path.last()),
-          stroke-spec,
-        )
+        let band = axis-band(centre-trained, raw-centre, half, polar-range)
+        if band != none {
+          _draw-radial-band-caps(
+            radial,
+            band,
+            centre-is-theta,
+            (path.first(), path.last()),
+            stroke-spec,
+          )
+        }
         continue
       }
+      let (cx, cy) = radial.centre
       // Each cap is perpendicular to the spine at its own end: radial on an
       // arc, tangent on a spoke. A radial cap stops at the centre rather than
       // cross it.
@@ -185,6 +158,25 @@
         cetz.draw.line(..tips, stroke: stroke-spec)
       }
       continue
+    }
+
+    let (cap-lo, cap-hi) = if extent-is-length {
+      (centre-c - half, centre-c + half)
+    } else {
+      let band = axis-band(centre-trained, raw-centre, half, centre-range)
+      if band == none { (centre-c, centre-c) } else { band }
+    }
+
+    // Dodge shifts the centre and shrinks the cap by the dodge slot count.
+    // Only the band-derived path has a meaningful "bucket" to dodge within;
+    // a pinned Typst-length cap has no relation to the discrete slot, so
+    // dodge is left as a no-op there.
+    if position-name == "dodge" and not extent-is-length {
+      let cap-span = cap-hi - cap-lo
+      centre-c = dodge-centre(row, centre-c, cap-span)
+      let half = dodge-half(row, cap-span / 2)
+      cap-lo = centre-c - half
+      cap-hi = centre-c + half
     }
 
     if axis == "y" {
