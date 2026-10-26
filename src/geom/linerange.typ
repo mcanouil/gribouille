@@ -6,7 +6,7 @@
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
 #import "../utils/radial.typ": shift-point
-#import "../utils/flip.typ": project-user-point, user-axes, user-columns
+#import "../utils/flip.typ": project-user-path, user-axes, user-columns
 #import "../position/dodge.typ": dodge-delta, dodge-geometry
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -20,6 +20,9 @@
 ///
 /// Mapping must provide `x`, `ymin`, `ymax`. Colour and linetype may be
 /// mapped or set as fixed layer parameters.
+///
+/// Under \@coord-radial a range that sweeps theta follows the polar grid as an
+/// arc.
 ///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
@@ -106,7 +109,8 @@
   inherit-aes: inherit-aes,
 )
 
-// Build one row's vertical range line, horizontal under coord-flip; shared
+// Build one row's vertical range line, horizontal under coord-flip and an arc
+// when the range sweeps theta under coord-radial; shared
 // with geom-pointrange. Returns
 // `(elem, dd, colour)` — the cetz line element to emit, the row's dodge
 // shift, and the resolved line colour for follow-up marks — or `none` when
@@ -133,12 +137,10 @@
   let lo = parse-number(row.at(ymin-col, default: none))
   let hi = parse-number(row.at(ymax-col, default: none))
   if xv == none or lo == none or hi == none { return none }
-  let p-lo = project-user-point(ctx, xv, lo)
-  let p-hi = project-user-point(ctx, xv, hi)
-  if p-lo == none or p-hi == none { return none }
+  let path = project-user-path(ctx, ((xv, lo), (xv, hi)))
+  if path.len() < 2 { return none }
   let dd = dodge-delta(dodge, row)
-  let (cx-lo, cy-lo) = shift-point(p-lo, dd)
-  let (cx-hi, cy-hi) = shift-point(p-hi, dd)
+  let points = path.map(p => shift-point(p, dd))
 
   let colour = resolve-channel(
     "colour",
@@ -169,8 +171,7 @@
   )
   (
     elem: cetz.draw.line(
-      (cx-lo, cy-lo),
-      (cx-hi, cy-hi),
+      ..points,
       stroke: (
         paint: paint,
         thickness: thickness,
