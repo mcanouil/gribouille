@@ -130,9 +130,9 @@
         if cap == none { continue }
         let (sx, sy) = end
         let (nx, ny) = cap
-        let tips = ((sx - nx, sy - ny), (sx + nx, sy + ny)).map(((px, py)) => {
-          let crosses = (px - cx) * (sx - cx) + (py - cy) * (sy - cy) < 0
-          if crosses { (cx, cy) } else { (px, py) }
+        let tips = ((sx - nx, sy - ny), (sx + nx, sy + ny)).map(((x, y)) => {
+          let crosses = (x - cx) * (sx - cx) + (y - cy) * (sy - cy) < 0
+          if crosses { (cx, cy) } else { (x, y) }
         })
         cetz.draw.line(..tips, stroke: stroke-spec)
       }
