@@ -75,10 +75,12 @@
   ))
   // A top axis is the bottom one copied to the top edge, with the same breaks
   // and labels.
-  let breaks = x.at("breaks", default: auto)
-  let labels = x.at("labels", default: auto)
-  let top = dup-axis(breaks: breaks, labels: labels)
-  x.insert("secondary", if side == "top" { top } else { none })
+  x.insert("secondary", if side == "top" {
+    dup-axis(
+      breaks: x.at("breaks", default: auto),
+      labels: x.at("labels", default: auto),
+    )
+  } else { none })
   x
 }
 
