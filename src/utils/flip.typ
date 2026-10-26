@@ -40,8 +40,8 @@
   )
 }
 
-// Canvas `(cx, cy)` of a point given in canvas units along the user's x and
-// y axes.
+// The pair `(ux, uy)` along the user's x and y axes, in the canvas axis order:
+// swapped under flip.
 #let user-point(ctx, ux, uy) = if _flipped(ctx) { (uy, ux) } else {
   (ux, uy)
 }
@@ -55,10 +55,9 @@
 
 // Canvas points of a path through data points `(ux, uy)` in the user's x/y
 // space, with the points the coord adds along each edge.
-#let project-user-path(ctx, pairs, closed: false) = project-path(
+#let project-user-path(ctx, pairs) = project-path(
   ctx,
   if _flipped(ctx) { pairs.map(((ux, uy)) => (uy, ux)) } else { pairs },
-  closed: closed,
 )
 
 // Canvas stair direction for a direction given in the user's x/y space:
