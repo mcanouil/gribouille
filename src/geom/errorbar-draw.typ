@@ -15,30 +15,25 @@
 #import "../coord/project.typ": axis-mapper, project-path
 #import "../utils/band.typ": axis-band
 #import "../utils/flip.typ": user-axis-key
-#import "../utils/radial.typ": radial-arc, radial-tangent-cap
+#import "../utils/radial.typ": polar-canvas, radial-arc, radial-tangent-cap
 #import "../utils/types.typ": parse-number
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 // Caps for a numeric cap extent under coord-radial. `band` is the cap span on
-// the centre axis, in the polar range of that axis. A centre on theta gives a
-// spoke spine, so each cap is an arc at the radius of its end. A centre on the
-// radius gives an arc spine, so each cap is a radial tick at the angle of its
-// end, and stops at the centre.
+// the centre axis and `ends` the two span ends, each in the polar range of its
+// axis. A centre on theta gives a spoke spine, so each cap is an arc at the
+// radius of its end. A centre on the radius gives an arc spine, so each cap is
+// a radial tick at the angle of its end, and stops at the centre.
 #let _draw-radial-band-caps(radial, band, centre-is-theta, ends, stroke-spec) = {
   let (lo, hi) = band
-  let (cx, cy) = radial.centre
-  for (ex, ey) in ends {
-    let (dx, dy) = (ex - cx, ey - cy)
-    let r = calc.sqrt(dx * dx + dy * dy)
+  for end in ends {
     if centre-is-theta {
-      cetz.draw.line(..radial-arc(lo, hi, r, radial), stroke: stroke-spec)
-    } else if r > 0 {
-      let (ux, uy) = (dx / r, dy / r)
-      let (r-lo, r-hi) = (calc.max(0, lo), calc.max(0, hi))
+      cetz.draw.line(..radial-arc(lo, hi, end, radial), stroke: stroke-spec)
+    } else {
       cetz.draw.line(
-        (cx + ux * r-lo, cy + uy * r-lo),
-        (cx + ux * r-hi, cy + uy * r-hi),
+        polar-canvas(radial, end, calc.max(0, lo)),
+        polar-canvas(radial, end, calc.max(0, hi)),
         stroke: stroke-spec,
       )
     }
@@ -128,7 +123,7 @@
             radial,
             band,
             centre-is-theta,
-            (path.first(), path.last()),
+            (span-lo, span-hi),
             stroke-spec,
           )
         }
