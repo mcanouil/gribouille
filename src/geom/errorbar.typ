@@ -14,6 +14,9 @@
 /// cap span in x data units for continuous x, and as a fraction of the
 /// per-category slot width for discrete x.
 ///
+/// Under \@coord-radial a bar that sweeps theta follows the polar grid as an
+/// arc, with each cap pointing at the centre.
+///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
 /// \@stability stable

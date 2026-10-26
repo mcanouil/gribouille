@@ -14,6 +14,9 @@
 /// cap span in y data units for continuous y, and as a fraction of the
 /// per-category slot height for discrete y.
 ///
+/// Under \@coord-radial a bar that sweeps theta follows the polar grid as an
+/// arc, with each cap pointing at the centre.
+///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
 /// \@stability stable

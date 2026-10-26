@@ -12,7 +12,7 @@
 #import "../position/dodge.typ": dodge-centre, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/linetype-resolve.typ": resolve-linetype
-#import "../coord/project.typ": axis-mapper, project-point
+#import "../coord/project.typ": axis-mapper, project-path
 #import "../utils/band.typ": axis-band
 #import "../utils/flip.typ": user-axis-key
 #import "../utils/radial.typ": RADIAL-DEFAULT-CAP-HALF, radial-tangent-cap
@@ -107,39 +107,33 @@
     )
 
     if ctx.at("radial", default: none) != none {
-      // Polar caps would ideally be arcs at constant r, but a tangent
-      // chord reads similarly at typical cap widths.
-      let p-lo = if axis == "y" {
-        project-point(ctx, raw-centre, lo)
+      let pairs = if axis == "y" {
+        ((raw-centre, lo), (raw-centre, hi))
       } else {
-        project-point(ctx, lo, raw-centre)
+        ((lo, raw-centre), (hi, raw-centre))
       }
-      let p-hi = if axis == "y" {
-        project-point(ctx, raw-centre, hi)
-      } else {
-        project-point(ctx, hi, raw-centre)
+      let path = project-path(ctx, pairs)
+      if path.len() < 2 { continue }
+      cetz.draw.line(..path, stroke: stroke-spec)
+      // Each cap is perpendicular to the spine at its own end: radial on an
+      // arc, tangent on a spoke.
+      let cap-half = if extent-is-length { half } else {
+        RADIAL-DEFAULT-CAP-HALF
       }
-      if p-lo == none or p-hi == none { continue }
-      let (sx-lo, sy-lo) = p-lo
-      let (sx-hi, sy-hi) = p-hi
-      cetz.draw.line((sx-lo, sy-lo), (sx-hi, sy-hi), stroke: stroke-spec)
-      let cap = radial-tangent-cap(
-        p-lo,
-        p-hi,
-        if extent-is-length { half } else { RADIAL-DEFAULT-CAP-HALF },
-      )
-      if cap == none { continue }
-      let (nx, ny) = cap
-      cetz.draw.line(
-        (sx-lo - nx, sy-lo - ny),
-        (sx-lo + nx, sy-lo + ny),
-        stroke: stroke-spec,
-      )
-      cetz.draw.line(
-        (sx-hi - nx, sy-hi - ny),
-        (sx-hi + nx, sy-hi + ny),
-        stroke: stroke-spec,
-      )
+      for (end, next) in (
+        (path.first(), path.at(1)),
+        (path.last(), path.at(-2)),
+      ) {
+        let cap = radial-tangent-cap(end, next, cap-half)
+        if cap == none { continue }
+        let (sx, sy) = end
+        let (nx, ny) = cap
+        cetz.draw.line(
+          (sx - nx, sy - ny),
+          (sx + nx, sy + ny),
+          stroke: stroke-spec,
+        )
+      }
       continue
     }
 
