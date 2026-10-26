@@ -2,6 +2,7 @@
 
 #import "../../src/coord/cartesian.typ": coord-cartesian
 #import "../../src/coord/radial.typ": coord-radial
+#import "../../src/render/panel-radial.typ": prepare-radial
 #import "../../src/utils/radial.typ": (
   group-theta-breaks, radial-ctx, radial-point, radial-r, radial-theta,
   radial-wedge,
@@ -161,5 +162,11 @@
 #assert.eq(clip-default-bundle.clip, false)
 #let clip-on-bundle = radial-ctx(clip-on, xt, yt, (0, 10), (0, 10))
 #assert.eq(clip-on-bundle.clip, true)
+
+// A panel whose coord has no theta axis lays out no angular axis.
+#assert.eq(
+  prepare-radial((coord: coord-cartesian())),
+  (label-bounds: (), tick-cm: 0.0),
+)
 
 coord-radial tests passed.
