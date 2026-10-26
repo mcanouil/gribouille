@@ -1,5 +1,6 @@
 ///! Radial coordinate system.
 
+#import "../utils/errors.typ": fail-enum
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
 
@@ -56,6 +57,9 @@
   direction: 1,
   clip: false,
 ) = {
+  if theta not in ("x", "y") {
+    fail-enum("coord-radial", "theta", theta, ("x", "y"))
+  }
   // The radial axis, the one theta does not run along: "y" for rose/radar and
   // "x" for pie. Expansion runs before trained scales exist, so it cannot
   // route through `radial-ctx`.

@@ -1,7 +1,7 @@
 #import "render.typ": render-plot
 #import "data.typ": _normalise-data
 #import "utils/errors.typ": fail, fail-type
-#import "coord/resolve.typ": resolve-coord
+#import "coord/resolve.typ": check-coord
 
 // Panic unless `value` is `none` or a dictionary tagged with `kind`, e.g. an
 // `aes()` mapping or a `coord-*()` spec.
@@ -22,7 +22,7 @@
 #let _check-spec-args(mapping, layers, coord) = {
   _check-kind("mapping", mapping, "aes", "an `aes()` mapping or `none`")
   _check-kind("coord", coord, "coord", "a `coord-*()` spec or `none`")
-  let _ = resolve-coord(coord)
+  check-coord(coord)
   if type(layers) != array {
     fail-type("plot", "layers", layers, "an array of geom layers")
   }

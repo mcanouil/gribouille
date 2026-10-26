@@ -19,8 +19,9 @@
     })
 }
 
-#let resolve-coord(coord) = {
-  if coord == none { return coord-cartesian() }
+// Panic unless `coord` is `none` or carries every key of `coord-base`.
+#let check-coord(coord) = {
+  if coord == none { return }
   let missing = _missing-keys(coord)
   if missing.len() > 0 {
     fail(
@@ -32,5 +33,9 @@
       hint: "Build it with a `coord-*()` constructor, such as `coord-cartesian()`.",
     )
   }
-  coord
+}
+
+#let resolve-coord(coord) = {
+  check-coord(coord)
+  if coord == none { coord-cartesian() } else { coord }
 }
