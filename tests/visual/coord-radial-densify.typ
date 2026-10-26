@@ -3,8 +3,10 @@
 // Each panel joins a few points spread over a wide sweep, so every edge would
 // be a visible straight chord if the coord did not curve it. The panels draw
 // line, path, step, area, ribbon, polygon, segment, spoke, and abline under
-// coord-radial. The last panel draws abline over points on a log10 radial
-// scale, where the line bends with the warped radius as well as the sweep.
+// coord-radial. Polygons keep straight edges under coord-radial, so a radar
+// polygon stays a star; every other panel curves. The last panel draws abline
+// over points on a log10 radial scale, where the line bends with the warped
+// radius as well as the sweep.
 
 #import "../../lib.typ": *
 
@@ -17,11 +19,7 @@
   (x: 8, y: 4),
 )
 #let band = pts.map(p => p + (lo: p.y - 1.5, hi: p.y + 1))
-#let shape = (
-  (x: 0, y: 4),
-  (x: 3, y: 4),
-  (x: 6, y: 2),
-)
+#let shape = (5, 3, 6, 1, 5, 4).enumerate().map(((i, y)) => (x: i, y: y))
 #let ends = (
   (x: 0, y: 3, xe: 3, ye: 3),
   (x: 4, y: 1, xe: 7, ye: 4),
