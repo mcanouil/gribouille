@@ -3,10 +3,10 @@
 // The first fifteen panels draw abline, boxplot, stacked col, dodged col,
 // crossbar, dotplot, errorbar, hex, rect, hline plus vline, rug, path, polygon,
 // segment, and area under coord-radial. The next five draw stacked col,
-// dodged col, boxplot, violin, and density-ridges under coord-flip. The last three are a
-// free-scale facet-wrap under coord-flip, the same under coord-radial, and a
-// coord-fixed ratio 2 scatter. Violin and density-ridges draw nothing under
-// coord-radial, so they have no radial panel.
+// dodged col, boxplot, violin, and density-ridges under coord-flip. The last
+// three are a free-scale facet-wrap under coord-flip, the same under
+// coord-radial, and a coord-fixed ratio 2 scatter. Violin and density-ridges
+// draw nothing under coord-radial, so they have no radial panel.
 
 #import "../../lib.typ": *
 
