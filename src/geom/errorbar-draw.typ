@@ -70,17 +70,12 @@
     (cap-extent / 1cm) / 2
   } else { cap-extent / 2 }
 
-  let centre-range = if centre-axis == "x" { ctx.px-range } else {
-    ctx.py-range
-  }
+  let centre-range = (ctx.coord.axis-range)(ctx, centre-axis)
   let position-name = layer-position-name(layer)
   let map-centre = axis-mapper(ctx, centre-axis)
   let map-span = axis-mapper(ctx, axis)
   let radial = ctx.at("radial", default: none)
   let centre-is-theta = radial != none and radial.theta-axis == centre-axis
-  let polar-range = if radial == none { none } else if centre-is-theta {
-    radial.theta-range
-  } else { radial.r-range }
 
   for row in data {
     let raw-centre = row.at(centre-col, default: none)
@@ -127,7 +122,7 @@
       if path.len() < 2 { continue }
       cetz.draw.line(..path, stroke: stroke-spec)
       if not extent-is-length {
-        let band = axis-band(centre-trained, raw-centre, half, polar-range)
+        let band = axis-band(centre-trained, raw-centre, half, centre-range)
         if band != none {
           _draw-radial-band-caps(
             radial,
