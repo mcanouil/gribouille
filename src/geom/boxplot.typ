@@ -176,7 +176,7 @@
   let axes = user-axes(ctx)
   if axes == none { return }
   let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
-  let (x-range, y-range) = (axes.x-range, axes.y-range)
+  let x-range = axes.x-range
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // Box outline, median, and whiskers carry the boxplot's structure, so

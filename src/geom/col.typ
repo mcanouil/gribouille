@@ -270,7 +270,6 @@
   let columns = user-columns(mapping, ctx)
   let value-col = columns.y
   let cat-col = columns.x
-  let value-range = axes.y-range
   let cat-range = axes.x-range
   if value-trained.type != "continuous" { return }
 

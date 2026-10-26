@@ -136,8 +136,7 @@
   ) { return }
   let axes = user-axes(ctx)
   if axes == none { return }
-  let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
-  let (x-range, y-range) = (axes.x-range, axes.y-range)
+  let (x-trained, x-range) = (axes.x-trained, axes.x-range)
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // Box outline and median bar carry the crossbar's structure, so the
