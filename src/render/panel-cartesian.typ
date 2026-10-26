@@ -23,8 +23,8 @@
   _title-body, _title-extent-cm, _x-title-place, _y-title-place,
 )
 
-// What one cartesian axis walks: the breaks, where they map to, and whether
-// the guide suppressed the band. `none` where the axis has no scale to walk.
+// What one cartesian axis walks: the breaks, where they map to.
+// `none` where the axis has no scale to walk.
 //
 // Continuous and discrete axes share everything except where the breaks come
 // from, so only that branches here.
@@ -41,9 +41,6 @@
       cached
     } else { _axis-tick-values(trained) },
     range: if axis == "x" { panel.px-range } else { panel.py-range },
-    suppress: if axis == "x" { panel.x-guide.suppress } else {
-      panel.y-guide.suppress
-    },
   )
 }
 
@@ -113,7 +110,7 @@
 // sub-decade rows a log axis ticks. Every row carries the widest label the
 // chrome stage measured, which is the figure the band it reserved was sized
 // from, so the panel draws inside the room it was given.
-#let _band-entries(axis, trained, walk, guide, disp, style, shown, extents) = {
+#let _band-entries(trained, walk, guide, disp, style, shown, extents) = {
   if walk == none { return () }
   let ext = _resolve-extents(extents, style.size)
   let labels = _band-labels(trained, walk, disp, style, shown)
@@ -200,7 +197,6 @@
     "x",
     panel.x-guide,
     _band-entries(
-      "x",
       x-trained,
       _x-walk,
       panel.x-guide,
@@ -218,7 +214,6 @@
     "y",
     panel.y-guide,
     _band-entries(
-      "y",
       y-trained,
       _y-walk,
       panel.y-guide,
