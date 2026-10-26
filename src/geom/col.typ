@@ -16,7 +16,7 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": (
-  radial-axis-ranges, radial-category-span, radial-wedge,
+  radial-category-span, radial-mappers, radial-wedge,
 )
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
@@ -197,17 +197,8 @@
   let baseline = calc.max(0.0, value-trained.domain.at(0))
   let bar-width-fraction = layer.params.width
 
-  let (cat-range, value-range) = radial-axis-ranges(radial)
-  let map-cat = axis-mapper(ctx, "x")
-  let map-cat-stat = axis-mapper(ctx, "x", space: "stat")
-  let map-value = axis-mapper(ctx, "y", space: "stat")
-  let category-span = radial-category-span(
-    cat-trained,
-    cat-col,
-    cat-range,
-    map-cat-stat,
-    data,
-  )
+  let (cat: map-cat, value: map-value) = radial-mappers(ctx, "x")
+  let category-span = radial-category-span(ctx, "x", cat-col, data)
   let half = category-span * bar-width-fraction / 2
 
   for row in data {

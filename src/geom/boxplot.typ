@@ -13,8 +13,7 @@
 #import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
 #import "../utils/radial.typ": (
-  polar-canvas, radial-arc, radial-axis-ranges, radial-category-span,
-  radial-wedge,
+  polar-canvas, radial-arc, radial-category-span, radial-mappers, radial-wedge,
 )
 #import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/types.typ": parse-number
@@ -194,37 +193,15 @@
 
   let radial = ctx.at("radial", default: none)
   if radial != none {
-    let cat-trained = if radial.cat-is-theta { x-trained } else { y-trained }
     let val-trained = if radial.cat-is-theta { y-trained } else { x-trained }
     if val-trained.type != "continuous" { return }
     let cat-col = if radial.cat-is-theta { cols.x } else {
       mapping.at("y", default: none)
     }
-    let (cat-range, value-range) = radial-axis-ranges(radial)
-    let (cat-key, value-key) = if radial.cat-is-theta { ("x", "y") } else {
-      ("y", "x")
-    }
-    let map-cat = axis-mapper(
-      ctx,
-      user-axis-key(cat-key, ctx),
-      range: cat-range,
-    )
-    let map-cat-stat = axis-mapper(
-      ctx,
-      user-axis-key(cat-key, ctx),
-      space: "stat",
-      range: cat-range,
-    )
-    let map-value = axis-mapper(
-      ctx,
-      user-axis-key(value-key, ctx),
-      space: "stat",
-      range: value-range,
-    )
+    let cat-key = if radial.cat-is-theta { "x" } else { "y" }
+    let (cat: map-cat, value: map-value) = radial-mappers(ctx, cat-key)
     let half = (
-      radial-category-span(cat-trained, cat-col, cat-range, map-cat-stat, data)
-        * layer.params.width
-        / 2
+      radial-category-span(ctx, cat-key, cat-col, data) * layer.params.width / 2
     )
     let cap-half-cat = half * layer.params.whisker-cap
     for row in data {
