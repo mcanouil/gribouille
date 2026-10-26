@@ -236,7 +236,7 @@
     let intercept = line.intercept
     let stroke-spec = line.stroke
     if radial != none {
-      let pts = project-path(ctx, _samples(slope, intercept))
+      let pts = project-path(ctx, _samples(slope, intercept), space: "data")
       if pts.len() >= 2 {
         cetz.draw.line(..pts, stroke: stroke-spec)
       }

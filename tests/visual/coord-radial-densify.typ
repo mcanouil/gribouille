@@ -62,7 +62,7 @@
   cell(
     growth,
     aes(x: "x", y: "y"),
-    (geom-point(size: 1.5pt), geom-abline(slope: 0.2, intercept: 0)),
+    (geom-point(size: 1.5pt), geom-abline(slope: 10, intercept: 1)),
     scales: scales(y: scale-log10()),
   ),
 )

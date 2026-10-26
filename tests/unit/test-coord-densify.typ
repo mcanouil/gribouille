@@ -80,3 +80,27 @@
   project-path(radial-ctx, ring, closed: true).len(),
   2 * arc-steps(calc.pi / 2) + arc-steps(calc.pi),
 )
+
+// On a pre-transformed scale, `space: "data"` warps data values forward first,
+// so data `10` and `100` land where stat `1` and `2` do.
+#let ty-log = (
+  type: "continuous",
+  domain: (0, 2),
+  transform: "log10",
+  pre-transformed: true,
+)
+#let log-ctx = (
+  radial-ctx
+    + (
+      trained: (x: tx, y: ty-log),
+      radial: (radial-coord.frame)(tx, ty-log, px-range, py-range),
+    )
+)
+#assert.eq(
+  project-path(log-ctx, ((0, 10), (90, 100)), space: "data"),
+  project-path(log-ctx, ((0, 1), (90, 2))),
+)
+#assert.ne(
+  project-path(log-ctx, ((0, 10), (90, 100)), space: "data"),
+  project-path(log-ctx, ((0, 10), (90, 100))),
+)
