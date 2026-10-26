@@ -4,7 +4,7 @@
 // legend.
 
 #import "../deps.typ": cetz
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail, fail-enum
 #import "../scale/train.typ": mapping-display-name
 #import "../theme/defaults.typ": resolve-colour
 #import "../theme/theme.typ": _line-stroke, resolve-theme-palette
@@ -225,7 +225,7 @@
   inner-ctx.radial = inner-radial
   for layer in prepared {
     if layer.name not in GEOMS {
-      fail("plot", "unknown geom " + repr(layer.name))
+      fail-enum("plot", "geom", layer.name, GEOMS.keys())
     }
     if not (coord.supports)(layer.name) {
       fail(
@@ -243,10 +243,7 @@
     import cetz.draw: floating, hide, rect
     hide(rect((0, 0), (panel-w, panel-h)), bounds: true)
     for layer in subset {
-      let entry = GEOMS.at(layer.name, default: none)
-      if entry != none {
-        floating({ (entry.draw)(layer, inner-ctx) })
-      }
+      floating({ (GEOMS.at(layer.name).draw)(layer, inner-ctx) })
     }
   })
   // `annotate(clip: false)` opts a layer out of the panel clip; render it in a
