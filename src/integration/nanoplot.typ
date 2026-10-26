@@ -86,13 +86,21 @@
   x
 }
 
+// A ratio side of a margin resolves against the plot canvas, which is wider on
+// the axis than in a cell, so a left or right side is given at the cell width.
+#let _at-width(value, width) = if type(value) == ratio {
+  value * width
+} else if type(value) == relative {
+  value.ratio * width + value.length
+} else { value }
+
 // The axis theme: the cell theme with no panel, nothing on the other side, and
 // labels on the asked side even when the theme hides them, as theme-void does.
-// The canvas reaches `pad` past the column on each side, so the axis line and
+// The canvas reaches `pad` past the column on each side, so the axis lines and
 // the plot background, which span the whole canvas, are not drawn.
 // The plot padding stays on the left and right, where the cells have it too,
 // and goes from the top and bottom, which would take the axis height.
-#let _axis-theme(base, side) = {
+#let _axis-theme(base, side, width) = {
   let other = if side == "top" { "bottom" } else { "top" }
   let out = base
   for key in _PANEL-SURFACES { out.insert(key, element-blank()) }
@@ -101,21 +109,29 @@
     // A `none` field inherits from `rect`, so the record keeps the padding
     // only, and `rect` is blank so it gives no paint.
     let inset = _normalise-margin(background.at("inset", default: none))
+    let outset = _normalise-margin(background.at("outset", default: none))
     out.insert("rect", element-blank())
     out.insert("plot-background", element-rect(
       inset: margin(
         top: 0pt,
-        right: inset.right,
+        right: _at-width(inset.right, width),
         bottom: 0pt,
-        left: inset.left,
+        left: _at-width(inset.left, width),
       ),
-      outset: background.at("outset", default: none),
+      outset: margin(
+        top: outset.top,
+        right: _at-width(outset.right, width),
+        bottom: outset.bottom,
+        left: _at-width(outset.left, width),
+      ),
     ))
   }
   for family in ("axis-text", "axis-ticks") {
     out.insert(family + "-x-" + other, element-blank())
   }
-  for edge in _SIDES { out.insert("axis-line-x-" + edge, element-blank()) }
+  for edge in ("x-top", "x-bottom", "y-left", "y-right") {
+    out.insert("axis-line-" + edge, element-blank())
+  }
   let text-key = "axis-text-x-" + side
   if (
     resolve-element(out, text-key).at("kind", default: none) == "element-blank"
@@ -264,6 +280,15 @@
       hint: "Give it in em or pt, as in 1.4em.",
     )
   }
+  if theme != none and type(theme) != dictionary {
+    fail-type(
+      "nanoplot",
+      "theme",
+      theme,
+      "a theme dictionary",
+      hint: "Call the preset, as in theme: theme-bw().",
+    )
+  }
   let cell-theme = if theme == none { theme-void() } else { theme }
 
   // keisen gives em sizes, and a plot takes absolute ones, so the drawers
@@ -293,7 +318,7 @@
         mapping: aes(x: "x", y: "y"),
         layers: (geom-blank(),),
         scales: (x: _axis-scale(_x-scale(scales, domain), pad, side)),
-        theme: _axis-theme(cell-theme, side),
+        theme: _axis-theme(cell-theme, side, width),
         labels: labels(x: none, y: none),
         guides: guides(default: none, y: none),
         width: width + 2 * pad,

@@ -63,10 +63,15 @@
 // The axis canvas reaches far past the column on each side, so the axis draws
 // no spine and no plot background, which would reach past the column too.
 #for side in ("top", "bottom") {
-  assert.eq(
-    resolve-element(_axis-theme(theme-bw(), side), "axis-line-x-" + side).kind,
-    "element-blank",
-  )
+  for edge in ("x-top", "x-bottom", "y-left", "y-right") {
+    assert.eq(
+      resolve-element(
+        _axis-theme(theme-bw(axis-line-y-left: element-line()), side, 4cm),
+        "axis-line-" + edge,
+      ).kind,
+      "element-blank",
+    )
+  }
   // A colour with no thickness strokes at the default thickness, and a fill
   // or colour on `rect` reaches `plot-background` through the cascade.
   for theme in (
@@ -74,10 +79,29 @@
     theme-minimal(plot-background: element-rect(colour: black)),
     theme-bw(rect: element-rect(fill: red, colour: black)),
   ) {
-    let background = _rect-style(_axis-theme(theme, side), "plot-background")
+    let background = _rect-style(
+      _axis-theme(theme, side, 4cm),
+      "plot-background",
+    )
     assert.eq((background.fill, background.stroke), (none, none))
   }
 }
+
+// A ratio side of the plot padding resolves against the canvas, and the axis
+// canvas is wider than a cell, so the axis takes the cell's padding in length.
+#let padded = resolve-element(
+  _axis-theme(
+    theme-minimal(plot-background: element-rect(
+      inset: margin(left: 25%, right: 1cm + 25%),
+      outset: margin(left: 50%),
+    )),
+    "bottom",
+    4cm,
+  ),
+  "plot-background",
+)
+#assert.eq((padded.inset.left, padded.inset.right), (1cm, 2cm))
+#assert.eq(padded.outset.left, 2cm)
 
 // The drawers return content at the size keisen asks for.
 #let cell = ((salary: 1, y: 0), (salary: 5, y: 0))
