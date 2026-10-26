@@ -5,7 +5,7 @@
 // line to carry every phrase below.
 //
 // expect: coord-radial: does not support geom-violin
-// expect: Draw this layer without coord-radial, or use geom-boxplot
+// expect: Draw this layer under coord-cartesian or coord-flip
 
 #import "/lib.typ": aes, coord-radial, geom-violin, plot
 
