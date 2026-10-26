@@ -3,7 +3,7 @@
 // its columns and scales through these helpers and swaps each canvas point
 // back: the user's x runs vertically and the user's y horizontally.
 
-#import "../coord/project.typ": project-point
+#import "../coord/project.typ": project-path, project-point
 
 #let _flipped(ctx) = ctx.at("flipped", default: false)
 
@@ -52,6 +52,14 @@
 } else {
   project-point(ctx, ux, uy)
 }
+
+// Canvas points of a path through data points `(ux, uy)` in the user's x/y
+// space, with the points the coord adds along each edge.
+#let project-user-path(ctx, pairs, closed: false) = project-path(
+  ctx,
+  if _flipped(ctx) { pairs.map(((ux, uy)) => (uy, ux)) } else { pairs },
+  closed: closed,
+)
 
 // Canvas stair direction for a direction given in the user's x/y space:
 // under flip the user's x runs vertically, so `"hv"` becomes `"vh"`.

@@ -3,13 +3,14 @@
 ///! Requires continuous x and y scales. The line is drawn across the full
 ///! trained x domain using `y = slope * x + intercept`. Under non-identity
 ///! axis transformations the line is sampled as a 64-point polyline so it
-///! follows the warped axis correctly.
+///! follows the warped axis correctly. Under `coord-radial` the line follows the
+///! polar grid as a curve.
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
-#import "../coord/project.typ": axis-mapper, project-point
+#import "../coord/project.typ": axis-mapper, project-path
 #import "../scale/train.typ": transform-inv
 #import "../utils/flip.typ": user-axes, user-axis-key, user-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -221,21 +222,21 @@
   let x-transform = user-x-trained.at("transform", default: "identity")
   let y-transform = user-y-trained.at("transform", default: "identity")
   let warped = x-transform != "identity" or y-transform != "identity"
+  let _samples(slope, intercept) = if warped {
+    range(0, 64).map(i => {
+      let x = x-lo + i / 63 * (x-hi - x-lo)
+      (x, slope * x + intercept)
+    })
+  } else {
+    ((x-lo, slope * x-lo + intercept), (x-hi, slope * x-hi + intercept))
+  }
 
   for line in lines {
     let slope = line.slope
     let intercept = line.intercept
     let stroke-spec = line.stroke
     if radial != none {
-      let n = 128
-      let pts = range(0, n)
-        .map(i => {
-          let t = i / (n - 1)
-          let x = x-lo + t * (x-hi - x-lo)
-          let y = slope * x + intercept
-          project-point(ctx, x, y)
-        })
-        .filter(p => p != none)
+      let pts = project-path(ctx, _samples(slope, intercept))
       if pts.len() >= 2 {
         cetz.draw.line(..pts, stroke: stroke-spec)
       }

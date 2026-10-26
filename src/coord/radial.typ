@@ -3,17 +3,15 @@
 #import "../utils/errors.typ": fail-enum
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
-#import "../utils/radial.typ": arc-steps, polar-canvas, radial-ctx, radial-point
+#import "../utils/radial.typ": (
+  ARC-STEP, arc-steps, polar-canvas, radial-ctx, radial-point,
+)
 #import "../render/panel-radial.typ": (
   draw-radial-background, draw-radial-foreground, prepare-radial,
 )
 
-// Below this theta sweep an edge stays one chord: it is already as short as
-// one step of `arc-steps`.
-#let _CHORD-SWEEP = calc.pi / 36
-
 // The `(u, v)` axis positions with points inserted along each edge whose theta
-// sweep reaches `_CHORD-SWEEP`, linear in `(u, v)` as ggplot2 munches in
+// sweep reaches `ARC-STEP`, linear in `(u, v)` as ggplot2 munches in
 // transformed space: at constant radius the edge becomes an arc. `t` is the
 // index of the theta position in each pair. `closed` also densifies the edge
 // from the last point back to the first, whose points come last.
@@ -26,7 +24,7 @@
     let b = uvs.at(calc.rem(i + 1, n))
     out.push(a)
     let sweep = b.at(t) - a.at(t)
-    if calc.abs(sweep) < _CHORD-SWEEP { continue }
+    if calc.abs(sweep) < ARC-STEP { continue }
     let steps = arc-steps(sweep)
     for k in range(1, steps) {
       let f = k / steps

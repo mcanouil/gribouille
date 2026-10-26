@@ -1,7 +1,7 @@
 // Smoke render: path-like geoms follow the polar grid under coord-radial.
 //
-// Each panel joins a few points spread over a wide sweep, so every edge would
-// be a visible straight chord if the coord did not curve it. The panels draw
+// Each panel draws edges over a wide sweep of theta, so every edge would be a
+// visible straight chord if the coord did not curve it. The panels draw
 // line, path, step, area, ribbon, polygon, segment, spoke, and abline under
 // coord-radial. Polygons keep straight edges under coord-radial, so a radar
 // polygon stays a star; every other panel curves. The last panel draws abline

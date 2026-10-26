@@ -54,6 +54,19 @@
   assert(calc.abs(radius(p) - radius(arc.first())) < 1e-9)
 }
 
+// With `theta: "y"` the sweep runs along y: an edge that moves y at constant x
+// is an arc, and an edge that moves x at constant y is one radial chord.
+#let y-coord = coord-radial(theta: "y")
+#let y-ctx = (
+  ctx
+    + (
+      coord: y-coord,
+      radial: (y-coord.frame)(tx, ty, px-range, py-range),
+    )
+)
+#assert(project-path(y-ctx, ((180, 0), (180, 10))).len() > 2)
+#assert.eq(project-path(y-ctx, ((0, 5), (360, 5))).len(), 2)
+
 // An edge under five degrees stays one chord.
 #assert.eq(project-path(radial-ctx, ((0, 5), (2, 5))).len(), 2)
 

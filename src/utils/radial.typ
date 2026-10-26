@@ -254,13 +254,14 @@
 // polar.
 #let RADIAL-DEFAULT-CAP-HALF = 0.15
 
-// Samples one polyline takes over `span` radians: one step per five degrees,
+// The sweep of one sample along an arc: five degrees.
+#let ARC-STEP = calc.pi / 36
+
+// Samples one polyline takes over `span` radians: one step per `ARC-STEP`,
 // with a floor of eight so even a narrow arc looks round. Every curve drawn at
 // a constant radius reads it, so a swept axis is sampled as finely as the
 // wedges and whiskers beside it.
-#let arc-steps(span) = calc.max(8, int(calc.ceil(
-  calc.abs(span) / (calc.pi / 36),
-)))
+#let arc-steps(span) = calc.max(8, int(calc.ceil(calc.abs(span) / ARC-STEP)))
 
 // Polyline samples along an arc at constant radius between `theta-lo` and
 // `theta-hi`. Used by composite geoms (boxplot, crossbar) to draw a median
