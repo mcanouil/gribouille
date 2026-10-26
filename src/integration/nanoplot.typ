@@ -86,6 +86,8 @@
 
 // The axis theme: the cell theme with no panel, nothing on the other side, and
 // labels on the asked side even when the theme hides them, as theme-void does.
+// The canvas reaches `pad` past the column on each side, so the axis line and
+// the plot background, which span the whole canvas, are not drawn.
 // The plot padding stays on the left and right, where the cells have it too,
 // and goes from the top and bottom, which would take the axis height.
 #let _axis-theme(base, side) = {
@@ -95,6 +97,8 @@
   let background = resolve-element(out, "plot-background")
   if background.at("kind", default: none) == "element-rect" {
     let inset = _normalise-margin(background.at("inset", default: none))
+    background.insert("fill", none)
+    background.insert("stroke", none)
     background.insert("inset", margin(
       top: 0pt,
       right: inset.right,
@@ -103,9 +107,10 @@
     ))
     out.insert("plot-background", background)
   }
-  for family in ("axis-text", "axis-ticks", "axis-line") {
+  for family in ("axis-text", "axis-ticks") {
     out.insert(family + "-x-" + other, element-blank())
   }
+  for edge in _SIDES { out.insert("axis-line-x-" + edge, element-blank()) }
   let text-key = "axis-text-x-" + side
   if (
     resolve-element(out, text-key).at("kind", default: none) == "element-blank"
@@ -134,6 +139,7 @@
 /// A wider `expand` does not help, because the cells widen their scale past the limits all the same.
 /// A tick label at the end of the domain is centred on the end, so half of it can go past the column content into the cell inset.
 /// It draws the tick labels even when the theme hides them, as \@theme-void does.
+/// The axis draws no axis line and no plot background, even when the theme sets them.
 /// Gribouille does not import keisen: the renderer is a plain dictionary.
 ///
 /// \@category Helpers

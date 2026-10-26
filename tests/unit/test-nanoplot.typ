@@ -3,7 +3,8 @@
 // the axis switch.
 
 #import "../../lib.typ": *
-#import "../../src/integration/nanoplot.typ": _x-scale
+#import "../../src/integration/nanoplot.typ": _axis-theme, _x-scale
+#import "../../src/theme/theme.typ": resolve-element
 
 #let renderer = nanoplot(
   mapping: aes(x: "salary", y: "y"),
@@ -58,6 +59,22 @@
   0,
   3,
 ))
+
+// The axis canvas reaches far past the column on each side, so the axis draws
+// no spine and no plot background, which would reach past the column too.
+#for side in ("top", "bottom") {
+  assert.eq(
+    resolve-element(_axis-theme(theme-bw(), side), "axis-line-x-" + side).kind,
+    "element-blank",
+  )
+  let background = resolve-element(
+    _axis-theme(theme-minimal(paper: luma(90%)), side),
+    "plot-background",
+  )
+  assert.eq(background.kind, "element-rect")
+  assert.eq(background.at("fill", default: none), none)
+  assert.eq(background.at("stroke", default: none), none)
+}
 
 // The drawers return content at the size keisen asks for.
 #let cell = ((salary: 1, y: 0), (salary: 5, y: 0))
