@@ -235,28 +235,12 @@
     let slope = line.slope
     let intercept = line.intercept
     let stroke-spec = line.stroke
-    if radial != none {
-      let pts = project-path(ctx, _samples(slope, intercept), space: "data")
-      if pts.len() >= 2 {
-        cetz.draw.line(..pts, stroke: stroke-spec)
-      }
-    } else if warped {
-      let n = 64
-      let pts = range(0, n).map(i => {
-        let t = i / (n - 1)
-        let x = x-lo + t * (x-hi - x-lo)
-        let y = slope * x + intercept
-        _pos(x, y)
-      })
+    let samples = _samples(slope, intercept)
+    let pts = if radial != none {
+      project-path(ctx, samples, space: "data")
+    } else { samples.map(((x, y)) => _pos(x, y)) }
+    if pts.len() >= 2 {
       cetz.draw.line(..pts, stroke: stroke-spec)
-    } else {
-      let y-at-lo = slope * x-lo + intercept
-      let y-at-hi = slope * x-hi + intercept
-      cetz.draw.line(
-        _pos(x-lo, y-at-lo),
-        _pos(x-hi, y-at-hi),
-        stroke: stroke-spec,
-      )
     }
   }
 }
