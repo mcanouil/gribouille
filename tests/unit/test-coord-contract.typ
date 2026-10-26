@@ -38,6 +38,26 @@
 #assert.eq(flipped.y.domain, ("a", "b", "c"))
 #assert.eq(flipped.y.reverse, true)
 
+// `coord-cartesian` limits replace the trained domain and drop its
+// `oob-cutoff`; `coord-transform` sets the transform of the axis.
+#let continuous = (
+  x: (type: "continuous", domain: (1, 10), oob-cutoff: (1, 10)),
+  y: (type: "continuous", domain: (0, 1)),
+)
+#let limited = (coord-cartesian(x-limits: (2, 4)).train)(continuous)
+#assert.eq(limited.x.domain, (2, 4))
+#assert("oob-cutoff" not in limited.x)
+#assert.eq(
+  (coord-transform(x: "log10").train)(continuous).x.transform,
+  "log10",
+)
+
+// The base `train` expands the scales, so a coord that keeps it still pads.
+#assert.eq(
+  (coord-base("bare").train)(continuous).x.view-transform,
+  apply-expand(continuous).x.view-transform,
+)
+
 // Pinned against `_fixed-inner-size` before the move into `coord-fixed`.
 #let wide = (
   x: (type: "continuous", domain: (0, 20)),
@@ -106,5 +126,15 @@
 )
 
 #assert.eq(resolve-coord(none).name, "cartesian")
+#for c in (
+  coord-cartesian(),
+  coord-fixed(),
+  coord-flip(),
+  coord-radial(),
+  coord-transform(),
+  coord-base("bare"),
+) {
+  assert.eq(resolve-coord(c), c)
+}
 
 Coord contract tests passed.
