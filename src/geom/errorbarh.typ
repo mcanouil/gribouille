@@ -16,8 +16,9 @@
 ///
 /// Under \@coord-radial a bar that sweeps theta follows the polar grid as an
 /// arc, with each cap pointing at the centre.
-/// There, `height` sets the cap span only when it is a length.
-/// A number gives a fixed cap span.
+/// A bar that runs along the radius has caps that are arcs.
+/// A number for `height` sets the cap span as on a Cartesian panel.
+/// A length sets a straight cap of that span.
 ///
 /// \@category Geoms
 /// \@subcategory Intervals and errors

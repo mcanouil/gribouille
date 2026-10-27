@@ -13,6 +13,7 @@
 ### Changes
 
 - feat: Under `coord-radial`, lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline` and the lines of `geom-smooth` and `geom-function` follow the polar grid as curves, as in ggplot2, instead of straight chords. Polygons keep straight edges. (#359)
+- fix: Under `coord-radial`, a numeric `width` on `geom-errorbar()` or `height` on `geom-errorbarh()` sizes the caps as it does on a Cartesian panel. A bar that runs along the radius gets arc caps, and a Typst length still gives a straight cap. (#363)
 - fix: Under `coord-radial`, `geom-errorbar()` and `geom-errorbarh()` draw a bar that sweeps theta as an arc, as in ggplot2, instead of a straight chord. Each cap points at the centre. (#362)
 - fix: Under `coord-radial(theta: "y")`, `geom-linerange()` and `geom-pointrange()` draw a range that sweeps theta as an arc, as in ggplot2, instead of a straight chord. (#361)
 - fix: `coord-radial` fails with a clear message for `geom-violin` and `geom-density-ridges`, which drew nothing before. (#358)
