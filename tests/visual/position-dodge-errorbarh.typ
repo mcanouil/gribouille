@@ -1,7 +1,7 @@
 // Smoke render: geom-errorbarh dodges its groups within each y slot.
 //
-// The bars run along x, so the dodge slots split the category band on y.
-// Each bar sits level with the point of its group.
+// The bars run along x, so the dodge slots split the category band on y. Each
+// bar stays inside the band of its own category, offset by its group.
 
 #import "../../lib.typ": *
 
