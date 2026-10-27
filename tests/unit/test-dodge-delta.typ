@@ -7,7 +7,7 @@
 // layer, and what a row does with it.
 
 #import "../../src/coord/cartesian.typ": coord-cartesian
-#import "../../src/position/dodge.typ": dodge-delta, dodge-geometry
+#import "../../src/position/dodge.typ": dodge-delta, dodge-geometry, dodge-uv
 
 #let assert-close(a, b, tol: 1e-9) = {
   assert(
@@ -48,8 +48,34 @@
 // A row with no dodge offset stays put even on a dodge layer.
 #assert.eq(dodge-delta(geom, (:)), (0.0, 0.0))
 
-// Radial coordinates: dodge does not apply on the angular axis.
-#assert.eq(dodge-geometry(ctx + (radial: true), layer-dodge), none)
+// The cartesian geometry leaves a mapped position alone: the shift lands on
+// the canvas point instead.
+#assert.eq(dodge-uv(geom, row-a, (1.0, 2.0)), (1.0, 2.0))
+
+// Under coord-radial the shift lands on the x position before projection, in
+// the units of the polar axis x takes, so the canvas shift is zero. With theta
+// on x, two levels split a full turn into slots of pi radians. The sweep runs
+// clockwise, so theta falls as x rises and the span is negative: the slots
+// follow the level order round the circle.
+#let radial-ctx(cat-is-theta) = ctx + (
+  radial: (
+    cat-is-theta: cat-is-theta,
+    theta-range: (calc.pi / 2, calc.pi / 2 - 2 * calc.pi),
+    r-range: (0, 4),
+  ),
+  resolve-data: _ => (),
+  resolve-mapping: _ => (x: "x"),
+)
+#let theta-geom = dodge-geometry(radial-ctx(true), layer-dodge)
+#assert-close(theta-geom.span, -calc.pi * 0.9)
+#assert.eq(theta-geom.direction, none)
+#assert.eq(dodge-delta(theta-geom, row-a), (0.0, 0.0))
+#let shifted = dodge-uv(theta-geom, row-a, (1.0, 2.0))
+#assert-close(shifted.at(0), 1.0 + 0.25 * calc.pi * 0.9)
+#assert.eq(shifted.at(1), 2.0)
+
+// With theta on y, the two levels split the 4cm radius into 2cm rings.
+#assert-close(dodge-geometry(radial-ctx(false), layer-dodge).span, 2 * 0.9)
 
 // A continuous category axis has no slot width of its own, so the geometry
 // infers one from the data: the narrowest canvas gap between two distinct x

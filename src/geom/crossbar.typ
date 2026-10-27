@@ -3,7 +3,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../position/apply.typ": layer-position-name
-#import "../position/dodge.typ": dodge-centre, dodge-half
+#import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
@@ -146,21 +146,17 @@
 
   let half-width = layer.params.width / 2
   let position-name = layer-position-name(layer)
+  let dodge = dodge-geometry(ctx, layer)
   let pt = user-point.with(ctx)
 
   let radial = ctx.at("radial", default: none)
   if radial != none {
-    let cat-col = if radial.cat-is-theta { cols.x } else { cols.y }
-    let cat-key = if radial.cat-is-theta { "x" } else { "y" }
-    let (cat: map-cat, value: map-value) = radial-mappers(ctx, cat-key)
-    let half = (
-      radial-category-span(ctx, cat-key, cat-col, data) * layer.params.width / 2
-    )
+    // The categories are the user's x on either theta axis, as for every
+    // point-like geom: `radial-mappers` routes them onto the polar axis x takes.
+    let (cat: map-cat, value: map-value) = radial-mappers(ctx, "x")
+    let span = radial-category-span(ctx, "x", cols.x, data) * layer.params.width
     for row in data {
-      let raw-cat = if radial.cat-is-theta {
-        row.at(cols.x, default: none)
-      } else { row.at(cols.y, default: none) }
-      let cat-c = map-cat(raw-cat)
+      let cat-c = map-cat(row.at(cols.x, default: none))
       let mid = parse-number(row.at(cols.y, default: none))
       let lo = parse-number(row.at(cols.ymin, default: none))
       let hi = parse-number(row.at(cols.ymax, default: none))
@@ -168,10 +164,16 @@
       let v-mid = map-value(mid)
       let v-lo = map-value(lo)
       let v-hi = map-value(hi)
-      let (theta-lo, theta-hi, r-lo, r-hi, r-mid) = if radial.cat-is-theta {
-        (cat-c - half, cat-c + half, v-lo, v-hi, v-mid)
+      let centre = cat-c
+      let half = span / 2
+      if position-name == "dodge" {
+        centre = dodge-centre(dodge, row, cat-c, span)
+        half = dodge-half(row, span / 2)
+      }
+      let (theta-lo, theta-hi, r-lo, r-hi) = if radial.cat-is-theta {
+        (centre - half, centre + half, v-lo, v-hi)
       } else {
-        (v-lo, v-hi, cat-c - half, cat-c + half, cat-c)
+        (v-lo, v-hi, centre - half, centre + half)
       }
       if r-lo > r-hi { (r-lo, r-hi) = (r-hi, r-lo) }
 
@@ -205,7 +207,7 @@
         stroke: stroke-spec,
       )
       if radial.cat-is-theta {
-        let median = radial-arc(theta-lo, theta-hi, r-mid, radial)
+        let median = radial-arc(theta-lo, theta-hi, v-mid, radial)
         cetz.draw.line(..median, stroke: middle-stroke-spec)
       } else {
         cetz.draw.line(
@@ -238,7 +240,7 @@
 
     if position-name == "dodge" {
       let span = cx-hi - cx-lo
-      let centre = dodge-centre(row, cx, span)
+      let centre = dodge-centre(dodge, row, cx, span)
       let half = dodge-half(row, span / 2)
       cx-lo = centre - half
       cx-hi = centre + half

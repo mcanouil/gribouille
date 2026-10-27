@@ -14,7 +14,7 @@
 #import "../coord/project.typ": path-uvs, project-uvs, to-canvas
 #import "../utils/stair.typ": stair
 #import "../utils/flip.typ": user-axes, user-columns
-#import "../position/dodge.typ": dodge-delta, dodge-geometry
+#import "../position/dodge.typ": dodge-delta, dodge-geometry, dodge-uv
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 // The `spec` record of line, path, and step: the draw path below reads the
@@ -62,9 +62,12 @@
 // every row on a continuous category axis, and this runs once a group. Each
 // offset is stepped with the positions, so a corner takes the same offset as
 // the canvas point it stands for, and a point the coord adds along an edge
-// takes the offset of the edge's start. With no dodge every offset is zero, so
-// the whole path is projected in one call rather than edge by edge.
+// takes the offset of the edge's start. Under `coord-radial` the offset lands on
+// the positions instead, so the edges follow the polar grid from the shifted
+// points. With no canvas offset the whole path is projected in one call rather
+// than edge by edge.
 #let rows-to-points(rows, mapping, ctx, dodge, direction: none) = {
+  let canvas-shift = dodge != none and dodge.direction != none
   let uvs = ()
   let deltas = ()
   let mapped = path-uvs(ctx, rows.map(row => (
@@ -73,12 +76,12 @@
   )))
   for (row, uv) in rows.zip(mapped) {
     if uv == none { continue }
-    uvs.push(uv)
-    if dodge != none { deltas.push(dodge-delta(dodge, row)) }
+    uvs.push(dodge-uv(dodge, row, uv))
+    if canvas-shift { deltas.push(dodge-delta(dodge, row)) }
   }
   if uvs.len() == 0 { return () }
   if direction != none { uvs = stair(uvs, direction) }
-  if dodge == none { return project-uvs(ctx, uvs) }
+  if not canvas-shift { return project-uvs(ctx, uvs) }
   if direction != none { deltas = stair(deltas, direction) }
   let pts = ()
   for i in range(uvs.len() - 1) {

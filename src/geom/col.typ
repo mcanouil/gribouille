@@ -7,7 +7,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../position/apply.typ": layer-marks-abut, layer-position-name
-#import "../position/dodge.typ": dodge-centre, dodge-half
+#import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
 #import "../scale/train.typ": discrete-slot-width, mapping-ref-col
@@ -174,6 +174,7 @@
   let cat-col = mapping.x
   let value-col = mapping.y
   let position = layer-position-name(layer)
+  let dodge = dodge-geometry(ctx, layer)
   // Only stacked segments share an edge; a bar that stands on its own would
   // lose part of its category gap to the seal.
   let abutting = layer-marks-abut(layer)
@@ -233,10 +234,17 @@
       default-thickness: default-thickness,
     )
 
+    let centre = cat-c
+    let bar-half = half
+    if position == "dodge" {
+      centre = dodge-centre(dodge, row, cat-c, 2 * half)
+      bar-half = dodge-half(row, half)
+    }
+
     let (theta-lo, theta-hi, r-lo, r-hi) = if radial.cat-is-theta {
-      (cat-c - half, cat-c + half, v-lo, v-hi)
+      (centre - bar-half, centre + bar-half, v-lo, v-hi)
     } else {
-      (v-lo, v-hi, cat-c - half, cat-c + half)
+      (v-lo, v-hi, centre - bar-half, centre + bar-half)
     }
     if r-lo > r-hi { (r-lo, r-hi) = (r-hi, r-lo) }
 
@@ -274,6 +282,7 @@
   if value-trained.type != "continuous" { return }
 
   let position = layer-position-name(layer)
+  let dodge = dodge-geometry(ctx, layer)
   // Only stacked segments share an edge; a bar that stands on its own would
   // lose part of its category gap to the seal.
   let abutting = layer-marks-abut(layer)
@@ -350,7 +359,7 @@
     let bar-half = half
     if position == "dodge" {
       let bucket = category-span * bar-width-fraction
-      centre = dodge-centre(row, cat-c, bucket)
+      centre = dodge-centre(dodge, row, cat-c, bucket)
       bar-half = dodge-half(row, bucket / 2)
     }
 

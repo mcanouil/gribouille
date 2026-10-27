@@ -5,9 +5,8 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
-#import "../utils/radial.typ": shift-point
-#import "../utils/flip.typ": project-user-path, user-axes, user-columns
-#import "../position/dodge.typ": dodge-delta, dodge-geometry
+#import "../utils/flip.typ": user-axes, user-columns
+#import "../position/dodge.typ": dodge-geometry, project-dodged-path
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
@@ -110,11 +109,9 @@
 )
 
 // Build one row's vertical range line, horizontal under coord-flip and an arc
-// when the range sweeps theta under coord-radial; shared
-// with geom-pointrange. Returns
-// `(elem, dd, colour)` — the cetz line element to emit, the row's dodge
-// shift, and the resolved line colour for follow-up marks — or `none` when
-// the row does not resolve. `line-alpha: true` folds the alpha channel into
+// when the range sweeps theta under coord-radial; shared with geom-pointrange.
+// Returns `(elem, colour)` — the cetz line element to emit and the resolved
+// line colour for follow-up marks — or `none` when the row does not resolve. `line-alpha: true` folds the alpha channel into
 // the line paint; pointrange keeps the paint opaque so its marker fill
 // inherits the plain colour.
 //
@@ -137,10 +134,8 @@
   let lo = parse-number(row.at(ymin-col, default: none))
   let hi = parse-number(row.at(ymax-col, default: none))
   if xv == none or lo == none or hi == none { return none }
-  let path = project-user-path(ctx, ((xv, lo), (xv, hi)))
-  if path.len() < 2 { return none }
-  let dd = dodge-delta(dodge, row)
-  let points = path.map(p => shift-point(p, dd))
+  let points = project-dodged-path(ctx, dodge, row, ((xv, lo), (xv, hi)))
+  if points.len() < 2 { return none }
 
   let colour = resolve-channel(
     "colour",
@@ -178,7 +173,6 @@
         dash: resolve-linetype(params, mapping, ctx, row),
       ),
     ),
-    dd: dd,
     colour: colour,
   )
 }

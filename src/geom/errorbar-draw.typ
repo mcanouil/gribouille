@@ -9,10 +9,10 @@
 
 #import "../deps.typ": cetz
 #import "../position/apply.typ": layer-position-name
-#import "../position/dodge.typ": dodge-centre, dodge-half
+#import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/linetype-resolve.typ": resolve-linetype
-#import "../coord/project.typ": axis-mapper, project-path
+#import "../coord/project.typ": axis-mapper, project-uvs
 #import "../utils/band.typ": axis-band
 #import "../utils/flip.typ": user-axis-key
 #import "../utils/radial.typ": polar-canvas, radial-arc, radial-tangent-cap
@@ -67,6 +67,7 @@
 
   let centre-range = (ctx.coord.axis-range)(ctx, centre-axis)
   let position-name = layer-position-name(layer)
+  let dodge = dodge-geometry(ctx, layer)
   let map-centre = axis-mapper(ctx, centre-axis)
   let map-span = axis-mapper(ctx, axis)
   let radial = ctx.at("radial", default: none)
@@ -108,16 +109,26 @@
     )
 
     if radial != none {
-      let pairs = if axis == "y" {
-        ((raw-centre, lo), (raw-centre, hi))
-      } else {
-        ((lo, raw-centre), (hi, raw-centre))
+      // Dodge moves the centre before projection, so the spine follows the
+      // polar grid from its slot. As on the cartesian path, a Typst-length cap
+      // has no slot to dodge within.
+      let band = if extent-is-length { none } else {
+        axis-band(centre-trained, raw-centre, half, centre-range)
       }
-      let path = project-path(ctx, pairs)
-      if path.len() < 2 { continue }
+      if position-name == "dodge" and band != none {
+        let cap-span = band.at(1) - band.at(0)
+        centre-c = dodge-centre(dodge, row, centre-c, cap-span)
+        let half = dodge-half(row, cap-span / 2)
+        band = (centre-c - half, centre-c + half)
+      }
+      let uvs = if axis == "y" {
+        ((centre-c, span-lo), (centre-c, span-hi))
+      } else {
+        ((span-lo, centre-c), (span-hi, centre-c))
+      }
+      let path = project-uvs(ctx, uvs)
       cetz.draw.line(..path, stroke: stroke-spec)
       if not extent-is-length {
-        let band = axis-band(centre-trained, raw-centre, half, centre-range)
         if band != none {
           _draw-radial-band-caps(
             radial,
@@ -163,7 +174,7 @@
     // dodge is left as a no-op there.
     if position-name == "dodge" and not extent-is-length {
       let cap-span = cap-hi - cap-lo
-      centre-c = dodge-centre(row, centre-c, cap-span)
+      centre-c = dodge-centre(dodge, row, centre-c, cap-span)
       let half = dodge-half(row, cap-span / 2)
       cap-lo = centre-c - half
       cap-hi = centre-c + half
