@@ -10,7 +10,7 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../stat/ydensity.typ": stat-ydensity
 #import "../position/apply.typ": layer-position-name
-#import "../position/dodge.typ": dodge-centre, dodge-half
+#import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
@@ -174,6 +174,7 @@
   let default-fill = resolve-geom-fill(g-defaults, role: "paper")
   let half-width = layer.params.width / 2
   let position-name = layer-position-name(layer)
+  let dodge = dodge-geometry(ctx, layer)
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     // One silhouette per distinct x bucket within the group, in
@@ -195,7 +196,7 @@
       let canvas-half = (band-hi - band-lo) / 2
       if position-name == "dodge" {
         let leader = rows.first()
-        centre = dodge-centre(leader, cx, band-hi - band-lo)
+        centre = dodge-centre(dodge, leader, cx, band-hi - band-lo)
         canvas-half = dodge-half(leader, canvas-half)
       }
 

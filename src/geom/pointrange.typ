@@ -4,10 +4,9 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
-#import "../utils/radial.typ": shift-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
-#import "../position/dodge.typ": dodge-geometry
-#import "../utils/flip.typ": project-user-point, user-axes, user-columns
+#import "../position/dodge.typ": dodge-geometry, project-dodged
+#import "../utils/flip.typ": user-axes, user-columns, user-point
 #import "linerange.typ": range-line-row
 
 #let spec = (
@@ -151,7 +150,7 @@
     let xv = row.at(cols.x, default: none)
     let mid = parse-number(row.at(cols.y, default: none))
     if xv == none or mid == none { continue }
-    let p-mid = project-user-point(ctx, xv, mid)
+    let p-mid = project-dodged(ctx, dodge, row, ..user-point(ctx, xv, mid))
     if p-mid == none { continue }
     let res = range-line-row(
       layer.params,
@@ -167,7 +166,7 @@
     )
     if res == none { continue }
     res.elem
-    let (cx-mid, cy-mid) = shift-point(p-mid, res.dd)
+    let (cx-mid, cy-mid) = p-mid
     let final-fill = resolve-channel(
       "fill",
       layer.params,

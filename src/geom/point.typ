@@ -11,9 +11,7 @@
 #import "../utils/level-resolve.typ": bin-index, discrete-index
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../utils/radial.typ": shift-point
-#import "../coord/project.typ": project-point
-#import "../position/dodge.typ": dodge-delta, dodge-geometry
+#import "../position/dodge.typ": dodge-geometry, project-dodged
 #import "../utils/stroke.typ": resolve-stroke-spec
 #import "../guide/draw-marker.typ": draw-marker
 #import "../utils/late-binding.typ": after-scale-source, apply-after-scale
@@ -228,13 +226,15 @@
   let dodge = dodge-geometry(ctx, layer)
 
   for row in data {
-    let projected = project-point(
+    let projected = project-dodged(
       ctx,
+      dodge,
+      row,
       row.at(mapping.x, default: none),
       row.at(mapping.y, default: none),
     )
     if projected == none { continue }
-    let (cx, cy) = shift-point(projected, dodge-delta(dodge, row))
+    let (cx, cy) = projected
     let size = resolve-channel("size", layer.params, mapping, ctx, row, 1.5pt)
     let body-fill = resolve-channel(
       "fill",

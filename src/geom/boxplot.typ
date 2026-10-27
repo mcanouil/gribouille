@@ -8,7 +8,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../position/apply.typ": layer-position-name
-#import "../position/dodge.typ": dodge-centre, dodge-half
+#import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
@@ -191,22 +191,18 @@
   let half-width = layer.params.width / 2
   let cap-half = half-width * layer.params.whisker-cap
 
+  let position-name = layer-position-name(layer)
+  let dodge = dodge-geometry(ctx, layer)
+
   let radial = ctx.at("radial", default: none)
   if radial != none {
-    let val-trained = if radial.cat-is-theta { y-trained } else { x-trained }
-    if val-trained.type != "continuous" { return }
-    let cat-col = if radial.cat-is-theta { cols.x } else {
-      mapping.at("y", default: none)
-    }
-    let cat-key = if radial.cat-is-theta { "x" } else { "y" }
-    let (cat: map-cat, value: map-value) = radial-mappers(ctx, cat-key)
-    let half = (
-      radial-category-span(ctx, cat-key, cat-col, data) * layer.params.width / 2
-    )
-    let cap-half-cat = half * layer.params.whisker-cap
+    if y-trained.type != "continuous" { return }
+    // The categories are the user's x on either theta axis, as for every
+    // point-like geom: `radial-mappers` puts them on the polar axis x takes.
+    let (cat: map-cat, value: map-value) = radial-mappers(ctx)
+    let span = radial-category-span(ctx, cols.x, data) * layer.params.width
     for row in data {
-      let raw-cat = row.at(cat-col, default: none)
-      let cat-c = map-cat(raw-cat)
+      let cat-c = map-cat(row.at(cols.x, default: none))
       let lower = parse-number(row.at(lower-col, default: none))
       let middle = parse-number(row.at(middle-col, default: none))
       let upper = parse-number(row.at(upper-col, default: none))
@@ -247,6 +243,13 @@
         default-colour,
       )
       let stroke-spec = build-stroke(stroke-thickness, resolved-stroke)
+
+      let half = span / 2
+      if position-name == "dodge" {
+        cat-c = dodge-centre(dodge, row, cat-c, span)
+        half = dodge-half(row, span / 2)
+      }
+      let cap-half-cat = half * layer.params.whisker-cap
 
       if radial.cat-is-theta {
         let theta-lo = cat-c - half
@@ -349,7 +352,6 @@
 
   if y-trained.type != "continuous" { return }
 
-  let position-name = layer-position-name(layer)
   let pt = user-point.with(ctx)
   let map-x = axis-mapper(ctx, user-axis-key("x", ctx))
   let map-y = axis-mapper(ctx, user-axis-key("y", ctx), space: "stat")
@@ -395,7 +397,7 @@
     let centre = cx
     if position-name == "dodge" {
       let span = cx-hi - cx-lo
-      centre = dodge-centre(row, cx, span)
+      centre = dodge-centre(dodge, row, cx, span)
       let box-half = dodge-half(row, span / 2)
       let cap-half-shrunk = dodge-half(row, (cap-hi - cap-lo) / 2)
       cx-lo = centre - box-half

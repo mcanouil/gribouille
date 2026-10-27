@@ -9,10 +9,10 @@
 
 #import "../deps.typ": cetz
 #import "../position/apply.typ": layer-position-name
-#import "../position/dodge.typ": dodge-centre, dodge-half
+#import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/linetype-resolve.typ": resolve-linetype
-#import "../coord/project.typ": axis-mapper, project-path
+#import "../coord/project.typ": axis-mapper, project-uvs
 #import "../utils/band.typ": axis-band
 #import "../utils/flip.typ": user-axis-key
 #import "../utils/radial.typ": polar-canvas, radial-arc, radial-tangent-cap
@@ -25,7 +25,13 @@
 // axis. A centre on theta gives a spoke spine, so each cap is an arc at the
 // radius of its end. A centre on the radius gives an arc spine, so each cap is
 // a radial tick at the angle of its end, and stops at the centre.
-#let _draw-radial-band-caps(radial, band, centre-is-theta, ends, stroke-spec) = {
+#let _draw-radial-band-caps(
+  radial,
+  band,
+  centre-is-theta,
+  ends,
+  stroke-spec,
+) = {
   let (lo, hi) = band
   for end in ends {
     if centre-is-theta {
@@ -67,6 +73,12 @@
 
   let centre-range = (ctx.coord.axis-range)(ctx, centre-axis)
   let position-name = layer-position-name(layer)
+  // The shared dodge slot is measured on the user's x. A bar whose centre sits
+  // on the other axis, as for errorbarh, dodges within its own cap band.
+  let dodge = dodge-geometry(ctx, layer)
+  if dodge != none and dodge.axis != (if centre-axis == "x" { 0 } else { 1 }) {
+    dodge = none
+  }
   let map-centre = axis-mapper(ctx, centre-axis)
   let map-span = axis-mapper(ctx, axis)
   let radial = ctx.at("radial", default: none)
@@ -108,16 +120,26 @@
     )
 
     if radial != none {
-      let pairs = if axis == "y" {
-        ((raw-centre, lo), (raw-centre, hi))
-      } else {
-        ((lo, raw-centre), (hi, raw-centre))
+      // Dodge moves the centre before projection, so the spine follows the
+      // polar grid from its slot. As on the cartesian path, a Typst-length cap
+      // has no slot to dodge within.
+      let band = if extent-is-length { none } else {
+        axis-band(centre-trained, raw-centre, half, centre-range)
       }
-      let path = project-path(ctx, pairs)
-      if path.len() < 2 { continue }
+      if position-name == "dodge" and band != none {
+        let cap-span = band.at(1) - band.at(0)
+        centre-c = dodge-centre(dodge, row, centre-c, cap-span)
+        let half = dodge-half(row, cap-span / 2)
+        band = (centre-c - half, centre-c + half)
+      }
+      let uvs = if axis == "y" {
+        ((centre-c, span-lo), (centre-c, span-hi))
+      } else {
+        ((span-lo, centre-c), (span-hi, centre-c))
+      }
+      let path = project-uvs(ctx, uvs)
       cetz.draw.line(..path, stroke: stroke-spec)
       if not extent-is-length {
-        let band = axis-band(centre-trained, raw-centre, half, centre-range)
         if band != none {
           _draw-radial-band-caps(
             radial,
@@ -163,7 +185,7 @@
     // dodge is left as a no-op there.
     if position-name == "dodge" and not extent-is-length {
       let cap-span = cap-hi - cap-lo
-      centre-c = dodge-centre(row, centre-c, cap-span)
+      centre-c = dodge-centre(dodge, row, centre-c, cap-span)
       let half = dodge-half(row, cap-span / 2)
       cap-lo = centre-c - half
       cap-hi = centre-c + half

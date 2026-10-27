@@ -49,12 +49,24 @@
     if stat-flush(layer.at("stat-source", default: "identity")) {
       acc.flush = true
     }
-    if geom == "col" {
-      if layer.at("position", default: "identity") == "fill" {
-        acc.any-fill = true
-      }
-      let bar-frac = layer.at("params", default: (:)).at("width", default: 0.9)
-      acc.bar-half = calc.max(acc.bar-half, bar-frac / 2)
+    if geom == "col" and layer.at("position", default: "identity") == "fill" {
+      acc.any-fill = true
+    }
+    // Band geoms and dodged marks reach half their width either side of the
+    // category, so a discrete category axis keeps that much room past its
+    // outer levels. The pad matters on the radius of `coord-radial(theta:
+    // "y")`, where the inner level would otherwise sit at radius 0 and a mark
+    // reaching past it would cross the centre.
+    if geom in ("col", "boxplot", "crossbar", "errorbar") {
+      let w = layer.at("params", default: (:)).at("width", default: 0.9)
+      if type(w) != length { acc.bar-half = calc.max(acc.bar-half, w / 2) }
+    }
+    let pos = layer.at("position", default: "identity")
+    if type(pos) == dictionary and pos.at("name", default: none) == "dodge" {
+      let w = pos.at("params", default: (:)).at("width", default: 0.9)
+      acc.bar-half = calc.max(acc.bar-half, w / 2)
+    } else if pos == "dodge" {
+      acc.bar-half = calc.max(acc.bar-half, 0.9 / 2)
     }
     acc = _scan-rows(mapping, layer.at("data", default: ()), acc)
   }

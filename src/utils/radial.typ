@@ -149,9 +149,6 @@
   level-position(trained, value)
 }
 
-// Add a canvas-cm `(dx, dy)` offset to a projected `(cx, cy)` point.
-#let shift-point(p, delta) = (p.at(0) + delta.at(0), p.at(1) + delta.at(1))
-
 // Group break values by canvas angle modulo a full turn. `project` maps a
 // break to canvas radians (or `none` to skip). Returns an array of groups,
 // where each group is an array of `(idx, b, theta)` records sharing an
@@ -196,32 +193,29 @@
   }
 }
 
-// The mappers a radial bar-like geom reads, with `cat-key` the axis that holds
-// its categories and the other axis its values. `cat` maps a row cell into
-// the category range and `value` a stat-space number into the value range.
-// Both ranges come from `radial-axis-ranges` rather than the coord, so the
-// categories take the polar axis that `theta` names for x, whichever axis
-// holds them.
-#let radial-mappers(ctx, cat-key) = {
-  let value-key = if cat-key == "x" { "y" } else { "x" }
+// The mappers a radial bar-like geom reads, with its categories on x and its
+// values on y. `cat` maps a row cell into the category range and `value` a
+// stat-space number into the value range, the polar axes that `theta` gives
+// x and y.
+#let radial-mappers(ctx) = {
   let (cat-range, value-range) = radial-axis-ranges(ctx.radial)
   (
-    cat: axis-mapper(ctx, cat-key, range: cat-range),
-    value: axis-mapper(ctx, value-key, space: "stat", range: value-range),
+    cat: axis-mapper(ctx, "x", range: cat-range),
+    value: axis-mapper(ctx, "y", space: "stat", range: value-range),
   )
 }
 
-// Bar-width category span on the `cat-key` axis, in the category range of
+// Bar-width category span on the x axis, in the category range of
 // `radial-axis-ranges`. Discrete scales use `discrete-slot-width`; continuous
 // scales fall back to the smallest gap between the sorted unique values of
 // `cat-col`, mirroring `geom-col`'s heuristic.
-#let radial-category-span(ctx, cat-key, cat-col, data) = {
-  let cat-trained = ctx.trained.at(cat-key)
+#let radial-category-span(ctx, cat-col, data) = {
+  let cat-trained = ctx.trained.at("x")
   let cat-range = radial-axis-ranges(ctx.radial).cat-range
   if cat-trained.type == "discrete" {
     return discrete-slot-width(cat-trained, cat-range)
   }
-  let map-cat = axis-mapper(ctx, cat-key, space: "stat", range: cat-range)
+  let map-cat = axis-mapper(ctx, "x", space: "stat", range: cat-range)
   let xs = data
     .map(r => parse-number(r.at(cat-col, default: none)))
     .filter(v => v != none)
