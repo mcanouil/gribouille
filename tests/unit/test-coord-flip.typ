@@ -148,8 +148,11 @@
 
 // The ranges come from the coord, so a coord that overrides `axis-range`
 // moves them too.
-#let inset-coord = coord-cartesian() + (
-  axis-range: (ctx, axis) => if axis == "x" { (1, 9) } else { (2, 4) },
+#let inset-coord = (
+  coord-cartesian()
+    + (
+      axis-range: (ctx, axis) => if axis == "x" { (1, 9) } else { (2, 4) },
+    )
 )
 #assert.eq(
   user-axes(axes-ctx + flip + (coord: inset-coord)),

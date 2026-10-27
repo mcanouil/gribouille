@@ -150,11 +150,14 @@
   // The radius is a canvas length, and the radial ranges are an angle and a
   // radius rather than a span of the panel, so radial measures it off the
   // panel extent.
-  let x-key = user-axis-key("x", ctx)
   let measure-range = if ctx.at("radial", default: none) == none {
     axes.x-range
-  } else if x-key == "x" { ctx.px-range } else { ctx.py-range }
-  let map-x = axis-mapper(ctx, x-key, range: measure-range)
+  } else { ctx.px-range }
+  let map-x = axis-mapper(
+    ctx,
+    user-axis-key("x", ctx),
+    range: measure-range,
+  )
   let cx-anchor = map-x(first-x)
   let cx-edge = map-x(first-x + bin-width / 2)
   if cx-anchor == none or cx-edge == none { return }
