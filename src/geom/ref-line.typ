@@ -114,13 +114,13 @@
   // user's mental model after coord-flip.
   let horizontal = user-axis-key(user-axis, ctx) == "y"
   if horizontal {
-    let (px-lo, px-hi) = ctx.px-range
+    let (px-lo, px-hi) = (ctx.coord.axis-range)(ctx, "x")
     for line in lines {
       let cy = map-value(line.value)
       cetz.draw.line((px-lo, cy), (px-hi, cy), stroke: line.stroke)
     }
   } else {
-    let (py-lo, py-hi) = ctx.py-range
+    let (py-lo, py-hi) = (ctx.coord.axis-range)(ctx, "y")
     for line in lines {
       let cx = map-value(line.value)
       cetz.draw.line((cx, py-lo), (cx, py-hi), stroke: line.stroke)

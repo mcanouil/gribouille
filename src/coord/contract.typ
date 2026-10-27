@@ -13,6 +13,9 @@
 // `frame` builds the bundle the panel hands geoms as `ctx.radial`, `none` on a
 // cartesian panel. `axis-range` is the canvas range one axis maps into, and
 // `to-canvas` turns a pair of mapped axis positions into a canvas point.
+// A coord that keeps the cartesian `draw-background` must accept the panel
+// record in `axis-range` as well as a draw context, since that background
+// reads its ranges through it too.
 // `project` runs once per row, so the default reads `ctx.px-range` and
 // `ctx.py-range` directly rather than calling `axis-range` and `to-canvas`.
 // A coord that overrides either of them must override `project` too.

@@ -40,7 +40,7 @@
     breaks: if is-continuous and cached != none {
       cached
     } else { _axis-tick-values(trained) },
-    range: if axis == "x" { panel.px-range } else { panel.py-range },
+    range: (panel.coord.axis-range)(panel, axis),
   )
 }
 
@@ -135,8 +135,8 @@
   let px-hi = panel.px-hi
   let py-lo = panel.py-lo
   let py-hi = panel.py-hi
-  let px-range = panel.px-range
-  let py-range = panel.py-range
+  let px-range = (coord.axis-range)(panel, "x")
+  let py-range = (coord.axis-range)(panel, "y")
   let axis-breaks = panel.axis-breaks
   let _ink = panel.ink
   let _ax-text = panel.ax-text

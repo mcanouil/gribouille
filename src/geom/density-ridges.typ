@@ -11,6 +11,7 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/group.typ": bucket-by-col, partition-by-group
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": resolve-stroke-spec
@@ -147,17 +148,14 @@
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
+  let cols = user-columns(mapping, ctx)
   let height-col = mapping.at("height", default: none)
-  if x-col == none or y-col == none or height-col == none { return }
+  if cols.x == none or cols.y == none or height-col == none { return }
 
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
-  if x-trained.type != "continuous" { return }
-  let map-x = axis-mapper(ctx, "x", space: "stat")
-  let map-y = axis-mapper(ctx, "y")
+  let axes = user-axes(ctx)
+  if axes == none or axes.x-trained.type != "continuous" { return }
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx), space: "stat")
+  let map-y = axis-mapper(ctx, user-axis-key("y", ctx))
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // The outline separates overlapping ridges, so the stroke default stands
@@ -170,16 +168,16 @@
   // to front (higher baselines first), letting front ridges overlap them.
   let ridges = ()
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
-    for rows in bucket-by-col(g.data, y-col) {
-      let raw-y = rows.first().at(y-col, default: none)
+    for rows in bucket-by-col(g.data, cols.y) {
+      let raw-y = rows.first().at(cols.y, default: none)
       let baseline = map-y(raw-y)
       if baseline == none { continue }
-      let band = axis-band(y-trained, raw-y, 0.5, ctx.py-range)
+      let band = axis-band(axes.y-trained, raw-y, 0.5, axes.y-range)
       if band == none { continue }
       let (band-lo, band-hi) = band
       let side = rows
         .map(r => {
-          let xv = parse-number(r.at(x-col, default: none))
+          let xv = parse-number(r.at(cols.x, default: none))
           let hv = parse-number(r.at(height-col, default: none))
           if xv == none or hv == none { return none }
           (x: xv, height: hv)
@@ -205,8 +203,9 @@
       (top.last().at(0), ridge.baseline),
       (top.first().at(0), ridge.baseline),
     )
-    let pts = top + base
-    if pts.any(p => p.at(0) == none) { continue }
+    let uvs = top + base
+    if uvs.any(p => p.at(0) == none) { continue }
+    let pts = uvs.map(((u, v)) => user-point(ctx, u, v))
 
     let final-fill = resolve-channel(
       "fill",

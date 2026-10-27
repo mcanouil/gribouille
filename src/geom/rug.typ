@@ -141,8 +141,8 @@
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
 
-  let (px-lo, px-hi) = ctx.px-range
-  let (py-lo, py-hi) = ctx.py-range
+  let (px-lo, px-hi) = (ctx.coord.axis-range)(ctx, "x")
+  let (py-lo, py-hi) = (ctx.coord.axis-range)(ctx, "y")
   let len = layer.params.length / 1cm
 
   let want-bottom = sides.contains("b")

@@ -147,7 +147,17 @@
   if bin-width == none { return }
   let first-x = parse-number(first.at(x-col))
   if first-x == none { return }
-  let map-x = axis-mapper(ctx, user-axis-key("x", ctx), range: axes.x-range)
+  // The radius is a canvas length, and the radial ranges are an angle and a
+  // radius rather than a span of the panel, so radial measures it off the
+  // panel extent.
+  let measure-range = if ctx.at("radial", default: none) == none {
+    axes.x-range
+  } else { ctx.px-range }
+  let map-x = axis-mapper(
+    ctx,
+    user-axis-key("x", ctx),
+    range: measure-range,
+  )
   let cx-anchor = map-x(first-x)
   let cx-edge = map-x(first-x + bin-width / 2)
   if cx-anchor == none or cx-edge == none { return }
