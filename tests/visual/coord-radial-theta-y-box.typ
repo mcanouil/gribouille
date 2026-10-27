@@ -34,6 +34,14 @@
 #grid(
   columns: 2,
   column-gutter: 0.4cm,
-  cell(raw, aes(x: "q", y: "y"), (geom-boxplot(), geom-point(size: 1pt, colour: red))),
-  cell(summary, aes(x: "q", y: "y", ymin: "lo", ymax: "hi"), (geom-crossbar(), geom-point(size: 2pt, colour: red))),
+  cell(
+    raw,
+    aes(x: "q", y: "y"),
+    (geom-boxplot(), geom-point(size: 1pt, colour: red)),
+  ),
+  cell(
+    summary,
+    aes(x: "q", y: "y", ymin: "lo", ymax: "hi"),
+    (geom-crossbar(), geom-point(size: 2pt, colour: red)),
+  ),
 )

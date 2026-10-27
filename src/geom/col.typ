@@ -198,8 +198,8 @@
   let baseline = calc.max(0.0, value-trained.domain.at(0))
   let bar-width-fraction = layer.params.width
 
-  let (cat: map-cat, value: map-value) = radial-mappers(ctx, "x")
-  let category-span = radial-category-span(ctx, "x", cat-col, data)
+  let (cat: map-cat, value: map-value) = radial-mappers(ctx)
+  let category-span = radial-category-span(ctx, cat-col, data)
   let half = category-span * bar-width-fraction / 2
 
   for row in data {

@@ -198,9 +198,9 @@
   if radial != none {
     if y-trained.type != "continuous" { return }
     // The categories are the user's x on either theta axis, as for every
-    // point-like geom: `radial-mappers` routes them onto the polar axis x takes.
-    let (cat: map-cat, value: map-value) = radial-mappers(ctx, "x")
-    let span = radial-category-span(ctx, "x", cols.x, data) * layer.params.width
+    // point-like geom: `radial-mappers` puts them on the polar axis x takes.
+    let (cat: map-cat, value: map-value) = radial-mappers(ctx)
+    let span = radial-category-span(ctx, cols.x, data) * layer.params.width
     for row in data {
       let cat-c = map-cat(row.at(cols.x, default: none))
       let lower = parse-number(row.at(lower-col, default: none))

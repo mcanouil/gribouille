@@ -80,7 +80,7 @@
 #assert.eq(dodged.data.at(1)._dodge-offset, 0.25)
 
 // dodge: padding shrinks the mark and leaves the slot centres alone, so marks
-// placed through dodge-delta stay centred over their bar.
+// placed through dodge-uv stay centred over their bar.
 #let padded = apply-position(
   "dodge",
   df,

@@ -1,13 +1,13 @@
-// The dodge shift the project-point geoms apply (point, line, path,
-// text/label/typst, point/linerange) so dodged marks ride the same slots the
-// bar geoms compute from their band math.
+// The dodge shift every geom applies, so dodged marks of one group share one
+// centre on every coord.
 //
 // The slot is resolved once per layer by `dodge-geometry` and spent per row by
-// `dodge-delta`, so these assert the pair: what the geometry answers for a
-// layer, and what a row does with it.
+// `dodge-uv` on the mapped position, so these assert the pair: what the
+// geometry answers for a layer, and what a row does with it.
 
 #import "../../src/coord/cartesian.typ": coord-cartesian
-#import "../../src/position/dodge.typ": dodge-delta, dodge-geometry, dodge-uv
+#import "../../src/coord/radial.typ": coord-radial
+#import "../../src/position/dodge.typ": dodge-geometry, dodge-uv
 
 #let assert-close(a, b, tol: 1e-9) = {
   assert(
@@ -31,51 +31,41 @@
 
 // A layer that does not dodge has no geometry, and a row under none stays put.
 #assert.eq(dodge-geometry(ctx, (position: "identity")), none)
-#assert.eq(dodge-delta(none, row-a), (0.0, 0.0))
+#assert.eq(dodge-uv(none, row-a, (1.0, 2.0)), (1.0, 2.0))
 
 // Dodge over a discrete x: slot-width 10/2 = 5, width 0.9, so span = 4.5.
 // Two groups at the same category shift equal and opposite on x only.
 #let geom = dodge-geometry(ctx, layer-dodge)
 #assert-close(geom.span, 4.5)
-#assert.eq(geom.direction, (1.0, 0.0))
-#let da = dodge-delta(geom, row-a)
-#let db = dodge-delta(geom, row-b)
-#assert-close(da.at(0), -0.25 * 4.5)
-#assert-close(db.at(0), 0.25 * 4.5)
-#assert.eq(da.at(1), 0.0)
-#assert-close(da.at(0), -db.at(0))
+#assert.eq(geom.axis, 0)
+#let ua = dodge-uv(geom, row-a, (1.0, 2.0))
+#let ub = dodge-uv(geom, row-b, (1.0, 2.0))
+#assert-close(ua.at(0), 1.0 - 0.25 * 4.5)
+#assert-close(ub.at(0), 1.0 + 0.25 * 4.5)
+#assert.eq(ua.at(1), 2.0)
 
 // A row with no dodge offset stays put even on a dodge layer.
-#assert.eq(dodge-delta(geom, (:)), (0.0, 0.0))
+#assert.eq(dodge-uv(geom, (:), (1.0, 2.0)), (1.0, 2.0))
 
-// The cartesian geometry leaves a mapped position alone: the shift lands on
-// the canvas point instead.
-#assert.eq(dodge-uv(geom, row-a, (1.0, 2.0)), (1.0, 2.0))
-
-// Under coord-radial the shift lands on the x position before projection, in
-// the units of the polar axis x takes, so the canvas shift is zero. With theta
-// on x, two levels split a full turn into slots of pi radians. The sweep runs
-// clockwise, so theta falls as x rises and the span is negative: the slots
-// follow the level order round the circle.
-#let radial-ctx(cat-is-theta) = ctx + (
-  radial: (
-    cat-is-theta: cat-is-theta,
-    theta-range: (calc.pi / 2, calc.pi / 2 - 2 * calc.pi),
-    r-range: (0, 4),
-  ),
-  resolve-data: _ => (),
-  resolve-mapping: _ => (x: "x"),
-)
-#let theta-geom = dodge-geometry(radial-ctx(true), layer-dodge)
+// Under coord-radial the span is in the range the coord maps x into. With
+// theta on x, two levels split a full turn into slots of pi radians. The sweep
+// runs clockwise, so theta falls as x rises and the span is negative: the
+// slots follow the level order round the circle.
+#let radial-ctx(theta) = {
+  let coord = coord-radial(theta: theta)
+  ctx + (
+    coord: coord,
+    radial: (coord.frame)(x-trained, y-cont, (0, 10), (0, 6)),
+  )
+}
+#let theta-geom = dodge-geometry(radial-ctx("x"), layer-dodge)
 #assert-close(theta-geom.span, -calc.pi * 0.9)
-#assert.eq(theta-geom.direction, none)
-#assert.eq(dodge-delta(theta-geom, row-a), (0.0, 0.0))
-#let shifted = dodge-uv(theta-geom, row-a, (1.0, 2.0))
-#assert-close(shifted.at(0), 1.0 + 0.25 * calc.pi * 0.9)
-#assert.eq(shifted.at(1), 2.0)
+#assert.eq(theta-geom.axis, 0)
 
-// With theta on y, the two levels split the 4cm radius into 2cm rings.
-#assert-close(dodge-geometry(radial-ctx(false), layer-dodge).span, 2 * 0.9)
+// With theta on y, x takes the radius: the two levels split it into rings.
+#let ring-ctx = radial-ctx("y")
+#let ring-geom = dodge-geometry(ring-ctx, layer-dodge)
+#assert-close(ring-geom.span, ring-ctx.radial.r-max / 2 * 0.9)
 
 // A continuous category axis has no slot width of its own, so the geometry
 // infers one from the data: the narrowest canvas gap between two distinct x
@@ -115,7 +105,7 @@
 )
 #assert.eq(dodge-geometry(ctx-cont, layer-dodge), none)
 
-// Under coord-flip the category axis is y, so the shift lands on y.
+// Under coord-flip the category axis is y, so the shift lands on v.
 #let ctx-flip = (
   trained: (x: y-cont, y: x-trained),
   px-range: (0, 10),
@@ -124,10 +114,10 @@
   coord: coord-cartesian(),
 )
 #let flipped-geom = dodge-geometry(ctx-flip, layer-dodge)
-#assert.eq(flipped-geom.direction, (0.0, 1.0))
-#let df = dodge-delta(flipped-geom, row-a)
-#assert.eq(df.at(0), 0.0)
-#assert-close(df.at(1), -0.25 * (8 / 2) * 0.9)
+#assert.eq(flipped-geom.axis, 1)
+#let uf = dodge-uv(flipped-geom, row-a, (1.0, 2.0))
+#assert.eq(uf.at(0), 1.0)
+#assert-close(uf.at(1), 2.0 - 0.25 * (8 / 2) * 0.9)
 
 // A flipped continuous category axis infers its slot from the category
 // column, which the flip swap moved onto y, not from the value column on x.
@@ -143,10 +133,11 @@
 #assert-close(dodge-geometry(flip-cont-ctx, layer-dodge).span, 2 * 0.9)
 
 // A position dict carries its own width, scaling the span accordingly.
-#let dw = dodge-delta(
+#let dw = dodge-uv(
   dodge-geometry(ctx, (position: (name: "dodge", params: (width: 0.5)))),
   row-a,
+  (0.0, 0.0),
 )
 #assert-close(dw.at(0), -0.25 * 5 * 0.5)
 
-dodge-delta tests passed.
+dodge shift tests passed.

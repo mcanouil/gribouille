@@ -17,7 +17,6 @@
 #import "../utils/flip.typ": (
   project-user-path, user-axes, user-axis-key, user-columns, user-point,
 )
-#import "../utils/radial.typ": radial-category-span, shift-point
 #import "../utils/types.typ": parse-number
 #import "../scale/train.typ": discrete-slot-width
 
@@ -100,29 +99,27 @@
 /// \@param half Undodged half-width on the canvas.
 #let dodge-half(row, half) = half / row.at("_dodge-n", default: 1)
 
-/// The dodge geometry a layer draws under: the canvas cm one slot covers and
-/// which axis the shift lands on.
+/// The dodge geometry a layer draws under: the span one slot covers and which
+/// mapped position the shift lands on.
 ///
-/// For geoms that place marks via `project-point` (point, line, path, text,
-/// label, typst, pointrange, linerange) rather than the band math used by the
-/// bar geoms. Nothing here varies per row, so a draw resolves it once and
-/// carries the record into its row loop: the layer dictionary reaches the whole
-/// row set, and a call that takes one costs time proportional to it.
+/// Nothing here varies per row, so a draw resolves it once and carries the
+/// record into its row loop: the layer dictionary reaches the whole row set,
+/// and a call that takes one costs time proportional to it.
 ///
 /// `none` unless the layer dodges, which is what makes the per-row shift free
 /// for every other plot.
 ///
-/// Under `coord-radial` a canvas translation would leave the polar grid, so
-/// the shift lands on the x position before projection instead: `span` is in
-/// the units of the polar axis that x takes (radians on theta, canvas cm on
-/// the radius), and `direction` is `none`.
+/// The span is measured in the range the coord maps the user's x into, so the
+/// shift lands on the mapped position before projection. A Cartesian panel
+/// maps straight to canvas cm. Under `coord-radial` the span is in radians on
+/// theta or in canvas cm on the radius, and the marks stay on the polar grid.
 ///
 /// \@internal
-/// \@param ctx Draw context carrying `trained`, `px-range`/`py-range`, `flipped`, and optional `radial`.
+/// \@param ctx Draw context carrying `trained`, `coord`, `flipped`, and the ranges the coord reads.
 ///
 /// \@param layer Layer dictionary; its `position` field selects dodge and its width.
 ///
-/// \@returns `(span, direction)`, or `none` when dodge does not apply. `direction` is the canvas unit vector of the user's x axis, or `none` under `coord-radial`.
+/// \@returns `(span, axis)`, or `none` when dodge does not apply. `axis` is the index, `0` or `1`, of the user's x in a mapped `(u, v)` position.
 #let dodge-geometry(ctx, layer) = {
   let pos = layer.at("position", default: "identity")
   let name = if type(pos) == str { pos } else if pos == none {
@@ -134,14 +131,6 @@
     pos.at("params", default: (:)).at("width", default: 0.9)
   } else { 0.9 }
 
-  if ctx.at("radial", default: none) != none {
-    let x-col = (ctx.resolve-mapping)(layer).at("x", default: none)
-    if x-col == none { return none }
-    let data = (ctx.resolve-data)(layer)
-    let span = radial-category-span(ctx, "x", x-col, data) * width
-    return (span: span, direction: none)
-  }
-
   let axes = user-axes(ctx)
   if axes == none { return none }
   let cat-trained = axes.x-trained
@@ -151,7 +140,8 @@
   let span = if cat-trained.type == "discrete" {
     discrete-slot-width(cat-trained, cat-range) * width
   } else {
-    // Continuous axis: infer slot width from min canvas gap between unique x values.
+    // Continuous axis: infer slot width from the min mapped gap between unique
+    // x values.
     let resolve-data = ctx.at("resolve-data", default: none)
     let resolve-mapping = ctx.at("resolve-mapping", default: none)
     if resolve-data == none or resolve-mapping == none { return none }
@@ -179,7 +169,7 @@
     }
   }
 
-  (span: span, direction: user-point(ctx, 1.0, 0.0))
+  (span: span, axis: if cat-key == "x" { 0 } else { 1 })
 }
 
 /// Shift a band geom's centre coordinate by this row's dodge offset.
@@ -202,42 +192,25 @@
   c + row.at("_dodge-offset", default: 0) * bucket
 }
 
-/// Canvas-cm shift that puts one row on its dodge slot.
-///
-/// Takes the record `dodge-geometry` resolved for the layer, so the per-row
-/// call carries a pair of numbers rather than the layer the rows hang off.
+/// Mapped `(u, v)` position that puts one row on its dodge slot.
 ///
 /// \@internal
 /// \@param geometry The record `dodge-geometry` answered, or `none`.
 ///
 /// \@param row Data row carrying `_dodge-offset` written by `apply`.
 ///
-/// \@returns `(dx, dy)` canvas-cm offset, `(0, 0)` when dodge does not apply.
-#let dodge-delta(geometry, row) = {
-  if geometry == none or geometry.direction == none { return (0.0, 0.0) }
-  let shift = row.at("_dodge-offset", default: 0) * geometry.span
-  let (ux, uy) = geometry.direction
-  (shift * ux, shift * uy)
-}
-
-/// Mapped `(u, v)` position that puts one row on its dodge slot under
-/// `coord-radial`, before projection. Unchanged in every other case, where
-/// `dodge-delta` shifts the canvas point instead.
-///
-/// \@internal
-/// \@param geometry The record `dodge-geometry` answered, or `none`.
-///
-/// \@param row Data row carrying `_dodge-offset` written by `apply`.
-///
-/// \@param uv Mapped `(u, v)` position of the row, with `u` the x position.
+/// \@param uv Mapped `(u, v)` position of the row.
 #let dodge-uv(geometry, row, uv) = {
-  if geometry == none or geometry.direction != none { return uv }
-  let (u, v) = uv
-  (u + row.at("_dodge-offset", default: 0) * geometry.span, v)
+  if geometry == none { return uv }
+  let shifted = uv
+  let offset = row.at("_dodge-offset", default: 0)
+  shifted.at(geometry.axis) += offset * geometry.span
+  shifted
 }
 
 /// Canvas point of a row's `(xv, yv)` on its dodge slot, or `none` when the
-/// position does not resolve.
+/// position does not resolve. `xv` and `yv` are the values on the canvas x and
+/// y axes, as `project-point` takes them.
 ///
 /// \@internal
 /// \@param ctx Draw context.
@@ -246,25 +219,18 @@
 ///
 /// \@param row Data row carrying `_dodge-offset` written by `apply`.
 ///
-/// \@param xv Row value on the x axis.
+/// \@param xv Row value on the canvas x axis.
 ///
-/// \@param yv Row value on the y axis.
-///
-/// \@param project Projection for the Cartesian case: `project-point`, or `project-user-point` for a geom that reads the user's columns.
-#let project-dodged(ctx, geometry, row, xv, yv, project: project-point) = {
-  if geometry != none and geometry.direction == none {
-    let uv = path-uvs(ctx, ((xv, yv),)).first()
-    if uv == none { return none }
-    return to-canvas(ctx, ..dodge-uv(geometry, row, uv))
-  }
-  let p = project(ctx, xv, yv)
-  if p == none { return none }
-  shift-point(p, dodge-delta(geometry, row))
+/// \@param yv Row value on the canvas y axis.
+#let project-dodged(ctx, geometry, row, xv, yv) = {
+  if geometry == none { return project-point(ctx, xv, yv) }
+  let uv = path-uvs(ctx, ((xv, yv),)).first()
+  if uv == none { return none }
+  to-canvas(ctx, ..dodge-uv(geometry, row, uv))
 }
 
 /// Canvas points of a row's path through the user's `(x, y)` pairs, on the
-/// row's dodge slot. Under `coord-radial` the path follows the polar grid
-/// from the shifted positions.
+/// row's dodge slot, with the points the coord adds along each edge.
 ///
 /// \@internal
 /// \@param ctx Draw context.
@@ -275,12 +241,12 @@
 ///
 /// \@param pairs The user's `(x, y)` pairs of the path.
 #let project-dodged-path(ctx, geometry, row, pairs) = {
-  if geometry != none and geometry.direction == none {
-    let uvs = path-uvs(ctx, pairs).filter(uv => uv != none)
-    return project-uvs(ctx, uvs.map(uv => dodge-uv(geometry, row, uv)))
-  }
-  let delta = dodge-delta(geometry, row)
-  project-user-path(ctx, pairs).map(p => shift-point(p, delta))
+  if geometry == none { return project-user-path(ctx, pairs) }
+  let uvs = path-uvs(ctx, pairs.map(((ux, uy)) => user-point(ctx, ux, uy)))
+  project-uvs(
+    ctx,
+    uvs.filter(uv => uv != none).map(uv => dodge-uv(geometry, row, uv)),
+  )
 }
 
 #let _row-width(row, default-width) = {
@@ -335,7 +301,7 @@
 
     if uniform {
       // Slot centres split the bucket evenly; padding shrinks each mark
-      // around its own centre, so marks placed by `dodge-delta` stay
+      // around its own centre, so marks placed by `dodge-uv` stay
       // centred over the bar while neighbouring slots stop touching.
       let shrink = n-levels / (1 - clamped-padding)
       for entry in entries {

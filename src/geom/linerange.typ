@@ -111,9 +111,9 @@
 // Build one row's vertical range line, horizontal under coord-flip and an arc
 // when the range sweeps theta under coord-radial; shared with geom-pointrange.
 // Returns `(elem, colour)` — the cetz line element to emit and the resolved
-// line colour for follow-up marks — or `none` when the row does not resolve. `line-alpha: true` folds the alpha channel into
-// the line paint; pointrange keeps the paint opaque so its marker fill
-// inherits the plain colour.
+// line colour for follow-up marks — or `none` when the row does not resolve.
+// `line-alpha: true` folds the alpha channel into the line paint; pointrange
+// keeps the paint opaque so its marker fill inherits the plain colour.
 //
 // `params` and `dodge` both arrive resolved, and for the same reason: this runs
 // once a row, so it takes the layer's parameters and its dodge slot rather than

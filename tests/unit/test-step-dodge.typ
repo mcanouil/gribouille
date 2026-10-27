@@ -1,6 +1,6 @@
-// `rows-to-points` steps the dodge offsets with the mapped positions, so a
-// dodged step line on a cartesian panel keeps the corners it had when each
-// point was shifted first and the shifted points were then stepped.
+// `rows-to-points` shifts each mapped position onto its dodge slot before it
+// steps them, so each corner of a dodged step line takes its x from one shifted
+// point and its y from the next.
 
 #import "../../src/coord/cartesian.typ": coord-cartesian
 #import "../../src/geom/grouped-path.typ": rows-to-points
@@ -32,20 +32,20 @@
   (x: 7, y: 3, _dodge-offset: 0.2),
 )
 
-// Span 2.5 along (0.6, 0.8) shifts the rows by (0.6, 0.8), (-0.6, -0.8) and
-// (0.3, 0.4), to (1.6, 2.8), (3.4, 5.2) and (7.3, 3.4).
-#let dodge = (span: 2.5, direction: (0.6, 0.8))
+// Span 2.5 on u shifts the rows by 1, -1 and 0.5 along x, to (2, 2), (3, 6)
+// and (7.5, 3).
+#let dodge = (span: 2.5, axis: 0)
 
 // "hv" puts each corner at the next x and the previous y.
 #assert-points(
   rows-to-points(rows, mapping, ctx, dodge, direction: "hv"),
-  ((1.6, 2.8), (3.4, 2.8), (3.4, 5.2), (7.3, 5.2), (7.3, 3.4)),
+  ((2, 2), (3, 2), (3, 6), (7.5, 6), (7.5, 3)),
 )
 
 // "vh" puts each corner at the previous x and the next y.
 #assert-points(
   rows-to-points(rows, mapping, ctx, dodge, direction: "vh"),
-  ((1.6, 2.8), (1.6, 5.2), (3.4, 5.2), (3.4, 3.4), (7.3, 3.4)),
+  ((2, 2), (2, 6), (3, 6), (3, 3), (7.5, 3)),
 )
 
 Step dodge tests passed.

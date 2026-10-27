@@ -10,11 +10,10 @@
 #import "../utils/bin.typ": bin-x-extents
 #import "../scale/train.typ": mapping-ref-col
 #import "../utils/group.typ": partition-by-group
-#import "../utils/radial.typ": shift-point
-#import "../coord/project.typ": path-uvs, project-uvs, to-canvas
+#import "../coord/project.typ": path-uvs, project-uvs
 #import "../utils/stair.typ": stair
 #import "../utils/flip.typ": user-axes, user-columns
-#import "../position/dodge.typ": dodge-delta, dodge-geometry, dodge-uv
+#import "../position/dodge.typ": dodge-geometry, dodge-uv
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 // The `spec` record of line, path, and step: the draw path below reads the
@@ -60,38 +59,22 @@
 // `dodge` is the slot `dodge-geometry` answered for the whole layer. It is
 // resolved once there and handed down because resolving it costs a pass over
 // every row on a continuous category axis, and this runs once a group. Each
-// offset is stepped with the positions, so a corner takes the same offset as
-// the canvas point it stands for, and a point the coord adds along an edge
-// takes the offset of the edge's start. Under `coord-radial` the offset lands on
-// the positions instead, so the edges follow the polar grid from the shifted
-// points. With no canvas offset the whole path is projected in one call rather
-// than edge by edge.
+// row's mapped position takes its own dodge shift before the staircase and the
+// projection, so a corner and the points the coord adds along an edge follow
+// the shifted positions.
 #let rows-to-points(rows, mapping, ctx, dodge, direction: none) = {
-  let canvas-shift = dodge != none and dodge.direction != none
   let uvs = ()
-  let deltas = ()
   let mapped = path-uvs(ctx, rows.map(row => (
     row.at(mapping.x, default: none),
     row.at(mapping.y, default: none),
   )))
   for (row, uv) in rows.zip(mapped) {
     if uv == none { continue }
-    uvs.push(dodge-uv(dodge, row, uv))
-    if canvas-shift { deltas.push(dodge-delta(dodge, row)) }
+    uvs.push(if dodge == none { uv } else { dodge-uv(dodge, row, uv) })
   }
   if uvs.len() == 0 { return () }
   if direction != none { uvs = stair(uvs, direction) }
-  if not canvas-shift { return project-uvs(ctx, uvs) }
-  if direction != none { deltas = stair(deltas, direction) }
-  let pts = ()
-  for i in range(uvs.len() - 1) {
-    let edge = project-uvs(ctx, (uvs.at(i), uvs.at(i + 1)))
-    for p in edge.slice(0, -1) {
-      pts.push(shift-point(p, deltas.at(i)))
-    }
-  }
-  pts.push(shift-point(to-canvas(ctx, ..uvs.last()), deltas.last()))
-  pts
+  project-uvs(ctx, uvs)
 }
 
 #let draw-grouped-paths(layer, ctx, build-pts) = {
