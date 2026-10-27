@@ -35,8 +35,8 @@
   (
     x-trained: x-trained,
     y-trained: y-trained,
-    x-range: if flipped { ctx.py-range } else { ctx.px-range },
-    y-range: if flipped { ctx.px-range } else { ctx.py-range },
+    x-range: (ctx.coord.axis-range)(ctx, x),
+    y-range: (ctx.coord.axis-range)(ctx, y),
   )
 }
 

@@ -135,6 +135,7 @@
   trained: (x: "tx", y: "ty"),
   px-range: (0, 10),
   py-range: (0, 5),
+  coord: coord-cartesian(),
 )
 #assert.eq(
   user-axes(axes-ctx + flip),
@@ -143,6 +144,16 @@
 #assert.eq(
   user-axes(axes-ctx),
   (x-trained: "tx", y-trained: "ty", x-range: (0, 10), y-range: (0, 5)),
+)
+
+// The ranges come from the coord, so a coord that overrides `axis-range`
+// moves them too.
+#let inset-coord = coord-cartesian() + (
+  axis-range: (ctx, axis) => if axis == "x" { (1, 9) } else { (2, 4) },
+)
+#assert.eq(
+  user-axes(axes-ctx + flip + (coord: inset-coord)),
+  (x-trained: "ty", y-trained: "tx", x-range: (2, 4), y-range: (1, 9)),
 )
 #assert.eq(user-axes(axes-ctx + (trained: (x: "tx"))), none)
 
