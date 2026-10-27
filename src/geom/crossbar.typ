@@ -164,6 +164,7 @@
       let v-mid = map-value(mid)
       let v-lo = map-value(lo)
       let v-hi = map-value(hi)
+      if v-mid == none or v-lo == none or v-hi == none { continue }
       let centre = cat-c
       let half = span / 2
       if position-name == "dodge" {

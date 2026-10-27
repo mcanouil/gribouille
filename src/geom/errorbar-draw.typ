@@ -25,7 +25,13 @@
 // axis. A centre on theta gives a spoke spine, so each cap is an arc at the
 // radius of its end. A centre on the radius gives an arc spine, so each cap is
 // a radial tick at the angle of its end, and stops at the centre.
-#let _draw-radial-band-caps(radial, band, centre-is-theta, ends, stroke-spec) = {
+#let _draw-radial-band-caps(
+  radial,
+  band,
+  centre-is-theta,
+  ends,
+  stroke-spec,
+) = {
   let (lo, hi) = band
   for end in ends {
     if centre-is-theta {
@@ -67,7 +73,12 @@
 
   let centre-range = (ctx.coord.axis-range)(ctx, centre-axis)
   let position-name = layer-position-name(layer)
+  // The shared dodge slot is measured on the user's x. A bar whose centre sits
+  // on the other axis, as for errorbarh, dodges within its own cap band.
   let dodge = dodge-geometry(ctx, layer)
+  if dodge != none and dodge.axis != (if centre-axis == "x" { 0 } else { 1 }) {
+    dodge = none
+  }
   let map-centre = axis-mapper(ctx, centre-axis)
   let map-span = axis-mapper(ctx, axis)
   let radial = ctx.at("radial", default: none)
