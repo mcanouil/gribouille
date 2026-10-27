@@ -165,7 +165,11 @@
       let gaps = range(mapped.len() - 1).map(i => (
         calc.abs(mapped.at(i + 1) - mapped.at(i))
       ))
-      calc.min(..gaps) * width
+      // The gaps are lengths, so the span takes the sign of the range, as
+      // the discrete slot width does: the slots then follow the level order
+      // on a range that runs backwards, such as a clockwise theta sweep.
+      let sign = if cat-hi < cat-lo { -1 } else { 1 }
+      sign * calc.min(..gaps) * width
     }
   }
 

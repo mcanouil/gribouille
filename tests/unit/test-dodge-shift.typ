@@ -62,6 +62,24 @@
 #assert-close(theta-geom.span, -calc.pi * 0.9)
 #assert.eq(theta-geom.axis, 0)
 
+// A continuous x under theta on x keeps the sign of the sweep too, so its
+// slots run round the circle in the same order as the discrete ones.
+#let cont-theta-ctx = {
+  let coord = coord-radial()
+  let cont = (type: "continuous", domain: (0, 4))
+  (
+    trained: (x: cont, y: y-cont),
+    coord: coord,
+    radial: (coord.frame)(cont, y-cont, (0, 10), (0, 6)),
+    resolve-data: _ => ((x: 0), (x: 1), (x: 4)),
+    resolve-mapping: _ => (x: "x"),
+  )
+}
+#assert-close(
+  dodge-geometry(cont-theta-ctx, layer-dodge).span,
+  -2 * calc.pi / 4 * 0.9,
+)
+
 // With theta on y, x takes the radius: the two levels split it into rings.
 #let ring-ctx = radial-ctx("y")
 #let ring-geom = dodge-geometry(ring-ctx, layer-dodge)
