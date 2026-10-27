@@ -154,7 +154,6 @@
 
   let axes = user-axes(ctx)
   if axes == none or axes.x-trained.type != "continuous" { return }
-  let pt = user-point.with(ctx)
   let map-x = axis-mapper(ctx, user-axis-key("x", ctx), space: "stat")
   let map-y = axis-mapper(ctx, user-axis-key("y", ctx))
 
@@ -206,7 +205,7 @@
     )
     let uvs = top + base
     if uvs.any(p => p.at(0) == none) { continue }
-    let pts = uvs.map(((u, v)) => pt(u, v))
+    let pts = uvs.map(((u, v)) => user-point(ctx, u, v))
 
     let final-fill = resolve-channel(
       "fill",
