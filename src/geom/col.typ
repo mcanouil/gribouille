@@ -51,17 +51,20 @@
   if min-gap == none { return none-ext }
   // Dodge writes its offset on every row, so the first row tells whether
   // the layer dodged, and the widths are read only when it did. One width
-  // for every row splits each gap evenly, inside `width` of it.
+  // for every row splits each gap evenly, inside `width` of it. A row with
+  // no `width` takes the layer width, as in dodge.
+  let bar-frac = params.at("width", default: 0.9)
   let fills-gap = (
     "_dodge-offset" in data.first()
       and data
-        .map(r => parse-number(r.at("width", default: none)))
-        .filter(w => w != none)
+        .map(r => {
+          let w = parse-number(r.at("width", default: none))
+          if w == none { bar-frac } else { w }
+        })
         .dedup()
         .len()
         > 1
   )
-  let bar-frac = params.at("width", default: 0.9)
   let reach = if fills-gap { calc.max(bar-frac, 1) } else { bar-frac }
   let bar-half = min-gap * reach / 2
   if bar-half <= 0 { return none-ext }

@@ -503,4 +503,17 @@
   uniform-post.x.domain,
 ))
 
+// A row with no `width` takes the layer width in dodge, so one group of
+// 0.3 against the default 0.9 still fills the whole gap.
+#let partial-post = post-domains(
+  (geom-col(position: "dodge"),),
+  dodge-mapping,
+  mixed-data.map(r => if r.g == "a" { r } else {
+    (x: r.x, y: r.y, g: r.g)
+  }),
+)
+#assert(approx-pair(partial-post.x.domain, (0.5, 3.5)), message: repr(
+  partial-post.x.domain,
+))
+
 geom extents tests passed.
