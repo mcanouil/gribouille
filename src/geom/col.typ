@@ -9,14 +9,14 @@
 #import "../position/apply.typ": layer-marks-abut, layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../coord/project.typ": axis-mapper
+#import "../coord/project.typ": axis-mapper, project-uvs
 #import "../scale/train.typ": discrete-slot-width, mapping-ref-col
 #import "../utils/bin.typ": bin-half-width
 #import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": (
-  radial-category-span, radial-mappers, radial-outline, radial-wedge,
+  radial-category-span, radial-mappers, radial-wedge,
 )
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/stroke.typ": (
@@ -219,16 +219,13 @@
 // The wedge of one bar segment under `coord-radial`, with the same corners
 // as `_draw-segment`. The category is the angle under `theta: "x"` and the
 // radius under `theta: "y"`.
-#let _draw-wedge(radial, segment, top, sliver: none) = {
-  let polar = if radial.cat-is-theta { ((u, v)) => (u, v) } else {
-    ((u, v)) => (v, u)
-  }
-  let pts = if sliver == none {
-    let (theta-lo, r-lo) = polar((segment.lo, segment.v-lo))
-    let (theta-hi, r-hi) = polar((segment.hi, top))
-    radial-wedge(theta-lo, theta-hi, r-lo, r-hi, radial)
+#let _draw-wedge(ctx, segment, top, sliver: none) = {
+  let pts = if sliver != none {
+    project-uvs(ctx, _segment-corners(segment, top, sliver), closed: true)
+  } else if ctx.radial.cat-is-theta {
+    radial-wedge(segment.lo, segment.hi, segment.v-lo, top, ctx.radial)
   } else {
-    radial-outline(_segment-corners(segment, top, sliver).map(polar), radial)
+    radial-wedge(segment.v-lo, top, segment.lo, segment.hi, ctx.radial)
   }
   cetz.draw.line(
     ..pts,
@@ -243,7 +240,8 @@
 // next to it, and the group drawn last would set where that edge falls.
 // A sealed segment reaches `rise(segment)` up into the sealed segment above
 // it, and `across(segment, lo)` across into the bar on its upper category
-// side over the span that bar covers, from value `lo` up. Stacks draw in
+// side over the span that bar covers, from value `lo` up. Both default to
+// `_overlap`, the plain length on a Cartesian panel. Stacks draw in
 // category order and each one from the bottom up, so a segment drawn later
 // covers every overlap. No overlap reaches past the top of its own stack or
 // the far edge of the next bar, so each outer edge stays where the data
@@ -252,7 +250,13 @@
 // `turn`, when set, is the value span of a full circle. A stack that spans
 // it has its top meet its bottom, and its bottom segment, drawn first,
 // reaches down into the top segment, which covers that overlap.
-#let _draw-stacked(segments, draw, rise, across, turn: none) = {
+#let _draw-stacked(
+  segments,
+  draw,
+  rise: _ => _overlap,
+  across: (..) => _overlap,
+  turn: none,
+) = {
   let stacks = bucket-index(
     segments.sorted(key: s => (s.lo, s.v-lo)),
     s => repr(s.lo),
@@ -282,7 +286,7 @@
 
     for (j, segment) in stack.enumerate() {
       if not segment.sealed {
-        draw(segment, segment.v-hi, none)
+        draw(segment, segment.v-hi)
         continue
       }
       if j == 0 and wraps {
@@ -301,7 +305,7 @@
         )
         if s-hi > s-lo { (s-lo, s-hi, reach) } else { none }
       }
-      draw(segment, top, sliver)
+      draw(segment, top, sliver: sliver)
     }
   }
 }
@@ -397,7 +401,7 @@
     if use-minmax {
       segments.push(segment)
     } else {
-      _draw-wedge(radial, segment, segment.v-hi)
+      _draw-wedge(ctx, segment, segment.v-hi)
     }
   }
   if not use-minmax { return }
@@ -407,26 +411,14 @@
   if radial.cat-is-theta {
     _draw-stacked(
       segments,
-      (segment, top, sliver) => _draw-wedge(
-        radial,
-        segment,
-        top,
-        sliver: sliver,
-      ),
-      _ => _overlap,
-      (_, lo) => _overlap-angle(lo),
+      _draw-wedge.with(ctx),
+      across: (_, lo) => _overlap-angle(lo),
     )
   } else {
     _draw-stacked(
       segments,
-      (segment, top, sliver) => _draw-wedge(
-        radial,
-        segment,
-        top,
-        sliver: sliver,
-      ),
-      segment => _overlap-angle(segment.lo),
-      (..) => _overlap,
+      _draw-wedge.with(ctx),
+      rise: segment => _overlap-angle(segment.lo),
       turn: 2 * calc.pi,
     )
   }
@@ -573,16 +565,6 @@
     }
   }
   if use-minmax {
-    _draw-stacked(
-      segments,
-      (segment, top, sliver) => _draw-segment(
-        ctx,
-        segment,
-        top,
-        sliver: sliver,
-      ),
-      _ => _overlap,
-      (..) => _overlap,
-    )
+    _draw-stacked(segments, _draw-segment.with(ctx))
   }
 }

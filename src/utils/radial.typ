@@ -265,23 +265,6 @@
   })
 }
 
-// Closed polygon through `corners`, each a `(theta, r)` pair in the units of
-// `radial-wedge`. An edge between two corners at the same radius follows the
-// arc, and every other edge is a straight line, so an outline built from
-// arcs and spokes keeps its round sides.
-#let radial-outline(corners, radial) = {
-  let pts = ()
-  for (i, (theta, r)) in corners.enumerate() {
-    let (theta-next, r-next) = corners.at(calc.rem(i + 1, corners.len()))
-    if r == r-next and theta != theta-next {
-      pts += radial-arc(theta, theta-next, r, radial).slice(0, -1)
-    } else {
-      pts.push(polar-canvas(radial, theta, r))
-    }
-  }
-  pts
-}
-
 // Closed wedge polygon (centre or annulus segment). `theta-lo` and
 // `theta-hi` are math-space radians, `r-lo` and `r-hi` are canvas units.
 // `n` defaults to one step per ~5° of arc with a floor of eight steps so
