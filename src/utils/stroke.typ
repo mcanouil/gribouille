@@ -87,6 +87,20 @@
 /// \@internal
 #let seam-seal-thickness = 1.2pt
 
+/// Whether a mark seals its seams: it has no stroke of its own, it can
+/// share an edge with another mark, and its fill is fully opaque.
+///
+/// \@internal
+/// \@param stroke-spec The resolved stroke (from `resolve-stroke-spec`) or `none`.
+///
+/// \@param fill The resolved fill colour or `none`.
+///
+/// \@param abutting Whether this mark can share an edge with another.
+/// \@returns `true` when the seal applies.
+#let seals-seam(stroke-spec, fill, abutting: true) = (
+  stroke-spec == none and abutting and is-opaque(fill)
+)
+
 /// Seal the antialiasing seams between abutting filled shapes.
 ///
 /// The rasteriser antialiases every shared edge of adjacent fills (tiles,
@@ -103,10 +117,11 @@
 /// for marks that cannot touch, such as a tile below its full slot, a bar
 /// that neither stacks nor fills, and an unstacked ribbon.
 ///
-/// One case stays unsealed whichever way it is drawn: a stacked bar abuts
-/// on the value axis but not on the category axis, and a stroke cannot be
-/// applied to one side of a rectangle, so its category gap keeps losing the
-/// seal width.
+/// Stacked bars of `geom-col` do not use this stroke, on a Cartesian panel
+/// or under `coord-radial`. The stroke paints outside every side of a bar or
+/// a wedge, so a stacked segment would spill onto the bar next to it and into
+/// its category gap. Those segments overlap their neighbours by
+/// `seam-seal-thickness` instead, where `seals-seam` answers `true`.
 ///
 /// \@internal
 /// \@param stroke-spec The resolved stroke (from `resolve-stroke-spec`) or `none`.
@@ -117,7 +132,6 @@
 /// \@returns The stroke to draw with: the input when set, a fill-paint hairline when sealing applies, `none` otherwise.
 #let seal-seam(stroke-spec, fill, abutting: true) = {
   if stroke-spec != none { return stroke-spec }
-  if not abutting { return none }
-  if not is-opaque(fill) { return none }
+  if not seals-seam(stroke-spec, fill, abutting: abutting) { return none }
   build-stroke(seam-seal-thickness, fill)
 }
