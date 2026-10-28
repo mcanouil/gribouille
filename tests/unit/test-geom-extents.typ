@@ -308,9 +308,7 @@
 
 #let six-data = range(1, 7).map(i => (x: i, y: i))
 #let dodge-data = (
-  range(1, 7)
-    .map(i => ((x: i, y: i, g: "a"), (x: i, y: i + 1, g: "b")))
-    .join()
+  range(1, 7).map(i => ((x: i, y: i, g: "a"), (x: i, y: i + 1, g: "b"))).join()
 )
 #let dodge-mapping = aes(x: "x", y: "y", fill: "g")
 #for (layer, mapping, data, cases) in (
@@ -369,9 +367,12 @@
   assert(
     centre - half >= dodged.trained.x.domain.at(0)
       and centre + half <= dodged.trained.x.domain.at(1),
-    message: "dodged bar " + repr(row) + " outside " + repr(
-      dodged.trained.x.domain,
-    ),
+    message: "dodged bar "
+      + repr(row)
+      + " outside "
+      + repr(
+        dodged.trained.x.domain,
+      ),
   )
 }
 
@@ -392,9 +393,12 @@
   ell-narrow.trained.y.domain,
 ))
 #let ell-half = limited(geom-ellipse(), ell-mapping, ell-data, (auto, 3))
-#assert(approx-pair(ell-half, (-1.8194651573476779, 4)), message: repr(
-  ell-half,
-))
+#assert(
+  approx-pair(ell-half, (-1.8194651573476779, 4)),
+  message: repr(
+    ell-half,
+  ),
+)
 #let tile-half = limited(
   geom-tile(),
   aes(x: "x", y: "y"),
