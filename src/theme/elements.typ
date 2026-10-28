@@ -321,7 +321,8 @@
 ///
 /// Pass the result to \@theme under `axis-ticks` and its per-axis, per-side,
 /// and minor variants (`axis-ticks-x`, `axis-ticks-y-right`,
-/// `axis-ticks-minor`, ...). \@element-line is accepted on the same keys and
+/// `axis-ticks-minor`, ...) and under `legend-ticks` for the ticks of a colour
+/// bar. \@element-line is accepted on the same keys and
 /// leaves `length` to the cascade. \@element-blank turns the marks off
 /// entirely: no ink and no reserved depth around the panel.
 ///

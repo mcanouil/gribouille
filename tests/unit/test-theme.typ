@@ -266,4 +266,17 @@
   (0.2 / 0.5) * 1pt,
 )
 
+// The colour bar tick is a tick surface: it has a length a theme can set, and
+// the default is the length it has always drawn at.
+#assert.eq(_tick-length(d0, "legend-ticks"), 0.1cm)
+#let long-bar-tick = merge-theme(theme(
+  legend-ticks: element-tick(length: 0.3cm),
+))
+#assert.eq(_tick-length(long-bar-tick, "legend-ticks"), 0.3cm)
+
+// A legend spine is blank until a theme gives it a stroke, and the gap between
+// the parts of a guide adds no room by default.
+#assert.eq(resolve-element(d0, "legend-line").kind, "element-blank")
+#assert.eq(d0.guide-spacing, 0cm)
+
 Theme tests passed.

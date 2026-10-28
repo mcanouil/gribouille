@@ -80,7 +80,9 @@
   // log axis reads at a glance. They inherit `axis-ticks` the same way.
   axis-ticks-mid: (length: 75%),
   // Thinner than the base to keep colour-bar ticks subtle.
-  legend-ticks: element-line(stroke: (0.3 / 0.5) * 100%),
+  legend-ticks: element-tick(stroke: (0.3 / 0.5) * 100%, length: 0.1cm),
+  // Spine along a colour bar. Blank by default: a legend has never drawn one.
+  legend-line: element-blank(),
 
   // Per-surface rect records
   panel-background: element-rect(),
@@ -100,6 +102,11 @@
   // dictionary sets column and row gaps independently. A facet's own `gutter:`
   // argument overrides this.
   panel-spacing: 0.5cm,
+
+  // Gap between the parts of a legend, for example the title and the keys or
+  // the colour bar. The title and tick bands carry their own room, so the
+  // default adds none.
+  guide-spacing: 0cm,
 
   // Global legend placement; `auto` defers to the natural default (`"right"`).
   // Accepts the same values as `guide-legend(position:)` and is overridden by

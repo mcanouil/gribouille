@@ -12,6 +12,9 @@
 
 ### Changes
 
+- feat: `theme()` takes `legend-ticks: element-tick(length: ...)`, so a theme sets the length of a colour bar tick as it does for an axis tick. The default stays `0.1cm`. (#372)
+- feat: `theme()` takes `guide-spacing`, the gap between the parts of a legend, such as its title and its colour bar. The default is `0cm`. (#372)
+- feat: `theme()` takes `legend-line`, the stroke of a legend spine. It is blank by default, so a legend draws none. (#372)
 - feat: Under `coord-radial`, lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline` and the lines of `geom-smooth` and `geom-function` follow the polar grid as curves, as in ggplot2, instead of straight chords. Polygons keep straight edges. (#359)
 - fix: `geom-qq()` and `geom-qq-line()` title their axes "theoretical" and "sample", also when the data is mapped with `aes(sample: ...)`. A scale name or a `labels()` entry still wins. (#371)
 - fix: Free facet scales keep `typst()` markup on the tick labels of a positional axis, as fixed scales do. (#371)
