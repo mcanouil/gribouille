@@ -339,13 +339,7 @@
         let s-hi = calc.min(top, span.at(1))
         if s-hi > s-lo { (s-lo, s-hi) } else { none }
       }
-      _draw-segment(
-        ctx,
-        (..segment, stroke: none),
-        top,
-        sliver: sliver,
-        overlap: overlap,
-      )
+      _draw-segment(ctx, segment, top, sliver: sliver, overlap: overlap)
     }
   }
 }
@@ -481,7 +475,7 @@
       v-lo: calc.min(v-lo-c, v-hi-c),
       v-hi: calc.max(v-lo-c, v-hi-c),
       fill: final-fill,
-      stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
+      stroke: stroke-spec,
       sealed: sealed,
     )
     if use-minmax {
