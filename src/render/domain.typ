@@ -210,8 +210,9 @@
 }
 
 // Apply post-training domain fix-ups (bar-zero floor, geom extents, bin
-// edges of binned stats, ribbon ymin/ymax padding, discrete bar padding). Called once globally and once
-// per panel under free scales so each panel's domain reflects its own subset.
+// edges of binned stats, ribbon ymin/ymax padding, discrete bar padding).
+// Called once globally and once per panel under free scales so each panel's
+// domain reflects its own subset.
 #let _post-train(trained, layers) = {
   let scan = _post-train-scan(layers)
 
@@ -246,7 +247,7 @@
   // runs once per layer on values in the trained-domain space; discrete axes
   // ignore it, and a missing axis is seeded from the extents. A layer whose
   // stat publishes bins also reaches the outer bin edges on `x`, whatever
-  // its geom.
+  // its geom, as ggplot2 trains `x` on the `xmin` and `xmax` of each bin.
   let cutoffs = (x: _limit-cutoff(trained, "x"), y: _limit-cutoff(trained, "y"))
   for layer in layers {
     let spec = GEOMS

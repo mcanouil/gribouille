@@ -492,4 +492,15 @@
   mixed-post.x.domain,
 ))
 
+// One width for every row splits each gap evenly, so the pad stays at the
+// bar half-width.
+#let uniform-post = post-domains(
+  (geom-col(position: "dodge"),),
+  dodge-mapping,
+  mixed-data.map(r => r + (width: 0.5)),
+)
+#assert(approx-pair(uniform-post.x.domain, (0.55, 3.45)), message: repr(
+  uniform-post.x.domain,
+))
+
 geom extents tests passed.

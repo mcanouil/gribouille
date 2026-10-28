@@ -28,9 +28,9 @@
 
 // Outer edges of the bars on a continuous `x` axis. A bar spans
 // `width` times the smallest gap between distinct `x` values, the same rule
-// as `draw`. Dodged rows that carry their own `width` share out the whole
-// gap, so the outer bars reach half a gap past the outer `x`. `none` when the
-// layer has no numeric `x` or nothing to pad.
+// as `draw`. Dodged rows of mixed `width` share out the whole gap, so the
+// outer bars reach half a gap past the outer `x`. `none` when the layer has
+// no numeric `x` or nothing to pad.
 #let _extents(params, mapping, data) = {
   let none-ext = (x: none, y: none)
   let x-col = mapping-ref-col(mapping.at("x", default: none))
@@ -50,10 +50,16 @@
   }
   if min-gap == none { return none-ext }
   // Dodge writes its offset on every row, so the first row tells whether
-  // the layer dodged, and the full scan runs only when it did.
+  // the layer dodged, and the widths are read only when it did. One width
+  // for every row splits each gap evenly, inside `width` of it.
   let fills-gap = (
     "_dodge-offset" in data.first()
-      and data.any(r => parse-number(r.at("width", default: none)) != none)
+      and data
+        .map(r => parse-number(r.at("width", default: none)))
+        .filter(w => w != none)
+        .dedup()
+        .len()
+        > 1
   )
   let bar-frac = params.at("width", default: 0.9)
   let reach = if fills-gap { calc.max(bar-frac, 1) } else { bar-frac }
