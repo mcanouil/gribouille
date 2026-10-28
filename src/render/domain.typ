@@ -6,7 +6,8 @@
 #import "../utils/types.typ": parse-number
 #import "common.typ": _track-min-max
 #import "../geom/registry.typ": GEOMS
-#import "../stat/apply.typ": stat-flush
+#import "../stat/apply.typ": stat-binned, stat-flush
+#import "../utils/bin.typ": bin-x-extents
 
 // Fold the ribbon y-range, so `ymin`/`ymax` extend the trained y domain.
 #let _scan-rows(mapping, layer-data, acc) = {
@@ -225,14 +226,17 @@
   // mark is drawn whole. The limits are recorded as `oob-cutoff`, so the
   // out-of-bounds pass still cuts at them once the domain is wider. The hook
   // runs once per layer on values in the trained-domain space; discrete axes
-  // ignore it, and a missing axis is seeded from the extents.
+  // ignore it, and a missing axis is seeded from the extents. A layer whose
+  // stat publishes bins also reaches the outer bin edges on `x`, whatever
+  // its geom.
   let cutoffs = (x: _limit-cutoff(trained, "x"), y: _limit-cutoff(trained, "y"))
   for layer in layers {
     let spec = GEOMS
       .at(layer.at("name", default: ""), default: (spec: (extents: none)))
       .spec
     let mapping = layer.at("mapping", default: none)
-    if spec.extents == none or mapping == none { continue }
+    let binned = stat-binned(layer.at("stat-source", default: "identity"))
+    if mapping == none or (spec.extents == none and not binned) { continue }
     let centre = spec.at("centre", default: (x: "x", y: "y"))
     let bounds = ()
     for axis in ("x", "y") {
@@ -249,17 +253,26 @@
         b.cutoff,
       )))
     }
-    let ext = (spec.extents)(layer.at("params", default: (:)), mapping, data)
-    for axis in ("x", "y") {
-      let range = ext.at(axis, default: none)
-      if range == none { continue }
-      let (ext-lo, ext-hi) = range
-      trained = _extend-domain(trained, axis, ext-lo, ext-hi)
-      let cutoff = cutoffs.at(axis)
-      if cutoff != none and trained.at(axis).type == "continuous" {
-        let t = trained.at(axis)
-        t.insert("oob-cutoff", cutoff)
-        trained.insert(axis, t)
+    let exts = ()
+    if spec.extents != none {
+      exts.push((spec.extents)(layer.at("params", default: (:)), mapping, data))
+    }
+    if binned {
+      let x-col = mapping-ref-col(mapping.at("x", default: none))
+      exts.push((x: bin-x-extents(data, x-col), y: none))
+    }
+    for ext in exts {
+      for axis in ("x", "y") {
+        let range = ext.at(axis, default: none)
+        if range == none { continue }
+        let (ext-lo, ext-hi) = range
+        trained = _extend-domain(trained, axis, ext-lo, ext-hi)
+        let cutoff = cutoffs.at(axis)
+        if cutoff != none and trained.at(axis).type == "continuous" {
+          let t = trained.at(axis)
+          t.insert("oob-cutoff", cutoff)
+          trained.insert(axis, t)
+        }
       }
     }
   }

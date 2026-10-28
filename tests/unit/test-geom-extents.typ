@@ -3,7 +3,8 @@
 // the panel. Discrete axes keep their trained domain, and under free facet
 // scales each panel pads from its own tiles only. The col, ellipse, and
 // binned-row padding go through the same hook, and keep the domains that
-// `_post-train` produced before they moved there.
+// `_post-train` produced before they moved there. Half a bin of padding
+// comes from the binning stats, not from a data column named `width`.
 
 #import "../../src/scale/train.typ": train
 #import "../../src/coord/expand.typ": apply-expand
@@ -17,7 +18,7 @@
 #import "../../src/geom/histogram.typ": geom-histogram
 #import "../../src/geom/freqpoly.typ": geom-freqpoly
 #import "../../src/geom/dotplot.typ": geom-dotplot, spec as dotplot-spec
-#import "../../src/geom/line.typ": spec as line-spec
+#import "../../src/geom/line.typ": geom-line, spec as line-spec
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/aes.typ": aes
 #import "../../src/data.typ": as-factor
@@ -206,10 +207,11 @@
 #for (name, s) in (
   ("col", col-spec),
   ("ellipse", ellipse-spec),
-  ("dotplot", dotplot-spec),
-  ("line", line-spec),
 ) {
   assert(type(s.extents) == function, message: name + " has no extents hook")
+}
+#for (name, s) in (("dotplot", dotplot-spec), ("line", line-spec)) {
+  assert.eq(s.extents, none, message: name + " pads from its stat only")
 }
 
 #let post-domains(layers, mapping, data) = {
@@ -264,8 +266,10 @@
 
 #let bin-data = range(20).map(i => (v: calc.rem(i * 7, 13) * 0.5))
 #let bin-mapping = aes(x: "v")
+// The bins span 0 to 6 and the bars fill them, so x pads half a bin to the
+// bin edges, not a whole bin.
 #let hist-post = post-domains((geom-histogram(bins: 5),), bin-mapping, bin-data)
-#assert(approx-pair(hist-post.x.domain, (-0.6, 6.6)), message: repr(
+#assert(approx-pair(hist-post.x.domain, (0, 6)), message: repr(
   hist-post.x.domain,
 ))
 #assert(approx-pair(hist-post.y.domain, (0, 6)), message: repr(
@@ -336,10 +340,10 @@
     bin-mapping,
     bin-data,
     (
-      ((2, 5), (1.8, 5.4)),
-      ((0, 10), (-0.6, 10)),
-      ((5, 2), (5.4, 1.8)),
-      ((auto, 3), (-0.6, 4.2)),
+      ((2, 5), (2, 5)),
+      ((0, 10), (0, 10)),
+      ((5, 2), (5, 2)),
+      ((auto, 3), (0, 3.6)),
     ),
   ),
 ) {
@@ -441,6 +445,47 @@
 )
 #assert(approx-pair(wide-post.x.domain, (0.55, 8)), message: repr(
   wide-post.x.domain,
+))
+
+// --- a data column named `width` does not pad x ---
+
+#let width-col-data = (
+  (x: 1, y: 3, width: 1),
+  (x: 2, y: 5, width: 1),
+  (x: 4, y: 2, width: 1),
+)
+#let width-col-post = post-domains((geom-col(),), col-mapping, width-col-data)
+#assert(approx-pair(width-col-post.x.domain, (0.55, 4.45)), message: repr(
+  width-col-post.x.domain,
+))
+#let width-line-post = post-domains(
+  (geom-line(),),
+  col-mapping,
+  width-col-data,
+)
+#assert(approx-pair(width-line-post.x.domain, (1, 4)), message: repr(
+  width-line-post.x.domain,
+))
+
+// --- dodged bars of mixed `width` keep their whole slot inside x ---
+
+// Mixed widths per x fill the whole gap between two x values, so the outer
+// bars reach half a gap past the outer x values.
+#let mixed-data = (
+  range(1, 4)
+    .map(i => (
+      (x: i, y: i, g: "a", width: 0.3),
+      (x: i, y: i + 1, g: "b", width: 0.7),
+    ))
+    .join()
+)
+#let mixed-post = post-domains(
+  (geom-col(position: "dodge"),),
+  dodge-mapping,
+  mixed-data,
+)
+#assert(approx-pair(mixed-post.x.domain, (0.5, 3.5)), message: repr(
+  mixed-post.x.domain,
 ))
 
 geom extents tests passed.

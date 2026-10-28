@@ -8,8 +8,6 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper, project-point
-#import "../scale/train.typ": mapping-ref-col
-#import "../utils/bin.typ": bin-x-extents
 #import "../stat/bindot.typ": stat-bindot
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/aes-pair.typ": resolve-pair-defaults
@@ -19,13 +17,10 @@
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
 )
 
-// The dots fill their bins, so `x` widens by half a bin on each side.
+// The dots fill their bins; stat-bindot widens `x` to the bin edges.
 #let spec = (
   reads: ("x", "y", "colour", "fill", "alpha"),
-  extents: (params, mapping, data) => (
-    x: bin-x-extents(data, mapping-ref-col(mapping.at("x", default: none))),
-    y: none,
-  ),
+  extents: none,
 )
 
 /// Dotplot layer: one dot per observation, stacked within bins.

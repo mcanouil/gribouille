@@ -11,7 +11,6 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper, project-uvs
 #import "../scale/train.typ": discrete-slot-width, mapping-ref-col
-#import "../utils/bin.typ": bin-half-width
 #import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
@@ -29,8 +28,9 @@
 
 // Outer edges of the bars on a continuous `x` axis. A bar spans
 // `width` times the smallest gap between distinct `x` values, the same rule
-// as `draw`, and rows from stat-bin also widen `x` by half a bin. `none`
-// when the layer has no numeric `x` or nothing to pad.
+// as `draw`. Dodged rows that carry their own `width` share out the whole
+// gap, so the outer bars reach half a gap past the outer `x`. `none` when the
+// layer has no numeric `x` or nothing to pad.
 #let _extents(params, mapping, data) = {
   let none-ext = (x: none, y: none)
   let x-col = mapping-ref-col(mapping.at("x", default: none))
@@ -48,15 +48,14 @@
     if gap == 0 { continue }
     if min-gap == none or gap < min-gap { min-gap = gap }
   }
-  let bar-half = if min-gap == none { 0.0 } else {
-    min-gap * params.at("width", default: 0.9) / 2
-  }
-  let bin-half = bin-half-width(data)
-  if bar-half <= 0 and bin-half <= 0 { return none-ext }
-  (
-    x: (xs.first() - bin-half - bar-half, xs.last() + bin-half + bar-half),
-    y: none,
-  )
+  if min-gap == none { return none-ext }
+  let bar-half = min-gap * params.at("width", default: 0.9) / 2
+  let fills-gap = data.any(r => (
+    "_dodge-offset" in r and parse-number(r.at("width", default: none)) != none
+  ))
+  if fills-gap { bar-half = calc.max(bar-half, min-gap / 2) }
+  if bar-half <= 0 { return none-ext }
+  (x: (xs.first() - bar-half, xs.last() + bar-half), y: none)
 }
 
 #let spec = (

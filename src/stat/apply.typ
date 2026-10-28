@@ -45,6 +45,8 @@
 // `flush: true` (default `false`) turns off the automatic position expansion
 // on both axes, so a grid of whole cells sits flush with the panel; an
 // explicit scale `expand` still wins on the side the user set.
+// `binned: true` (default `false`) marks a stat whose rows are whole bins
+// along `x`, `width` wide; the trained `x` then reaches the outer bin edges.
 #let _STATS = (
   identity: (
     apply: identity-stat.apply,
@@ -56,6 +58,7 @@
     reads: ("x", "weight"),
     ctor: bin-stat.stat-bin,
     setup: panel-bin-grid,
+    binned: true,
   ),
   "bin-2d": (
     apply: bin-2d-stat.apply,
@@ -74,6 +77,7 @@
     reads: ("x",),
     ctor: bindot-stat.stat-bindot,
     setup: panel-bin-grid,
+    binned: true,
   ),
   contour: (
     apply: contour-stat.apply,
@@ -227,6 +231,11 @@
 // Whether the stat `name` asks for a flush panel (see `flush` above).
 #let stat-flush(name) = {
   _STATS.at(name, default: (:)).at("flush", default: false)
+}
+
+// Whether the stat `name` publishes whole bins (see `binned` above).
+#let stat-binned(name) = {
+  _STATS.at(name, default: (:)).at("binned", default: false)
 }
 
 #let stat-default-params(name) = {
