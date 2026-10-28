@@ -94,14 +94,15 @@
 #assert.eq(x-ext((3.0, 3.0, 3.0)), none)
 #assert.eq(x-ext(()), none)
 
-// Rows from stat-bin also pad by half a bin, on top of the bar half-width.
+// A `width` column in the rows adds nothing to the bar half-width: the
+// binning stats pad their own bins.
 #assert.eq(
   (col-spec.extents)(
     (width: 1.0),
     (x: "x"),
     ((x: 1.0, width: 2.0), (x: 3.0, width: 2.0)),
   ).x,
-  (1.0 - 1.0 - 1.0, 3.0 + 1.0 + 1.0),
+  (1.0 - 1.0, 3.0 + 1.0),
 )
 
 geom-col continuous-axis padding tests passed.

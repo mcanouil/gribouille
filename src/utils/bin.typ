@@ -147,11 +147,9 @@
 }
 
 // Half the widest bin in the rows of stat-bin or stat-bindot, read from the
-// `width` column that both publish. Zero when the first row has no `width`.
+// `width` column that both publish. Callers pass only rows from those stats,
+// so a data column of the same name never reaches here.
 #let bin-half-width(rows) = {
-  if rows.len() == 0 or rows.first().at("width", default: none) == none {
-    return 0.0
-  }
   let half = 0.0
   for row in rows {
     let w = row.at("width", default: none)
@@ -161,8 +159,8 @@
 }
 
 // The `x` range of binned rows, widened by half a bin on each side so the
-// outer bins stay inside the panel. `none` when the rows are not binned or
-// have no numeric `x`.
+// outer bins stay inside the panel. `none` when the rows have no bin width or
+// no numeric `x`.
 #let bin-x-extents(rows, x-col) = {
   let half = bin-half-width(rows)
   if half <= 0 or x-col == none { return none }

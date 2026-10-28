@@ -11,7 +11,6 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper, project-uvs
 #import "../scale/train.typ": discrete-slot-width, mapping-ref-col
-#import "../utils/bin.typ": bin-half-width
 #import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
@@ -29,8 +28,9 @@
 
 // Outer edges of the bars on a continuous `x` axis. A bar spans
 // `width` times the smallest gap between distinct `x` values, the same rule
-// as `draw`, and rows from stat-bin also widen `x` by half a bin. `none`
-// when the layer has no numeric `x` or nothing to pad.
+// as `draw`. Dodged rows of mixed `width` share out the whole gap, so the
+// outer bars reach half a gap past the outer `x`. `none` when the layer has
+// no numeric `x` or nothing to pad.
 #let _extents(params, mapping, data) = {
   let none-ext = (x: none, y: none)
   let x-col = mapping-ref-col(mapping.at("x", default: none))
@@ -48,15 +48,27 @@
     if gap == 0 { continue }
     if min-gap == none or gap < min-gap { min-gap = gap }
   }
-  let bar-half = if min-gap == none { 0.0 } else {
-    min-gap * params.at("width", default: 0.9) / 2
-  }
-  let bin-half = bin-half-width(data)
-  if bar-half <= 0 and bin-half <= 0 { return none-ext }
-  (
-    x: (xs.first() - bin-half - bar-half, xs.last() + bin-half + bar-half),
-    y: none,
+  if min-gap == none { return none-ext }
+  // Dodge writes its offset on every row, so the first row tells whether
+  // the layer dodged, and the widths are read only when it did. One width
+  // for every row splits each gap evenly, inside `width` of it. A row with
+  // no `width` takes the layer width, as in dodge.
+  let bar-frac = params.at("width", default: 0.9)
+  let fills-gap = (
+    "_dodge-offset" in data.first()
+      and data
+        .map(r => {
+          let w = parse-number(r.at("width", default: none))
+          if w == none { bar-frac } else { w }
+        })
+        .dedup()
+        .len()
+        > 1
   )
+  let reach = if fills-gap { calc.max(bar-frac, 1) } else { bar-frac }
+  let bar-half = min-gap * reach / 2
+  if bar-half <= 0 { return none-ext }
+  (x: (xs.first() - bar-half, xs.last() + bar-half), y: none)
 }
 
 #let spec = (
