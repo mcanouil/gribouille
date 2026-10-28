@@ -294,7 +294,10 @@
       }
       let above = stack.at(j + 1, default: none)
       let top = if above != none and above.sealed {
-        calc.min(segment.v-hi + rise(segment), stack-top)
+        calc.max(
+          segment.v-hi,
+          calc.min(segment.v-hi + rise(segment), above.v-hi),
+        )
       } else { segment.v-hi }
       let sliver = if span == none { none } else {
         let s-lo = calc.max(segment.v-lo, span.at(0))
