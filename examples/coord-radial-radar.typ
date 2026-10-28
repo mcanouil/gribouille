@@ -15,9 +15,14 @@
     geom-point(size: 2pt),
   ),
   coord: coord-radial(theta: "x"),
-  scales: scales(x: scale-continuous(limits: (0, 6),
+  scales: scales(
+    x: scale-continuous(
+      limits: (0, 6),
       labels: v => if v == 6 { none } else { str(v) },
-      expand: false,), y: scale-continuous(limits: (0, 10))),
+      expand: false,
+    ),
+    y: scale-continuous(limits: (0, 10)),
+  ),
   labels: labels(title: "Vehicle Profile"),
   theme: theme-minimal(),
   width: 12cm,

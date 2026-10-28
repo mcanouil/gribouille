@@ -32,9 +32,18 @@
       size: 8pt,
     ),
   ),
-  scales: scales(x: scale-continuous(), y: scale-continuous(labels: format-comma()), colour: scale-discrete(limits: species-colours.keys(),
-      palette: species-colours.values(),), fill: scale-discrete(limits: species-colours.keys(),
-      palette: species-colours.values(),)),
+  scales: scales(
+    x: scale-continuous(),
+    y: scale-continuous(labels: format-comma()),
+    colour: scale-discrete(
+      limits: species-colours.keys(),
+      palette: species-colours.values(),
+    ),
+    fill: scale-discrete(
+      limits: species-colours.keys(),
+      palette: species-colours.values(),
+    ),
+  ),
   labels: labels(
     title: typst("Penguins *Dataset*"),
     subtitle: typst({

@@ -26,6 +26,9 @@
   ),
   base(
     "limits: (0, 8) / (0, 50)",
-    extra-scales: scales(x: scale-continuous(limits: (0, 8)), y: scale-continuous(limits: (0, 50))),
+    extra-scales: scales(
+      x: scale-continuous(limits: (0, 8)),
+      y: scale-continuous(limits: (0, 50)),
+    ),
   ),
 )

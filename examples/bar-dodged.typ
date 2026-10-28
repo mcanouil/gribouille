@@ -24,8 +24,8 @@
     x: scale-discrete(expand: false),
     y: scale-continuous(
       expand: (0%, 10%),
-        labels: format-currency(symbol: "$", digits: 0)
-    )
+      labels: format-currency(symbol: "$", digits: 0),
+    ),
   ),
   labels: labels(
     title: "Revenue by Quarter, Dodged",

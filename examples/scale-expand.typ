@@ -25,7 +25,10 @@
   base("default (5% expand)"),
   base(
     "expand: false",
-    scales: scales(x: scale-continuous(expand: false), y: scale-continuous(expand: false)),
+    scales: scales(
+      x: scale-continuous(expand: false),
+      y: scale-continuous(expand: false),
+    ),
   ),
   base(
     "coord-cartesian(expand: false)",

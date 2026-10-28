@@ -36,8 +36,14 @@
     data: pts,
     mapping: aes(x: "x", y: "y", shape: "w"),
     layers: (geom-point(size: 4pt),),
-    scales: scales(shape: scale-binned(n-breaks: 6,
-        palette: ("circle", "square", "triangle", "diamond", "cross", "x"),)),
+    scales: scales(shape: scale-binned(n-breaks: 6, palette: (
+      "circle",
+      "square",
+      "triangle",
+      "diamond",
+      "cross",
+      "x",
+    ))),
     labels: labels(
       title: "Scale-Shape-Binned with Custom Palette",
       x: "X",

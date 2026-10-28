@@ -18,7 +18,12 @@
   layers: (
     geom-line(stroke: 1pt, colour: accent, alpha: 0.5),
     geom-point(size: 3pt, fill: accent),
-    geom-typst(mapping: aes(nudge-y: 0.4cm), label: [#math.star], size: 12pt, colour: accent),
+    geom-typst(
+      mapping: aes(nudge-y: 0.4cm),
+      label: [#math.star],
+      size: 12pt,
+      colour: accent,
+    ),
     annotate(
       "typst",
       x: 3,
