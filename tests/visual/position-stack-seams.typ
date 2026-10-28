@@ -6,7 +6,8 @@
 // Right: stacked columns on a discrete x where one group is zero in a column.
 // The zero segment draws nothing, and each column keeps its own width. The
 // top segment of Q3 is thinner than the seal overlap, and the segment below
-// it still stops at its lower edge.
+// it still stops at its lower edge. Q4 holds a negative value, so its
+// segments overlap, and each one keeps its full height.
 
 #import "../../lib.typ": *
 
@@ -37,6 +38,9 @@
   (q: "Q2", g: "c", y: 1),
   (q: "Q3", g: "a", y: 0.02),
   (q: "Q3", g: "c", y: 4.98),
+  (q: "Q4", g: "a", y: 2),
+  (q: "Q4", g: "b", y: -1),
+  (q: "Q4", g: "c", y: 3),
 )
 
 #stack(
@@ -54,7 +58,7 @@
     data: cols,
     mapping: aes(x: "q", y: "y", fill: "g"),
     layers: (geom-col(position: "stack"),),
-    labels: labels(title: "columns with a zero segment"),
+    labels: labels(title: "stacked columns"),
     width: 7cm,
     height: 5cm,
   ),

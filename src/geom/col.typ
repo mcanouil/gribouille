@@ -325,7 +325,7 @@
     let span = if abuts {
       (calc.min(..next.map(s => s.v-lo)), calc.max(..next.map(s => s.v-hi)))
     } else { none }
-    let stack-top = stack.last().v-hi
+    let stack-top = calc.max(..stack.map(s => s.v-hi))
 
     for (j, segment) in stack.enumerate() {
       if not segment.sealed {
