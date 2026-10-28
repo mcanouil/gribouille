@@ -18,7 +18,10 @@
 #import "../utils/radial.typ": (
   radial-category-span, radial-mappers, radial-wedge,
 )
-#import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
+#import "../utils/bucket.typ": bucket-index
+#import "../utils/stroke.typ": (
+  resolve-stroke-spec, seal-seam, seals-seam, seam-seal-thickness,
+)
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
   resolve-geom-linewidth,
@@ -233,6 +236,11 @@
       default-colour,
       default-thickness: default-thickness,
     )
+    if (
+      use-minmax
+        and v-lo == v-hi
+        and seals-seam(stroke-spec, final-fill, abutting: abutting)
+    ) { continue }
 
     let centre = cat-c
     let bar-half = half
@@ -255,6 +263,89 @@
       fill: final-fill,
       stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
     )
+  }
+}
+
+// One bar segment, filled from its lower value edge up to `top`. `sliver`,
+// when set, is the `(lo, hi)` value span over which the segment reaches
+// `overlap` past its upper category edge, into the bar next to it.
+#let _draw-segment(ctx, segment, top, sliver: none, overlap: 0.0) = {
+  if sliver == none {
+    cetz.draw.rect(
+      user-point(ctx, segment.lo, segment.v-lo),
+      user-point(ctx, segment.hi, top),
+      fill: segment.fill,
+      stroke: segment.stroke,
+    )
+    return
+  }
+  let (s-lo, s-hi) = sliver
+  let reach = segment.hi + overlap
+  let pts = (
+    (segment.lo, segment.v-lo),
+    (segment.hi, segment.v-lo),
+    (segment.hi, s-lo),
+    (reach, s-lo),
+    (reach, s-hi),
+    (segment.hi, s-hi),
+    (segment.hi, top),
+    (segment.lo, top),
+  )
+  cetz.draw.line(
+    ..pts.map(((u, v)) => user-point(ctx, u, v)),
+    close: true,
+    fill: segment.fill,
+    stroke: segment.stroke,
+  )
+}
+
+// Stacked segments seal their seams by overlap, not by the seal stroke. The
+// stroke paints outside every side, so a segment would spill onto the bar
+// next to it, and the group drawn last would set where that edge falls.
+// A sealed segment reaches `seam-seal-thickness` up into the sealed segment
+// above it, and across into the bar on its upper category side over the
+// span that bar covers. Stacks draw in category order and each one from the
+// bottom up, so a segment drawn later covers every overlap, and each outer
+// edge stays where the data puts it. A zero-height sealed segment draws
+// nothing.
+#let _draw-stacked(ctx, segments) = {
+  let overlap = seam-seal-thickness / 1cm
+  let stacks = bucket-index(segments, s => repr(s.lo))
+    .buckets
+    .map(stack => stack
+      .filter(s => not s.sealed or s.v-hi > s.v-lo)
+      .sorted(key: s => s.v-lo))
+    .filter(stack => stack.len() > 0)
+    .sorted(key: stack => stack.first().lo)
+
+  for (i, stack) in stacks.enumerate() {
+    let next = stacks.at(i + 1, default: none)
+    let abuts = (
+      next != none
+        and next.all(s => s.sealed)
+        and calc.abs(next.first().lo - stack.first().hi) < 1e-6
+    )
+    let span = if abuts {
+      (calc.min(..next.map(s => s.v-lo)), calc.max(..next.map(s => s.v-hi)))
+    } else { none }
+
+    for (j, segment) in stack.enumerate() {
+      if not segment.sealed {
+        _draw-segment(ctx, segment, segment.v-hi)
+        continue
+      }
+      let above = stack.at(j + 1, default: none)
+      let top = if above != none and above.sealed {
+        segment.v-hi + overlap
+      } else { segment.v-hi }
+      let sliver = if span == none { none } else {
+        let s-lo = calc.max(segment.v-lo, span.at(0))
+        let s-hi = calc.min(top, span.at(1))
+        if s-hi > s-lo { (s-lo, s-hi) } else { none }
+      }
+      segment.stroke = none
+      _draw-segment(ctx, segment, top, sliver: sliver, overlap: overlap)
+    }
   }
 }
 
@@ -339,6 +430,7 @@
   let bar-width-fraction = layer.params.width
   let half = category-span * bar-width-fraction / 2
 
+  let segments = ()
   for row in data {
     let cat-c = map-cat(row.at(cat-col, default: none))
     if cat-c == none { continue }
@@ -380,14 +472,20 @@
       default-thickness: default-thickness,
     )
 
-    let a = user-point(ctx, centre - bar-half, v-lo-c)
-    let b = user-point(ctx, centre + bar-half, v-hi-c)
-
-    cetz.draw.rect(
-      a,
-      b,
+    let segment = (
+      lo: centre - bar-half,
+      hi: centre + bar-half,
+      v-lo: calc.min(v-lo-c, v-hi-c),
+      v-hi: calc.max(v-lo-c, v-hi-c),
       fill: final-fill,
       stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
+      sealed: seals-seam(stroke-spec, final-fill, abutting: abutting),
     )
+    if use-minmax {
+      segments.push(segment)
+    } else {
+      _draw-segment(ctx, segment, segment.v-hi)
+    }
   }
+  if use-minmax { _draw-stacked(ctx, segments) }
 }
