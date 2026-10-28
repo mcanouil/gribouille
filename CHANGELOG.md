@@ -13,6 +13,7 @@
 ### Changes
 
 - feat: Under `coord-radial`, lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline` and the lines of `geom-smooth` and `geom-function` follow the polar grid as curves, as in ggplot2, instead of straight chords. Polygons keep straight edges. (#359)
+- fix: A continuous axis with explicit `limits` keeps a pinned side at the limit when a `geom-ribbon()` band reaches past it, and a reversed axis keeps its direction. The band is cut at the panel edge. (#370)
 - fix: `geom-histogram()` pads its x scale by half a bin, out to the outer bin edges, as ggplot2 does. It used to leave a whole bin of empty room on each side. (#369)
 - fix: A data column named `width` no longer pads the x scale of `geom-col()`, `geom-line()`, `geom-path()` or `geom-step()`. Only `stat-bin()` and `stat-bindot()` pad by their bins, and dodged bars of mixed `width` now stay inside the panel. (#369)
 - fix: Under `coord-radial`, stacked and filled wedges from `geom-col()`, `geom-bar()` and `geom-histogram()` keep their edges where the data puts them, for theta on x and on y. A wedge no longer spills onto its neighbours, and a ring that fills the circle shows no light seam at 12 o'clock. (#367)
