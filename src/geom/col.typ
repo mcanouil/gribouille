@@ -306,24 +306,20 @@
 // above it, and across into the bar on its upper category side over the
 // span that bar covers. Stacks draw in category order and each one from the
 // bottom up, so a segment drawn later covers every overlap, and each outer
-// edge stays where the data puts it. A zero-height sealed segment draws
-// nothing.
+// edge stays where the data puts it.
 #let _draw-stacked(ctx, segments) = {
   let overlap = seam-seal-thickness / 1cm
-  let stacks = bucket-index(segments, s => repr(s.lo))
-    .buckets
-    .map(stack => stack
-      .filter(s => not s.sealed or s.v-hi > s.v-lo)
-      .sorted(key: s => s.v-lo))
-    .filter(stack => stack.len() > 0)
-    .sorted(key: stack => stack.first().lo)
+  let stacks = bucket-index(
+    segments.sorted(key: s => (s.lo, s.v-lo)),
+    s => repr(s.lo),
+  ).buckets
 
   for (i, stack) in stacks.enumerate() {
     let next = stacks.at(i + 1, default: none)
     let abuts = (
       next != none
         and next.all(s => s.sealed)
-        and calc.abs(next.first().lo - stack.first().hi) < 1e-6
+        and calc.abs(next.first().lo - stack.first().hi) < 1e-9
     )
     let span = if abuts {
       (calc.min(..next.map(s => s.v-lo)), calc.max(..next.map(s => s.v-hi)))
@@ -343,8 +339,13 @@
         let s-hi = calc.min(top, span.at(1))
         if s-hi > s-lo { (s-lo, s-hi) } else { none }
       }
-      segment.stroke = none
-      _draw-segment(ctx, segment, top, sliver: sliver, overlap: overlap)
+      _draw-segment(
+        ctx,
+        (..segment, stroke: none),
+        top,
+        sliver: sliver,
+        overlap: overlap,
+      )
     }
   }
 }
@@ -472,6 +473,8 @@
       default-thickness: default-thickness,
     )
 
+    let sealed = seals-seam(stroke-spec, final-fill, abutting: abutting)
+    if use-minmax and v-lo-c == v-hi-c and sealed { continue }
     let segment = (
       lo: centre - bar-half,
       hi: centre + bar-half,
@@ -479,7 +482,7 @@
       v-hi: calc.max(v-lo-c, v-hi-c),
       fill: final-fill,
       stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
-      sealed: seals-seam(stroke-spec, final-fill, abutting: abutting),
+      sealed: sealed,
     )
     if use-minmax {
       segments.push(segment)
