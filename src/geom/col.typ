@@ -267,9 +267,10 @@
 }
 
 // One bar segment, filled from its lower value edge up to `top`. `sliver`,
-// when set, is the `(lo, hi)` value span over which the segment reaches
-// `overlap` past its upper category edge, into the bar next to it.
-#let _draw-segment(ctx, segment, top, sliver: none, overlap: 0.0) = {
+// when set, is `(lo, hi, reach)`: over the value span from `lo` to `hi`, the
+// segment reaches past its upper category edge to `reach`, into the bar next
+// to it.
+#let _draw-segment(ctx, segment, top, sliver: none) = {
   if sliver == none {
     cetz.draw.rect(
       user-point(ctx, segment.lo, segment.v-lo),
@@ -279,8 +280,7 @@
     )
     return
   }
-  let (s-lo, s-hi) = sliver
-  let reach = segment.hi + overlap
+  let (s-lo, s-hi, reach) = sliver
   let pts = (
     (segment.lo, segment.v-lo),
     (segment.hi, segment.v-lo),
@@ -305,8 +305,9 @@
 // A sealed segment reaches `seam-seal-thickness` up into the sealed segment
 // above it, and across into the bar on its upper category side over the
 // span that bar covers. Stacks draw in category order and each one from the
-// bottom up, so a segment drawn later covers every overlap, and each outer
-// edge stays where the data puts it.
+// bottom up, so a segment drawn later covers every overlap. No overlap
+// reaches past the top of its own stack or the far edge of the next bar, so
+// each outer edge stays where the data puts it.
 #let _draw-stacked(ctx, segments) = {
   let overlap = seam-seal-thickness / 1cm
   let stacks = bucket-index(
@@ -324,6 +325,7 @@
     let span = if abuts {
       (calc.min(..next.map(s => s.v-lo)), calc.max(..next.map(s => s.v-hi)))
     } else { none }
+    let stack-top = stack.last().v-hi
 
     for (j, segment) in stack.enumerate() {
       if not segment.sealed {
@@ -332,14 +334,15 @@
       }
       let above = stack.at(j + 1, default: none)
       let top = if above != none and above.sealed {
-        segment.v-hi + overlap
+        calc.min(segment.v-hi + overlap, stack-top)
       } else { segment.v-hi }
       let sliver = if span == none { none } else {
         let s-lo = calc.max(segment.v-lo, span.at(0))
         let s-hi = calc.min(top, span.at(1))
-        if s-hi > s-lo { (s-lo, s-hi) } else { none }
+        let reach = calc.min(segment.hi + overlap, next.first().hi)
+        if s-hi > s-lo { (s-lo, s-hi, reach) } else { none }
       }
-      _draw-segment(ctx, segment, top, sliver: sliver, overlap: overlap)
+      _draw-segment(ctx, segment, top, sliver: sliver)
     }
   }
 }

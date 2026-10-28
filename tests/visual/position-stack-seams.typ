@@ -4,7 +4,9 @@
 // segments of one bin start and end at the same x, whatever the draw order of
 // the groups, and an empty group paints no stripe on top of the stack.
 // Right: stacked columns on a discrete x where one group is zero in a column.
-// The zero segment draws nothing, and each column keeps its own width.
+// The zero segment draws nothing, and each column keeps its own width. The
+// top segment of Q3 is thinner than the seal overlap, and the segment below
+// it still stops at its lower edge.
 
 #import "../../lib.typ": *
 
@@ -33,6 +35,8 @@
   (q: "Q2", g: "a", y: 0),
   (q: "Q2", g: "b", y: 4),
   (q: "Q2", g: "c", y: 1),
+  (q: "Q3", g: "a", y: 0.02),
+  (q: "Q3", g: "c", y: 4.98),
 )
 
 #stack(
