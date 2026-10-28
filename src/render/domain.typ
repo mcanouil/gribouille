@@ -210,7 +210,7 @@
 }
 
 // Apply post-training domain fix-ups (bar-zero floor, geom extents, bin
-// edges of binned stats, ribbon ymin/ymax padding, discrete bar padding).
+// edges of binned stats, ribbon ymin/ymax padding on unpinned sides, discrete bar padding).
 // Called once globally and once per panel under free scales so each panel's
 // domain reflects its own subset.
 #let _post-train(trained, layers) = {
@@ -286,10 +286,27 @@
   if scan.ribbon-y-min != none {
     let lo-extra = scan.ribbon-y-min
     let hi-extra = scan.ribbon-y-max
-    trained = _rewrite-continuous-domain(trained, "y", ((lo, hi)) => (
-      calc.min(lo, lo-extra),
-      calc.max(hi, hi-extra),
-    ))
+    let (pin-lo, pin-hi) = if cutoffs.y == none { (none, none) } else {
+      cutoffs.y
+    }
+    trained = _rewrite-continuous-domain(trained, "y", ((lo, hi)) => {
+      let ascending = lo <= hi
+      let (low-side, high-side) = if ascending { (lo, hi) } else { (hi, lo) }
+      let (pin-low, pin-high) = if ascending {
+        (pin-lo, pin-hi)
+      } else {
+        (pin-hi, pin-lo)
+      }
+      let new-low = if pin-low == none { calc.min(low-side, lo-extra) } else {
+        low-side
+      }
+      let new-high = if pin-high == none {
+        calc.max(high-side, hi-extra)
+      } else {
+        high-side
+      }
+      if ascending { (new-low, new-high) } else { (new-high, new-low) }
+    })
   }
 
   // Discrete category axes get `geom-min-pad` so `apply-expand` keeps outer
