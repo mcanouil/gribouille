@@ -117,11 +117,11 @@
 /// for marks that cannot touch, such as a tile below its full slot, a bar
 /// that neither stacks nor fills, and an unstacked ribbon.
 ///
-/// Stacked bars of `geom-col` on a Cartesian panel do not use this stroke.
-/// The stroke paints outside every side of a rectangle, so a stacked segment
-/// would spill onto the bar next to it and into its category gap. Those
-/// segments overlap their neighbours by `seam-seal-thickness` instead, where
-/// `seals-seam` answers `true`.
+/// Stacked bars of `geom-col` do not use this stroke, on a Cartesian panel
+/// or under `coord-radial`. The stroke paints outside every side of a bar or
+/// a wedge, so a stacked segment would spill onto the bar next to it and into
+/// its category gap. Those segments overlap their neighbours by
+/// `seam-seal-thickness` instead, where `seals-seam` answers `true`.
 ///
 /// \@internal
 /// \@param stroke-spec The resolved stroke (from `resolve-stroke-spec`) or `none`.

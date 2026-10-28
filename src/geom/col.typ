@@ -16,11 +16,11 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": (
-  radial-category-span, radial-mappers, radial-wedge,
+  radial-category-span, radial-mappers, radial-outline, radial-wedge,
 )
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/stroke.typ": (
-  resolve-stroke-spec, seal-seam, seals-seam, seam-seal-thickness,
+  resolve-stroke-spec, seals-seam, seam-seal-thickness,
 )
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -168,6 +168,144 @@
   inherit-aes: inherit-aes,
 )
 
+// Canvas length every sealed segment overlaps its neighbour by.
+#let _overlap = seam-seal-thickness / 1cm
+
+// Angle that spans `_overlap` along an arc of radius `r`. A segment at the
+// centre has no arc to measure, so its overlap is clamped by its neighbour
+// alone.
+#let _overlap-angle(r) = if r > 0 { _overlap / r } else { float.inf }
+
+// Corners of one bar segment in category and value coordinates, filled from
+// its lower value edge up to `top`. `sliver`, when set, is `(lo, hi, reach)`:
+// over the value span from `lo` to `hi`, the segment reaches past its upper
+// category edge to `reach`, into the bar next to it.
+#let _segment-corners(segment, top, sliver) = {
+  let (s-lo, s-hi, reach) = sliver
+  (
+    (segment.lo, segment.v-lo),
+    (segment.hi, segment.v-lo),
+    (segment.hi, s-lo),
+    (reach, s-lo),
+    (reach, s-hi),
+    (segment.hi, s-hi),
+    (segment.hi, top),
+    (segment.lo, top),
+  )
+}
+
+#let _draw-segment(ctx, segment, top, sliver: none) = {
+  if sliver == none {
+    cetz.draw.rect(
+      user-point(ctx, segment.lo, segment.v-lo),
+      user-point(ctx, segment.hi, top),
+      fill: segment.fill,
+      stroke: segment.stroke,
+    )
+    return
+  }
+  cetz.draw.line(
+    .._segment-corners(segment, top, sliver).map(((u, v)) => user-point(
+      ctx,
+      u,
+      v,
+    )),
+    close: true,
+    fill: segment.fill,
+    stroke: segment.stroke,
+  )
+}
+
+// The wedge of one bar segment under `coord-radial`, with the same corners
+// as `_draw-segment`. The category is the angle under `theta: "x"` and the
+// radius under `theta: "y"`.
+#let _draw-wedge(radial, segment, top, sliver: none) = {
+  let polar = if radial.cat-is-theta { ((u, v)) => (u, v) } else {
+    ((u, v)) => (v, u)
+  }
+  let pts = if sliver == none {
+    let (theta-lo, r-lo) = polar((segment.lo, segment.v-lo))
+    let (theta-hi, r-hi) = polar((segment.hi, top))
+    radial-wedge(theta-lo, theta-hi, r-lo, r-hi, radial)
+  } else {
+    radial-outline(_segment-corners(segment, top, sliver).map(polar), radial)
+  }
+  cetz.draw.line(
+    ..pts,
+    close: true,
+    fill: segment.fill,
+    stroke: segment.stroke,
+  )
+}
+
+// Stacked segments seal their seams by overlap, not by the seal stroke. The
+// stroke paints outside every side, so a segment would spill onto the bar
+// next to it, and the group drawn last would set where that edge falls.
+// A sealed segment reaches `rise(segment)` up into the sealed segment above
+// it, and `across(segment, lo)` across into the bar on its upper category
+// side over the span that bar covers, from value `lo` up. Stacks draw in
+// category order and each one from the bottom up, so a segment drawn later
+// covers every overlap. No overlap reaches past the top of its own stack or
+// the far edge of the next bar, so each outer edge stays where the data
+// puts it.
+//
+// `turn`, when set, is the value span of a full circle. A stack that spans
+// it has its top meet its bottom, and its bottom segment, drawn first,
+// reaches down into the top segment, which covers that overlap.
+#let _draw-stacked(segments, draw, rise, across, turn: none) = {
+  let stacks = bucket-index(
+    segments.sorted(key: s => (s.lo, s.v-lo)),
+    s => repr(s.lo),
+  ).buckets
+
+  for (i, stack) in stacks.enumerate() {
+    let next = stacks.at(i + 1, default: none)
+    let abuts = (
+      next != none
+        and next.all(s => s.sealed)
+        and calc.abs(next.first().lo - stack.first().hi) < 1e-9
+    )
+    let span = if abuts {
+      (calc.min(..next.map(s => s.v-lo)), calc.max(..next.map(s => s.v-hi)))
+    } else { none }
+    // Segments overlap where a stack holds a negative value, so the last
+    // one by its lower edge need not reach the highest edge.
+    let first = stack.first()
+    let last = stack.sorted(key: s => s.v-hi).last()
+    let stack-top = last.v-hi
+    let wraps = (
+      turn != none
+        and first.sealed
+        and last.sealed
+        and calc.abs(stack-top - first.v-lo - turn) < 1e-9
+    )
+
+    for (j, segment) in stack.enumerate() {
+      if not segment.sealed {
+        draw(segment, segment.v-hi, none)
+        continue
+      }
+      if j == 0 and wraps {
+        segment.v-lo -= calc.min(rise(segment), last.v-hi - last.v-lo)
+      }
+      let above = stack.at(j + 1, default: none)
+      let top = if above != none and above.sealed {
+        calc.min(segment.v-hi + rise(segment), stack-top)
+      } else { segment.v-hi }
+      let sliver = if span == none { none } else {
+        let s-lo = calc.max(segment.v-lo, span.at(0))
+        let s-hi = calc.min(top, span.at(1))
+        let reach = calc.min(
+          segment.hi + across(segment, s-lo),
+          next.first().hi,
+        )
+        if s-hi > s-lo { (s-lo, s-hi, reach) } else { none }
+      }
+      draw(segment, top, sliver)
+    }
+  }
+}
+
 #let _draw-radial(layer, ctx, mapping, data, radial) = {
   let cat-trained = ctx.trained.at("x", default: none)
   let value-trained = ctx.trained.at("y", default: none)
@@ -205,6 +343,7 @@
   let category-span = radial-category-span(ctx, cat-col, data)
   let half = category-span * bar-width-fraction / 2
 
+  let segments = ()
   for row in data {
     let cat-c = map-cat(row.at(cat-col, default: none))
     if cat-c == none { continue }
@@ -236,11 +375,8 @@
       default-colour,
       default-thickness: default-thickness,
     )
-    if (
-      use-minmax
-        and v-lo == v-hi
-        and seals-seam(stroke-spec, final-fill, abutting: abutting)
-    ) { continue }
+    let sealed = seals-seam(stroke-spec, final-fill, abutting: abutting)
+    if use-minmax and v-lo == v-hi and sealed { continue }
 
     let centre = cat-c
     let bar-half = half
@@ -249,101 +385,50 @@
       bar-half = dodge-half(row, half)
     }
 
-    let (theta-lo, theta-hi, r-lo, r-hi) = if radial.cat-is-theta {
-      (centre - bar-half, centre + bar-half, v-lo, v-hi)
-    } else {
-      (v-lo, v-hi, centre - bar-half, centre + bar-half)
-    }
-    if r-lo > r-hi { (r-lo, r-hi) = (r-hi, r-lo) }
-
-    let pts = radial-wedge(theta-lo, theta-hi, r-lo, r-hi, radial)
-    cetz.draw.line(
-      ..pts,
-      close: true,
+    let segment = (
+      lo: calc.min(centre - bar-half, centre + bar-half),
+      hi: calc.max(centre - bar-half, centre + bar-half),
+      v-lo: calc.min(v-lo, v-hi),
+      v-hi: calc.max(v-lo, v-hi),
       fill: final-fill,
-      stroke: seal-seam(stroke-spec, final-fill, abutting: abutting),
+      stroke: stroke-spec,
+      sealed: sealed,
     )
-  }
-}
-
-// One bar segment, filled from its lower value edge up to `top`. `sliver`,
-// when set, is `(lo, hi, reach)`: over the value span from `lo` to `hi`, the
-// segment reaches past its upper category edge to `reach`, into the bar next
-// to it.
-#let _draw-segment(ctx, segment, top, sliver: none) = {
-  if sliver == none {
-    cetz.draw.rect(
-      user-point(ctx, segment.lo, segment.v-lo),
-      user-point(ctx, segment.hi, top),
-      fill: segment.fill,
-      stroke: segment.stroke,
-    )
-    return
-  }
-  let (s-lo, s-hi, reach) = sliver
-  let pts = (
-    (segment.lo, segment.v-lo),
-    (segment.hi, segment.v-lo),
-    (segment.hi, s-lo),
-    (reach, s-lo),
-    (reach, s-hi),
-    (segment.hi, s-hi),
-    (segment.hi, top),
-    (segment.lo, top),
-  )
-  cetz.draw.line(
-    ..pts.map(((u, v)) => user-point(ctx, u, v)),
-    close: true,
-    fill: segment.fill,
-    stroke: segment.stroke,
-  )
-}
-
-// Stacked segments seal their seams by overlap, not by the seal stroke. The
-// stroke paints outside every side, so a segment would spill onto the bar
-// next to it, and the group drawn last would set where that edge falls.
-// A sealed segment reaches `seam-seal-thickness` up into the sealed segment
-// above it, and across into the bar on its upper category side over the
-// span that bar covers. Stacks draw in category order and each one from the
-// bottom up, so a segment drawn later covers every overlap. No overlap
-// reaches past the top of its own stack or the far edge of the next bar, so
-// each outer edge stays where the data puts it.
-#let _draw-stacked(ctx, segments) = {
-  let overlap = seam-seal-thickness / 1cm
-  let stacks = bucket-index(
-    segments.sorted(key: s => (s.lo, s.v-lo)),
-    s => repr(s.lo),
-  ).buckets
-
-  for (i, stack) in stacks.enumerate() {
-    let next = stacks.at(i + 1, default: none)
-    let abuts = (
-      next != none
-        and next.all(s => s.sealed)
-        and calc.abs(next.first().lo - stack.first().hi) < 1e-9
-    )
-    let span = if abuts {
-      (calc.min(..next.map(s => s.v-lo)), calc.max(..next.map(s => s.v-hi)))
-    } else { none }
-    let stack-top = calc.max(..stack.map(s => s.v-hi))
-
-    for (j, segment) in stack.enumerate() {
-      if not segment.sealed {
-        _draw-segment(ctx, segment, segment.v-hi)
-        continue
-      }
-      let above = stack.at(j + 1, default: none)
-      let top = if above != none and above.sealed {
-        calc.min(segment.v-hi + overlap, stack-top)
-      } else { segment.v-hi }
-      let sliver = if span == none { none } else {
-        let s-lo = calc.max(segment.v-lo, span.at(0))
-        let s-hi = calc.min(top, span.at(1))
-        let reach = calc.min(segment.hi + overlap, next.first().hi)
-        if s-hi > s-lo { (s-lo, s-hi, reach) } else { none }
-      }
-      _draw-segment(ctx, segment, top, sliver: sliver)
+    if use-minmax {
+      segments.push(segment)
+    } else {
+      _draw-wedge(radial, segment, segment.v-hi)
     }
+  }
+  if not use-minmax { return }
+  // Along the radius an overlap is a plain length. Along the angle it is
+  // measured on the smallest radius it covers, so it is never shorter than
+  // `_overlap` on the canvas.
+  if radial.cat-is-theta {
+    _draw-stacked(
+      segments,
+      (segment, top, sliver) => _draw-wedge(
+        radial,
+        segment,
+        top,
+        sliver: sliver,
+      ),
+      _ => _overlap,
+      (_, lo) => _overlap-angle(lo),
+    )
+  } else {
+    _draw-stacked(
+      segments,
+      (segment, top, sliver) => _draw-wedge(
+        radial,
+        segment,
+        top,
+        sliver: sliver,
+      ),
+      segment => _overlap-angle(segment.lo),
+      (..) => _overlap,
+      turn: 2 * calc.pi,
+    )
   }
 }
 
@@ -487,5 +572,17 @@
       _draw-segment(ctx, segment, segment.v-hi)
     }
   }
-  if use-minmax { _draw-stacked(ctx, segments) }
+  if use-minmax {
+    _draw-stacked(
+      segments,
+      (segment, top, sliver) => _draw-segment(
+        ctx,
+        segment,
+        top,
+        sliver: sliver,
+      ),
+      _ => _overlap,
+      (..) => _overlap,
+    )
+  }
 }
