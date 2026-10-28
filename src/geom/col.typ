@@ -49,11 +49,15 @@
     if min-gap == none or gap < min-gap { min-gap = gap }
   }
   if min-gap == none { return none-ext }
-  let bar-half = min-gap * params.at("width", default: 0.9) / 2
-  let fills-gap = data.any(r => (
-    "_dodge-offset" in r and parse-number(r.at("width", default: none)) != none
-  ))
-  if fills-gap { bar-half = calc.max(bar-half, min-gap / 2) }
+  // Dodge writes its offset on every row, so the first row tells whether
+  // the layer dodged, and the full scan runs only when it did.
+  let fills-gap = (
+    "_dodge-offset" in data.first()
+      and data.any(r => parse-number(r.at("width", default: none)) != none)
+  )
+  let bar-frac = params.at("width", default: 0.9)
+  let reach = if fills-gap { calc.max(bar-frac, 1) } else { bar-frac }
+  let bar-half = min-gap * reach / 2
   if bar-half <= 0 { return none-ext }
   (x: (xs.first() - bar-half, xs.last() + bar-half), y: none)
 }

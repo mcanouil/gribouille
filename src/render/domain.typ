@@ -161,6 +161,24 @@
   })
 }
 
+// Widen each axis of `trained` to an `(x, y)` extents record, and keep the
+// user limits of a widened continuous axis as its `oob-cutoff`.
+#let _extend-axes(trained, ext, cutoffs) = {
+  for axis in ("x", "y") {
+    let range = ext.at(axis, default: none)
+    if range == none { continue }
+    let (ext-lo, ext-hi) = range
+    trained = _extend-domain(trained, axis, ext-lo, ext-hi)
+    let cutoff = cutoffs.at(axis)
+    if cutoff != none and trained.at(axis).type == "continuous" {
+      let t = trained.at(axis)
+      t.insert("oob-cutoff", cutoff)
+      trained.insert(axis, t)
+    }
+  }
+  trained
+}
+
 // The user limits of a continuous axis, in domain order, with `none` on a
 // side left at `auto`, or `none` when the axis has no limits. Read from the
 // trained domain, so the values are in the space the layer rows use.
@@ -191,8 +209,8 @@
   (c-lo == none or v >= c-lo) and (c-hi == none or v <= c-hi)
 }
 
-// Apply post-training domain fix-ups (bar-zero floor, geom extents, ribbon
-// ymin/ymax padding, discrete bar padding). Called once globally and once
+// Apply post-training domain fix-ups (bar-zero floor, geom extents, bin
+// edges of binned stats, ribbon ymin/ymax padding, discrete bar padding). Called once globally and once
 // per panel under free scales so each panel's domain reflects its own subset.
 #let _post-train(trained, layers) = {
   let scan = _post-train-scan(layers)
@@ -261,20 +279,7 @@
       let x-col = mapping-ref-col(mapping.at("x", default: none))
       exts.push((x: bin-x-extents(data, x-col), y: none))
     }
-    for ext in exts {
-      for axis in ("x", "y") {
-        let range = ext.at(axis, default: none)
-        if range == none { continue }
-        let (ext-lo, ext-hi) = range
-        trained = _extend-domain(trained, axis, ext-lo, ext-hi)
-        let cutoff = cutoffs.at(axis)
-        if cutoff != none and trained.at(axis).type == "continuous" {
-          let t = trained.at(axis)
-          t.insert("oob-cutoff", cutoff)
-          trained.insert(axis, t)
-        }
-      }
-    }
+    for ext in exts { trained = _extend-axes(trained, ext, cutoffs) }
   }
 
   if scan.ribbon-y-min != none {
