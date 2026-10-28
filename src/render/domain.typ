@@ -74,11 +74,38 @@
   acc
 }
 
+// Axis titles that a statistic fixes when the plot mapping cannot name them:
+// the Q-Q statistics synthesise their own columns, so the mapped `sample`
+// column names no axis. Applies only when every layer uses such a statistic.
+#let _STAT-AXIS-NAMES = (
+  qq: (x: "theoretical", y: "sample"),
+  qq-line: (x: "theoretical", y: "sample"),
+)
+
+#let _stat-axis-names(layers) = {
+  let names = layers.map(l => _STAT-AXIS-NAMES.at(
+    l.at("stat-source", default: ""),
+    default: none,
+  ))
+  if names.len() == 0 or names.any(n => n == none) { return (:) }
+  names.first()
+}
+
 // Inject labels `x`/`y`/... names into trained scale specs so axis and legend
 // titles follow labels() overrides. `auto` (the labels default) keeps the
 // scale-derived name; `none` sets `spec.blank` to suppress the title and
 // collapse its reserved space; a string overrides the name.
-#let _apply-labels(trained, labels) = {
+#let _apply-labels(trained, labels, layers) = {
+  for (aes-name, name) in _stat-axis-names(layers).pairs() {
+    let t = trained.at(aes-name, default: none)
+    if t == none { continue }
+    let spec = t.at("spec", default: none)
+    let base = if spec == none { (aesthetic: aes-name) } else { spec }
+    if base.at("name", default: none) != none { continue }
+    let new-t = t
+    new-t.insert("spec", base + (name: name))
+    trained.insert(aes-name, new-t)
+  }
   if labels == none { return trained }
   for (aes-name, label) in labels.axes.pairs() {
     if label == auto { continue }
