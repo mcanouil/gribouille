@@ -96,7 +96,7 @@
     mapping: spec.mapping,
     data: spec.data,
   )
-  trained = _apply-labels(trained, labels)
+  trained = _apply-labels(trained, labels, prepared)
 
   // Once training is done, mapping-ref annotations have served their purpose;
   // flatten them so geoms receive plain column names.

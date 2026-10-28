@@ -89,7 +89,7 @@
     data: spec.data,
     aesthetics: positional-aesthetics,
   )
-  pt = _apply-labels(pt, labels)
+  pt = _apply-labels(pt, labels, layers)
   pt = _post-train(pt, layers)
   (coord.train)(pt)
 }

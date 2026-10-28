@@ -353,7 +353,10 @@
         forced-type: _resolve-forced-type(train-ref, layer-data, col-name),
         levels: layer-factor-levels.at(col-name, default: none),
       ))
-      if is-typst-markup(train-ref) { entry.typst-mark = true }
+      // The render pass strips mapping refs from panel layers, so a retrain
+      // finds the mark on the layer's `typst-marks` instead.
+      let marked = layer.at("typst-marks", default: (:)).at(a, default: false)
+      if is-typst-markup(train-ref) or marked { entry.typst-mark = true }
       cache.insert(a, entry)
     }
   }
