@@ -13,6 +13,7 @@
 ### Changes
 
 - feat: Under `coord-radial`, lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline` and the lines of `geom-smooth` and `geom-function` follow the polar grid as curves, as in ggplot2, instead of straight chords. Polygons keep straight edges. (#359)
+- fix: Stacked and filled bars from `geom-col()`, `geom-bar()` and `geom-histogram()` keep their edges where the data puts them, so the segments of one bar line up and the gap between bars keeps its full width. A group that is empty in a bar no longer draws a thin stripe on top of it. (#366)
 - fix: Under `coord-radial`, `position: "dodge"` puts each group on its own slot for every geom, inside the sweep of a category when theta is x and inside its ring when theta is y. The groups used to overlap. (#365)
 - fix: Every geom of a dodged group now shares one centre, set by the `width` of `position-dodge()`, so error bars, boxes, crossbars and violins line up with the columns and points of their group. The `width` of each geom only sets how wide its mark is. (#365)
 - fix: Under `coord-radial(theta: "y")`, `geom-boxplot()` and `geom-crossbar()` give each x category its own ring and sweep the y values round the circle, as the points do. The boxplot used to draw nothing and the crossbar failed. (#365)
@@ -36,7 +37,6 @@
 - fix: `geom-rect()` and `geom-bin-2d()` under `coord-flip()` draw their extents on the flipped axes. (#337)
 - fix: `geom-segment()` and `geom-curve()` under `coord-flip()` draw their end point on the flipped axes, as they already did for their start point. (#336)
 - fix: `position-beeswarm()`, `position-jitter()`, `position-jitterdodge()` and `position-nudge()` put each mark on the slot of its level on the discrete scale. They now follow the scale `limits` and the levels that other layers add. (#334)
-- fix: Stacked and filled bars from `geom-col()`, `geom-bar()` and `geom-histogram()` keep their edges where the data puts them, so the segments of one bar line up and the gap between bars keeps its full width. A group that is empty in a bar no longer draws a thin stripe on top of it.
 - docs: The feature matrix lists the geoms that do not follow `coord-flip()` yet. (#337)
 - docs: The agent skill tells agents to stop at a Gribouille bug, reduce it to a minimal plot, and draft an issue for the user. A workaround comes only with the user's consent and a link to the issue. (#335)
 - docs: Show the package version from `typst.toml` in the documentation import lines, rather than `dev` on the development site. (#316)
