@@ -229,9 +229,9 @@
 
   // `"all"` hoists every key, shared or not. The other modes hoist an aesthetic
   // only when every panel carries it and every copy merges.
-  let hoisted = if collect == "all" { candidates } else {
-    candidates.filter(a => _all-mergeable(per-panel, a))
-  }
+  let hoisted = candidates.filter(a => (
+    collect == "all" or _all-mergeable(per-panel, a)
+  ))
   if hoisted.len() == 0 {
     return (hoisted: (), hoisted-guides: (), legend-side: none)
   }
@@ -1168,12 +1168,7 @@
       )
     }
   }
-  if (
-    collect != auto
-      and collect != none
-      and collect != "all"
-      and type(collect) != array
-  ) {
+  if not (collect in (auto, none, "all") or type(collect) == array) {
     fail(
       "compose",
       "`collect` must be `auto`, `none`, `\"all\"`, or an array of aesthetic names",

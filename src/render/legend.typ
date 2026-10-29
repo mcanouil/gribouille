@@ -1885,8 +1885,7 @@
 
 // Render a free-standing legend canvas, sized by `size` from `standalone-size`
 // over the same `guides`. Used by `compose()` to draw the shared, hoisted
-// legend outside any plot panel. Each guide carries its own `trained` scales,
-// which `_draw-guide-body` reads in place of a shared context.
+// legend outside any plot panel. Each guide carries its own `trained` scales.
 //
 // `panel-rect` carries the *content* box, not the canvas: `_draw-side`'s
 // centring terms then cancel and the guide stack starts at its origin. Along

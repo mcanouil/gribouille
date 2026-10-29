@@ -42,24 +42,12 @@
   layers: (geom-point(size: 3pt),),
 )
 
+#let sized(..args) = compose(..args, columns: 2, width: 14cm, height: 5cm)
+
 #stack(
   dir: ttb,
   spacing: 0.8cm,
-  compose(heatmap, profiles, columns: 2, width: 14cm, height: 5cm),
-  compose(
-    heatmap,
-    profiles,
-    columns: 2,
-    collect: "all",
-    width: 14cm,
-    height: 5cm,
-  ),
-  compose(
-    points(("a", "b")),
-    points(("p", "q", "r")),
-    columns: 2,
-    collect: "all",
-    width: 14cm,
-    height: 5cm,
-  ),
+  sized(heatmap, profiles),
+  sized(heatmap, profiles, collect: "all"),
+  sized(points(("a", "b")), points(("p", "q", "r")), collect: "all"),
 )
