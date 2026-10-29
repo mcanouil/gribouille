@@ -26,7 +26,7 @@
 // against the panel edge and each later one clears those before it.
 //
 // `spacing` is the gap between neighbours, in centimetres; `auto` takes the
-// context's tick gap, which is what separates a tick row from its labels today.
+// context's `guide-spacing`, or its tick gap where the context carries none.
 #let compose-stack(..children, entries: auto, spacing: auto) = {
   let kids = children.pos()
   check(
@@ -124,6 +124,8 @@
 #let _spacing-of(node, gctx) = {
   let given = node.at("spacing", default: auto)
   if given != auto { return given }
+  let themed = gctx.at("guide-spacing", default: none)
+  if themed != none { return themed }
   gctx.at("tick-gap", default: 0.0)
 }
 

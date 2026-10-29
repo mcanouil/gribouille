@@ -31,6 +31,7 @@
     "axis-line": "line",
     "axis-ticks": "line",
     "legend-ticks": "line",
+    "legend-line": "line",
     "panel-background": "rect",
     "plot-background": "rect",
     "strip-background": "rect",

@@ -3,7 +3,8 @@
 
 #import "../../src/render/legend.typ": (
   _GLYPH-DIAMETER-CM, _guide-shape, _ladder-key-diam-cm, _ladder-node,
-  _ladder-vmetrics, _legend-text-style, _legend-title-style, _stack-layout,
+  _ladder-vmetrics, _legend-gctx, _legend-text-style, _legend-title-style,
+  _stack-layout,
 )
 
 // A size-ladder's grid shape uses its break count under nrow/ncolumn.
@@ -87,8 +88,10 @@
   let style = _legend-text-style(none)
   let title-style = _legend-title-style(none)
   let height-of(guide) = {
+    let box-gctx = _legend-gctx(none)
     _stack-layout(
-      _ladder-node(guide, style, title-style, 0.0, 0.0),
+      _ladder-node(guide, style, title-style, 0.0, 0.0, box-gctx),
+      box-gctx,
     )
       .layout
       .across

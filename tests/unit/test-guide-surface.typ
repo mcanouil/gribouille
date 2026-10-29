@@ -38,9 +38,9 @@
 #assert.eq(surface-for(legend, "background"), "legend-background")
 #assert.eq(surface-for(legend, "bar"), "legend-bar")
 
-// Asymmetry, tested rather than assumed: a legend has no line surface and no
-// tick tiers, so a line part measures nothing there.
-#assert.eq(surface-for(legend, "line"), none)
+// Asymmetry, tested rather than assumed: a legend has a line surface, blank by
+// default, and no tick tiers.
+#assert.eq(surface-for(legend, "line"), "legend-line")
 #assert.eq(surface-for(legend, "ticks-mid"), none)
 #assert.eq(surface-for(legend, "ticks-minor"), none)
 
@@ -72,13 +72,20 @@
   0.075,
 )
 
-// Beside a legend the surface carries no length at all, so the two constants
-// answer instead. These are the lengths the colour bar has always drawn at.
+// Beside a legend with no theme behind it, the two constants answer. These are
+// the lengths the colour bar has always drawn at.
 #assert.eq(LEGEND-TICK-LEN, 0.1)
 #assert.eq(LEGEND-TICK-GAP, 0.08)
 #assert.eq(
   tick-metrics(legend),
   (surface: "legend-ticks", len: 0.1, gap: 0.08),
+)
+
+// With a theme behind it, the legend tick takes its length from the surface.
+#let themed-legend = gctx("right", "legend", tick-length: s => 0.25)
+#assert.eq(
+  tick-metrics(themed-legend),
+  (surface: "legend-ticks", len: 0.25, gap: 0.08),
 )
 
 // A tier the context has no surface for reserves nothing, so a caller reading
