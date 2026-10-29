@@ -92,10 +92,12 @@
   none
 }
 
+// NaN is an unusable cell: it compares false with every number, so it would
+// reach `<` and `>` and raise `cannot compare float.nan`.
 #let parse-number(v) = {
   if v == none { return none }
   if type(v) == int { return float(v) }
-  if type(v) == float { return v }
+  if type(v) == float { return if float.is-nan(v) { none } else { v } }
   if type(v) == str {
     let t = v.trim()
     if t == "" { return none }
