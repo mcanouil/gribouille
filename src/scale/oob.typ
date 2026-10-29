@@ -4,16 +4,31 @@
 // for any user-limited aesthetic falls outside the trained domain. When the
 // scale's `oob` is `"squish"` the row stays and the cell is clamped to the
 // nearest limit so downstream resolvers see an in-range value. Discrete
-// scales censor only — squish has no geometric meaning on levels.
+// scales censor only — squish has no geometric meaning on levels. A cell that
+// a continuous scale cannot read, such as `"zz"` or NaN, drops its row too.
 
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
 #import "../utils/palette.typ": spec-attr
-#import "train.typ": level-lookup, mapping-ref-col, to-stat-fn, view-bounds-stat
+#import "train.typ": (
+  level-lookup, mapping-ref-col, positional-aesthetics, to-stat-fn,
+  view-bounds-stat,
+)
 #import "../utils/errors.typ": fail
 
-// Build the per-row check for one trained scale, or `none` when the scale sets
-// no user `limits` and therefore censors nothing.
+// An empty string is a missing cell, as `none` is, not an unusable one.
+#let _is-missing(raw) = raw == none or raw == ""
+
+// Drop a cell that a continuous channel cannot read, such as `"zz"` on a colour
+// scale, so the row does not draw in the fallback ink. A missing cell stays.
+#let _drop-unusable(raw) = {
+  if _is-missing(raw) or parse-number(raw) != none { return ("in", raw) }
+  ("unusable", raw)
+}
+
+// Build the per-row check for one trained scale, or `none` when the scale
+// censors nothing: a scale with no user `limits`, other than a continuous
+// non-position scale that trained on a cell it cannot read.
 //
 // The check is a closure taking the cell alone, so the level lookup is
 // captured once rather than reaching the call on every row. Holding the same
@@ -24,8 +39,20 @@
 //   ("in",     value)   — unchanged
 //   ("squish", clamped) — kept, value rewritten
 //   ("drop",   value)   — caller drops the row
-#let _checker(trained) = {
-  if spec-attr(trained, "limits") == none { return none }
+//   ("unusable", value) — caller drops the row, also under `strict`
+#let _checker(aes, trained) = {
+  if spec-attr(trained, "limits") == none {
+    if (
+      trained.type == "continuous"
+        // A position cell that does not parse, on x, y or a feeder such as
+        // ymin, is skipped by every geom, so the pre-pass leaves it alone.
+        and aes not in positional-aesthetics
+        and trained.at("unusable", default: false)
+    ) {
+      return _drop-unusable
+    }
+    return none
+  }
 
   if trained.type == "continuous" {
     // Only a continuous scale reads `oob`, because only it can squish.
@@ -50,8 +77,9 @@
     let span-hi = calc.max(t-lo, t-hi)
     let domain = trained.domain
     return raw => {
+      if _is-missing(raw) { return ("in", raw) }
       let v = parse-number(raw)
-      if v == none { return ("in", raw) }
+      if v == none { return ("unusable", raw) }
       let sv = to-stat(v)
       if sv >= span-lo and sv <= span-hi { return ("in", raw) }
       if oob == "squish" {
@@ -123,7 +151,7 @@
 #let oob-plans(trained) = {
   let plans = ()
   for (aes, t) in trained.pairs() {
-    let check = _checker(t)
+    let check = _checker(aes, t)
     if check == none { continue }
     plans.push((aes: aes, check: check, limits: spec-attr(t, "limits")))
   }
@@ -185,15 +213,19 @@
           new-row.insert(col, value)
           continue
         }
-        if strict {
+        // A cell the scale cannot read is not outside the limits, so `strict`
+        // does not report it.
+        if strict and action == "drop" {
           fail(
-            "scale `" + aes + "`",
+            "plot",
             "row "
               + str(row-idx)
-              + " value "
-              + repr(cell)
-              + " outside limits "
-              + repr(binding.limits),
+              + " on "
+              + aes
+              + " is outside limits "
+              + repr(binding.limits)
+              + "; got "
+              + repr(cell),
             hint: "Set `oob: \"squish\"` to clamp, widen `limits`, "
               + "or remove `strict: true` to drop silently.",
           )

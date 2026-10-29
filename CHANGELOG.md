@@ -4,6 +4,8 @@
 
 ### Breaking changes
 
+- fix!: `scales()` checks the arguments of every `scale-*` constructor when it binds the scale, and fails under the name of that constructor. An unknown `oob` mode or viridis `option`, an empty `scale-manual()`, `scale-gradientn()` or `scale-stepsn()`, an `n-breaks` below 1, and a `chroma`, `luminance`, `start` or `end` out of range used to pass in silence, and now fail. (#376)
+- fix!: A `breaks` or `minor-breaks` value that doesn't parse as a number, or that sits outside the domain of a log10 or sqrt scale, now fails as a limit does. It used to drop in silence. `expand-limits()` fails on a value that doesn't parse, too. (#376)
 - fix!: A geom fails when it gets a constant for an aesthetic it does not draw, for example `geom-point(xend: 3)`. The value never had an effect, so remove it. (#350)
 - fix!: `scales()` fails for an aesthetic that has no scale, for example `width`. The entry never had an effect, so remove it. (#350)
 - fix!: `annotate()` puts a keyword argument in its inline row only when the target geom reads it, and passes any other to the geom, which rejects a name it does not know. `annotate("text", x: 1, y: 1, label: "a", xmin: 0)` now fails. (#350)
@@ -17,6 +19,10 @@
 - feat: `theme()` takes `guide-spacing`, the gap between the parts of a legend, such as its title and its colour bar. The default is `0cm`. (#372)
 - feat: `theme()` takes `legend-line`, the stroke of a legend spine. It is blank by default, so a legend draws none. (#372)
 - feat: Under `coord-radial`, lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline` and the lines of `geom-smooth` and `geom-function` follow the polar grid as curves, as in ggplot2, instead of straight chords. Polygons keep straight edges. (#359)
+- fix: A cell that a continuous colour, fill, size or alpha scale can't read, such as `"zz"` or NaN, now drops its row, whatever the `oob` mode. It used to raise `invalid float` or draw in the fallback ink. (#376)
+- fix: NaN counts as a missing value everywhere, so the `breaks-*`, `cut-*` and `format-*` helpers and scale training no longer raise `cannot compare float.nan`. (#376)
+- fix: A wrong type for a scale argument such as `limits`, `expand`, `range`, `hue`, `direction`, `midpoint`, `palette` or `n-minor`, or for `sec-axis(transform:)`, fails with a message that names the function you called, not a raw Typst error. (#376)
+- fix: Scale messages show the value as you wrote it, so `0` stays `0` and not `0.0`, and a `plot(strict: true)` failure is reported under `plot`. (#376)
 - fix: `geom-qq()` and `geom-qq-line()` title their axes "theoretical" and "sample", also when the data is mapped with `aes(sample: ...)`. A scale name or a `labels()` entry still wins. (#371)
 - fix: Free facet scales keep `typst()` markup on the tick labels of a positional axis, as fixed scales do. (#371)
 - fix: A continuous axis with explicit `limits` keeps a pinned side at the limit when a `geom-ribbon()` band reaches past it, and a reversed axis keeps its direction. The band is cut at the panel edge. (#370)

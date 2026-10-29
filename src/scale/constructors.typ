@@ -1206,9 +1206,9 @@
 /// \@param hue `(start, end)` angle pair sweeping the HCL hue circle; default
 ///   `(15deg, 375deg)`.
 ///
-/// \@param chroma HCL chroma, a number; default `100`.
+/// \@param chroma HCL chroma, a number in `[0, 100]`; default `100`.
 ///
-/// \@param luminance HCL luminance, a number; default `65`.
+/// \@param luminance HCL luminance, a number in `[0, 100]`; default `65`.
 ///
 /// \@param name Axis or legend title, as a string or content; `none` (default)
 ///   falls back to the mapped column name.

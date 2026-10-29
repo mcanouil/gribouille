@@ -8,6 +8,8 @@
 ///! A panel has no opposite edge to draw on under `coord-radial`, so a
 ///! secondary axis degrades to a no-op there.
 
+#import "../utils/errors.typ": fail-type
+
 /// Duplicate the primary axis on the opposite side of the panel.
 ///
 /// Draws the same ticks as the primary axis but on the top edge for x or
@@ -144,13 +146,24 @@
   name: none,
   breaks: auto,
   labels: auto,
-) = (
-  kind: "secondary-axis",
-  transform: transform,
-  name: name,
-  breaks: breaks,
-  labels: labels,
-)
+) = {
+  if transform != "identity" and type(transform) != function {
+    fail-type(
+      "sec-axis",
+      "transform",
+      transform,
+      "a function or \"identity\"",
+      hint: "Write `transform: x => x * 2`.",
+    )
+  }
+  (
+    kind: "secondary-axis",
+    transform: transform,
+    name: name,
+    breaks: breaks,
+    labels: labels,
+  )
+}
 
 // Map a primary value through the secondary's transformation.
 #let apply-transform(sec, value) = {

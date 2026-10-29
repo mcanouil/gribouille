@@ -10,6 +10,12 @@
 #import "../utils/pretty.typ": pretty
 #import "../utils/extended.typ": extended
 
+// The trained values without NaN, which is an unusable cell and compares with
+// no number. Each closure below reads its values through it first.
+#let _drop-nan(values) = values.filter(v => (
+  type(v) != float or not float.is-nan(v)
+))
+
 // Data range of the trained values, or `none` when the vector is empty (an
 // unmapped scale, or one whose every cell failed to parse as a number).
 // Folded rather than spread through `calc.min`, which would push one argument
@@ -69,6 +75,7 @@
     "offset must be a number; got " + repr(offset),
   )
   values => {
+    let values = _drop-nan(values)
     let span = _range-of(values)
     if span == none { return () }
     let (lo, hi) = span
@@ -115,6 +122,7 @@
     "n must be a positive integer; got " + repr(n),
   )
   values => {
+    let values = _drop-nan(values)
     let span = _range-of(values)
     if span == none { return () }
     let (lo, hi) = span
@@ -159,6 +167,7 @@
     "n must be an integer above 1; got " + repr(n),
   )
   values => {
+    let values = _drop-nan(values)
     let span = _range-of(values)
     if span == none { return () }
     let (lo, hi) = span
@@ -294,6 +303,7 @@
   }
   check(base > 1, "breaks-log", "base must be above 1; got " + repr(base))
   values => {
+    let values = _drop-nan(values)
     if values.len() == 0 { return () }
     // A log break is undefined at or below zero. Non-positive rows drop out
     // rather than fail, since a log axis discards them too, but a vector with
@@ -360,6 +370,7 @@
     )
   }
   values => {
+    let values = _drop-nan(values)
     if values.len() == 0 { return () }
     let sorted = values.sorted()
     let last = sorted.len() - 1

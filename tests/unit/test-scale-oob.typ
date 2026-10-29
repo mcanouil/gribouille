@@ -6,7 +6,9 @@
 //   - "squish" keeps the row and clamps the cell to the nearest limit
 //   - rows without user `limits` on a scale are never touched
 //   - discrete `limits` drops rows whose level is outside the set
-//   - rows with unparseable values survive (treated as in-range)
+//   - rows with unparseable values drop, with or without `limits`, except on a
+//     position scale with no `limits`, and a `none` cell stays
+//   - `strict` does not report an unparseable cell
 
 #import "../../src/scale/oob.typ": filter-oob, oob-plans
 #import "../../src/utils/late-binding.typ": from-theme
@@ -19,9 +21,11 @@
   view-transform: none,
   transform: "identity",
   pre-transformed: false,
+  unusable: false,
 ) = {
   let t = (
     type: "continuous",
+    unusable: unusable,
     domain: if limits != none { limits } else { (0, 10) },
     transform: transform,
     pre-transformed: pre-transformed,
@@ -89,13 +93,61 @@
   assert.eq(out.counts.at("fill"), 2)
 }
 
-// unparseable continuous values are treated as in-range
+// an unparseable continuous cell drops its row, and a `none` cell stays
 #{
   let trained = (fill: _trained-continuous(limits: (2, 5)))
+  let rows = ((v: 3), (v: "abc"), (v: none), (v: float.nan))
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
+  assert.eq(out.layers.at(0).data, ((v: 3), (v: none)))
+  assert.eq(out.counts.at("fill"), 2)
+}
+
+// without `limits`, a continuous non-position scale that trained on an
+// unparseable cell still drops it
+#{
+  let trained = (fill: _trained-continuous(unusable: true))
   let rows = ((v: 3), (v: "abc"), (v: none))
   let out = filter-oob((_layer(rows),), oob-plans(trained))
+  assert.eq(out.layers.at(0).data, ((v: 3), (v: none)))
+}
+
+// without `limits`, a position scale leaves the cell to the geom
+#{
+  let trained = (x: _trained-continuous(unusable: true))
+  let rows = ((v: 3), (v: "abc"))
+  let layer = (kind: "layer", data: rows, mapping: (x: "v"))
+  let out = filter-oob((layer,), oob-plans(trained))
   assert.eq(out.layers.at(0).data, rows)
-  assert.eq(out.counts, (:))
+}
+
+// without `limits`, a positional feeder such as ymin leaves the cell to the
+// geom too, so an errorbar keeps its row
+#{
+  let trained = (ymin: _trained-continuous(unusable: true))
+  let rows = ((v: 3), (v: "abc"))
+  let layer = (kind: "layer", data: rows, mapping: (ymin: "v"))
+  let out = filter-oob((layer,), oob-plans(trained))
+  assert.eq(out.layers.at(0).data, rows)
+}
+
+// an empty string is a missing cell, as `none` is, with or without `limits`
+#{
+  let rows = ((v: 3), (v: ""))
+  let free = (fill: _trained-continuous(unusable: true))
+  assert.eq(filter-oob((_layer(rows),), oob-plans(free)).layers.at(0).data, rows)
+  let limited = (fill: _trained-continuous(limits: (2, 5)))
+  assert.eq(
+    filter-oob((_layer(rows),), oob-plans(limited)).layers.at(0).data,
+    rows,
+  )
+}
+
+// `strict` drops an unparseable cell in silence: it is not outside the limits
+#{
+  let trained = (fill: _trained-continuous(limits: (2, 5)))
+  let rows = ((v: 3), (v: "abc"))
+  let out = filter-oob((_layer(rows),), oob-plans(trained), strict: true)
+  assert.eq(out.layers.at(0).data, ((v: 3),))
 }
 
 // expansion headroom: a value outside `limits` but inside the expanded

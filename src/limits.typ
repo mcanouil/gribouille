@@ -5,6 +5,8 @@
 ///! For clipping use \@scale-continuous with its `limits:` argument directly.
 
 #import "scale/continuous.typ": _continuous-scale
+#import "utils/errors.typ": fail-type
+#import "utils/types.typ": parse-number
 
 /// Ensure the trained domain includes the supplied values without replacing it.
 ///
@@ -54,16 +56,31 @@
 ///
 /// \@see \@scale-continuous, \@scales
 #let expand-limits(x: none, y: none) = {
-  let _values(v) = if type(v) == array { v } else { (v,) }
+  // A value here is a user argument, not a data cell, so one that does not
+  // parse fails, as a scale limit does.
+  let _values(name, v) = {
+    let values = if type(v) == array { v } else { (v,) }
+    for value in values {
+      if parse-number(value) == none {
+        fail-type(
+          "expand-limits",
+          name,
+          value,
+          "a number or an ISO date string",
+        )
+      }
+    }
+    values
+  }
   let out = (:)
   if x != none {
     let s = _continuous-scale("x")
-    s.insert("extend", _values(x))
+    s.insert("extend", _values("x", x))
     out.insert("x", s)
   }
   if y != none {
     let s = _continuous-scale("y")
-    s.insert("extend", _values(y))
+    s.insert("extend", _values("y", y))
     out.insert("y", s)
   }
   out

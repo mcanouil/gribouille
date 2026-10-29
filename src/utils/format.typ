@@ -12,9 +12,15 @@
 #import "./types.typ": parse-number
 #import "./typst-markup.typ": typst
 
+// A break as a number: an int stays an int, so its label keeps no decimals,
+// and anything else goes through `parse-number`, which reads NaN as no value.
+#let _numeric(value) = if type(value) == int { value } else {
+  parse-number(value)
+}
+
 #let _format-number-impl(n, big-mark: ",", decimal-mark: ".", digits: auto) = {
   if n == none { return none }
-  let value = if type(n) == str { parse-number(n) } else { n }
+  let value = _numeric(n)
   if value == none { return str(n) }
   let abs-val = if value < 0 { -value } else { value }
   let d = if digits == auto { 6 } else { int(digits) }
@@ -187,7 +193,7 @@
   digits: 0,
 ) = value => {
   if value == none { return none }
-  let v = if type(value) == str { parse-number(value) } else { value }
+  let v = _numeric(value)
   if v == none { return str(value) }
   (
     _format-number-impl(
@@ -280,7 +286,7 @@
 /// \@see \@format-number, \@typst
 #let format-scientific(digits: 2) = value => {
   if value == none { return none }
-  let v = if type(value) == str { parse-number(value) } else { value }
+  let v = _numeric(value)
   if v == none { return str(value) }
   if v == 0 { return typst("$0$") }
   let abs-v = if v < 0 { -v } else { v }
@@ -346,7 +352,7 @@
   let base-str = _format-number-impl(base, big-mark: "")
   value => {
     if value == none { return none }
-    let v = if type(value) == str { parse-number(value) } else { value }
+    let v = _numeric(value)
     if v == none { return str(value) }
     // A logarithm is undefined at or below zero. Such a break belongs to a
     // linear axis, so label it plainly rather than fail.
