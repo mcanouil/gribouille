@@ -3,11 +3,11 @@
 
 #import "../scale/train.typ": (
   _SYNTHETIC-FEEDERS, _find-user-scale, _resolve-forced-type, level-position,
-  mapping-ref-col, transform-fwd,
+  mapping-ref-col, scope-of, transform-fwd,
 )
 #import "../utils/types.typ": infer-column-type, parse-number
 #import "../utils/aes-resolve.typ": merge-mapping
-#import "../utils/errors.typ": fail-type
+#import "../scale/arguments.typ": check-transform-domain
 #import "common.typ": _resolve-data
 
 // Collect unique levels of a column from the raw (pre-stat) data across all
@@ -42,8 +42,7 @@
     if s.at("type", default: none) != "continuous" { continue }
     let t = s.at("transform", default: "identity")
     if _PRE-STAT-TRANSFORMS.contains(t) {
-      let scope = "scale-" + s.at("family", default: "continuous")
-      result.insert(axis, (transform: t, scope: scope))
+      result.insert(axis, (transform: t, scope: scope-of(s)))
     }
   }
   result
@@ -73,12 +72,7 @@
     let raw = row.at(entry.col, default: none)
     let v = parse-number(raw)
     if v == none { continue }
-    if entry.transform == "log10" and v <= 0 {
-      fail-type(entry.scope, entry.axis, raw, "positive on a log10 scale")
-    }
-    if entry.transform == "sqrt" and v < 0 {
-      fail-type(entry.scope, entry.axis, raw, "non-negative on a sqrt scale")
-    }
+    check-transform-domain(entry.scope, entry.axis, raw, v, entry.transform)
     new-row.insert(entry.col, transform-fwd(entry.transform, v))
   }
   new-row

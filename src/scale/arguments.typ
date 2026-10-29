@@ -14,6 +14,7 @@
 #import "../utils/types.typ": is-native-numeric, parse-number
 #import "../utils/viridis.typ" as viridis-mod
 #import "../utils/palette.typ": brewer-palettes
+#import "expansion.typ": normalise-expansion
 
 // Accepted `transform` names, mirrored by `transform-fwd`/`transform-inv` in
 // train.typ, and accepted `oob` modes, mirrored by `_checker` in oob.typ.
@@ -33,11 +34,15 @@
   }
 }
 
-#let _check-unit-number(scope, name, value) = {
-  _check-number(scope, name, value)
-  if value < 0 or value > 1 {
-    fail-range(scope, name, value, 0, 1, lo-open: false, hi-open: false)
+#let _check-in(scope, name, value, lo, hi) = {
+  if value < lo or value > hi {
+    fail-range(scope, name, value, lo, hi, lo-open: false, hi-open: false)
   }
+}
+
+#let _check-number-in(scope, name, value, lo, hi) = {
+  _check-number(scope, name, value)
+  _check-in(scope, name, value, lo, hi)
 }
 
 #let _check-non-empty(scope, name, value, expected) = {
@@ -62,42 +67,9 @@
       if not is-native-numeric(side) {
         fail-type(scope, "range", value, expected)
       }
-      if side < 0 or side > 1 {
-        fail-range(scope, "range", side, 0, 1, lo-open: false, hi-open: false)
-      }
+      _check-in(scope, "range", side, 0, 1)
     }
   }
-}
-
-#let _check-expand-piece(scope, value, piece) = {
-  if piece == auto or piece == 0 { return }
-  if type(piece) not in (ratio, length, relative) {
-    fail-type(
-      scope,
-      "expand",
-      value,
-      "a ratio, a length, a relative length, or a (lo, hi) pair of them",
-      hint: "Write `expand: 5%`, `expand: 2pt`, or `expand: (5%, auto)`.",
-    )
-  }
-}
-
-#let _check-expand(scope, value) = {
-  if value == auto or value == false or value == none { return }
-  if type(value) == array {
-    if value.len() != 2 {
-      fail-type(
-        scope,
-        "expand",
-        value,
-        "a (lo, hi) pair",
-        hint: "Give one value for both sides, or one value per side.",
-      )
-    }
-    for piece in value { _check-expand-piece(scope, value, piece) }
-    return
-  }
-  _check-expand-piece(scope, value, value)
 }
 
 // Check the named arguments of a stub of `family` bound to `aesthetic`. Each
@@ -153,16 +125,10 @@
     if key in named { _check-number(scope, key, named.at(key)) }
   }
   for key in ("start", "end") {
-    if key in named { _check-unit-number(scope, key, named.at(key)) }
+    if key in named { _check-number-in(scope, key, named.at(key), 0, 1) }
   }
   for key in ("chroma", "luminance") {
-    if key in named {
-      let value = named.at(key)
-      _check-number(scope, key, value)
-      if value < 0 or value > 100 {
-        fail-range(scope, key, value, 0, 100, lo-open: false, hi-open: false)
-      }
-    }
+    if key in named { _check-number-in(scope, key, named.at(key), 0, 100) }
   }
   if "hue" in named {
     let hue = named.hue
@@ -173,7 +139,21 @@
     }
   }
   if "range" in named { _check-range(scope, aesthetic, named.range) }
-  if "expand" in named { _check-expand(scope, named.expand) }
+  if "expand" in named {
+    // The call only checks the value, so its result is dropped.
+    let _ = normalise-expansion(named.expand, "continuous", scope: scope)
+  }
+}
+
+// Fail when `v`, the parsed form of the user value `raw`, lies outside the
+// domain of `transform`. The message prints `raw`, as the user wrote it.
+#let check-transform-domain(scope, name, raw, v, transform) = {
+  if transform == "log10" and v <= 0 {
+    fail-type(scope, name, raw, "positive on a log10 scale")
+  }
+  if transform == "sqrt" and v < 0 {
+    fail-type(scope, name, raw, "non-negative on a sqrt scale")
+  }
 }
 
 // Check one side of a continuous `limits` pair, and the domain of `transform`.
@@ -189,12 +169,7 @@
       "a number, an ISO date string, or `auto`",
     )
   }
-  if transform == "log10" and v <= 0 {
-    fail-type(scope, side + " limit", value, "positive on a log10 scale")
-  }
-  if transform == "sqrt" and v < 0 {
-    fail-type(scope, side + " limit", value, "non-negative on a sqrt scale")
-  }
+  check-transform-domain(scope, side + " limit", value, v, transform)
 }
 
 // Check `limits` on the built scale: a `(lo, hi)` pair on a continuous scale,
@@ -249,11 +224,6 @@
     if v == none {
       fail-type(scope, "breaks", b, "a number or an ISO date string")
     }
-    if transform == "log10" and v <= 0 {
-      fail-type(scope, "breaks", b, "positive on a log10 scale")
-    }
-    if transform == "sqrt" and v < 0 {
-      fail-type(scope, "breaks", b, "non-negative on a sqrt scale")
-    }
+    check-transform-domain(scope, "breaks", b, v, transform)
   }
 }

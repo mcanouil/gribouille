@@ -21,9 +21,11 @@
   view-transform: none,
   transform: "identity",
   pre-transformed: false,
+  unusable: false,
 ) = {
   let t = (
     type: "continuous",
+    unusable: unusable,
     domain: if limits != none { limits } else { (0, 10) },
     transform: transform,
     pre-transformed: pre-transformed,
@@ -100,10 +102,10 @@
   assert.eq(out.counts.at("fill"), 2)
 }
 
-// without `limits`, a continuous non-position scale still drops an
-// unparseable cell
+// without `limits`, a continuous non-position scale that trained on an
+// unparseable cell still drops it
 #{
-  let trained = (fill: _trained-continuous())
+  let trained = (fill: _trained-continuous(unusable: true))
   let rows = ((v: 3), (v: "abc"), (v: none))
   let out = filter-oob((_layer(rows),), oob-plans(trained))
   assert.eq(out.layers.at(0).data, ((v: 3), (v: none)))
@@ -111,7 +113,7 @@
 
 // without `limits`, a position scale leaves the cell to the geom
 #{
-  let trained = (x: _trained-continuous())
+  let trained = (x: _trained-continuous(unusable: true))
   let rows = ((v: 3), (v: "abc"))
   let layer = (kind: "layer", data: rows, mapping: (x: "v"))
   let out = filter-oob((layer,), oob-plans(trained))

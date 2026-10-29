@@ -163,10 +163,14 @@
   let lo = none
   let hi = none
   let whole = true
+  let unusable = false
   for col in cols {
     for raw in col.values {
       let v = parse-number(raw)
-      if v == none { continue }
+      if v == none {
+        if raw != none { unusable = true }
+        continue
+      }
       if whole and v != calc.round(v) { whole = false }
       if lo == none {
         lo = v
@@ -177,11 +181,13 @@
       }
     }
   }
-  if lo == none { return (domain: (0.0, 1.0), integer: false) }
-  if lo == hi and not _SYNTHETIC-FEEDERS.contains(aesthetic) {
-    return (domain: (lo - 0.5, hi + 0.5), integer: whole)
+  if lo == none {
+    return (domain: (0.0, 1.0), integer: false, unusable: unusable)
   }
-  (domain: (lo, hi), integer: whole)
+  if lo == hi and not _SYNTHETIC-FEEDERS.contains(aesthetic) {
+    return (domain: (lo - 0.5, hi + 0.5), integer: whole, unusable: unusable)
+  }
+  (domain: (lo, hi), integer: whole, unusable: unusable)
 }
 
 // Flatten the cached columns into the numeric vector a function-valued
@@ -201,7 +207,7 @@
 
 // The constructor a user scale came from, as `bind-scale` stamped it, so a
 // message names the function the user called.
-#let _scope-of(user-scale) = "scale-" + user-scale.at("family", default: "continuous")
+#let scope-of(user-scale) = "scale-" + user-scale.at("family", default: "continuous")
 
 // Call a user break closure on the trained values and validate its result.
 // `name` is the spec key, so the message names the argument the user wrote.
@@ -383,11 +389,13 @@
     _scale-type-from-cache(cols)
   }
   let integer = false
+  let unusable = false
   let domain = if scale-type == "identity" {
     ()
   } else if scale-type == "continuous" {
     let scanned = _continuous-domain-from-cache(cols, aes)
     integer = scanned.integer
+    unusable = scanned.unusable
     scanned.domain
   } else {
     _discrete-domain-from-cache(cols)
@@ -507,9 +515,10 @@
           values = values.filter(v => v <= hi)
         }
       }
+      let scope = scope-of(user-scale)
       for key in keys {
         let resolved = _breaks-from-closure(
-          _scope-of(user-scale),
+          scope,
           key,
           user-scale.at(key),
           values,
@@ -521,7 +530,7 @@
         secondary.insert(
           "breaks",
           _breaks-from-closure(
-            _scope-of(user-scale),
+            scope,
             "breaks",
             secondary.breaks,
             values,
@@ -552,12 +561,10 @@
       let folded = if pre-transformed {
         numeric-breaks.map(b => transform-fwd(transform, b))
       } else { numeric-breaks }
-      if folded.len() > 0 {
-        let (lo, hi) = domain
-        if not explicit-lo { lo = calc.min(lo, ..folded) }
-        if not explicit-hi { hi = calc.max(hi, ..folded) }
-        domain = (lo, hi)
-      }
+      let (lo, hi) = domain
+      if not explicit-lo { lo = calc.min(lo, ..folded) }
+      if not explicit-hi { hi = calc.max(hi, ..folded) }
+      domain = (lo, hi)
     }
   }
   let level-index = if scale-type == "discrete" {
@@ -572,6 +579,8 @@
   //     view window that axis breaks and panel mapping read.
   // `integer` records that every trained value was a whole number, so the
   // automatic breaks stay whole (`_axis-breaks`, continuous guides).
+  // `unusable` records that a cell did not parse as a number, so the oob
+  // pre-pass walks the rows to drop it only when there is one to drop.
   // Read `spec` keys through `spec-attr` (utils/palette.typ), not by direct
   // `.spec.at(...)` pokes.
   let entry = (
@@ -583,6 +592,7 @@
     pre-transformed: pre-transformed,
     typst-mark: cached.typst-mark,
     integer: integer,
+    unusable: unusable,
   )
   if user-scale != none and user-scale.at("temporal", default: none) != none {
     entry.insert("temporal", user-scale.temporal)

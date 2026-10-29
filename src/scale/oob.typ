@@ -26,7 +26,7 @@
 
 // Build the per-row check for one trained scale, or `none` when the scale
 // censors nothing: a scale with no user `limits`, other than a continuous
-// non-position scale, which still drops the cells it cannot read.
+// non-position scale that trained on a cell it cannot read.
 //
 // The check is a closure taking the cell alone, so the level lookup is
 // captured once rather than reaching the call on every row. Holding the same
@@ -40,7 +40,11 @@
 //   ("unusable", value) — caller drops the row, also under `strict`
 #let _checker(aes, trained) = {
   if spec-attr(trained, "limits") == none {
-    if trained.type == "continuous" and aes not in _POSITION-AES {
+    if (
+      trained.type == "continuous"
+        and aes not in _POSITION-AES
+        and trained.at("unusable", default: false)
+    ) {
       return _drop-unusable
     }
     return none

@@ -35,7 +35,6 @@
     }
   }
   value => {
-    if value == none or value == "" { return ink }
     let v = parse-number(value)
     if v == none { return ink }
     resolve-continuous-colour(trained, v, pal, ink)
