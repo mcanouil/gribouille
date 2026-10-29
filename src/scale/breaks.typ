@@ -6,7 +6,7 @@
 ///! Writing the closure by hand works just as well; these cover the common
 ///! placements.
 
-#import "../utils/errors.typ": check, fail, fail-type
+#import "../utils/errors.typ": check, fail-type
 #import "../utils/pretty.typ": pretty
 #import "../utils/extended.typ": extended
 
@@ -35,7 +35,9 @@
 ///
 /// Covers the data range with positions `offset + k * width`, so the ticks
 /// stay on round multiples however the domain moves. The counterpart of
-/// `scales::breaks_width()`.
+/// `scales::breaks_width()`. The step is fixed, so data that spans no
+/// multiple of `width`, such as a single value off the grid, gets no breaks. The step is fixed, so data that spans no
+/// multiple of `width`, such as a single value off the grid, gets no breaks.
 ///
 /// \@category Scales
 /// \@subcategory Breaks
@@ -305,13 +307,10 @@
   values => {
     let values = _drop-nan(values)
     if values.len() == 0 { return () }
-    // A log break is undefined at or below zero. Non-positive rows drop out
-    // rather than fail, since a log axis discards them too, but a vector with
-    // nothing positive left has no answer to give.
+    // A log break is undefined at or below zero, so non-positive rows drop out
+    // as a log axis discards them too. Nothing positive left gives no breaks.
     let positive = values.filter(v => v > 0)
-    if positive.len() == 0 {
-      fail("breaks-log", "no positive values to place breaks on")
-    }
+    if positive.len() == 0 { return () }
     let (lo, hi) = _range-of(positive)
     let kmin = int(calc.floor(_log-exponent(lo, base)))
     let kmax = int(calc.ceil(_log-exponent(hi, base)))
@@ -359,6 +358,9 @@
 ///
 /// \@see \@breaks-width, \@breaks-pretty, \@scale-continuous
 #let breaks-quantile(probs: (0, 0.25, 0.5, 0.75, 1)) = {
+  if type(probs) != array {
+    fail-type("breaks-quantile", "probs", probs, "an array of numbers")
+  }
   for p in probs {
     if type(p) != int and type(p) != float {
       fail-type("breaks-quantile", "probs", p, "an array of numbers")
@@ -374,7 +376,7 @@
     if values.len() == 0 { return () }
     let sorted = values.sorted()
     let last = sorted.len() - 1
-    probs.map(p => {
+    let breaks = probs.map(p => {
       let pos = p * last
       let below = int(calc.floor(pos))
       let above = int(calc.ceil(pos))
@@ -382,5 +384,6 @@
       let weight = pos - below
       sorted.at(below) * (1 - weight) + sorted.at(above) * weight
     })
+    breaks.dedup()
   }
 }

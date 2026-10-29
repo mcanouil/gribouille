@@ -4,6 +4,7 @@
 
 ### Breaking changes
 
+- fix!: `breaks-quantile()`, `cut-interval()`, `cut-number()`, `cut-width()`, the `format-*` factories, `label-both()`, `label-wrap()`, `labeller()` and the `labeller` argument of `facet-wrap()` and `facet-grid()` check their arguments and fail under their own name, where a wrong type used to raise a raw Typst error. `cut-number()` also fails when its quantile breaks tie, the `format-*` factories fail for a negative `digits`, and `format-wrap()` and `label-wrap()` fail for a `width` below 1. (#379)
 - fix!: The binning, contour, 2D density, quantile, smooth, ellipse, function and boxplot stats and their geoms check their arguments, and fail under the name of the function you called. `bins: 0`, `bins: 2.5`, `binwidth: 0`, `n: 1` for `stat-density-2d()`, `bw: -1`, `breaks: 3`, `quantiles: (1.5,)`, `n-samples: 0`, `level: 1` or a negative `level` for `stat-smooth()` and `stat-ellipse()`, `stat-function(fun: 5)`, `stat-function(n: 0)` and `stat-boxplot(coefficient: -1)` used to raise a raw error, clamp in silence or draw a wrong result. (#378)
 - fix!: `stat-summary()` and `stat-summary-bin()` fail when the layer maps `weight` and `fun` is `median`, `median-hilow`, `quantile`, `quantiles` or `mean-cl-boot`. These helpers have no weighted form and used to drop the weights in silence. A callable `fun` gets the weights as `weights:`, so give it that parameter or a `..args` sink. (#377)
 - fix!: `as-numeric(data, col)` and `as-factor(data, col)` fail on a column that the data doesn't hold, where they used to add a new column of `none`. They also accept a column store and fail by name on the wrong number of arguments. (#377)
@@ -23,6 +24,10 @@
 - feat: `theme()` takes `guide-spacing`, the gap between the parts of a legend, such as its title and its colour bar. The default is `0cm`. (#372)
 - feat: `theme()` takes `legend-line`, the stroke of a legend spine. It is blank by default, so a legend draws none. (#372)
 - feat: Under `coord-radial`, lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline` and the lines of `geom-smooth` and `geom-function` follow the polar grid as curves, as in ggplot2, instead of straight chords. Polygons keep straight edges. (#359)
+- fix: `breaks-log()` returns no breaks when no value is positive, and `breaks-quantile()` returns one break for each distinct quantile. `breaks-width()` documents that data off its grid gets no breaks. (#379)
+- fix: `cut-interval()`, `cut-number()` and `cut-width()` round the bounds in their labels to three digits, and their messages name the function you called. (#379)
+- fix: `format-number()` and the other `format-*` helpers drop the sign of a value that rounds to zero, so no label reads `-0.00`. (#379)
+- fix: `label-wrap()` and `format-wrap()` share one wrap that counts characters, fills each line, and splits a word longer than the width. Accented text no longer raises an error. (#379)
 - fix: `stat-bin()`, `stat-count()`, `stat-bindot()` and `stat-connect()` return no rows when `x` is not mapped, as the other stats do. They used to pass the raw rows through. (#378)
 - fix: An unknown `fun` in `stat-summary()`, `stat-summary-bin()`, `stat-summary-2d()` and `stat-summary-hex()`, and an unknown `distribution` in `geom-qq()` and `geom-qq-line()`, name the function you called and list the valid values. (#378)
 - fix: A `none` cell in a key column forms its own group in `summarise()`, `count()`, `distinct()`, `slice-max()`, `slice-min()`, the joins and `pivot-wider()`, and a `none` key only matches a `none` key. An empty key list puts every row in one group, so `pivot-wider()` with no identifier column works, and a join with `by: ()` fails by name. (#377)

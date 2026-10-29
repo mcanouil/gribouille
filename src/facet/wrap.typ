@@ -3,7 +3,7 @@
 ///! One panel per level of a discrete variable, wrapped into a grid of
 ///! `ncolumn` columns (or `nrow` rows).
 
-#import "labellers.typ": label-value
+#import "labellers.typ": check-labeller, label-value
 #import "../utils/errors.typ": fail-enum
 
 /// Wrap facets: one panel per level of a discrete variable.
@@ -114,6 +114,7 @@
   gutter: auto,
   axes: "margins",
 ) = {
+  if labeller != none { check-labeller("facet-wrap", "labeller", labeller) }
   if not ("fixed", "free", "free_x", "free_y").contains(scales) {
     fail-enum(
       "facet-wrap",

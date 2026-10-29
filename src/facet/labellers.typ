@@ -5,6 +5,35 @@
 ///! the level as-is. Combine several labellers into one with `labeller` so
 ///! different facet variables can use different rules.
 
+#import "../utils/errors.typ": check, fail-enum, fail-type
+#import "../utils/wrap.typ": soft-wrap
+
+#let _known-labellers = ("value", "both", "context", "wrap", "compound")
+
+#let _check-string(scope, name, value) = {
+  if type(value) != str { fail-type(scope, name, value, "a string") }
+}
+
+// Check that `lab` is a labeller dictionary, recursing into the labellers it
+// holds. Public constructors build such a dictionary, but a facet also takes a
+// hand-written one, so the facet constructors run this on their argument.
+#let check-labeller(scope, name, lab) = {
+  if type(lab) != dictionary or lab.at("kind", default: none) != "labeller" {
+    fail-type(scope, name, lab, "a labeller such as `label-value()`")
+  }
+  let kind = lab.at("name", default: none)
+  if kind not in _known-labellers {
+    fail-enum(scope, name + " name", kind, _known-labellers)
+  }
+  if kind == "wrap" and lab.inner != none {
+    check-labeller(scope, name, lab.inner)
+  }
+  if kind == "compound" {
+    check-labeller(scope, name, lab.default)
+    for (_, rule) in lab.rules { check-labeller(scope, name, rule) }
+  }
+}
+
 /// Default labeller: shows the level value as-is.
 ///
 /// \@category Facets
@@ -87,11 +116,14 @@
 /// ```
 ///
 /// \@see \@label-value, \@label-context, \@labeller
-#let label-both(separator: ": ") = (
-  kind: "labeller",
-  name: "both",
-  separator: separator,
-)
+#let label-both(separator: ": ") = {
+  _check-string("label-both", "separator", separator)
+  (
+    kind: "labeller",
+    name: "both",
+    separator: separator,
+  )
+}
 
 /// Labeller appending the row count for each level.
 ///
@@ -183,12 +215,23 @@
 /// ```
 ///
 /// \@see \@label-value, \@label-both, \@labeller
-#let label-wrap(width: 20, inner: none) = (
-  kind: "labeller",
-  name: "wrap",
-  width: width,
-  inner: inner,
-)
+#let label-wrap(width: 20, inner: none) = {
+  if type(width) != int {
+    fail-type("label-wrap", "width", width, "a positive integer")
+  }
+  check(
+    width >= 1,
+    "label-wrap",
+    "width must be a positive integer; got " + repr(width),
+  )
+  if inner != none { check-labeller("label-wrap", "inner", inner) }
+  (
+    kind: "labeller",
+    name: "wrap",
+    width: width,
+    inner: inner,
+  )
+}
 
 /// Combine labellers into a single rule keyed by facet variable.
 ///
@@ -258,14 +301,21 @@
 /// ```
 ///
 /// \@see \@label-value, \@label-both, \@label-context
-#let labeller(rules: (:), default: none) = (
-  kind: "labeller",
-  name: "compound",
-  rules: rules,
-  default: if default == none { (kind: "labeller", name: "value") } else {
-    default
-  },
-)
+#let labeller(rules: (:), default: none) = {
+  if type(rules) != dictionary {
+    fail-type("labeller", "rules", rules, "a dictionary of labellers")
+  }
+  for (_, rule) in rules { check-labeller("labeller", "rules", rule) }
+  if default != none { check-labeller("labeller", "default", default) }
+  (
+    kind: "labeller",
+    name: "compound",
+    rules: rules,
+    default: if default == none { (kind: "labeller", name: "value") } else {
+      default
+    },
+  )
+}
 
 // Resolve a labeller for a specific facet variable. Compound labellers pick
 // the rule matching `var`, falling back to `default`.
@@ -275,41 +325,10 @@
   lab.rules.at(var, default: lab.default)
 }
 
-// Soft-wrap `s` to lines no longer than `width`, breaking at the latest space
-// at or before the limit when possible. Falls back to a hard split.
-#let _soft-wrap(s, width) = {
-  if width <= 0 { return s }
-  let n = s.len()
-  if n <= width { return s }
-  let lines = ()
-  let rest = s
-  while rest.len() > width {
-    // Skip leading whitespace before measuring the next line.
-    while rest.len() > 0 and rest.at(0) == " " { rest = rest.slice(1) }
-    if rest.len() <= width { break }
-    let head = rest.slice(0, width)
-    let space-at = -1
-    let i = 0
-    while i < head.len() {
-      if head.at(i) == " " { space-at = i }
-      i = i + 1
-    }
-    if space-at > 0 {
-      lines.push(rest.slice(0, space-at))
-      rest = rest.slice(space-at + 1)
-    } else {
-      lines.push(head)
-      rest = rest.slice(width)
-    }
-  }
-  while rest.len() > 0 and rest.at(0) == " " { rest = rest.slice(1) }
-  if rest.len() > 0 { lines.push(rest) }
-  lines.join("\n")
-}
-
 // Apply a single labeller to a (var, level, count) triple. `count` may be
 // `none` if the renderer cannot supply it.
 #let apply-one(lab, var, level, count) = {
+  let level = str(level)
   if lab == none { return level }
   if lab.name == "value" { return level }
   if lab.name == "both" { return var + lab.separator + level }
@@ -321,7 +340,7 @@
     let inner-text = if lab.inner == none { level } else {
       apply-one(lab.inner, var, level, count)
     }
-    return _soft-wrap(inner-text, lab.width)
+    return soft-wrap(inner-text, lab.width)
   }
   level
 }

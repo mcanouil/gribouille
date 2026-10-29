@@ -3,7 +3,7 @@
 ///! Panels arranged on a `row x column` grid, driven by two discrete variables.
 ///! Scales may be shared (`"fixed"`) or freed per column (`x`) / row (`y`).
 
-#import "labellers.typ": label-value
+#import "labellers.typ": check-labeller, label-value
 #import "../utils/errors.typ": fail, fail-enum
 
 /// Grid facets: panels on a row x column grid from two discrete variables.
@@ -80,6 +80,7 @@
   labeller: label-value(),
   gutter: auto,
 ) = {
+  if labeller != none { check-labeller("facet-grid", "labeller", labeller) }
   if not ("fixed", "free", "free_x", "free_y").contains(scales) {
     fail-enum(
       "facet-grid",

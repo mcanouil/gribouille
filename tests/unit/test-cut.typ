@@ -58,4 +58,11 @@
 #assert(r-wc.at(1) != r-wc.at(2))
 #assert(r-wc.at(2) != r-wc.at(3))
 
+// Labels round the bounds as the axis ticks do.
+#assert.eq(cut-interval((0, 1), n: 3).at(0), "(0,0.333]")
+#assert.eq(cut-width((0.1, 0.35), width: 0.25).at(0), "(0,0.25]")
+
+// Constant data takes a one-element `labels` array for its single bin.
+#assert.eq(cut-interval((5, 5), n: 2, labels: ("x",)), ("x", "x"))
+
 Cut helpers tests passed.

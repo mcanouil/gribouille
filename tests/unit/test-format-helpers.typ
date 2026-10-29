@@ -96,4 +96,13 @@
 #assert.eq(wrap("short"), "short")
 #assert.eq(wrap("hello world foo"), "hello\nworld foo")
 
+// A value that rounds to zero loses its sign.
+#assert.eq(format-number(digits: 2)(-0.001), "0.00")
+#assert.eq(format-number(digits: 2)(-0.014), "-0.01")
+#assert.eq(format-percent()(-0.001), "0%")
+
+// Wrapping counts characters, and a long word splits at the width.
+#assert.eq(format-wrap(width: 3)("é é"), "é é")
+#assert.eq(format-wrap(width: 8)("abcdefgh ij"), "abcdefgh\nij")
+
 format helper tests passed.
