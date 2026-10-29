@@ -6,6 +6,7 @@
 ///! post-flip y axis is discrete its direction is reversed by default so
 ///! the first level sits at the top, matching reading order top-to-bottom.
 
+#import "../utils/errors.typ": fail-type
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
 
@@ -89,11 +90,16 @@
 /// bottom-to-top direction.
 ///
 /// \@see \@plot, \@coord-cartesian, \@geom-col
-#let coord-flip(reverse: auto) = (
-  coord-base("flip")
-    + (
-      flipped: true,
-      reverse: reverse,
-      train: trained => _apply-flip(apply-expand(trained), reverse),
-    )
-)
+#let coord-flip(reverse: auto) = {
+  if reverse != auto and type(reverse) != bool {
+    fail-type("coord-flip", "reverse", reverse, "`auto` or a boolean")
+  }
+  (
+    coord-base("flip")
+      + (
+        flipped: true,
+        reverse: reverse,
+        train: trained => _apply-flip(apply-expand(trained), reverse),
+      )
+  )
+}

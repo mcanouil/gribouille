@@ -4,7 +4,7 @@
 ///! `ncolumn` columns (or `nrow` rows).
 
 #import "labellers.typ": check-labeller, label-value
-#import "../utils/errors.typ": fail-enum
+#import "../utils/errors.typ": fail-enum, fail-type
 
 /// Wrap facets: one panel per level of a discrete variable.
 ///
@@ -114,6 +114,14 @@
   gutter: auto,
   axes: "margins",
 ) = {
+  if type(variable) != str {
+    fail-type("facet-wrap", "variable", variable, "a column name string")
+  }
+  for (name, count) in (("ncolumn", ncolumn), ("nrow", nrow)) {
+    if count != none and (type(count) != int or count < 1) {
+      fail-type("facet-wrap", name, count, "`none` or a positive integer")
+    }
+  }
   if labeller != none { check-labeller("facet-wrap", "labeller", labeller) }
   if not ("fixed", "free", "free_x", "free_y").contains(scales) {
     fail-enum(

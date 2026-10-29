@@ -3,6 +3,8 @@
 ///! Locks the panel so that one data unit on x maps to `ratio` data units on y.
 ///! Scale training is unchanged; only the inner panel pixel size is adjusted.
 
+#import "../utils/errors.typ": fail-type
+#import "../utils/types.typ": check-number
 #import "contract.typ": coord-base
 
 // Shrink the inner panel along the longer axis so that one x data unit
@@ -77,10 +79,14 @@
 /// ```
 ///
 /// \@see \@plot, \@coord-cartesian
-#let coord-fixed(ratio: 1) = (
-  coord-base("fixed")
-    + (
-      ratio: ratio,
-      panel-size: (trained, w, h) => _fixed-inner-size(ratio, trained, w, h),
-    )
-)
+#let coord-fixed(ratio: 1) = {
+  check-number("coord-fixed", "ratio", ratio)
+  if ratio <= 0 { fail-type("coord-fixed", "ratio", ratio, "a positive number") }
+  (
+    coord-base("fixed")
+      + (
+        ratio: ratio,
+        panel-size: (trained, w, h) => _fixed-inner-size(ratio, trained, w, h),
+      )
+  )
+}
