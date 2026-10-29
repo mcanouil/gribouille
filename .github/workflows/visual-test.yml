@@ -5,6 +5,8 @@
 name: Visual test
 
 # Enforces the visual test rule in tests/visual/README.md.
+# There is no paths filter, so every pull request gets a check run that a
+# ruleset can require. A fix that touches neither src/ nor lib.typ passes.
 
 on:
   pull_request:
@@ -17,9 +19,6 @@ on:
       - converted_to_draft
       - labeled
       - unlabeled
-    paths:
-      - "src/**"
-      - "lib.typ"
 
 permissions:
   contents: read
@@ -49,9 +48,13 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          files="$(gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/files?per_page=100" \
-            --jq '.[] | select(.status != "removed") | .filename')"
-          if grep -E '^tests/visual/[^/]+\.typ$' <<<"${files}"; then
+          changes="$(gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/files?per_page=100" \
+            --jq '.[] | "\(.status) \(.filename)"')"
+          if ! grep -qE '^[a-z]+ (src/|lib\.typ$)' <<<"${changes}"; then
+            echo "The pull request changes neither src/ nor lib.typ."
+            exit 0
+          fi
+          if grep -E '^(added|modified|renamed|copied|changed) tests/visual/[^/]+\.typ$' <<<"${changes}"; then
             exit 0
           fi
           echo "::error title=No visual test::Add or change a tests/visual/*.typ file, or add the label 'Status: No Visual Change :see_no_evil:' if the fix does not change what a plot draws. See tests/visual/README.md."
