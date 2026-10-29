@@ -12,7 +12,7 @@
 
 ### Changes
 
-- feat: `compose()` takes `collect: "all"`, which moves every key into the shared legend, also a key that only some panels carry. Keys that merge are drawn once, and the others are stacked in panel order. (#373)
+- feat: `compose()` takes `collect: "all"`, which moves every key into the shared legend, also a key that only some panels carry. Keys that merge are drawn once, and the others are stacked in panel order. The shared legend now follows the guide order of the panels, also for a `collect` array. (#373)
 - feat: `theme()` takes `legend-ticks: element-tick(length: ...)`, so a theme sets the length of a colour bar tick as it does for an axis tick. The default stays `0.1cm`. (#372)
 - feat: `theme()` takes `guide-spacing`, the gap between the parts of a legend, such as its title and its colour bar. The default is `0cm`. (#372)
 - feat: `theme()` takes `legend-line`, the stroke of a legend spine. It is blank by default, so a legend draws none. (#372)

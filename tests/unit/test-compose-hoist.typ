@@ -216,4 +216,17 @@
   assert.eq(h.hoisted-guides.len(), 1)
 }
 
+// The shared block follows the guide order of the panel, not the order of the
+// names in a `collect` array.
+#context {
+  let sized = defer(
+    plot,
+    data: data,
+    mapping: aes(x: "x", y: "y", colour: "g", size: "y"),
+    layers: (geom-point(),),
+  )(as-spec: true)
+  let h = _hoist-guides((sized, sized), (:), ("size", "colour"), none)
+  assert.eq(h.hoisted-guides.map(g => g.aesthetics), (("colour",), ("size",)))
+}
+
 Compose guide hoisting tests passed.
