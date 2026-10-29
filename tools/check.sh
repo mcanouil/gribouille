@@ -8,6 +8,10 @@
 # Flags:
 #   --snapshot       Also run the visual snapshot harness in --check mode.
 #   --snapshot=ARGS  Pass ARGS through to tools/snapshot/run.lua (e.g. `--only geom-bar`).
+#
+# The snapshot harness compiles every example and visual test itself and reports
+# each compile failure, so a full snapshot run skips their PDF compile. A run
+# with `--only` keeps it, because the harness then compiles a subset.
 
 set -euo pipefail
 
@@ -84,14 +88,23 @@ else
   "${lua_bin}" tools/skill-inventory.lua --check || failures=$((failures + 1))
 fi
 
+snapshot_compiles_all=false
+examples_glob="examples/*.typ .github/star-history/star-history.typ"
+if [[ -n "${lua_bin}" && -n "${snapshot_mode}" && " ${snapshot_args} " != *" --only "* ]]; then
+  snapshot_compiles_all=true
+  examples_glob=".github/star-history/star-history.typ"
+fi
+
 compile_glob "unit" "tests/unit/*.typ"
-compile_glob "examples" "examples/*.typ .github/star-history/star-history.typ"
+compile_glob "examples" "${examples_glob}"
 
 if ! tools/version-check.sh; then
   failures=$((failures + 1))
 fi
 
-compile_glob "visual" "tests/visual/*.typ"
+if [[ "${snapshot_compiles_all}" == false ]]; then
+  compile_glob "visual" "tests/visual/*.typ"
+fi
 
 # The error fixtures assert the opposite of the globs above: each one must fail,
 # with the message it declares. Run unconditionally, because a suite whose whole

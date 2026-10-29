@@ -123,15 +123,9 @@ local function pad_to(src, dst, w, h)
     shell_quote(src), w, h, shell_quote(dst)))
 end
 
--- Same `compare -metric AE -fuzz` contract as run.lua:diff_images, so the
--- overlay matches what CI gates on. Returns the AE pixel count (nil on error).
+-- Returns the AE pixel count (nil on error) that CI gates on.
 local function overlay(base_png, head_png, diff_png, fuzz)
-  local cmd = string.format(
-    "compare -metric AE -fuzz %s %s %s %s 2>&1",
-    fuzz, shell_quote(base_png), shell_quote(head_png), shell_quote(diff_png))
-  local code, out = util.popen_capture(cmd)
-  if code > 1 then return nil end
-  return tonumber(out:match("^%s*(%d+)"))
+  return common.parse_ae(util.popen_capture(common.compare_cmd(base_png, head_png, diff_png, fuzz)))
 end
 
 local function side_by_side(base_png, head_png, out_png)
