@@ -26,11 +26,14 @@ function M.compare_cmd(golden, current, diff_png, fuzz)
   )
 end
 
--- Reads the AE pixel count from a `compare` exit code and output. Returns nil
--- on error, so callers don't confuse a crashed compare with a clean 0-pixel match.
+-- Reads the AE pixel count from a `compare` exit code and output. A large
+-- count prints in exponent form (`2.25e+06`), so the whole number is read.
+-- Returns nil on error, so callers don't confuse a crashed compare with a
+-- clean 0-pixel match.
 function M.parse_ae(code, out)
-  if code <= 1 then return tonumber(out:match("^%s*(%d+)")) end
-  return nil
+  if code > 1 then return nil end
+  local n = tonumber(out:match("^%s*(%S+)"))
+  return n and math.floor(n + 0.5)
 end
 
 return M

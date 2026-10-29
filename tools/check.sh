@@ -90,7 +90,7 @@ fi
 
 snapshot_compiles_all=false
 examples_glob="examples/*.typ .github/star-history/star-history.typ"
-if [[ -n "${snapshot_mode}" && " ${snapshot_args} " != *" --only "* ]]; then
+if [[ -n "${lua_bin}" && -n "${snapshot_mode}" && " ${snapshot_args} " != *" --only "* ]]; then
   snapshot_compiles_all=true
   examples_glob=".github/star-history/star-history.typ"
 fi
