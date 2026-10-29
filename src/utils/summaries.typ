@@ -5,17 +5,17 @@
 ///! collapse to `(y: none, ymin: none, ymax: none)` so the caller can decide
 ///! how to handle missing buckets.
 
-#import "types.typ": check-number, parse-number, to-numeric
+#import "types.typ": check-number, parse-number, parse-plain-number, to-numeric
 #import "normal.typ": qnorm
 #import "errors.typ": fail, fail-range, fail-type
 
-// Parse a weight cell through `parse-number`. A missing, `none`, or
-// non-numeric cell (such as "NA") weighs zero, so the weighted helpers'
+// Parse a weight cell through `parse-plain-number`. A missing, `none`, or
+// non-numeric cell (such as "NA" or a date) weighs zero, so the weighted helpers'
 // `w > 0` test drops its row as it drops any other unusable cell. A native
 // integer stays an integer, so a weighted count prints as one.
 #let _weight-of(raw) = {
   if type(raw) == int { return raw }
-  let w = parse-number(raw)
+  let w = parse-plain-number(raw)
   if w == none { 0 } else { w }
 }
 

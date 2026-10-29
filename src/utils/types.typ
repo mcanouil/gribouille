@@ -32,7 +32,7 @@
 /// Numeric values pass through unchanged so a column can mix pre-encoded
 /// numbers and ISO strings.
 /// Empty, `none`, and unparseable values return `none`, and so does an
-/// impossible date or clock time such as `"2020-02-30"` or `"2020-01-01T25:00"`.
+/// impossible date or datetime such as `"2020-02-30"` or `"2020-01-01T25:00"`.
 ///
 /// Recognised string forms:
 ///
@@ -126,6 +126,13 @@
     return _iso-numeric(t)
   }
   none
+}
+
+// `parse-number` without the ISO-8601 fallback, for a cell that holds a plain
+// quantity such as a weight: a date or clock-time string gives `none`.
+#let parse-plain-number(v) = {
+  if type(v) == str and v.trim().match(_numeric-re) == none { return none }
+  parse-number(v)
 }
 
 // Parse every entry via `parse-number` and drop the unparseable ones.

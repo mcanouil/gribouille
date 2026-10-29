@@ -93,6 +93,11 @@
     (x: "x", y: "y", ymin: "ymin", ymax: "ymax"),
   )
   if mapping == none { return (data: (), mapping: new-mapping) }
+  check-weighted-fun(
+    "stat-summary-bin",
+    params.at("fun", default: "mean-se"),
+    mapping.at("weight", default: none),
+  )
   let x-col = mapping.at("x", default: none)
   let y-col = mapping.at("y", default: none)
   if x-col == none or y-col == none {
@@ -105,7 +110,6 @@
 
   let fun = params.at("fun", default: "mean-se")
   let fun-args = params.at("fun-args", default: (:))
-  check-weighted-fun("stat-summary-bin", fun, weight-col)
 
   let out = ()
   for i in range(cells.grid.n-bins) {

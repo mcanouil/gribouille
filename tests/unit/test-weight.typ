@@ -107,6 +107,9 @@
 #assert.eq(mean((1, 5, 3), weights: (1, "NA", 1)).y, 2.0)
 #assert.eq(mean((1, 5, 3), weights: (1, "x", "1")).y, 2.0)
 #assert.eq(mean((1, 5), weights: (1, float.nan)).y, 1.0)
+// A date or clock-time string is not a weight either.
+#assert.eq(mean((1, 5, 3), weights: (1, "2020-01-01", " 1 ")).y, 2.0)
+#assert.eq(mean((1, 5), weights: (1, "12:30")).y, 1.0)
 #let r-na = apply-stat(
   "count",
   ((x: "a", w: 2), (x: "a", w: "NA"), (x: "b", w: 3)),

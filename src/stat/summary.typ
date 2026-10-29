@@ -164,6 +164,11 @@
 #let apply(data, mapping, params: (:)) = {
   let base-mapping = (x: "x", y: "y", ymin: "ymin", ymax: "ymax")
   if mapping == none { return (data: (), mapping: base-mapping) }
+  check-weighted-fun(
+    "stat-summary",
+    params.at("fun", default: "mean-se"),
+    mapping.at("weight", default: none),
+  )
   let x-col = mapping.at("x", default: none)
   let y-col = mapping.at("y", default: none)
   if x-col == none or y-col == none {
@@ -178,7 +183,6 @@
     fail-enum("stat-summary", "axis", axis, ("both", "x", "y"))
   }
   let weight-col = mapping.at("weight", default: none)
-  check-weighted-fun("stat-summary", fun, weight-col)
 
   let has-grouping = _group-aesthetics.any(a => (
     mapping.at(a, default: none) != none
