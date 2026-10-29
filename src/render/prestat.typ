@@ -48,7 +48,8 @@
   result
 }
 
-// (column, transform, scope, axis) records to rewrite on each row of a layer.
+// (column, transform, scope, aesthetic) records to rewrite on each row of a
+// layer.
 // Synthetic feeders share the axis's pre-stat transform.
 #let _pre-transform-cols(mapping, pre) = {
   if mapping == none { return () }
@@ -58,7 +59,7 @@
     for f in feeders {
       let raw = mapping.at(f, default: none)
       if raw == none { continue }
-      pairs.push((col: mapping-ref-col(raw), axis: axis, ..entry))
+      pairs.push((col: mapping-ref-col(raw), aesthetic: f, ..entry))
     }
   }
   pairs
@@ -72,7 +73,13 @@
     let raw = row.at(entry.col, default: none)
     let v = parse-number(raw)
     if v == none { continue }
-    check-transform-domain(entry.scope, entry.axis, raw, v, entry.transform)
+    check-transform-domain(
+      entry.scope,
+      entry.aesthetic,
+      raw,
+      v,
+      entry.transform,
+    )
     new-row.insert(entry.col, transform-fwd(entry.transform, v))
   }
   new-row

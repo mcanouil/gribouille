@@ -120,6 +120,28 @@
   assert.eq(out.layers.at(0).data, rows)
 }
 
+// without `limits`, a positional feeder such as ymin leaves the cell to the
+// geom too, so an errorbar keeps its row
+#{
+  let trained = (ymin: _trained-continuous(unusable: true))
+  let rows = ((v: 3), (v: "abc"))
+  let layer = (kind: "layer", data: rows, mapping: (ymin: "v"))
+  let out = filter-oob((layer,), oob-plans(trained))
+  assert.eq(out.layers.at(0).data, rows)
+}
+
+// an empty string is a missing cell, as `none` is, with or without `limits`
+#{
+  let rows = ((v: 3), (v: ""))
+  let free = (fill: _trained-continuous(unusable: true))
+  assert.eq(filter-oob((_layer(rows),), oob-plans(free)).layers.at(0).data, rows)
+  let limited = (fill: _trained-continuous(limits: (2, 5)))
+  assert.eq(
+    filter-oob((_layer(rows),), oob-plans(limited)).layers.at(0).data,
+    rows,
+  )
+}
+
 // `strict` drops an unparseable cell in silence: it is not outside the limits
 #{
   let trained = (fill: _trained-continuous(limits: (2, 5)))

@@ -89,8 +89,14 @@
       fail-type(scope, "n-breaks", n, "a positive integer")
     }
   }
-  if "option" in named and named.option not in viridis-mod.palettes {
-    fail-enum(scope, "option", named.option, viridis-mod.palettes.keys())
+  if "option" in named {
+    let option = named.option
+    if type(option) != str {
+      fail-type(scope, "option", option, "a viridis variant name as a string")
+    }
+    if option not in viridis-mod.palettes {
+      fail-enum(scope, "option", option, viridis-mod.palettes.keys())
+    }
   }
   if "palette" in named {
     let palette = named.palette

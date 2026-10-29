@@ -10,17 +10,19 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/late-binding.typ": is-late-binding
 #import "../utils/palette.typ": spec-attr
-#import "train.typ": level-lookup, mapping-ref-col, to-stat-fn, view-bounds-stat
+#import "train.typ": (
+  level-lookup, mapping-ref-col, positional-aesthetics, to-stat-fn,
+  view-bounds-stat,
+)
 #import "../utils/errors.typ": fail
 
-// A position cell that does not parse is skipped by every geom, so only the
-// other continuous channels need the pre-pass to drop it.
-#let _POSITION-AES = ("x", "y")
+// An empty string is a missing cell, as `none` is, not an unusable one.
+#let _is-missing(raw) = raw == none or raw == ""
 
 // Drop a cell that a continuous channel cannot read, such as `"zz"` on a colour
-// scale, so the row does not draw in the fallback ink. A `none` cell stays.
+// scale, so the row does not draw in the fallback ink. A missing cell stays.
 #let _drop-unusable(raw) = {
-  if raw == none or parse-number(raw) != none { return ("in", raw) }
+  if _is-missing(raw) or parse-number(raw) != none { return ("in", raw) }
   ("unusable", raw)
 }
 
@@ -42,7 +44,9 @@
   if spec-attr(trained, "limits") == none {
     if (
       trained.type == "continuous"
-        and aes not in _POSITION-AES
+        // A position cell that does not parse, on x, y or a feeder such as
+        // ymin, is skipped by every geom, so the pre-pass leaves it alone.
+        and aes not in positional-aesthetics
         and trained.at("unusable", default: false)
     ) {
       return _drop-unusable
@@ -73,7 +77,7 @@
     let span-hi = calc.max(t-lo, t-hi)
     let domain = trained.domain
     return raw => {
-      if raw == none { return ("in", raw) }
+      if _is-missing(raw) { return ("in", raw) }
       let v = parse-number(raw)
       if v == none { return ("unusable", raw) }
       let sv = to-stat(v)
