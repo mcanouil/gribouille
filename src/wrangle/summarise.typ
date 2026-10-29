@@ -58,9 +58,16 @@
 }
 
 // Engine behind `summarise` and `count`. `scope` names the verb the user
-// called, and `by-label` names its grouping argument in an unknown-column
-// message.
-#let _summarise(scope, data, aggregations, by, by-label: "by") = {
+// called, `by-label` names its grouping argument in an unknown-column
+// message, and `collision-hint` gives the fix for a name collision.
+#let _summarise(
+  scope,
+  data,
+  aggregations,
+  by,
+  by-label: "by",
+  collision-hint: "Rename the aggregation or drop the column from `by`.",
+) = {
   let rows = _require-frame(scope, "data", data)
   if aggregations.pos().len() != 0 {
     fail(
@@ -87,7 +94,7 @@
       fail(
         scope,
         "aggregation \"" + name + "\" collides with a grouping column",
-        hint: "Rename the aggregation or drop the column from `by`.",
+        hint: collision-hint,
       )
     }
   }
@@ -199,6 +206,7 @@
     arguments(n: rows => rows.len()),
     group-cols,
     by-label: "column",
+    collision-hint: "Rename the column `n` before counting.",
   )
   if sort { result = result.sorted(key: row => -row.n) }
   result

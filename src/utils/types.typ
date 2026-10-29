@@ -32,7 +32,7 @@
 /// Numeric values pass through unchanged so a column can mix pre-encoded
 /// numbers and ISO strings.
 /// Empty, `none`, and unparseable values return `none`, and so does an
-/// impossible date or datetime such as `"2020-02-30"` or `"2020-01-01T25:00"`.
+/// impossible date or clock time such as `"2020-02-30"` or `"25:00"`.
 ///
 /// Recognised string forms:
 ///
@@ -95,9 +95,11 @@
   if kind == "time" {
     let m = t.match(_time-re)
     if m == none { return none }
-    let (h, mi, s) = m.captures
+    let (h, mi) = m.captures.slice(0, 2).map(int)
+    let s = m.captures.at(2)
     let sec = if s == none { 0 } else { int(s) }
-    return float(int(h) * 3600 + int(mi) * 60 + sec)
+    if h > 23 or mi > 59 or sec > 59 { return none }
+    return float(h * 3600 + mi * 60 + sec)
   }
   none
 }
