@@ -107,8 +107,17 @@
       if palette not in brewer-palettes {
         fail-enum(scope, "palette", palette, brewer-palettes.keys())
       }
-    } else if type(palette) == array and palette.len() == 0 {
-      fail-type(scope, "palette", palette, "a non-empty array")
+    } else if palette != auto {
+      // Only `scale-continuous` interpolates, so only it takes a gradient.
+      let gradient = family == "continuous"
+      let expected = if gradient { "a gradient, an array, or `auto`" } else {
+        "an array or `auto`"
+      }
+      let ok = type(palette) == array or (gradient and type(palette) == gradient)
+      if not ok { fail-type(scope, "palette", palette, expected) }
+      if type(palette) == array and palette.len() == 0 {
+        fail-type(scope, "palette", palette, "a non-empty array")
+      }
     }
   }
   if family == "manual" {
@@ -215,21 +224,35 @@
   }
 }
 
-// Check an explicit `breaks` array (or a bare break) on a continuous scale.
-// A break is a user argument, not a data cell, so an unparsable break, or one
-// outside the domain of the transform, fails as a limit does.
+// Check an explicit `breaks` or `minor-breaks` array (or a bare break) on a
+// continuous scale, and `n-minor`. A break is a user argument, not a data cell,
+// so an unparsable break, or one outside the domain of the transform, fails as
+// a limit does.
 #let check-breaks(family, scale) = {
   if scale.type != "continuous" { return }
-  let breaks = scale.at("breaks", default: auto)
-  if breaks == auto or breaks == none or type(breaks) == function { return }
   let scope = "scale-" + family
   let transform = scale.at("transform", default: "identity")
-  let values = if type(breaks) == array { breaks } else { (breaks,) }
-  for b in values {
-    let v = parse-number(b)
-    if v == none {
-      fail-type(scope, "breaks", b, "a number or an ISO date string")
+  for key in ("breaks", "minor-breaks") {
+    let breaks = scale.at(key, default: auto)
+    if breaks == auto or breaks == none or type(breaks) == function {
+      continue
     }
-    check-transform-domain(scope, "breaks", b, v, transform)
+    let values = if type(breaks) == array { breaks } else { (breaks,) }
+    for b in values {
+      let v = parse-number(b)
+      if v == none {
+        fail-type(scope, key, b, "a number or an ISO date string")
+      }
+      check-transform-domain(scope, key, b, v, transform)
+    }
+  }
+  let n-minor = scale.at("n-minor", default: auto)
+  if n-minor != auto and (type(n-minor) != int or n-minor < 0) {
+    fail-type(
+      scope,
+      "n-minor",
+      n-minor,
+      "a non-negative integer or `auto`",
+    )
   }
 }
