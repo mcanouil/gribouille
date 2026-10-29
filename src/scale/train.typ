@@ -168,7 +168,8 @@
     for raw in col.values {
       let v = parse-number(raw)
       if v == none {
-        if raw != none { unusable = true }
+        // An empty string is a missing cell, as `none` is (oob.typ).
+        if raw != none and raw != "" { unusable = true }
         continue
       }
       if whole and v != calc.round(v) { whole = false }
@@ -207,7 +208,9 @@
 
 // The constructor a user scale came from, as `bind-scale` stamped it, so a
 // message names the function the user called.
-#let scope-of(user-scale) = "scale-" + user-scale.at("family", default: "continuous")
+#let scope-of(user-scale) = (
+  "scale-" + user-scale.at("family", default: "continuous")
+)
 
 // Call a user break closure on the trained values and validate its result.
 // `name` is the spec key, so the message names the argument the user wrote.

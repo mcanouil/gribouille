@@ -1,7 +1,8 @@
 // A discrete scale fails when its `limits` carry a number in place of a level
 // name.
 //
-// The check runs in `_train-entry`, so the plot needs no `strict:` to reach it.
+// `scales()` runs the check when it binds the scale (`check-limits` in
+// src/scale/arguments.typ), so the plot needs no `strict:` to reach it.
 // `tools/check-errors.sh` compiles this file, requires the compile to fail, and
 // requires the `error:` line to carry the phrase below.
 //
