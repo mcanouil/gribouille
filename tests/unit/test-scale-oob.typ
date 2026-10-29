@@ -6,7 +6,9 @@
 //   - "squish" keeps the row and clamps the cell to the nearest limit
 //   - rows without user `limits` on a scale are never touched
 //   - discrete `limits` drops rows whose level is outside the set
-//   - rows with unparseable values survive (treated as in-range)
+//   - rows with unparseable values drop, with or without `limits`, except on a
+//     position scale with no `limits`, and a `none` cell stays
+//   - `strict` does not report an unparseable cell
 
 #import "../../src/scale/oob.typ": filter-oob, oob-plans
 #import "../../src/utils/late-binding.typ": from-theme
@@ -89,13 +91,39 @@
   assert.eq(out.counts.at("fill"), 2)
 }
 
-// unparseable continuous values are treated as in-range
+// an unparseable continuous cell drops its row, and a `none` cell stays
 #{
   let trained = (fill: _trained-continuous(limits: (2, 5)))
+  let rows = ((v: 3), (v: "abc"), (v: none), (v: float.nan))
+  let out = filter-oob((_layer(rows),), oob-plans(trained))
+  assert.eq(out.layers.at(0).data, ((v: 3), (v: none)))
+  assert.eq(out.counts.at("fill"), 2)
+}
+
+// without `limits`, a continuous non-position scale still drops an
+// unparseable cell
+#{
+  let trained = (fill: _trained-continuous())
   let rows = ((v: 3), (v: "abc"), (v: none))
   let out = filter-oob((_layer(rows),), oob-plans(trained))
+  assert.eq(out.layers.at(0).data, ((v: 3), (v: none)))
+}
+
+// without `limits`, a position scale leaves the cell to the geom
+#{
+  let trained = (x: _trained-continuous())
+  let rows = ((v: 3), (v: "abc"))
+  let layer = (kind: "layer", data: rows, mapping: (x: "v"))
+  let out = filter-oob((layer,), oob-plans(trained))
   assert.eq(out.layers.at(0).data, rows)
-  assert.eq(out.counts, (:))
+}
+
+// `strict` drops an unparseable cell in silence: it is not outside the limits
+#{
+  let trained = (fill: _trained-continuous(limits: (2, 5)))
+  let rows = ((v: 3), (v: "abc"))
+  let out = filter-oob((_layer(rows),), oob-plans(trained), strict: true)
+  assert.eq(out.layers.at(0).data, ((v: 3),))
 }
 
 // expansion headroom: a value outside `limits` but inside the expanded

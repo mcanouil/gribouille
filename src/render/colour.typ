@@ -5,6 +5,7 @@
 #import "../utils/palette.typ": palette-at, spec-palette
 #import "../utils/colour.typ": resolve-continuous-colour
 #import "../scale/train.typ": level-lookup
+#import "../utils/types.typ": parse-number
 
 // Build a colour resolver curried over the (trained, palette) pair so per-row
 // callers resolve the palette once outside the row loop and call the returned
@@ -35,7 +36,8 @@
   }
   value => {
     if value == none or value == "" { return ink }
-    let v = if type(value) == str { float(value.trim()) } else { float(value) }
+    let v = parse-number(value)
+    if v == none { return ink }
     resolve-continuous-colour(trained, v, pal, ink)
   }
 }
