@@ -1518,11 +1518,20 @@
 // Every guide is drawn by its own stack, from the record `_stamp-sizes`
 // measured, in the box context every legend box shares. Nothing here reads the
 // kind: the stack already says what the guide is.
-#let _draw-guide-body(guide, ctx, ox, cursor, theme) = compose-draw(
-  guide.stack.node,
-  _legend-box-gctx(guide, ctx, ox, cursor, theme),
-  guide.stack.layout,
-)
+//
+// A guide that `compose()` hoisted carries the trained scales of the panel it
+// comes from, because two hoisted guides on one aesthetic can come from
+// panels that trained it apart.
+#let _draw-guide-body(guide, ctx, ox, cursor, theme) = {
+  let guide-ctx = if "trained" in guide {
+    (..ctx, trained: guide.trained)
+  } else { ctx }
+  compose-draw(
+    guide.stack.node,
+    _legend-box-gctx(guide, guide-ctx, ox, cursor, theme),
+    guide.stack.layout,
+  )
+}
 
 // Vertical gap between stacked guides on a side: the panel-to-legend gap plus
 // the legend-background outset on the panel-facing edge.
@@ -1876,7 +1885,8 @@
 
 // Render a free-standing legend canvas, sized by `size` from `standalone-size`
 // over the same `guides`. Used by `compose()` to draw the shared, hoisted
-// legend outside any plot panel.
+// legend outside any plot panel. Each guide carries its own `trained` scales,
+// which `_draw-guide-body` reads in place of a shared context.
 //
 // `panel-rect` carries the *content* box, not the canvas: `_draw-side`'s
 // centring terms then cancel and the guide stack starts at its origin. Along
@@ -1886,9 +1896,8 @@
 // `gap` -- lands inside the canvas that `clip: true` would otherwise cut.
 // `margin.left: 0.05` cancels `_draw-side`'s own left-side nudge, and
 // `margin.bottom: 0.4` cancels its bottom offset.
-#let standalone(guides, trained, theme, side, size) = {
+#let standalone(guides, theme, side, size) = {
   let ctx = (
-    trained: trained,
     palette: resolve-theme-palette(theme),
     theme: theme,
     canvas-w: size.canvas-w,

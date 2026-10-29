@@ -40,7 +40,7 @@
   assert.eq(h.hoisted, ("colour",))
   assert.eq(h.hoisted-guides.len(), 1)
   assert.eq(h.hoisted-guides.first().key-diam-cm, 0.6)
-  assert(h.trained != none)
+  assert(h.hoisted-guides.first().trained != none)
 }
 
 // A `key-size` override comes from the spec, not the theme, so building the
@@ -97,13 +97,12 @@
 }
 
 // A nested compose panel carries no guides of its own, so nothing hoists and no
-// guide is built. `trained` is `none`, which is what `compose()` reads to decide
-// there is no legend to attach.
+// guide is built, which is what `compose()` reads to decide there is no legend
+// to attach.
 #context {
   let h = _hoist-guides((panel(none), nested), (:), auto, none)
   assert.eq(h.hoisted, ())
   assert.eq(h.hoisted-guides, ())
-  assert.eq(h.trained, none)
 }
 
 // `collect` selects the aesthetics: `none` hoists nothing, an explicit list
@@ -147,3 +146,73 @@
 )
 
 Compose guide hoisting tests passed.
+
+// `collect: "all"` hoists a key that only one panel owns, as it is, with the
+// trained scales of the panel that owns it. A fill ramp on one panel and a
+// colour and shape key on the other land in one block, in panel order.
+#let ramp = defer(
+  plot,
+  data: data,
+  mapping: aes(x: "x", y: "y", fill: "y"),
+  layers: (geom-point(),),
+)(as-spec: true)
+#let profile = defer(
+  plot,
+  data: data,
+  mapping: aes(x: "x", y: "y", colour: "g", shape: "g"),
+  layers: (geom-point(),),
+)(as-spec: true)
+#context {
+  assert.eq(_hoist-guides((ramp, profile), (:), auto, none).hoisted, ())
+  let h = _hoist-guides((ramp, profile), (:), "all", none)
+  assert.eq(h.hoisted.sorted(), ("colour", "fill", "shape"))
+  assert.eq(h.hoisted-guides.map(g => g.aesthetics), (
+    ("fill",),
+    ("colour", "shape"),
+  ))
+  assert("fill" in h.hoisted-guides.at(0).trained)
+  assert("colour" in h.hoisted-guides.at(1).trained)
+  assert("fill" not in h.hoisted-guides.at(1).trained)
+  assert.eq(h.legend-side, "right")
+}
+
+// Under `"all"`, keys that several panels own and that merge are drawn once,
+// and a key the other panel lacks still joins the block.
+#context {
+  let h = _hoist-guides((panel(none), profile), (:), "all", none)
+  assert.eq(h.hoisted-guides.map(g => g.aesthetics), (
+    ("colour",),
+    ("colour", "shape"),
+  ))
+  let same = _hoist-guides((panel(none), panel(none), ramp), (:), "all", none)
+  assert.eq(same.hoisted-guides.map(g => g.aesthetics), (
+    ("colour",),
+    ("fill",),
+  ))
+}
+
+// Under `"all"`, keys that several panels own but that cannot merge are stacked
+// in panel order, and each keeps the trained scale of its own panel.
+#context {
+  let other = defer(
+    plot,
+    data: (x: (1, 2), y: (1, 2), g: ("p", "q")),
+    mapping: aes(x: "x", y: "y", colour: "g"),
+    layers: (geom-point(),),
+  )(as-spec: true)
+  let h = _hoist-guides((panel(none), other), (:), "all", none)
+  assert.eq(h.hoisted, ("colour",))
+  assert.eq(h.hoisted-guides.map(g => g.levels), (("a", "b", "c"), ("p", "q")))
+  assert.ne(
+    h.hoisted-guides.at(0).trained.colour,
+    h.hoisted-guides.at(1).trained.colour,
+  )
+}
+
+// Under `"all"`, a nested compose panel owns no key, so the plot panels beside
+// it still hoist theirs.
+#context {
+  let h = _hoist-guides((panel(none), nested), (:), "all", none)
+  assert.eq(h.hoisted, ("colour",))
+  assert.eq(h.hoisted-guides.len(), 1)
+}

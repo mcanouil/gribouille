@@ -191,10 +191,11 @@
 }
 
 // Guide-hoisting stage: probe each plot panel's would-be guides to decide which
-// aesthetics hoist, then derive the shared guides and the trained scales under
-// the composition's theme, since that is the theme they are drawn under. A
-// panel theme styles its own panel alone. Returns `(hoisted, hoisted-guides,
-// trained, legend-side)`.
+// aesthetics hoist, then derive the shared guides under the composition's
+// theme, since that is the theme they are drawn under. A panel theme styles its
+// own panel alone. Each hoisted guide carries the trained scales of the panel
+// it comes from, under `trained`. Returns `(hoisted, hoisted-guides,
+// legend-side)`.
 #let _hoist-guides(panels, guides, collect, theme-source) = {
   // Compose-level `guides` belong to the probe alone: the real panel render
   // keeps the panel's own. Probe only plot panels; a nested compose collects
@@ -208,7 +209,7 @@
     _index-by-aesthetic(p.guides)
   })
 
-  let candidates = if collect == auto {
+  let candidates = if collect == auto or collect == "all" {
     let all = ()
     let seen = (:)
     for idx in per-panel {
@@ -226,48 +227,52 @@
     collect
   }
 
-  let hoisted = candidates.filter(a => _all-mergeable(per-panel, a))
-  let source = panels.position(_is-plot-spec)
-  if hoisted.len() == 0 or source == none {
-    return (
-      hoisted: (),
-      hoisted-guides: (),
-      trained: none,
-      legend-side: none,
-    )
+  // `"all"` hoists every key, shared or not. The other modes hoist an aesthetic
+  // only when every panel carries it and every copy merges.
+  let hoisted = if collect == "all" { candidates } else {
+    candidates.filter(a => _all-mergeable(per-panel, a))
+  }
+  if hoisted.len() == 0 {
+    return (hoisted: (), hoisted-guides: (), legend-side: none)
   }
 
-  // `_all-mergeable` needs every panel to carry the aesthetic, so the first plot
-  // panel carries all of them. Build its guides again under the composition's
-  // theme when its own theme differs, so the key glyph, the side, and the
-  // trained scales behind the glyphs come from the theme the legend is drawn
-  // under. A per-legend `guide-legend(key-size:)` comes from the spec, so
-  // building again keeps it.
-  let src = panels.at(source)
-  let derived = if _theme-source-eq(
-    src.at("theme", default: none),
-    theme-source,
-  ) {
-    probes.at(source)
-  } else {
-    render-plot-deferred(
-      (..probe-spec(src), theme: theme-source),
-      layout-only: true,
-    )
-  }
-  let derived-index = _index-by-aesthetic(derived.guides)
-
+  // Walk the panels in order and keep each guide on a hoisted aesthetic that no
+  // earlier panel already gave in a form it merges with. Outside `"all"`, every
+  // panel carries the same guides, so the first plot panel gives all of them.
+  // Build the owning panel's guides again under the composition's theme when
+  // its own theme differs, so the key glyph, the side, and the trained scales
+  // behind the glyphs come from the theme the legend is drawn under. A
+  // per-legend `guide-legend(key-size:)` comes from the spec, so building again
+  // keeps it.
   let hoisted-guides = ()
-  let seen-aesthetics = (:)
-  for a in hoisted {
-    // A composition theme that hides the legend leaves the aesthetic hoisted,
-    // so the panels go on suppressing it, and draws nothing for it.
-    let g = derived-index.at(a, default: none)
-    if g == none { continue }
-    let key = repr(g.aesthetics)
-    if key not in seen-aesthetics {
-      seen-aesthetics.insert(key, true)
-      hoisted-guides.push(g)
+  let kept = ()
+  for (i, probe) in probes.enumerate() {
+    if probe == none { continue }
+    let fresh = probe.guides.filter(g => (
+      g.at("aesthetics", default: ()).any(a => a in hoisted)
+        and not kept.any(k => legend-mod.can-merge-cross-panel(k, g))
+    ))
+    if fresh.len() == 0 { continue }
+    kept += fresh
+    let src = panels.at(i)
+    let derived = if _theme-source-eq(
+      src.at("theme", default: none),
+      theme-source,
+    ) {
+      probe
+    } else {
+      render-plot-deferred(
+        (..probe-spec(src), theme: theme-source),
+        layout-only: true,
+      )
+    }
+    let derived-index = _index-by-aesthetic(derived.guides)
+    for g in fresh {
+      // A composition theme that hides the legend leaves the aesthetic
+      // hoisted, so the panels go on suppressing it, and draws nothing for it.
+      let d = derived-index.at(g.aesthetics.first(), default: none)
+      if d == none { continue }
+      hoisted-guides.push((..d, trained: derived.trained))
     }
   }
 
@@ -304,7 +309,6 @@
   (
     hoisted: hoisted,
     hoisted-guides: hoisted-guides,
-    trained: derived.trained,
     legend-side: legend-side,
   )
 }
@@ -413,13 +417,12 @@
   )
 }
 
-// Attach the hoisted legend canvas on its side of the panel block. The guides
-// and the trained scales come from `_hoist-guides`, which built both under
-// `theme`, the theme this draws them under.
+// Attach the hoisted legend canvas on its side of the panel block. The guides,
+// each with its trained scales, come from `_hoist-guides`, which built them
+// under `theme`, the theme this draws them under.
 #let _attach-legend(
   panel-block,
   hoisted-guides,
-  trained,
   theme,
   legend-side,
   legend-size,
@@ -427,7 +430,6 @@
 ) = {
   let legend-canvas = legend-mod.standalone(
     hoisted-guides,
-    trained,
     theme,
     legend-side,
     legend-size,
@@ -498,7 +500,6 @@
   let hoist = _hoist-guides(panels, guides, collect, resolved.theme)
   let hoisted = hoist.hoisted
   let hoisted-guides = hoist.hoisted-guides
-  let legend-trained = hoist.trained
   let legend-side = hoist.legend-side
 
   let tags = _tag-params(spec, tag-ctx)
@@ -813,7 +814,6 @@
     _attach-legend(
       panel-block,
       hoisted-guides,
-      legend-trained,
       theme,
       legend-side,
       legend-size,
@@ -902,6 +902,11 @@
 ///     hoisting to the listed aesthetics. Listed aesthetics that aren't
 ///     mergeable across panels still stay per-plot; non-listed aesthetics
 ///     are never hoisted regardless of agreement.
+///   - `"all"` hoists every key, also one that only some panels carry. A key
+///     that only one panel owns moves into the shared block as it is. Keys that
+///     several panels own and that merge are drawn once. Keys that several
+///     panels own and that do not merge are stacked, in panel order, and each
+///     keeps the scale of its own panel.
 ///   The merge predicate ignores per-panel placement, grid shape (`nrow` /
 ///   `ncol`), and legend styling; compose forces a single shared side and grid
 ///   layout for the hoisted block, and builds it under the composition's theme.
@@ -1018,6 +1023,25 @@
 ///   panel(aes(x: "displ", y: "cty", colour: as-factor("cyl"))),
 ///   layout: "grid", columns: (auto, auto),
 ///   guides: guides(default: guide-legend(position: "bottom")),
+/// )
+/// ```
+///
+/// \@examples Collect every key with `collect: "all"`, also the keys that
+/// the panels do not share.
+/// ```
+/// //| alt: "Two mpg scatter panels with one legend block on the right: a colour bar for city mileage from the left panel above a colour and shape key for drive train from the right panel."
+/// #compose(
+///   defer(plot,
+///     data: mpg, mapping: aes(x: "displ", y: "hwy", colour: "cty"),
+///     layers: (geom-point(size: 2pt),),
+///   ),
+///   defer(plot,
+///     data: mpg,
+///     mapping: aes(x: "displ", y: "cty", colour: "drv", shape: "drv"),
+///     layers: (geom-point(size: 2pt),),
+///   ),
+///   columns: 2,
+///   collect: "all",
 /// )
 /// ```
 ///
@@ -1144,10 +1168,15 @@
       )
     }
   }
-  if collect != auto and collect != none and type(collect) != array {
+  if (
+    collect != auto
+      and collect != none
+      and collect != "all"
+      and type(collect) != array
+  ) {
     fail(
       "compose",
-      "`collect` must be `auto`, `none`, or an array of aesthetic names",
+      "`collect` must be `auto`, `none`, `\"all\"`, or an array of aesthetic names",
     )
   }
   if layout != "grid" and layout != "stack" {
