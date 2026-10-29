@@ -54,6 +54,37 @@
   }
 }
 
+// Panic unless the 2D KDE parameters are well-formed. `bw` and `n` take one
+// value for both axes or an `(x, y)` pair. `scope` names the calling stat so the
+// message points at the user-facing constructor.
+#let validate-kde-2d-params(scope, params) = {
+  let each-axis(value, ok) = if type(value) == array {
+    value.len() == 2 and value.all(ok)
+  } else { ok(value) }
+  let bw = params.at("bw", default: auto)
+  if not each-axis(bw, v => v == auto or (type(v) in (int, float) and v > 0)) {
+    fail-type(
+      scope,
+      "bw",
+      bw,
+      "a positive number, `auto`, or an `(x, y)` pair of them",
+    )
+  }
+  let adjust = params.at("adjust", default: 1)
+  if type(adjust) not in (int, float) or adjust <= 0 {
+    fail-type(scope, "adjust", adjust, "a positive number")
+  }
+  let n = params.at("n", default: 25)
+  if not each-axis(n, v => type(v) == int and v >= 2) {
+    fail-type(
+      scope,
+      "n",
+      n,
+      "an integer of at least 2, or an `(x, y)` pair of them",
+    )
+  }
+}
+
 // Weighted Gaussian KDE of `pairs` (dicts with numeric `x` and positive
 // weight `w`; the caller filters) over `n` evenly spaced grid points. The
 // grid spans the data range, extended by `_CUT` bandwidths per side unless

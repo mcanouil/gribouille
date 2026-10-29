@@ -6,7 +6,7 @@
 
 #import "../layer.typ": make-layer, split-aes-params
 #import "line.typ": spec as line-spec
-#import "../stat/quantile.typ": stat-quantile
+#import "../stat/quantile.typ": stat-quantile, validate-quantile-params
 
 /// Quantile-regression layer: a fitted line per requested τ.
 ///
@@ -96,6 +96,7 @@
   )
     + split-aes-params("geom-quantile", args, line-spec.reads),
   stat: if stat == auto {
+    validate-quantile-params("geom-quantile", quantiles, n-samples)
     stat-quantile(quantiles: quantiles, n-samples: n-samples)
   } else { stat },
   position: position,

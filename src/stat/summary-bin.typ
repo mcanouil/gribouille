@@ -5,7 +5,9 @@
 ///! using one of the helpers in `src/utils/summaries.typ`.
 
 #import "../utils/summaries.typ": _apply-summary, check-weighted-fun
-#import "../utils/bin.typ": bin-1d-cells, bin-midpoint, panel-bin-grid
+#import "../utils/bin.typ": (
+  bin-1d-cells, bin-midpoint, check-bin-params, panel-bin-grid,
+)
 #import "../utils/aes-resolve.typ": stat-output-mapping
 
 /// Summary statistic over uniform x bins.
@@ -76,16 +78,19 @@
   bins: 30,
   binwidth: none,
   fun-args: (:),
-) = (
-  kind: "stat",
-  name: "summary-bin",
-  params: (
-    fun: fun,
-    bins: bins,
-    binwidth: binwidth,
-    "fun-args": fun-args,
-  ),
-)
+) = {
+  check-bin-params("stat-summary-bin", bins, binwidth)
+  (
+    kind: "stat",
+    name: "summary-bin",
+    params: (
+      fun: fun,
+      bins: bins,
+      binwidth: binwidth,
+      "fun-args": fun-args,
+    ),
+  )
+}
 
 #let apply(data, mapping, params: (:)) = {
   let new-mapping = stat-output-mapping(
@@ -117,6 +122,7 @@
     if bucket.ys.len() == 0 { continue }
     let weights = if weight-col == none { none } else { bucket.ws }
     let summary = _apply-summary(
+      "stat-summary-bin",
       fun,
       bucket.ys,
       fun-args: fun-args,

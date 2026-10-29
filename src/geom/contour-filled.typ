@@ -1,6 +1,7 @@
 ///! Filled-contour geom. Wraps \@stat-contour-filled over polygon fills.
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/contour-grid.typ": check-level-params
 #import "polygon.typ": spec as polygon-spec
 #import "../stat/contour-filled.typ": stat-contour-filled
 
@@ -96,6 +97,7 @@
   )
     + split-aes-params("geom-contour-filled", args, polygon-spec.reads),
   stat: if stat == auto {
+    check-level-params("geom-contour-filled", bins, binwidth, breaks)
     stat-contour-filled(bins: bins, binwidth: binwidth, breaks: breaks)
   } else { stat },
   position: position,

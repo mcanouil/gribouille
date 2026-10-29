@@ -3,7 +3,9 @@
 ///! Backing statistic for \@geom-histogram. Emits one row per bin with the
 ///! bin midpoint as x, the count as y, and the bin `width` for reference.
 
-#import "../utils/bin.typ": bin-1d-cells, bin-midpoint, panel-bin-grid
+#import "../utils/bin.typ": (
+  bin-1d-cells, bin-midpoint, check-bin-params, panel-bin-grid,
+)
 #import "../utils/aes-resolve.typ": stat-output-mapping
 
 /// Bin statistic: partition x into uniform-width bins, count rows per bin.
@@ -50,18 +52,17 @@
 /// ```
 ///
 /// \@see \@geom-histogram, \@stat-count
-#let stat-bin(bins: 30, binwidth: none) = (
-  kind: "stat",
-  name: "bin",
-  params: (bins: bins, binwidth: binwidth),
-)
+#let stat-bin(bins: 30, binwidth: none) = {
+  check-bin-params("stat-bin", bins, binwidth)
+  (kind: "stat", name: "bin", params: (bins: bins, binwidth: binwidth))
+}
 
 #let apply(data, mapping, params: (:)) = {
   let x-col = if mapping != none { mapping.at("x", default: none) } else {
     none
   }
   let new-mapping = stat-output-mapping(mapping, (x: "x", y: "y"))
-  if x-col == none { return (data: data, mapping: mapping) }
+  if x-col == none { return (data: (), mapping: new-mapping) }
   let cells = bin-1d-cells(
     data,
     x-col,

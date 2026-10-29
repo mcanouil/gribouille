@@ -79,7 +79,7 @@
 
 // --- summarise dispatches by name -----------------------------------------
 
-#let r-dispatch = _apply-summary("mean-se", (1, 2, 3, 4, 5))
+#let r-dispatch = _apply-summary("stat-summary", "mean-se", (1, 2, 3, 4, 5))
 #assert.eq(r-dispatch.y, 3.0)
 
 // --- stat-summary: one row per x bucket -----------------------------------
@@ -169,13 +169,16 @@
 
 // --- summarise dispatcher: new string names -------------------------------
 
-#assert.eq(_apply-summary("mean", (1, 2, 3)).y, 2.0)
-#assert.eq(_apply-summary("median", (1, 2, 3, 4)).y, 2.5)
+#assert.eq(_apply-summary("stat-summary", "mean", (1, 2, 3)).y, 2.0)
+#assert.eq(_apply-summary("stat-summary", "median", (1, 2, 3, 4)).y, 2.5)
 #assert.eq(
-  _apply-summary("quantile", (1, 2, 3, 4), fun-args: (q: 0.25)).y,
+  _apply-summary("stat-summary", "quantile", (1, 2, 3, 4), fun-args: (
+    q: 0.25,
+  )).y,
   1.75,
 )
 #let r-qs-disp = _apply-summary(
+  "stat-summary",
   "quantiles",
   range(1, 11),
   fun-args: (probs: (0.1, 0.5, 0.9)),
@@ -184,13 +187,18 @@
 
 // --- summarise dispatcher: callable form ----------------------------------
 
-#let r-fn = _apply-summary(v => (y: 0, ymin: -1, ymax: 1), (1, 2, 3))
+#let r-fn = _apply-summary(
+  "stat-summary",
+  v => (y: 0, ymin: -1, ymax: 1),
+  (1, 2, 3),
+)
 #assert.eq(r-fn.y, 0)
 #assert.eq(r-fn.ymin, -1)
 #assert.eq(r-fn.ymax, 1)
 
 // Callable consumes a fun-arg passed via the dispatcher.
 #let r-fn-args = _apply-summary(
+  "stat-summary",
   (v, k: 1) => (y: v.sum() * k, ymin: 0, ymax: 0),
   (1, 2, 3),
   fun-args: (k: 2),
@@ -380,15 +388,30 @@
 
 // --- summarise dispatcher: weights forwarded -------------------------------
 
-#let r-w-disp-se = _apply-summary("mean-se", w-vals, weights: w-w)
+#let r-w-disp-se = _apply-summary(
+  "stat-summary",
+  "mean-se",
+  w-vals,
+  weights: w-w,
+)
 #assert.eq(r-w-disp-se.ymin, r-w-se.ymin)
 #assert.eq(r-w-disp-se.ymax, r-w-se.ymax)
 
-#let r-w-disp-sd = _apply-summary("mean-sd", w-vals, weights: w-w)
+#let r-w-disp-sd = _apply-summary(
+  "stat-summary",
+  "mean-sd",
+  w-vals,
+  weights: w-w,
+)
 #assert.eq(r-w-disp-sd.ymin, r-w-sd.ymin)
 #assert.eq(r-w-disp-sd.ymax, r-w-sd.ymax)
 
-#let r-w-disp-cl = _apply-summary("mean-cl-normal", w-vals, weights: w-w)
+#let r-w-disp-cl = _apply-summary(
+  "stat-summary",
+  "mean-cl-normal",
+  w-vals,
+  weights: w-w,
+)
 #assert.eq(r-w-disp-cl.ymin, r-w-cl.ymin)
 #assert.eq(r-w-disp-cl.ymax, r-w-cl.ymax)
 

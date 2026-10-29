@@ -1,4 +1,5 @@
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/bin.typ": check-bin-params
 #import "col.typ": spec as col-spec
 #import "../stat/bin.typ": stat-bin
 
@@ -117,9 +118,10 @@
     width: width,
   )
     + split-aes-params("geom-histogram", args, col-spec.reads),
-  stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else {
-    stat
-  },
+  stat: if stat == auto {
+    check-bin-params("geom-histogram", bins, binwidth)
+    stat-bin(bins: bins, binwidth: binwidth)
+  } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

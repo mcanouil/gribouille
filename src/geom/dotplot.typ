@@ -5,6 +5,7 @@
 ///! data units on the x-axis and one stack-row in y units.
 
 #import "../deps.typ": cetz
+#import "../utils/bin.typ": check-bin-params
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper, project-point
@@ -109,6 +110,7 @@
   )
     + split-aes-params("geom-dotplot", args, spec.reads),
   stat: if stat == auto {
+    check-bin-params("geom-dotplot", bins, binwidth)
     stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
   } else { stat },
   position: position,

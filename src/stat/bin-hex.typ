@@ -1,6 +1,7 @@
 ///! Hexagonal two-dimensional binning. Backing statistic for \@geom-hex.
 
 #import "../utils/aes-resolve.typ": stat-output-mapping
+#import "../utils/bin.typ": check-bin-params
 #import "../utils/hex.typ": hex-cells, panel-hex-grid
 
 /// Two-dimensional hexagonal bin statistic: partition (x, y) into a
@@ -38,11 +39,10 @@
 /// ```
 ///
 /// \@see \@geom-hex, \@stat-bin-2d
-#let stat-bin-hex(bins: 30, binwidth: none) = (
-  kind: "stat",
-  name: "bin-hex",
-  params: (bins: bins, binwidth: binwidth),
-)
+#let stat-bin-hex(bins: 30, binwidth: none) = {
+  check-bin-params("stat-bin-hex", bins, binwidth, pair: true)
+  (kind: "stat", name: "bin-hex", params: (bins: bins, binwidth: binwidth))
+}
 
 #let apply(data, mapping, params: (:)) = {
   let new-mapping = stat-output-mapping(

@@ -10,7 +10,7 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../stat/smooth.typ": stat-smooth
+#import "../stat/smooth.typ": stat-smooth, validate-smooth-params
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
 #import "../utils/colour-resolve.typ": apply-alpha
@@ -180,6 +180,10 @@
   )
     + split-aes-params("geom-smooth", args, spec.reads),
   stat: if stat == auto {
+    validate-smooth-params(
+      "geom-smooth",
+      (method: method, level: level, span: span, degree: degree),
+    )
     stat-smooth(
       method: method,
       se: se,

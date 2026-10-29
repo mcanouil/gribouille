@@ -4,6 +4,7 @@
 
 #import "pretty.typ": pretty
 #import "types.typ": parse-number
+#import "errors.typ": fail-type
 
 #let grid-from-rows(rows, x-col, y-col, z-col) = {
   let parsed = ()
@@ -46,6 +47,25 @@
     z.at(x-idx.at(str(p.x))).at(y-idx.at(str(p.y))) = p.z
   }
   (xs: xs, ys: ys, z: z, z-lo: z-lo, z-hi: z-hi)
+}
+
+// Panic unless `bins`, `binwidth` and `breaks` can set contour levels. `none`
+// leaves a setting to the defaults, and `breaks: auto` leaves the levels to
+// `bins` and `binwidth`. `scope` names the public function that the user called.
+#let check-level-params(scope, bins, binwidth, breaks) = {
+  if bins != none and (type(bins) != int or bins < 1) {
+    fail-type(scope, "bins", bins, "a positive integer or `none`")
+  }
+  if (
+    binwidth != none and (type(binwidth) not in (int, float) or binwidth <= 0)
+  ) {
+    fail-type(scope, "binwidth", binwidth, "a positive number or `none`")
+  }
+  if breaks != none and breaks != auto {
+    if type(breaks) != array or breaks.any(b => type(b) not in (int, float)) {
+      fail-type(scope, "breaks", breaks, "an array of numbers or `auto`")
+    }
+  }
 }
 
 // Endpoints are excluded so degenerate boundary iso-lines are skipped.

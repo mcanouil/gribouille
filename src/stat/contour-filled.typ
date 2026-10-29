@@ -1,7 +1,9 @@
 ///! Filled iso-band statistic. Backing stat for \@geom-contour-filled.
 
 #import "../utils/aes-resolve.typ": stat-output-mapping
-#import "../utils/contour-grid.typ": grid-from-rows, resolve-levels
+#import "../utils/contour-grid.typ": (
+  check-level-params, grid-from-rows, resolve-levels,
+)
 #import "../utils/isobands.typ": isobands
 
 /// Filled iso-band statistic. Partitions the `(x, y, z)` field into bands
@@ -50,11 +52,14 @@
 /// ```
 ///
 /// \@see \@geom-contour-filled, \@stat-contour
-#let stat-contour-filled(bins: 10, binwidth: none, breaks: auto) = (
-  kind: "stat",
-  name: "contour-filled",
-  params: (bins: bins, binwidth: binwidth, breaks: breaks),
-)
+#let stat-contour-filled(bins: 10, binwidth: none, breaks: auto) = {
+  check-level-params("stat-contour-filled", bins, binwidth, breaks)
+  (
+    kind: "stat",
+    name: "contour-filled",
+    params: (bins: bins, binwidth: binwidth, breaks: breaks),
+  )
+}
 
 #let apply(data, mapping, params: (:)) = {
   let new-mapping = stat-output-mapping(

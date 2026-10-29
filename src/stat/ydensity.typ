@@ -80,6 +80,16 @@
 
 #let _SCALE-MODES = ("area", "count", "width")
 
+// Panic unless the violin density parameters are well-formed. `scope` names
+// the public function that the user called.
+#let validate-ydensity-params(scope, params) = {
+  validate-kde-params(scope, params)
+  let scale-mode = params.at("scale", default: "area")
+  if scale-mode not in _SCALE-MODES {
+    fail-enum(scope, "scale", scale-mode, _SCALE-MODES)
+  }
+}
+
 #let apply(data, mapping, params: (:)) = {
   let base-mapping = stat-output-mapping(mapping, (y: "y"))
   if mapping == none { return (data: (), mapping: base-mapping) }
@@ -88,11 +98,8 @@
   if x-col == none or y-col == none {
     return (data: (), mapping: base-mapping)
   }
-  validate-kde-params("stat-ydensity", params)
+  validate-ydensity-params("stat-ydensity", params)
   let scale-mode = params.at("scale", default: "area")
-  if scale-mode not in _SCALE-MODES {
-    fail-enum("stat-ydensity", "scale", scale-mode, _SCALE-MODES)
-  }
   let weight-col = mapping.at("weight", default: none)
 
   // Bucket rows by their raw x value in first-appearance order so the

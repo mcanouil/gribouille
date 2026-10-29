@@ -1,6 +1,7 @@
 ///! Rectangular two-dimensional binning. Backing statistic for \@geom-bin-2d.
 
 #import "../utils/aes-resolve.typ": stat-output-mapping
+#import "../utils/bin.typ": check-bin-params
 #import "../utils/bin-2d.typ": bin-2d-cells, bin-midpoint-2d, panel-bin-grid-2d
 
 /// Two-dimensional bin statistic: partition (x, y) into a rectangular grid
@@ -38,11 +39,10 @@
 /// ```
 ///
 /// \@see \@geom-bin-2d, \@stat-bin
-#let stat-bin-2d(bins: 30, binwidth: none) = (
-  kind: "stat",
-  name: "bin-2d",
-  params: (bins: bins, binwidth: binwidth),
-)
+#let stat-bin-2d(bins: 30, binwidth: none) = {
+  check-bin-params("stat-bin-2d", bins, binwidth, pair: true)
+  (kind: "stat", name: "bin-2d", params: (bins: bins, binwidth: binwidth))
+}
 
 #let apply(data, mapping, params: (:)) = {
   let new-mapping = stat-output-mapping(

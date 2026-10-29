@@ -1,4 +1,6 @@
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/contour-grid.typ": check-level-params
+#import "../utils/kde.typ": validate-kde-2d-params
 #import "polygon.typ": spec as polygon-spec
 #import "../stat/density-2d-filled.typ": stat-density-2d-filled
 
@@ -112,6 +114,12 @@
       polygon-spec.reads,
     ),
   stat: if stat == auto {
+    validate-kde-2d-params("geom-density-2d-filled", (
+      bw: bw,
+      adjust: adjust,
+      n: n,
+    ))
+    check-level-params("geom-density-2d-filled", bins, binwidth, breaks)
     stat-density-2d-filled(
       bw: bw,
       adjust: adjust,

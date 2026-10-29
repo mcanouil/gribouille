@@ -117,11 +117,11 @@
 }
 
 #let apply(data, mapping, params: (:)) = {
-  if mapping == none { return (data: data, mapping: mapping) }
+  if mapping == none { return (data: (), mapping: mapping) }
   let x-col = mapping.at("x", default: none)
   let y-col = mapping.at("y", default: none)
   if x-col == none or y-col == none {
-    return (data: data, mapping: mapping)
+    return (data: (), mapping: mapping)
   }
   let mode = params.at("connection", default: "hv")
 

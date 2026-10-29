@@ -4,6 +4,7 @@
 ///! one row per level with the count as y.
 
 #import "../utils/summaries.typ": read-weight
+#import "../utils/aes-resolve.typ": stat-output-mapping
 
 /// Count statistic: one output row per distinct x level with `y = count`.
 ///
@@ -62,7 +63,12 @@
   let x-col = if mapping != none { mapping.at("x", default: none) } else {
     none
   }
-  if x-col == none { return (data: data, mapping: mapping) }
+  if x-col == none {
+    return (
+      data: (),
+      mapping: stat-output-mapping(mapping, (y: "_count")),
+    )
+  }
   let weight-col = if mapping != none {
     mapping.at("weight", default: none)
   } else { none }
@@ -88,7 +94,5 @@
     r.insert("_count", counts.at(k))
     r
   })
-  let new-mapping = mapping
-  new-mapping.insert("y", "_count")
-  (data: rows, mapping: new-mapping)
+  (data: rows, mapping: stat-output-mapping(mapping, (y: "_count")))
 }

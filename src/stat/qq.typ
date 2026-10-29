@@ -15,7 +15,7 @@
 /// statistic falls back to `y`.
 /// Non-numeric and `none` values are dropped.
 /// Output rows are sorted by `sample` ascending, with `theoretical` taken
-/// from `theoretical-quantile((i + 0.5) / n, distribution)` for `i` in `0..n`.
+/// from `theoretical-quantile` at the plotting positions `(i + 0.5) / n` for `i` in `0..n`.
 /// Supported reference distributions are `"normal"` (default), `"uniform"`,
 /// and `"exponential"`.
 ///
@@ -81,7 +81,7 @@
   while i < n {
     let p = (i + 0.5) / n
     rows.push((
-      theoretical: theoretical-quantile(p, distribution),
+      theoretical: theoretical-quantile("stat-qq", p, distribution),
       sample: sorted.at(i),
     ))
     i = i + 1
