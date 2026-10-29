@@ -91,11 +91,29 @@
 // Normalise a verb's `data` argument, rejecting `none`: a wrangle verb needs a
 // real dataset, where `plot` and a layer read `none` as "inherit".
 #let _require-frame(scope, label, data) = {
-  let rows = _normalise-data(data, scope: scope, label: label)
-  if rows == none {
+  if data == none {
     fail-type(scope, label, data, "an array of dicts or a dict of arrays")
   }
-  rows
+  _normalise-data(data, scope: scope, label: label)
+}
+
+// Validate that every entry of `cols` is a string column name, and (when
+// `rows` is non-empty) that it exists. Empty data carries no column names to
+// check against, so existence is skipped there, matching `summarise`.
+#let _require-cols(scope, label, cols, rows) = {
+  for col in cols {
+    if type(col) != str {
+      fail-type(scope, label, col, "a string column name")
+    }
+  }
+  if rows.len() != 0 {
+    let available = column-names(rows)
+    for col in cols {
+      if not available.contains(col) {
+        fail-unknown-column(scope, label, col, available)
+      }
+    }
+  }
 }
 
 #let _mapping-ref(col, type) = (
@@ -120,14 +138,8 @@
   }
   let col = pos.last()
   if pos.len() == 1 { return (rows: none, col: col) }
-  if type(col) != str {
-    fail-type(scope, "col", col, "a string column name")
-  }
   let rows = _require-frame(scope, "data", pos.first())
-  let available = column-names(rows)
-  if rows.len() != 0 and not available.contains(col) {
-    fail-unknown-column(scope, "col", col, available)
-  }
+  _require-cols(scope, "col", (col,), rows)
   (rows: rows, col: col)
 }
 

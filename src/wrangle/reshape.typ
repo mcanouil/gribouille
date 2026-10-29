@@ -7,10 +7,10 @@
 ///! store input is accepted) and return a row-store, feeding `#plot` directly.
 ///! `pivot-longer` then `pivot-wider` round-trips the data, modulo column order.
 
-#import "../data.typ": _require-frame, column-names
+#import "../data.typ": _require-cols, _require-frame, column-names
 #import "../utils/errors.typ": fail, fail-type
 #import "summarise.typ": _bucket-groups
-#import "select.typ": _carry-factors, _require-cols
+#import "select.typ": _carry-factors
 
 // New column name for a `names-from` cell: dict keys are strings, so a value
 // is stringified and a `none` cell names the column "none".

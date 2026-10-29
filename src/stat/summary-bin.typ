@@ -4,7 +4,7 @@
 ///! each bin reduces the y values inside to a `(y, ymin, ymax)` summary
 ///! using one of the helpers in `src/utils/summaries.typ`.
 
-#import "../utils/summaries.typ": _apply-summary
+#import "../utils/summaries.typ": _apply-summary, check-weighted-fun
 #import "../utils/bin.typ": bin-1d-cells, bin-midpoint, panel-bin-grid
 #import "../utils/aes-resolve.typ": stat-output-mapping
 
@@ -105,6 +105,7 @@
 
   let fun = params.at("fun", default: "mean-se")
   let fun-args = params.at("fun-args", default: (:))
+  check-weighted-fun("stat-summary-bin", fun, weight-col)
 
   let out = ()
   for i in range(cells.grid.n-bins) {
@@ -116,7 +117,6 @@
       bucket.ys,
       fun-args: fun-args,
       weights: weights,
-      scope: "stat-summary-bin",
     )
     if summary.y == none { continue }
     out.push((

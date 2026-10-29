@@ -5,7 +5,7 @@
 ///! collapse to `(y: none, ymin: none, ymax: none)` so the caller can decide
 ///! how to handle missing buckets.
 
-#import "types.typ": is-native-numeric, parse-number, to-numeric
+#import "types.typ": check-number, parse-number, to-numeric
 #import "normal.typ": qnorm
 #import "errors.typ": fail, fail-range, fail-type
 
@@ -47,13 +47,6 @@
 }
 
 #let _empty-summary = (y: none, ymin: none, ymax: none)
-
-// Type check for a numeric argument, run before its range check.
-#let _check-number(scope, name, value) = {
-  if not is-native-numeric(value) {
-    fail-type(scope, name, value, "a number")
-  }
-}
 
 #let _mean(xs) = xs.sum(default: 0.0) / xs.len()
 
@@ -212,7 +205,7 @@
 /// #let s = quantile((1, 2, 3, 4), q: 0.25)
 /// ```
 #let quantile(values, q: 0.5) = {
-  _check-number("quantile", "q", q)
+  check-number("quantile", "q", q)
   if q < 0 or q > 1 {
     fail-range("quantile", "q", q, 0, 1, lo-open: false, hi-open: false)
   }
@@ -248,7 +241,7 @@
     fail-type("quantiles", "probs", probs, "an array of three probabilities")
   }
   for p in probs {
-    _check-number("quantiles", "every prob", p)
+    check-number("quantiles", "every prob", p)
     if p < 0 or p > 1 {
       fail-range(
         "quantiles",
@@ -307,7 +300,7 @@
 /// #let s = mean-se((2, 3, 4, 5, 6), multiplier: 2)
 /// ```
 #let mean-se(values, multiplier: 1, weights: none) = {
-  _check-number("mean-se", "multiplier", multiplier)
+  check-number("mean-se", "multiplier", multiplier)
   _mean-band(values, weights, multiplier, "se")
 }
 
@@ -340,7 +333,7 @@
 /// #let s = mean-cl-normal((2, 3, 4, 5, 6), conf: 0.5)
 /// ```
 #let mean-cl-normal(values, conf: 0.95, weights: none) = {
-  _check-number("mean-cl-normal", "conf", conf)
+  check-number("mean-cl-normal", "conf", conf)
   if conf <= 0 or conf >= 1 {
     fail-range("mean-cl-normal", "conf", conf, 0, 1)
   }
@@ -372,7 +365,7 @@
 /// #let s = mean-sd((2, 3, 4, 5, 6), multiplier: 2)
 /// ```
 #let mean-sd(values, multiplier: 1, weights: none) = {
-  _check-number("mean-sd", "multiplier", multiplier)
+  check-number("mean-sd", "multiplier", multiplier)
   _mean-band(values, weights, multiplier, "sd")
 }
 
@@ -403,7 +396,7 @@
 /// #let s = median-hilow((1, 2, 3, 4, 5, 6, 7, 8, 9, 10), conf: 0.9)
 /// ```
 #let median-hilow(values, conf: 0.5) = {
-  _check-number("median-hilow", "conf", conf)
+  check-number("median-hilow", "conf", conf)
   if conf <= 0 or conf >= 1 {
     fail-range("median-hilow", "conf", conf, 0, 1)
   }
@@ -459,7 +452,7 @@
 /// #let s = mean-cl-boot((2, 3, 4, 5, 6, 7), n-boot: 5000, seed: 42)
 /// ```
 #let mean-cl-boot(values, conf: 0.95, n-boot: 1000, seed: 0) = {
-  _check-number("mean-cl-boot", "conf", conf)
+  check-number("mean-cl-boot", "conf", conf)
   if conf <= 0 or conf >= 1 {
     fail-range("mean-cl-boot", "conf", conf, 0, 1)
   }
@@ -500,6 +493,18 @@
   "mean-cl-boot",
 )
 
+// Fail when a layer maps `weight` and `fun` names a summary helper with no
+// weighted formulation. `scope` names the public stat.
+#let check-weighted-fun(scope, fun, weight-col) = {
+  if weight-col != none and fun in _UNWEIGHTED-SUMMARIES {
+    fail(
+      scope,
+      "fun " + repr(fun) + " cannot use the weight aesthetic",
+      hint: "Drop the weight mapping, or use mean, mean-se, mean-sd, or mean-cl-normal.",
+    )
+  }
+}
+
 /// Look up a summary helper by name, or invoke a user-supplied callable.
 ///
 /// String names use the kebab form (`"mean-se"`, `"mean-cl-normal"`,
@@ -518,26 +523,11 @@
 /// \@param weights Optional array of non-negative weights aligned with `values`
 /// (`none` for unit weights). Forwarded to helpers that honour weights (`mean`,
 /// `mean-se`, `mean-sd`, `mean-cl-normal`), and to a callable as `weights:`
-/// only when it is not `none`. A helper without a weighted formulation fails
-/// when it receives weights.
-///
-/// \@param scope Public stat named in an error message.
+/// only when it is not `none`. Run `check-weighted-fun` first, so a helper
+/// without a weighted formulation never receives weights.
 ///
 /// \@internal
-#let _apply-summary(
-  name,
-  values,
-  fun-args: (:),
-  weights: none,
-  scope: "stat-summary",
-) = {
-  if weights != none and name in _UNWEIGHTED-SUMMARIES {
-    fail(
-      scope,
-      "fun " + repr(name) + " cannot use the weight aesthetic",
-      hint: "Drop the weight mapping, or use mean, mean-se, mean-sd, or mean-cl-normal.",
-    )
-  }
+#let _apply-summary(name, values, fun-args: (:), weights: none) = {
   if type(name) == function {
     if weights == none { return name(values, ..fun-args) }
     return name(values, weights: weights, ..fun-args)

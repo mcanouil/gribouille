@@ -1,6 +1,8 @@
 // Column type inference and number parsing.
 // Typst's csv() gives strings, so gribouille parses them on demand.
 
+#import "errors.typ": fail-type
+
 #let _numeric-re = regex("^\\s*-?\\d+(\\.\\d+)?([eE][-+]?\\d+)?\\s*$")
 #let _date-re = regex("^(\\d{4})-(\\d{2})-(\\d{2})$")
 #let _datetime-re = regex(
@@ -65,8 +67,8 @@
   if kind == "datetime" {
     let m = t.match(_datetime-re)
     if m == none { return none }
-    let (y, mo, d, h, mi, s) = m.captures
-    let (y, mo, d, h, mi) = (y, mo, d, h, mi).map(int)
+    let (y, mo, d, h, mi) = m.captures.slice(0, 5).map(int)
+    let s = m.captures.at(5)
     let sec = if s == none { 0 } else { int(s) }
     if not _valid-date(y, mo, d) or h > 23 or mi > 59 or sec > 59 {
       return none
@@ -132,6 +134,13 @@
 }
 
 #let is-native-numeric(v) = type(v) == int or type(v) == float
+
+// Type check for a numeric argument, run before its range check.
+#let check-number(scope, name, value) = {
+  if not is-native-numeric(value) {
+    fail-type(scope, name, value, "a number")
+  }
+}
 
 #let infer-column-type(values) = {
   let non-empty = values.filter(v => v != none and v != "")

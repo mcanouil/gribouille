@@ -5,7 +5,7 @@
 ///! `src/utils/summaries.typ`.
 
 #import "../utils/types.typ": parse-number
-#import "../utils/summaries.typ": _apply-summary
+#import "../utils/summaries.typ": _apply-summary, check-weighted-fun
 #import "../utils/errors.typ": fail-enum
 
 /// Per-axis reduction to a central value and an uncertainty band.
@@ -178,6 +178,7 @@
     fail-enum("stat-summary", "axis", axis, ("both", "x", "y"))
   }
   let weight-col = mapping.at("weight", default: none)
+  check-weighted-fun("stat-summary", fun, weight-col)
 
   let has-grouping = _group-aesthetics.any(a => (
     mapping.at(a, default: none) != none

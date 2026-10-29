@@ -7,8 +7,8 @@
 ///! input through `_normalise-data` and return a row-store, feeding `#plot`
 ///! directly.
 
-#import "../data.typ": _require-frame, column-names, group-by
-#import "../utils/errors.typ": fail, fail-type, fail-unknown-column, quote-each
+#import "../data.typ": _require-cols, _require-frame, group-by
+#import "../utils/errors.typ": fail, fail-type, quote-each
 
 // Coerce a `by:` argument into an array of column-name strings. `none` means
 // "no grouping" (the whole dataset); a bare string is a single column. `scope`
@@ -72,14 +72,7 @@
     )
   }
   let by-cols = _normalise-by(by, scope: scope)
-  let available = column-names(rows)
-  if rows.len() != 0 {
-    for col in by-cols {
-      if not available.contains(col) {
-        fail-unknown-column(scope, by-label, col, available)
-      }
-    }
-  }
+  _require-cols(scope, by-label, by-cols, rows)
   let aggs = aggregations.named()
   for (name, fn) in aggs {
     if type(fn) != function {

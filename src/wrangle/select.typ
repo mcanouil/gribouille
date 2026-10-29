@@ -8,7 +8,7 @@
 ///! already cover row filtering, sorting, and rowwise mutation, so those are
 ///! left to Typst.
 
-#import "../data.typ": _require-frame, column-names
+#import "../data.typ": _require-cols, _require-frame, column-names
 #import "../utils/types.typ": parse-number
 #import "../utils/errors.typ": fail, fail-type, fail-unknown-column, quote-each
 #import "summarise.typ": _bucket-groups, _normalise-by
@@ -22,25 +22,6 @@
         + quote-each(args.named().keys()),
       hint: hint,
     )
-  }
-}
-
-// Validate that every entry of `cols` is a string column name, and (when
-// `rows` is non-empty) that it exists. Empty data carries no column names to
-// check against, so existence is skipped there, matching `summarise`.
-#let _require-cols(scope, label, cols, rows) = {
-  for col in cols {
-    if type(col) != str {
-      fail-type(scope, label, col, "a string column name")
-    }
-  }
-  if rows.len() != 0 {
-    let available = column-names(rows)
-    for col in cols {
-      if not available.contains(col) {
-        fail-unknown-column(scope, label, col, available)
-      }
-    }
   }
 }
 
