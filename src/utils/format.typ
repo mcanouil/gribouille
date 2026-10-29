@@ -10,12 +10,43 @@
 
 #import "./errors.typ": check, fail-type
 #import "./types.typ": parse-number
+#import "./wrap.typ": soft-wrap
 #import "./typst-markup.typ": typst
 
 // A break as a number: an int stays an int, so its label keeps no decimals,
 // and anything else goes through `parse-number`, which reads NaN as no value.
 #let _numeric(value) = if type(value) == int { value } else {
   parse-number(value)
+}
+
+#let _check-string(scope, name, value) = {
+  if type(value) != str { fail-type(scope, name, value, "a string") }
+}
+
+#let _check-number(scope, name, value) = {
+  if type(value) != int and type(value) != float {
+    fail-type(scope, name, value, "a number")
+  }
+}
+
+#let _check-digits(scope, digits, allow-auto: true) = {
+  let expected = if allow-auto { "`auto` or a non-negative integer" } else {
+    "a non-negative integer"
+  }
+  if (digits != auto or not allow-auto) and type(digits) != int {
+    fail-type(scope, "digits", digits, expected)
+  }
+  check(
+    digits == auto or digits >= 0,
+    scope,
+    "digits must be " + expected + "; got " + repr(digits),
+  )
+}
+
+#let _check-number-style(scope, big-mark, decimal-mark, digits) = {
+  _check-string(scope, "big-mark", big-mark)
+  _check-string(scope, "decimal-mark", decimal-mark)
+  _check-digits(scope, digits)
 }
 
 #let _format-number-impl(n, big-mark: ",", decimal-mark: ".", digits: auto) = {
@@ -59,7 +90,8 @@
       decimal-mark + s
     }
   }
-  let sign = if value < 0 { "-" } else { "" }
+  // A value that rounds to zero loses its sign, so no label reads "-0.00".
+  let sign = if value < 0 and abs-rounded != 0 { "-" } else { "" }
   sign + with-sep + frac-str
 }
 
@@ -102,15 +134,20 @@
   digits: auto,
   prefix: "",
   suffix: "",
-) = value => {
-  let formatted = _format-number-impl(
-    value,
-    big-mark: big-mark,
-    decimal-mark: decimal-mark,
-    digits: digits,
-  )
-  if formatted == none { return none }
-  prefix + formatted + suffix
+) = {
+  _check-number-style("format-number", big-mark, decimal-mark, digits)
+  _check-string("format-number", "prefix", prefix)
+  _check-string("format-number", "suffix", suffix)
+  value => {
+    let formatted = _format-number-impl(
+      value,
+      big-mark: big-mark,
+      decimal-mark: decimal-mark,
+      digits: digits,
+    )
+    if formatted == none { return none }
+    prefix + formatted + suffix
+  }
 }
 
 /// Shorthand for `format-number(big-mark: ",")`.
@@ -142,13 +179,18 @@
 /// ```
 ///
 /// \@see \@format-number, \@format-currency
-#let format-comma(digits: auto, prefix: "", suffix: "") = format-number(
-  big-mark: ",",
-  decimal-mark: ".",
-  digits: digits,
-  prefix: prefix,
-  suffix: suffix,
-)
+#let format-comma(digits: auto, prefix: "", suffix: "") = {
+  _check-digits("format-comma", digits)
+  _check-string("format-comma", "prefix", prefix)
+  _check-string("format-comma", "suffix", suffix)
+  format-number(
+    big-mark: ",",
+    decimal-mark: ".",
+    digits: digits,
+    prefix: prefix,
+    suffix: suffix,
+  )
+}
 
 /// Format a numeric break as a percentage.
 ///
@@ -191,19 +233,24 @@
   big-mark: "",
   decimal-mark: ".",
   digits: 0,
-) = value => {
-  if value == none { return none }
-  let v = _numeric(value)
-  if v == none { return str(value) }
-  (
-    _format-number-impl(
-      v * scale,
-      big-mark: big-mark,
-      decimal-mark: decimal-mark,
-      digits: digits,
+) = {
+  _check-number("format-percent", "scale", scale)
+  _check-string("format-percent", "suffix", suffix)
+  _check-number-style("format-percent", big-mark, decimal-mark, digits)
+  value => {
+    if value == none { return none }
+    let v = _numeric(value)
+    if v == none { return str(value) }
+    (
+      _format-number-impl(
+        v * scale,
+        big-mark: big-mark,
+        decimal-mark: decimal-mark,
+        digits: digits,
+      )
+        + suffix
     )
-      + suffix
-  )
+  }
 }
 
 /// Format a numeric break as currency.
@@ -244,15 +291,19 @@
   big-mark: ",",
   decimal-mark: ".",
   digits: 2,
-) = value => {
-  let formatted = _format-number-impl(
-    value,
-    big-mark: big-mark,
-    decimal-mark: decimal-mark,
-    digits: digits,
-  )
-  if formatted == none { return none }
-  symbol + formatted
+) = {
+  _check-string("format-currency", "symbol", symbol)
+  _check-number-style("format-currency", big-mark, decimal-mark, digits)
+  value => {
+    let formatted = _format-number-impl(
+      value,
+      big-mark: big-mark,
+      decimal-mark: decimal-mark,
+      digits: digits,
+    )
+    if formatted == none { return none }
+    symbol + formatted
+  }
 }
 
 /// Format a numeric break in scientific notation as Typst math.
@@ -284,26 +335,29 @@
 /// ```
 ///
 /// \@see \@format-number, \@typst
-#let format-scientific(digits: 2) = value => {
-  if value == none { return none }
-  let v = _numeric(value)
-  if v == none { return str(value) }
-  if v == 0 { return typst("$0$") }
-  let abs-v = if v < 0 { -v } else { v }
-  if abs-v >= 1e-3 and abs-v < 1e3 {
-    let formatted = _format-number-impl(v, digits: digits)
-    return typst("$" + formatted + "$")
+#let format-scientific(digits: 2) = {
+  _check-digits("format-scientific", digits, allow-auto: false)
+  value => {
+    if value == none { return none }
+    let v = _numeric(value)
+    if v == none { return str(value) }
+    if v == 0 { return typst("$0$") }
+    let abs-v = if v < 0 { -v } else { v }
+    if abs-v >= 1e-3 and abs-v < 1e3 {
+      let formatted = _format-number-impl(v, digits: digits)
+      return typst("$" + formatted + "$")
+    }
+    let exp = int(calc.floor(calc.log(abs-v, base: 10)))
+    let mantissa = v / calc.pow(10, exp)
+    // Rounding the mantissa can push it to 10 (e.g. 9.999 -> 10.00); carry the
+    // overflow into the exponent so the notation stays in [1, 10).
+    if calc.abs(calc.round(mantissa, digits: digits)) >= 10 {
+      exp += 1
+      mantissa = v / calc.pow(10, exp)
+    }
+    let m-str = _format-number-impl(mantissa, digits: digits)
+    typst("$" + m-str + " times 10^(" + str(exp) + ")$")
   }
-  let exp = int(calc.floor(calc.log(abs-v, base: 10)))
-  let mantissa = v / calc.pow(10, exp)
-  // Rounding the mantissa can push it to 10 (e.g. 9.999 -> 10.00); carry the
-  // overflow into the exponent so the notation stays in [1, 10).
-  if calc.abs(calc.round(mantissa, digits: digits)) >= 10 {
-    exp += 1
-    mantissa = v / calc.pow(10, exp)
-  }
-  let m-str = _format-number-impl(mantissa, digits: digits)
-  typst("$" + m-str + " times 10^(" + str(exp) + ")$")
 }
 
 /// Format a numeric break as a power of a base, in Typst math.
@@ -349,6 +403,7 @@
     fail-type("format-log", "base", base, "a number")
   }
   check(base > 1, "format-log", "base must be above 1; got " + repr(base))
+  _check-digits("format-log", digits, allow-auto: false)
   let base-str = _format-number-impl(base, big-mark: "")
   value => {
     if value == none { return none }
@@ -527,25 +582,19 @@
 /// ```
 ///
 /// \@see \@format-title, \@label-wrap
-#let format-wrap(width: 20) = value => {
-  if value == none { return none }
-  let s = str(value)
-  if s.len() <= width { return s }
-  let words = s.split(" ")
-  let lines = ()
-  let line = ""
-  for w in words {
-    if line == "" {
-      line = w
-    } else if line.len() + 1 + w.len() <= width {
-      line = line + " " + w
-    } else {
-      lines.push(line)
-      line = w
-    }
+#let format-wrap(width: 20) = {
+  if type(width) != int {
+    fail-type("format-wrap", "width", width, "a positive integer")
   }
-  if line != "" { lines.push(line) }
-  lines.join("\n")
+  check(
+    width >= 1,
+    "format-wrap",
+    "width must be a positive integer; got " + repr(width),
+  )
+  value => {
+    if value == none { return none }
+    soft-wrap(str(value), width)
+  }
 }
 
 // Compact numeric tick formatter shared by axis ticks, secondary-axis ticks,

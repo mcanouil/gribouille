@@ -5,6 +5,7 @@
 // variable name and fall back to a default for missing keys.
 
 #import "../../src/facet/labellers.typ" as lab
+#import "../../src/utils/format.typ": format-wrap
 
 // label-value: returns the level as-is, ignoring var and count.
 #assert.eq(lab.format(lab.label-value(), "cyl", "6"), "6")
@@ -54,5 +55,24 @@
 )
 #assert.eq(lab.format(comp2, "cyl", "6"), "6")
 #assert.eq(lab.format(comp2, "vs", "1"), "vs: 1")
+
+// A non-string level converts with str() before it is joined.
+#assert.eq(lab.format(lab.label-both(), "cyl", 6), "cyl: 6")
+
+// Wrapping counts characters, so accented text is not cut mid-character.
+#assert.eq(lab.format(lab.label-wrap(width: 3), "x", "ééé ééé"), "ééé\nééé")
+
+// Greedy wrap fills each line, and a long word splits at the width.
+#assert.eq(lab.format(lab.label-wrap(width: 5), "x", "ab cd ef"), "ab cd\nef")
+#assert.eq(
+  lab.format(lab.label-wrap(width: 4), "x", "abcdefgh ij"),
+  "abcd\nefgh\nij",
+)
+
+// Both wrap helpers agree.
+#assert.eq(
+  lab.format(lab.label-wrap(width: 8), "x", "abcdefghij kl"),
+  format-wrap(width: 8)("abcdefghij kl"),
+)
 
 Labeller tests passed.
