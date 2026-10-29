@@ -84,6 +84,8 @@ Route every validation through [`src/utils/errors.typ`](src/utils/errors.typ) (`
 
 The message grammar says how a function fails.
 These rules say when.
+Some older code does not follow them yet.
+Do not copy that code: bring it into line when you change it.
 
 - An absent optional parameter takes its documented default in silence.
   A parameter with no meaningful default, such as a column name, a function, or a list of sub-guides, is required, and its absence fails by name.
