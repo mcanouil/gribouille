@@ -82,50 +82,54 @@ local function parse_args(argv)
   return opts
 end
 
--- Keep up to `jobs` typst processes in flight as a sliding window: reap the
--- oldest handle to free a slot before spawning the next source, instead of
--- draining a whole batch behind its slowest compile. Returns an array aligned
--- with `sources`, where each entry is `{ code, log, png }`.
-local function compile_pool(sources, opts)
+-- Keep up to `jobs` shell commands in flight as a sliding window: reap the
+-- oldest handle to free a slot before spawning the next command, instead of
+-- draining a whole batch behind its slowest one. Returns an array aligned with
+-- `cmds`, where each entry is `{ code, log }`.
+local function run_pool(cmds, jobs)
   local results = {}
   local pending = {}
   local function reap_oldest()
     local b = table.remove(pending, 1)
     local out = b.handle:read("*a")
     local _, _, code = b.handle:close()
-    results[b.idx] = { code = code or 0, log = out, png = b.png }
+    results[b.idx] = { code = code or 0, log = out }
   end
-  for i, s in ipairs(sources) do
-    if #pending >= opts.jobs then reap_oldest() end
-    local png = string.format("%s/png/%s.png", opts.build_root, s.key)
-    local cmd = string.format(
-      "typst compile %s --root %s --ignore-system-fonts --ppi %d %s 2>&1",
-      shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(png)
-    )
+  for i, cmd in ipairs(cmds) do
+    if #pending >= jobs then reap_oldest() end
     local handle = io.popen(cmd, "r")
     if not handle then
-      error(string.format("snapshot: failed to spawn typst for %s (io.popen returned nil)", s.src_typ))
+      error(string.format("snapshot: failed to spawn %s (io.popen returned nil)", cmd))
     end
-    pending[#pending + 1] = { idx = i, handle = handle, png = png }
+    pending[#pending + 1] = { idx = i, handle = handle }
   end
   while #pending > 0 do reap_oldest() end
   return results
 end
 
+local function compile_cmd(s, png, opts)
+  return string.format(
+    "typst compile %s --root %s --ignore-system-fonts --ppi %d %s 2>&1",
+    shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(png)
+  )
+end
+
 -- ImageMagick `compare -metric AE` writes "<ae>" or "<ae> (<normalised>)" on
 -- stderr. Uses the v6/v7-compatible `compare` entry point rather than
 -- `magick compare`. Exit codes: 0 == identical, 1 == differs but ran
--- cleanly, >=2 == error. Returns `code, ae, log`; on error `ae` is nil so
--- callers don't confuse a crashed compare with a clean 0-pixel match.
-local function diff_images(golden, current, diff_png, fuzz)
-  local cmd = string.format(
+-- cleanly, >=2 == error.
+local function compare_cmd(golden, current, diff_png, fuzz)
+  return string.format(
     "compare -metric AE -fuzz %s %s %s %s 2>&1",
     fuzz, shell_quote(golden), shell_quote(current), shell_quote(diff_png)
   )
-  local code, out = util.popen_capture(cmd)
-  local ae
-  if code <= 1 then ae = tonumber(out:match("^%s*(%d+)")) end
-  return code, ae, out
+end
+
+-- Reads a `compare` result as `ae`; on error `ae` is nil so callers don't
+-- confuse a crashed compare with a clean 0-pixel match.
+local function parse_ae(r)
+  if r.code <= 1 then return tonumber(r.log:match("^%s*(%d+)")) end
+  return nil
 end
 
 -- Goldens are minted by CI and nowhere else. A local `--update` bakes the
@@ -198,10 +202,28 @@ local function main()
     end
   end
 
-  opts.build_root = build_root
-  local compile_fail, diff_fail, missing, ok = {}, {}, {}, 0
-  local compiled = compile_pool(sources, opts)
+  local png_of, diff_of, cmds = {}, {}, {}
+  for i, s in ipairs(sources) do
+    png_of[i] = string.format("%s/png/%s.png", build_root, s.key)
+    diff_of[i] = string.format("%s/diff/%s.png", build_root, s.key)
+    cmds[i] = compile_cmd(s, png_of[i], opts)
+  end
+  local compiled = run_pool(cmds, opts.jobs)
 
+  -- The diffs run through the same pool, after every compile has finished.
+  local compared = {}
+  if not opts.update then
+    local diff_idx, diff_cmds = {}, {}
+    for i, s in ipairs(sources) do
+      if compiled[i].code == 0 and util.file_exists(s.golden) then
+        diff_idx[#diff_idx + 1] = i
+        diff_cmds[#diff_cmds + 1] = compare_cmd(s.golden, png_of[i], diff_of[i], opts.fuzz)
+      end
+    end
+    for j, r in ipairs(run_pool(diff_cmds, opts.jobs)) do compared[diff_idx[j]] = r end
+  end
+
+  local compile_fail, diff_fail, missing, ok = {}, {}, {}, 0
   for i, s in ipairs(sources) do
     local r = compiled[i]
     if r.code ~= 0 then
@@ -211,18 +233,18 @@ local function main()
         io.write("  A snapshot holds one page: remove the page breaks and let the page grow.\n")
       end
     elseif opts.update then
-      util.copy_file(r.png, s.golden)
+      util.copy_file(png_of[i], s.golden)
       ok = ok + 1
       io.write(string.format("update       %s\n", s.key))
-    elseif not util.file_exists(s.golden) then
+    elseif not compared[i] then
       missing[#missing + 1] = s.key
       io.write(string.format("MISSING      %s (no golden at %s)\n", s.key, s.golden))
     else
-      local diff_png = string.format("%s/diff/%s.png", build_root, s.key)
-      local code, ae, log = diff_images(s.golden, r.png, diff_png, opts.fuzz)
+      local c = compared[i]
+      local ae = parse_ae(c)
       if ae == nil then
-        diff_fail[#diff_fail + 1] = string.format("%s (compare exit=%d)", s.key, code)
-        io.write(string.format("COMPARE-ERR  %s exit=%d\n%s\n", s.key, code, log))
+        diff_fail[#diff_fail + 1] = string.format("%s (compare exit=%d)", s.key, c.code)
+        io.write(string.format("COMPARE-ERR  %s exit=%d\n%s\n", s.key, c.code, c.log))
       elseif ae > opts.tolerance then
         diff_fail[#diff_fail + 1] = string.format("%s (AE=%d)", s.key, ae)
         io.write(string.format("DIFF         %s  AE=%d\n", s.key, ae))
