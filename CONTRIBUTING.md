@@ -80,6 +80,30 @@ In return, a documentation fix reaches the stable site only at the next release.
 Never inline a panic string.
 Route every validation through [`src/utils/errors.typ`](src/utils/errors.typ) (`fail`, `fail-enum`, `fail-type`, `fail-range`, `check`), which enforces the message grammar `<scope>: <problem>; got <repr(value)>. <hint>`.
 
+### Input handling
+
+The message grammar says how a function fails.
+These rules say when.
+
+- An absent optional parameter takes its documented default in silence.
+  A parameter with no meaningful default, such as a column name, a function, or a list of sub-guides, is required, and its absence fails by name.
+  Every default must pass the checks of its own function.
+- Check every public parameter through `src/utils/errors.typ` before the code uses it, type first and range second.
+  Check in the constructor, or at bind for a deferred constructor such as a `scale-*` stub.
+  A raw Typst error that a user can reach is a bug.
+- Degenerate data, such as an empty vector, a zero span, a single level, or a column with no usable cell, gives an empty answer: no breaks, no rows, or a blank panel.
+  It never fails.
+- A degenerate argument, such as a count below 1, a negative width or length, or a probability outside its interval, fails through `fail-range`.
+  Never clamp an argument in silence.
+- A data cell that cannot be read on its channel drops its row in silence, in every family.
+  This covers a non-numeric string on a continuous channel, NaN, an impossible date, a weight that is not a number, and a value that is not a level of a discrete scale.
+  A `none` cell in a key column forms its own group.
+  A user argument is not a data cell: an unparsable break or limit fails.
+- The scope names the public function that the user called.
+  An internal helper that checks user input takes a `scope` parameter.
+  An internal scope is right only for an invariant that user input cannot reach.
+- A message states only the bounds that the code enforces, and prints the value as the user gave it, not after parsing or a unit conversion.
+
 ## Checks
 
 [`tools/check.sh`](tools/check.sh) runs the same suite as CI and needs Lua 5.4.
