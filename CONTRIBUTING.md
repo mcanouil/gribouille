@@ -88,7 +88,7 @@ These rules say when.
 - An absent optional parameter takes its documented default in silence.
   A parameter with no meaningful default, such as a column name, a function, or a list of sub-guides, is required, and its absence fails by name.
   Every default must pass the checks of its own function.
-- Check every public parameter through `src/utils/errors.typ` before the code uses it, type first and range second.
+- Check every public parameter before the code uses it, type first and range second.
   Check in the constructor, or at bind for a deferred constructor such as a `scale-*` stub.
   A raw Typst error that a user can reach is a bug.
 - Degenerate data, such as an empty vector, a zero span, a single level, or a column with no usable cell, gives an empty answer: no breaks, no rows, or a blank panel.
