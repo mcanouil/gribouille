@@ -145,8 +145,6 @@
   ),
 )
 
-Compose guide hoisting tests passed.
-
 // `collect: "all"` hoists a key that only one panel owns, as it is, with the
 // trained scales of the panel that owns it. A fill ramp on one panel and a
 // colour and shape key on the other land in one block, in panel order.
@@ -216,3 +214,5 @@ Compose guide hoisting tests passed.
   assert.eq(h.hoisted, ("colour",))
   assert.eq(h.hoisted-guides.len(), 1)
 }
+
+Compose guide hoisting tests passed.

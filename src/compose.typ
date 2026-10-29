@@ -911,6 +911,9 @@
 ///   `ncol`), and legend styling; compose forces a single shared side and grid
 ///   layout for the hoisted block, and builds it under the composition's theme.
 ///   Custom guides (`guide-custom`) never hoist.
+///   The shared block stacks the hoisted guides in panel order, and the guides
+///   of one panel in that panel's own guide order, whatever the order of the
+///   names in a `collect` array.
 ///
 /// \@param guides Per-aesthetic guide overrides applied to the collected
 ///   legend, built with \@guides, exactly as for \@plot. The collected legend's
