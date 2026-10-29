@@ -107,29 +107,11 @@ local function run_pool(cmds, jobs)
   return results
 end
 
-local function compile_cmd(s, png, opts)
+local function compile_cmd(s, opts)
   return string.format(
     "typst compile %s --root %s --ignore-system-fonts --ppi %d %s 2>&1",
-    shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(png)
+    shell_quote(s.src_typ), shell_quote(opts.root), opts.ppi, shell_quote(s.png)
   )
-end
-
--- ImageMagick `compare -metric AE` writes "<ae>" or "<ae> (<normalised>)" on
--- stderr. Uses the v6/v7-compatible `compare` entry point rather than
--- `magick compare`. Exit codes: 0 == identical, 1 == differs but ran
--- cleanly, >=2 == error.
-local function compare_cmd(golden, current, diff_png, fuzz)
-  return string.format(
-    "compare -metric AE -fuzz %s %s %s %s 2>&1",
-    fuzz, shell_quote(golden), shell_quote(current), shell_quote(diff_png)
-  )
-end
-
--- Reads a `compare` result as `ae`; on error `ae` is nil so callers don't
--- confuse a crashed compare with a clean 0-pixel match.
-local function parse_ae(r)
-  if r.code <= 1 then return tonumber(r.log:match("^%s*(%d+)")) end
-  return nil
 end
 
 -- Goldens are minted by CI and nowhere else. A local `--update` bakes the
@@ -202,11 +184,11 @@ local function main()
     end
   end
 
-  local png_of, diff_of, cmds = {}, {}, {}
+  local cmds = {}
   for i, s in ipairs(sources) do
-    png_of[i] = string.format("%s/png/%s.png", build_root, s.key)
-    diff_of[i] = string.format("%s/diff/%s.png", build_root, s.key)
-    cmds[i] = compile_cmd(s, png_of[i], opts)
+    s.png = string.format("%s/png/%s.png", build_root, s.key)
+    s.diff = string.format("%s/diff/%s.png", build_root, s.key)
+    cmds[i] = compile_cmd(s, opts)
   end
   local compiled = run_pool(cmds, opts.jobs)
 
@@ -217,7 +199,7 @@ local function main()
     for i, s in ipairs(sources) do
       if compiled[i].code == 0 and util.file_exists(s.golden) then
         diff_idx[#diff_idx + 1] = i
-        diff_cmds[#diff_cmds + 1] = compare_cmd(s.golden, png_of[i], diff_of[i], opts.fuzz)
+        diff_cmds[#diff_cmds + 1] = common.compare_cmd(s.golden, s.png, s.diff, opts.fuzz)
       end
     end
     for j, r in ipairs(run_pool(diff_cmds, opts.jobs)) do compared[diff_idx[j]] = r end
@@ -233,7 +215,7 @@ local function main()
         io.write("  A snapshot holds one page: remove the page breaks and let the page grow.\n")
       end
     elseif opts.update then
-      util.copy_file(png_of[i], s.golden)
+      util.copy_file(s.png, s.golden)
       ok = ok + 1
       io.write(string.format("update       %s\n", s.key))
     elseif not compared[i] then
@@ -241,7 +223,7 @@ local function main()
       io.write(string.format("MISSING      %s (no golden at %s)\n", s.key, s.golden))
     else
       local c = compared[i]
-      local ae = parse_ae(c)
+      local ae = common.parse_ae(c.code, c.log)
       if ae == nil then
         diff_fail[#diff_fail + 1] = string.format("%s (compare exit=%d)", s.key, c.code)
         io.write(string.format("COMPARE-ERR  %s exit=%d\n%s\n", s.key, c.code, c.log))

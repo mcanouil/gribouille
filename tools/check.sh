@@ -89,16 +89,14 @@ else
 fi
 
 snapshot_compiles_all=false
+examples_glob="examples/*.typ .github/star-history/star-history.typ"
 if [[ -n "${snapshot_mode}" && " ${snapshot_args} " != *" --only "* ]]; then
   snapshot_compiles_all=true
+  examples_glob=".github/star-history/star-history.typ"
 fi
 
 compile_glob "unit" "tests/unit/*.typ"
-if [[ "${snapshot_compiles_all}" == true ]]; then
-  compile_glob "examples" ".github/star-history/star-history.typ"
-else
-  compile_glob "examples" "examples/*.typ .github/star-history/star-history.typ"
-fi
+compile_glob "examples" "${examples_glob}"
 
 if ! tools/version-check.sh; then
   failures=$((failures + 1))
