@@ -9,7 +9,7 @@
 #import "../data.typ": _normalise-data, column
 #import "../utils/types.typ": infer-column-type, parse-number
 #import "../utils/typst-markup.typ": is-typst-markup
-#import "../utils/errors.typ": check, fail, fail-type
+#import "../utils/errors.typ": fail, fail-type
 #import "../utils/late-binding.typ": (
   after-scale-source, is-late-binding, late-binding-name,
 )
@@ -199,15 +199,19 @@
   out
 }
 
+// The constructor a user scale came from, as `bind-scale` stamped it, so a
+// message names the function the user called.
+#let _scope-of(user-scale) = "scale-" + user-scale.at("family", default: "continuous")
+
 // Call a user break closure on the trained values and validate its result.
 // `name` is the spec key, so the message names the argument the user wrote.
-#let _breaks-from-closure(name, closure, values) = {
+#let _breaks-from-closure(scope, name, closure, values) = {
   let out = closure(values)
   if type(out) != array { out = (out,) }
   for b in out {
     if type(b) != int and type(b) != float {
       fail-type(
-        "scale",
+        scope,
         name,
         b,
         "a number",
@@ -405,16 +409,9 @@
       explicit-hi = uhi != auto
       // ISO date/datetime/time string limits resolve to the same numeric epoch
       // the column data trains against; numeric limits pass through unchanged.
-      if explicit-lo {
-        let n = parse-number(ulo)
-        check(n != none, "scale", "could not parse lower limit: " + repr(ulo))
-        ulo = n
-      }
-      if explicit-hi {
-        let n = parse-number(uhi)
-        check(n != none, "scale", "could not parse upper limit: " + repr(uhi))
-        uhi = n
-      }
+      // `check-limits` (arguments.typ) rejected an unparsable limit at bind.
+      if explicit-lo { ulo = parse-number(ulo) }
+      if explicit-hi { uhi = parse-number(uhi) }
       domain = (
         if explicit-lo { ulo } else { dlo },
         if explicit-hi { uhi } else { dhi },
@@ -422,26 +419,8 @@
     } else {
       // Discrete limits are a level array, not a `(lo, hi)` pair, so there is
       // no per-side `auto`; the continuous-only lift/fold below never reads the
-      // `explicit-*` flags for this branch.
-      //
-      // A level must be a string. A discrete scale reads a bare number as a
-      // 1-indexed position rather than a level name (`map-discrete`), so a
-      // numeric level would be ambiguous: the pre-pass could not censor
-      // against it, and a position and a level of the same value would
-      // disagree. A domain trained from data is stringified, so only a user
-      // limit can carry another type.
-      for level in user-scale.limits {
-        if type(level) != str {
-          fail-type(
-            "scale `" + aes + "`",
-            "limits",
-            level,
-            "a level name as a string",
-            hint: "A discrete scale reads a bare number as a position, not as "
-              + "a level. Quote the levels, as in `limits: (\"1\", \"2\")`.",
-          )
-        }
-      }
+      // `explicit-*` flags for this branch. `check-limits` (arguments.typ)
+      // checked at bind that every level is a string.
       domain = user-scale.limits
     }
   }
@@ -472,15 +451,6 @@
   let pre-transformed = (
     scale-type == "continuous" and (transform == "log10" or transform == "sqrt")
   )
-  // A value lies in the active transform's domain when it is positive (log10),
-  // non-negative (sqrt), or unconstrained (any other transform).
-  let in-transform-domain = v => {
-    if transform == "log10" { v > 0 } else if transform == "sqrt" {
-      v >= 0
-    } else {
-      true
-    }
-  }
   if (
     pre-transformed
       and user-scale != none
@@ -489,21 +459,11 @@
     // User-supplied limits come in data space; lift the pinned side(s) to stat
     // space. An `auto` side keeps the trained bound, which is already in stat
     // space, so it must not be transformed again.
-    let lift = v => {
-      if transform == "log10" {
-        check(v > 0, "scale", "log10 limits must be positive; got " + repr(v))
-      } else if transform == "sqrt" {
-        check(
-          v >= 0,
-          "scale",
-          "sqrt limits must be non-negative; got " + repr(v),
-        )
-      }
-      transform-fwd(transform, v)
-    }
+    // `check-limits` (arguments.typ) rejected a limit outside the domain of
+    // the transform at bind.
     let (lo, hi) = domain
-    if explicit-lo { lo = lift(lo) }
-    if explicit-hi { hi = lift(hi) }
+    if explicit-lo { lo = transform-fwd(transform, lo) }
+    if explicit-hi { hi = transform-fwd(transform, hi) }
     domain = (lo, hi)
   }
   // A function-valued `breaks` / `minor-breaks` resolves here, against the
@@ -549,6 +509,7 @@
       }
       for key in keys {
         let resolved = _breaks-from-closure(
+          _scope-of(user-scale),
           key,
           user-scale.at(key),
           values,
@@ -559,7 +520,12 @@
       if secondary-closure {
         secondary.insert(
           "breaks",
-          _breaks-from-closure("breaks", secondary.breaks, values),
+          _breaks-from-closure(
+            _scope-of(user-scale),
+            "breaks",
+            secondary.breaks,
+            values,
+          ),
         )
         user-scale.insert("secondary", secondary)
       }
@@ -567,9 +533,10 @@
   }
   // Feature 5: explicit `breaks` widen the trained domain so requested ticks
   // are visible, except on a side pinned by an explicit limit. Breaks are in
-  // data units; lift them into stat space for pre-transformed scales (dropping
-  // values outside the transform's domain) so the comparison stays in the
-  // domain's native unit. Closure-derived breaks are excluded: the domain is
+  // data units; lift them into stat space for pre-transformed scales so the
+  // comparison stays in the domain's native unit. `check-breaks`
+  // (arguments.typ) rejected an unparsable break, or one outside the domain of
+  // the transform, at bind. Closure-derived breaks are excluded: the domain is
   // the closure's own input, so widening it would leave the two inconsistent.
   if (
     scale-type == "continuous"
@@ -580,12 +547,10 @@
     if type(user-breaks) == array and user-breaks.len() > 0 {
       // ISO date/datetime/time string breaks resolve to the same numeric epoch
       // the column data trains against; numeric breaks pass through unchanged.
-      let numeric-breaks = user-breaks.map(parse-number).filter(b => b != none)
+      let numeric-breaks = user-breaks.map(parse-number)
       user-scale = (..user-scale, breaks: numeric-breaks)
       let folded = if pre-transformed {
-        numeric-breaks
-          .filter(in-transform-domain)
-          .map(b => transform-fwd(transform, b))
+        numeric-breaks.map(b => transform-fwd(transform, b))
       } else { numeric-breaks }
       if folded.len() > 0 {
         let (lo, hi) = domain

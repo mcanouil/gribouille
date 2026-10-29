@@ -4,27 +4,6 @@
 ///! `breaks` and `labels` to control tick marks, or `transform` to apply
 ///! `"log10"`, `"sqrt"`, or `"reverse"` transformations.
 
-#import "../utils/errors.typ": fail-enum
-
-// Accepted `transform` names, mirrored by `transform-fwd`/`transform-inv` in
-// train.typ, and accepted `oob` modes, mirrored by `_checker` in oob.typ. The
-// public `scale-*` constructors defer, so these fire when `scales()` binds the
-// scale: a typo fails there rather than silently no-opping downstream.
-#let _TRANSFORMS = ("identity", "reverse", "log10", "sqrt")
-#let _OOB-MODES = ("drop", "squish")
-
-#let _check-transform(transform) = {
-  if transform not in _TRANSFORMS {
-    fail-enum("scale", "transform", transform, _TRANSFORMS)
-  }
-}
-
-#let _check-oob(oob) = {
-  if oob not in _OOB-MODES {
-    fail-enum("scale", "oob", oob, _OOB-MODES)
-  }
-}
-
 #let _continuous-scale(
   aesthetic,
   name: none,
@@ -38,8 +17,6 @@
   expand: auto,
   secondary: none,
 ) = {
-  _check-transform(transform)
-  _check-oob(oob)
   (
     kind: "scale",
     aesthetic: aesthetic,
@@ -68,9 +45,6 @@
   n-minor: auto,
   labels: auto,
 ) = {
-  // `transform` is always a fixed literal from `_trans(...)` in bind.typ, so only
-  // the user-reachable `oob` needs checking here.
-  _check-oob(oob)
   (
     kind: "scale",
     aesthetic: aesthetic,
@@ -96,7 +70,6 @@
   breaks: auto,
   labels: auto,
 ) = {
-  _check-oob(oob)
   (
     kind: "scale",
     aesthetic: aesthetic,

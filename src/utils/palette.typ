@@ -3,7 +3,7 @@
 // preference). Continuous default is viridis.
 
 #import "viridis.typ": viridis
-#import "errors.typ": fail
+#import "errors.typ": fail, fail-enum, fail-type
 
 /// Okabe-Ito colour-vision-deficiency-safe qualitative palette.
 ///
@@ -319,15 +319,10 @@
   ),
 )
 
-// Index a palette with modulo wrap so out-of-range indices cycle.
+// Index a palette with modulo wrap so out-of-range indices cycle. `scales()`
+// and `theme()` reject an empty palette, so an empty one here is a bug.
 #let palette-at(palette, idx) = {
-  if palette.len() == 0 {
-    fail(
-      "palette-at",
-      "palette is empty",
-      hint: "`scale-*-manual()` needs at least one value.",
-    )
-  }
+  if palette.len() == 0 { fail("palette-at", "palette is empty") }
   palette.at(calc.rem(idx, palette.len()))
 }
 
@@ -404,13 +399,11 @@
 /// )
 /// ```
 #let brewer-palette(name) = {
-  let pal = brewer-palettes.at(name, default: none)
-  if pal == none {
-    let known = brewer-palettes.keys().join(", ")
-    fail(
-      "brewer-palette",
-      "unknown ColorBrewer palette '" + name + "'; known palettes: " + known,
-    )
+  if type(name) != str {
+    fail-type("brewer-palette", "name", name, "a palette name as a string")
   }
-  pal
+  if name not in brewer-palettes {
+    fail-enum("brewer-palette", "name", name, brewer-palettes.keys())
+  }
+  brewer-palettes.at(name)
 }

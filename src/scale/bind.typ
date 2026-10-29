@@ -6,6 +6,7 @@
 ///! which bakes the aesthetic and produces the concrete scale dict.
 
 #import "../utils/errors.typ": fail, fail-enum, quote-each
+#import "arguments.typ": check-arguments, check-breaks, check-limits
 #import "continuous.typ": _binned-scale, _continuous-scale, _transform-scale
 #import "discrete.typ": _discrete-scale
 #import "date.typ": _temporal-scale
@@ -381,5 +382,12 @@
       )
     }
   }
-  (entry.call)(aesthetic, ..stub.args)
+  check-arguments(family, aesthetic, stub.args.named())
+  let scale = (entry.call)(aesthetic, ..stub.args)
+  check-limits(family, scale)
+  check-breaks(family, scale)
+  // Training reads the family to name the constructor in a message about a
+  // data cell, which it can only check once the data is known.
+  scale.insert("family", family)
+  scale
 }
