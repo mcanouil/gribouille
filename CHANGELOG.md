@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+- fix!: `stat-summary()` and `stat-summary-bin()` fail when the layer maps `weight` and `fun` is `median`, `median-hilow`, `quantile`, `quantiles` or `mean-cl-boot`. These helpers have no weighted form and used to drop the weights in silence. A callable `fun` gets the weights as `weights:`, so give it that parameter or a `..args` sink. (#377)
+- fix!: `as-numeric(data, col)` and `as-factor(data, col)` fail on a column that the data doesn't hold, where they used to add a new column of `none`. They also accept a column store and fail by name on the wrong number of arguments. (#377)
+- fix!: `quantiles()` fails when its `probs` aren't in ascending order, and `mean-cl-boot()` fails on an `n-boot` below 1. The first used to give `ymin` above `ymax`, and the second clamped the count to 1 in silence. (#377)
 - fix!: `scales()` checks the arguments of every `scale-*` constructor when it binds the scale, and fails under the name of that constructor. An unknown `oob` mode or viridis `option`, an empty `scale-manual()`, `scale-gradientn()` or `scale-stepsn()`, an `n-breaks` below 1, and a `chroma`, `luminance`, `start` or `end` out of range used to pass in silence, and now fail. (#376)
 - fix!: A `breaks` or `minor-breaks` value that doesn't parse as a number, or that sits outside the domain of a log10 or sqrt scale, now fails as a limit does. It used to drop in silence. `expand-limits()` fails on a value that doesn't parse, too. (#376)
 - fix!: A geom fails when it gets a constant for an aesthetic it does not draw, for example `geom-point(xend: 3)`. The value never had an effect, so remove it. (#350)
@@ -19,6 +22,9 @@
 - feat: `theme()` takes `guide-spacing`, the gap between the parts of a legend, such as its title and its colour bar. The default is `0cm`. (#372)
 - feat: `theme()` takes `legend-line`, the stroke of a legend spine. It is blank by default, so a legend draws none. (#372)
 - feat: Under `coord-radial`, lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline` and the lines of `geom-smooth` and `geom-function` follow the polar grid as curves, as in ggplot2, instead of straight chords. Polygons keep straight edges. (#359)
+- fix: A `none` cell in a key column forms its own group in `summarise()`, `count()`, `distinct()`, `slice-max()`, `slice-min()`, the joins and `pivot-wider()`, and a `none` key only matches a `none` key. An empty key list puts every row in one group, so `pivot-wider()` with no identifier column works, and a join with `by: ()` fails by name. (#377)
+- fix: An impossible date such as `"2020-02-30"` and a weight that isn't a number such as `"NA"` now drop their row, as other unusable cells do. They used to raise `date is invalid` and `invalid float`. (#377)
+- fix: The wrangle verbs, `plot()` and the summary helpers name the function you called when their input is wrong. `select(none)`, `count(data, "b")`, `quantile(q: "0.5")` and `plot(width: "10cm")` used to raise a raw Typst error or report under another name. (#377)
 - fix: A cell that a continuous colour, fill, size or alpha scale can't read, such as `"zz"` or NaN, now drops its row, whatever the `oob` mode. It used to raise `invalid float` or draw in the fallback ink. (#376)
 - fix: NaN counts as a missing value everywhere, so the `breaks-*`, `cut-*` and `format-*` helpers and scale training no longer raise `cannot compare float.nan`. (#376)
 - fix: A wrong type for a scale argument such as `limits`, `expand`, `range`, `hue`, `direction`, `midpoint`, `palette` or `n-minor`, or for `sec-axis(transform:)`, fails with a message that names the function you called, not a raw Typst error. (#376)

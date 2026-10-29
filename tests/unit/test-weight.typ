@@ -103,4 +103,16 @@
 #assert-close(r-summary.data.at(0).y, 5)
 #assert-close(r-summary.data.at(1).y, 0)
 
+// A weight that is not a number drops its row, like a non-numeric value.
+#assert.eq(mean((1, 5, 3), weights: (1, "NA", 1)).y, 2.0)
+#assert.eq(mean((1, 5, 3), weights: (1, "x", "1")).y, 2.0)
+#assert.eq(mean((1, 5), weights: (1, float.nan)).y, 1.0)
+#let r-na = apply-stat(
+  "count",
+  ((x: "a", w: 2), (x: "a", w: "NA"), (x: "b", w: 3)),
+  (x: "x", weight: "w"),
+  (:),
+)
+#assert.eq(r-na.data.map(row => row._count), (2, 3))
+
 Weight aesthetic stat-routing tests passed.

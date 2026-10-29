@@ -23,6 +23,8 @@
 /// \@stability stable
 ///
 /// \@param fun Name of the summary helper to apply to each bin's y values.
+///   With a `weight` mapping, the only valid helper names are `mean`,
+///   `mean-se`, `mean-sd`, and `mean-cl-normal`.
 ///
 /// \@param bins Target number of bins when `binwidth` is `none`.
 ///
@@ -114,6 +116,7 @@
       bucket.ys,
       fun-args: fun-args,
       weights: weights,
+      scope: "stat-summary-bin",
     )
     if summary.y == none { continue }
     out.push((

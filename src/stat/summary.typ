@@ -27,6 +27,10 @@
 /// `"mean-cl-normal"`, `"mean-cl-boot"`, `"mean-sd"`, `"median-hilow"`,
 /// `"mean"`, `"median"`, `"quantile"`, `"quantiles"`) or a Typst callable of
 /// the form `(values, ..fun-args) -> (y, ymin, ymax)`.
+/// With a `weight` mapping, `mean`, `mean-se`, `mean-sd`, and `mean-cl-normal`
+/// use the weights, and the other named helpers fail.
+/// A callable then receives the weights as `weights:`, so it must accept
+/// `weights` or a sink such as `..args`.
 ///
 /// \@category Stats
 /// \@subcategory Summaries

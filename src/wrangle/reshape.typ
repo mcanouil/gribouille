@@ -7,10 +7,14 @@
 ///! store input is accepted) and return a row-store, feeding `#plot` directly.
 ///! `pivot-longer` then `pivot-wider` round-trips the data, modulo column order.
 
-#import "../data.typ": _normalise-data, column-names
+#import "../data.typ": _require-frame, column-names
 #import "../utils/errors.typ": fail, fail-type
 #import "summarise.typ": _bucket-groups
 #import "select.typ": _carry-factors, _require-cols
+
+// New column name for a `names-from` cell: dict keys are strings, so a value
+// is stringified and a `none` cell names the column "none".
+#let _column-name(value) = if value == none { "none" } else { str(value) }
 
 /// Melt several columns into a single name/value column pair (wide to long).
 ///
@@ -40,7 +44,7 @@
 ///
 /// \@see \@pivot-wider
 #let pivot-longer(data, cols, names-to: "name", values-to: "value") = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("pivot-longer", "data", data)
   let melt = if type(cols) == str { (cols,) } else { cols }
   if type(melt) != array {
     fail-type(
@@ -89,7 +93,9 @@
 /// `names-from` holds the new column names, `values-from` their cell values;
 /// every other column identifies the output row. Rows sharing the identifier
 /// columns collapse into one, with a column per distinct `names-from` value
-/// (stringified, since dict keys are strings) in first-appearance order. Absent
+/// (stringified, since dict keys are strings) in first-appearance order. A
+/// `none` name becomes the column `"none"`, and a `none` identifier cell forms
+/// its own row. With no identifier column, every row collapses into one. Absent
 /// name/identifier combinations are filled with `none`; a repeated combination
 /// (the same `names-from` value twice within one identifier group) is an
 /// ambiguous spread and fails.
@@ -113,7 +119,7 @@
 ///
 /// \@see \@pivot-longer
 #let pivot-wider(data, names-from: none, values-from: none) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("pivot-wider", "data", data)
   _require-cols("pivot-wider", "names-from", (names-from,), rows)
   _require-cols("pivot-wider", "values-from", (values-from,), rows)
   if names-from == values-from {
@@ -124,7 +130,7 @@
   ))
   let new-cols = ()
   for row in rows {
-    let name = str(row.at(names-from, default: none))
+    let name = _column-name(row.at(names-from, default: none))
     if not new-cols.contains(name) { new-cols.push(name) }
   }
   for name in new-cols {
@@ -144,7 +150,7 @@
     for name in new-cols { out.insert(name, none) }
     let filled = (:)
     for row in group.rows {
-      let name = str(row.at(names-from, default: none))
+      let name = _column-name(row.at(names-from, default: none))
       if name in filled {
         let id-desc = id-cols
           .zip(group.values)

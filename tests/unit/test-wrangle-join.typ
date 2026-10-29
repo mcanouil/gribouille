@@ -134,3 +134,17 @@
     .at("_gribouille-factors"),
   ("city",),
 )
+
+// A `none` key matches a `none` key, and never a string.
+#assert.eq(
+  left-join(
+    ((k: none, a: 1), (k: "", a: 2)),
+    ((k: none, b: 10),),
+    by: "k",
+  ).map(row => row.b),
+  (10, none),
+)
+
+// A natural join with an empty x and no shared column keys every row alike.
+#assert.eq(full-join((), ((b: 1),)), ((b: 1),))
+#assert.eq(left-join((), ((b: 1),)), ())

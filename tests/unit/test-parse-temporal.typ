@@ -42,4 +42,20 @@
 #assert.eq(parse-temporal("2024-01-15", "time"), none)
 #assert.eq(parse-temporal("12:00", "date"), none)
 
+// An impossible date or clock time is an unusable cell, not a Typst error.
+#assert.eq(parse-temporal("2020-02-30", "date"), none)
+#assert.eq(parse-temporal("2021-02-29", "date"), none)
+#assert.eq(parse-temporal("1900-02-29", "date"), none)
+#assert.eq(parse-temporal("2020-13-01", "date"), none)
+#assert.eq(parse-temporal("2020-04-31", "date"), none)
+#assert.eq(parse-temporal("2020-00-10", "date"), none)
+#assert.eq(parse-temporal("2020-01-00", "date"), none)
+#assert.eq(parse-temporal("2020-02-30T10:00", "datetime"), none)
+#assert.eq(parse-temporal("2020-01-01T25:00", "datetime"), none)
+#assert.eq(parse-temporal("2020-01-01T10:60", "datetime"), none)
+#assert.eq(parse-temporal("2020-01-01T10:00:60", "datetime"), none)
+#assert(parse-temporal("2020-02-29", "date") != none)
+#assert(parse-temporal("2000-02-29", "date") != none)
+#assert(parse-temporal("2020-12-31T23:59:59", "datetime") != none)
+
 parse-temporal tests passed.

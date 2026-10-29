@@ -8,6 +8,19 @@
 )
 #let _time-re = regex("^(\\d{2}):(\\d{2})(?::(\\d{2}))?$")
 
+// Whether the calendar date exists: `datetime()` raises on an impossible date
+// such as 2020-02-30, and an unusable cell must give `none`, not an error.
+#let _valid-date(y, mo, d) = {
+  if mo < 1 or mo > 12 or d < 1 { return false }
+  let leap = (
+    calc.rem(y, 4) == 0 and (calc.rem(y, 100) != 0 or calc.rem(y, 400) == 0)
+  )
+  let days = if mo == 2 { if leap { 29 } else { 28 } } else if (
+    (4, 6, 9, 11).contains(mo)
+  ) { 30 } else { 31 }
+  d <= days
+}
+
 /// Parse an ISO-8601 temporal string into a numeric epoch.
 ///
 /// The reference epoch is `2000-01-01T00:00:00`.
@@ -16,7 +29,8 @@
 /// `"time"` returns seconds since midnight.
 /// Numeric values pass through unchanged so a column can mix pre-encoded
 /// numbers and ISO strings.
-/// Empty, `none`, and unparseable values return `none`.
+/// Empty, `none`, and unparseable values return `none`, and so does an
+/// impossible date or clock time such as `"2020-02-30"` or `"2020-01-01T25:00"`.
 ///
 /// Recognised string forms:
 ///
@@ -41,8 +55,9 @@
   if kind == "date" {
     let m = t.match(_date-re)
     if m == none { return none }
-    let (y, mo, d) = m.captures
-    let dt = datetime(year: int(y), month: int(mo), day: int(d))
+    let (y, mo, d) = m.captures.map(int)
+    if not _valid-date(y, mo, d) { return none }
+    let dt = datetime(year: y, month: mo, day: d)
     let epoch = datetime(year: 2000, month: 1, day: 1)
     let dur = dt - epoch
     return float(dur.days())
@@ -51,13 +66,17 @@
     let m = t.match(_datetime-re)
     if m == none { return none }
     let (y, mo, d, h, mi, s) = m.captures
+    let (y, mo, d, h, mi) = (y, mo, d, h, mi).map(int)
     let sec = if s == none { 0 } else { int(s) }
+    if not _valid-date(y, mo, d) or h > 23 or mi > 59 or sec > 59 {
+      return none
+    }
     let dt = datetime(
-      year: int(y),
-      month: int(mo),
-      day: int(d),
-      hour: int(h),
-      minute: int(mi),
+      year: y,
+      month: mo,
+      day: d,
+      hour: h,
+      minute: mi,
       second: sec,
     )
     let epoch = datetime(

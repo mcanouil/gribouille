@@ -92,3 +92,23 @@
     .at("_gribouille-factors"),
   ("g",),
 )
+
+// With no identifier column, every row collapses into one wide row.
+#assert.eq(
+  pivot-wider(
+    ((k: "a", v: 1), (k: "b", v: 2)),
+    names-from: "k",
+    values-from: "v",
+  ),
+  ((a: 1, b: 2),),
+)
+
+// A `none` identifier forms its own row; a `none` name becomes "none".
+#assert.eq(
+  pivot-wider(
+    ((id: none, k: "a", v: 1), (id: 1, k: none, v: 2)),
+    names-from: "k",
+    values-from: "v",
+  ),
+  ((id: none, a: 1, "none": none), (id: 1, a: none, "none": 2)),
+)

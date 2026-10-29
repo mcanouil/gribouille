@@ -8,7 +8,7 @@
 ///! already cover row filtering, sorting, and rowwise mutation, so those are
 ///! left to Typst.
 
-#import "../data.typ": _normalise-data, column-names
+#import "../data.typ": _require-frame, column-names
 #import "../utils/types.typ": parse-number
 #import "../utils/errors.typ": fail, fail-type, fail-unknown-column, quote-each
 #import "summarise.typ": _bucket-groups, _normalise-by
@@ -93,7 +93,7 @@
 ///
 /// \@see \@rename, \@relocate
 #let select(data, ..names) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("select", "data", data)
   _require-positional("select", names)
   let cols = names.pos()
   _require-cols("select", "selection", cols, rows)
@@ -123,7 +123,7 @@
 ///
 /// \@see \@select, \@relocate
 #let rename(data, ..renames) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("rename", "data", data)
   if renames.pos().len() != 0 {
     fail(
       "rename",
@@ -203,7 +203,7 @@
 ///
 /// \@see \@select, \@rename
 #let relocate(data, ..cols, before: none, after: none) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("relocate", "data", data)
   _require-positional(
     "relocate",
     cols,
@@ -265,7 +265,7 @@
 ///
 /// \@see \@distinct
 #let drop-na(data, ..cols) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("drop-na", "data", data)
   _require-positional("drop-na", cols)
   let requested = cols.pos()
   _require-cols("drop-na", "column", requested, rows)
@@ -297,7 +297,7 @@
 ///
 /// \@see \@drop-na
 #let distinct(data, ..cols) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("distinct", "data", data)
   _require-positional("distinct", cols)
   let key-cols = cols.pos()
   _require-cols("distinct", "column", key-cols, rows)
@@ -311,7 +311,7 @@
 // when `n` reaches them. The numeric sort is stable, so ties keep input order
 // and there is no tie expansion.
 #let _slice-extreme(scope, data, col, n, by, descending) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame(scope, "data", data)
   if type(n) != int or n < 0 {
     fail-type(scope, "n", n, "a non-negative integer")
   }

@@ -5,23 +5,29 @@
 ///! collapse to `(y: none, ymin: none, ymax: none)` so the caller can decide
 ///! how to handle missing buckets.
 
-#import "types.typ": parse-number, to-numeric
+#import "types.typ": is-native-numeric, parse-number, to-numeric
 #import "normal.typ": qnorm
 #import "errors.typ": fail, fail-range, fail-type
 
-// Read a weight value from a row, coercing strings via `float`. Treats a
-// `none` weight column as unit weight; treats a missing/`none` cell as
-// zero so the row is filtered out by the weighted helpers' `w > 0` test.
-#let read-weight(row, weight-col) = {
-  if weight-col == none { return 1 }
-  let raw = row.at(weight-col, default: none)
-  if raw == none { return 0 }
-  if type(raw) == str { return float(raw) }
-  raw
+// Parse a weight cell through `parse-number`. A missing, `none`, or
+// non-numeric cell (such as "NA") weighs zero, so the weighted helpers'
+// `w > 0` test drops its row as it drops any other unusable cell. A native
+// integer stays an integer, so a weighted count prints as one.
+#let _weight-of(raw) = {
+  if type(raw) == int { return raw }
+  let w = parse-number(raw)
+  if w == none { 0 } else { w }
 }
 
-// Pair each value with its weight, drop non-numeric values, and treat
-// missing weights as 1. Returns `(xs, ws)` arrays with matching lengths;
+// Read a weight value from a row. Treats a `none` weight column as unit
+// weight, and an unusable cell as zero (see `_weight-of`).
+#let read-weight(row, weight-col) = {
+  if weight-col == none { return 1 }
+  _weight-of(row.at(weight-col, default: none))
+}
+
+// Pair each value with its weight, and drop non-numeric values and unusable
+// weights. Returns `(xs, ws)` arrays with matching lengths;
 // when `weights` is `none`, every entry weights as 1.
 #let _to-weighted(values, weights) = {
   let n = values.len()
@@ -31,10 +37,7 @@
     let v = parse-number(values.at(i))
     if v == none { continue }
     let w = if weights == none { 1 } else {
-      let raw = weights.at(i, default: none)
-      if raw == none {
-        0
-      } else if type(raw) == str { float(raw) } else { raw }
+      _weight-of(weights.at(i, default: none))
     }
     if w <= 0 { continue }
     xs.push(v)
@@ -44,6 +47,13 @@
 }
 
 #let _empty-summary = (y: none, ymin: none, ymax: none)
+
+// Type check for a numeric argument, run before its range check.
+#let _check-number(scope, name, value) = {
+  if not is-native-numeric(value) {
+    fail-type(scope, name, value, "a number")
+  }
+}
 
 #let _mean(xs) = xs.sum(default: 0.0) / xs.len()
 
@@ -202,6 +212,7 @@
 /// #let s = quantile((1, 2, 3, 4), q: 0.25)
 /// ```
 #let quantile(values, q: 0.5) = {
+  _check-number("quantile", "q", q)
   if q < 0 or q > 1 {
     fail-range("quantile", "q", q, 0, 1, lo-open: false, hi-open: false)
   }
@@ -223,7 +234,8 @@
 ///
 /// \@param values Array of numbers; non-numeric entries are dropped.
 ///
-/// \@param probs Three probabilities in `[0, 1]`, ordered low-mid-high.
+/// \@param probs Three probabilities in `[0, 1]`, in ascending order:
+///   low, mid, high.
 ///
 /// \@returns Dict `(y, ymin, ymax)`; all-`none` if `values` has no numerics.
 ///
@@ -236,6 +248,7 @@
     fail-type("quantiles", "probs", probs, "an array of three probabilities")
   }
   for p in probs {
+    _check-number("quantiles", "every prob", p)
     if p < 0 or p > 1 {
       fail-range(
         "quantiles",
@@ -247,6 +260,13 @@
         hi-open: false,
       )
     }
+  }
+  if probs != probs.sorted() {
+    fail(
+      "quantiles",
+      "probs must be in ascending order; got " + repr(probs),
+      hint: "Order them low, mid, high.",
+    )
   }
   let xs = to-numeric(values)
   if xs.len() == 0 { return _empty-summary }
@@ -287,6 +307,7 @@
 /// #let s = mean-se((2, 3, 4, 5, 6), multiplier: 2)
 /// ```
 #let mean-se(values, multiplier: 1, weights: none) = {
+  _check-number("mean-se", "multiplier", multiplier)
   _mean-band(values, weights, multiplier, "se")
 }
 
@@ -319,6 +340,7 @@
 /// #let s = mean-cl-normal((2, 3, 4, 5, 6), conf: 0.5)
 /// ```
 #let mean-cl-normal(values, conf: 0.95, weights: none) = {
+  _check-number("mean-cl-normal", "conf", conf)
   if conf <= 0 or conf >= 1 {
     fail-range("mean-cl-normal", "conf", conf, 0, 1)
   }
@@ -350,6 +372,7 @@
 /// #let s = mean-sd((2, 3, 4, 5, 6), multiplier: 2)
 /// ```
 #let mean-sd(values, multiplier: 1, weights: none) = {
+  _check-number("mean-sd", "multiplier", multiplier)
   _mean-band(values, weights, multiplier, "sd")
 }
 
@@ -380,6 +403,7 @@
 /// #let s = median-hilow((1, 2, 3, 4, 5, 6, 7, 8, 9, 10), conf: 0.9)
 /// ```
 #let median-hilow(values, conf: 0.5) = {
+  _check-number("median-hilow", "conf", conf)
   if conf <= 0 or conf >= 1 {
     fail-range("median-hilow", "conf", conf, 0, 1)
   }
@@ -418,7 +442,7 @@
 ///
 /// \@param conf Confidence level in the open interval `(0, 1)`.
 ///
-/// \@param n-boot Number of bootstrap resamples.
+/// \@param n-boot Number of bootstrap resamples, a positive integer.
 ///
 /// \@param seed Integer seed for the deterministic resampling sequence.
 ///
@@ -435,17 +459,20 @@
 /// #let s = mean-cl-boot((2, 3, 4, 5, 6, 7), n-boot: 5000, seed: 42)
 /// ```
 #let mean-cl-boot(values, conf: 0.95, n-boot: 1000, seed: 0) = {
+  _check-number("mean-cl-boot", "conf", conf)
   if conf <= 0 or conf >= 1 {
     fail-range("mean-cl-boot", "conf", conf, 0, 1)
+  }
+  if type(n-boot) != int or n-boot < 1 {
+    fail-type("mean-cl-boot", "n-boot", n-boot, "a positive integer")
   }
   let xs = to-numeric(values)
   let n = xs.len()
   if n == 0 { return _empty-summary }
   let m = _mean(xs)
   if n < 2 { return (y: m, ymin: m, ymax: m) }
-  let nb = calc.max(1, int(n-boot))
   let means = ()
-  for b in range(0, nb) {
+  for b in range(0, n-boot) {
     let acc = 0.0
     for j in range(0, n) {
       let r = _rand01(seed + b * 100003 + j * 1009)
@@ -464,6 +491,15 @@
   )
 }
 
+// Summary helpers with no weighted formulation.
+#let _UNWEIGHTED-SUMMARIES = (
+  "median",
+  "median-hilow",
+  "quantile",
+  "quantiles",
+  "mean-cl-boot",
+)
+
 /// Look up a summary helper by name, or invoke a user-supplied callable.
 ///
 /// String names use the kebab form (`"mean-se"`, `"mean-cl-normal"`,
@@ -481,11 +517,27 @@
 ///
 /// \@param weights Optional array of non-negative weights aligned with `values`
 /// (`none` for unit weights). Forwarded to helpers that honour weights (`mean`,
-/// `mean-se`, `mean-sd`, `mean-cl-normal`); helpers without a weighted
-/// formulation ignore the parameter.
+/// `mean-se`, `mean-sd`, `mean-cl-normal`), and to a callable as `weights:`
+/// only when it is not `none`. A helper without a weighted formulation fails
+/// when it receives weights.
+///
+/// \@param scope Public stat named in an error message.
 ///
 /// \@internal
-#let _apply-summary(name, values, fun-args: (:), weights: none) = {
+#let _apply-summary(
+  name,
+  values,
+  fun-args: (:),
+  weights: none,
+  scope: "stat-summary",
+) = {
+  if weights != none and name in _UNWEIGHTED-SUMMARIES {
+    fail(
+      scope,
+      "fun " + repr(name) + " cannot use the weight aesthetic",
+      hint: "Drop the weight mapping, or use mean, mean-se, mean-sd, or mean-cl-normal.",
+    )
+  }
   if type(name) == function {
     if weights == none { return name(values, ..fun-args) }
     return name(values, weights: weights, ..fun-args)
