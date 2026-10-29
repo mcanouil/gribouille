@@ -3,8 +3,9 @@
 ///! Data is an array of dictionaries (one per row). `pivot-longer` melts a set
 ///! of columns into a name/value pair of columns (one output row per melted
 ///! cell); `pivot-wider` spreads a name column and a value column back into one
-///! column per distinct name. Both call `_normalise-data` on entry (column-
-///! store input is accepted) and return a row-store, feeding `#plot` directly.
+///! column per distinct name. Both call `_require-frame` on entry (column-
+///! store input is accepted, `none` fails) and return a row-store, feeding
+///! `#plot` directly.
 ///! `pivot-longer` then `pivot-wider` round-trips the data, modulo column order.
 
 #import "../data.typ": _require-cols, _require-frame, column-names

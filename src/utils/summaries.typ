@@ -500,7 +500,7 @@
     fail(
       scope,
       "fun " + repr(fun) + " cannot use the weight aesthetic",
-      hint: "Drop the weight mapping, or use mean, mean-se, mean-sd, or mean-cl-normal.",
+      hint: "Map `weight` only on the layers that need it, or use mean, mean-se, mean-sd, or mean-cl-normal.",
     )
   }
 }

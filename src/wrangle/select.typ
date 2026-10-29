@@ -3,8 +3,9 @@
 ///! Data is an array of dictionaries (one per row). `select`/`rename`/
 ///! `relocate` reshape the columns; `drop-na`/`distinct` and
 ///! `slice-max`/`slice-min` filter or rank the rows. Each verb calls
-///! `_normalise-data` on entry (column-store input is accepted) and returns a
-///! row-store, feeding `#plot` directly. Native `.filter`/`.sorted`/`.map`
+///! `_require-frame` on entry (column-store input is accepted, `none` fails)
+///! and returns a row-store, feeding `#plot` directly. Native
+///! `.filter`/`.sorted`/`.map`
 ///! already cover row filtering, sorting, and rowwise mutation, so those are
 ///! left to Typst.
 

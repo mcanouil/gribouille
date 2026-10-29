@@ -5,8 +5,9 @@
 ///! columns and combine their columns; the filtering joins (`semi-join`/
 ///! `anti-join`) keep rows of the first dataset by key presence. `bind-rows`
 ///! stacks datasets (column union, `none`-filling gaps); `bind-cols` glues them
-///! side by side. Every verb calls `_normalise-data` on entry (column-store
-///! input is accepted) and returns a row-store, feeding `#plot` directly.
+///! side by side. Every verb normalises its input (column-store input is
+///! accepted): a join fails on `none`, and a bind skips it. Each returns a
+///! row-store, feeding `#plot` directly.
 ///!
 ///! Keys are matched on the stringified compound value (`str(value)` joined with
 ///! the Unit Separator, like `_bucket-groups`), so key equality is by string
