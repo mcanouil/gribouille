@@ -81,4 +81,10 @@
 // as-factor.
 #assert.eq(column(as-factor(((a: 1),), "a"), "a"), ("1",))
 
+// The two-argument forms accept a column store.
+#assert.eq(as-numeric((a: ("1", "2")), "a"), ((a: 1.0), (a: 2.0)))
+#assert.eq(column(as-factor((a: (1, 2)), "a"), "a"), ("1", "2"))
+// Empty data has no column to check, so any name passes.
+#assert.eq(as-numeric((), "a"), ())
+
 Unit tests passed.

@@ -4,7 +4,7 @@
 ///! each bin reduces the y values inside to a `(y, ymin, ymax)` summary
 ///! using one of the helpers in `src/utils/summaries.typ`.
 
-#import "../utils/summaries.typ": _apply-summary
+#import "../utils/summaries.typ": _apply-summary, check-weighted-fun
 #import "../utils/bin.typ": bin-1d-cells, bin-midpoint, panel-bin-grid
 #import "../utils/aes-resolve.typ": stat-output-mapping
 
@@ -23,6 +23,8 @@
 /// \@stability stable
 ///
 /// \@param fun Name of the summary helper to apply to each bin's y values.
+///   With a `weight` mapping, the only valid helper names are `mean`,
+///   `mean-se`, `mean-sd`, and `mean-cl-normal`.
 ///
 /// \@param bins Target number of bins when `binwidth` is `none`.
 ///
@@ -91,6 +93,11 @@
     (x: "x", y: "y", ymin: "ymin", ymax: "ymax"),
   )
   if mapping == none { return (data: (), mapping: new-mapping) }
+  check-weighted-fun(
+    "stat-summary-bin",
+    params.at("fun", default: "mean-se"),
+    mapping.at("weight", default: none),
+  )
   let x-col = mapping.at("x", default: none)
   let y-col = mapping.at("y", default: none)
   if x-col == none or y-col == none {

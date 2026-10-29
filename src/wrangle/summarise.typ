@@ -7,8 +7,8 @@
 ///! input through `_normalise-data` and return a row-store, feeding `#plot`
 ///! directly.
 
-#import "../data.typ": _normalise-data, column-names, group-by
-#import "../utils/errors.typ": fail, fail-type, fail-unknown-column, quote-each
+#import "../data.typ": _require-cols, _require-frame, group-by
+#import "../utils/errors.typ": fail, fail-type, quote-each
 
 // Coerce a `by:` argument into an array of column-name strings. `none` means
 // "no grouping" (the whole dataset); a bare string is a single column. `scope`
@@ -32,15 +32,24 @@
   )
 }
 
+// Stringified compound key for `row` over `cols`, joined with the Unit
+// Separator. A `none` cell keys as its own group, apart from any string value,
+// and an empty `cols` puts every row in one group.
+#let _key-of(row, cols) = {
+  cols
+    .map(col => {
+      let v = row.at(col, default: none)
+      if v == none { "\u{0}" } else { str(v) }
+    })
+    .join("\u{1}", default: "")
+}
+
 // Partition `rows` by the values of `cols`, returning `(values, rows)` records
 // in first-appearance order. `values` holds each group's column values (from
 // its first row); `rows` is the bucket. Reuses `group-by`, so within-group
-// order is preserved and a compound key joins columns with the Unit Separator.
+// order is preserved.
 #let _bucket-groups(rows, cols) = {
-  let key-fn = row => cols
-    .map(col => str(row.at(col, default: "")))
-    .join("\u{1}")
-  group-by(rows, key-fn)
+  group-by(rows, row => _key-of(row, cols))
     .values()
     .map(bucket => (
       values: cols.map(col => bucket.first().at(col, default: none)),
@@ -48,11 +57,67 @@
     ))
 }
 
+// Engine behind `summarise` and `count`. `scope` names the verb the user
+// called, `by-label` names its grouping argument in an unknown-column
+// message, and `collision-hint` gives the fix for a name collision.
+#let _summarise(
+  scope,
+  data,
+  aggregations,
+  by,
+  by-label: "by",
+  collision-hint: "Rename the aggregation or drop the column from `by`.",
+) = {
+  let rows = _require-frame(scope, "data", data)
+  if aggregations.pos().len() != 0 {
+    fail(
+      scope,
+      "aggregations must be named; got "
+        + str(aggregations.pos().len())
+        + " positional argument(s)",
+      hint: "Pass each aggregation as `name: rows => value`.",
+    )
+  }
+  let by-cols = _normalise-by(by, scope: scope)
+  _require-cols(scope, by-label, by-cols, rows)
+  let aggs = aggregations.named()
+  for (name, fn) in aggs {
+    if type(fn) != function {
+      fail-type(
+        scope,
+        "aggregation \"" + name + "\"",
+        fn,
+        "a function `rows => value`",
+      )
+    }
+    if by-cols.contains(name) {
+      fail(
+        scope,
+        "aggregation \"" + name + "\" collides with a grouping column",
+        hint: collision-hint,
+      )
+    }
+  }
+  let groups = if by-cols.len() == 0 {
+    ((values: (), rows: rows),)
+  } else {
+    _bucket-groups(rows, by-cols)
+  }
+  groups.map(group => {
+    let out = (:)
+    for (col, value) in by-cols.zip(group.values) { out.insert(col, value) }
+    for (name, fn) in aggs { out.insert(name, fn(group.rows)) }
+    out
+  })
+}
+
+
 /// Collapse each group of rows to a single row of named aggregations.
 ///
 /// With `by: none` the whole dataset is one group, yielding exactly one row;
 /// with `by: ("col", ...)` (a single string is accepted too) there is one
-/// output row per group, in first-appearance order. Each output row carries the
+/// output row per group, in first-appearance order. A `none` cell in a grouping
+/// column forms its own group. Each output row carries the
 /// grouping columns first (in `by:` order) then one column per aggregation.
 /// Every aggregation is a closure receiving that group's rows (an array of
 /// dictionaries) and returning the cell value: `n: rows => rows.len()`,
@@ -89,62 +154,7 @@
 ///
 /// \@see \@count
 #let summarise(data, ..aggregations, by: none) = {
-  let rows = _normalise-data(data)
-  if rows == none {
-    fail-type(
-      "summarise",
-      "data",
-      data,
-      "an array of dicts or a dict of arrays",
-    )
-  }
-  if aggregations.pos().len() != 0 {
-    fail(
-      "summarise",
-      "aggregations must be named; got "
-        + str(aggregations.pos().len())
-        + " positional argument(s)",
-      hint: "Pass each aggregation as `name: rows => value`.",
-    )
-  }
-  let by-cols = _normalise-by(by)
-  let available = column-names(rows)
-  if rows.len() != 0 {
-    for col in by-cols {
-      if not available.contains(col) {
-        fail-unknown-column("summarise", "by", col, available)
-      }
-    }
-  }
-  let aggs = aggregations.named()
-  for (name, fn) in aggs {
-    if type(fn) != function {
-      fail-type(
-        "summarise",
-        "aggregation \"" + name + "\"",
-        fn,
-        "a function `rows => value`",
-      )
-    }
-    if by-cols.contains(name) {
-      fail(
-        "summarise",
-        "aggregation \"" + name + "\" collides with a grouping column",
-        hint: "Rename the aggregation or drop the column from `by`.",
-      )
-    }
-  }
-  let groups = if by-cols.len() == 0 {
-    ((values: (), rows: rows),)
-  } else {
-    _bucket-groups(rows, by-cols)
-  }
-  groups.map(group => {
-    let out = (:)
-    for (col, value) in by-cols.zip(group.values) { out.insert(col, value) }
-    for (name, fn) in aggs { out.insert(name, fn(group.rows)) }
-    out
-  })
+  _summarise("summarise", data, aggregations, by)
 }
 
 /// Count the rows in each group, one output row per group.
@@ -190,7 +200,14 @@
   if type(sort) != bool {
     fail-type("count", "sort", sort, "a boolean")
   }
-  let result = summarise(data, n: rows => rows.len(), by: group-cols)
+  let result = _summarise(
+    "count",
+    data,
+    arguments(n: rows => rows.len()),
+    group-cols,
+    by-label: "column",
+    collision-hint: "Rename the column `n` before counting.",
+  )
   if sort { result = result.sorted(key: row => -row.n) }
   result
 }

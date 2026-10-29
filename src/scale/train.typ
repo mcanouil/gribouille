@@ -41,7 +41,11 @@
 #let _layer-data(layer, plot-data) = {
   if layer.data == none { return plot-data }
   if type(layer.data) == function {
-    return _normalise-data((layer.data)(plot-data))
+    return _normalise-data(
+      (layer.data)(plot-data),
+      scope: "plot",
+      label: "layer data",
+    )
   }
   layer.data
 }

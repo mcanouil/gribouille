@@ -5,7 +5,7 @@
 ///! `src/utils/summaries.typ`.
 
 #import "../utils/types.typ": parse-number
-#import "../utils/summaries.typ": _apply-summary
+#import "../utils/summaries.typ": _apply-summary, check-weighted-fun
 #import "../utils/errors.typ": fail-enum
 
 /// Per-axis reduction to a central value and an uncertainty band.
@@ -27,6 +27,10 @@
 /// `"mean-cl-normal"`, `"mean-cl-boot"`, `"mean-sd"`, `"median-hilow"`,
 /// `"mean"`, `"median"`, `"quantile"`, `"quantiles"`) or a Typst callable of
 /// the form `(values, ..fun-args) -> (y, ymin, ymax)`.
+/// With a `weight` mapping, `mean`, `mean-se`, `mean-sd`, and `mean-cl-normal`
+/// use the weights, and the other named helpers fail.
+/// A callable then receives the weights as `weights:`, so it must accept
+/// `weights` or a sink such as `..args`.
 ///
 /// \@category Stats
 /// \@subcategory Summaries
@@ -160,6 +164,11 @@
 #let apply(data, mapping, params: (:)) = {
   let base-mapping = (x: "x", y: "y", ymin: "ymin", ymax: "ymax")
   if mapping == none { return (data: (), mapping: base-mapping) }
+  check-weighted-fun(
+    "stat-summary",
+    params.at("fun", default: "mean-se"),
+    mapping.at("weight", default: none),
+  )
   let x-col = mapping.at("x", default: none)
   let y-col = mapping.at("y", default: none)
   if x-col == none or y-col == none {

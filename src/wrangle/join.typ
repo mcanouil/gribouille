@@ -5,27 +5,20 @@
 ///! columns and combine their columns; the filtering joins (`semi-join`/
 ///! `anti-join`) keep rows of the first dataset by key presence. `bind-rows`
 ///! stacks datasets (column union, `none`-filling gaps); `bind-cols` glues them
-///! side by side. Every verb calls `_normalise-data` on entry (column-store
-///! input is accepted) and returns a row-store, feeding `#plot` directly.
+///! side by side. Every verb normalises its input (column-store input is
+///! accepted): a join fails on `none`, and a bind skips it. Each returns a
+///! row-store, feeding `#plot` directly.
 ///!
 ///! Keys are matched on the stringified compound value (`str(value)` joined with
 ///! the Unit Separator, like `_bucket-groups`), so key equality is by string
-///! form: a native `1` and the string `"1"` match. The `_gribouille-factors`
+///! form: a native `1` and the string `"1"` match. A `none` key matches a
+///! `none` key, and no string. The `_gribouille-factors`
 ///! tag is carried through, filtered to the surviving columns.
 
-#import "../data.typ": _normalise-data, column-names, group-by
-#import "../utils/errors.typ": fail, fail-type, fail-unknown-column, quote-each
-#import "summarise.typ": _normalise-by
+#import "../data.typ": _normalise-data, _require-frame, column-names, group-by
+#import "../utils/errors.typ": fail, fail-unknown-column, quote-each
+#import "summarise.typ": _key-of, _normalise-by
 #import "select.typ": _carry-factors
-
-// Normalise a join input, rejecting `none` (a join needs a real dataset).
-#let _require-frame(scope, label, data) = {
-  let rows = _normalise-data(data)
-  if rows == none {
-    fail-type(scope, label, data, "an array of dicts or a dict of arrays")
-  }
-  rows
-}
 
 // Resolve the key columns: `by: none` is a natural join on the columns common
 // to both (in `x` order); a string or array names them explicitly. Validates
@@ -45,7 +38,15 @@
     }
     common
   } else {
-    _normalise-by(by, scope: scope)
+    let named = _normalise-by(by, scope: scope)
+    if named.len() == 0 {
+      fail(
+        scope,
+        "by must name at least one key column; got ()",
+        hint: "Pass `by: none` for a natural join on the shared columns.",
+      )
+    }
+    named
   }
   for key in keys {
     if x.len() > 0 and not xc.contains(key) {
@@ -56,11 +57,6 @@
     }
   }
   keys
-}
-
-// Stringified compound key for `row` over `keys`, matching `group-by`'s keying.
-#let _key-of(row, keys) = {
-  str(keys.map(col => str(row.at(col, default: ""))).join("\u{1}"))
 }
 
 // Build one merged output row from an `x` row and/or a `y` row. `x-cols` are the
@@ -175,7 +171,8 @@
 ///
 /// \@param y Right dataset (row-store or column-store).
 ///
-/// \@param by Key columns: `none` for the common columns, a name, or an array.
+/// \@param by Key columns: `none` for the common columns, a name, or a
+///   non-empty array.
 ///
 /// \@returns A row-store array of x augmented with y's columns.
 ///
@@ -202,7 +199,8 @@
 ///
 /// \@param y Right dataset (row-store or column-store).
 ///
-/// \@param by Key columns: `none` for the common columns, a name, or an array.
+/// \@param by Key columns: `none` for the common columns, a name, or a
+///   non-empty array.
 ///
 /// \@returns A row-store array of matched rows.
 ///
@@ -224,7 +222,8 @@
 ///
 /// \@param y Right dataset (row-store or column-store).
 ///
-/// \@param by Key columns: `none` for the common columns, a name, or an array.
+/// \@param by Key columns: `none` for the common columns, a name, or a
+///   non-empty array.
 ///
 /// \@returns A row-store array of every row from both inputs.
 ///
@@ -247,7 +246,8 @@
 ///
 /// \@param y Dataset whose keys gate `x` (row-store or column-store).
 ///
-/// \@param by Key columns: `none` for the common columns, a name, or an array.
+/// \@param by Key columns: `none` for the common columns, a name, or a
+///   non-empty array.
 ///
 /// \@returns The rows of `x` with a match in `y`.
 ///
@@ -268,7 +268,8 @@
 ///
 /// \@param y Dataset whose keys exclude rows of `x` (row-store or column-store).
 ///
-/// \@param by Key columns: `none` for the common columns, a name, or an array.
+/// \@param by Key columns: `none` for the common columns, a name, or a
+///   non-empty array.
 ///
 /// \@returns The rows of `x` with no match in `y`.
 ///
@@ -306,7 +307,10 @@
         + quote-each(datasets.named().keys()),
     )
   }
-  let sets = datasets.pos().map(_normalise-data).filter(d => d != none)
+  let sets = datasets
+    .pos()
+    .map(d => _normalise-data(d, scope: "bind-rows"))
+    .filter(d => d != none)
   let all-cols = ()
   for d in sets {
     for col in column-names(d) {
@@ -361,7 +365,10 @@
         + quote-each(datasets.named().keys()),
     )
   }
-  let sets = datasets.pos().map(_normalise-data).filter(d => d != none)
+  let sets = datasets
+    .pos()
+    .map(d => _normalise-data(d, scope: "bind-cols"))
+    .filter(d => d != none)
   if sets.len() == 0 { return () }
   let n = sets.first().len()
   for (i, d) in sets.enumerate() {

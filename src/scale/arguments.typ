@@ -11,7 +11,7 @@
 // `limits` and `breaks` depends on its type and its transform.
 
 #import "../utils/errors.typ": fail-enum, fail-range, fail-type
-#import "../utils/types.typ": is-native-numeric, parse-number
+#import "../utils/types.typ": check-number, is-native-numeric, parse-number
 #import "../utils/viridis.typ" as viridis-mod
 #import "../utils/palette.typ": brewer-palettes
 #import "expansion.typ": normalise-expansion
@@ -28,12 +28,6 @@
 // The aesthetics whose `range` holds lengths; `alpha` holds numbers.
 #let _LENGTH-RANGE-AES = ("size", "linewidth", "stroke")
 
-#let _check-number(scope, name, value) = {
-  if not is-native-numeric(value) {
-    fail-type(scope, name, value, "a number")
-  }
-}
-
 #let _check-in(scope, name, value, lo, hi) = {
   if value < lo or value > hi {
     fail-range(scope, name, value, lo, hi, lo-open: false, hi-open: false)
@@ -41,7 +35,7 @@
 }
 
 #let _check-number-in(scope, name, value, lo, hi) = {
-  _check-number(scope, name, value)
+  check-number(scope, name, value)
   _check-in(scope, name, value, lo, hi)
 }
 
@@ -113,7 +107,9 @@
       let expected = if gradient { "a gradient, an array, or `auto`" } else {
         "an array or `auto`"
       }
-      let ok = type(palette) == array or (gradient and type(palette) == gradient)
+      let ok = (
+        type(palette) == array or (gradient and type(palette) == gradient)
+      )
       if not ok { fail-type(scope, "palette", palette, expected) }
       if type(palette) == array and palette.len() == 0 {
         fail-type(scope, "palette", palette, "a non-empty array")
@@ -137,7 +133,7 @@
     )
   }
   for key in ("direction", "midpoint") {
-    if key in named { _check-number(scope, key, named.at(key)) }
+    if key in named { check-number(scope, key, named.at(key)) }
   }
   for key in ("start", "end") {
     if key in named { _check-number-in(scope, key, named.at(key), 0, 1) }

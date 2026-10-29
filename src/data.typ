@@ -8,7 +8,7 @@
 
 #import "utils/bucket.typ": bucket-dict
 #import "utils/types.typ": parse-number
-#import "utils/errors.typ": fail, fail-type
+#import "utils/errors.typ": fail, fail-type, fail-unknown-column
 
 #let column(data, name) = {
   data.map(row => row.at(name, default: none))
@@ -37,12 +37,14 @@
 //
 // `none` passes through unchanged so optional per-layer overrides keep their
 // "inherit plot data" semantics. Idempotent on already-normalised input.
-#let _normalise-data(data) = {
+// `scope` names the public function the user called, and `label` names the
+// argument, for the error message.
+#let _normalise-data(data, scope: "data", label: "data") = {
   if data == none { return none }
   if type(data) == array {
     for (i, row) in data.enumerate() {
       if type(row) != dictionary {
-        fail-type("data", "row " + str(i), row, "a dictionary")
+        fail-type(scope, label + " row " + str(i), row, "a dictionary")
       }
     }
     return data
@@ -54,8 +56,8 @@
     for (k, vs) in pairs {
       if type(vs) != array {
         fail-type(
-          "data",
-          "column-store value for \"" + k + "\"",
+          scope,
+          label + " column \"" + k + "\"",
           vs,
           "an array",
         )
@@ -65,7 +67,7 @@
       } else if vs.len() != len {
         let first-key = pairs.first().at(0)
         fail(
-          "data",
+          scope,
           "column-store columns must share the same length; got \""
             + first-key
             + "\"="
@@ -83,7 +85,35 @@
       row
     })
   }
-  fail-type("data", "value", data, "an array of dicts or a dict of arrays")
+  fail-type(scope, label, data, "an array of dicts or a dict of arrays")
+}
+
+// Normalise a verb's `data` argument, rejecting `none`: a wrangle verb needs a
+// real dataset, where `plot` and a layer read `none` as "inherit".
+#let _require-frame(scope, label, data) = {
+  if data == none {
+    fail-type(scope, label, data, "an array of dicts or a dict of arrays")
+  }
+  _normalise-data(data, scope: scope, label: label)
+}
+
+// Validate that every entry of `cols` is a string column name, and (when
+// `rows` is non-empty) that it exists. Empty data carries no column names to
+// check against, so existence is skipped there, matching `summarise`.
+#let _require-cols(scope, label, cols, rows) = {
+  for col in cols {
+    if type(col) != str {
+      fail-type(scope, label, col, "a string column name")
+    }
+  }
+  if rows.len() != 0 {
+    let available = column-names(rows)
+    for col in cols {
+      if not available.contains(col) {
+        fail-unknown-column(scope, label, col, available)
+      }
+    }
+  }
 }
 
 #let _mapping-ref(col, type) = (
@@ -91,6 +121,27 @@
   var: col,
   type: type,
 )
+
+// Check the positional arguments of a dual-arity coercion helper. Returns
+// `(rows: none, col)` for the one-argument tag form, whose `col` may also be a
+// `typst()` annotation, and `(rows, col)` with normalised rows for the
+// two-argument rewrite form.
+#let _coerce-args(scope, args) = {
+  let pos = args.pos()
+  if pos.len() != 1 and pos.len() != 2 {
+    fail(
+      scope,
+      "expects `(data, col)` or `(col)`; got "
+        + str(pos.len())
+        + " positional argument(s)",
+    )
+  }
+  let col = pos.last()
+  if pos.len() == 1 { return (rows: none, col: col) }
+  let rows = _require-frame(scope, "data", pos.first())
+  _require-cols(scope, "col", (col,), rows)
+  (rows: rows, col: col)
+}
 
 /// Coerce a column to numeric, or tag an aesthetic as continuous.
 ///
@@ -103,7 +154,8 @@
 /// \@category Core
 /// \@stability stable
 ///
-/// \@param ..args Either `(data, col)` or `(col)`. See arities.
+/// \@param ..args Either `(data, col)` or `(col)`. See arities. In the
+///   two-argument form, `col` must be a column of `data`.
 ///
 /// \@param na Sentinel values treated as missing: a cell equal to any entry
 /// (a bare value is wrapped to a single-entry list) becomes `none` before
@@ -167,13 +219,10 @@
 ///
 /// \@see \@as-factor, \@aes
 #let as-numeric(..args, na: ()) = {
-  let pos = args.pos()
-  if pos.len() == 1 {
-    return _mapping-ref(pos.at(0), "continuous")
-  }
-  let (data, col) = pos
+  let (rows, col) = _coerce-args("as-numeric", args)
+  if rows == none { return _mapping-ref(col, "continuous") }
   let sentinels = if type(na) == array { na } else { (na,) }
-  data.map(row => {
+  rows.map(row => {
     let v = row.at(col, default: none)
     let needle = if type(v) == str { v.trim() } else { v }
     let new-row = row
@@ -196,7 +245,8 @@
 /// \@category Core
 /// \@stability stable
 ///
-/// \@param ..args Either `(data, col)` or `(col)`. See arities.
+/// \@param ..args Either `(data, col)` or `(col)`. See arities. In the
+///   two-argument form, `col` must be a column of `data`.
 ///
 /// \@arity (data, col): Return a new dataset with `col` coerced to strings (preserving `none`).
 /// \@arity (col): Return a `mapping-ref` dict tagging `col` as discrete for \@aes.
@@ -243,12 +293,9 @@
 ///
 /// \@see \@as-numeric, \@aes
 #let as-factor(..args) = {
-  let pos = args.pos()
-  if pos.len() == 1 {
-    return _mapping-ref(pos.at(0), "discrete")
-  }
-  let (data, col) = pos
-  data.map(row => {
+  let (rows, col) = _coerce-args("as-factor", args)
+  if rows == none { return _mapping-ref(col, "discrete") }
+  rows.map(row => {
     let v = row.at(col, default: none)
     let new-row = row
     new-row.insert(col, if v == none { none } else { str(v) })
