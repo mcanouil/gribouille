@@ -69,10 +69,13 @@
 
 // --- theoretical-quantile: dispatches per distribution -------------------
 
-#assert(calc.abs(theoretical-quantile(0.5, "normal")) < 1e-9)
-#assert(calc.abs(theoretical-quantile(0.25, "uniform") - 0.25) < 1e-9)
+#assert(calc.abs(theoretical-quantile("stat-qq", 0.5, "normal")) < 1e-9)
 #assert(
-  calc.abs(theoretical-quantile(0.5, "exponential") - calc.ln(2)) < 1e-9,
+  calc.abs(theoretical-quantile("stat-qq", 0.25, "uniform") - 0.25) < 1e-9,
+)
+#assert(
+  calc.abs(theoretical-quantile("stat-qq", 0.5, "exponential") - calc.ln(2))
+    < 1e-9,
 )
 
 // --- stat-qq: uniform distribution uses p directly -----------------------

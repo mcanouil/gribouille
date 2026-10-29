@@ -11,7 +11,33 @@
 #import "../utils/late-binding.typ": after-scale-source
 #import "../scale/train.typ": mapping-ref-col
 #import "../utils/normal.typ": qnorm
-#import "../utils/errors.typ": fail-enum, fail-range
+#import "../utils/errors.typ": fail-enum, fail-range, fail-type
+
+#let _DEGREES = (0, 1, 2)
+
+// Panic unless the smoother parameters are well-formed. `scope` names the
+// public function that the user called.
+#let validate-smooth-params(scope, params) = {
+  let method = params.at("method", default: "lm")
+  if method not in ("lm", "loess") {
+    fail-enum(scope, "method", method, ("lm", "loess"))
+  }
+  let level = params.at("level", default: 0.95)
+  if type(level) not in (int, float) {
+    fail-type(scope, "level", level, "a number")
+  }
+  if level <= 0 or level >= 1 {
+    fail-range(scope, "level", level, 0, 1)
+  }
+  let span = params.at("span", default: 0.75)
+  if type(span) not in (int, float) or span <= 0 or span > 1 {
+    fail-range(scope, "span", span, 0, 1, hi-open: false)
+  }
+  let degree = params.at("degree", default: 2)
+  if degree not in _DEGREES {
+    fail-enum(scope, "degree", degree, _DEGREES)
+  }
+}
 
 /// Smoother statistic: fitted curve with a pointwise confidence band.
 ///
@@ -107,11 +133,17 @@
   level: 0.95,
   span: 0.75,
   degree: 2,
-) = (
-  kind: "stat",
-  name: "smooth",
-  params: (method: method, se: se, level: level, span: span, degree: degree),
-)
+) = {
+  let params = (
+    method: method,
+    se: se,
+    level: level,
+    span: span,
+    degree: degree,
+  )
+  validate-smooth-params("stat-smooth", params)
+  (kind: "stat", name: "smooth", params: params)
+}
 
 // Columns that implicitly group rows so each subset gets its own fit. The
 // contract matches geom-line: `group`, `colour`, `fill`, `linetype` — any
@@ -237,23 +269,6 @@
   })
 }
 
-#let _DEGREES = (0, 1, 2)
-
-#let _validate(params) = {
-  let method = params.at("method", default: "lm")
-  if method not in ("lm", "loess") {
-    fail-enum("stat-smooth", "method", method, ("lm", "loess"))
-  }
-  let span = params.at("span", default: 0.75)
-  if type(span) not in (int, float) or span <= 0 or span > 1 {
-    fail-range("stat-smooth", "span", span, 0, 1, hi-open: false)
-  }
-  let degree = params.at("degree", default: 2)
-  if degree not in _DEGREES {
-    fail-enum("stat-smooth", "degree", degree, _DEGREES)
-  }
-}
-
 #let apply(data, mapping, params: (:)) = {
   let x-col = if mapping != none { mapping.at("x", default: none) } else {
     none
@@ -278,7 +293,6 @@
     samples.insert(key, bucket-rows.at(i).first())
   }
 
-  _validate(params)
   let weight-col = mapping.at("weight", default: none)
   let method = params.at("method", default: "lm")
   let span = params.at("span", default: 0.75)

@@ -1,6 +1,7 @@
 ///! Contour-line geom. Wraps \@stat-contour over the grouped-path renderer.
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/contour-grid.typ": check-level-params
 #import "path.typ": spec as path-spec
 #import "../stat/contour.typ": stat-contour
 
@@ -90,6 +91,7 @@
   )
     + split-aes-params("geom-contour", args, path-spec.reads),
   stat: if stat == auto {
+    check-level-params("geom-contour", bins, binwidth, breaks)
     stat-contour(bins: bins, binwidth: binwidth, breaks: breaks)
   } else { stat },
   position: position,

@@ -1,4 +1,5 @@
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/bin.typ": check-bin-params
 #import "line.typ": spec as line-spec
 #import "../stat/bin.typ": stat-bin
 
@@ -100,9 +101,10 @@
     linetype: linetype,
   )
     + split-aes-params("geom-freqpoly", args, line-spec.reads),
-  stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else {
-    stat
-  },
+  stat: if stat == auto {
+    check-bin-params("geom-freqpoly", bins, binwidth)
+    stat-bin(bins: bins, binwidth: binwidth)
+  } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,

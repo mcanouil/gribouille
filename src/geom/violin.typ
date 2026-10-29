@@ -8,7 +8,7 @@
 #import "../utils/bucket.typ": bucket-index
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../stat/ydensity.typ": stat-ydensity
+#import "../stat/ydensity.typ": stat-ydensity, validate-ydensity-params
 #import "../position/apply.typ": layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -145,6 +145,10 @@
   )
     + split-aes-params("geom-violin", args, spec.reads),
   stat: if stat == auto {
+    validate-ydensity-params(
+      "geom-violin",
+      (bw: bw, adjust: adjust, n: n, trim: trim, scale: scale),
+    )
     stat-ydensity(bw: bw, adjust: adjust, n: n, trim: trim, scale: scale)
   } else { stat },
   position: position,

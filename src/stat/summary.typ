@@ -111,8 +111,20 @@
   let xs = data.map(r => r.at(x-col, default: none))
   let ys = data.map(r => r.at(y-col, default: none))
   let weights = _weights-of(data, weight-col)
-  let sx = _apply-summary(fun, xs, fun-args: fun-args, weights: weights)
-  let sy = _apply-summary(fun, ys, fun-args: fun-args, weights: weights)
+  let sx = _apply-summary(
+    "stat-summary",
+    fun,
+    xs,
+    fun-args: fun-args,
+    weights: weights,
+  )
+  let sy = _apply-summary(
+    "stat-summary",
+    fun,
+    ys,
+    fun-args: fun-args,
+    weights: weights,
+  )
   if sx.y == none or sy.y == none {
     return (data: (), mapping: (x: "x", y: "y", ymin: "ymin", ymax: "ymax"))
   }
@@ -224,6 +236,7 @@
       let xs = rows.map(r => r.at(x-col, default: none))
       let weights = _weights-of(rows, weight-col)
       let summary = _apply-summary(
+        "stat-summary",
         fun,
         xs,
         fun-args: fun-args,
@@ -261,7 +274,13 @@
     let rows = bucketed.buckets.at(key)
     let ys = rows.map(r => r.at(y-col, default: none))
     let weights = _weights-of(rows, weight-col)
-    let summary = _apply-summary(fun, ys, fun-args: fun-args, weights: weights)
+    let summary = _apply-summary(
+      "stat-summary",
+      fun,
+      ys,
+      fun-args: fun-args,
+      weights: weights,
+    )
     if summary.y == none { continue }
 
     let raw-x = rows.first().at(x-col, default: none)

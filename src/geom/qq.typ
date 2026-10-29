@@ -3,6 +3,7 @@
 ///! Thin wrapper around \@geom-point that computes its data via \@stat-qq.
 
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/normal.typ": check-distribution
 #import "point.typ": spec as point-spec
 
 /// Q-Q point layer: sorted sample versus theoretical quantile.
@@ -99,7 +100,7 @@
     colour: colour,
     alpha: alpha,
     shape: shape,
-    distribution: distribution,
+    distribution: check-distribution("geom-qq", distribution),
   )
     + split-aes-params("geom-qq", args, point-spec.reads),
   stat: stat,

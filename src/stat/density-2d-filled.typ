@@ -7,9 +7,9 @@
 ///! observations.
 
 #import "../utils/aes-resolve.typ": stat-output-mapping
-#import "../utils/contour-grid.typ": resolve-levels
+#import "../utils/contour-grid.typ": check-level-params, resolve-levels
 #import "../utils/isobands.typ": isobands
-#import "../utils/kde.typ": kde-2d
+#import "../utils/kde.typ": kde-2d, validate-kde-2d-params
 #import "density-2d.typ": density-2d-pairs
 
 /// Filled 2D density statistic: iso-bands of a Gaussian kernel density
@@ -74,18 +74,26 @@
   bins: 10,
   binwidth: none,
   breaks: auto,
-) = (
-  kind: "stat",
-  name: "density-2d-filled",
-  params: (
+) = {
+  validate-kde-2d-params("stat-density-2d-filled", (
     bw: bw,
     adjust: adjust,
     n: n,
-    bins: bins,
-    binwidth: binwidth,
-    breaks: breaks,
-  ),
-)
+  ))
+  check-level-params("stat-density-2d-filled", bins, binwidth, breaks)
+  (
+    kind: "stat",
+    name: "density-2d-filled",
+    params: (
+      bw: bw,
+      adjust: adjust,
+      n: n,
+      bins: bins,
+      binwidth: binwidth,
+      breaks: breaks,
+    ),
+  )
+}
 
 #let apply(data, mapping, params: (:)) = {
   let new-mapping = stat-output-mapping(

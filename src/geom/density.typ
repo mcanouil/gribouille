@@ -1,6 +1,7 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "area.typ": spec as area-spec
 #import "../stat/density.typ": stat-density
+#import "../utils/kde.typ": validate-kde-params
 
 ///! Smoothed density curve of the x sample.
 ///!
@@ -116,6 +117,10 @@
   )
     + split-aes-params("geom-density", args, area-spec.reads),
   stat: if stat == auto {
+    validate-kde-params(
+      "geom-density",
+      (bw: bw, adjust: adjust, n: n, trim: trim),
+    )
     stat-density(bw: bw, adjust: adjust, n: n, trim: trim)
   } else { stat },
   position: position,

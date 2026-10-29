@@ -7,7 +7,7 @@
 
 #import "types.typ": check-number, parse-number, parse-plain-number, to-numeric
 #import "normal.typ": qnorm
-#import "errors.typ": fail, fail-range, fail-type
+#import "errors.typ": fail, fail-enum, fail-range, fail-type
 
 // Parse a weight cell through `parse-plain-number`. A missing, `none`, or
 // non-numeric cell (such as "NA" or a date) weighs zero, so the weighted helpers'
@@ -505,6 +505,19 @@
   }
 }
 
+// Names that `_apply-summary` resolves to a summary helper.
+#let _SUMMARY-NAMES = (
+  "mean-se",
+  "mean-cl-normal",
+  "mean-cl-boot",
+  "mean-sd",
+  "median-hilow",
+  "mean",
+  "median",
+  "quantile",
+  "quantiles",
+)
+
 /// Look up a summary helper by name, or invoke a user-supplied callable.
 ///
 /// String names use the kebab form (`"mean-se"`, `"mean-cl-normal"`,
@@ -512,7 +525,9 @@
 /// `"quantile"`, `"quantiles"`). When `name` is a function, it is called as
 /// `name(values, ..fun-args)` and must return a dict `(y, ymin, ymax)`;
 /// custom callables can take a sink (`..args`) to ignore extras. Unknown
-/// string names panic.
+/// string names panic under `scope`.
+///
+/// \@param scope Public function that the user called, named in the error.
 ///
 /// \@param name Summary helper name, or a callable returning `(y, ymin, ymax)`.
 ///
@@ -527,7 +542,7 @@
 /// without a weighted formulation never receives weights.
 ///
 /// \@internal
-#let _apply-summary(name, values, fun-args: (:), weights: none) = {
+#let _apply-summary(scope, name, values, fun-args: (:), weights: none) = {
   if type(name) == function {
     if weights == none { return name(values, ..fun-args) }
     return name(values, weights: weights, ..fun-args)
@@ -560,13 +575,12 @@
     let probs = fun-args.at("probs", default: (0.25, 0.5, 0.75))
     return quantiles(values, probs: probs)
   }
-  fail(
-    "apply-summary",
-    "unknown summary function "
-      + repr(name)
-      + "; expected a callable or one of mean-se, mean-cl-normal, "
-      + "mean-cl-boot, mean-sd, median-hilow, mean, median, quantile, "
-      + "quantiles",
+  fail-enum(
+    scope,
+    "fun",
+    name,
+    _SUMMARY-NAMES,
+    hint: "A function is also accepted.",
   )
 }
 
@@ -593,16 +607,24 @@
 /// Distinct from `_apply-summary`, which returns a `(y, ymin, ymax)` triple for
 /// 1D bands.
 ///
+/// \@param scope Public function that the user called, named in the error.
+///
 /// \@param name Reduction keyword or callable `values => scalar`.
 ///
 /// \@param values Sequence of input values to reduce.
 ///
 /// \@internal
-#let reduce-scalar(name, values) = {
+#let reduce-scalar(scope, name, values) = {
   if type(name) == function { return name(values) }
   let fn = _scalar-reducers.at(name, default: none)
   if fn == none {
-    fail("reduce-scalar", "unknown reduction " + repr(name))
+    fail-enum(
+      scope,
+      "fun",
+      name,
+      _scalar-reducers.keys(),
+      hint: "A function is also accepted.",
+    )
   }
   fn(values)
 }

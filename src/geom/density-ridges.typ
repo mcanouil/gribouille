@@ -8,6 +8,7 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../stat/density-ridges.typ": stat-density-ridges
+#import "../utils/kde.typ": validate-kde-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
@@ -137,6 +138,10 @@
   )
     + split-aes-params("geom-density-ridges", args, spec.reads),
   stat: if stat == auto {
+    validate-kde-params(
+      "geom-density-ridges",
+      (bw: bw, adjust: adjust, n: n, trim: trim),
+    )
     stat-density-ridges(bw: bw, adjust: adjust, n: n, trim: trim)
   } else { stat },
   position: position,

@@ -108,6 +108,7 @@
 
 // _apply-summary() dispatches by name.
 #let r-disp-kebab = _apply-summary(
+  "stat-summary",
   "mean-cl-boot",
   xs,
   fun-args: (conf: 0.95, n-boot: 200, seed: 42),

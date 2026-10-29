@@ -1,4 +1,6 @@
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/contour-grid.typ": check-level-params
+#import "../utils/kde.typ": validate-kde-2d-params
 #import "path.typ": spec as path-spec
 #import "../stat/density-2d.typ": stat-density-2d
 
@@ -106,6 +108,8 @@
   )
     + split-aes-params("geom-density-2d", args, path-spec.reads),
   stat: if stat == auto {
+    validate-kde-2d-params("geom-density-2d", (bw: bw, adjust: adjust, n: n))
+    check-level-params("geom-density-2d", bins, binwidth, breaks)
     stat-density-2d(
       bw: bw,
       adjust: adjust,

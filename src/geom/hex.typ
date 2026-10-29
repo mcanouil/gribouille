@@ -2,6 +2,7 @@
 ///! polygon draw routine.
 
 #import "../deps.typ": cetz
+#import "../utils/bin.typ": check-bin-params
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../stat/bin-hex.typ": stat-bin-hex
@@ -98,9 +99,10 @@
     alpha: alpha,
   )
     + split-aes-params("geom-hex", args, spec.reads),
-  stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else {
-    stat
-  },
+  stat: if stat == auto {
+    check-bin-params("geom-hex", bins, binwidth, pair: true)
+    stat-bin-hex(bins: bins, binwidth: binwidth)
+  } else { stat },
   position: position,
   key: key,
   inherit-aes: inherit-aes,
