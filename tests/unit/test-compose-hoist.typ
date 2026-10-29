@@ -174,8 +174,9 @@
   assert.eq(h.legend-side, "right")
 }
 
-// Under `"all"`, keys that several panels own and that merge are drawn once,
-// and a key the other panel lacks still joins the block.
+// Under `"all"`, a colour key and a colour and shape key do not merge, because
+// their aesthetics differ, so both stack. Keys that several panels own and that
+// merge are drawn once, and a key the other panels lack still joins the block.
 #context {
   let h = _hoist-guides((panel(none), profile), (:), "all", none)
   assert.eq(h.hoisted-guides.map(g => g.aesthetics), (
