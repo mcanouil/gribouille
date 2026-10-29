@@ -29,7 +29,8 @@ Options:
   --tolerance <n> Max AE pixel count per diff (default: 0).
   --fuzz <pct>    ImageMagick `-fuzz` value (default: 2%).
   --only <key>    Only run sources whose key contains this substring.
-  --jobs <n>      Parallel typst compiles (default: $JOBS or processor count).
+  --jobs <n>      Parallel typst compiles and image compares
+                  (default: $JOBS or processor count).
   --help          Show this help and exit.
 ]]
 
