@@ -120,7 +120,7 @@
   if theme-position != auto {
     placement = _merge-placement(
       placement,
-      _normalise-position(theme-position, auto, none, false),
+      _normalise-position(theme-position, auto, none, false, "theme"),
     )
   }
   let default-placement = if default-guide != none {
@@ -605,10 +605,10 @@
 
 // Resolve a `guide-custom` width or height field to a cm float. Accepts a
 // length or `auto`; anything else panics so user typos surface loudly.
-#let _custom-dim-cm(value, fallback) = {
+#let _custom-dim-cm(name, value, fallback) = {
   if value == auto { return fallback }
   if type(value) == length { return length-to-cm(value, 0) }
-  fail-type("guide-custom", "width/height", value, "a length or `auto`")
+  fail-type("guide-custom", name, value, "a length or `auto`")
 }
 
 // Per-line vertical extent of swatch / ladder rows: cap-height plus a
@@ -1275,8 +1275,8 @@
     if g.at("name", default: none) != "custom" { continue }
     let placement = _resolve-placement(g, shared-guide, theme)
     if placement.side == "none" { continue }
-    let cm-w = _custom-dim-cm(g.width, _CUSTOM-DEFAULT-WIDTH)
-    let cm-h = _custom-dim-cm(g.height, _CUSTOM-DEFAULT-HEIGHT)
+    let cm-w = _custom-dim-cm("width", g.width, _CUSTOM-DEFAULT-WIDTH)
+    let cm-h = _custom-dim-cm("height", g.height, _CUSTOM-DEFAULT-HEIGHT)
     let custom = (
       kind: "custom",
       content: g.content,

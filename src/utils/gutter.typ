@@ -7,6 +7,19 @@
 #import "margin.typ": length-to-cm
 #import "errors.typ": fail, fail-type
 
+// Resolve one gutter length to cm. It must be a length or a number of at least
+// 0: a negative gutter overlaps the panels it separates.
+#let _gutter-cm(scope, name, value, size-pt) = {
+  if type(value) not in (length, int, float) {
+    fail-type(scope, name, value, "a length such as `0.5cm`, or a number")
+  }
+  let cm = length-to-cm(value, size-pt)
+  if cm < 0 {
+    fail-type(scope, name, value, "a length of at least `0pt`")
+  }
+  cm
+}
+
 // Normalise a gutter value to `(x: <cm float>, y: <cm float>)`.
 //   - a length / int / float applies to both axes;
 //   - a dictionary sets each axis independently, and a missing key falls back
@@ -22,13 +35,16 @@
         )
       }
     }
-    return (
-      x: length-to-cm(value.at("x", default: fallback), size-pt),
-      y: length-to-cm(value.at("y", default: fallback), size-pt),
+    let axis(key) = _gutter-cm(
+      scope,
+      "gutter." + key,
+      value.at(key, default: fallback),
+      size-pt,
     )
+    return (x: axis("x"), y: axis("y"))
   }
-  if type(value) == length or type(value) == int or type(value) == float {
-    let cm = length-to-cm(value, size-pt)
+  if type(value) in (length, int, float) {
+    let cm = _gutter-cm(scope, "gutter", value, size-pt)
     return (x: cm, y: cm)
   }
   fail-type(

@@ -165,6 +165,20 @@
   }
 }
 
+// Panic unless `value` is a length of at least 0. A caller that also takes
+// `none` or `auto` tests for it first and names it in `also`.
+#let assert-nonnegative-length(scope, name, value, also: none) = {
+  if type(value) != length or value.abs < 0pt or value.em < 0 {
+    fail-type(
+      scope,
+      name,
+      value,
+      "a length of at least `0pt`"
+        + if also != none { ", or " + also } else { "" },
+    )
+  }
+}
+
 // Panic unless `size` is an absolute length, a ratio (a `%` value relative to
 // the parent surface size), or `none` (inherit). Guards against passing a raw
 // number or string where a typed size is expected.

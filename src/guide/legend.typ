@@ -5,7 +5,10 @@
 ///! swatch grid with `nrow` / `ncolumn` / `byrow`, and placement with
 ///! `position` / `direction` / `order`.
 
-#import "../utils/errors.typ": assert-halign, assert-length, fail, quote-each
+#import "../utils/errors.typ": (
+  assert-halign, assert-nonnegative-length, fail, fail-enum, fail-type,
+  quote-each,
+)
 
 #let _VALID-SIDES = ("none", "top", "right", "bottom", "left")
 
@@ -20,7 +23,10 @@
 // dict `(dx:, dy:)` / `(x:, y:)` for arbitrary offsets. `direction` defaults
 // to "horizontal" for top/bottom sides and "vertical" elsewhere; pass it
 // explicitly to override. Shared with `guide-custom`.
-#let _normalise-position(position, direction, order, byrow) = {
+#let _normalise-position(position, direction, order, byrow, scope) = {
+  if order != none and type(order) != int {
+    fail-type(scope, "order", order, "a whole number, or `none`")
+  }
   let side = none
   let align = none
   let dx = 0pt
@@ -43,10 +49,25 @@
       dx = position.at("x", default: 0pt)
       dy = position.at("y", default: 0pt)
     } else {
-      fail("guide", _POSITION-HELP + "; got " + repr(position))
+      fail(scope, _POSITION-HELP + "; got " + repr(position))
+    }
+    for (name, offset) in (
+      ("position offset dx", dx),
+      ("position offset dy", dy),
+    ) {
+      if type(offset) == ratio { continue }
+      if type(offset) != length or offset.em != 0 {
+        fail-type(
+          scope,
+          name,
+          offset,
+          "an absolute length such as `1cm`, or a ratio",
+          hint: "A length with an `em` part cannot place a legend.",
+        )
+      }
     }
   } else {
-    fail("guide", _POSITION-HELP + "; got " + repr(position))
+    fail(scope, _POSITION-HELP + "; got " + repr(position))
   }
 
   let resolved-direction = if direction == auto {
@@ -58,10 +79,12 @@
   } else if direction == "horizontal" or direction == "vertical" {
     direction
   } else {
-    fail(
-      "guide",
-      "direction must be \"horizontal\", \"vertical\", or `auto`; got "
-        + repr(direction),
+    fail-enum(
+      scope,
+      "direction",
+      direction,
+      ("horizontal", "vertical"),
+      hint: "Use `auto` to infer it from `position`.",
     )
   }
 
@@ -226,7 +249,19 @@
   key-size: none,
 ) = {
   assert-halign("guide-legend", align)
-  assert-length("guide-legend", "key-size", key-size)
+  if key-size != none {
+    assert-nonnegative-length(
+      "guide-legend",
+      "key-size",
+      key-size,
+      also: "`none`",
+    )
+  }
+  for (name, count) in (("nrow", nrow), ("ncolumn", ncolumn)) {
+    if count != none and (type(count) != int or count < 1) {
+      fail-type("guide-legend", name, count, "`none` or a positive integer")
+    }
+  }
   (
     kind: "guide",
     name: "legend",
@@ -237,6 +272,12 @@
     reverse: reverse,
     align: align,
     key-size: key-size,
-    placement: _normalise-position(position, direction, order, byrow),
+    placement: _normalise-position(
+      position,
+      direction,
+      order,
+      byrow,
+      "guide-legend",
+    ),
   )
 }

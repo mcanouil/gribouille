@@ -5,6 +5,7 @@
 ///! the auto-built legends. Useful for annotations, swatch keys produced by
 ///! external code, branding, or anything Typst can typeset.
 
+#import "../utils/errors.typ": assert-nonnegative-length
 #import "legend.typ": _normalise-position
 
 /// Render arbitrary Typst content as a legend slot.
@@ -69,12 +70,25 @@
   direction: auto,
   order: none,
   byrow: false,
-) = (
-  kind: "guide",
-  name: "custom",
-  content: content,
-  width: width,
-  height: height,
-  title: title,
-  placement: _normalise-position(position, direction, order, byrow),
-)
+) = {
+  for (name, value) in (("width", width), ("height", height)) {
+    if value != auto {
+      assert-nonnegative-length("guide-custom", name, value, also: "`auto`")
+    }
+  }
+  (
+    kind: "guide",
+    name: "custom",
+    content: content,
+    width: width,
+    height: height,
+    title: title,
+    placement: _normalise-position(
+      position,
+      direction,
+      order,
+      byrow,
+      "guide-custom",
+    ),
+  )
+}

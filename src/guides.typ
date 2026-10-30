@@ -103,7 +103,7 @@
       continue
     } else if v == none {
       out.insert(k, (kind: "guide", suppress: true))
-    } else if type(v) == dictionary {
+    } else if type(v) == dictionary and v.at("kind", default: none) == "guide" {
       out.insert(k, v)
     } else {
       fail(
