@@ -4,6 +4,7 @@
 ///! small amount. Offsets are deterministic for a given `seed` so renders
 ///! are reproducible.
 
+#import "../utils/errors.typ": assert-number
 #import "../utils/types.typ": parse-number
 
 /// Random per-row offset on x and y.
@@ -64,11 +65,16 @@
 /// ```
 ///
 /// \@see \@position-nudge, \@geom-jitter
-#let position-jitter(width: 0.4, height: 0.4, seed: 0) = (
-  kind: "position",
-  name: "jitter",
-  params: (width: width, height: height, seed: seed),
-)
+#let position-jitter(width: 0.4, height: 0.4, seed: 0) = {
+  assert-number("position-jitter", "width", width, min: 0)
+  assert-number("position-jitter", "height", height, min: 0)
+  assert-number("position-jitter", "seed", seed)
+  (
+    kind: "position",
+    name: "jitter",
+    params: (width: width, height: height, seed: seed),
+  )
+}
 
 // Deterministic pseudo-random in [-1, 1) seeded by an integer index. Uses
 // the standard sin-fract noise trick so renders are reproducible without

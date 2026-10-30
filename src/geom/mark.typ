@@ -1,8 +1,9 @@
 ///! Annotation geom that encloses each group with a chosen shape.
 
+#import "../position/apply.typ": assert-position
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../utils/errors.typ": fail-enum, fail-type
+#import "../utils/errors.typ": assert-alpha, fail-enum, fail-type
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": project-point
 #import "../utils/types.typ": parse-number
@@ -214,6 +215,8 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-mark", position)
+  assert-alpha("geom-mark", alpha)
   if method not in _METHODS {
     fail-enum("geom-mark", "method", method, _METHODS)
   }

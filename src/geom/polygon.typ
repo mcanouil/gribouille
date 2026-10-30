@@ -1,5 +1,7 @@
 ///! Closed polygons from `(x, y)` rows, one polygon per group.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -106,17 +108,21 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "polygon",
-  mapping: mapping,
-  data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-polygon", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-position("geom-polygon", position)
+  assert-alpha("geom-polygon", alpha)
+  make-layer(
+    "polygon",
+    mapping: mapping,
+    data: data,
+    params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
+      + split-aes-params("geom-polygon", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

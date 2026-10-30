@@ -1,5 +1,7 @@
 ///! Point at `(x, y)` plus a vertical range from `ymin` to `ymax`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -114,24 +116,29 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "pointrange",
-  mapping: mapping,
-  data: data,
-  params: (
-    size: size,
-    stroke: stroke,
-    colour: colour,
-    fill: fill,
-    alpha: alpha,
-    linetype: linetype,
+) = {
+  assert-position("geom-pointrange", position)
+  assert-alpha("geom-pointrange", alpha)
+  assert-linetype("geom-pointrange", linetype)
+  make-layer(
+    "pointrange",
+    mapping: mapping,
+    data: data,
+    params: (
+      size: size,
+      stroke: stroke,
+      colour: colour,
+      fill: fill,
+      alpha: alpha,
+      linetype: linetype,
+    )
+      + split-aes-params("geom-pointrange", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-pointrange", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

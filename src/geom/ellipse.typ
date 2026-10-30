@@ -1,5 +1,7 @@
 ///! Parametric ellipse geom: one ellipse per data row.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -137,26 +139,30 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "ellipse",
-  mapping: mapping,
-  data: data,
-  params: (
-    a: a,
-    b: b,
-    angle: angle,
-    n: n,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
+) = {
+  assert-position("geom-ellipse", position)
+  assert-alpha("geom-ellipse", alpha)
+  make-layer(
+    "ellipse",
+    mapping: mapping,
+    data: data,
+    params: (
+      a: a,
+      b: b,
+      angle: angle,
+      n: n,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-ellipse", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-ellipse", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let _row-num(row, col, fallback) = {
   if col == none { return fallback }

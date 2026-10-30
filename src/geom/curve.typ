@@ -5,9 +5,12 @@
 ///! `angle`, then the curve is sampled into a polyline drawn through the
 ///! same draw chain.
 
+#import "../position/apply.typ": assert-position
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../utils/errors.typ": fail-range
+#import "../utils/errors.typ": (
+  assert-alpha, assert-linetype, fail-range, fail-type,
+)
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/arrow.typ": assert-arrow, draw-arrow-heads
 #import "../utils/linetype-resolve.typ": resolve-linetype
@@ -151,7 +154,13 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-curve", position)
+  assert-alpha("geom-curve", alpha)
+  assert-linetype("geom-curve", linetype)
   assert-arrow("geom-curve", arrow)
+  if type(curvature) not in (int, float) {
+    fail-type("geom-curve", "curvature", curvature, "a number in [-1, 1]")
+  }
   if curvature < -1 or curvature > 1 {
     fail-range(
       "geom-curve",
@@ -162,6 +171,9 @@
       lo-open: false,
       hi-open: false,
     )
+  }
+  if type(n) != int or n < 1 {
+    fail-type("geom-curve", "n", n, "a positive integer")
   }
   make-layer(
     "curve",

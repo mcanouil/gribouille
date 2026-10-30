@@ -6,7 +6,7 @@
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": assert-alpha, assert-linetype, fail
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": project-path
 #import "../utils/colour-resolve.typ": apply-alpha
@@ -97,6 +97,8 @@
   inherit-aes: false,
   ..args,
 ) = {
+  assert-alpha("geom-function", alpha)
+  assert-linetype("geom-function", linetype)
   if n < 2 {
     fail("geom-function", "n must be at least 2; got " + repr(n))
   }

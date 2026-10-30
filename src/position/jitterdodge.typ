@@ -3,6 +3,7 @@
 ///! Useful for scatterplots over a discrete x with a colour grouping:
 ///! groups dodge into separate slots and points jitter within each slot.
 
+#import "../utils/errors.typ": assert-number
 #import "dodge.typ"
 #import "jitter.typ" as jitter-mod
 #import "../utils/types.typ": parse-number
@@ -76,16 +77,27 @@
   height: 0,
   dodge-width: 0.75,
   seed: 0,
-) = (
-  kind: "position",
-  name: "jitterdodge",
-  params: (
-    width: width,
-    height: height,
-    dodge-width: dodge-width,
-    seed: seed,
-  ),
-)
+) = {
+  assert-number("position-jitterdodge", "width", width, min: 0)
+  assert-number("position-jitterdodge", "height", height, min: 0)
+  assert-number(
+    "position-jitterdodge",
+    "dodge-width",
+    dodge-width,
+    positive: true,
+  )
+  assert-number("position-jitterdodge", "seed", seed)
+  (
+    kind: "position",
+    name: "jitterdodge",
+    params: (
+      width: width,
+      height: height,
+      dodge-width: dodge-width,
+      seed: seed,
+    ),
+  )
+}
 
 #let apply(data, mapping, params: (:), coord: none) = {
   let dodge-width = params.at("dodge-width", default: 0.75)

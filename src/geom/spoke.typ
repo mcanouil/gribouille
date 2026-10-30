@@ -4,6 +4,8 @@
 ///! the offset to the segment endpoint via `xend = x + radius * cos(angle)`
 ///! and `yend = y + radius * sin(angle)`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -122,6 +124,9 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-spoke", position)
+  assert-alpha("geom-spoke", alpha)
+  assert-linetype("geom-spoke", linetype)
   assert-arrow("geom-spoke", arrow)
   make-layer(
     "spoke",

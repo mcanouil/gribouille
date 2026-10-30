@@ -1,5 +1,7 @@
 ///! Line segments from `(x, y)` to `(xend, yend)`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -118,6 +120,9 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-segment", position)
+  assert-alpha("geom-segment", alpha)
+  assert-linetype("geom-segment", linetype)
   assert-arrow("geom-segment", arrow)
   make-layer(
     "segment",

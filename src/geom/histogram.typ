@@ -1,3 +1,5 @@
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/bin.typ": check-bin-params
 #import "col.typ": spec as col-spec
@@ -106,23 +108,27 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "col",
-  mapping: mapping,
-  data: data,
-  params: (
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
-    width: width,
+) = {
+  assert-position("geom-histogram", position)
+  assert-alpha("geom-histogram", alpha)
+  make-layer(
+    "col",
+    mapping: mapping,
+    data: data,
+    params: (
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+      width: width,
+    )
+      + split-aes-params("geom-histogram", args, col-spec.reads),
+    stat: if stat == auto {
+      check-bin-params("geom-histogram", bins, binwidth)
+      stat-bin(bins: bins, binwidth: binwidth)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-histogram", args, col-spec.reads),
-  stat: if stat == auto {
-    check-bin-params("geom-histogram", bins, binwidth)
-    stat-bin(bins: bins, binwidth: binwidth)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

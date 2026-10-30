@@ -3,6 +3,7 @@
 ///! Renders nothing but contributes its data to scale training. Useful for
 ///! forcing axis training without drawing marks.
 
+#import "../position/apply.typ": assert-position
 #import "../layer.typ": make-layer, split-aes-params
 
 #let spec = (reads: (), extents: none)
@@ -69,15 +70,18 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "blank",
-  mapping: mapping,
-  data: data,
-  params: split-aes-params("geom-blank", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-position("geom-blank", position)
+  make-layer(
+    "blank",
+    mapping: mapping,
+    data: data,
+    params: split-aes-params("geom-blank", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {}

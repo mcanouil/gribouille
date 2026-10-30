@@ -4,9 +4,12 @@
 ///! layer to count observations for you. The layer honours `position: "stack"`,
 ///! `"dodge"`, and `"fill"` via the matching position adjustments.
 
+#import "../utils/errors.typ": assert-alpha, assert-fraction
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../position/apply.typ": layer-marks-abut, layer-position-name
+#import "../position/apply.typ": (
+  assert-position, layer-marks-abut, layer-position-name,
+)
 #import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper, project-uvs
@@ -89,7 +92,7 @@
 ///
 /// \@param data Layer-specific dataset, or a function applied to the plot data returning the layer frame. Falls back to the plot data when `none`.
 ///
-/// \@param width Bar width as a fraction of the category width (0 to 1).
+/// \@param width Bar width as a fraction of the category width, in `(0, 1]`.
 ///
 /// \@param colour Bar outline colour. `auto` resolves via the colour scale, falling back to the theme `ink` only when neither `colour` nor `fill` is set.
 ///
@@ -162,23 +165,28 @@
   position: "identity",
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "col",
-  mapping: mapping,
-  data: data,
-  params: (
-    width: width,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
+) = {
+  assert-alpha("geom-col", alpha)
+  assert-fraction("geom-col", "width", width)
+  assert-position("geom-col", position)
+  make-layer(
+    "col",
+    mapping: mapping,
+    data: data,
+    params: (
+      width: width,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-col", args, spec.reads),
+    key: key,
+    stat: stat,
+    position: position,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-col", args, spec.reads),
-  key: key,
-  stat: stat,
-  position: position,
-  inherit-aes: inherit-aes,
-)
+}
 
 // Canvas length every sealed segment overlaps its neighbour by.
 #let _overlap = seam-seal-thickness / 1cm

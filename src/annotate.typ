@@ -158,7 +158,11 @@
   }
 
   if geom in _params-only {
-    return with-clip(constructor(..named, inherit-aes: false))
+    return with-clip(constructor(
+      ..named,
+      _scope: "annotate",
+      inherit-aes: false,
+    ))
   }
 
   let aes-keys = _aes-keys-for(geom, GEOMS.at(geom).spec.reads)
@@ -190,6 +194,7 @@
 
   with-clip(constructor(
     ..layer-args,
+    _scope: "annotate",
     data: data,
     mapping: mapping,
     inherit-aes: false,

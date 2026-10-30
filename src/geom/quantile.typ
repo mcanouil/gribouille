@@ -4,6 +4,8 @@
 ///! quantile τ. Use the `colour` aesthetic on the layer to differentiate
 ///! lines; otherwise all lines share the layer's `colour` parameter.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../layer.typ": make-layer, split-aes-params
 #import "line.typ": spec as line-spec
 #import "../stat/quantile.typ": stat-quantile, validate-quantile-params
@@ -82,24 +84,29 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "line",
-  mapping: mapping,
-  data: data,
-  params: (
-    stroke: stroke,
-    stroke-fallback: 0.6pt,
-    colour: colour,
-    alpha: alpha,
-    linetype: linetype,
-    linewidth: linewidth,
+) = {
+  assert-position("geom-quantile", position)
+  assert-alpha("geom-quantile", alpha)
+  assert-linetype("geom-quantile", linetype)
+  make-layer(
+    "line",
+    mapping: mapping,
+    data: data,
+    params: (
+      stroke: stroke,
+      stroke-fallback: 0.6pt,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
+      linewidth: linewidth,
+    )
+      + split-aes-params("geom-quantile", args, line-spec.reads),
+    stat: if stat == auto {
+      validate-quantile-params("geom-quantile", quantiles, n-samples)
+      stat-quantile(quantiles: quantiles, n-samples: n-samples)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-quantile", args, line-spec.reads),
-  stat: if stat == auto {
-    validate-quantile-params("geom-quantile", quantiles, n-samples)
-    stat-quantile(quantiles: quantiles, n-samples: n-samples)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

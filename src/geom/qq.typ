@@ -2,6 +2,8 @@
 ///!
 ///! Thin wrapper around \@geom-point that computes its data via \@stat-qq.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/normal.typ": check-distribution
 #import "point.typ": spec as point-spec
@@ -89,22 +91,26 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "point",
-  mapping: mapping,
-  data: data,
-  params: (
-    size: size,
-    stroke: stroke,
-    fill: fill,
-    colour: colour,
-    alpha: alpha,
-    shape: shape,
-    distribution: check-distribution("geom-qq", distribution),
+) = {
+  assert-position("geom-qq", position)
+  assert-alpha("geom-qq", alpha)
+  make-layer(
+    "point",
+    mapping: mapping,
+    data: data,
+    params: (
+      size: size,
+      stroke: stroke,
+      fill: fill,
+      colour: colour,
+      alpha: alpha,
+      shape: shape,
+      distribution: check-distribution("geom-qq", distribution),
+    )
+      + split-aes-params("geom-qq", args, point-spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-qq", args, point-spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

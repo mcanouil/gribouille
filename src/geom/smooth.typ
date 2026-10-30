@@ -6,6 +6,8 @@
 ///! \@stat-smooth, which also returns the pointwise confidence band drawn
 ///! when `se: true`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -162,40 +164,45 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "smooth",
-  mapping: mapping,
-  data: data,
-  params: (
-    method: method,
-    se: se,
-    level: level,
-    span: span,
-    degree: degree,
-    stroke: stroke,
-    colour: colour,
-    fill: fill,
-    alpha: alpha,
-    linetype: linetype,
-  )
-    + split-aes-params("geom-smooth", args, spec.reads),
-  stat: if stat == auto {
-    validate-smooth-params(
-      "geom-smooth",
-      (method: method, level: level, span: span, degree: degree),
-    )
-    stat-smooth(
+) = {
+  assert-position("geom-smooth", position)
+  assert-alpha("geom-smooth", alpha)
+  assert-linetype("geom-smooth", linetype)
+  make-layer(
+    "smooth",
+    mapping: mapping,
+    data: data,
+    params: (
       method: method,
       se: se,
       level: level,
       span: span,
       degree: degree,
+      stroke: stroke,
+      colour: colour,
+      fill: fill,
+      alpha: alpha,
+      linetype: linetype,
     )
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+      + split-aes-params("geom-smooth", args, spec.reads),
+    stat: if stat == auto {
+      validate-smooth-params(
+        "geom-smooth",
+        (method: method, level: level, span: span, degree: degree),
+      )
+      stat-smooth(
+        method: method,
+        se: se,
+        level: level,
+        span: span,
+        degree: degree,
+      )
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

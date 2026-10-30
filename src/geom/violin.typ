@@ -5,11 +5,12 @@
 ///! as a closed silhouette. \@coord-radial fails for this layer, as
 ///! mirrored silhouettes do not translate to polar wedges.
 
+#import "../utils/errors.typ": assert-alpha
 #import "../utils/bucket.typ": bucket-index
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../stat/ydensity.typ": stat-ydensity, validate-ydensity-params
-#import "../position/apply.typ": layer-position-name
+#import "../position/apply.typ": assert-position, layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
@@ -132,29 +133,33 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "violin",
-  mapping: mapping,
-  data: data,
-  params: (
-    width: width,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
-  )
-    + split-aes-params("geom-violin", args, spec.reads),
-  stat: if stat == auto {
-    validate-ydensity-params(
-      "geom-violin",
-      (bw: bw, adjust: adjust, n: n, trim: trim, scale: scale),
+) = {
+  assert-position("geom-violin", position)
+  assert-alpha("geom-violin", alpha)
+  make-layer(
+    "violin",
+    mapping: mapping,
+    data: data,
+    params: (
+      width: width,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
     )
-    stat-ydensity(bw: bw, adjust: adjust, n: n, trim: trim, scale: scale)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+      + split-aes-params("geom-violin", args, spec.reads),
+    stat: if stat == auto {
+      validate-ydensity-params(
+        "geom-violin",
+        (bw: bw, adjust: adjust, n: n, trim: trim, scale: scale),
+      )
+      stat-ydensity(bw: bw, adjust: adjust, n: n, trim: trim, scale: scale)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
