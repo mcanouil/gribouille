@@ -2,6 +2,8 @@
 ///!
 ///! Mapping provides `x` and `y`; `width` and `height` may be mapped or fixed.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -139,24 +141,28 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "tile",
-  mapping: mapping,
-  data: data,
-  params: (
-    width: width,
-    height: height,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
+) = {
+  assert-position("geom-tile", position)
+  assert-alpha("geom-tile", alpha)
+  make-layer(
+    "tile",
+    mapping: mapping,
+    data: data,
+    params: (
+      width: width,
+      height: height,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-tile", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-tile", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 /// Spacing between neighbouring tile centres on one axis, or `none` when the
 /// axis holds a single centre and so has no neighbour to abut.

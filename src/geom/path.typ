@@ -4,6 +4,8 @@
 ///! rather than sorted by x. Useful for trajectories, time-series with
 ///! out-of-order timestamps, and any path where order is meaningful.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
 #import "grouped-path.typ": draw-grouped-paths, rows-to-points, spec
@@ -87,6 +89,9 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-path", position)
+  assert-alpha("geom-path", alpha)
+  assert-linetype("geom-path", linetype)
   assert-arrow("geom-path", arrow)
   make-layer(
     "path",

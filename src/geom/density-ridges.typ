@@ -5,6 +5,8 @@
 ///! rising from its bucket's baseline, back to front so ridges lower on
 ///! the plot overlap the ones behind them. \@coord-radial fails for this layer.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-number
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../stat/density-ridges.typ": stat-density-ridges
@@ -39,7 +41,7 @@
 ///
 /// \@param data Layer-specific dataset, or a function applied to the plot data returning the layer frame. Falls back to the plot data when `none`.
 ///
-/// \@param scale Tallest ridge height in y-level units; values above `1` overlap the ridge behind.
+/// \@param scale Tallest ridge height in y-level units, at least `0`; values above `1` overlap the ridge behind.
 ///
 /// \@param bw Kernel bandwidth. `auto` applies Silverman's rule of thumb; pass a positive number to fix it.
 ///
@@ -125,29 +127,34 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "density-ridges",
-  mapping: mapping,
-  data: data,
-  params: (
-    scale: scale,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
-  )
-    + split-aes-params("geom-density-ridges", args, spec.reads),
-  stat: if stat == auto {
-    validate-kde-params(
-      "geom-density-ridges",
-      (bw: bw, adjust: adjust, n: n, trim: trim),
+) = {
+  assert-position("geom-density-ridges", position)
+  assert-alpha("geom-density-ridges", alpha)
+  assert-number("geom-density-ridges", "scale", scale, min: 0)
+  make-layer(
+    "density-ridges",
+    mapping: mapping,
+    data: data,
+    params: (
+      scale: scale,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
     )
-    stat-density-ridges(bw: bw, adjust: adjust, n: n, trim: trim)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+      + split-aes-params("geom-density-ridges", args, spec.reads),
+    stat: if stat == auto {
+      validate-kde-params(
+        "geom-density-ridges",
+        (bw: bw, adjust: adjust, n: n, trim: trim),
+      )
+      stat-density-ridges(bw: bw, adjust: adjust, n: n, trim: trim)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

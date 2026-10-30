@@ -3,6 +3,7 @@
 ///! Useful for separating two layers that would otherwise overlap, e.g.,
 ///! shifting text labels off their points.
 
+#import "../utils/errors.typ": assert-number
 #import "../utils/types.typ": parse-number
 
 /// Shift every row's x and y by a fixed amount in data units.
@@ -59,11 +60,15 @@
 /// ```
 ///
 /// \@see \@position-jitter, \@geom-text
-#let position-nudge(x: 0, y: 0) = (
-  kind: "position",
-  name: "nudge",
-  params: (x: x, y: y),
-)
+#let position-nudge(x: 0, y: 0) = {
+  assert-number("position-nudge", "x", x)
+  assert-number("position-nudge", "y", y)
+  (
+    kind: "position",
+    name: "nudge",
+    params: (x: x, y: y),
+  )
+}
 
 #let apply(data, mapping, params: (:), coord: none) = {
   let dx = params.at("x", default: 0)

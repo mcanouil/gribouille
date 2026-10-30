@@ -5,9 +5,10 @@
 ///! receives pre-computed summary rows (`x`, `lower`, `middle`, `upper`,
 ///! `ymin`, `ymax`, optional `outliers`).
 
+#import "../utils/errors.typ": assert-alpha, assert-number
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../position/apply.typ": layer-position-name
+#import "../position/apply.typ": assert-position, layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
@@ -135,26 +136,31 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "boxplot",
-  mapping: mapping,
-  data: data,
-  params: (
-    width: width,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
-    outlier-size: outlier-size,
-    outlier-colour: outlier-colour,
-    whisker-cap: whisker-cap,
+) = {
+  assert-position("geom-boxplot", position)
+  assert-alpha("geom-boxplot", alpha)
+  assert-number("geom-boxplot", "width", width, min: 0)
+  make-layer(
+    "boxplot",
+    mapping: mapping,
+    data: data,
+    params: (
+      width: width,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+      outlier-size: outlier-size,
+      outlier-colour: outlier-colour,
+      whisker-cap: whisker-cap,
+    )
+      + split-aes-params("geom-boxplot", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-boxplot", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

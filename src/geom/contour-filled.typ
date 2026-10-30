@@ -1,5 +1,7 @@
 ///! Filled-contour geom. Wraps \@stat-contour-filled over polygon fills.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/contour-grid.typ": check-level-params
 #import "polygon.typ": spec as polygon-spec
@@ -85,22 +87,26 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "polygon",
-  mapping: mapping,
-  data: data,
-  params: (
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
+) = {
+  assert-position("geom-contour-filled", position)
+  assert-alpha("geom-contour-filled", alpha)
+  make-layer(
+    "polygon",
+    mapping: mapping,
+    data: data,
+    params: (
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-contour-filled", args, polygon-spec.reads),
+    stat: if stat == auto {
+      check-level-params("geom-contour-filled", bins, binwidth, breaks)
+      stat-contour-filled(bins: bins, binwidth: binwidth, breaks: breaks)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-contour-filled", args, polygon-spec.reads),
-  stat: if stat == auto {
-    check-level-params("geom-contour-filled", bins, binwidth, breaks)
-    stat-contour-filled(bins: bins, binwidth: binwidth, breaks: breaks)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

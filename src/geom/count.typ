@@ -4,6 +4,8 @@
 ///! \@stat-sum aggregates duplicate `(x, y)` rows into one row per unique pair
 ///! and exposes the count via the `size` aesthetic.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../layer.typ": make-layer, split-aes-params
 #import "point.typ": spec as point-spec
 
@@ -96,21 +98,25 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "point",
-  mapping: mapping,
-  data: data,
-  params: (
-    size: size,
-    stroke: stroke,
-    fill: fill,
-    colour: colour,
-    alpha: alpha,
-    shape: shape,
+) = {
+  assert-position("geom-count", position)
+  assert-alpha("geom-count", alpha)
+  make-layer(
+    "point",
+    mapping: mapping,
+    data: data,
+    params: (
+      size: size,
+      stroke: stroke,
+      fill: fill,
+      colour: colour,
+      alpha: alpha,
+      shape: shape,
+    )
+      + split-aes-params("geom-count", args, point-spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-count", args, point-spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

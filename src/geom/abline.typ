@@ -6,6 +6,7 @@
 ///! follows the warped axis correctly. Under `coord-radial` the line follows the
 ///! polar grid as a curve.
 
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -123,22 +124,26 @@
   key: auto,
   inherit-aes: false,
   ..args,
-) = make-layer(
-  "abline",
-  mapping: mapping,
-  data: data,
-  params: (
-    slope: slope,
-    intercept: intercept,
-    colour: colour,
-    stroke: stroke,
-    alpha: alpha,
-    linetype: linetype,
+) = {
+  assert-alpha("geom-abline", alpha)
+  assert-linetype("geom-abline", linetype)
+  make-layer(
+    "abline",
+    mapping: mapping,
+    data: data,
+    params: (
+      slope: slope,
+      intercept: intercept,
+      colour: colour,
+      stroke: stroke,
+      alpha: alpha,
+      linetype: linetype,
+    )
+      + split-aes-params("geom-abline", args, spec.reads),
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-abline", args, spec.reads),
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   // Under flip, the renderer has already swapped trained.x and trained.y so

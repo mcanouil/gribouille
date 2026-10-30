@@ -9,6 +9,7 @@
 ///! mark's own width, with `padding` between adjacent slots, scaled to fit
 ///! the bucket.
 
+#import "../utils/errors.typ": assert-number, fail-range
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
 #import "../coord/project.typ": (
@@ -41,7 +42,7 @@
 ///
 /// \@param width Total width reserved for the dodged group, as a fraction of the category width.
 ///
-/// \@param padding Gap between adjacent dodge slots. With uniform widths it is a fraction of one slot; with mixed widths it is a fraction of the bucket.
+/// \@param padding Gap between adjacent dodge slots, in `[0, 0.9]`. With uniform widths it is a fraction of one slot; with mixed widths it is a fraction of the bucket.
 ///
 /// \@returns Position dictionary with `name: "dodge"`, consumed by \@plot.
 ///
@@ -85,11 +86,26 @@
 /// ```
 ///
 /// \@see \@position-stack, \@position-fill, \@position-identity, \@position-jitter
-#let position-dodge(width: 0.9, padding: 0.1) = (
-  kind: "position",
-  name: "dodge",
-  params: (width: width, padding: padding),
-)
+#let position-dodge(width: 0.9, padding: 0.1) = {
+  assert-number("position-dodge", "width", width, positive: true)
+  assert-number("position-dodge", "padding", padding)
+  if padding < 0 or padding > 0.9 {
+    fail-range(
+      "position-dodge",
+      "padding",
+      padding,
+      0,
+      0.9,
+      lo-open: false,
+      hi-open: false,
+    )
+  }
+  (
+    kind: "position",
+    name: "dodge",
+    params: (width: width, padding: padding),
+  )
+}
 
 /// Shrink a half-width by this row's dodge slot count.
 ///
@@ -264,7 +280,6 @@
 
   let bar-frac = params.at("width", default: 0.9)
   let padding = params.at("padding", default: 0.1)
-  let clamped-padding = calc.max(0.0, calc.min(padding, 0.9))
 
   // Alphabetic levels so slot order matches the trained discrete domain
   // and the legend. Dedup is dict-keyed for O(n) instead of array-scan
@@ -307,7 +322,7 @@
       // Slot centres split the bucket evenly; padding shrinks each mark
       // around its own centre, so marks placed by `dodge-uv` stay
       // centred over the bar while neighbouring slots stop touching.
-      let shrink = n-levels / (1 - clamped-padding)
+      let shrink = n-levels / (1 - padding)
       for entry in entries {
         let idx = level-index.at(entry.key, default: none)
         if idx == none { continue }
@@ -321,10 +336,10 @@
       let sorted-entries = entries.sorted(key: e => e.key)
       let n = sorted-entries.len()
       let widths-sum = sorted-entries.fold(0.0, (acc, e) => acc + e.w)
-      let padding-sum = if n > 1 { (n - 1) * clamped-padding } else { 0 }
+      let padding-sum = if n > 1 { (n - 1) * padding } else { 0 }
       let total = widths-sum + padding-sum
       let scale = if total > 1 { 1.0 / total } else { 1.0 }
-      let eff-pad = clamped-padding * scale
+      let eff-pad = padding * scale
       let cursor = -0.5
       for entry in sorted-entries {
         let w = entry.w * scale

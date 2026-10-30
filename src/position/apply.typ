@@ -6,7 +6,7 @@
 // `coord-radial`.
 
 #import "identity.typ" as identity-pos
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail-enum
 #import "stack.typ" as stack-pos
 #import "dodge.typ" as dodge-pos
 #import "fill.typ" as fill-pos
@@ -41,11 +41,19 @@
   nudge: ("x", "y"),
 )
 
+// Panic unless `position` is `none`, a position dict from a `position-*()`
+// constructor, or the name of a known adjustment.
+#let assert-position(scope, position) = {
+  if type(position) == str and position not in _POSITIONS {
+    fail-enum(scope, "position", position, _POSITIONS.keys())
+  }
+}
+
 #let apply-position(name, data, mapping, params: (:), coord: none) = {
   let resolved = if name == none { "identity" } else { name }
   let apply = _POSITIONS.at(resolved, default: none)
   if apply == none {
-    fail("position", "unknown adjustment " + repr(resolved))
+    fail-enum("position", "adjustment", resolved, _POSITIONS.keys())
   }
   apply(data, mapping, params: params, coord: coord)
 }

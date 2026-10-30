@@ -4,6 +4,8 @@
 ///! bin. Backed by \@stat-bindot. Dot diameter is `binwidth * dotsize` in
 ///! data units on the x-axis and one stack-row in y units.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
 #import "../utils/bin.typ": check-bin-params
 #import "../layer.typ": make-layer, split-aes-params
@@ -97,26 +99,30 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "dotplot",
-  mapping: mapping,
-  data: data,
-  params: (
-    fill: fill,
-    colour: colour,
-    stroke: stroke,
-    alpha: alpha,
-    dotsize: dotsize,
+) = {
+  assert-position("geom-dotplot", position)
+  assert-alpha("geom-dotplot", alpha)
+  make-layer(
+    "dotplot",
+    mapping: mapping,
+    data: data,
+    params: (
+      fill: fill,
+      colour: colour,
+      stroke: stroke,
+      alpha: alpha,
+      dotsize: dotsize,
+    )
+      + split-aes-params("geom-dotplot", args, spec.reads),
+    stat: if stat == auto {
+      check-bin-params("geom-dotplot", bins, binwidth)
+      stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-dotplot", args, spec.reads),
-  stat: if stat == auto {
-    check-bin-params("geom-dotplot", bins, binwidth)
-    stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

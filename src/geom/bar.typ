@@ -4,6 +4,8 @@
 ///! `position` to `"stack"`. Use this when you want counts; use \@geom-col for
 ///! pre-aggregated heights.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-fraction
 #import "../layer.typ": split-aes-params
 #import "col.typ": geom-col, spec as col-spec
 
@@ -21,7 +23,7 @@
 ///
 /// \@param data Layer-specific dataset, or a function applied to the plot data returning the layer frame. Falls back to the plot data when `none`.
 ///
-/// \@param width Bar width as a fraction of the category width (0 to 1).
+/// \@param width Bar width as a fraction of the category width, in `(0, 1]`.
 ///
 /// \@param colour Bar outline colour. `auto` resolves via the colour scale, falling back to the theme `ink` only when neither `colour` nor `fill` is set.
 ///
@@ -110,17 +112,22 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = geom-col(
-  mapping: mapping,
-  data: data,
-  width: width,
-  colour: colour,
-  fill: fill,
-  stroke: stroke,
-  alpha: alpha,
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-  ..split-aes-params("geom-bar", args, col-spec.reads),
-)
+) = {
+  assert-position("geom-bar", position)
+  assert-alpha("geom-bar", alpha)
+  assert-fraction("geom-bar", "width", width)
+  geom-col(
+    mapping: mapping,
+    data: data,
+    width: width,
+    colour: colour,
+    fill: fill,
+    stroke: stroke,
+    alpha: alpha,
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+    ..split-aes-params("geom-bar", args, col-spec.reads),
+  )
+}

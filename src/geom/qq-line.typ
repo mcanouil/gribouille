@@ -2,6 +2,8 @@
 ///!
 ///! Thin wrapper around \@geom-line that computes its data via \@stat-qq-line.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/normal.typ": check-distribution
 #import "line.typ": spec as line-spec
@@ -85,20 +87,25 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "line",
-  mapping: mapping,
-  data: data,
-  params: (
-    stroke: stroke,
-    colour: colour,
-    alpha: alpha,
-    linetype: linetype,
-    distribution: check-distribution("geom-qq-line", distribution),
+) = {
+  assert-position("geom-qq-line", position)
+  assert-alpha("geom-qq-line", alpha)
+  assert-linetype("geom-qq-line", linetype)
+  make-layer(
+    "line",
+    mapping: mapping,
+    data: data,
+    params: (
+      stroke: stroke,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
+      distribution: check-distribution("geom-qq-line", distribution),
+    )
+      + split-aes-params("geom-qq-line", args, line-spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-qq-line", args, line-spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

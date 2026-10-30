@@ -1,5 +1,7 @@
 ///! Horizontal line from `xmin` to `xmax` with vertical caps at each `y`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../layer.typ": make-layer, split-aes-params
 #import "errorbar-draw.typ": _draw-errorbar-axis
 
@@ -98,23 +100,28 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "errorbarh",
-  mapping: mapping,
-  data: data,
-  params: (
-    height: height,
-    stroke: stroke,
-    colour: colour,
-    alpha: alpha,
-    linetype: linetype,
+) = {
+  assert-position("geom-errorbarh", position)
+  assert-alpha("geom-errorbarh", alpha)
+  assert-linetype("geom-errorbarh", linetype)
+  make-layer(
+    "errorbarh",
+    mapping: mapping,
+    data: data,
+    params: (
+      height: height,
+      stroke: stroke,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
+    )
+      + split-aes-params("geom-errorbarh", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-errorbarh", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   _draw-errorbar-axis(layer, ctx, "x", layer.params.height)

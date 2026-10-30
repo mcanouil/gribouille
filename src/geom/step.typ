@@ -4,9 +4,10 @@
 ///! stair-step: a horizontal then vertical move (`direction: "hv"`,
 ///! default) or vertical then horizontal (`direction: "vh"`).
 
+#import "../position/apply.typ": assert-position
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
-#import "../utils/errors.typ": fail-enum
+#import "../utils/errors.typ": assert-alpha, assert-linetype, fail-enum
 #import "../utils/flip.typ": user-stair-direction
 #import "grouped-path.typ": (
   draw-grouped-paths, rows-to-points, sort-rows-by-x, spec,
@@ -90,6 +91,9 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-step", position)
+  assert-alpha("geom-step", alpha)
+  assert-linetype("geom-step", linetype)
   assert-arrow("geom-step", arrow)
   if direction != "hv" and direction != "vh" {
     fail-enum("geom-step", "direction", direction, ("hv", "vh"))

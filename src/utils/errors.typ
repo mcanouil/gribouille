@@ -208,3 +208,96 @@
     )
   }
 }
+
+// Panic unless `alpha` is `none`, `auto`, or a number in [0, 1]. Guards the
+// documented opacity range at construction, where it would otherwise clamp in
+// silence or fail on a comparison at render.
+#let assert-alpha(scope, alpha) = {
+  if alpha == none or alpha == auto { return }
+  if type(alpha) not in (int, float) {
+    fail-type(scope, "alpha", alpha, "a number in [0, 1], `auto`, or `none`")
+  }
+  if alpha < 0 or alpha > 1 {
+    fail-range(scope, "alpha", alpha, 0, 1, lo-open: false, hi-open: false)
+  }
+}
+
+#let LINETYPES = (
+  "solid",
+  "dotted",
+  "densely-dotted",
+  "loosely-dotted",
+  "dashed",
+  "densely-dashed",
+  "loosely-dashed",
+  "dash-dotted",
+  "densely-dash-dotted",
+  "loosely-dash-dotted",
+)
+
+// Panic unless `linetype` is `none`, `auto`, a Typst dash keyword, or a Typst
+// dash pattern (an array or a dictionary).
+#let assert-linetype(scope, linetype) = {
+  if linetype == none or linetype == auto { return }
+  if type(linetype) in (array, dictionary) { return }
+  if linetype not in LINETYPES {
+    fail-enum(
+      scope,
+      "linetype",
+      linetype,
+      LINETYPES,
+      hint: "Use `auto` to honour the linetype scale.",
+    )
+  }
+}
+
+// Panic unless `value` is a number. With `positive`, it must be greater than
+// zero; with `min`, it must be at least `min`.
+#let assert-number(scope, name, value, min: none, positive: false) = {
+  let expected = if positive { "a positive number" } else if min == none {
+    "a number"
+  } else { "a number of at least " + repr(min) }
+  if type(value) not in (int, float) {
+    fail-type(scope, name, value, expected)
+  }
+  if positive and value <= 0 or min != none and value < min {
+    fail-type(scope, name, value, expected)
+  }
+}
+
+#let CONTENT-ANCHORS = (
+  "center",
+  "mid",
+  "mid-east",
+  "mid-west",
+  "base",
+  "base-east",
+  "base-west",
+  "text",
+  "north",
+  "north-east",
+  "north-west",
+  "south",
+  "south-east",
+  "south-west",
+  "east",
+  "west",
+)
+
+// Panic unless `anchor` names an anchor of a CeTZ content element.
+#let assert-anchor(scope, anchor) = {
+  if anchor not in CONTENT-ANCHORS {
+    fail-enum(scope, "anchor", anchor, CONTENT-ANCHORS)
+  }
+}
+
+// Panic unless `value` is a number in (0, 1], the share of a slot that a mark
+// fills.
+#let assert-fraction(scope, name, value) = {
+  if type(value) not in (int, float) {
+    fail-type(scope, name, value, "a number in (0, 1]")
+  }
+  if value <= 0 or value > 1 {
+    fail-range(scope, name, value, 0, 1, hi-open: false)
+  }
+}

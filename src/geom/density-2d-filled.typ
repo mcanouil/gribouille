@@ -1,3 +1,5 @@
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/contour-grid.typ": check-level-params
 #import "../utils/kde.typ": validate-kde-2d-params
@@ -98,38 +100,42 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "polygon",
-  mapping: mapping,
-  data: data,
-  params: (
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
-  )
-    + split-aes-params(
-      "geom-density-2d-filled",
-      args,
-      polygon-spec.reads,
-    ),
-  stat: if stat == auto {
-    validate-kde-2d-params("geom-density-2d-filled", (
-      bw: bw,
-      adjust: adjust,
-      n: n,
-    ))
-    check-level-params("geom-density-2d-filled", bins, binwidth, breaks)
-    stat-density-2d-filled(
-      bw: bw,
-      adjust: adjust,
-      n: n,
-      bins: bins,
-      binwidth: binwidth,
-      breaks: breaks,
+) = {
+  assert-position("geom-density-2d-filled", position)
+  assert-alpha("geom-density-2d-filled", alpha)
+  make-layer(
+    "polygon",
+    mapping: mapping,
+    data: data,
+    params: (
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
     )
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+      + split-aes-params(
+        "geom-density-2d-filled",
+        args,
+        polygon-spec.reads,
+      ),
+    stat: if stat == auto {
+      validate-kde-2d-params("geom-density-2d-filled", (
+        bw: bw,
+        adjust: adjust,
+        n: n,
+      ))
+      check-level-params("geom-density-2d-filled", bins, binwidth, breaks)
+      stat-density-2d-filled(
+        bw: bw,
+        adjust: adjust,
+        n: n,
+        bins: bins,
+        binwidth: binwidth,
+        breaks: breaks,
+      )
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}

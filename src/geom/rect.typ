@@ -1,5 +1,7 @@
 ///! Axis-aligned rectangles from `xmin`, `ymin`, `xmax`, `ymax`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -99,17 +101,21 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "rect",
-  mapping: mapping,
-  data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-rect", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-position("geom-rect", position)
+  assert-alpha("geom-rect", alpha)
+  make-layer(
+    "rect",
+    mapping: mapping,
+    data: data,
+    params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
+      + split-aes-params("geom-rect", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

@@ -1,8 +1,9 @@
 ///! Hollow box from `ymin` to `ymax` with a thicker bar at `y` (the median).
 
+#import "../utils/errors.typ": assert-alpha, assert-number
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../position/apply.typ": layer-position-name
+#import "../position/apply.typ": assert-position, layer-position-name
 #import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
@@ -107,24 +108,29 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "crossbar",
-  mapping: mapping,
-  data: data,
-  params: (
-    width: width,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    middle-stroke: middle-stroke,
-    alpha: alpha,
+) = {
+  assert-position("geom-crossbar", position)
+  assert-alpha("geom-crossbar", alpha)
+  assert-number("geom-crossbar", "width", width, min: 0)
+  make-layer(
+    "crossbar",
+    mapping: mapping,
+    data: data,
+    params: (
+      width: width,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      middle-stroke: middle-stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-crossbar", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-crossbar", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

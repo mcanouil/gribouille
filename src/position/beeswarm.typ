@@ -5,6 +5,7 @@
 ///! sequence so the cloud fills evenly without a random number generator.
 ///! Renders are reproducible without a seed.
 
+#import "../utils/errors.typ": assert-number
 #import "../utils/bucket.typ": bucket-dict
 #import "../utils/types.typ": parse-number
 #import "../utils/kde.typ": bw-nrd0
@@ -27,7 +28,7 @@
 ///
 /// \@param width Maximum absolute offset applied to the x position, in x data units.
 ///
-/// \@param adjust Bandwidth multiplier for the density estimate: `adjust: 0.5` halves the smoothing.
+/// \@param adjust Bandwidth multiplier for the density estimate, greater than `0`: `adjust: 0.5` halves the smoothing.
 ///
 /// \@returns Position dictionary with `name: "beeswarm"`, consumed by \@plot.
 ///
@@ -51,11 +52,15 @@
 /// ```
 ///
 /// \@see \@position-jitter, \@geom-beeswarm
-#let position-beeswarm(width: 0.4, adjust: 1) = (
-  kind: "position",
-  name: "beeswarm",
-  params: (width: width, adjust: adjust),
-)
+#let position-beeswarm(width: 0.4, adjust: 1) = {
+  assert-number("position-beeswarm", "width", width, min: 0)
+  assert-number("position-beeswarm", "adjust", adjust, positive: true)
+  (
+    kind: "position",
+    name: "beeswarm",
+    params: (width: width, adjust: adjust),
+  )
+}
 
 // Van der Corput base-2 value for a 1-indexed rank: the bit-reversed
 // fraction (1 → 0.5, 2 → 0.25, 3 → 0.75, ...), which spreads consecutive

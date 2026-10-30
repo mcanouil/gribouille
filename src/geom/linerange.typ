@@ -1,5 +1,7 @@
 ///! Vertical range from `ymin` to `ymax` at each `x`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -96,17 +98,22 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "linerange",
-  mapping: mapping,
-  data: data,
-  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
-    + split-aes-params("geom-linerange", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-alpha("geom-linerange", alpha)
+  assert-linetype("geom-linerange", linetype)
+  assert-position("geom-linerange", position)
+  make-layer(
+    "linerange",
+    mapping: mapping,
+    data: data,
+    params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
+      + split-aes-params("geom-linerange", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 // Build one row's vertical range line, horizontal under coord-flip and an arc
 // when the range sweeps theta under coord-radial; shared with geom-pointrange.

@@ -5,6 +5,7 @@
 ///! Under \@coord-flip the line is drawn as a vertical reference at the same
 ///! data value because the y axis becomes the rendered horizontal axis.
 
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../layer.typ": make-layer, split-aes-params
 #import "ref-line.typ": _draw-axis-lines
 
@@ -107,21 +108,25 @@
   key: auto,
   inherit-aes: false,
   ..args,
-) = make-layer(
-  "hline",
-  mapping: mapping,
-  data: data,
-  params: (
-    yintercept: yintercept,
-    colour: colour,
-    stroke: stroke,
-    alpha: alpha,
-    linetype: linetype,
+) = {
+  assert-alpha("geom-hline", alpha)
+  assert-linetype("geom-hline", linetype)
+  make-layer(
+    "hline",
+    mapping: mapping,
+    data: data,
+    params: (
+      yintercept: yintercept,
+      colour: colour,
+      stroke: stroke,
+      alpha: alpha,
+      linetype: linetype,
+    )
+      + split-aes-params("geom-hline", args, spec.reads),
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-hline", args, spec.reads),
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   _draw-axis-lines(layer.params.yintercept, "y", layer, ctx)

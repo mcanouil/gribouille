@@ -5,6 +5,8 @@
 ///! Size, shape, and alpha can each be mapped or set as fixed layer
 ///! parameters.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/palette.typ": default-shapes, palette-at, spec-palette
@@ -163,24 +165,28 @@
   position: "identity",
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "point",
-  mapping: mapping,
-  data: data,
-  params: (
-    size: size,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
-    shape: shape,
+) = {
+  assert-position("geom-point", position)
+  assert-alpha("geom-point", alpha)
+  make-layer(
+    "point",
+    mapping: mapping,
+    data: data,
+    params: (
+      size: size,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+      shape: shape,
+    )
+      + split-aes-params("geom-point", args, spec.reads),
+    key: key,
+    stat: stat,
+    position: position,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-point", args, spec.reads),
-  key: key,
-  stat: stat,
-  position: position,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   if layer.params.shape == none { return }

@@ -3,6 +3,8 @@
 ///! Adds short ticks just outside the panel edges to expose the raw
 ///! distribution of one or both positional aesthetics.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, fail-type
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -103,23 +105,49 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "rug",
-  mapping: mapping,
-  data: data,
-  params: (
-    sides: sides,
-    length: length,
-    stroke: stroke,
-    colour: colour,
-    alpha: alpha,
+) = {
+  assert-position("geom-rug", position)
+  assert-alpha("geom-rug", alpha)
+  if (
+    sides != none
+      and (
+        type(sides) != str
+          or sides.clusters().any(c => c not in ("b", "t", "l", "r"))
+      )
+  ) {
+    fail-type(
+      "geom-rug",
+      "sides",
+      sides,
+      "a string of the codes `b`, `t`, `l`, `r`, or `none`",
+    )
+  }
+  if type(length) != std.length or length < 0cm {
+    fail-type(
+      "geom-rug",
+      "length",
+      length,
+      "a non-negative length such as `0.15cm`",
+    )
+  }
+  make-layer(
+    "rug",
+    mapping: mapping,
+    data: data,
+    params: (
+      sides: sides,
+      length: length,
+      stroke: stroke,
+      colour: colour,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-rug", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-rug", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
