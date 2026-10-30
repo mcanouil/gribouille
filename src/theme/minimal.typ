@@ -92,12 +92,12 @@
   ..fields,
 ) = {
   let _paper = if paper == auto { _tr-paper } else { paper }
-  let surfaces = if paper == auto {
-    minimal-surfaces(ink, _paper)
+  let surfaces = (ink, background) => if paper == auto {
+    minimal-surfaces(ink, background)
   } else {
     (
-      ..minimal-surfaces(ink, _paper),
-      plot-background: element-rect(fill: _paper),
+      ..minimal-surfaces(ink, background),
+      plot-background: element-rect(fill: background),
     )
   }
   _preset("minimal", ink, _paper, accent, surfaces, fields)

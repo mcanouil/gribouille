@@ -179,46 +179,154 @@
   }
 }
 
-// Panic unless `size` is an absolute length, a ratio (a `%` value relative to
-// the parent surface size), or `none` (inherit). Guards against passing a raw
-// number or string where a typed size is expected.
-#let assert-text-size(scope, size) = {
-  if size != none and type(size) != length and type(size) != ratio {
+// Panic unless `value` is an absolute length, a ratio (a `%` value relative to
+// the parent surface), or `none` (inherit), and is not below zero. `given` is
+// the value as the caller wrote it, for the message.
+#let _assert-extent(scope, name, value, given, expected, hint) = {
+  if value != none and type(value) not in (length, ratio) {
+    fail-type(scope, name, given, expected, hint: hint)
+  }
+  let zero = if type(value) == length { 0pt } else { 0% }
+  if type(value) in (length, ratio) and value < zero {
     fail-type(
       scope,
-      "size",
-      size,
-      "a length (e.g., `12pt`), a ratio (e.g., `80%`), or `none`",
-      hint: "Use `12pt` for an absolute size or `80%` to scale the parent size.",
+      name,
+      given,
+      "a length or ratio of at least 0",
+      hint: hint,
     )
   }
 }
 
-// Panic unless `stroke` is an absolute length, a ratio (a `%` value relative to
-// the parent surface stroke), or `none` (inherit). Guards against passing a raw
-// number or string where a typed stroke thickness is expected.
-#let assert-stroke(scope, stroke) = {
-  if stroke != none and type(stroke) != length and type(stroke) != ratio {
+// Panic unless `size` is a length or ratio of at least 0, or `none` (inherit).
+// Guards against passing a raw number or string where a typed size is expected.
+#let assert-text-size(scope, size) = _assert-extent(
+  scope,
+  "size",
+  size,
+  size,
+  "a length (e.g., `12pt`), a ratio (e.g., `80%`), or `none`",
+  "Use `12pt` for an absolute size or `80%` to scale the parent size.",
+)
+
+// Panic unless `stroke` is a length or ratio of at least 0, or `none`
+// (inherit). `given` is the value before `split-stroke-shorthand` reduced a
+// native `stroke(...)`, so the message shows what the user wrote. A dictionary
+// here means that `stroke(...)` carried a dash, cap, join or miter limit.
+#let assert-stroke(scope, stroke, given: auto) = {
+  let shown = if given == auto { stroke } else { given }
+  if type(stroke) == dictionary {
     fail-type(
       scope,
       "stroke",
-      stroke,
+      shown,
       "a length (e.g., `1pt`), a ratio (e.g., `80%`), or `none`",
-      hint: "Use `1pt` for an absolute thickness or `80%` to scale the parent stroke.",
+      hint: "Dash, cap and join are not supported; this stroke sets "
+        + stroke.keys().filter(k => k != "thickness").join(", ")
+        + ". Set a thickness and a separate `colour`.",
+    )
+  }
+  _assert-extent(
+    scope,
+    "stroke",
+    stroke,
+    shown,
+    "a length (e.g., `1pt`), a ratio (e.g., `80%`), or `none`",
+    "Use `1pt` for an absolute thickness or `80%` to scale the parent stroke.",
+  )
+}
+
+// Panic unless `value` is a length or ratio of at least 0, or `none` (inherit).
+#let assert-tick-length(scope, value) = _assert-extent(
+  scope,
+  "length",
+  value,
+  value,
+  "a length (e.g., `0.1cm`), a ratio (e.g., `50%`), or `none`",
+  "Use `0.1cm` for an absolute tick length or `50%` to scale the parent length.",
+)
+
+// Panic unless `value` is `none` (inherit) or a colour, gradient or tiling.
+#let assert-paint(scope, name, value) = {
+  if value != none and type(value) not in (color, gradient, tiling) {
+    fail-type(
+      scope,
+      name,
+      value,
+      "a colour, a gradient, a tiling, or `none`",
+      hint: "Pass an `rgb(...)` value, not a string.",
     )
   }
 }
 
-// Panic unless `length` is an absolute length, a ratio (a `%` value relative to
-// the parent surface tick length), or `none` (inherit).
-#let assert-tick-length(scope, value) = {
-  if value != none and type(value) != length and type(value) != ratio {
+// Panic unless `value` is a colour. Used where the value is mixed with another
+// colour, which a gradient or a tiling cannot be.
+#let assert-colour(scope, name, value, none-ok: true) = {
+  if value == none and none-ok { return }
+  if type(value) != color {
     fail-type(
       scope,
-      "length",
+      name,
       value,
-      "a length (e.g., `0.1cm`), a ratio (e.g., `50%`), or `none`",
-      hint: "Use `0.1cm` for an absolute tick length or `50%` to scale the parent length.",
+      if none-ok { "a colour, or `none`" } else { "a colour" },
+      hint: "Pass an `rgb(...)` value, not a string.",
+    )
+  }
+}
+
+// Panic unless `angle` is `none` (inherit) or a Typst angle.
+#let assert-angle(scope, angle) = {
+  if angle != none and type(angle) != std.angle {
+    fail-type(
+      scope,
+      "angle",
+      angle,
+      "an angle such as `45deg`, or `none`",
+      hint: "Use `45deg`, not the number `45`.",
+    )
+  }
+}
+
+// Panic unless `weight` is `none` (inherit), a whole number, or a weight name.
+#let assert-weight(scope, weight) = {
+  if weight != none and type(weight) not in (int, str) {
+    fail-type(
+      scope,
+      "weight",
+      weight,
+      "a whole number such as `700`, a name such as `\"bold\"`, or `none`",
+    )
+  }
+}
+
+// Panic unless `font` is `none` (keep the document font), a family name, an
+// array of family names, or a font dictionary.
+#let assert-font(scope, font) = {
+  if font != none and type(font) not in (str, array, dictionary) {
+    fail-type(
+      scope,
+      "font",
+      font,
+      "a font family name, an array of names, or `none`",
+    )
+  }
+}
+
+// Panic unless `value` is `none` or a `margin(...)` record. Anything else is
+// not a margin, and the theme could only discard it.
+#let assert-margin(scope, name, value) = {
+  if (
+    value != none
+      and (
+        type(value) != dictionary or value.at("kind", default: none) != "margin"
+      )
+  ) {
+    fail-type(
+      scope,
+      name,
+      value,
+      "a `margin(...)` record, or `none`",
+      hint: "Build it with `margin(top: 0.4cm, ...)`; a bare length is not a margin.",
     )
   }
 }

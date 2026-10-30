@@ -3,6 +3,8 @@
 ///! Plots that do not specify an explicit `theme:` argument inherit the
 ///! global theme.
 
+#import "../utils/errors.typ": fail-type
+
 #let _theme-state = state("gribouille-theme", none)
 
 /// Set the global default theme for all subsequent plots.
@@ -30,7 +32,17 @@
 /// ```
 ///
 /// \@see \@theme-get, \@theme
-#let theme-set(theme) = _theme-state.update(theme)
+#let theme-set(theme) = {
+  if theme != none and type(theme) != dictionary {
+    fail-type(
+      "theme-set",
+      "theme",
+      theme,
+      "a theme dictionary from `theme()` or a `theme-*` preset, or `none`",
+    )
+  }
+  _theme-state.update(theme)
+}
 
 /// Get the current global default theme.
 ///

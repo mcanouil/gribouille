@@ -6,7 +6,7 @@
 #import "../utils/brand-yml.typ": brand-colours, brand-font, brand-palette-from
 #import "defaults.typ": _tr-ink, _tr-paper, default-theme, minimal-surfaces
 #import "elements.typ": element-rect
-#import "theme.typ": _preset
+#import "theme.typ": _preset, assert-palette
 
 // Set a font on an element record without rebuilding it: `merge-theme`
 // replaces a record wholesale, so a bare `element-text(font: ...)` would drop
@@ -156,6 +156,7 @@
   let ink = colours.at("foreground", default: _tr-ink)
   let paper = colours.at("background", default: _tr-paper)
   let accent = colours.at("primary", default: default-theme.accent)
+  if palette not in (auto, none) { assert-palette("theme-brand", palette) }
   let derived = if palette == auto { brand-palette-from(colours) } else {
     palette
   }
@@ -164,7 +165,7 @@
     ink,
     paper,
     accent,
-    (
+    (ink, paper) => (
       ..minimal-surfaces(ink, paper),
       // Paint the canvas: a dark brand on an unpainted background leaves
       // light ink on a white page.

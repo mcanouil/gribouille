@@ -10,7 +10,7 @@
   element-tick,
 )
 #import "theme.typ": _surface-parent, default-stroke-thickness
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail, fail-type
 
 // Read document colours injected by the typst-render Quarto extension via
 // --input flags. Falls back to black/white when rendering standalone.
@@ -136,7 +136,19 @@
 // outside this set is never queried, so it would silently do nothing.
 #let _KNOWN-THEME-KEYS = default-theme.keys() + _surface-parent.keys()
 
+// Keys whose value is an element record: every surface with a parent, plus the
+// three base records those surfaces inherit from.
+#let _ELEMENT-KEYS = _surface-parent.keys() + ("text", "line", "rect")
+
 #let merge-theme(user) = {
+  if user != none and type(user) != dictionary {
+    fail-type(
+      "theme",
+      "theme",
+      user,
+      "a theme dictionary from `theme()` or a `theme-*` preset, or `none`",
+    )
+  }
   let src = if user == none { minimal-surfaces(_tr-ink, _tr-paper) } else {
     user
   }
@@ -148,6 +160,27 @@
         "unknown element " + repr(k),
         hint: "Key overrides by element, e.g. \"axis-text\", \"panel-grid\", "
           + "\"legend-background\"; see the theme reference for the full set.",
+      )
+    }
+    if k in _ELEMENT-KEYS and type(v) != dictionary {
+      fail-type(
+        "theme",
+        k,
+        v,
+        "an element record such as `element-line(...)` or `element-blank()`",
+        hint: "Build it with `element-text`, `element-line`, `element-tick`, `element-rect` or `element-blank`.",
+      )
+    }
+    if (
+      k == "geom"
+        and (type(v) != dictionary or v.at("kind", default: none) != "element-geom")
+    ) {
+      fail-type(
+        "theme",
+        k,
+        v,
+        "an `element-geom(...)` record",
+        hint: "Build it with `element-geom(fill: ..., colour: ..., linewidth: ...)`.",
       )
     }
     merged.insert(k, v)

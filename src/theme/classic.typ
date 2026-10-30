@@ -77,7 +77,7 @@
   ink,
   paper,
   accent,
-  (
+  (ink, paper) => (
     panel-background: element-rect(fill: paper),
     panel-grid: element-blank(),
     axis-line: element-line(colour: ink, stroke: (0.6 / 0.5) * 100%),

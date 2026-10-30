@@ -10,7 +10,7 @@
 
 #import "elements.typ": element-geom
 #import "../utils/colour.typ": colour-mix
-#import "../utils/errors.typ": fail, fail-type
+#import "../utils/errors.typ": assert-colour, fail, fail-type
 #import "../utils/palette.typ": default-discrete
 #import "../utils/margin.typ": (
   resolve-margin-side-cm, resolve-margin-side-rel-cm,
@@ -214,6 +214,26 @@
   g
 }
 
+/// Fail unless `palette` is a non-empty array of colours.
+///
+/// \@internal
+/// \@param scope Public function that took the palette, e.g., `"theme"`.
+///
+/// \@param palette The value to check.
+#let assert-palette(scope, palette) = {
+  if type(palette) != array or palette.len() == 0 {
+    fail-type(
+      scope,
+      "palette",
+      palette,
+      "a non-empty array of colours, or `auto` for the library default",
+      hint: "Pass e.g. "
+        + scope
+        + "(palette: (rgb(\"#e94c3d\"), rgb(\"#1f7a8c\"))).",
+    )
+  }
+}
+
 /// Resolve the theme's default palette for discrete colour / fill scales.
 ///
 /// `auto` (and a partial theme missing the key) yields the library default,
@@ -229,15 +249,7 @@
   if theme == none { return default-discrete }
   let p = theme.at("palette", default: auto)
   if p == auto or p == none { return default-discrete }
-  if type(p) != array or p.len() == 0 {
-    fail-type(
-      "theme",
-      "palette",
-      p,
-      "a non-empty array of colours, or `auto` for the library default",
-      hint: "Pass e.g. theme(palette: (rgb(\"#e94c3d\"), rgb(\"#1f7a8c\"))).",
-    )
-  }
+  assert-palette("theme", p)
   p
 }
 
@@ -619,6 +631,21 @@
   out
 }
 
+// Fail unless a theme-building function got only named arguments.
+#let _assert-named(scope, fields) = {
+  if fields.pos().len() != 0 {
+    fail(
+      scope,
+      "expects named element overrides; got "
+        + str(fields.pos().len())
+        + " positional value(s)",
+      hint: "Key each override by element, e.g. "
+        + scope
+        + "(axis-text: element-text(...)).",
+    )
+  }
+}
+
 #let _apply-overrides(out, fields) = {
   for (k, v) in fields.named().pairs() {
     out = _apply-element(out, k, v)
@@ -642,11 +669,16 @@
 ///
 /// \@param accent Accent colour.
 ///
-/// \@param surfaces Dict of surface keys to element records.
+/// \@param surfaces Function from `ink` and `paper` to a dict of surface keys and element records. It runs after the colours pass their checks.
 ///
 /// \@param fields Rest-binding capture forwarded from the preset constructor.
 /// \@returns A theme dict ready for the renderer.
 #let _preset(name, ink, paper, accent, surfaces, fields) = {
+  let scope = "theme-" + name
+  _assert-named(scope, fields)
+  assert-colour(scope, "ink", ink, none-ok: false)
+  assert-colour(scope, "paper", paper, none-ok: false)
+  assert-colour(scope, "accent", accent, none-ok: false)
   let base = (
     kind: "theme",
     name: name,
@@ -654,7 +686,7 @@
     paper: paper,
     accent: accent,
   )
-  for (k, v) in surfaces.pairs() {
+  for (k, v) in surfaces(ink, paper).pairs() {
     if v == none { continue }
     base.insert(k, v)
   }
@@ -775,14 +807,9 @@
 ///
 /// \@see \@theme-grey, \@theme-minimal, \@theme-classic, \@theme-void, \@element-text, \@element-line, \@element-tick, \@element-rect, \@element-blank, \@margin
 #let theme(..fields) = {
-  if fields.pos().len() != 0 {
-    fail(
-      "theme",
-      "expects named element overrides; got "
-        + str(fields.pos().len())
-        + " positional value(s)",
-      hint: "Key each override by element, e.g. theme(axis-text: element-text(...)).",
-    )
+  _assert-named("theme", fields)
+  for role in ("ink", "paper", "accent") {
+    assert-colour("theme", role, fields.named().at(role, default: none))
   }
   let out = (kind: "theme", name: "custom")
   _apply-overrides(out, fields)

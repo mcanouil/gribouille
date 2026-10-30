@@ -82,20 +82,19 @@
   // a 5pt inset on every side, which is a third of a centimetre off each
   // dimension and the difference between drawing and failing at sparkline
   // sizes. Only an explicit `margin(...)` record clears it: `_merge-element`
-  // skips `none`, and `_normalise-margin` discards anything that is not a
-  // `margin`, so both `inset: none` and `inset: 0pt` leave the default standing.
-  let _plot-bg = element-rect(
-    fill: if paper == auto { none } else { _paper },
-    inset: margin(top: 0pt, right: 0pt, bottom: 0pt, left: 0pt),
-  )
+  // skips `none`, so `inset: none` leaves the default standing, and
+  // `element-rect` rejects `inset: 0pt` because it is not a `margin`.
   _preset(
     "void",
     ink,
     _paper,
     accent,
-    (
+    (ink, background) => (
       panel-background: element-blank(),
-      plot-background: _plot-bg,
+      plot-background: element-rect(
+        fill: if paper == auto { none } else { background },
+        inset: margin(top: 0pt, right: 0pt, bottom: 0pt, left: 0pt),
+      ),
       panel-grid: element-blank(),
       axis-line: element-blank(),
       axis-title: element-text(size: 0pt),

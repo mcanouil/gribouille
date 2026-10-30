@@ -1,0 +1,12 @@
+// A negative element stroke fails at the builder.
+//
+// `tools/check-errors.sh` compiles this file, requires the compile to fail, and
+// requires the `error:` line to carry every phrase below.
+//
+// expect: element-line: stroke must be a length or ratio of at least 0; got -1pt
+
+#import "/lib.typ": *
+
+#set page(width: 10cm, height: 8cm, margin: 0pt)
+
+#element-line(stroke: -1pt)
