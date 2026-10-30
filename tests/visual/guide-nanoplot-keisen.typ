@@ -9,7 +9,7 @@
 // the local checkout; it moves to @preview/keisen once that release is out.
 
 #import "../../lib.typ": *
-#import "@local/keisen:0.1.0" as keisen
+#import "@preview/keisen:0.2.0" as keisen
 
 #set page(width: auto, height: auto, margin: 0.4cm)
 #set text(size: 7pt)
