@@ -3,7 +3,9 @@
 // the axis switch.
 
 #import "../../lib.typ": *
-#import "../../src/integration/nanoplot.typ": _axis-theme, _x-scale
+#import "../../src/integration/nanoplot.typ": (
+  _auto-axis-height, _axis-theme, _coord, _x-scale,
+)
 #import "../../src/theme/theme.typ": _rect-style, resolve-element
 
 #let renderer = nanoplot(
@@ -38,27 +40,35 @@
   (2.0,),
 )
 
-// The shared domain becomes the x limits, the expansion stays at Gribouille's
-// default unless the user scale sets one, and the other arguments stay.
-#let bare = _x-scale((:), (0, 10))
-#assert.eq(bare.limits, (0, 10))
+// The cells and the axis share the user's x scale, expansion included, and the
+// domain is no scale limit, so a geom that draws whole marks cannot widen it.
+#let bare = _x-scale((:))
+#assert.eq(bare.at("limits", default: none), none)
 #assert.eq(bare.expand, auto)
-#let user = _x-scale(
-  scales(x: scale-continuous(
-    breaks: (2, 4),
-    labels: format-comma(),
-    expand: 5%,
-  )),
-  (1, 9),
-)
-#assert.eq(user.limits, (1, 9))
+#let user = _x-scale(scales(x: scale-continuous(
+  breaks: (2, 4),
+  labels: format-comma(),
+  expand: 5%,
+)))
+#assert.eq(user.at("limits", default: none), none)
 #assert.eq(user.breaks, (2, 4))
 #assert.eq(user.expand, 5%)
 #assert.eq(type(user.labels), function)
-#assert.eq(_x-scale(scales(x: scale-continuous(limits: (0, 3))), none).limits, (
-  0,
-  3,
-))
+#assert.eq(_x-scale(scales(x: scale-continuous(limits: (0, 3)))).limits, (0, 3))
+
+// The domain is the x limits of the coordinate system.
+#assert.eq(_coord(none), none)
+#assert.eq(_coord((0, 10)).x-limits, (0, 10))
+
+// The default axis height follows the axis text of the theme and its tick.
+#let height(theme) = _auto-axis-height(
+  _axis-theme(theme, "bottom", 3cm),
+  "bottom",
+)
+#assert(
+  height(theme-bw(axis-text: element-text(size: 20pt))) > height(theme-bw()),
+)
+#assert(height(theme-void()) > 0pt)
 
 // The axis canvas reaches far past the column on each side, so the axis draws
 // no spine and no plot background, which would reach past the column too.

@@ -10,12 +10,15 @@
 #import "../aes.typ": aes
 #import "../guides.typ": guides
 #import "../labels.typ": labels
+#import "../coord/cartesian.typ": coord-cartesian
 #import "../geom/blank.typ": geom-blank
 #import "../scale/continuous.typ": _continuous-scale
 #import "../scale/expansion.typ": normalise-expansion
 #import "../scale/secondary.typ": dup-axis
 #import "../theme/void.typ": theme-void
-#import "../theme/theme.typ": _normalise-margin, resolve-element
+#import "../theme/theme.typ": (
+  _normalise-margin, _text-style, _tick-length, resolve-element,
+)
 #import "../theme/elements.typ": (
   element-blank, element-rect, element-text, margin,
 )
@@ -52,14 +55,15 @@
     ))
 }
 
-// The x scale the cells and the axis share: the user's scale with the column
-// domain as its limits. Its other fields stay, the expansion included, so a mark
-// at the end of the domain is drawn whole under Gribouille's default expansion.
-#let _x-scale(scales, domain) = {
-  let x = scales.at("x", default: none)
-  if x == none { x = _continuous-scale("x") }
-  if domain != none { x.insert("limits", (domain.first(), domain.last())) }
-  x
+// The x scale the cells and the axis share: the user's scale, expansion
+// included.
+#let _x-scale(scales) = scales.at("x", default: _continuous-scale("x"))
+
+// The coordinate system the cells and the axis share. The column domain is set
+// as `x-limits` and not as scale limits, because a geom that draws whole marks
+// widens a scale past its limits, and each cell would then widen its own scale.
+#let _coord(domain) = if domain == none { none } else {
+  coord-cartesian(x-limits: (domain.first(), domain.last()))
 }
 
 // The axis is drawn on a canvas `pad` wider on each side, with `pad` added to
@@ -141,6 +145,12 @@
   out
 }
 
+// The height the axis needs: its tick, and a line of its label text.
+#let _auto-axis-height(axis-theme, side) = {
+  let label = _text-style(axis-theme, "axis-text-x-" + side).size
+  _tick-length(axis-theme, "axis-ticks-x-" + side) + 1.4 * label
+}
+
 /// Draw a Gribouille plot in each cell of a keisen nanoplot column, with a shared axis.
 ///
 /// `nanoplot` returns a keisen nanoplot renderer.
@@ -155,9 +165,9 @@
 ///
 /// When `axis` is `true`, keisen draws the x axis of the column below the column labels and again after the last row.
 /// The axis uses the same x scale and theme as the cells, so each break lines up with the cells.
-/// This is not true for a geom that widens the x scale past its limits to draw whole marks, such as \@geom-col, \@geom-tile or \@geom-histogram: it widens the scale of the cells, but not the scale of the axis.
-/// For these geoms, give keisen's `format-nanoplot` a `domain` that holds the whole marks, for example half a bar width past each end, as in `domain: (-0.5, 10.5)` for bars at 0 to 10.
-/// A wider `expand` does not help, because the cells widen their scale past the limits all the same.
+/// The cells and the axis set the column domain as the `x-limits` of \@coord-cartesian, so a geom that draws whole marks, such as \@geom-col, \@geom-tile or \@geom-histogram, does not widen the scale of a cell.
+/// A mark at the end of the domain is centred on the end, and the part of it past the end is drawn into the cell margin.
+/// To draw whole marks, give keisen's `format-nanoplot` a `domain` that holds them, for example half a bar width past each end, as in `domain: (-0.5, 10.5)` for bars at 0 to 10.
 /// A tick label at the end of the domain is centred on the end, so half of it can go past the column content into the cell inset.
 /// It draws the tick labels even when the theme hides them, as \@theme-void does.
 /// The axis draws no axis line and no plot background, even when the theme sets them.
@@ -182,9 +192,9 @@
 ///
 /// \@param axis `true` (default) gives the column an x axis; `false` gives it none.
 ///
-/// \@param axis-height Height of the axis, as a length; default `1.4em`.
-///   The axis text takes its size from the theme, not from the table.
-///   If the theme text is larger than the table text, increase `axis-height` so the tick labels fit.
+/// \@param axis-height Height of the axis, as a length; default `auto`.
+///   `auto` gives the height of the axis ticks plus 1.4 times the size of the axis text of the theme.
+///   The axis text takes its size from the theme, not from the table, so give a length only to set the height yourself.
 ///
 /// \@returns A keisen nanoplot renderer, `(kind: "nanoplot-renderer", draw, readings, axis)`.
 ///
@@ -238,7 +248,7 @@
   theme: none,
   domain-field: none,
   axis: true,
-  axis-height: 1.4em,
+  axis-height: auto,
 ) = {
   if type(domain-field) != str {
     fail-type(
@@ -271,12 +281,12 @@
   if type(axis) != bool {
     fail-type("nanoplot", "axis", axis, "a boolean")
   }
-  if type(axis-height) != length {
+  if axis-height != auto and type(axis-height) != length {
     fail-type(
       "nanoplot",
       "axis-height",
       axis-height,
-      "a length",
+      "auto or a length",
       hint: "Give it in em or pt, as in 1.4em.",
     )
   }
@@ -297,7 +307,8 @@
     data: value,
     mapping: mapping,
     layers: layers,
-    scales: scales + (x: _x-scale(scales, domain)),
+    scales: scales + (x: _x-scale(scales)),
+    coord: _coord(domain),
     theme: cell-theme,
     labels: labels(x: none, y: none),
     guides: guides(default: none, x: none, y: none),
@@ -310,15 +321,19 @@
     if domain == none { return none }
     context {
       let width = width.to-absolute()
-      let height = axis-height.to-absolute()
+      let axis-theme = _axis-theme(cell-theme, side, width)
+      let height = if axis-height == auto {
+        _auto-axis-height(axis-theme, side)
+      } else { axis-height.to-absolute() }
       // Wider than half of any tick label, so no label reaches past the canvas.
       let pad = width + 4cm
       box(width: width, height: height, place(top + left, dx: -pad, plot(
         data: ((x: domain.first(), y: 0), (x: domain.last(), y: 0)),
         mapping: aes(x: "x", y: "y"),
         layers: (geom-blank(),),
-        scales: (x: _axis-scale(_x-scale(scales, domain), pad, side)),
-        theme: _axis-theme(cell-theme, side, width),
+        scales: (x: _axis-scale(_x-scale(scales), pad, side)),
+        coord: _coord(domain),
+        theme: axis-theme,
         labels: labels(x: none, y: none),
         guides: guides(default: none, y: none),
         width: width + 2 * pad,
