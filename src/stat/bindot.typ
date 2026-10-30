@@ -7,7 +7,7 @@
 
 #import "../utils/types.typ": parse-number
 #import "../utils/bin.typ": (
-  bin-midpoint, bin-of, panel-bin-grid, resolve-bin-grid,
+  bin-midpoint, bin-of, check-bin-params, panel-bin-grid, resolve-bin-grid,
 )
 #import "../utils/aes-resolve.typ": stat-output-mapping
 
@@ -47,18 +47,21 @@
 /// ```
 ///
 /// \@see \@geom-dotplot, \@stat-bin
-#let stat-bindot(bins: 30, binwidth: none, stackratio: 1.0) = (
-  kind: "stat",
-  name: "bindot",
-  params: (bins: bins, binwidth: binwidth, stackratio: stackratio),
-)
+#let stat-bindot(bins: 30, binwidth: none, stackratio: 1.0) = {
+  check-bin-params("stat-bindot", bins, binwidth)
+  (
+    kind: "stat",
+    name: "bindot",
+    params: (bins: bins, binwidth: binwidth, stackratio: stackratio),
+  )
+}
 
 #let apply(data, mapping, params: (:)) = {
   let x-col = if mapping != none { mapping.at("x", default: none) } else {
     none
   }
-  if x-col == none { return (data: data, mapping: mapping) }
   let new-mapping = stat-output-mapping(mapping, (x: "x", y: "y"))
+  if x-col == none { return (data: (), mapping: new-mapping) }
   let xs = data
     .map(r => parse-number(r.at(x-col, default: none)))
     .filter(v => v != none)

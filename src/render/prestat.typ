@@ -3,10 +3,11 @@
 
 #import "../scale/train.typ": (
   _SYNTHETIC-FEEDERS, _find-user-scale, _resolve-forced-type, level-position,
-  mapping-ref-col, transform-fwd,
+  mapping-ref-col, scope-of, transform-fwd,
 )
 #import "../utils/types.typ": infer-column-type, parse-number
 #import "../utils/aes-resolve.typ": merge-mapping
+#import "../scale/arguments.typ": check-transform-domain
 #import "common.typ": _resolve-data
 
 // Collect unique levels of a column from the raw (pre-stat) data across all
@@ -40,33 +41,46 @@
     if s == none { continue }
     if s.at("type", default: none) != "continuous" { continue }
     let t = s.at("transform", default: "identity")
-    if _PRE-STAT-TRANSFORMS.contains(t) { result.insert(axis, t) }
+    if _PRE-STAT-TRANSFORMS.contains(t) {
+      result.insert(axis, (transform: t, scope: scope-of(s)))
+    }
   }
   result
 }
 
-// (column, transform) pairs to rewrite on each row of a layer. Synthetic
-// feeders share the axis's pre-stat transform.
+// (column, transform, scope, aesthetic) records to rewrite on each row of a
+// layer.
+// Synthetic feeders share the axis's pre-stat transform.
 #let _pre-transform-cols(mapping, pre) = {
   if mapping == none { return () }
   let pairs = ()
-  for (axis, t) in pre.pairs() {
+  for (axis, entry) in pre.pairs() {
     let feeders = (axis,) + _SYNTHETIC-FEEDERS.filter(s => s.starts-with(axis))
     for f in feeders {
       let raw = mapping.at(f, default: none)
       if raw == none { continue }
-      pairs.push((mapping-ref-col(raw), t))
+      pairs.push((col: mapping-ref-col(raw), aesthetic: f, ..entry))
     }
   }
   pairs
 }
 
+// A cell outside the domain of the transform fails here, where the cell the
+// user wrote is still at hand, so the message prints it before parsing.
 #let _pre-transform-row(row, col-trans) = {
   let new-row = row
-  for (col, transform) in col-trans {
-    let v = parse-number(row.at(col, default: none))
+  for entry in col-trans {
+    let raw = row.at(entry.col, default: none)
+    let v = parse-number(raw)
     if v == none { continue }
-    new-row.insert(col, transform-fwd(transform, v))
+    check-transform-domain(
+      entry.scope,
+      entry.aesthetic,
+      raw,
+      v,
+      entry.transform,
+    )
+    new-row.insert(entry.col, transform-fwd(entry.transform, v))
   }
   new-row
 }

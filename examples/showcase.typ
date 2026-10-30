@@ -26,7 +26,7 @@
     colour: "Species",
     fill: "Species",
   ),
-  theme: theme-minimal(legend-position: bottom + right,),
+  theme: theme-minimal(legend-position: bottom + right),
   width: 12cm,
   height: 9cm,
 )

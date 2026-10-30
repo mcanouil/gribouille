@@ -7,6 +7,7 @@
 
 #import "types.typ": parse-number
 #import "errors.typ": fail, fail-type
+#import "format.typ": format-break
 #import "summaries.typ": quantile-type-7
 
 // Keeps `none` entries (unlike `types.to-numeric`) so bin labels stay
@@ -19,17 +20,37 @@
   values.filter(v => v != none)
 }
 
-#let _format-number(v) = {
-  if type(v) == int { return str(v) }
-  let s = str(v)
-  if s.ends-with(".0") { s.slice(0, s.len() - 2) } else { s }
-}
-
 #let _default-label(lo, hi) = {
-  "(" + _format-number(lo) + "," + _format-number(hi) + "]"
+  "(" + format-break(lo) + "," + format-break(hi) + "]"
 }
 
-#let _resolve-labels(breaks, labels) = {
+#let _check-labels-type(scope, labels) = {
+  if labels != auto and type(labels) != array {
+    fail-type(scope, "labels", labels, "`auto` or an array")
+  }
+}
+
+#let _check-count(scope, n) = {
+  if type(n) != int { fail-type(scope, "n", n, "a positive integer") }
+  if n < 1 { fail(scope, "n must be >= 1; got " + repr(n)) }
+}
+
+// Labels for the single bin that a constant vector falls in.
+#let _single-label(scope, lo, hi, labels, reason) = {
+  let single = if labels == auto { (_default-label(lo, hi),) } else { labels }
+  if single.len() != 1 {
+    fail(
+      scope,
+      "labels must be a single-element array when "
+        + reason
+        + "; got "
+        + repr(labels),
+    )
+  }
+  single.at(0)
+}
+
+#let _resolve-labels(scope, breaks, labels) = {
   let n = breaks.len() - 1
   if labels == auto {
     let out = ()
@@ -40,12 +61,9 @@
     }
     return out
   }
-  if type(labels) != array {
-    fail-type("cut", "labels", labels, "`auto` or an array")
-  }
   if labels.len() != n {
     fail(
-      "cut",
+      scope,
       "labels length "
         + str(labels.len())
         + " does not match number of bins "
@@ -108,7 +126,8 @@
 /// )
 /// ```
 #let cut-interval(values, n: 4, labels: auto) = {
-  if n < 1 { fail("cut-interval", "n must be >= 1; got " + repr(n)) }
+  _check-count("cut-interval", n)
+  _check-labels-type("cut-interval", labels)
   let parsed = _parse-numbers(values)
   let numeric = _filter-numeric(parsed)
   if numeric.len() == 0 {
@@ -117,18 +136,12 @@
   let lo = calc.min(..numeric)
   let hi = calc.max(..numeric)
   if lo == hi {
-    let single = if labels == auto { (_default-label(lo, hi),) } else { labels }
-    if type(single) != array or single.len() != 1 {
-      fail(
-        "cut-interval",
-        "labels must be a single-element array when min == max",
-      )
-    }
-    return parsed.map(v => if v == none { none } else { single.at(0) })
+    let single = _single-label("cut-interval", lo, hi, labels, "min == max")
+    return parsed.map(v => if v == none { none } else { single })
   }
   let step = (hi - lo) / n
   let breaks = range(0, n + 1).map(i => lo + i * step)
-  let label-arr = _resolve-labels(breaks, labels)
+  let label-arr = _resolve-labels("cut-interval", breaks, labels)
   parsed.map(v => _assign-bin(v, breaks, label-arr))
 }
 
@@ -167,7 +180,8 @@
 /// )
 /// ```
 #let cut-number(values, n: 4, labels: auto) = {
-  if n < 1 { fail("cut-number", "n must be >= 1; got " + repr(n)) }
+  _check-count("cut-number", n)
+  _check-labels-type("cut-number", labels)
   let parsed = _parse-numbers(values)
   let numeric = _filter-numeric(parsed)
   if numeric.len() == 0 {
@@ -178,16 +192,25 @@
   let lo = breaks.at(0)
   let hi = breaks.at(n)
   if lo == hi {
-    let single = if labels == auto { (_default-label(lo, hi),) } else { labels }
-    if type(single) != array or single.len() != 1 {
-      fail(
-        "cut-number",
-        "labels must be a single-element array when all values are equal",
-      )
-    }
-    return parsed.map(v => if v == none { none } else { single.at(0) })
+    let single = _single-label(
+      "cut-number",
+      lo,
+      hi,
+      labels,
+      "all values are equal",
+    )
+    return parsed.map(v => if v == none { none } else { single })
   }
-  let label-arr = _resolve-labels(breaks, labels)
+  let tied = range(0, n).any(i => breaks.at(i) == breaks.at(i + 1))
+  if tied {
+    fail(
+      "cut-number",
+      "quantile breaks are not distinct, so some bins have zero width; got n: "
+        + repr(n),
+      hint: "Use fewer bins, or cut-interval for equal-width bins.",
+    )
+  }
+  let label-arr = _resolve-labels("cut-number", breaks, labels)
   parsed.map(v => _assign-bin(v, breaks, label-arr))
 }
 
@@ -223,9 +246,13 @@
 /// #let bins = cut-width((-3, -1, 0, 1, 2, 4), width: 2, center: 0)
 /// ```
 #let cut-width(values, width: 1, center: none, labels: auto) = {
+  if type(width) != int and type(width) != float {
+    fail-type("cut-width", "width", width, "a positive number")
+  }
   if width <= 0 {
     fail("cut-width", "width must be positive; got " + repr(width))
   }
+  _check-labels-type("cut-width", labels)
   let parsed = _parse-numbers(values)
   let numeric = _filter-numeric(parsed)
   if numeric.len() == 0 {
@@ -239,6 +266,6 @@
   if n-bins < 1 { n-bins = 1 }
   if start + n-bins * width <= hi-val { n-bins = n-bins + 1 }
   let breaks = range(0, n-bins + 1).map(i => start + i * width)
-  let label-arr = _resolve-labels(breaks, labels)
+  let label-arr = _resolve-labels("cut-width", breaks, labels)
   parsed.map(v => _assign-bin(v, breaks, label-arr))
 }

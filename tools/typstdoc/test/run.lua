@@ -1988,6 +1988,23 @@ compiler = "0.15.0"
   end)
 end)
 
+describe("snapshot: compare AE parsing", function()
+  local common = dofile(ROOT .. "/../snapshot/common.lua")
+
+  it("reads a plain count and an identical match", function()
+    assert_eq(common.parse_ae(0, "0"), 0)
+    assert_eq(common.parse_ae(1, "1234 (0.0188)"), 1234)
+  end)
+
+  it("reads a count in exponent form whole", function()
+    assert_eq(common.parse_ae(1, "2.25e+06 (1)"), 2250000)
+  end)
+
+  it("returns nil when compare fails", function()
+    assert_eq(common.parse_ae(2, "compare: unable to open image"), nil)
+  end)
+end)
+
 -- -----------------------------------------------------------------------
 cleanup()
 

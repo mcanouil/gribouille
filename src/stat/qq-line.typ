@@ -83,12 +83,12 @@
   let sorted = xs.sorted()
   let q1 = quantile-type-7(sorted, 0.25)
   let q3 = quantile-type-7(sorted, 0.75)
-  let z1 = theoretical-quantile(0.25, distribution)
-  let z3 = theoretical-quantile(0.75, distribution)
+  let z1 = theoretical-quantile("stat-qq-line", 0.25, distribution)
+  let z3 = theoretical-quantile("stat-qq-line", 0.75, distribution)
   let slope = (q3 - q1) / (z3 - z1)
   let intercept = q1 - slope * z1
-  let t-lo = theoretical-quantile(0.5 / n, distribution)
-  let t-hi = theoretical-quantile((n - 0.5) / n, distribution)
+  let t-lo = theoretical-quantile("stat-qq-line", 0.5 / n, distribution)
+  let t-hi = theoretical-quantile("stat-qq-line", (n - 0.5) / n, distribution)
   let rows = (
     (theoretical: t-lo, sample: intercept + slope * t-lo),
     (theoretical: t-hi, sample: intercept + slope * t-hi),

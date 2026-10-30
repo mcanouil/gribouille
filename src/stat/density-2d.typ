@@ -8,9 +8,9 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/summaries.typ": read-weight
 #import "../utils/aes-resolve.typ": stat-output-mapping
-#import "../utils/contour-grid.typ": resolve-levels
+#import "../utils/contour-grid.typ": check-level-params, resolve-levels
 #import "../utils/marching-squares.typ": isolines-multi
-#import "../utils/kde.typ": kde-2d
+#import "../utils/kde.typ": kde-2d, validate-kde-2d-params
 
 // Parse the `(x, y, weight)` sample shared by the line and filled 2D
 // density stats. Returns `none` when the mapping or sample is unusable.
@@ -91,18 +91,22 @@
   bins: 10,
   binwidth: none,
   breaks: auto,
-) = (
-  kind: "stat",
-  name: "density-2d",
-  params: (
-    bw: bw,
-    adjust: adjust,
-    n: n,
-    bins: bins,
-    binwidth: binwidth,
-    breaks: breaks,
-  ),
-)
+) = {
+  validate-kde-2d-params("stat-density-2d", (bw: bw, adjust: adjust, n: n))
+  check-level-params("stat-density-2d", bins, binwidth, breaks)
+  (
+    kind: "stat",
+    name: "density-2d",
+    params: (
+      bw: bw,
+      adjust: adjust,
+      n: n,
+      bins: bins,
+      binwidth: binwidth,
+      breaks: breaks,
+    ),
+  )
+}
 
 #let apply(data, mapping, params: (:)) = {
   let new-mapping = stat-output-mapping(

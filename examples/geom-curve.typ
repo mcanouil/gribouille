@@ -18,7 +18,9 @@
     geom-curve(curvature: curvature, stroke: 1.2pt),
     geom-point(size: 3pt),
   ),
-  scales: scales(x: scale-continuous(breaks: (0, 1, 2)), y: scale-continuous(breaks: (-1, 0, 1, 1.5))),
+  scales: scales(x: scale-continuous(breaks: (0, 1, 2)), y: scale-continuous(
+    breaks: (-1, 0, 1, 1.5),
+  )),
   labels: labels(title: title, x: "Stage", y: "Lane", colour: "Flow"),
   theme: theme-minimal(),
   width: 12cm,

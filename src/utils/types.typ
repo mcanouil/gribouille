@@ -1,12 +1,27 @@
 // Column type inference and number parsing.
 // Typst's csv() gives strings, so gribouille parses them on demand.
 
+#import "errors.typ": fail-type
+
 #let _numeric-re = regex("^\\s*-?\\d+(\\.\\d+)?([eE][-+]?\\d+)?\\s*$")
 #let _date-re = regex("^(\\d{4})-(\\d{2})-(\\d{2})$")
 #let _datetime-re = regex(
   "^(\\d{4})-(\\d{2})-(\\d{2})[T ](\\d{2}):(\\d{2})(?::(\\d{2}))?$",
 )
 #let _time-re = regex("^(\\d{2}):(\\d{2})(?::(\\d{2}))?$")
+
+// Whether the calendar date exists: `datetime()` raises on an impossible date
+// such as 2020-02-30, and an unusable cell must give `none`, not an error.
+#let _valid-date(y, mo, d) = {
+  if mo < 1 or mo > 12 or d < 1 { return false }
+  let leap = (
+    calc.rem(y, 4) == 0 and (calc.rem(y, 100) != 0 or calc.rem(y, 400) == 0)
+  )
+  let days = if mo == 2 { if leap { 29 } else { 28 } } else if (
+    (4, 6, 9, 11).contains(mo)
+  ) { 30 } else { 31 }
+  d <= days
+}
 
 /// Parse an ISO-8601 temporal string into a numeric epoch.
 ///
@@ -16,7 +31,8 @@
 /// `"time"` returns seconds since midnight.
 /// Numeric values pass through unchanged so a column can mix pre-encoded
 /// numbers and ISO strings.
-/// Empty, `none`, and unparseable values return `none`.
+/// Empty, `none`, and unparseable values return `none`, and so does an
+/// impossible date or clock time such as `"2020-02-30"` or `"25:00"`.
 ///
 /// Recognised string forms:
 ///
@@ -41,8 +57,9 @@
   if kind == "date" {
     let m = t.match(_date-re)
     if m == none { return none }
-    let (y, mo, d) = m.captures
-    let dt = datetime(year: int(y), month: int(mo), day: int(d))
+    let (y, mo, d) = m.captures.map(int)
+    if not _valid-date(y, mo, d) { return none }
+    let dt = datetime(year: y, month: mo, day: d)
     let epoch = datetime(year: 2000, month: 1, day: 1)
     let dur = dt - epoch
     return float(dur.days())
@@ -50,14 +67,18 @@
   if kind == "datetime" {
     let m = t.match(_datetime-re)
     if m == none { return none }
-    let (y, mo, d, h, mi, s) = m.captures
+    let (y, mo, d, h, mi) = m.captures.slice(0, 5).map(int)
+    let s = m.captures.at(5)
     let sec = if s == none { 0 } else { int(s) }
+    if not _valid-date(y, mo, d) or h > 23 or mi > 59 or sec > 59 {
+      return none
+    }
     let dt = datetime(
-      year: int(y),
-      month: int(mo),
-      day: int(d),
-      hour: int(h),
-      minute: int(mi),
+      year: y,
+      month: mo,
+      day: d,
+      hour: h,
+      minute: mi,
       second: sec,
     )
     let epoch = datetime(
@@ -74,9 +95,11 @@
   if kind == "time" {
     let m = t.match(_time-re)
     if m == none { return none }
-    let (h, mi, s) = m.captures
+    let (h, mi) = m.captures.slice(0, 2).map(int)
+    let s = m.captures.at(2)
     let sec = if s == none { 0 } else { int(s) }
-    return float(int(h) * 3600 + int(mi) * 60 + sec)
+    if h > 23 or mi > 59 or sec > 59 { return none }
+    return float(h * 3600 + mi * 60 + sec)
   }
   none
 }
@@ -92,10 +115,12 @@
   none
 }
 
+// NaN is an unusable cell: it compares false with every number, so it would
+// reach `<` and `>` and raise `cannot compare float.nan`.
 #let parse-number(v) = {
   if v == none { return none }
   if type(v) == int { return float(v) }
-  if type(v) == float { return v }
+  if type(v) == float { return if float.is-nan(v) { none } else { v } }
   if type(v) == str {
     let t = v.trim()
     if t == "" { return none }
@@ -105,12 +130,26 @@
   none
 }
 
+// `parse-number` without the ISO-8601 fallback, for a cell that holds a plain
+// quantity such as a weight: a date or clock-time string gives `none`.
+#let parse-plain-number(v) = {
+  if type(v) == str and v.trim().match(_numeric-re) == none { return none }
+  parse-number(v)
+}
+
 // Parse every entry via `parse-number` and drop the unparseable ones.
 #let to-numeric(values) = {
   values.map(parse-number).filter(v => v != none)
 }
 
 #let is-native-numeric(v) = type(v) == int or type(v) == float
+
+// Type check for a numeric argument, run before its range check.
+#let check-number(scope, name, value) = {
+  if not is-native-numeric(value) {
+    fail-type(scope, name, value, "a number")
+  }
+}
 
 #let infer-column-type(values) = {
   let non-empty = values.filter(v => v != none and v != "")

@@ -128,3 +128,8 @@
 // A missing key reads as missing, so it sorts last like a non-numeric cell.
 #let dfk = ((id: 1, v: 2), (id: 2), (id: 3, v: 8))
 #assert.eq(slice-max(dfk, "v", n: 3).map(row => row.id), (3, 1, 2))
+
+// A `none` key cell forms its own group in distinct and slice-*.
+#let dfn = ((g: none, v: 1), (g: "a", v: 2), (g: none, v: 3))
+#assert.eq(distinct(dfn, "g").map(row => row.v), (1, 2))
+#assert.eq(slice-max(dfn, "v", by: "g").map(row => row.v), (3, 2))

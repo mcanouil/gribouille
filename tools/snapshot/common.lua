@@ -14,4 +14,26 @@ function M.abs(root, path)
   return root .. "/" .. path
 end
 
+-- ImageMagick `compare -metric AE` writes "<ae>" or "<ae> (<normalised>)" on
+-- stderr. Uses the v6/v7-compatible `compare` entry point rather than
+-- `magick compare`. Exit codes: 0 == identical, 1 == differs but ran
+-- cleanly, >=2 == error. run.lua gates on this contract and diff.lua draws
+-- its overlay with it, so both read the same AE count.
+function M.compare_cmd(golden, current, diff_png, fuzz)
+  return string.format(
+    "compare -metric AE -fuzz %s %s %s %s 2>&1",
+    fuzz, M.shell_quote(golden), M.shell_quote(current), M.shell_quote(diff_png)
+  )
+end
+
+-- Reads the AE pixel count from a `compare` exit code and output. A large
+-- count prints in exponent form (`2.25e+06`), so the whole number is read.
+-- Returns nil on error, so callers don't confuse a crashed compare with a
+-- clean 0-pixel match.
+function M.parse_ae(code, out)
+  if code > 1 then return nil end
+  local n = tonumber(out:match("^%s*(%S+)"))
+  return n and math.floor(n + 0.5)
+end
+
 return M

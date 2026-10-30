@@ -6,7 +6,7 @@
 ///! and `y` (point, line, path, step).
 
 #import "../utils/types.typ": parse-number
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail, fail-type
 
 /// Sample `fun` at `n` points across `x-limits` and emit `(x, y)` rows.
 ///
@@ -69,11 +69,19 @@
 /// ```
 ///
 /// \@see \@geom-function, \@stat-smooth
-#let stat-function(fun: x => x, n: 101, x-limits: (0, 1)) = (
-  kind: "stat",
-  name: "function",
-  params: (fun: fun, n: n, x-limits: x-limits),
-)
+#let stat-function(fun: x => x, n: 101, x-limits: (0, 1)) = {
+  if type(fun) != function {
+    fail-type("stat-function", "fun", fun, "a function")
+  }
+  if type(n) != int or n < 2 {
+    fail-type("stat-function", "n", n, "an integer of at least 2")
+  }
+  (
+    kind: "stat",
+    name: "function",
+    params: (fun: fun, n: n, x-limits: x-limits),
+  )
+}
 
 #let _resolve-x-limits(x-limits, data, mapping) = {
   if x-limits != none { return x-limits }
@@ -118,7 +126,7 @@
     data,
     mapping,
   )
-  let n = calc.max(2, int(params.at("n", default: 101)))
+  let n = params.at("n", default: 101)
   let (lo, hi) = (float(x-limits.at(0)), float(x-limits.at(1)))
   if hi <= lo {
     fail(

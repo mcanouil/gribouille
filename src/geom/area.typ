@@ -7,7 +7,7 @@
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../utils/errors.typ": fail-enum
+#import "../utils/errors.typ": assert-alpha, fail-enum
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "grouped-path.typ": sort-rows-by-x
@@ -15,7 +15,7 @@
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/band.typ": band-polygon
 #import "../utils/flip.typ": user-axes, user-columns
-#import "../position/apply.typ": layer-marks-abut
+#import "../position/apply.typ": assert-position, layer-marks-abut
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -125,6 +125,8 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-area", position)
+  assert-alpha("geom-area", alpha)
   if direction != none and direction != "hv" and direction != "vh" {
     fail-enum("geom-area", "direction", direction, ("hv", "vh"))
   }
@@ -197,7 +199,7 @@
       p => p.ymin,
       direction: direction,
     )
-    if pts.any(p => p == none) { continue }
+    if pts == none { continue }
 
     let leader = rows.first()
     let final-fill = resolve-channel(

@@ -68,8 +68,14 @@
   rgb("#fee838"),
 )
 
-#let palette(option) = {
-  if option == "magma" { magma } else if option == "plasma" { plasma } else if (
-    option == "inferno"
-  ) { inferno } else if option == "cividis" { cividis } else { viridis }
-}
+#let palettes = (
+  viridis: viridis,
+  magma: magma,
+  plasma: plasma,
+  inferno: inferno,
+  cividis: cividis,
+)
+
+// `scales()` checks `option` against `palettes` when it binds the scale, so the
+// lookup here always finds the name.
+#let palette(option) = palettes.at(option)

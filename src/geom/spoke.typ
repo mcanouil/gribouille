@@ -4,13 +4,15 @@
 ///! the offset to the segment endpoint via `xend = x + radius * cos(angle)`
 ///! and `yend = y + radius * sin(angle)`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/arrow.typ": assert-arrow, draw-arrow-heads
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
-#import "../utils/flip.typ": project-user-point, user-axes, user-columns
+#import "../utils/flip.typ": project-user-path, user-axes, user-columns
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let spec = (
@@ -33,7 +35,8 @@
 /// parameter; mapped values are read as numbers in radians from the data.
 /// `radius` is the segment length in data units. Under \@coord-flip, the
 /// angle still runs from the user's x axis, so the spoke mirrors across the
-/// diagonal.
+/// diagonal. Under \@coord-radial a spoke that sweeps theta follows the polar
+/// grid as an arc.
 ///
 /// \@category Geoms
 /// \@subcategory Lines and paths
@@ -121,6 +124,9 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-spoke", position)
+  assert-alpha("geom-spoke", alpha)
+  assert-linetype("geom-spoke", linetype)
   assert-arrow("geom-spoke", arrow)
   make-layer(
     "spoke",
@@ -194,11 +200,8 @@
     }
     let x1 = x0 + r * cos-t
     let y1 = y0 + r * sin-t
-    let p0 = project-user-point(ctx, x0, y0)
-    let p1 = project-user-point(ctx, x1, y1)
-    if p0 == none or p1 == none { continue }
-    let (cx0, cy0) = p0
-    let (cx1, cy1) = p1
+    let pts = project-user-path(ctx, ((x0, y0), (x1, y1)))
+    if pts.len() < 2 { continue }
 
     let final-colour = resolve-channel(
       "colour",
@@ -217,8 +220,7 @@
       0.8pt,
     )
     cetz.draw.line(
-      (cx0, cy0),
-      (cx1, cy1),
+      ..pts,
       stroke: (
         paint: final-colour,
         thickness: thickness,
@@ -226,7 +228,7 @@
       ),
     )
     draw-arrow-heads(
-      ((cx0, cy0), (cx1, cy1)),
+      pts,
       arrow-spec,
       final-colour,
       thickness,

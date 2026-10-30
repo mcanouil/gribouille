@@ -1,9 +1,11 @@
 ///! Axis-aligned rectangles from `xmin`, `ymin`, `xmax`, `ymax`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-axis, map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/types.typ": parse-number
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/radial.typ": radial-wedge
@@ -99,17 +101,21 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "rect",
-  mapping: mapping,
-  data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-rect", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-position("geom-rect", position)
+  assert-alpha("geom-rect", alpha)
+  make-layer(
+    "rect",
+    mapping: mapping,
+    data: data,
+    params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
+      + split-aes-params("geom-rect", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -136,6 +142,9 @@
   )
 
   let radial = ctx.at("radial", default: none)
+  let space = if radial != none { "stat" } else { "row" }
+  let map-x = axis-mapper(ctx, "x", space: space)
+  let map-y = axis-mapper(ctx, "y", space: space)
   for row in data {
     let x0 = parse-number(row.at(xmin-col, default: none))
     let x1 = parse-number(row.at(xmax-col, default: none))
@@ -163,21 +172,19 @@
 
     if radial != none {
       let cat-is-theta = radial.cat-is-theta
-      let theta-range = radial.theta-range
-      let r-range = radial.r-range
       let (theta-lo, theta-hi, r-lo, r-hi) = if cat-is-theta {
         (
-          map-axis(x-trained, x0, theta-range),
-          map-axis(x-trained, x1, theta-range),
-          map-axis(y-trained, y0, r-range),
-          map-axis(y-trained, y1, r-range),
+          map-x(x0),
+          map-x(x1),
+          map-y(y0),
+          map-y(y1),
         )
       } else {
         (
-          map-axis(y-trained, y0, theta-range),
-          map-axis(y-trained, y1, theta-range),
-          map-axis(x-trained, x0, r-range),
-          map-axis(x-trained, x1, r-range),
+          map-y(y0),
+          map-y(y1),
+          map-x(x0),
+          map-x(x1),
         )
       }
       if r-lo > r-hi { (r-lo, r-hi) = (r-hi, r-lo) }
@@ -189,10 +196,10 @@
         stroke: seal-seam(stroke-spec, final-fill),
       )
     } else {
-      let cx0 = map-position(x-trained, x0, ctx.px-range)
-      let cx1 = map-position(x-trained, x1, ctx.px-range)
-      let cy0 = map-position(y-trained, y0, ctx.py-range)
-      let cy1 = map-position(y-trained, y1, ctx.py-range)
+      let cx0 = map-x(x0)
+      let cx1 = map-x(x1)
+      let cy0 = map-y(y0)
+      let cy1 = map-y(y1)
       if cx0 == none or cx1 == none or cy0 == none or cy1 == none { continue }
       cetz.draw.rect(
         (cx0, cy0),

@@ -3,12 +3,13 @@
 ///! Data is an array of dictionaries (one per row). `select`/`rename`/
 ///! `relocate` reshape the columns; `drop-na`/`distinct` and
 ///! `slice-max`/`slice-min` filter or rank the rows. Each verb calls
-///! `_normalise-data` on entry (column-store input is accepted) and returns a
-///! row-store, feeding `#plot` directly. Native `.filter`/`.sorted`/`.map`
+///! `_require-frame` on entry (column-store input is accepted, `none` fails)
+///! and returns a row-store, feeding `#plot` directly. Native
+///! `.filter`/`.sorted`/`.map`
 ///! already cover row filtering, sorting, and rowwise mutation, so those are
 ///! left to Typst.
 
-#import "../data.typ": _normalise-data, column-names
+#import "../data.typ": _require-cols, _require-frame, column-names
 #import "../utils/types.typ": parse-number
 #import "../utils/errors.typ": fail, fail-type, fail-unknown-column, quote-each
 #import "summarise.typ": _bucket-groups, _normalise-by
@@ -22,25 +23,6 @@
         + quote-each(args.named().keys()),
       hint: hint,
     )
-  }
-}
-
-// Validate that every entry of `cols` is a string column name, and (when
-// `rows` is non-empty) that it exists. Empty data carries no column names to
-// check against, so existence is skipped there, matching `summarise`.
-#let _require-cols(scope, label, cols, rows) = {
-  for col in cols {
-    if type(col) != str {
-      fail-type(scope, label, col, "a string column name")
-    }
-  }
-  if rows.len() != 0 {
-    let available = column-names(rows)
-    for col in cols {
-      if not available.contains(col) {
-        fail-unknown-column(scope, label, col, available)
-      }
-    }
   }
 }
 
@@ -93,7 +75,7 @@
 ///
 /// \@see \@rename, \@relocate
 #let select(data, ..names) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("select", "data", data)
   _require-positional("select", names)
   let cols = names.pos()
   _require-cols("select", "selection", cols, rows)
@@ -123,7 +105,7 @@
 ///
 /// \@see \@select, \@relocate
 #let rename(data, ..renames) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("rename", "data", data)
   if renames.pos().len() != 0 {
     fail(
       "rename",
@@ -203,7 +185,7 @@
 ///
 /// \@see \@select, \@rename
 #let relocate(data, ..cols, before: none, after: none) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("relocate", "data", data)
   _require-positional(
     "relocate",
     cols,
@@ -265,7 +247,7 @@
 ///
 /// \@see \@distinct
 #let drop-na(data, ..cols) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("drop-na", "data", data)
   _require-positional("drop-na", cols)
   let requested = cols.pos()
   _require-cols("drop-na", "column", requested, rows)
@@ -297,7 +279,7 @@
 ///
 /// \@see \@drop-na
 #let distinct(data, ..cols) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame("distinct", "data", data)
   _require-positional("distinct", cols)
   let key-cols = cols.pos()
   _require-cols("distinct", "column", key-cols, rows)
@@ -311,7 +293,7 @@
 // when `n` reaches them. The numeric sort is stable, so ties keep input order
 // and there is no tie expansion.
 #let _slice-extreme(scope, data, col, n, by, descending) = {
-  let rows = _normalise-data(data)
+  let rows = _require-frame(scope, "data", data)
   if type(n) != int or n < 0 {
     fail-type(scope, "n", n, "a non-negative integer")
   }

@@ -9,7 +9,25 @@
 ///! then snap to the exact two-point line through the near-zero-residual
 ///! points. O(n² log n) — usable to a few thousand rows.
 
-#import "../utils/types.typ": parse-number
+#import "../utils/types.typ": check-number, parse-number
+#import "../utils/errors.typ": fail-range, fail-type
+
+// Panic unless the quantile fit parameters are well-formed. `scope` names the
+// public function that the user called.
+#let validate-quantile-params(scope, quantiles, n-samples) = {
+  if type(quantiles) != array {
+    fail-type(scope, "quantiles", quantiles, "an array of probabilities")
+  }
+  for tau in quantiles {
+    check-number(scope, "every quantile", tau)
+    if tau <= 0 or tau >= 1 {
+      fail-range(scope, "every quantile", tau, 0, 1)
+    }
+  }
+  if type(n-samples) != int or n-samples < 1 {
+    fail-type(scope, "n-samples", n-samples, "a positive integer")
+  }
+}
 
 /// Quantile regression statistic: fit one line per τ and sample it.
 ///
@@ -50,11 +68,14 @@
 /// ```
 ///
 /// \@see \@geom-quantile, \@geom-smooth
-#let stat-quantile(quantiles: (0.25, 0.5, 0.75), n-samples: 64) = (
-  kind: "stat",
-  name: "quantile",
-  params: (quantiles: quantiles, n-samples: n-samples),
-)
+#let stat-quantile(quantiles: (0.25, 0.5, 0.75), n-samples: 64) = {
+  validate-quantile-params("stat-quantile", quantiles, n-samples)
+  (
+    kind: "stat",
+    name: "quantile",
+    params: (quantiles: quantiles, n-samples: n-samples),
+  )
+}
 
 // Exact asymmetric absolute loss of the line `y = intercept + slope * x`.
 #let _loss-line(pairs, tau, intercept, slope) = {

@@ -9,7 +9,7 @@
 #import "../data.typ": _normalise-data, column
 #import "../utils/types.typ": infer-column-type, parse-number
 #import "../utils/typst-markup.typ": is-typst-markup
-#import "../utils/errors.typ": check, fail, fail-type
+#import "../utils/errors.typ": fail, fail-type
 #import "../utils/late-binding.typ": (
   after-scale-source, is-late-binding, late-binding-name,
 )
@@ -41,7 +41,11 @@
 #let _layer-data(layer, plot-data) = {
   if layer.data == none { return plot-data }
   if type(layer.data) == function {
-    return _normalise-data((layer.data)(plot-data))
+    return _normalise-data(
+      (layer.data)(plot-data),
+      scope: "plot",
+      label: "layer data",
+    )
   }
   layer.data
 }
@@ -163,10 +167,15 @@
   let lo = none
   let hi = none
   let whole = true
+  let unusable = false
   for col in cols {
     for raw in col.values {
       let v = parse-number(raw)
-      if v == none { continue }
+      if v == none {
+        // An empty string is a missing cell, as `none` is (oob.typ).
+        if raw != none and raw != "" { unusable = true }
+        continue
+      }
       if whole and v != calc.round(v) { whole = false }
       if lo == none {
         lo = v
@@ -177,11 +186,13 @@
       }
     }
   }
-  if lo == none { return (domain: (0.0, 1.0), integer: false) }
-  if lo == hi and not _SYNTHETIC-FEEDERS.contains(aesthetic) {
-    return (domain: (lo - 0.5, hi + 0.5), integer: whole)
+  if lo == none {
+    return (domain: (0.0, 1.0), integer: false, unusable: unusable)
   }
-  (domain: (lo, hi), integer: whole)
+  if lo == hi and not _SYNTHETIC-FEEDERS.contains(aesthetic) {
+    return (domain: (lo - 0.5, hi + 0.5), integer: whole, unusable: unusable)
+  }
+  (domain: (lo, hi), integer: whole, unusable: unusable)
 }
 
 // Flatten the cached columns into the numeric vector a function-valued
@@ -199,15 +210,21 @@
   out
 }
 
+// The constructor a user scale came from, as `bind-scale` stamped it, so a
+// message names the function the user called.
+#let scope-of(user-scale) = (
+  "scale-" + user-scale.at("family", default: "continuous")
+)
+
 // Call a user break closure on the trained values and validate its result.
 // `name` is the spec key, so the message names the argument the user wrote.
-#let _breaks-from-closure(name, closure, values) = {
+#let _breaks-from-closure(scope, name, closure, values) = {
   let out = closure(values)
   if type(out) != array { out = (out,) }
   for b in out {
     if type(b) != int and type(b) != float {
       fail-type(
-        "scale",
+        scope,
         name,
         b,
         "a number",
@@ -353,7 +370,10 @@
         forced-type: _resolve-forced-type(train-ref, layer-data, col-name),
         levels: layer-factor-levels.at(col-name, default: none),
       ))
-      if is-typst-markup(train-ref) { entry.typst-mark = true }
+      // The render pass strips mapping refs from panel layers, so a retrain
+      // finds the mark on the layer's `typst-marks` instead.
+      let marked = layer.at("typst-marks", default: (:)).at(a, default: false)
+      if is-typst-markup(train-ref) or marked { entry.typst-mark = true }
       cache.insert(a, entry)
     }
   }
@@ -376,11 +396,13 @@
     _scale-type-from-cache(cols)
   }
   let integer = false
+  let unusable = false
   let domain = if scale-type == "identity" {
     ()
   } else if scale-type == "continuous" {
     let scanned = _continuous-domain-from-cache(cols, aes)
     integer = scanned.integer
+    unusable = scanned.unusable
     scanned.domain
   } else {
     _discrete-domain-from-cache(cols)
@@ -402,16 +424,9 @@
       explicit-hi = uhi != auto
       // ISO date/datetime/time string limits resolve to the same numeric epoch
       // the column data trains against; numeric limits pass through unchanged.
-      if explicit-lo {
-        let n = parse-number(ulo)
-        check(n != none, "scale", "could not parse lower limit: " + repr(ulo))
-        ulo = n
-      }
-      if explicit-hi {
-        let n = parse-number(uhi)
-        check(n != none, "scale", "could not parse upper limit: " + repr(uhi))
-        uhi = n
-      }
+      // `check-limits` (arguments.typ) rejected an unparsable limit at bind.
+      if explicit-lo { ulo = parse-number(ulo) }
+      if explicit-hi { uhi = parse-number(uhi) }
       domain = (
         if explicit-lo { ulo } else { dlo },
         if explicit-hi { uhi } else { dhi },
@@ -419,26 +434,8 @@
     } else {
       // Discrete limits are a level array, not a `(lo, hi)` pair, so there is
       // no per-side `auto`; the continuous-only lift/fold below never reads the
-      // `explicit-*` flags for this branch.
-      //
-      // A level must be a string. A discrete scale reads a bare number as a
-      // 1-indexed position rather than a level name (`map-discrete`), so a
-      // numeric level would be ambiguous: the pre-pass could not censor
-      // against it, and a position and a level of the same value would
-      // disagree. A domain trained from data is stringified, so only a user
-      // limit can carry another type.
-      for level in user-scale.limits {
-        if type(level) != str {
-          fail-type(
-            "scale `" + aes + "`",
-            "limits",
-            level,
-            "a level name as a string",
-            hint: "A discrete scale reads a bare number as a position, not as "
-              + "a level. Quote the levels, as in `limits: (\"1\", \"2\")`.",
-          )
-        }
-      }
+      // `explicit-*` flags for this branch. `check-limits` (arguments.typ)
+      // checked at bind that every level is a string.
       domain = user-scale.limits
     }
   }
@@ -469,15 +466,6 @@
   let pre-transformed = (
     scale-type == "continuous" and (transform == "log10" or transform == "sqrt")
   )
-  // A value lies in the active transform's domain when it is positive (log10),
-  // non-negative (sqrt), or unconstrained (any other transform).
-  let in-transform-domain = v => {
-    if transform == "log10" { v > 0 } else if transform == "sqrt" {
-      v >= 0
-    } else {
-      true
-    }
-  }
   if (
     pre-transformed
       and user-scale != none
@@ -486,21 +474,11 @@
     // User-supplied limits come in data space; lift the pinned side(s) to stat
     // space. An `auto` side keeps the trained bound, which is already in stat
     // space, so it must not be transformed again.
-    let lift = v => {
-      if transform == "log10" {
-        check(v > 0, "scale", "log10 limits must be positive; got " + repr(v))
-      } else if transform == "sqrt" {
-        check(
-          v >= 0,
-          "scale",
-          "sqrt limits must be non-negative; got " + repr(v),
-        )
-      }
-      transform-fwd(transform, v)
-    }
+    // `check-limits` (arguments.typ) rejected a limit outside the domain of
+    // the transform at bind.
     let (lo, hi) = domain
-    if explicit-lo { lo = lift(lo) }
-    if explicit-hi { hi = lift(hi) }
+    if explicit-lo { lo = transform-fwd(transform, lo) }
+    if explicit-hi { hi = transform-fwd(transform, hi) }
     domain = (lo, hi)
   }
   // A function-valued `breaks` / `minor-breaks` resolves here, against the
@@ -544,8 +522,10 @@
           values = values.filter(v => v <= hi)
         }
       }
+      let scope = scope-of(user-scale)
       for key in keys {
         let resolved = _breaks-from-closure(
+          scope,
           key,
           user-scale.at(key),
           values,
@@ -556,7 +536,12 @@
       if secondary-closure {
         secondary.insert(
           "breaks",
-          _breaks-from-closure("breaks", secondary.breaks, values),
+          _breaks-from-closure(
+            scope,
+            "breaks",
+            secondary.breaks,
+            values,
+          ),
         )
         user-scale.insert("secondary", secondary)
       }
@@ -564,9 +549,10 @@
   }
   // Feature 5: explicit `breaks` widen the trained domain so requested ticks
   // are visible, except on a side pinned by an explicit limit. Breaks are in
-  // data units; lift them into stat space for pre-transformed scales (dropping
-  // values outside the transform's domain) so the comparison stays in the
-  // domain's native unit. Closure-derived breaks are excluded: the domain is
+  // data units; lift them into stat space for pre-transformed scales so the
+  // comparison stays in the domain's native unit. `check-breaks`
+  // (arguments.typ) rejected an unparsable break, or one outside the domain of
+  // the transform, at bind. Closure-derived breaks are excluded: the domain is
   // the closure's own input, so widening it would leave the two inconsistent.
   if (
     scale-type == "continuous"
@@ -577,19 +563,15 @@
     if type(user-breaks) == array and user-breaks.len() > 0 {
       // ISO date/datetime/time string breaks resolve to the same numeric epoch
       // the column data trains against; numeric breaks pass through unchanged.
-      let numeric-breaks = user-breaks.map(parse-number).filter(b => b != none)
+      let numeric-breaks = user-breaks.map(parse-number)
       user-scale = (..user-scale, breaks: numeric-breaks)
       let folded = if pre-transformed {
-        numeric-breaks
-          .filter(in-transform-domain)
-          .map(b => transform-fwd(transform, b))
+        numeric-breaks.map(b => transform-fwd(transform, b))
       } else { numeric-breaks }
-      if folded.len() > 0 {
-        let (lo, hi) = domain
-        if not explicit-lo { lo = calc.min(lo, ..folded) }
-        if not explicit-hi { hi = calc.max(hi, ..folded) }
-        domain = (lo, hi)
-      }
+      let (lo, hi) = domain
+      if not explicit-lo { lo = calc.min(lo, ..folded) }
+      if not explicit-hi { hi = calc.max(hi, ..folded) }
+      domain = (lo, hi)
     }
   }
   let level-index = if scale-type == "discrete" {
@@ -598,12 +580,14 @@
   // Canonical trained-scale shape (GLOSSARY.md "trained"). Later pipeline
   // stages extend it in place:
   //   - `temporal` / `date-format` just below, on date/datetime/time scales;
-  //   - `reverse` in `_apply-flip` (render/domain.typ), discrete-axis flip;
+  //   - `reverse` in `_apply-flip` (coord/flip.typ), discrete-axis flip;
   //   - `view-transform` (continuous) / `view-index` (discrete) and
-  //     `view-pad-cm` in `_apply-expand` (render/domain.typ), the expanded
+  //     `view-pad-cm` in `apply-expand` (coord/expand.typ), the expanded
   //     view window that axis breaks and panel mapping read.
   // `integer` records that every trained value was a whole number, so the
   // automatic breaks stay whole (`_axis-breaks`, continuous guides).
+  // `unusable` records that a cell did not parse as a number, so the oob
+  // pre-pass walks the rows to drop it only when there is one to drop.
   // Read `spec` keys through `spec-attr` (utils/palette.typ), not by direct
   // `.spec.at(...)` pokes.
   let entry = (
@@ -615,6 +599,7 @@
     pre-transformed: pre-transformed,
     typst-mark: cached.typst-mark,
     integer: integer,
+    unusable: unusable,
   )
   if user-scale != none and user-scale.at("temporal", default: none) != none {
     entry.insert("temporal", user-scale.temporal)
@@ -822,7 +807,7 @@
 }
 
 // Expanded scale bounds in stat space: the `view-transform` set by
-// `_apply-expand` when present, else the raw domain warped through `_to-stat`.
+// `apply-expand` when present, else the raw domain warped through `_to-stat`.
 // Shared by coordinate mapping and the out-of-range pre-pass so both honour the
 // same expanded view.
 #let view-bounds-stat(trained) = {

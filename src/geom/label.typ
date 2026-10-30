@@ -3,6 +3,8 @@
 ///! Like \@geom-text but wraps the label in a rectangle with configurable
 ///! fill, stroke, inset, and corner radius.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-anchor
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
@@ -188,6 +190,9 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-label", position)
+  assert-alpha("geom-label", alpha)
+  assert-anchor("geom-label", anchor)
   assert-arrow("geom-label", arrow)
   make-layer(
     "label",
@@ -231,8 +236,10 @@
   let data = (ctx.resolve-data)(layer)
   if mapping == none or mapping.at("x", default: none) == none { return }
   if mapping.at("y", default: none) == none { return }
+  let const-label = layer.params.at("label", default: none)
+  let use-const = const-label != none
   let label-col = mapping.at("label", default: none)
-  if label-col == none { return }
+  if not use-const and label-col == none { return }
   let x-trained = ctx.trained.at("x", default: none)
   let y-trained = ctx.trained.at("y", default: none)
   if x-trained == none or y-trained == none { return }
@@ -257,7 +264,9 @@
   for (idx, row) in data.enumerate() {
     let centre = row-centre(state, ctx, mapping, idx, row)
     if centre == none { continue }
-    let label = row.at(label-col, default: none)
+    let label = if use-const { const-label } else {
+      row.at(label-col, default: none)
+    }
     if label == none { continue }
     if label-typst { label = eval-as-markup(label) }
     // Resolve text colour with `theme-colour` as the unconditional fallback so

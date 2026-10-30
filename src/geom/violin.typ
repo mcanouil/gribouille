@@ -2,19 +2,20 @@
 ///!
 ///! The default `stat = "ydensity"` smooths each x bucket's y sample into a
 ///! density curve; the geom mirrors that curve around the bucket's x slot
-///! as a closed silhouette. Under \@coord-radial the layer degrades to a
-///! no-op (mirrored silhouettes do not translate to polar wedges yet).
+///! as a closed silhouette. \@coord-radial fails for this layer, as
+///! mirrored silhouettes do not translate to polar wedges.
 
+#import "../utils/errors.typ": assert-alpha
 #import "../utils/bucket.typ": bucket-index
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../stat/ydensity.typ": stat-ydensity
-#import "../position/apply.typ": layer-position-name
-#import "../position/dodge.typ": dodge-centre, dodge-half
+#import "../stat/ydensity.typ": stat-ydensity, validate-ydensity-params
+#import "../position/apply.typ": assert-position, layer-position-name
+#import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-axis, map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
-#import "../utils/flip.typ": user-axes, user-columns, user-point
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/group.typ": partition-by-group
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke
@@ -132,25 +133,33 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "violin",
-  mapping: mapping,
-  data: data,
-  params: (
-    width: width,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
+) = {
+  assert-position("geom-violin", position)
+  assert-alpha("geom-violin", alpha)
+  make-layer(
+    "violin",
+    mapping: mapping,
+    data: data,
+    params: (
+      width: width,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-violin", args, spec.reads),
+    stat: if stat == auto {
+      validate-ydensity-params(
+        "geom-violin",
+        (bw: bw, adjust: adjust, n: n, trim: trim, scale: scale),
+      )
+      stat-ydensity(bw: bw, adjust: adjust, n: n, trim: trim, scale: scale)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-violin", args, spec.reads),
-  stat: if stat == auto {
-    stat-ydensity(bw: bw, adjust: adjust, n: n, trim: trim, scale: scale)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -161,10 +170,11 @@
 
   let axes = user-axes(ctx)
   if axes == none or axes.y-trained.type != "continuous" { return }
-  if ctx.at("radial", default: none) != none { return }
-  let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
-  let (x-range, y-range) = (axes.x-range, axes.y-range)
+  let x-trained = axes.x-trained
+  let x-range = axes.x-range
   let pt = user-point.with(ctx)
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx))
+  let map-y = axis-mapper(ctx, user-axis-key("y", ctx), space: "stat")
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // The outline carries the violin's structure, so the stroke default
@@ -173,6 +183,7 @@
   let default-fill = resolve-geom-fill(g-defaults, role: "paper")
   let half-width = layer.params.width / 2
   let position-name = layer-position-name(layer)
+  let dodge = dodge-geometry(ctx, layer)
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     // One silhouette per distinct x bucket within the group, in
@@ -184,7 +195,7 @@
 
     for rows in bucket-rows {
       let raw-x = rows.first().at(cols.x, default: none)
-      let cx = map-position(x-trained, raw-x, x-range)
+      let cx = map-x(raw-x)
       if cx == none { continue }
       let band = axis-band(x-trained, raw-x, half-width, x-range)
       if band == none { continue }
@@ -194,7 +205,7 @@
       let canvas-half = (band-hi - band-lo) / 2
       if position-name == "dodge" {
         let leader = rows.first()
-        centre = dodge-centre(leader, cx, band-hi - band-lo)
+        centre = dodge-centre(dodge, leader, cx, band-hi - band-lo)
         canvas-half = dodge-half(leader, canvas-half)
       }
 
@@ -209,7 +220,7 @@
         .sorted(key: p => p.y)
       if side.len() < 2 { continue }
 
-      let cys = side.map(p => map-axis(y-trained, p.y, y-range))
+      let cys = side.map(p => map-y(p.y))
       if cys.any(cy => cy == none) { continue }
       let left = side
         .zip(cys)

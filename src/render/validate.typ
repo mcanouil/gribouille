@@ -64,12 +64,16 @@
   }
 }
 
-// Check the facet variable(s) against the plot data columns. Faceting
-// partitions every layer's data by these columns, so validate against the
-// plot-level data.
+// Check the facet variable(s) against the columns of the plot data and of every
+// layer's own data. Faceting partitions each layer's data by these columns.
 #let _validate-facet(spec) = {
   if spec.facet == none { return }
   let cols = column-names(spec.data)
+  for layer in spec.layers {
+    for col in column-names(_resolve-data(layer, spec.data)) {
+      if col not in cols { cols.push(col) }
+    }
+  }
   if cols.len() == 0 { return }
   if spec.facet.name == "wrap" {
     let variable = spec.facet.variable

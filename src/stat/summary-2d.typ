@@ -1,4 +1,5 @@
 #import "../utils/aes-resolve.typ": stat-output-mapping
+#import "../utils/bin.typ": check-bin-params
 #import "../utils/bin-2d.typ": bin-2d-cells, bin-midpoint-2d
 #import "../utils/summaries.typ": reduce-scalar
 
@@ -47,11 +48,14 @@
 /// ```
 ///
 /// \@see \@stat-bin-2d, \@stat-summary-bin
-#let stat-summary-2d(fun: "mean", bins: 30, binwidth: none) = (
-  kind: "stat",
-  name: "summary-2d",
-  params: (fun: fun, bins: bins, binwidth: binwidth),
-)
+#let stat-summary-2d(fun: "mean", bins: 30, binwidth: none) = {
+  check-bin-params("stat-summary-2d", bins, binwidth, pair: true)
+  (
+    kind: "stat",
+    name: "summary-2d",
+    params: (fun: fun, bins: bins, binwidth: binwidth),
+  )
+}
 
 #let apply(data, mapping, params: (:)) = {
   let new-mapping = stat-output-mapping(
@@ -84,7 +88,7 @@
   for k in range(cells.buckets.len()) {
     let bucket = cells.buckets.at(k)
     if bucket.len() == 0 { continue }
-    let value = reduce-scalar(fun, bucket)
+    let value = reduce-scalar("stat-summary-2d", fun, bucket)
     if value == none { continue }
     let (xm, ym) = bin-midpoint-2d(grid, calc.quo(k, ny), calc.rem(k, ny))
     rows.push((

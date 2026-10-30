@@ -18,7 +18,11 @@
     geom-point(size: 2pt, alpha: 0.7),
     geom-smooth(method: "lm", alpha: 0.15),
   ),
-  scales: scales(colour: scale-manual(values: palette), fill: scale-manual(values: palette), y: scale-continuous(labels: format-comma())),
+  scales: scales(
+    colour: scale-manual(values: palette),
+    fill: scale-manual(values: palette),
+    y: scale-continuous(labels: format-comma()),
+  ),
   labels: labels(
     title: "Penguin Species Drawn with a Custom Palette",
     x: "Flipper Length (mm)",

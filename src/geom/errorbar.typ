@@ -1,5 +1,7 @@
 ///! Vertical line from `ymin` to `ymax` with horizontal caps at each `x`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../layer.typ": make-layer, split-aes-params
 #import "errorbar-draw.typ": _draw-errorbar-axis
 
@@ -13,6 +15,12 @@
 /// Mapping must provide `x`, `ymin`, `ymax`. The `width` parameter sets the
 /// cap span in x data units for continuous x, and as a fraction of the
 /// per-category slot width for discrete x.
+///
+/// Under \@coord-radial a bar that sweeps theta follows the polar grid as an
+/// arc, with each cap pointing at the centre.
+/// A bar that runs along the radius has caps that are arcs.
+/// A number for `width` sets the cap span as on a Cartesian panel.
+/// A length sets a straight cap of that span.
 ///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
@@ -92,23 +100,28 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "errorbar",
-  mapping: mapping,
-  data: data,
-  params: (
-    width: width,
-    stroke: stroke,
-    colour: colour,
-    alpha: alpha,
-    linetype: linetype,
+) = {
+  assert-position("geom-errorbar", position)
+  assert-alpha("geom-errorbar", alpha)
+  assert-linetype("geom-errorbar", linetype)
+  make-layer(
+    "errorbar",
+    mapping: mapping,
+    data: data,
+    params: (
+      width: width,
+      stroke: stroke,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
+    )
+      + split-aes-params("geom-errorbar", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-errorbar", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   _draw-errorbar-axis(layer, ctx, "y", layer.params.width)

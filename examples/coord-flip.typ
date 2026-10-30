@@ -19,7 +19,10 @@
     mapping: aes(x: "q", y: "revenue", fill: "q"),
     layers: (geom-col(),),
     guides: guides(fill: none),
-    scales: scales(y: scale-continuous(labels: format-currency(symbol: "$", digits: 0))),
+    scales: scales(y: scale-continuous(labels: format-currency(
+      symbol: "$",
+      digits: 0,
+    ))),
     labels: labels(
       title: "Default Cartesian",
       x: "Quarter",
@@ -35,7 +38,10 @@
     layers: (geom-col(),),
     coord: coord-flip(),
     guides: guides(fill: none),
-    scales: scales(y: scale-continuous(labels: format-currency(symbol: "$", digits: 0))),
+    scales: scales(y: scale-continuous(labels: format-currency(
+      symbol: "$",
+      digits: 0,
+    ))),
     labels: labels(title: "coord-flip()", x: "Quarter", y: "Revenue (M)"),
     theme: theme-minimal(),
     width: 12cm,

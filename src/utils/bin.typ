@@ -4,7 +4,7 @@
 
 #import "types.typ": parse-number
 #import "summaries.typ": read-weight
-#import "errors.typ": check
+#import "errors.typ": fail-type
 
 // Split a scalar-or-`(x, y)` parameter (e.g., `bins`, `binwidth`) into a
 // per-axis pair, applying `fallback` to a `none` value.
@@ -23,20 +23,48 @@
   (lo, hi)
 }
 
+// Panic unless `bins` and `binwidth` can bin an axis. `binwidth` wins when it
+// is set, so `bins` is checked only when it will be used. With `pair`, either
+// argument may also be an `(x, y)` pair, and a pair is checked per axis. `scope`
+// names the public function that the user called.
+#let check-bin-params(scope, bins, binwidth, pair: false) = {
+  let valid-bins(v) = type(v) == int and v >= 1
+  let valid-width(v) = type(v) in (int, float) and v > 0
+  let valid(v, ok) = if pair and type(v) == array {
+    v.len() == 2 and v.all(ok)
+  } else { ok(v) }
+  if binwidth != none {
+    if not valid(binwidth, valid-width) {
+      fail-type(
+        scope,
+        "binwidth",
+        binwidth,
+        if pair { "a positive number or an `(x, y)` pair of them" } else {
+          "a positive number"
+        },
+        hint: "Use `none` to set the number of bins instead.",
+      )
+    }
+  } else if not valid(bins, valid-bins) {
+    fail-type(
+      scope,
+      "bins",
+      bins,
+      if pair { "a positive integer or an `(x, y)` pair of them" } else {
+        "a positive integer"
+      },
+    )
+  }
+}
+
 // Resolve `(n-bins, width)` from a domain and a `bins`/`binwidth` pair.
 // `binwidth` wins when both are supplied; otherwise the domain is split into
-// `bins` equal-width buckets.
+// `bins` equal-width buckets. The constructors of the binning stats run
+// `check-bin-params`, so both arguments are valid here.
 #let bin-config(lo, hi, bins, binwidth) = {
-  let n-bins = if binwidth != none and binwidth > 0 {
+  let n-bins = if binwidth != none {
     calc.max(1, int(calc.ceil((hi - lo) / binwidth)))
-  } else {
-    check(
-      bins != none and bins > 0,
-      "bin-config",
-      "bins must be a positive integer; got " + repr(bins),
-    )
-    bins
-  }
+  } else { bins }
   (n-bins: n-bins, width: (hi - lo) / n-bins)
 }
 
@@ -147,11 +175,9 @@
 }
 
 // Half the widest bin in the rows of stat-bin or stat-bindot, read from the
-// `width` column that both publish. Zero when the first row has no `width`.
+// `width` column that both publish. Callers pass only rows from those stats,
+// so a data column of the same name never reaches here.
 #let bin-half-width(rows) = {
-  if rows.len() == 0 or rows.first().at("width", default: none) == none {
-    return 0.0
-  }
   let half = 0.0
   for row in rows {
     let w = row.at("width", default: none)
@@ -161,8 +187,8 @@
 }
 
 // The `x` range of binned rows, widened by half a bin on each side so the
-// outer bins stay inside the panel. `none` when the rows are not binned or
-// have no numeric `x`.
+// outer bins stay inside the panel. `none` when the rows have no bin width or
+// no numeric `x`.
 #let bin-x-extents(rows, x-col) = {
   let half = bin-half-width(rows)
   if half <= 0 or x-col == none { return none }

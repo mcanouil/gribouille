@@ -1,6 +1,9 @@
 ///! Contour-line geom. Wraps \@stat-contour over the grouped-path renderer.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/contour-grid.typ": check-level-params
 #import "path.typ": spec as path-spec
 #import "../stat/contour.typ": stat-contour
 
@@ -77,22 +80,28 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "path",
-  mapping: mapping,
-  data: data,
-  params: (
-    stroke: stroke,
-    stroke-fallback: 0.6pt,
-    colour: colour,
-    alpha: alpha,
-    linetype: linetype,
+) = {
+  assert-position("geom-contour", position)
+  assert-alpha("geom-contour", alpha)
+  assert-linetype("geom-contour", linetype)
+  make-layer(
+    "path",
+    mapping: mapping,
+    data: data,
+    params: (
+      stroke: stroke,
+      stroke-fallback: 0.6pt,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
+    )
+      + split-aes-params("geom-contour", args, path-spec.reads),
+    stat: if stat == auto {
+      check-level-params("geom-contour", bins, binwidth, breaks)
+      stat-contour(bins: bins, binwidth: binwidth, breaks: breaks)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-contour", args, path-spec.reads),
-  stat: if stat == auto {
-    stat-contour(bins: bins, binwidth: binwidth, breaks: breaks)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

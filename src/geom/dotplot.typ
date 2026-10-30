@@ -4,28 +4,26 @@
 ///! bin. Backed by \@stat-bindot. Dot diameter is `binwidth * dotsize` in
 ///! data units on the x-axis and one stack-row in y units.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
+#import "../utils/bin.typ": check-bin-params
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-position, mapping-ref-col
-#import "../utils/bin.typ": bin-x-extents
+#import "../coord/project.typ": axis-mapper, project-point
 #import "../stat/bindot.typ": stat-bindot
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../utils/flip.typ": user-axes, user-columns
-#import "../utils/radial.typ": project-point
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns
 #import "../utils/types.typ": parse-number
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
 )
 
-// The dots fill their bins, so `x` widens by half a bin on each side.
+// The dots fill their bins; stat-bindot widens `x` to the bin edges.
 #let spec = (
   reads: ("x", "y", "colour", "fill", "alpha"),
-  extents: (params, mapping, data) => (
-    x: bin-x-extents(data, mapping-ref-col(mapping.at("x", default: none))),
-    y: none,
-  ),
+  extents: none,
 )
 
 /// Dotplot layer: one dot per observation, stacked within bins.
@@ -101,25 +99,30 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "dotplot",
-  mapping: mapping,
-  data: data,
-  params: (
-    fill: fill,
-    colour: colour,
-    stroke: stroke,
-    alpha: alpha,
-    dotsize: dotsize,
+) = {
+  assert-position("geom-dotplot", position)
+  assert-alpha("geom-dotplot", alpha)
+  make-layer(
+    "dotplot",
+    mapping: mapping,
+    data: data,
+    params: (
+      fill: fill,
+      colour: colour,
+      stroke: stroke,
+      alpha: alpha,
+      dotsize: dotsize,
+    )
+      + split-aes-params("geom-dotplot", args, spec.reads),
+    stat: if stat == auto {
+      check-bin-params("geom-dotplot", bins, binwidth)
+      stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-dotplot", args, spec.reads),
-  stat: if stat == auto {
-    stat-bindot(bins: bins, binwidth: binwidth, stackratio: stackratio)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -129,7 +132,6 @@
   // vertically.
   let axes = user-axes(ctx)
   if axes == none { return }
-  let (x-trained, x-range) = (axes.x-trained, axes.x-range)
   let x-col = user-columns(mapping, ctx).x
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
@@ -148,12 +150,19 @@
   if bin-width == none { return }
   let first-x = parse-number(first.at(x-col))
   if first-x == none { return }
-  let cx-anchor = map-position(x-trained, first-x, x-range)
-  let cx-edge = map-position(
-    x-trained,
-    first-x + bin-width / 2,
-    x-range,
+  // The radius is a canvas length, and the radial ranges are an angle and a
+  // radius rather than a span of the panel, so radial measures it off the
+  // panel extent.
+  let measure-range = if ctx.at("radial", default: none) == none {
+    axes.x-range
+  } else { ctx.px-range }
+  let map-x = axis-mapper(
+    ctx,
+    user-axis-key("x", ctx),
+    range: measure-range,
   )
+  let cx-anchor = map-x(first-x)
+  let cx-edge = map-x(first-x + bin-width / 2)
   if cx-anchor == none or cx-edge == none { return }
   // A reversed x axis maps the bin edge below its centre.
   let radius-cm = calc.abs(cx-edge - cx-anchor) * layer.params.dotsize

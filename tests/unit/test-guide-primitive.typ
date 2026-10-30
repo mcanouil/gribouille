@@ -72,9 +72,17 @@
 #assert.eq(line-b.along, 0.0)
 #assert.eq(line-b.fills, true)
 
-// A legend has no line surface, so the same spine measures nothing there. The
-// asymmetry is a tested fact rather than a comment.
+// The `legend-line` surface is blank by default, so the same spine measures
+// nothing beside a legend until a theme gives it a stroke.
 #assert.eq(registry.measure(prim-line(), legend), measured())
+#let spined = gctx(
+  "right",
+  "legend",
+  surface-stroke: surface => if surface == "legend-line" { 0.5pt } else {
+    none
+  },
+)
+#assert.eq(registry.measure(prim-line(), spined), measured(fills: true))
 
 // Major ticks reserve the resolved `axis-ticks` length: 0.1cm by default.
 #let ticks-b = registry.measure(prim-ticks(), bottom, entries: majors)
@@ -141,10 +149,9 @@
   measured(),
 )
 
-// Beside a legend the tick length comes from the constant the colour bar has
-// always drawn at, not from the theme: this context's theme closure answers
-// 0.5, so only the legend constant satisfies the assertion.
-#assert.eq(registry.measure(prim-ticks(), legend, entries: majors).across, 0.1)
+// Beside a legend the tick length comes from the theme closure the context
+// carries, as on an axis: this context's closure answers 0.5.
+#assert.eq(registry.measure(prim-ticks(), legend, entries: majors).across, 0.5)
 
 // A blanked spine measures nothing, because measure and draw gate on the same
 // stroke. Without this, `theme-void` would reserve a line it never draws.

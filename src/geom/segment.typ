@@ -1,11 +1,13 @@
-///! Straight line segments from `(x, y)` to `(xend, yend)`.
+///! Line segments from `(x, y)` to `(xend, yend)`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/arrow.typ": assert-arrow, draw-arrow-heads
 #import "../utils/linetype-resolve.typ": resolve-linetype
-#import "../utils/radial.typ": project-point
+#import "../coord/project.typ": project-path
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let spec = (
@@ -14,6 +16,9 @@
 )
 
 /// Segment layer: one line from `(x, y)` to `(xend, yend)` per row.
+///
+/// Under \@coord-radial a segment that sweeps theta follows the polar grid as
+/// an arc.
 ///
 /// Mapping must provide `x`, `y`, `xend`, `yend`. Colour and linetype may
 /// be mapped or set as fixed layer parameters.
@@ -115,6 +120,9 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-segment", position)
+  assert-alpha("geom-segment", alpha)
+  assert-linetype("geom-segment", linetype)
   assert-arrow("geom-segment", arrow)
   make-layer(
     "segment",
@@ -159,11 +167,8 @@
     let x1 = row.at(xend-col, default: none)
     let y1 = row.at(yend-col, default: none)
     if x0 == none or y0 == none or x1 == none or y1 == none { continue }
-    let p0 = project-point(ctx, x0, y0)
-    let p1 = project-point(ctx, x1, y1)
-    if p0 == none or p1 == none { continue }
-    let (cx0, cy0) = p0
-    let (cx1, cy1) = p1
+    let pts = project-path(ctx, ((x0, y0), (x1, y1)))
+    if pts.len() < 2 { continue }
 
     let final-colour = resolve-channel(
       "colour",
@@ -183,8 +188,7 @@
       0.8pt,
     )
     cetz.draw.line(
-      (cx0, cy0),
-      (cx1, cy1),
+      ..pts,
       stroke: (
         paint: final-colour,
         thickness: thickness,
@@ -192,7 +196,7 @@
       ),
     )
     draw-arrow-heads(
-      ((cx0, cy0), (cx1, cy1)),
+      pts,
       arrow-spec,
       final-colour,
       thickness,

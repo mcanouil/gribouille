@@ -103,3 +103,19 @@
   (g: "c"),
 )
 #assert.eq(count(df-tie, "g", sort: true).map(row => row.g), ("a", "b", "c"))
+
+// --- a `none` key cell forms its own group --------------------------------
+
+#let df-none = (
+  (g: "a", x: 1),
+  (g: none, x: 2),
+  (g: "a", x: 3),
+  (g: none, x: 4),
+)
+#assert.eq(
+  summarise(df-none, s: rows => rows.map(row => row.x).sum(), by: "g"),
+  ((g: "a", s: 4), (g: none, s: 6)),
+)
+#assert.eq(count(df-none, "g"), ((g: "a", n: 2), (g: none, n: 2)))
+// A `none` key never merges with a string key, not even the empty one.
+#assert.eq(count(((g: ""), (g: none)), "g").len(), 2)

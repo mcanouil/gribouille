@@ -17,7 +17,9 @@
   data: revenue,
   mapping: aes(x: "quarter", y: "mean", ymin: "lo", ymax: "hi"),
   layers: layers,
-  scales: scales(x: scale-continuous(breaks: (1, 2, 3, 4)), y: scale-continuous(labels: format-currency(symbol: "$", digits: 1))),
+  scales: scales(x: scale-continuous(breaks: (1, 2, 3, 4)), y: scale-continuous(
+    labels: format-currency(symbol: "$", digits: 1),
+  )),
   labels: labels(title: title, x: "Quarter", y: "Revenue"),
   theme: theme-minimal(),
   width: 12cm,

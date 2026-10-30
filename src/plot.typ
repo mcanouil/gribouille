@@ -1,6 +1,7 @@
 #import "render.typ": render-plot
 #import "data.typ": _normalise-data
 #import "utils/errors.typ": fail, fail-type
+#import "coord/resolve.typ": check-coord
 
 // Panic unless `value` is `none` or a dictionary tagged with `kind`, e.g. an
 // `aes()` mapping or a `coord-*()` spec.
@@ -16,13 +17,19 @@
 }
 
 // Reject the structural spec arguments up front so a wrong-typed `mapping`,
-// `layers`, or `coord` fails with a named message instead of a cryptic Typst
-// error deep in the renderer.
-#let _check-spec-args(mapping, layers, coord) = {
+// `layers`, `coord`, `width`, or `height` fails with a named message instead
+// of a cryptic Typst error deep in the renderer.
+#let _check-spec-args(mapping, layers, coord, width, height) = {
   _check-kind("mapping", mapping, "aes", "an `aes()` mapping or `none`")
   _check-kind("coord", coord, "coord", "a `coord-*()` spec or `none`")
+  check-coord(coord)
   if type(layers) != array {
     fail-type("plot", "layers", layers, "an array of geom layers")
+  }
+  for (name, value) in (("width", width), ("height", height)) {
+    if value != auto and type(value) != length {
+      fail-type("plot", name, value, "a length or `auto`")
+    }
   }
 }
 
@@ -140,10 +147,10 @@
   strict: false,
   as-spec: false,
 ) = {
-  _check-spec-args(mapping, layers, coord)
+  _check-spec-args(mapping, layers, coord, width, height)
   let alt = _resolve-alt(alt, labels)
   let spec = (
-    data: _normalise-data(data),
+    data: _normalise-data(data, scope: "plot"),
     mapping: mapping,
     layers: layers,
     scales: scales,

@@ -6,9 +6,9 @@
 
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": assert-alpha, assert-linetype, fail
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../utils/radial.typ": project-point
+#import "../coord/project.typ": project-path
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
@@ -97,6 +97,8 @@
   inherit-aes: false,
   ..args,
 ) = {
+  assert-alpha("geom-function", alpha)
+  assert-linetype("geom-function", linetype)
   if n < 2 {
     fail("geom-function", "n must be at least 2; got " + repr(n))
   }
@@ -134,15 +136,14 @@
   let n = calc.max(2, int(layer.params.n))
   let step = (hi - lo) / (n - 1)
 
-  let pts = ()
+  let pairs = ()
   for i in range(0, n) {
     let x = lo + i * step
     let y = fun(x)
     if y == none { continue }
-    let p = project-point(ctx, x, float(y))
-    if p == none { continue }
-    pts.push(p)
+    pairs.push((x, float(y)))
   }
+  let pts = project-path(ctx, pairs)
   if pts.len() < 2 { return }
 
   let colour = if layer.params.colour != auto {

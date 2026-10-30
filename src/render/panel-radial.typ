@@ -19,8 +19,9 @@
 #import "../guide/primitive/ticks.typ": prim-ticks
 #import "../deps.typ": cetz
 #import "../scale/train.typ": map-axis-data, map-break
+#import "../theme/theme.typ": _line-stroke, _rect-style, surface-set-below
 #import "../utils/radial.typ": (
-  THETA-LABEL-PAD, group-theta-breaks, theta-range-of,
+  THETA-LABEL-PAD, group-theta-breaks, theta-axis-of, theta-range-of,
 )
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/aes-resolve.typ": resolve-label
@@ -28,8 +29,10 @@
   _axis-breaks, _axis-label, _axis-tick-values, _theta-group-label,
 )
 #import "axis-parts.typ": guide-gctx
-#import "extents.typ": _resolve-extents
-#import "guides.typ": _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _read-r-guide
+#import "extents.typ": _resolve-extents, _theta-label-bounds
+#import "guides.typ": (
+  _THETA-CAP-FRAC, _THETA-CAP-MAX-RAD, _read-r-guide, _read-theta-guide,
+)
 
 // Two canvas angles are the same direction when they differ by a whole number
 // of turns: a full sweep puts its first and last break on one ray.
@@ -201,10 +204,60 @@
   )
 }
 
+// What the radial frame needs from the angular axis before the circle is
+// sized, for the `prepare` step of `coord-radial`: the label boxes and the tick
+// reach `radial-ctx` takes, and the band the background draws.
+//
+// The theta tick labels ring the circle just outside it, so the circle has
+// to leave them room inside the panel: the panel is all the room the chrome
+// granted, and a label past its edge grows the whole figure past the
+// requested `width`/`height`. Gate the band on the same conditions the draw
+// does, so a suppressed or blank theta axis gives it back.
+#let prepare-radial(panel) = {
+  let _ax-text = panel.ax-text
+  let _theta-guide = _read-theta-guide(panel.spec)
+  let _theta-key = theta-axis-of(panel.coord)
+  let _theta-text = if _theta-key == "x" { _ax-text.xb } else { _ax-text.yl }
+  let _label-bounds = if (
+    _theta-text.size > 0pt
+      and not (_theta-guide != none and _theta-guide.suppress)
+  ) {
+    _theta-label-bounds(
+      _resolve-extents(
+        if _theta-key == "x" { panel.x-extents } else { panel.y-extents },
+        _theta-text.size,
+      ).at("groups", default: ()),
+      if _theta-guide == none { 0 } else { _theta-guide.angle },
+    )
+  } else { () }
+  // The theta ticks sit between the circle and those labels, so the angular
+  // axis is laid out here rather than with the cartesian sides: the radius
+  // owes its ticks their length before either can be placed.
+  let _theta-y = _theta-key == "y"
+  let _theta-band = theta-band(
+    panel.theme,
+    panel.coord,
+    _theta-guide,
+    if _theta-y { panel.y-trained } else { panel.x-trained },
+    _theta-key,
+    if _theta-y { panel.y-disp } else { panel.x-disp },
+    if _theta-y { _ax-text.yl } else { _ax-text.xb },
+    _resolve-extents(
+      if _theta-y { panel.y-extents } else { panel.x-extents },
+      if _theta-y { _ax-text.yl.size } else { _ax-text.xb.size },
+    ),
+  )
+  (
+    label-bounds: _label-bounds,
+    tick-cm: _theta-band.reach,
+    theta-band: _theta-band,
+  )
+}
+
 // Pre-geom radial pass: the grid circles and the spokes, which are panel
-// furniture, and then the angular axis. `rctx` carries the enclosing panel
-// state: `outer-radial`, `x-trained`/`y-trained`, `grid-radial`,
-// `grid-radial-discrete`, and `theta`, the band `theta-band` built.
+// furniture, and then the angular axis. `panel` is the record the panel
+// builds (GLOSSARY.md "panel"); this pass reads `theme`, `ink`,
+// `outer-radial`, `x-trained`/`y-trained`, and `theta-band`.
 //
 // A faceted radial panel keeps its own tick labels, both weights, where a
 // cartesian one gives them up to the panel on its edge. `show-x-labels` and
@@ -214,11 +267,21 @@
 // nobody, so dropping them would leave an interior panel with no scale to read
 // against. `radial-ctx` reserves the ring in every panel either way, so
 // keeping them costs no room.
-#let _draw-radial-panel(rctx) = {
+#let _draw-radial-panel(panel) = {
   import cetz.draw: circle, line
-  let outer-radial = rctx.outer-radial
-  let _grid-radial = rctx.grid-radial
-  let _grid-radial-discrete = rctx.grid-radial-discrete
+  let outer-radial = panel.outer-radial
+  // Radial panels draw one grid weight for both circles and spokes; the
+  // per-axis split and minor lines apply to cartesian panels only.
+  let _grid-radial = _line-stroke(
+    panel.theme,
+    "panel-grid-major",
+    fallback-colour: panel.ink,
+  )
+  let _grid-radial-discrete = surface-set-below(
+    panel.theme,
+    "panel-grid-major",
+    "panel-grid",
+  )
 
   let (cx, cy) = outer-radial.centre
   let r-max = outer-radial.r-max
@@ -228,9 +291,9 @@
   // The angular axis owns the sweep, so the radius runs along whichever scale
   // does not: `y` on a rose or radar, `x` on a pie.
   let (theta-trained, r-trained) = if outer-radial.cat-is-theta {
-    (rctx.x-trained, rctx.y-trained)
+    (panel.x-trained, panel.y-trained)
   } else {
-    (rctx.y-trained, rctx.x-trained)
+    (panel.y-trained, panel.x-trained)
   }
 
   // A discrete r scale draws its circles only when the theme sets the grid on
@@ -274,13 +337,35 @@
   // The angular axis: its arc, its tick weights and its labels, drawn from the
   // stack the panel laid out before it knew its own radius. Only `place` is
   // added here, because that is the one thing the circle decides.
-  if rctx.theta.node != none {
+  if panel.theta-band.node != none {
     compose-draw(
-      rctx.theta.node,
-      (..rctx.theta.ctx, place: place-theta(outer-radial)),
-      rctx.theta.layout,
+      panel.theta-band.node,
+      (..panel.theta-band.ctx, place: place-theta(outer-radial)),
+      panel.theta-band.layout,
     )
   }
+}
+
+// The radial `draw-background`: the panel fill as a disc, then the grid and
+// the angular axis.
+#let draw-radial-background(panel) = {
+  let outer-radial = panel.outer-radial
+  let _panel = _rect-style(
+    panel.theme,
+    "panel-background",
+    fallback-fill: panel.theme.paper,
+    outset-ref-w: panel.canvas-w,
+    outset-ref-h: panel.canvas-h,
+  )
+  if _panel.fill != none or _panel.stroke != none {
+    cetz.draw.circle(
+      outer-radial.centre,
+      radius: outer-radial.r-max,
+      fill: _panel.fill,
+      stroke: _panel.stroke,
+    )
+  }
+  _draw-radial-panel(panel)
 }
 
 // The entry table the radial axis annotates: one row per break that lands
@@ -314,18 +399,19 @@
 }
 
 // Post-geom radial pass: the radial axis, drawn after the layers so filled
-// wedges, lines, and points cannot mask its labels. `rctx` carries `spec`,
-// `theme`, `outer-radial`, `x-trained`/`y-trained`, `x-disp`/`y-disp`,
-// `ax-text`, and `x-extents`/`y-extents`. Like the angular labels, these stay
-// on every faceted panel.
-#let _draw-radial-r-labels(rctx) = {
-  let outer-radial = rctx.outer-radial
-  if _read-r-guide(rctx.spec).suppress { return }
+// wedges, lines, and points cannot mask its labels: the radial
+// `draw-foreground`. It reads `spec`, `theme`, `outer-radial`,
+// `x-trained`/`y-trained`, `x-disp`/`y-disp`, `ax-text`, and
+// `x-extents`/`y-extents` off `panel`. Like the angular labels, these stay on
+// every faceted panel.
+#let draw-radial-foreground(panel) = {
+  let outer-radial = panel.outer-radial
+  if _read-r-guide(panel.spec).suppress { return }
   let cat-is-theta = outer-radial.cat-is-theta
   let axis = if cat-is-theta { "y" } else { "x" }
-  let trained = if cat-is-theta { rctx.y-trained } else { rctx.x-trained }
-  let disp = if cat-is-theta { rctx.y-disp } else { rctx.x-disp }
-  let style = if cat-is-theta { rctx.ax-text.yl } else { rctx.ax-text.xb }
+  let trained = if cat-is-theta { panel.y-trained } else { panel.x-trained }
+  let disp = if cat-is-theta { panel.y-disp } else { panel.x-disp }
+  let style = if cat-is-theta { panel.ax-text.yl } else { panel.ax-text.xb }
   let entries = _r-entries(
     trained,
     disp,
@@ -333,14 +419,14 @@
     outer-radial.r-max,
     outer-radial.r-range,
     _resolve-extents(
-      if cat-is-theta { rctx.y-extents } else { rctx.x-extents },
+      if cat-is-theta { panel.y-extents } else { panel.x-extents },
       style.size,
     ),
   )
   if entries.len() == 0 { return }
   let node = train(compose-stack(prim-labels(), entries: entries, spacing: 0.0))
   let ctx = guide-gctx(
-    rctx.theme,
+    panel.theme,
     "r",
     axis,
     place: place-r(outer-radial),

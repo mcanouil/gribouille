@@ -3,10 +3,12 @@
 ///! Adds short ticks just outside the panel edges to expose the raw
 ///! distribution of one or both positional aesthetics.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, fail-type
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/types.typ": parse-number
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
@@ -103,23 +105,49 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "rug",
-  mapping: mapping,
-  data: data,
-  params: (
-    sides: sides,
-    length: length,
-    stroke: stroke,
-    colour: colour,
-    alpha: alpha,
+) = {
+  assert-position("geom-rug", position)
+  assert-alpha("geom-rug", alpha)
+  if (
+    sides != none
+      and (
+        type(sides) != str
+          or sides.clusters().any(c => c not in ("b", "t", "l", "r"))
+      )
+  ) {
+    fail-type(
+      "geom-rug",
+      "sides",
+      sides,
+      "a string of the codes `b`, `t`, `l`, `r`, or `none`",
+    )
+  }
+  if type(length) != std.length or length < 0cm {
+    fail-type(
+      "geom-rug",
+      "length",
+      length,
+      "a non-negative length such as `0.15cm`",
+    )
+  }
+  make-layer(
+    "rug",
+    mapping: mapping,
+    data: data,
+    params: (
+      sides: sides,
+      length: length,
+      stroke: stroke,
+      colour: colour,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-rug", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-rug", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -136,11 +164,13 @@
   let y-col = mapping.at("y", default: none)
   let x-trained = ctx.trained.at("x", default: none)
   let y-trained = ctx.trained.at("y", default: none)
+  let map-x = axis-mapper(ctx, "x")
+  let map-y = axis-mapper(ctx, "y")
 
   let theme-colour = resolve-geom-colour(resolve-geom-defaults(ctx.theme))
 
-  let (px-lo, px-hi) = ctx.px-range
-  let (py-lo, py-hi) = ctx.py-range
+  let (px-lo, px-hi) = (ctx.coord.axis-range)(ctx, "x")
+  let (py-lo, py-hi) = (ctx.coord.axis-range)(ctx, "y")
   let len = layer.params.length / 1cm
 
   let want-bottom = sides.contains("b")
@@ -170,11 +200,7 @@
     let stroke-spec = (paint: final-colour, thickness: thickness)
 
     if (want-bottom or want-top) and x-col != none and x-trained != none {
-      let cx = map-position(
-        x-trained,
-        row.at(x-col, default: none),
-        ctx.px-range,
-      )
+      let cx = map-x(row.at(x-col, default: none))
       if cx != none {
         if want-bottom {
           cetz.draw.line((cx, py-lo), (cx, py-lo + len), stroke: stroke-spec)
@@ -185,11 +211,7 @@
       }
     }
     if (want-left or want-right) and y-col != none and y-trained != none {
-      let cy = map-position(
-        y-trained,
-        row.at(y-col, default: none),
-        ctx.py-range,
-      )
+      let cy = map-y(row.at(y-col, default: none))
       if cy != none {
         if want-left {
           cetz.draw.line((px-lo, cy), (px-lo + len, cy), stroke: stroke-spec)

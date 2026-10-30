@@ -288,7 +288,7 @@
 #let _render-prepare(spec, theme) = {
   let facet-wrap-mode = spec.facet != none and spec.facet.name == "wrap"
   let facet-grid-mode = spec.facet != none and spec.facet.name == "grid"
-  let coord = spec.at("coord", default: none)
+  let coord = spec.coord
 
   let wrap-levels = if facet-wrap-mode {
     _raw-levels-for(spec, spec.facet.variable)

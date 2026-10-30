@@ -25,10 +25,10 @@
   mapping: aes(x: "x", y: "y", fill: "zone"),
   layers: (geom-polygon(alpha: 0.6, stroke: 0.6pt),),
   scales: scales(fill: scale-manual(values: (
-      rgb("#a1d99b"),
-      rgb("#fdae6b"),
-      rgb("#9ecae1"),
-    ))),
+    rgb("#a1d99b"),
+    rgb("#fdae6b"),
+    rgb("#9ecae1"),
+  ))),
   coord: coord-fixed(),
   labels: labels(
     title: "Stylised Altitude Zones",

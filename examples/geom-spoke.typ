@@ -23,7 +23,14 @@
 
 #plot(
   data: field,
-  mapping: aes(x: "x", y: "y", angle: "angle", radius: "r", colour: "mag", fill: "mag"),
+  mapping: aes(
+    x: "x",
+    y: "y",
+    angle: "angle",
+    radius: "r",
+    colour: "mag",
+    fill: "mag",
+  ),
   layers: (
     geom-spoke(stroke: 0.8pt),
     geom-point(size: 1.5pt),

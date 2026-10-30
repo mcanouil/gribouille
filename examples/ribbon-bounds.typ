@@ -20,7 +20,10 @@
     geom-line(colour: accent, stroke: 1.2pt),
     geom-point(size: 2.5pt, fill: accent),
   ),
-  scales: scales(x: scale-continuous(name: "Time step"), y: scale-continuous(name: "Value")),
+  scales: scales(
+    x: scale-continuous(name: "Time step"),
+    y: scale-continuous(name: "Value"),
+  ),
   labels: labels(
     title: "Trend with an Explicit Ribbon Band",
     subtitle: "ymin and ymax aesthetics drive geom-ribbon directly",

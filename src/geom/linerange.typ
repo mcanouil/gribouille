@@ -1,13 +1,14 @@
 ///! Vertical range from `ymin` to `ymax` at each `x`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/linetype-resolve.typ": resolve-linetype
 #import "../utils/types.typ": parse-number
-#import "../utils/radial.typ": shift-point
-#import "../utils/flip.typ": project-user-point, user-axes, user-columns
-#import "../position/dodge.typ": dodge-delta, dodge-geometry
+#import "../utils/flip.typ": user-axes, user-columns
+#import "../position/dodge.typ": dodge-geometry, project-dodged-path
 #import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
@@ -20,6 +21,9 @@
 ///
 /// Mapping must provide `x`, `ymin`, `ymax`. Colour and linetype may be
 /// mapped or set as fixed layer parameters.
+///
+/// Under \@coord-radial a range that sweeps theta follows the polar grid as an
+/// arc.
 ///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
@@ -94,25 +98,29 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "linerange",
-  mapping: mapping,
-  data: data,
-  params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
-    + split-aes-params("geom-linerange", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-alpha("geom-linerange", alpha)
+  assert-linetype("geom-linerange", linetype)
+  assert-position("geom-linerange", position)
+  make-layer(
+    "linerange",
+    mapping: mapping,
+    data: data,
+    params: (stroke: stroke, colour: colour, alpha: alpha, linetype: linetype)
+      + split-aes-params("geom-linerange", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
-// Build one row's vertical range line, horizontal under coord-flip; shared
-// with geom-pointrange. Returns
-// `(elem, dd, colour)` — the cetz line element to emit, the row's dodge
-// shift, and the resolved line colour for follow-up marks — or `none` when
-// the row does not resolve. `line-alpha: true` folds the alpha channel into
-// the line paint; pointrange keeps the paint opaque so its marker fill
-// inherits the plain colour.
+// Build one row's vertical range line, horizontal under coord-flip and an arc
+// when the range sweeps theta under coord-radial; shared with geom-pointrange.
+// Returns `(elem, colour)` — the cetz line element to emit and the resolved
+// line colour for follow-up marks — or `none` when the row does not resolve.
+// `line-alpha: true` folds the alpha channel into the line paint; pointrange
+// keeps the paint opaque so its marker fill inherits the plain colour.
 //
 // `params` and `dodge` both arrive resolved, and for the same reason: this runs
 // once a row, so it takes the layer's parameters and its dodge slot rather than
@@ -133,12 +141,8 @@
   let lo = parse-number(row.at(ymin-col, default: none))
   let hi = parse-number(row.at(ymax-col, default: none))
   if xv == none or lo == none or hi == none { return none }
-  let p-lo = project-user-point(ctx, xv, lo)
-  let p-hi = project-user-point(ctx, xv, hi)
-  if p-lo == none or p-hi == none { return none }
-  let dd = dodge-delta(dodge, row)
-  let (cx-lo, cy-lo) = shift-point(p-lo, dd)
-  let (cx-hi, cy-hi) = shift-point(p-hi, dd)
+  let points = project-dodged-path(ctx, dodge, row, ((xv, lo), (xv, hi)))
+  if points.len() < 2 { return none }
 
   let colour = resolve-channel(
     "colour",
@@ -169,15 +173,13 @@
   )
   (
     elem: cetz.draw.line(
-      (cx-lo, cy-lo),
-      (cx-hi, cy-hi),
+      ..points,
       stroke: (
         paint: paint,
         thickness: thickness,
         dash: resolve-linetype(params, mapping, ctx, row),
       ),
     ),
-    dd: dd,
     colour: colour,
   )
 }

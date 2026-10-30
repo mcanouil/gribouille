@@ -1,5 +1,26 @@
 ///! Coordinate-level transformation via `coord_transform()`.
 
+#import "../scale/arguments.typ": _TRANSFORMS
+#import "../utils/errors.typ": fail-enum
+#import "contract.typ": coord-base
+#import "expand.typ": apply-expand
+
+// coord-transform warps the view at mapping time. Skips axes whose scale
+// already pre-transformed the data: pre- and post-stat warps don't compose.
+#let _apply-coord-transform(trained, transforms) = {
+  for axis in ("x", "y") {
+    let t = transforms.at(axis)
+    if t == "identity" { continue }
+    let entry = trained.at(axis, default: none)
+    if entry == none or entry.type != "continuous" { continue }
+    if entry.at("pre-transformed", default: false) { continue }
+    let new-entry = entry
+    new-entry.insert("transform", t)
+    trained.insert(axis, new-entry)
+  }
+  trained
+}
+
 /// Transform the displayed coordinates after statistics have run.
 ///
 /// Sets the per-axis `transform` so the trained scale's view is warped at
@@ -37,9 +58,17 @@
 /// ```
 ///
 /// \@see \@plot, \@scale-continuous
-#let coord-transform(x: "identity", y: "identity") = (
-  kind: "coord",
-  name: "transform",
-  x: x,
-  y: y,
-)
+#let coord-transform(x: "identity", y: "identity") = {
+  if x not in _TRANSFORMS { fail-enum("coord-transform", "x", x, _TRANSFORMS) }
+  if y not in _TRANSFORMS { fail-enum("coord-transform", "y", y, _TRANSFORMS) }
+  (
+    coord-base("transform")
+      + (
+        x: x,
+        y: y,
+        train: trained => apply-expand(
+          _apply-coord-transform(trained, (x: x, y: y)),
+        ),
+      )
+  )
+}

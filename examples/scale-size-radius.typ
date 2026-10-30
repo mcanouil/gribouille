@@ -44,8 +44,10 @@
     data: manual,
     mapping: aes(x: "x", y: "y", size: "g"),
     layers: (geom-point(fill: accent),),
-    scales: scales(size: scale-manual(values: (2pt, 4pt, 8pt),
-        limits: ("small", "medium", "large"),)),
+    scales: scales(size: scale-manual(
+      values: (2pt, 4pt, 8pt),
+      limits: ("small", "medium", "large"),
+    )),
     labels: labels(
       title: "Scale-Size-Manual",
       x: "X",

@@ -17,7 +17,7 @@
 /// the geom does not name. A positional arg, or a key the geom does not read,
 /// is a user error.
 ///
-/// \@param scope Geom name used in error messages (e.g. `"geom-label"`).
+/// \@param scope Geom name used in error messages (e.g. `"geom-label"`). A `_scope` named argument in `args` replaces it, so a wrapper such as \@annotate reports under its own name.
 ///
 /// \@param args The geom's captured `arguments` value.
 ///
@@ -26,6 +26,8 @@
 ///
 /// \@returns Dict of aesthetic key to constant value, to merge into `params`.
 #let split-aes-params(scope, args, keys) = {
+  let named = args.named()
+  let scope = named.remove("_scope", default: scope)
   if args.pos().len() != 0 {
     fail(
       scope,
@@ -34,7 +36,7 @@
     )
   }
   let aes-params = (:)
-  for (key, value) in args.named().pairs() {
+  for (key, value) in named.pairs() {
     if key in keys {
       aes-params.insert(key, value)
     } else if keys.len() == 0 {

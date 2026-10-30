@@ -1,17 +1,17 @@
 ///! Hollow box from `ymin` to `ymax` with a thicker bar at `y` (the median).
 
+#import "../utils/errors.typ": assert-alpha, assert-number
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../position/apply.typ": layer-position-name
-#import "../position/dodge.typ": dodge-centre, dodge-half
+#import "../position/apply.typ": assert-position, layer-position-name
+#import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-axis, map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
 #import "../utils/radial.typ": (
-  polar-canvas, radial-arc, radial-axis-ranges, radial-category-span,
-  radial-wedge,
+  polar-canvas, radial-arc, radial-category-span, radial-mappers, radial-wedge,
 )
-#import "../utils/flip.typ": user-axes, user-columns, user-point
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke
 #import "../theme/theme.typ": (
@@ -108,24 +108,29 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "crossbar",
-  mapping: mapping,
-  data: data,
-  params: (
-    width: width,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    middle-stroke: middle-stroke,
-    alpha: alpha,
+) = {
+  assert-position("geom-crossbar", position)
+  assert-alpha("geom-crossbar", alpha)
+  assert-number("geom-crossbar", "width", width, min: 0)
+  make-layer(
+    "crossbar",
+    mapping: mapping,
+    data: data,
+    params: (
+      width: width,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      middle-stroke: middle-stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-crossbar", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-crossbar", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -137,8 +142,7 @@
   ) { return }
   let axes = user-axes(ctx)
   if axes == none { return }
-  let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
-  let (x-range, y-range) = (axes.x-range, axes.y-range)
+  let (x-trained, x-range) = (axes.x-trained, axes.x-range)
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // Box outline and median bar carry the crossbar's structure, so the
@@ -148,35 +152,35 @@
 
   let half-width = layer.params.width / 2
   let position-name = layer-position-name(layer)
+  let dodge = dodge-geometry(ctx, layer)
   let pt = user-point.with(ctx)
 
   let radial = ctx.at("radial", default: none)
   if radial != none {
-    let cat-trained = if radial.cat-is-theta { x-trained } else { y-trained }
-    let val-trained = if radial.cat-is-theta { y-trained } else { x-trained }
-    let cat-col = if radial.cat-is-theta { cols.x } else { cols.y }
-    let (cat-range, value-range) = radial-axis-ranges(radial)
-    let half = (
-      radial-category-span(cat-trained, cat-col, cat-range, data)
-        * layer.params.width
-        / 2
-    )
+    // The categories are the user's x on either theta axis, as for every
+    // point-like geom: `radial-mappers` puts them on the polar axis x takes.
+    let (cat: map-cat, value: map-value) = radial-mappers(ctx)
+    let span = radial-category-span(ctx, cols.x, data) * layer.params.width
     for row in data {
-      let raw-cat = if radial.cat-is-theta {
-        row.at(cols.x, default: none)
-      } else { row.at(cols.y, default: none) }
-      let cat-c = map-position(cat-trained, raw-cat, cat-range)
+      let cat-c = map-cat(row.at(cols.x, default: none))
       let mid = parse-number(row.at(cols.y, default: none))
       let lo = parse-number(row.at(cols.ymin, default: none))
       let hi = parse-number(row.at(cols.ymax, default: none))
       if cat-c == none or mid == none or lo == none or hi == none { continue }
-      let v-mid = map-axis(val-trained, mid, value-range)
-      let v-lo = map-axis(val-trained, lo, value-range)
-      let v-hi = map-axis(val-trained, hi, value-range)
-      let (theta-lo, theta-hi, r-lo, r-hi, r-mid) = if radial.cat-is-theta {
-        (cat-c - half, cat-c + half, v-lo, v-hi, v-mid)
+      let v-mid = map-value(mid)
+      let v-lo = map-value(lo)
+      let v-hi = map-value(hi)
+      if v-mid == none or v-lo == none or v-hi == none { continue }
+      let centre = cat-c
+      let half = span / 2
+      if position-name == "dodge" {
+        centre = dodge-centre(dodge, row, cat-c, span)
+        half = dodge-half(row, span / 2)
+      }
+      let (theta-lo, theta-hi, r-lo, r-hi) = if radial.cat-is-theta {
+        (centre - half, centre + half, v-lo, v-hi)
       } else {
-        (v-lo, v-hi, cat-c - half, cat-c + half, cat-c)
+        (v-lo, v-hi, centre - half, centre + half)
       }
       if r-lo > r-hi { (r-lo, r-hi) = (r-hi, r-lo) }
 
@@ -210,7 +214,7 @@
         stroke: stroke-spec,
       )
       if radial.cat-is-theta {
-        let median = radial-arc(theta-lo, theta-hi, r-mid, radial)
+        let median = radial-arc(theta-lo, theta-hi, v-mid, radial)
         cetz.draw.line(..median, stroke: middle-stroke-spec)
       } else {
         cetz.draw.line(
@@ -223,16 +227,19 @@
     return
   }
 
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx))
+  let map-y = axis-mapper(ctx, user-axis-key("y", ctx))
+
   for row in data {
     let raw-x = row.at(cols.x, default: none)
-    let cx = map-position(x-trained, raw-x, x-range)
+    let cx = map-x(raw-x)
     let mid = parse-number(row.at(cols.y, default: none))
     let lo = parse-number(row.at(cols.ymin, default: none))
     let hi = parse-number(row.at(cols.ymax, default: none))
     if cx == none or mid == none or lo == none or hi == none { continue }
-    let cy-mid = map-position(y-trained, mid, y-range)
-    let cy-lo = map-position(y-trained, lo, y-range)
-    let cy-hi = map-position(y-trained, hi, y-range)
+    let cy-mid = map-y(mid)
+    let cy-lo = map-y(lo)
+    let cy-hi = map-y(hi)
     if cy-mid == none or cy-lo == none or cy-hi == none { continue }
 
     let band = axis-band(x-trained, raw-x, half-width, x-range)
@@ -240,7 +247,7 @@
 
     if position-name == "dodge" {
       let span = cx-hi - cx-lo
-      let centre = dodge-centre(row, cx, span)
+      let centre = dodge-centre(dodge, row, cx, span)
       let half = dodge-half(row, span / 2)
       cx-lo = centre - half
       cx-hi = centre + half

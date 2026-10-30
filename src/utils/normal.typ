@@ -123,6 +123,17 @@
   q
 }
 
+#let _DISTRIBUTIONS = ("normal", "uniform", "exponential")
+
+// Return `distribution` when it names a reference family, and panic under
+// `scope` otherwise.
+#let check-distribution(scope, distribution) = {
+  if distribution not in _DISTRIBUTIONS {
+    fail-enum(scope, "distribution", distribution, _DISTRIBUTIONS)
+  }
+  distribution
+}
+
 /// Theoretical quantile for a Q-Q reference distribution.
 ///
 /// Dispatches to the inverse CDF of the chosen reference family.
@@ -131,6 +142,8 @@
 /// `-ln(1 - p)` (the quantile of `Exp(1)` at probability `p`).
 ///
 /// \@internal
+///
+/// \@param scope Public function that the user called, named in the error.
 ///
 /// \@param p Probability in the open interval `(0, 1)`.
 ///
@@ -141,18 +154,21 @@
 /// \@examples-static Same probability under the three supported reference
 /// distributions.
 /// ```
-/// #let z-norm = theoretical-quantile(0.5, "normal")     // 0
-/// #let z-uni  = theoretical-quantile(0.5, "uniform")    // 0.5
-/// #let z-exp  = theoretical-quantile(0.5, "exponential") // ~0.693
+/// #let z-norm = theoretical-quantile("geom-qq", 0.5, "normal")     // 0
+/// #let z-uni  = theoretical-quantile("geom-qq", 0.5, "uniform")    // 0.5
+/// #let z-exp  = theoretical-quantile("geom-qq", 0.5, "exponential") // ~0.693
 /// ```
 ///
 /// \@examples-static Build an array of plotting positions for use inside a
 /// custom Q-Q derivation.
 /// ```
 /// #let n = 5
-/// #let qs = range(0, n).map(i => theoretical-quantile((i + 0.5) / n, "normal"))
+/// #let qs = range(0, n).map(i => {
+///   theoretical-quantile("geom-qq", (i + 0.5) / n, "normal")
+/// })
 /// ```
-#let theoretical-quantile(p, distribution) = {
+#let theoretical-quantile(scope, p, distribution) = {
+  let _ = check-distribution(scope, distribution)
   if distribution == "normal" {
     qnorm(p)
   } else if distribution == "uniform" {
@@ -160,17 +176,10 @@
       fail-range("theoretical-quantile", "p", p, 0, 1)
     }
     p
-  } else if distribution == "exponential" {
+  } else {
     if p <= 0 or p >= 1 {
       fail-range("theoretical-quantile", "p", p, 0, 1)
     }
     -calc.ln(1 - p)
-  } else {
-    fail-enum(
-      "theoretical-quantile",
-      "distribution",
-      distribution,
-      ("normal", "uniform", "exponential"),
-    )
   }
 }

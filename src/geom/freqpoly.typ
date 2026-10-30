@@ -1,4 +1,7 @@
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/bin.typ": check-bin-params
 #import "line.typ": spec as line-spec
 #import "../stat/bin.typ": stat-bin
 
@@ -89,21 +92,27 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "line",
-  mapping: mapping,
-  data: data,
-  params: (
-    stroke: stroke,
-    colour: colour,
-    alpha: alpha,
-    linetype: linetype,
+) = {
+  assert-position("geom-freqpoly", position)
+  assert-alpha("geom-freqpoly", alpha)
+  assert-linetype("geom-freqpoly", linetype)
+  make-layer(
+    "line",
+    mapping: mapping,
+    data: data,
+    params: (
+      stroke: stroke,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
+    )
+      + split-aes-params("geom-freqpoly", args, line-spec.reads),
+    stat: if stat == auto {
+      check-bin-params("geom-freqpoly", bins, binwidth)
+      stat-bin(bins: bins, binwidth: binwidth)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-freqpoly", args, line-spec.reads),
-  stat: if stat == auto { stat-bin(bins: bins, binwidth: binwidth) } else {
-    stat
-  },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

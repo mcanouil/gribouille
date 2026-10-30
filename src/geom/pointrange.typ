@@ -1,13 +1,14 @@
 ///! Point at `(x, y)` plus a vertical range from `ymin` to `ymax`.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
-#import "../utils/radial.typ": shift-point
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
-#import "../position/dodge.typ": dodge-geometry
-#import "../utils/flip.typ": project-user-point, user-axes, user-columns
+#import "../position/dodge.typ": dodge-geometry, project-dodged
+#import "../utils/flip.typ": user-axes, user-columns, user-point
 #import "linerange.typ": range-line-row
 
 #let spec = (
@@ -30,6 +31,9 @@
 ///
 /// Mapping must provide `x`, `y`, `ymin`, `ymax`. `colour` paints the range
 /// line and the point outline; `fill` paints the point body.
+///
+/// Under \@coord-radial a range that sweeps theta follows the polar grid as an
+/// arc.
 ///
 /// \@category Geoms
 /// \@subcategory Intervals and errors
@@ -112,24 +116,29 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "pointrange",
-  mapping: mapping,
-  data: data,
-  params: (
-    size: size,
-    stroke: stroke,
-    colour: colour,
-    fill: fill,
-    alpha: alpha,
-    linetype: linetype,
+) = {
+  assert-position("geom-pointrange", position)
+  assert-alpha("geom-pointrange", alpha)
+  assert-linetype("geom-pointrange", linetype)
+  make-layer(
+    "pointrange",
+    mapping: mapping,
+    data: data,
+    params: (
+      size: size,
+      stroke: stroke,
+      colour: colour,
+      fill: fill,
+      alpha: alpha,
+      linetype: linetype,
+    )
+      + split-aes-params("geom-pointrange", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-pointrange", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -148,7 +157,7 @@
     let xv = row.at(cols.x, default: none)
     let mid = parse-number(row.at(cols.y, default: none))
     if xv == none or mid == none { continue }
-    let p-mid = project-user-point(ctx, xv, mid)
+    let p-mid = project-dodged(ctx, dodge, row, ..user-point(ctx, xv, mid))
     if p-mid == none { continue }
     let res = range-line-row(
       layer.params,
@@ -164,7 +173,7 @@
     )
     if res == none { continue }
     res.elem
-    let (cx-mid, cy-mid) = shift-point(p-mid, res.dd)
+    let (cx-mid, cy-mid) = p-mid
     let final-fill = resolve-channel(
       "fill",
       layer.params,

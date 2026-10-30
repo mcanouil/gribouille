@@ -21,7 +21,10 @@
     geom-line(stroke: 0.6pt, alpha: 0.4),
     geom-point(size: 3pt),
   ),
-  scales: scales(x: scale-continuous(transform: "log10", labels: format-comma()), y: scale-continuous(transform: "log10", labels: format-comma())),
+  scales: scales(
+    x: scale-continuous(transform: "log10", labels: format-comma()),
+    y: scale-continuous(transform: "log10", labels: format-comma()),
+  ),
   guides: gs,
   labels: labels(title: title, x: "Inputs (log10)", y: "Outputs (log10)"),
   theme: theme-minimal(),

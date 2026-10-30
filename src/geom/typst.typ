@@ -1,5 +1,7 @@
 ///! Text geom that always evaluates its `label` aesthetic as Typst markup.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-anchor
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
 #import "./text.typ" as text-geom
@@ -137,6 +139,9 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-typst", position)
+  assert-alpha("geom-typst", alpha)
+  assert-anchor("geom-typst", anchor)
   assert-arrow("geom-typst", arrow)
   make-layer(
     "typst",

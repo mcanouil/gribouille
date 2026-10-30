@@ -1,5 +1,6 @@
 // coord-radial: spec dictionary shape and core projection helpers.
 
+#import "../../src/coord/cartesian.typ": coord-cartesian
 #import "../../src/coord/radial.typ": coord-radial
 #import "../../src/utils/radial.typ": (
   group-theta-breaks, radial-ctx, radial-point, radial-r, radial-theta,
@@ -37,16 +38,7 @@
 
 // Cartesian and other coords return `none`.
 #assert.eq(radial-ctx(none, xt, yt, (0, 10), (0, 10)), none)
-#assert.eq(
-  radial-ctx(
-    (kind: "coord", coord: "cartesian"),
-    xt,
-    yt,
-    (0, 10),
-    (0, 10),
-  ),
-  none,
-)
+#assert.eq(radial-ctx(coord-cartesian(), xt, yt, (0, 10), (0, 10)), none)
 
 // theta sweep runs from π/2 (12 o'clock) clockwise back to -3π/2 by default.
 #assert(approx-eq(radial.theta-range.at(0), calc.pi / 2))

@@ -62,6 +62,9 @@
 #assert.eq((breaks-log())(()), ())
 
 // Non-positive values drop out, as they do on a log axis.
+// A vector with no positive value has no log breaks, as for any other degenerate
+// data.
+#assert.eq((breaks-log())((-1, 0)), ())
 #assert(close((breaks-log())((0, -5, 1000)), (1000,)))
 
 // --- the closure reaches the axis through training ---

@@ -1,34 +1,23 @@
 ///! Joint `(x, y) → (cx, cy)` projection helpers for `coord-radial`.
 
-#import "../scale/train.typ": (
-  discrete-slot-width, level-position, map-axis, map-position,
-)
+#import "../coord/project.typ": axis-mapper
+#import "../scale/train.typ": discrete-slot-width, level-position, map-position
 #import "types.typ": parse-number
-
-// True when the coord is any flavour of `coord-radial`.
-#let is-radial(coord) = (
-  coord != none and coord.at("name", default: none) == "radial"
-)
 
 // Gap (cm) between the outer theta arc and the tick labels ringing it. The
 // draw site offsets the labels by it and the chrome stage reserves the band
 // they land in, so the two cannot drift apart.
 #let THETA-LABEL-PAD = 0.2
 
-// The axis the sweep runs along. `none` off a radial coord, so callers can
-// compare an axis key against it unguarded.
-#let theta-axis-of(coord) = if is-radial(coord) {
-  coord.at("theta", default: "x")
-} else { none }
-
-// Its complement, the axis the radius runs along: "y" when theta is "x"
-// (rose/radar) and "x" when theta is "y" (pie). Used during scale expansion,
-// which runs before trained scales exist and so cannot route through
-// `radial-ctx`.
-#let radial-axis-of(coord) = {
-  let theta = theta-axis-of(coord)
-  if theta == none { none } else if theta == "x" { "y" } else { "x" }
+// The axis the sweep runs along, read from the `theta` field only a radial
+// coord carries. `none` off a radial coord, so callers can compare an axis key
+// against it unguarded.
+#let theta-axis-of(coord) = if coord == none { none } else {
+  coord.at("theta", default: none)
 }
+
+// True when the coord is any flavour of `coord-radial`.
+#let is-radial(coord) = theta-axis-of(coord) != none
 
 // The `(theta-lo, theta-hi)` sweep in canvas radians. It falls out of the
 // coord alone, with no panel rect in sight, which is what lets the chrome
@@ -142,23 +131,8 @@
   (cx + r * calc.cos(theta), cy + r * calc.sin(theta))
 }
 
-// Single entry point for geoms: projects a row's `(x, y)` to canvas units
-// via either the trained scales or the active radial bundle. Returns `none`
-// when either coordinate fails to resolve.
-#let project-point(ctx, xv, yv) = {
-  let radial = ctx.at("radial", default: none)
-  if radial != none { return radial-point(xv, yv, radial) }
-  let xt = ctx.trained.at("x", default: none)
-  let yt = ctx.trained.at("y", default: none)
-  if xt == none or yt == none { return none }
-  let cx = map-position(xt, xv, ctx.px-range)
-  let cy = map-position(yt, yv, ctx.py-range)
-  if cx == none or cy == none { return none }
-  (cx, cy)
-}
-
 // Trained scale for one axis, taken from the radial bundle when a radial coord
-// is active and from `ctx.trained` otherwise. Mirrors `project-point`'s split.
+// is active and from `ctx.trained` otherwise.
 #let _axis-trained(ctx, axis) = {
   let radial = ctx.at("radial", default: none)
   if radial != none { return radial.at(axis + "-trained", default: none) }
@@ -174,9 +148,6 @@
   if trained.type == "continuous" { return parse-number(value) }
   level-position(trained, value)
 }
-
-// Add a canvas-cm `(dx, dy)` offset to a projected `(cx, cy)` point.
-#let shift-point(p, delta) = (p.at(0) + delta.at(0), p.at(1) + delta.at(1))
 
 // Group break values by canvas angle modulo a full turn. `project` maps a
 // break to canvas radians (or `none` to skip). Returns an array of groups,
@@ -212,28 +183,6 @@
   (cx + r * calc.cos(theta), cy + r * calc.sin(theta))
 }
 
-// Bar-width category span derived from a trained scale. Discrete scales use
-// `discrete-slot-width`; continuous scales fall back to the smallest gap
-// between sorted unique x values, mirroring `geom-col`'s heuristic.
-#let radial-category-span(cat-trained, cat-col, cat-range, data) = {
-  if cat-trained.type == "discrete" {
-    return discrete-slot-width(cat-trained, cat-range)
-  }
-  let xs = data
-    .map(r => parse-number(r.at(cat-col, default: none)))
-    .filter(v => v != none)
-  let (d-lo, d-hi) = cat-trained.domain
-  if xs.len() < 2 or d-hi == d-lo {
-    return (cat-range.at(1) - cat-range.at(0)) / 10
-  }
-  let sorted = xs.dedup().sorted()
-  let panel-gaps = range(sorted.len() - 1).map(i => calc.abs(
-    map-axis(cat-trained, sorted.at(i + 1), cat-range)
-      - map-axis(cat-trained, sorted.at(i), cat-range),
-  ))
-  calc.min(..panel-gaps)
-}
-
 // Resolve `cat-range` and `value-range` from a radial bundle so callers
 // don't repeat the `cat-is-theta` ternary.
 #let radial-axis-ranges(radial) = {
@@ -244,31 +193,65 @@
   }
 }
 
-// Tangent-cap offset for composite-bar geoms (errorbar, errorbarh).
-// Returns `(nx, ny)` perpendicular to the chord `(p-lo, p-hi)` with length
-// `half`, or `none` when the chord is degenerate.
-#let radial-tangent-cap(p-lo, p-hi, half) = {
-  let (sx-lo, sy-lo) = p-lo
-  let (sx-hi, sy-hi) = p-hi
-  let dx = sx-hi - sx-lo
-  let dy = sy-hi - sy-lo
+// The mappers a radial bar-like geom reads, with its categories on x and its
+// values on y. `cat` maps a row cell into the category range and `value` a
+// stat-space number into the value range, the polar axes that `theta` gives
+// x and y.
+#let radial-mappers(ctx) = {
+  let (cat-range, value-range) = radial-axis-ranges(ctx.radial)
+  (
+    cat: axis-mapper(ctx, "x", range: cat-range),
+    value: axis-mapper(ctx, "y", space: "stat", range: value-range),
+  )
+}
+
+// Bar-width category span on the x axis, in the category range of
+// `radial-axis-ranges`. Discrete scales use `discrete-slot-width`; continuous
+// scales fall back to the smallest gap between the sorted unique values of
+// `cat-col`, mirroring `geom-col`'s heuristic.
+#let radial-category-span(ctx, cat-col, data) = {
+  let cat-trained = ctx.trained.at("x")
+  let cat-range = radial-axis-ranges(ctx.radial).cat-range
+  if cat-trained.type == "discrete" {
+    return discrete-slot-width(cat-trained, cat-range)
+  }
+  let map-cat = axis-mapper(ctx, "x", space: "stat", range: cat-range)
+  let xs = data
+    .map(r => parse-number(r.at(cat-col, default: none)))
+    .filter(v => v != none)
+  let (d-lo, d-hi) = cat-trained.domain
+  if xs.len() < 2 or d-hi == d-lo {
+    return (cat-range.at(1) - cat-range.at(0)) / 10
+  }
+  let sorted = xs.dedup().sorted()
+  let panel-gaps = range(sorted.len() - 1).map(i => calc.abs(
+    map-cat(sorted.at(i + 1)) - map-cat(sorted.at(i)),
+  ))
+  calc.min(..panel-gaps)
+}
+
+// Cap offset for composite-bar geoms (errorbar, errorbarh). Returns `(nx, ny)`
+// perpendicular to the segment from `end` to `next` with length `half`, or
+// `none` when the segment is degenerate. The segment is the last piece of the
+// projected spine, so the offset is radial on an arc and tangent on a spoke.
+#let radial-tangent-cap(end, next, half) = {
+  let (sx-end, sy-end) = end
+  let (sx-next, sy-next) = next
+  let dx = sx-next - sx-end
+  let dy = sy-next - sy-end
   let len = calc.sqrt(dx * dx + dy * dy)
   if len == 0 { return none }
   (-dy / len * half, dx / len * half)
 }
 
-// Default canvas-unit half-cap for radial composite-bar geoms when the user
-// supplied a relative cap width that has no meaningful pixel mapping under
-// polar.
-#let RADIAL-DEFAULT-CAP-HALF = 0.15
+// The sweep of one sample along an arc: five degrees.
+#let ARC-STEP = calc.pi / 36
 
-// Samples one polyline takes over `span` radians: one step per five degrees,
+// Samples one polyline takes over `span` radians: one step per `ARC-STEP`,
 // with a floor of eight so even a narrow arc looks round. Every curve drawn at
 // a constant radius reads it, so a swept axis is sampled as finely as the
 // wedges and whiskers beside it.
-#let arc-steps(span) = calc.max(8, int(calc.ceil(
-  calc.abs(span) / (calc.pi / 36),
-)))
+#let arc-steps(span) = calc.max(8, int(calc.ceil(calc.abs(span) / ARC-STEP)))
 
 // Polyline samples along an arc at constant radius between `theta-lo` and
 // `theta-hi`. Used by composite geoms (boxplot, crossbar) to draw a median

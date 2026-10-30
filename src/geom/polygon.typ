@@ -1,12 +1,14 @@
 ///! Closed polygons from `(x, y)` rows, one polygon per group.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/types.typ": parse-number
 #import "../utils/group.typ": partition-by-group
 #import "../utils/aes-pair.typ": resolve-pair-defaults
-#import "../utils/radial.typ": project-point
+#import "../coord/project.typ": project-point
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -106,17 +108,21 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "polygon",
-  mapping: mapping,
-  data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-polygon", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-position("geom-polygon", position)
+  assert-alpha("geom-polygon", alpha)
+  make-layer(
+    "polygon",
+    mapping: mapping,
+    data: data,
+    params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
+      + split-aes-params("geom-polygon", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -137,6 +143,8 @@
 
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     let rows = g.data
+    // Polygons keep straight edges under every coord, so each vertex is
+    // projected on its own rather than through `project-path`.
     let pts = ()
     for row in rows {
       let p = project-point(

@@ -67,8 +67,9 @@
   let (h-lo, h-hi) = h
   let span = h-hi - h-lo
   let step = span / count
-  let lightness = calc.max(0, calc.min(100, l)) * 1%
-  let chroma-frac = calc.max(0, calc.min(100, c)) / 100
+  // `scales()` checked at bind that `c` and `l` lie in [0, 100].
+  let lightness = l * 1%
+  let chroma-frac = c / 100
   let chroma = chroma-frac * 0.18 + 0.02
   range(count).map(i => oklch(lightness, chroma, h-lo + step * i))
 }

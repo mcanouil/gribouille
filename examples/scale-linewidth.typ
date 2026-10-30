@@ -50,8 +50,10 @@
     data: manual,
     mapping: aes(x: "x", y: "y", linewidth: "g", group: "g"),
     layers: (geom-line(),),
-    scales: scales(linewidth: scale-manual(values: (0.4pt, 1.2pt, 2.4pt),
-        limits: ("thin", "medium", "thick"),)),
+    scales: scales(linewidth: scale-manual(
+      values: (0.4pt, 1.2pt, 2.4pt),
+      limits: ("thin", "medium", "thick"),
+    )),
     labels: labels(
       title: "Scale-Linewidth-Manual",
       x: "X",

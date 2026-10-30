@@ -3,6 +3,8 @@
 ///! The label string comes from the `label` aesthetic. For a boxed variant
 ///! with a fill and border, use \@geom-label.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-anchor
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
@@ -157,6 +159,9 @@
   inherit-aes: true,
   ..args,
 ) = {
+  assert-position("geom-text", position)
+  assert-alpha("geom-text", alpha)
+  assert-anchor("geom-text", anchor)
   assert-arrow("geom-text", arrow)
   make-layer(
     "text",

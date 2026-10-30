@@ -142,6 +142,7 @@
   key-draw: none,
   bar-draw: none,
   tick-gap: 0.1,
+  guide-spacing: none,
 ) = {
   if type(aesthetic) != str {
     fail-type("guide-gctx", "aesthetic", aesthetic, "an aesthetic name")
@@ -252,5 +253,8 @@
     // Cm between a tick and its label in an axis context. Mirrors the chrome
     // stage's `_TICK-LABEL-GAP`, passed in rather than imported.
     tick-gap: tick-gap,
+    // Cm between the parts of a composition that states no spacing of its own.
+    // `none` leaves the tick gap in charge.
+    guide-spacing: guide-spacing,
   )
 }

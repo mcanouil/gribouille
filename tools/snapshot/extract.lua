@@ -91,6 +91,11 @@ function M.collect(opts)
   local sources = {}
   for _, spec in ipairs(FILE_GROUPS) do
     local files = collect_files(opts.root, spec, opts.build_root, opts.golden_root, matches)
+    -- tools/check.sh leaves these directories to the snapshot run, so an
+    -- empty one must fail here rather than pass with nothing compiled.
+    if #files == 0 and not opts.only then
+      error(string.format("snapshot: no .typ file in %s/", spec.dir), 0)
+    end
     for _, s in ipairs(files) do sources[#sources + 1] = s end
   end
   for _, s in ipairs(collect_docstrings(opts.root, opts.build_root, opts.golden_root, matches)) do

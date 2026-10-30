@@ -170,3 +170,11 @@
   assert.eq(bar.kind, "colourbar")
   assert.eq(bar.breaks, (0, 25, 50, 75, 100))
 }
+
+// Tied data collapses to distinct breaks.
+#assert.eq((breaks-quantile())((3, 3, 3, 3)), (3,))
+#assert.eq((breaks-quantile(probs: (0, 0.5, 1)))((1, 1, 1, 9)), (1, 9))
+
+// A zero span off the width grid has no multiple to place, so no breaks.
+#assert.eq((breaks-width(1))((2.5, 2.5)), ())
+#assert.eq((breaks-width(1))((2, 2)), (2,))

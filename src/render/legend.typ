@@ -19,7 +19,7 @@
 #import "../theme/defaults.typ": default-theme, resolve-colour
 #import "../theme/theme.typ": (
   _line-stroke, _rect-outset-cm, _rect-style, _text-args, _text-style,
-  _zero-margin-cm, resolve-geom-defaults, resolve-theme-palette,
+  _tick-length, _zero-margin-cm, resolve-geom-defaults, resolve-theme-palette,
 )
 #import "../guide/draw-key.typ": default-key-for, draw-glyph
 #import "../guide/legend.typ": _normalise-position
@@ -680,15 +680,6 @@
 #let _COLOURBAR-H-W = 3.0
 #let _COLOURBAR-H-H = 0.35
 #let _COLOURBAR-PAD-V = 0.3
-// Room between a colour bar and its tick labels, read from the same `bar-lead`
-// the draw places them with, so the reservation cannot say one thing while the
-// draw does another.
-//
-// Both directions read it. A vertical bar spends it across its flank and a
-// horizontal one down its band, and what sits past it either way is the turned
-// label box from `_max-break-label-box`.
-#let _COLOURBAR-LABEL-LEAD = bar-lead(gctx("right", "legend"))
-
 // Resolve the displayed break positions for a continuous guide: keep the
 // explicit in-domain breaks when the scale supplies them, otherwise fall back
 // to `computed` (the binned edges/midpoints or `pretty` ticks).
@@ -838,7 +829,7 @@
 
 // The stack a swatch guide is: its title above its key grid. Each column sizes
 // to its own widest label, so one long level does not pad the rest.
-#let _swatch-node(g, style, title-style, title-w, title-h) = {
+#let _swatch-node(g, style, title-style, title-w, title-h, gctx) = {
   let size-pt = style.size / 1pt
   let diam = g.key-diam-cm
   let entries = _swatch-entries(g, style)
@@ -879,9 +870,6 @@
       label-align: _label-align(g, style.align),
       justify: _grid-justify(g, title-style),
     ),
-    // The title band already carries the gap below the title, so the parts sit
-    // flush.
-    spacing: 0.0,
   )
 }
 
@@ -907,7 +895,7 @@
 // diameter. A horizontal one puts its label under its glyph, packs its columns
 // edge to edge, and gives every row one stride with the tallest label already
 // in it.
-#let _ladder-node(g, style, title-style, title-w, title-h) = {
+#let _ladder-node(g, style, title-style, title-w, title-h, gctx) = {
   let size-pt = style.size / 1pt
   let entries = _ladder-entries(g, style)
   let shape = _guide-shape(g, g.breaks.len())
@@ -973,7 +961,6 @@
       label-align: _label-align(g, style.align),
       justify: _grid-justify(g, title-style),
     ),
-    spacing: 0.0,
   )
 }
 
@@ -1006,7 +993,12 @@
 // room past the strip is reserved here, and each direction spends the same two
 // terms on its own axes: the lead the draw places a label at, and the box that
 // label was measured to occupy.
-#let _colourbar-node(g, style, title-style, title-w, title-h) = {
+//
+// The lead is the `bar-lead` the draw places the labels with, read from the same
+// context, so the reservation cannot say one thing while the draw does another.
+// A vertical bar spends it across its flank and a horizontal one down its band.
+#let _colourbar-node(g, style, title-style, title-w, title-h, gctx) = {
+  let lead = bar-lead(gctx)
   let horizontal = g.placement.direction == "horizontal"
   let breaks = _colourbar-breaks(g)
   let label = _max-break-label-box(g, breaks, style)
@@ -1019,17 +1011,16 @@
         (_COLOURBAR-H-W, _COLOURBAR-H-H)
       } else { (_COLOURBAR-V-W, _COLOURBAR-V-H) },
       band: if horizontal {
-        _COLOURBAR-LABEL-LEAD + label.height
+        lead + label.height
       } else { _COLOURBAR-PAD-V },
       label-reserve: if horizontal { label.width } else {
-        _COLOURBAR-LABEL-LEAD + label.width
+        lead + label.width
       },
       label-w: label.width,
       angle: if style.angle != none { style.angle / 1deg } else { 0 },
       label-align: _label-align(g, style.align),
       justify: _grid-justify(g, title-style),
     ),
-    spacing: 0.0,
   )
 }
 
@@ -1047,8 +1038,6 @@
   .._box-title(g, title-style, title-w, title-h),
   prim-content(g.content, width: g.cm-width, height: g.cm-height),
   prim-spacer(_CUSTOM-PAD-V),
-  // The parts of a custom block sit flush; the slack is the trailing spacer.
-  spacing: 0.0,
 )
 
 // Which builder makes the stack each guide kind is. Adding a guide is a builder
@@ -1061,7 +1050,7 @@
   swatch: _swatch-node,
   "size-ladder": _ladder-node,
   colourbar: _colourbar-node,
-  custom: (g, style, title-style, title-w, title-h) => _custom-node(
+  custom: (g, style, title-style, title-w, title-h, gctx) => _custom-node(
     g,
     title-style,
     title-w,
@@ -1070,22 +1059,31 @@
 )
 
 // A legend box is laid out in a box of its own, not against a panel edge, so
-// its context carries only the orientation the stack needs.
+// its context carries only the orientation the stack needs, and the two theme
+// values a stack spends: the length of a tick and the gap between parts.
 // The side is nominal: a legend box stacks downward whichever side it lands on,
 // which is what the context gives a legend by default.
 //
 // The aesthetic decides the theme surfaces, and every legend box paints on the
 // legend ones, so the name here only has to be one no axis answers to.
-#let _LEGEND-GCTX = gctx("right", "legend")
+#let _legend-gctx(theme) = {
+  let resolved = if theme == none { default-theme } else { theme }
+  gctx(
+    "right",
+    "legend",
+    tick-length: surface => _tick-length(resolved, surface) / 1cm,
+    guide-spacing: resolved.at("guide-spacing", default: 0cm) / 1cm,
+  )
+}
 
 // The layout a guide reserves and draws from. Built once per guide in
 // `_stamp-sizes` and read back by both, so the two cannot drift.
 //
 // `span` is left unset: a measurement never asks where a point lands, and the
 // span is the width this record is about to decide.
-#let _stack-layout(node) = (
+#let _stack-layout(node, gctx) = (
   node: node,
-  layout: compose-layout-of(node, _LEGEND-GCTX),
+  layout: compose-layout-of(node, gctx),
 )
 
 // Stamp the cm a guide occupies on the surfaces `theme` paints it with: its
@@ -1110,14 +1108,16 @@
   if type(out.kind) != str or out.kind not in _NODE-BUILDERS {
     fail("legend._stamp-sizes", "unknown guide kind " + repr(out.kind))
   }
+  let box-gctx = _legend-gctx(theme)
   let node = (_NODE-BUILDERS.at(out.kind))(
     out,
     text-style,
     title-style,
     title.width,
     out.title-h,
+    box-gctx,
   )
-  out.insert("stack", _stack-layout(node))
+  out.insert("stack", _stack-layout(node, box-gctx))
   // The width is the wider of the title and whatever the guide puts under it,
   // and the height is the whole box; both come off that one layout, so the room
   // the sizing pass reserves is the room the draw consumes.
@@ -1486,7 +1486,7 @@
   let ink = resolve-colour(theme, "ink")
   let glyph-font = resolve-geom-defaults(theme).font
   (
-    .._LEGEND-GCTX,
+    .._legend-gctx(theme),
     span: guide.width,
     place: (frac, across) => (ox + frac * guide.width, cursor - across),
     text-style: _guide-text-styles(theme),
@@ -1518,11 +1518,20 @@
 // Every guide is drawn by its own stack, from the record `_stamp-sizes`
 // measured, in the box context every legend box shares. Nothing here reads the
 // kind: the stack already says what the guide is.
-#let _draw-guide-body(guide, ctx, ox, cursor, theme) = compose-draw(
-  guide.stack.node,
-  _legend-box-gctx(guide, ctx, ox, cursor, theme),
-  guide.stack.layout,
-)
+//
+// A guide that `compose()` hoisted carries the trained scales of the panel it
+// comes from, because two hoisted guides on one aesthetic can come from
+// panels that trained it apart.
+#let _draw-guide-body(guide, ctx, ox, cursor, theme) = {
+  let guide-ctx = if "trained" in guide {
+    (..ctx, trained: guide.trained)
+  } else { ctx }
+  compose-draw(
+    guide.stack.node,
+    _legend-box-gctx(guide, guide-ctx, ox, cursor, theme),
+    guide.stack.layout,
+  )
+}
 
 // Vertical gap between stacked guides on a side: the panel-to-legend gap plus
 // the legend-background outset on the panel-facing edge.
@@ -1876,7 +1885,7 @@
 
 // Render a free-standing legend canvas, sized by `size` from `standalone-size`
 // over the same `guides`. Used by `compose()` to draw the shared, hoisted
-// legend outside any plot panel.
+// legend outside any plot panel. Each guide carries its own `trained` scales.
 //
 // `panel-rect` carries the *content* box, not the canvas: `_draw-side`'s
 // centring terms then cancel and the guide stack starts at its origin. Along
@@ -1886,9 +1895,8 @@
 // `gap` -- lands inside the canvas that `clip: true` would otherwise cut.
 // `margin.left: 0.05` cancels `_draw-side`'s own left-side nudge, and
 // `margin.bottom: 0.4` cancels its bottom offset.
-#let standalone(guides, trained, theme, side, size) = {
+#let standalone(guides, theme, side, size) = {
   let ctx = (
-    trained: trained,
     palette: resolve-theme-palette(theme),
     theme: theme,
     canvas-w: size.canvas-w,

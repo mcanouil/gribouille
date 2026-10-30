@@ -3,15 +3,18 @@
 ///! The default `stat = "density-ridges"` smooths each y bucket's x sample
 ///! into a density curve; the geom draws every curve as a filled ridge
 ///! rising from its bucket's baseline, back to front so ridges lower on
-///! the plot overlap the ones behind them. Under \@coord-radial the layer
-///! degrades to a no-op.
+///! the plot overlap the ones behind them. \@coord-radial fails for this layer.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-number
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../stat/density-ridges.typ": stat-density-ridges
+#import "../utils/kde.typ": validate-kde-params
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-axis, map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/group.typ": bucket-by-col, partition-by-group
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": resolve-stroke-spec
@@ -38,7 +41,7 @@
 ///
 /// \@param data Layer-specific dataset, or a function applied to the plot data returning the layer frame. Falls back to the plot data when `none`.
 ///
-/// \@param scale Tallest ridge height in y-level units; values above `1` overlap the ridge behind.
+/// \@param scale Tallest ridge height in y-level units, at least `0`; values above `1` overlap the ridge behind.
 ///
 /// \@param bw Kernel bandwidth. `auto` applies Silverman's rule of thumb; pass a positive number to fix it.
 ///
@@ -124,40 +127,47 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "density-ridges",
-  mapping: mapping,
-  data: data,
-  params: (
-    scale: scale,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
+) = {
+  assert-position("geom-density-ridges", position)
+  assert-alpha("geom-density-ridges", alpha)
+  assert-number("geom-density-ridges", "scale", scale, min: 0)
+  make-layer(
+    "density-ridges",
+    mapping: mapping,
+    data: data,
+    params: (
+      scale: scale,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-density-ridges", args, spec.reads),
+    stat: if stat == auto {
+      validate-kde-params(
+        "geom-density-ridges",
+        (bw: bw, adjust: adjust, n: n, trim: trim),
+      )
+      stat-density-ridges(bw: bw, adjust: adjust, n: n, trim: trim)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-density-ridges", args, spec.reads),
-  stat: if stat == auto {
-    stat-density-ridges(bw: bw, adjust: adjust, n: n, trim: trim)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
   let data = (ctx.resolve-data)(layer)
   if mapping == none { return }
-  let x-col = mapping.at("x", default: none)
-  let y-col = mapping.at("y", default: none)
+  let cols = user-columns(mapping, ctx)
   let height-col = mapping.at("height", default: none)
-  if x-col == none or y-col == none or height-col == none { return }
+  if cols.x == none or cols.y == none or height-col == none { return }
 
-  let x-trained = ctx.trained.at("x", default: none)
-  let y-trained = ctx.trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return }
-  if x-trained.type != "continuous" { return }
-  if ctx.at("radial", default: none) != none { return }
+  let axes = user-axes(ctx)
+  if axes == none or axes.x-trained.type != "continuous" { return }
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx), space: "stat")
+  let map-y = axis-mapper(ctx, user-axis-key("y", ctx))
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // The outline separates overlapping ridges, so the stroke default stands
@@ -170,16 +180,16 @@
   // to front (higher baselines first), letting front ridges overlap them.
   let ridges = ()
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
-    for rows in bucket-by-col(g.data, y-col) {
-      let raw-y = rows.first().at(y-col, default: none)
-      let baseline = map-position(y-trained, raw-y, ctx.py-range)
+    for rows in bucket-by-col(g.data, cols.y) {
+      let raw-y = rows.first().at(cols.y, default: none)
+      let baseline = map-y(raw-y)
       if baseline == none { continue }
-      let band = axis-band(y-trained, raw-y, 0.5, ctx.py-range)
+      let band = axis-band(axes.y-trained, raw-y, 0.5, axes.y-range)
       if band == none { continue }
       let (band-lo, band-hi) = band
       let side = rows
         .map(r => {
-          let xv = parse-number(r.at(x-col, default: none))
+          let xv = parse-number(r.at(cols.x, default: none))
           let hv = parse-number(r.at(height-col, default: none))
           if xv == none or hv == none { return none }
           (x: xv, height: hv)
@@ -198,15 +208,16 @@
 
   for ridge in ridges.sorted(key: r => -r.baseline) {
     let top = ridge.side.map(p => (
-      map-axis(x-trained, p.x, ctx.px-range),
+      map-x(p.x),
       ridge.baseline + ridge.span * scale * p.height,
     ))
     let base = (
       (top.last().at(0), ridge.baseline),
       (top.first().at(0), ridge.baseline),
     )
-    let pts = top + base
-    if pts.any(p => p.at(0) == none) { continue }
+    let uvs = top + base
+    if uvs.any(p => p.at(0) == none) { continue }
+    let pts = uvs.map(((u, v)) => user-point(ctx, u, v))
 
     let final-fill = resolve-channel(
       "fill",

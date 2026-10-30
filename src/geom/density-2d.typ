@@ -1,4 +1,8 @@
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha, assert-linetype
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/contour-grid.typ": check-level-params
+#import "../utils/kde.typ": validate-kde-2d-params
 #import "path.typ": spec as path-spec
 #import "../stat/density-2d.typ": stat-density-2d
 
@@ -93,29 +97,36 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "path",
-  mapping: mapping,
-  data: data,
-  params: (
-    stroke: stroke,
-    stroke-fallback: 0.6pt,
-    colour: colour,
-    alpha: alpha,
-    linetype: linetype,
-  )
-    + split-aes-params("geom-density-2d", args, path-spec.reads),
-  stat: if stat == auto {
-    stat-density-2d(
-      bw: bw,
-      adjust: adjust,
-      n: n,
-      bins: bins,
-      binwidth: binwidth,
-      breaks: breaks,
+) = {
+  assert-position("geom-density-2d", position)
+  assert-alpha("geom-density-2d", alpha)
+  assert-linetype("geom-density-2d", linetype)
+  make-layer(
+    "path",
+    mapping: mapping,
+    data: data,
+    params: (
+      stroke: stroke,
+      stroke-fallback: 0.6pt,
+      colour: colour,
+      alpha: alpha,
+      linetype: linetype,
     )
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+      + split-aes-params("geom-density-2d", args, path-spec.reads),
+    stat: if stat == auto {
+      validate-kde-2d-params("geom-density-2d", (bw: bw, adjust: adjust, n: n))
+      check-level-params("geom-density-2d", bins, binwidth, breaks)
+      stat-density-2d(
+        bw: bw,
+        adjust: adjust,
+        n: n,
+        bins: bins,
+        binwidth: binwidth,
+        breaks: breaks,
+      )
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}

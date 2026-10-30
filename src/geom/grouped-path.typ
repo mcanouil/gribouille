@@ -7,23 +7,18 @@
 #import "../utils/arrow.typ": draw-arrow-heads
 #import "../utils/level-resolve.typ": discrete-index
 #import "../utils/types.typ": parse-number
-#import "../utils/bin.typ": bin-x-extents
-#import "../scale/train.typ": mapping-ref-col
 #import "../utils/group.typ": partition-by-group
-#import "../utils/radial.typ": project-point, shift-point
+#import "../coord/project.typ": path-uvs, project-uvs
+#import "../utils/stair.typ": stair
 #import "../utils/flip.typ": user-axes, user-columns
-#import "../position/dodge.typ": dodge-delta, dodge-geometry
+#import "../position/dodge.typ": dodge-geometry, dodge-uv
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 // The `spec` record of line, path, and step: the draw path below reads the
-// same keys for all three. Rows from stat-bin (as in `geom-freqpoly`) widen
-// `x` by half a bin, so the outer bins stay inside the panel.
+// same keys for all three.
 #let spec = (
   reads: ("x", "y", "colour", "alpha", "linewidth", "linetype"),
-  extents: (params, mapping, data) => (
-    x: bin-x-extents(data, mapping-ref-col(mapping.at("x", default: none))),
-    y: none,
-  ),
+  extents: none,
 )
 
 // Sort rows by their x value: numeric for continuous scales, domain index
@@ -49,25 +44,31 @@
     .map(p => p.row)
 }
 
-// Map rows to (cx, cy) screen positions via `project-point`, which routes
-// through `ctx.radial` when active. Skips rows whose mapped position fails
-// to resolve.
+// Map rows to (cx, cy) screen positions through the coord, which curves each
+// edge along its grid (`project-uvs`). Skips rows whose mapped position fails
+// to resolve, so their neighbours join directly. A non-`none` `direction`
+// (`"hv"` or `"vh"`) steps the mapped positions into a staircase first, so
+// under `coord-radial` the treads follow the circles.
 //
 // `dodge` is the slot `dodge-geometry` answered for the whole layer. It is
 // resolved once there and handed down because resolving it costs a pass over
-// every row on a continuous category axis, and this runs once a group.
-#let rows-to-points(rows, mapping, ctx, dodge) = {
-  let pts = ()
-  for row in rows {
-    let p = project-point(
-      ctx,
-      row.at(mapping.x, default: none),
-      row.at(mapping.y, default: none),
-    )
-    if p == none { continue }
-    pts.push(shift-point(p, dodge-delta(dodge, row)))
+// every row on a continuous category axis, and this runs once a group. Each
+// row's mapped position takes its own dodge shift before the staircase and the
+// projection, so a corner and the points the coord adds along an edge follow
+// the shifted positions.
+#let rows-to-points(rows, mapping, ctx, dodge, direction: none) = {
+  let uvs = ()
+  let mapped = path-uvs(ctx, rows.map(row => (
+    row.at(mapping.x, default: none),
+    row.at(mapping.y, default: none),
+  )))
+  for (row, uv) in rows.zip(mapped) {
+    if uv == none { continue }
+    uvs.push(if dodge == none { uv } else { dodge-uv(dodge, row, uv) })
   }
-  pts
+  if uvs.len() == 0 { return () }
+  if direction != none { uvs = stair(uvs, direction) }
+  project-uvs(ctx, uvs)
 }
 
 #let draw-grouped-paths(layer, ctx, build-pts) = {

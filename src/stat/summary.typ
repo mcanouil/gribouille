@@ -5,7 +5,7 @@
 ///! `src/utils/summaries.typ`.
 
 #import "../utils/types.typ": parse-number
-#import "../utils/summaries.typ": _apply-summary
+#import "../utils/summaries.typ": _apply-summary, check-weighted-fun
 #import "../utils/errors.typ": fail-enum
 
 /// Per-axis reduction to a central value and an uncertainty band.
@@ -27,6 +27,10 @@
 /// `"mean-cl-normal"`, `"mean-cl-boot"`, `"mean-sd"`, `"median-hilow"`,
 /// `"mean"`, `"median"`, `"quantile"`, `"quantiles"`) or a Typst callable of
 /// the form `(values, ..fun-args) -> (y, ymin, ymax)`.
+/// With a `weight` mapping, `mean`, `mean-se`, `mean-sd`, and `mean-cl-normal`
+/// use the weights, and the other named helpers fail.
+/// A callable then receives the weights as `weights:`, so it must accept
+/// `weights` or a sink such as `..args`.
 ///
 /// \@category Stats
 /// \@subcategory Summaries
@@ -107,8 +111,20 @@
   let xs = data.map(r => r.at(x-col, default: none))
   let ys = data.map(r => r.at(y-col, default: none))
   let weights = _weights-of(data, weight-col)
-  let sx = _apply-summary(fun, xs, fun-args: fun-args, weights: weights)
-  let sy = _apply-summary(fun, ys, fun-args: fun-args, weights: weights)
+  let sx = _apply-summary(
+    "stat-summary",
+    fun,
+    xs,
+    fun-args: fun-args,
+    weights: weights,
+  )
+  let sy = _apply-summary(
+    "stat-summary",
+    fun,
+    ys,
+    fun-args: fun-args,
+    weights: weights,
+  )
   if sx.y == none or sy.y == none {
     return (data: (), mapping: (x: "x", y: "y", ymin: "ymin", ymax: "ymax"))
   }
@@ -160,6 +176,11 @@
 #let apply(data, mapping, params: (:)) = {
   let base-mapping = (x: "x", y: "y", ymin: "ymin", ymax: "ymax")
   if mapping == none { return (data: (), mapping: base-mapping) }
+  check-weighted-fun(
+    "stat-summary",
+    params.at("fun", default: "mean-se"),
+    mapping.at("weight", default: none),
+  )
   let x-col = mapping.at("x", default: none)
   let y-col = mapping.at("y", default: none)
   if x-col == none or y-col == none {
@@ -215,6 +236,7 @@
       let xs = rows.map(r => r.at(x-col, default: none))
       let weights = _weights-of(rows, weight-col)
       let summary = _apply-summary(
+        "stat-summary",
         fun,
         xs,
         fun-args: fun-args,
@@ -252,7 +274,13 @@
     let rows = bucketed.buckets.at(key)
     let ys = rows.map(r => r.at(y-col, default: none))
     let weights = _weights-of(rows, weight-col)
-    let summary = _apply-summary(fun, ys, fun-args: fun-args, weights: weights)
+    let summary = _apply-summary(
+      "stat-summary",
+      fun,
+      ys,
+      fun-args: fun-args,
+      weights: weights,
+    )
     if summary.y == none { continue }
 
     let raw-x = rows.first().at(x-col, default: none)

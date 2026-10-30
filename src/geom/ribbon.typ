@@ -4,6 +4,7 @@
 ///! for uncertainty envelopes and shaded ranges under a line.
 ///! Under \@coord-flip the band runs along the vertical axis.
 
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
@@ -13,7 +14,7 @@
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/band.typ": band-polygon
 #import "../utils/flip.typ": user-axes, user-columns
-#import "../position/apply.typ": layer-marks-abut
+#import "../position/apply.typ": assert-position, layer-marks-abut
 #import "../utils/stroke.typ": resolve-stroke-spec, seal-seam
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -126,17 +127,21 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "ribbon",
-  mapping: mapping,
-  data: data,
-  params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
-    + split-aes-params("geom-ribbon", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+) = {
+  assert-position("geom-ribbon", position)
+  assert-alpha("geom-ribbon", alpha)
+  make-layer(
+    "ribbon",
+    mapping: mapping,
+    data: data,
+    params: (colour: colour, fill: fill, stroke: stroke, alpha: alpha)
+      + split-aes-params("geom-ribbon", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+  )
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -170,7 +175,7 @@
     if sorted.len() < 2 { continue }
 
     let pts = band-polygon(ctx, sorted, p => p.hi, p => p.lo)
-    if pts.any(p => p == none) { continue }
+    if pts == none { continue }
 
     let leader = rows.first()
     let final-fill = resolve-channel(

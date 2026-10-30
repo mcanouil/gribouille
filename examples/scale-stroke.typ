@@ -39,8 +39,10 @@
     data: manual,
     mapping: aes(x: "x", y: "y", stroke: "g"),
     layers: (geom-point(size: 6pt, fill: accent),),
-    scales: scales(stroke: scale-manual(values: (0.2pt, 0.8pt, 2pt),
-        limits: ("thin", "medium", "thick"),)),
+    scales: scales(stroke: scale-manual(
+      values: (0.2pt, 0.8pt, 2pt),
+      limits: ("thin", "medium", "thick"),
+    )),
     labels: labels(
       title: "Scale-Stroke-Manual",
       x: "X",

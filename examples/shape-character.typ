@@ -17,7 +17,10 @@
   layers: (
     geom-point(size: 5pt),
   ),
-  scales: scales(shape: scale-manual(values: ("A", sym.star.filled, "λ")), colour: scale-brewer(palette: "Dark2")),
+  scales: scales(
+    shape: scale-manual(values: ("A", sym.star.filled, "λ")),
+    colour: scale-brewer(palette: "Dark2"),
+  ),
   labels: labels(
     title: "Character Symbols as Markers",
     subtitle: "A Latin letter, a Typst sym., and a Greek letter as shape values",

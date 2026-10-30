@@ -147,10 +147,12 @@
 /// \@param col Column name whose value keys the buckets.
 /// \@returns Array of row-dictionary arrays, one bucket per distinct value, in first-appearance order.
 /// \@internal
-#let bucket-by-col(data, col) = bucket-index(data, row => {
-  let key = str(row.at(col, default: ""))
-  if key == "" { none } else { key }
-}).buckets
+#let bucket-by-col(data, col) = {
+  bucket-index(data, row => {
+    let key = str(row.at(col, default: ""))
+    if key == "" { none } else { key }
+  }).buckets
+}
 
 /// Return the column names for all grouping aesthetics (not x or y).
 ///

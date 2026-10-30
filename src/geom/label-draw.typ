@@ -3,11 +3,12 @@
 // rendering. Kept here so the three geoms do not redeclare the same bits.
 
 #import "../deps.typ": cetz
-#import "../position/dodge.typ": dodge-delta, dodge-geometry
+#import "../position/dodge.typ": dodge-geometry, project-dodged
 #import "../utils/aes-resolve.typ": aes-col
 #import "../utils/arrow.typ": draw-arrow-heads
 #import "../utils/flip.typ": user-point
-#import "../utils/radial.typ": axis-numeric, project-point, shift-point
+#import "../utils/radial.typ": axis-numeric
+#import "../coord/project.typ": project-point
 #import "../utils/repel.typ": repel
 #import "../utils/segment-route.typ": aabb-from-centre, route-segment
 #import "../utils/types.typ": parse-number
@@ -95,9 +96,9 @@
     .map(((idx, row)) => {
       let xv = row.at(mapping.x, default: none)
       let yv = row.at(mapping.y, default: none)
-      let projected = project-point(ctx, xv, yv)
+      let projected = project-dodged(ctx, dodge, row, xv, yv)
       if projected == none { return none }
-      let (cx, cy) = shift-point(projected, dodge-delta(dodge, row))
+      let (cx, cy) = projected
       let (nudge-dx, nudge-dy) = if not needs-nudge {
         (0.0, 0.0)
       } else {
@@ -135,10 +136,10 @@
   for (idx, row) in data.enumerate() {
     let xv = row.at(mapping.x, default: none)
     let yv = row.at(mapping.y, default: none)
-    let projected = project-point(ctx, xv, yv)
+    let projected = project-dodged(ctx, dodge, row, xv, yv)
     if projected == none { continue }
     live-idx.push(idx)
-    anchors.push(shift-point(projected, dodge-delta(dodge, row)))
+    anchors.push(projected)
     live-sizes.push(sizes.at(idx, default: (w: 0.0, h: 0.0)))
   }
   let offsets = repel(anchors, live-sizes, params: repel-params)
@@ -242,20 +243,20 @@
 
 // Resolve one row's final label-centre `(cx, cy)` using the placements
 // produced by `prepare-draw` when available, falling back to a direct
-// `project-point` when neither nudge nor segment is in play.
+// `project-dodged` when neither nudge nor segment is in play.
 #let row-centre(state, ctx, mapping, idx, row) = {
   if state.needs-placement {
     let p = state.placements.at(idx)
     if p == none { return none }
     return p.centre
   }
-  let projected = project-point(
+  project-dodged(
     ctx,
+    state.dodge,
+    row,
     row.at(mapping.x, default: none),
     row.at(mapping.y, default: none),
   )
-  if projected == none { return none }
-  shift-point(projected, dodge-delta(state.dodge, row))
 }
 
 // Render a routed connector for one row when its label has been moved off

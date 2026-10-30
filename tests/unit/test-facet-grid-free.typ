@@ -3,6 +3,7 @@
 // yield equal x-domain within each column and equal y-domain within each row,
 // differing across columns and rows.
 
+#import "../../src/coord/cartesian.typ": coord-cartesian
 #import "../../src/render/canvas.typ": _train-grid-panels
 #import "../../src/facet/grid.typ": facet-grid
 
@@ -40,7 +41,7 @@
   spec,
   panels,
   (:),
-  none,
+  coord-cartesian(),
   none,
   2,
   2,
@@ -65,7 +66,17 @@
 #assert.eq(pt.at(2).y.domain, (100.0, 101.0))
 
 // free_x only: y stays the shared global (here empty), x still per column.
-#let pt-x = _train-grid-panels(spec, panels, (:), none, none, 2, 2, true, false)
+#let pt-x = _train-grid-panels(
+  spec,
+  panels,
+  (:),
+  coord-cartesian(),
+  none,
+  2,
+  2,
+  true,
+  false,
+)
 #assert.eq(pt-x.at(0).x.domain, (0.0, 1.0))
 #assert.eq(pt-x.at(1).x.domain, (10.0, 11.0))
 #assert(not pt-x.at(0).keys().contains("y"))

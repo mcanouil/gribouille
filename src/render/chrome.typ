@@ -13,7 +13,6 @@
 #import "guides.typ": _axis-text-angle, _read-axis-guide
 #import "legend.typ": paints-bar, side-block-cm
 #import "facet.typ": _facet-gutter, _fit-gutter
-#import "domain.typ": _fixed-inner-size, _is-flipped
 #import "../utils/errors.typ": cm-text, fail
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _LAYOUT-TOLERANCE, _TICK-LABEL-GAP, _axis-guide-rows,
@@ -199,7 +198,7 @@
   let y-recs = if y-drawn { y-extents.at("breaks", default: ()) } else { () }
   // A suppressed (`labels(x: none)`) or nameless axis title reserves no extent;
   // mirror the draw-side gate so the panel reclaims the freed depth.
-  let _flipped = _is-flipped(coord)
+  let _flipped = coord.flipped
   let _x-title-name = if spec.mapping == none { none } else {
     mapping-display-name(
       spec.mapping.at(if _flipped { "y" } else { "x" }, default: none),
@@ -484,7 +483,7 @@
         slack-y: (0.0, 0.0),
       )
     } else {
-      let (inner-w, inner-h) = _fixed-inner-size(coord, trained, box-w, box-h)
+      let (inner-w, inner-h) = (coord.panel-size)(trained, box-w, box-h)
       (
         w: inner-w,
         h: inner-h,
@@ -874,7 +873,7 @@
   let box-w = calc.max(0.0, width-units - fit.margin.left - fit.margin.right)
   let box-h = calc.max(0.0, height-units - fit.margin.top - fit.margin.bottom)
   let (panel-cw, panel-ch) = if ctx.faceted { (box-w, box-h) } else {
-    _fixed-inner-size(coord, trained, box-w, box-h)
+    (coord.panel-size)(trained, box-w, box-h)
   }
   for side in ("top", "right", "bottom", "left") {
     let block = legend-blocks.at(side)

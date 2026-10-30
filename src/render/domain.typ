@@ -1,13 +1,13 @@
-// Domain scanning, coordinate-system application, and post-training domain
-// fix-ups (bar-zero floor, geom extents, ribbon padding, expansion, flip).
+// Domain scanning and post-training domain fix-ups (bar-zero floor, geom
+// extents, ribbon padding), plus the flip mapping swap. The coord steps that
+// follow (limits, expansion, flip) live in each coord's `train`.
 
-#import "../scale/train.typ": mapping-ref-col, transform-fwd
-#import "../scale/expansion.typ": DISCRETE-AUTO-DATA-PAD, normalise-expansion
-#import "../utils/radial.typ": radial-axis-of
+#import "../scale/train.typ": mapping-ref-col
 #import "../utils/types.typ": parse-number
 #import "common.typ": _track-min-max
 #import "../geom/registry.typ": GEOMS
-#import "../stat/apply.typ": stat-flush
+#import "../stat/apply.typ": stat-binned, stat-flush
+#import "../utils/bin.typ": bin-x-extents
 
 // Fold the ribbon y-range, so `ymin`/`ymax` extend the trained y domain.
 #let _scan-rows(mapping, layer-data, acc) = {
@@ -50,23 +50,62 @@
     if stat-flush(layer.at("stat-source", default: "identity")) {
       acc.flush = true
     }
-    if geom == "col" {
-      if layer.at("position", default: "identity") == "fill" {
-        acc.any-fill = true
-      }
-      let bar-frac = layer.at("params", default: (:)).at("width", default: 0.9)
-      acc.bar-half = calc.max(acc.bar-half, bar-frac / 2)
+    if geom == "col" and layer.at("position", default: "identity") == "fill" {
+      acc.any-fill = true
+    }
+    // Band geoms and dodged marks reach half their width either side of the
+    // category, so a discrete category axis keeps that much room past its
+    // outer levels. The pad matters on the radius of `coord-radial(theta:
+    // "y")`, where the inner level would otherwise sit at radius 0 and a mark
+    // reaching past it would cross the centre.
+    if geom in ("col", "boxplot", "crossbar", "errorbar") {
+      let w = layer.at("params", default: (:)).at("width", default: 0.9)
+      if type(w) != length { acc.bar-half = calc.max(acc.bar-half, w / 2) }
+    }
+    let pos = layer.at("position", default: "identity")
+    if type(pos) == dictionary and pos.at("name", default: none) == "dodge" {
+      let w = pos.at("params", default: (:)).at("width", default: 0.9)
+      acc.bar-half = calc.max(acc.bar-half, w / 2)
+    } else if pos == "dodge" {
+      acc.bar-half = calc.max(acc.bar-half, 0.9 / 2)
     }
     acc = _scan-rows(mapping, layer.at("data", default: ()), acc)
   }
   acc
 }
 
+// Axis titles that a statistic fixes when the plot mapping cannot name them:
+// the Q-Q statistics synthesise their own columns, so the mapped `sample`
+// column names no axis. Applies only when every layer uses such a statistic.
+#let _STAT-AXIS-NAMES = (
+  qq: (x: "theoretical", y: "sample"),
+  qq-line: (x: "theoretical", y: "sample"),
+)
+
+#let _stat-axis-names(layers) = {
+  let names = layers.map(l => _STAT-AXIS-NAMES.at(
+    l.at("stat-source", default: ""),
+    default: none,
+  ))
+  if names.len() == 0 or names.any(n => n == none) { return (:) }
+  names.first()
+}
+
 // Inject labels `x`/`y`/... names into trained scale specs so axis and legend
 // titles follow labels() overrides. `auto` (the labels default) keeps the
 // scale-derived name; `none` sets `spec.blank` to suppress the title and
 // collapse its reserved space; a string overrides the name.
-#let _apply-labels(trained, labels) = {
+#let _apply-labels(trained, labels, layers) = {
+  for (aes-name, name) in _stat-axis-names(layers).pairs() {
+    let t = trained.at(aes-name, default: none)
+    if t == none { continue }
+    let spec = t.at("spec", default: none)
+    let base = if spec == none { (aesthetic: aes-name) } else { spec }
+    if base.at("name", default: none) != none { continue }
+    let new-t = t
+    new-t.insert("spec", base + (name: name))
+    trained.insert(aes-name, new-t)
+  }
   if labels == none { return trained }
   for (aes-name, label) in labels.axes.pairs() {
     if label == auto { continue }
@@ -86,69 +125,7 @@
   trained
 }
 
-// coord-transform warps the view at mapping time. Skips axes whose scale
-// already pre-transformed the data: pre- and post-stat warps don't compose.
-#let _apply-coord-transform(trained, coord) = {
-  if coord == none or coord.at("name", default: none) != "transform" {
-    return trained
-  }
-  for axis in ("x", "y") {
-    let t = coord.at(axis, default: "identity")
-    if t == "identity" { continue }
-    let entry = trained.at(axis, default: none)
-    if entry == none or entry.type != "continuous" { continue }
-    if entry.at("pre-transformed", default: false) { continue }
-    let new-entry = entry
-    new-entry.insert("transform", t)
-    trained.insert(axis, new-entry)
-  }
-  trained
-}
-
-// x-limits/y-limits arrive in data space; pre-transformed domains live in stat space.
-#let _coord-limits-to-domain(entry, lim) = {
-  if not entry.at("pre-transformed", default: false) { return lim }
-  let t = entry.at("transform", default: "identity")
-  let (lo, hi) = lim
-  (transform-fwd(t, lo), transform-fwd(t, hi))
-}
-
-// coord-cartesian x-limits/y-limits overrides take precedence over scale training,
-// so re-apply them after any per-panel retraining.
-#let _apply-coord(trained, coord) = {
-  if coord == none { return trained }
-  if coord.name != "cartesian" { return trained }
-  let x-limits = coord.at("x-limits", default: none)
-  if (
-    x-limits != none
-      and trained.at("x", default: none) != none
-      and trained.x.type == "continuous"
-  ) {
-    let new-x = trained.x
-    new-x.insert("domain", _coord-limits-to-domain(trained.x, x-limits))
-    let _ = new-x.remove("oob-cutoff", default: none)
-    trained.insert("x", new-x)
-  }
-  let y-limits = coord.at("y-limits", default: none)
-  if (
-    y-limits != none
-      and trained.at("y", default: none) != none
-      and trained.y.type == "continuous"
-  ) {
-    let new-y = trained.y
-    new-y.insert("domain", _coord-limits-to-domain(trained.y, y-limits))
-    let _ = new-y.remove("oob-cutoff", default: none)
-    trained.insert("y", new-y)
-  }
-  trained
-}
-
-// Detect whether the spec asks for axis-flipping at render time.
-#let _is-flipped(coord) = (
-  coord != none and coord.at("name", default: none) == "flip"
-)
-
-// The positional aesthetics that move to the other axis with `_apply-flip`, as
+// The positional aesthetics that move to the other axis with `coord-flip`, as
 // `(x-side, y-side)` pairs. A geom reads these names against the swapped
 // trained scales, so each pair listed here swaps with them. A channel left out
 // stays in user space, so its geom draws correctly only if it branches on
@@ -176,161 +153,6 @@
     if has-x { out.insert(y-side, x-col) }
   }
   out
-}
-
-// Swap the trained x and y scales so the renderer's bottom axis shows the
-// user's original y scale and the left axis shows the user's original x
-// scale. Called after `_apply-coord` so any cartesian x-limits/y-limits overrides
-// apply to the pre-flip axes as the user wrote them.
-#let _apply-flip(trained, coord) = {
-  if not _is-flipped(coord) { return trained }
-  let x = trained.at("x", default: none)
-  let y = trained.at("y", default: none)
-  trained.insert("x", y)
-  trained.insert("y", x)
-  if x == none { return trained }
-
-  let policy = coord.at("reverse", default: auto)
-  let do-reverse = if policy == auto { x.type == "discrete" } else { policy }
-  if not do-reverse { return trained }
-  let new-y = x
-  if x.type == "discrete" {
-    new-y.insert("reverse", true)
-  } else if x.type == "continuous" {
-    new-y.insert("reverse", not new-y.at("reverse", default: false))
-  }
-  trained.insert("y", new-y)
-  trained
-}
-
-// Shrink the inner panel along the longer axis so that one x data unit
-// projects to `ratio` y data units. Returns the adjusted (width, height).
-// Falls back to the input box if either trained scale is missing or has a
-// zero-length domain.
-#let _fixed-inner-size(coord, trained, box-w, box-h) = {
-  if coord == none or coord.name != "fixed" { return (box-w, box-h) }
-  let x-trained = trained.at("x", default: none)
-  let y-trained = trained.at("y", default: none)
-  if x-trained == none or y-trained == none { return (box-w, box-h) }
-  if x-trained.type != "continuous" or y-trained.type != "continuous" {
-    return (box-w, box-h)
-  }
-  let (x-lo, x-hi) = x-trained.domain
-  let (y-lo, y-hi) = y-trained.domain
-  let dx = x-hi - x-lo
-  let dy = y-hi - y-lo
-  // A degenerate domain has no ratio to hold, and a box the chrome squeezed to
-  // nothing has none either: hand the box back rather than divide by it.
-  if dx <= 0 or dy <= 0 or box-w <= 0 or box-h <= 0 { return (box-w, box-h) }
-  let ratio = coord.at("ratio", default: 1)
-  // Pixels-per-x-unit must equal ratio * pixels-per-y-unit.
-  let want = (dy * ratio) / dx
-  let have = box-h / box-w
-  if want >= have {
-    (box-h / want, box-h)
-  } else {
-    (box-w, box-w * want)
-  }
-}
-
-// Apply scale expansion on top of the already-padded domain produced by
-// `_post-train`. Multiplicative breathing room (ratio) is folded into
-// `view-transform` (continuous) / `view-index` (discrete); absolute additive
-// padding (length) is recorded as `view-pad-cm` and applied later by
-// `_draw-axis-and-layers` as a canvas-cm inset on the data area.
-// `coord-cartesian(expand: false)` zeroes everything.
-#let _apply-expand(trained, coord) = {
-  let coord-no-expand = (
-    coord != none
-      and coord.at("name", default: none) == "cartesian"
-      and coord.at("expand", default: true) == false
-  )
-  // Under `coord-radial`, the radial axis maps view-min to canvas radius 0,
-  // so any lo-side padding leaves a hole at the centre. Collapse the radial
-  // lo-side to zero when `expand` is auto.
-  let radial-axis = radial-axis-of(coord)
-  for axis in ("x", "y") {
-    let entry = trained.at(axis, default: none)
-    if entry == none { continue }
-    let spec = entry.at("spec", default: none)
-    let raw = if spec == none { auto } else { spec.at("expand", default: auto) }
-    let expand = if coord-no-expand { false } else { raw }
-    let (mult-lo, add-cm-lo, mult-hi, add-cm-hi) = normalise-expansion(
-      expand,
-      entry.type,
-    )
-    // A side left at `auto` (whole value or one tuple element) gets the
-    // auto-only treatments below; an explicit value on that side opts out.
-    let lo-auto = (
-      raw == auto
-        or (
-          type(raw) == array and raw.len() == 2 and raw.at(0) == auto
-        )
-    )
-    let hi-auto = (
-      raw == auto
-        or (
-          type(raw) == array and raw.len() == 2 and raw.at(1) == auto
-        )
-    )
-    // Bars / areas anchor at y=0: when the user did not pin `expand`
-    // explicitly, drop the multiplicative expansion on the anchored side so
-    // the baseline sits flush against the axis line. Length-add is always
-    // honoured.
-    let anchor = entry.at("anchor-zero", default: none)
-    if anchor != none {
-      if (anchor == "lo" or anchor == "both") and lo-auto { mult-lo = 0 }
-      if (anchor == "hi" or anchor == "both") and hi-auto { mult-hi = 0 }
-    }
-    // A `flush` axis drops the automatic expansion on each side left at
-    // `auto`, the same as `coord-cartesian(expand: false)` there.
-    if entry.at("flush", default: false) {
-      if lo-auto {
-        mult-lo = 0
-        add-cm-lo = 0
-      }
-      if hi-auto {
-        mult-hi = 0
-        add-cm-hi = 0
-      }
-    }
-    let radial-zero-lo = axis == radial-axis and lo-auto
-    if radial-zero-lo {
-      mult-lo = 0
-      add-cm-lo = 0
-    }
-    let new-entry = entry
-    if entry.type == "continuous" {
-      let (lo, hi) = entry.domain
-      let transform = entry.at("transform", default: "identity")
-      let pre = entry.at("pre-transformed", default: false)
-      // Pre-transformed domains already live in stat space; warping again
-      // would double-apply.
-      let t-lo = if pre { lo } else { transform-fwd(transform, lo) }
-      let t-hi = if pre { hi } else { transform-fwd(transform, hi) }
-      let span = t-hi - t-lo
-      new-entry.insert(
-        "view-transform",
-        (t-lo - mult-lo * span, t-hi + mult-hi * span),
-      )
-    } else if entry.type == "discrete" {
-      let n = entry.domain.len()
-      let span = if n > 1 { n - 1 } else { 0 }
-      // A discrete side left at `auto` gets a default 0.6-slot data-unit pad;
-      // an explicit value on that side supersedes it. Radial axes skip
-      // the lo-side data pad so the inner edge sits at radius 0.
-      let auto-data-pad-lo = if lo-auto { DISCRETE-AUTO-DATA-PAD } else { 0 }
-      let auto-data-pad-hi = if hi-auto { DISCRETE-AUTO-DATA-PAD } else { 0 }
-      let geom-min = entry.at("geom-min-pad", default: 0)
-      let lo-pad-base = if radial-zero-lo { 0 } else { auto-data-pad-lo }
-      let pad-lo = calc.max(mult-lo * span + lo-pad-base, geom-min)
-      let pad-hi = calc.max(mult-hi * span + auto-data-pad-hi, geom-min)
-      new-entry.insert("view-index", (0 - pad-lo, (n - 1) + pad-hi))
-    }
-    new-entry.insert("view-pad-cm", (add-cm-lo, add-cm-hi))
-    trained.insert(axis, new-entry)
-  }
-  trained
 }
 
 // Rewrite a continuous trained-scale's domain via `fn((lo, hi)) -> (lo, hi)`.
@@ -366,6 +188,24 @@
   })
 }
 
+// Widen each axis of `trained` to an `(x, y)` extents record, and keep the
+// user limits of a widened continuous axis as its `oob-cutoff`.
+#let _extend-axes(trained, ext, cutoffs) = {
+  for axis in ("x", "y") {
+    let range = ext.at(axis, default: none)
+    if range == none { continue }
+    let (ext-lo, ext-hi) = range
+    trained = _extend-domain(trained, axis, ext-lo, ext-hi)
+    let cutoff = cutoffs.at(axis)
+    if cutoff != none and trained.at(axis).type == "continuous" {
+      let t = trained.at(axis)
+      t.insert("oob-cutoff", cutoff)
+      trained.insert(axis, t)
+    }
+  }
+  trained
+}
+
 // The user limits of a continuous axis, in domain order, with `none` on a
 // side left at `auto`, or `none` when the axis has no limits. Read from the
 // trained domain, so the values are in the space the layer rows use.
@@ -396,14 +236,15 @@
   (c-lo == none or v >= c-lo) and (c-hi == none or v <= c-hi)
 }
 
-// Apply post-training domain fix-ups (bar-zero floor, geom extents, ribbon
-// ymin/ymax padding, discrete bar padding). Called once globally and once
-// per panel under free scales so each panel's domain reflects its own subset.
+// Apply post-training domain fix-ups (bar-zero floor, geom extents, bin
+// edges of binned stats, ribbon ymin/ymax padding on unpinned sides, discrete bar padding).
+// Called once globally and once per panel under free scales so each panel's
+// domain reflects its own subset.
 #let _post-train(trained, layers) = {
   let scan = _post-train-scan(layers)
 
   // Bars and areas anchor against y=0. The touching side is tagged so
-  // `_apply-expand` collapses its auto-expansion to zero, matching the
+  // `apply-expand` collapses its auto-expansion to zero, matching the
   // `expansion(mult = c(0, 0.05))` convention. `position: "fill"` anchors
   // both sides; mixed-sign data keeps symmetric expansion.
   if scan.needs-y-zero {
@@ -431,14 +272,17 @@
   // mark is drawn whole. The limits are recorded as `oob-cutoff`, so the
   // out-of-bounds pass still cuts at them once the domain is wider. The hook
   // runs once per layer on values in the trained-domain space; discrete axes
-  // ignore it, and a missing axis is seeded from the extents.
+  // ignore it, and a missing axis is seeded from the extents. A layer whose
+  // stat publishes bins also reaches the outer bin edges on `x`, whatever
+  // its geom, as ggplot2 trains `x` on the `xmin` and `xmax` of each bin.
   let cutoffs = (x: _limit-cutoff(trained, "x"), y: _limit-cutoff(trained, "y"))
   for layer in layers {
     let spec = GEOMS
       .at(layer.at("name", default: ""), default: (spec: (extents: none)))
       .spec
     let mapping = layer.at("mapping", default: none)
-    if spec.extents == none or mapping == none { continue }
+    let binned = stat-binned(layer.at("stat-source", default: "identity"))
+    if mapping == none or (spec.extents == none and not binned) { continue }
     let centre = spec.at("centre", default: (x: "x", y: "y"))
     let bounds = ()
     for axis in ("x", "y") {
@@ -455,31 +299,44 @@
         b.cutoff,
       )))
     }
-    let ext = (spec.extents)(layer.at("params", default: (:)), mapping, data)
-    for axis in ("x", "y") {
-      let range = ext.at(axis, default: none)
-      if range == none { continue }
-      let (ext-lo, ext-hi) = range
-      trained = _extend-domain(trained, axis, ext-lo, ext-hi)
-      let cutoff = cutoffs.at(axis)
-      if cutoff != none and trained.at(axis).type == "continuous" {
-        let t = trained.at(axis)
-        t.insert("oob-cutoff", cutoff)
-        trained.insert(axis, t)
-      }
+    let exts = ()
+    if spec.extents != none {
+      exts.push((spec.extents)(layer.at("params", default: (:)), mapping, data))
     }
+    if binned {
+      let x-col = mapping-ref-col(mapping.at("x", default: none))
+      exts.push((x: bin-x-extents(data, x-col), y: none))
+    }
+    for ext in exts { trained = _extend-axes(trained, ext, cutoffs) }
   }
 
   if scan.ribbon-y-min != none {
     let lo-extra = scan.ribbon-y-min
     let hi-extra = scan.ribbon-y-max
-    trained = _rewrite-continuous-domain(trained, "y", ((lo, hi)) => (
-      calc.min(lo, lo-extra),
-      calc.max(hi, hi-extra),
-    ))
+    let (pin-lo, pin-hi) = if cutoffs.y == none { (none, none) } else {
+      cutoffs.y
+    }
+    trained = _rewrite-continuous-domain(trained, "y", ((lo, hi)) => {
+      let ascending = lo <= hi
+      let (low-side, high-side) = if ascending { (lo, hi) } else { (hi, lo) }
+      let (pin-low, pin-high) = if ascending {
+        (pin-lo, pin-hi)
+      } else {
+        (pin-hi, pin-lo)
+      }
+      let new-low = if pin-low == none { calc.min(low-side, lo-extra) } else {
+        low-side
+      }
+      let new-high = if pin-high == none {
+        calc.max(high-side, hi-extra)
+      } else {
+        high-side
+      }
+      if ascending { (new-low, new-high) } else { (new-high, new-low) }
+    })
   }
 
-  // Discrete category axes get `geom-min-pad` so `_apply-expand` keeps outer
+  // Discrete category axes get `geom-min-pad` so `apply-expand` keeps outer
   // bars inside the panel; the continuous case is col's extents hook.
   if scan.bar-half > 0 {
     let xt = trained.at("x", default: none)
@@ -490,7 +347,7 @@
     }
   }
 
-  // A `flush` stat tags both position axes so `_apply-expand` drops their
+  // A `flush` stat tags both position axes so `apply-expand` drops their
   // automatic expansion.
   if scan.flush {
     for axis in ("x", "y") {

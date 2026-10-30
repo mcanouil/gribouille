@@ -12,18 +12,22 @@
 ///! per-scale default on that side. `auto` resolves to a sensible per-scale
 ///! default; `false` and `none` collapse to zero.
 
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail-type
 
-#let _resolve-piece(piece) = {
+// `value` is the whole `expand:` argument, so the message shows what the user
+// wrote.
+#let _resolve-piece(piece, value, scope) = {
   if piece == 0 { return (0, 0) }
   let t = type(piece)
   if t == ratio { return (piece / 100%, 0) }
   if t == length { return (0, piece / 1cm) }
   if t == relative { return (piece.ratio / 100%, piece.length / 1cm) }
-  fail(
+  fail-type(
+    scope,
     "expand",
-    "expected a ratio (e.g., 5%), length (e.g., 5pt), or relative; got "
-      + repr(piece),
+    value,
+    "a ratio, a length, a relative length, or a (lo, hi) pair of them",
+    hint: "Write `expand: 5%`, `expand: 2pt`, or `expand: (5%, auto)`.",
   )
 }
 
@@ -44,10 +48,21 @@
 // Coerce a user-provided `expand:` value into the canonical 4-tuple
 // `(mult-lo, add-cm-lo, mult-hi, add-cm-hi)`. `mult-*` is a unitless ratio
 // (e.g., 0.05 for 5%); `add-cm-*` is a canvas-cm length (e.g., `5pt / 1cm`).
-#let normalise-expansion(value, scale-type) = {
+// `scope` names the caller in a message: `bind-scale` runs this once on the
+// user value, so a later call sees only a value that passed.
+#let normalise-expansion(value, scale-type, scope: "normalise-expansion") = {
   if value == auto { return _default-for(scale-type) }
   if value == false or value == none { return (0, 0, 0, 0) }
-  let (lo, hi) = if type(value) == array and value.len() == 2 {
+  if type(value) == array and value.len() != 2 {
+    fail-type(
+      scope,
+      "expand",
+      value,
+      "a (lo, hi) pair",
+      hint: "Give one value for both sides, or one value per side.",
+    )
+  }
+  let (lo, hi) = if type(value) == array {
     (value.at(0), value.at(1))
   } else {
     (value, value)
@@ -55,9 +70,9 @@
   let defaults = _default-for(scale-type)
   let (mult-lo, add-lo) = if lo == auto {
     (defaults.at(0), defaults.at(1))
-  } else { _resolve-piece(lo) }
+  } else { _resolve-piece(lo, value, scope) }
   let (mult-hi, add-hi) = if hi == auto {
     (defaults.at(2), defaults.at(3))
-  } else { _resolve-piece(hi) }
+  } else { _resolve-piece(hi, value, scope) }
   (mult-lo, add-lo, mult-hi, add-hi)
 }

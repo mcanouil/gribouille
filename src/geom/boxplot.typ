@@ -5,18 +5,18 @@
 ///! receives pre-computed summary rows (`x`, `lower`, `middle`, `upper`,
 ///! `ymin`, `ymax`, optional `outliers`).
 
+#import "../utils/errors.typ": assert-alpha, assert-number
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
-#import "../position/apply.typ": layer-position-name
-#import "../position/dodge.typ": dodge-centre, dodge-half
+#import "../position/apply.typ": assert-position, layer-position-name
+#import "../position/dodge.typ": dodge-centre, dodge-geometry, dodge-half
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-axis, map-position
+#import "../coord/project.typ": axis-mapper
 #import "../utils/band.typ": axis-band
 #import "../utils/radial.typ": (
-  polar-canvas, radial-arc, radial-axis-ranges, radial-category-span,
-  radial-wedge,
+  polar-canvas, radial-arc, radial-category-span, radial-mappers, radial-wedge,
 )
-#import "../utils/flip.typ": user-axes, user-columns, user-point
+#import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/types.typ": parse-number
 #import "../utils/stroke.typ": build-stroke
 #import "../theme/theme.typ": (
@@ -136,26 +136,31 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "boxplot",
-  mapping: mapping,
-  data: data,
-  params: (
-    width: width,
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
-    outlier-size: outlier-size,
-    outlier-colour: outlier-colour,
-    whisker-cap: whisker-cap,
+) = {
+  assert-position("geom-boxplot", position)
+  assert-alpha("geom-boxplot", alpha)
+  assert-number("geom-boxplot", "width", width, min: 0)
+  make-layer(
+    "boxplot",
+    mapping: mapping,
+    data: data,
+    params: (
+      width: width,
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+      outlier-size: outlier-size,
+      outlier-colour: outlier-colour,
+      whisker-cap: whisker-cap,
+    )
+      + split-aes-params("geom-boxplot", args, spec.reads),
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-boxplot", args, spec.reads),
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)
@@ -177,7 +182,7 @@
   let axes = user-axes(ctx)
   if axes == none { return }
   let (x-trained, y-trained) = (axes.x-trained, axes.y-trained)
-  let (x-range, y-range) = (axes.x-range, axes.y-range)
+  let x-range = axes.x-range
 
   let g-defaults = resolve-geom-defaults(ctx.theme)
   // Box outline, median, and whiskers carry the boxplot's structure, so
@@ -192,24 +197,18 @@
   let half-width = layer.params.width / 2
   let cap-half = half-width * layer.params.whisker-cap
 
+  let position-name = layer-position-name(layer)
+  let dodge = dodge-geometry(ctx, layer)
+
   let radial = ctx.at("radial", default: none)
   if radial != none {
-    let cat-trained = if radial.cat-is-theta { x-trained } else { y-trained }
-    let val-trained = if radial.cat-is-theta { y-trained } else { x-trained }
-    if val-trained.type != "continuous" { return }
-    let cat-col = if radial.cat-is-theta { cols.x } else {
-      mapping.at("y", default: none)
-    }
-    let (cat-range, value-range) = radial-axis-ranges(radial)
-    let half = (
-      radial-category-span(cat-trained, cat-col, cat-range, data)
-        * layer.params.width
-        / 2
-    )
-    let cap-half-cat = half * layer.params.whisker-cap
+    if y-trained.type != "continuous" { return }
+    // The categories are the user's x on either theta axis, as for every
+    // point-like geom: `radial-mappers` puts them on the polar axis x takes.
+    let (cat: map-cat, value: map-value) = radial-mappers(ctx)
+    let span = radial-category-span(ctx, cols.x, data) * layer.params.width
     for row in data {
-      let raw-cat = row.at(cat-col, default: none)
-      let cat-c = map-position(cat-trained, raw-cat, cat-range)
+      let cat-c = map-cat(row.at(cols.x, default: none))
       let lower = parse-number(row.at(lower-col, default: none))
       let middle = parse-number(row.at(middle-col, default: none))
       let upper = parse-number(row.at(upper-col, default: none))
@@ -227,11 +226,11 @@
       let whisker-hi = parse-number(row.at("whisker-hi", default: none))
       if whisker-lo == none { whisker-lo = ymin }
       if whisker-hi == none { whisker-hi = ymax }
-      let v-lower = map-axis(val-trained, lower, value-range)
-      let v-middle = map-axis(val-trained, middle, value-range)
-      let v-upper = map-axis(val-trained, upper, value-range)
-      let v-wlo = map-axis(val-trained, whisker-lo, value-range)
-      let v-whi = map-axis(val-trained, whisker-hi, value-range)
+      let v-lower = map-value(lower)
+      let v-middle = map-value(middle)
+      let v-upper = map-value(upper)
+      let v-wlo = map-value(whisker-lo)
+      let v-whi = map-value(whisker-hi)
 
       let final-fill = resolve-channel(
         "fill",
@@ -250,6 +249,13 @@
         default-colour,
       )
       let stroke-spec = build-stroke(stroke-thickness, resolved-stroke)
+
+      let half = span / 2
+      if position-name == "dodge" {
+        cat-c = dodge-centre(dodge, row, cat-c, span)
+        half = dodge-half(row, span / 2)
+      }
+      let cap-half-cat = half * layer.params.whisker-cap
 
       if radial.cat-is-theta {
         let theta-lo = cat-c - half
@@ -289,7 +295,7 @@
         for ov in outliers {
           let v = parse-number(ov)
           if v == none { continue }
-          let r = map-axis(val-trained, v, value-range)
+          let r = map-value(v)
           cetz.draw.circle(
             polar-canvas(radial, cat-c, r),
             radius: layer.params.outlier-size,
@@ -337,7 +343,7 @@
         for ov in outliers {
           let v = parse-number(ov)
           if v == none { continue }
-          let theta = map-axis(val-trained, v, value-range)
+          let theta = map-value(v)
           cetz.draw.circle(
             polar-canvas(radial, theta, cat-c),
             radius: layer.params.outlier-size,
@@ -352,12 +358,13 @@
 
   if y-trained.type != "continuous" { return }
 
-  let position-name = layer-position-name(layer)
   let pt = user-point.with(ctx)
+  let map-x = axis-mapper(ctx, user-axis-key("x", ctx))
+  let map-y = axis-mapper(ctx, user-axis-key("y", ctx), space: "stat")
 
   for row in data {
     let raw-x = row.at(cols.x, default: none)
-    let cx = map-position(x-trained, raw-x, x-range)
+    let cx = map-x(raw-x)
     if cx == none { continue }
 
     let lower = parse-number(row.at(lower-col, default: none))
@@ -381,11 +388,11 @@
     if whisker-lo == none { whisker-lo = ymin }
     if whisker-hi == none { whisker-hi = ymax }
 
-    let cy-lower = map-axis(y-trained, lower, y-range)
-    let cy-middle = map-axis(y-trained, middle, y-range)
-    let cy-upper = map-axis(y-trained, upper, y-range)
-    let cy-whisker-lo = map-axis(y-trained, whisker-lo, y-range)
-    let cy-whisker-hi = map-axis(y-trained, whisker-hi, y-range)
+    let cy-lower = map-y(lower)
+    let cy-middle = map-y(middle)
+    let cy-upper = map-y(upper)
+    let cy-whisker-lo = map-y(whisker-lo)
+    let cy-whisker-hi = map-y(whisker-hi)
 
     let boaxis-band = axis-band(x-trained, raw-x, half-width, x-range)
     let cap-band = axis-band(x-trained, raw-x, cap-half, x-range)
@@ -396,7 +403,7 @@
     let centre = cx
     if position-name == "dodge" {
       let span = cx-hi - cx-lo
-      centre = dodge-centre(row, cx, span)
+      centre = dodge-centre(dodge, row, cx, span)
       let box-half = dodge-half(row, span / 2)
       let cap-half-shrunk = dodge-half(row, (cap-hi - cap-lo) / 2)
       cx-lo = centre - box-half
@@ -465,7 +472,7 @@
     for ov in outliers {
       let v = parse-number(ov)
       if v == none { continue }
-      let cy = map-axis(y-trained, v, y-range)
+      let cy = map-y(v)
       cetz.draw.circle(
         pt(centre, cy),
         radius: layer.params.outlier-size,

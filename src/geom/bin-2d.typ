@@ -1,6 +1,9 @@
 ///! Rectangular two-dimensional binning. Wraps \@stat-bin-2d over rect output.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../layer.typ": make-layer, split-aes-params
+#import "../utils/bin.typ": check-bin-params
 #import "rect.typ": spec as rect-spec
 #import "../stat/bin-2d.typ": stat-bin-2d
 
@@ -73,21 +76,26 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "rect",
-  mapping: mapping,
-  data: data,
-  params: (
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
+) = {
+  assert-position("geom-bin-2d", position)
+  assert-alpha("geom-bin-2d", alpha)
+  make-layer(
+    "rect",
+    mapping: mapping,
+    data: data,
+    params: (
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-bin-2d", args, rect-spec.reads),
+    stat: if stat == auto {
+      check-bin-params("geom-bin-2d", bins, binwidth, pair: true)
+      stat-bin-2d(bins: bins, binwidth: binwidth)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-bin-2d", args, rect-spec.reads),
-  stat: if stat == auto { stat-bin-2d(bins: bins, binwidth: binwidth) } else {
-    stat
-  },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

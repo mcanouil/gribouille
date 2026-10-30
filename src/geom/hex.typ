@@ -1,10 +1,12 @@
 ///! Hexagonal two-dimensional bin layer. Wraps \@stat-bin-hex over a hex
 ///! polygon draw routine.
 
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../deps.typ": cetz
+#import "../utils/bin.typ": check-bin-params
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/aes-resolve.typ": resolve-channel
-#import "../scale/train.typ": map-position
 #import "../stat/bin-hex.typ": stat-bin-hex
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../utils/hex.typ": hex-vertices
@@ -88,24 +90,29 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "hex",
-  mapping: mapping,
-  data: data,
-  params: (
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
+) = {
+  assert-position("geom-hex", position)
+  assert-alpha("geom-hex", alpha)
+  make-layer(
+    "hex",
+    mapping: mapping,
+    data: data,
+    params: (
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+    )
+      + split-aes-params("geom-hex", args, spec.reads),
+    stat: if stat == auto {
+      check-bin-params("geom-hex", bins, binwidth, pair: true)
+      stat-bin-hex(bins: bins, binwidth: binwidth)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-hex", args, spec.reads),
-  stat: if stat == auto { stat-bin-hex(bins: bins, binwidth: binwidth) } else {
-    stat
-  },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}
 
 #let draw(layer, ctx) = {
   let mapping = (ctx.resolve-mapping)(layer)

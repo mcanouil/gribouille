@@ -1,6 +1,9 @@
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../layer.typ": make-layer, split-aes-params
 #import "area.typ": spec as area-spec
 #import "../stat/density.typ": stat-density
+#import "../utils/kde.typ": validate-kde-params
 
 ///! Smoothed density curve of the x sample.
 ///!
@@ -101,24 +104,32 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = make-layer(
-  "area",
-  mapping: mapping,
-  data: data,
-  params: (
-    colour: colour,
-    fill: fill,
-    stroke: stroke,
-    alpha: alpha,
-    direction: none,
-    outline-role: "ink",
-    fill-role: none,
+) = {
+  assert-position("geom-density", position)
+  assert-alpha("geom-density", alpha)
+  make-layer(
+    "area",
+    mapping: mapping,
+    data: data,
+    params: (
+      colour: colour,
+      fill: fill,
+      stroke: stroke,
+      alpha: alpha,
+      direction: none,
+      outline-role: "ink",
+      fill-role: none,
+    )
+      + split-aes-params("geom-density", args, area-spec.reads),
+    stat: if stat == auto {
+      validate-kde-params(
+        "geom-density",
+        (bw: bw, adjust: adjust, n: n, trim: trim),
+      )
+      stat-density(bw: bw, adjust: adjust, n: n, trim: trim)
+    } else { stat },
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
   )
-    + split-aes-params("geom-density", args, area-spec.reads),
-  stat: if stat == auto {
-    stat-density(bw: bw, adjust: adjust, n: n, trim: trim)
-  } else { stat },
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-)
+}

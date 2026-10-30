@@ -4,7 +4,8 @@
 
 #import "../scale/train.typ": discrete-slot-width, map-axis, map-position
 #import "types.typ": parse-number
-#import "flip.typ": project-user-point, user-stair-direction
+#import "../coord/project.typ": path-uvs, project-uvs
+#import "flip.typ": user-point, user-stair-direction
 #import "stair.typ": stair
 
 /// Compute the panel coordinate range of a band centred on `raw`.
@@ -45,16 +46,15 @@
 /// Build a closed filled-band polygon from points already sorted by x: the
 /// upper edge forward followed by the lower edge reversed. Under coord-flip
 /// the band runs along the vertical axis and spans the horizontal one.
-/// `hi`/`lo` read the upper/lower value off each point. Unmappable points
-/// project to `none` and pass through unchanged, so callers guard with
-/// `pts.any(p => p == none)`.
+/// `hi`/`lo` read the upper/lower value off each point. The outline goes
+/// through the coord as one closed path, so under coord-radial both edges and
+/// the two edges that close the band follow the polar grid.
 /// A non-`none` `direction` (`"hv"` or `"vh"`) steps both edges into a
-/// staircase, leaving the closed shape intact; the step is skipped when an
-/// edge holds an unmappable point so the guard still fires.
+/// staircase, leaving the closed shape intact.
 ///
 /// \@internal
 ///
-/// \@param ctx Per-draw context forwarded to `project-user-point`.
+/// \@param ctx Per-draw context forwarded to `project-uvs`.
 ///
 /// \@param sorted Points sorted by x, each carrying an `x` field.
 ///
@@ -64,19 +64,20 @@
 ///
 /// \@param direction Stair direction `"hv"`/`"vh"`, or `none` for a smooth band.
 ///
-/// \@returns Array of projected `(x, y)` points forming the closed polygon.
+/// \@returns Array of projected `(x, y)` points forming the closed polygon, or `none` when a point does not resolve.
 #let band-polygon(ctx, sorted, hi, lo, direction: none) = {
-  let upper = sorted.map(p => project-user-point(ctx, p.x, hi(p)))
-  let lower = sorted.rev().map(p => project-user-point(ctx, p.x, lo(p)))
+  let upper = path-uvs(ctx, sorted.map(p => user-point(ctx, p.x, hi(p))))
+  let lower = path-uvs(
+    ctx,
+    sorted.rev().map(p => user-point(ctx, p.x, lo(p))),
+  )
+  if upper.any(uv => uv == none) or lower.any(uv => uv == none) {
+    return none
+  }
   direction = user-stair-direction(direction, ctx)
-  if (
-    direction != none
-      and not upper.any(p => p == none)
-      and not lower.any(p => p == none)
-  ) {
+  if direction != none {
     upper = stair(upper, direction)
     lower = stair(lower, direction)
   }
-  upper + lower
+  project-uvs(ctx, upper + lower, closed: true)
 }
-

@@ -22,7 +22,7 @@
     fill: scale-discrete(
       limits: species-colours.keys(),
       palette: species-colours.values(),
-    )
+    ),
   ),
   labels: labels(
     title: "Chinstrap and Gentoo bills overlap; Adelie bills stand apart",
@@ -34,7 +34,7 @@
   guides: guides(default: none),
   theme: theme-minimal(
     axis-ticks: element-tick(length: 0.12cm),
-    panel-grid-major-y: element-line()
+    panel-grid-major-y: element-line(),
   ),
   width: 12cm,
   height: 7.5cm,

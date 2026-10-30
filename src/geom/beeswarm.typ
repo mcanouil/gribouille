@@ -1,3 +1,5 @@
+#import "../position/apply.typ": assert-position
+#import "../utils/errors.typ": assert-alpha
 #import "../layer.typ": split-aes-params
 #import "point.typ": geom-point, spec as point-spec
 
@@ -96,18 +98,22 @@
   key: auto,
   inherit-aes: true,
   ..args,
-) = geom-point(
-  mapping: mapping,
-  data: data,
-  size: size,
-  stroke: stroke,
-  fill: fill,
-  colour: colour,
-  alpha: alpha,
-  shape: shape,
-  stat: stat,
-  position: position,
-  key: key,
-  inherit-aes: inherit-aes,
-  ..split-aes-params("geom-beeswarm", args, point-spec.reads),
-)
+) = {
+  assert-position("geom-beeswarm", position)
+  assert-alpha("geom-beeswarm", alpha)
+  geom-point(
+    mapping: mapping,
+    data: data,
+    size: size,
+    stroke: stroke,
+    fill: fill,
+    colour: colour,
+    alpha: alpha,
+    shape: shape,
+    stat: stat,
+    position: position,
+    key: key,
+    inherit-aes: inherit-aes,
+    ..split-aes-params("geom-beeswarm", args, point-spec.reads),
+  )
+}

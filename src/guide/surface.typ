@@ -9,11 +9,12 @@
 ///! Three asymmetries between the two contexts are encoded here rather than
 ///! discovered at a draw site:
 ///!
-///! - A legend has no line surface, so `line` resolves to `none` and a line
-///!   part measures nothing in a legend.
-///! - `axis-ticks` is an `element-tick` carrying a length; `legend-ticks` is an
-///!   `element-line` with none. So `tick-metrics` answers with a length as well
-///!   as a surface, and supplies the legend length itself.
+///! - A legend has no sub-decade tick tiers, so those roles resolve to `none`.
+///!   Its `line` role resolves to `legend-line`, which is blank by default, so a
+///!   legend draws no spine unless the theme asks for one.
+///! - A tick surface carries a length, and `tick-metrics` answers with it as
+///!   well as the surface. A context with no `tick-length` closure falls back to
+///!   `LEGEND-TICK-LEN` in a legend and to nothing on an axis.
 ///! - The sub-decade tick tiers are per-axis, never per-side, so they take the
 ///!   axis rather than the side.
 
@@ -40,10 +41,9 @@
   "bar",
 )
 
-// Tick geometry a legend draws at. The colour bar has drawn its ticks at these
-// two lengths since before the guide layer existed, and `legend-ticks` carries
-// no length of its own to read them from, so they live here as named constants
-// rather than as locals at the draw site.
+// Tick geometry a legend draws at when its context carries no theme. The length
+// is the default of `legend-ticks`; the gap is the room between a tick and its
+// label.
 #let LEGEND-TICK-LEN = 0.1
 #let LEGEND-TICK-GAP = 0.08
 
@@ -74,10 +74,12 @@
   } else {
     if role == "text" { "legend-text" } else if role == "title" {
       "legend-title"
-    } else if role == "ticks" { "legend-ticks" } else if role == "background" {
-      "legend-background"
-    } else if role == "bar" { "legend-bar" } else {
-      // A legend has no axis line, and no sub-decade tick tiers.
+    } else if role == "line" { "legend-line" } else if role == "ticks" {
+      "legend-ticks"
+    } else if role == "background" { "legend-background" } else if (
+      role == "bar"
+    ) { "legend-bar" } else {
+      // A legend has no sub-decade tick tiers.
       none
     }
   }
@@ -86,9 +88,8 @@
 // The surface a tick tier paints on, the cm it draws, and the cm between it and
 // its label.
 //
-// In an axis context the length comes from the theme through the `tick-length`
-// closure the context carries. In a legend context the theme surface carries no
-// length, so the two constants above answer instead.
+// The length comes from the theme through the `tick-length` closure the context
+// carries. A legend context without one answers with the constants above.
 #let tick-metrics(gctx, tier: "major") = {
   let role = if tier == "major" { "ticks" } else { "ticks-" + tier }
   let surface = surface-for(gctx, role)
@@ -96,10 +97,14 @@
   // tiers. Answer with nothing to draw, so a caller reading `len` reserves no
   // room for a tick that never appears.
   if surface == none { return (surface: none, len: 0.0, gap: 0.0) }
-  if gctx.mode == "legend" {
-    return (surface: surface, len: LEGEND-TICK-LEN, gap: LEGEND-TICK-GAP)
-  }
   let resolve = gctx.at("tick-length", default: none)
+  if gctx.mode == "legend" {
+    return (
+      surface: surface,
+      len: if resolve == none { LEGEND-TICK-LEN } else { (resolve)(surface) },
+      gap: LEGEND-TICK-GAP,
+    )
+  }
   (
     surface: surface,
     len: if resolve == none { 0.0 } else { (resolve)(surface) },

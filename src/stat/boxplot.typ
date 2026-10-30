@@ -6,6 +6,7 @@
 ///! type-7 / numpy default linear interpolation rule.
 
 #import "../utils/types.typ": parse-number
+#import "../utils/errors.typ": fail-type
 #import "../utils/summaries.typ": quantile-type-7
 #import "../utils/group.typ": bucket-by-col
 
@@ -67,11 +68,17 @@
 /// ```
 ///
 /// \@see \@geom-boxplot, \@stat-identity
-#let stat-boxplot(coefficient: 1.5) = (
-  kind: "stat",
-  name: "boxplot",
-  params: (coefficient: coefficient),
-)
+#let stat-boxplot(coefficient: 1.5) = {
+  if type(coefficient) not in (int, float) or coefficient < 0 {
+    fail-type(
+      "stat-boxplot",
+      "coefficient",
+      coefficient,
+      "a non-negative number",
+    )
+  }
+  (kind: "stat", name: "boxplot", params: (coefficient: coefficient))
+}
 
 #let _summarise(rows, x-col, y-col, coefficient) = {
   let ys = rows

@@ -4,8 +4,10 @@
 ///! each bin reduces the y values inside to a `(y, ymin, ymax)` summary
 ///! using one of the helpers in `src/utils/summaries.typ`.
 
-#import "../utils/summaries.typ": _apply-summary
-#import "../utils/bin.typ": bin-1d-cells, bin-midpoint, panel-bin-grid
+#import "../utils/summaries.typ": _apply-summary, check-weighted-fun
+#import "../utils/bin.typ": (
+  bin-1d-cells, bin-midpoint, check-bin-params, panel-bin-grid,
+)
 #import "../utils/aes-resolve.typ": stat-output-mapping
 
 /// Summary statistic over uniform x bins.
@@ -23,6 +25,8 @@
 /// \@stability stable
 ///
 /// \@param fun Name of the summary helper to apply to each bin's y values.
+///   With a `weight` mapping, the only valid helper names are `mean`,
+///   `mean-se`, `mean-sd`, and `mean-cl-normal`.
 ///
 /// \@param bins Target number of bins when `binwidth` is `none`.
 ///
@@ -74,16 +78,19 @@
   bins: 30,
   binwidth: none,
   fun-args: (:),
-) = (
-  kind: "stat",
-  name: "summary-bin",
-  params: (
-    fun: fun,
-    bins: bins,
-    binwidth: binwidth,
-    "fun-args": fun-args,
-  ),
-)
+) = {
+  check-bin-params("stat-summary-bin", bins, binwidth)
+  (
+    kind: "stat",
+    name: "summary-bin",
+    params: (
+      fun: fun,
+      bins: bins,
+      binwidth: binwidth,
+      "fun-args": fun-args,
+    ),
+  )
+}
 
 #let apply(data, mapping, params: (:)) = {
   let new-mapping = stat-output-mapping(
@@ -91,6 +98,11 @@
     (x: "x", y: "y", ymin: "ymin", ymax: "ymax"),
   )
   if mapping == none { return (data: (), mapping: new-mapping) }
+  check-weighted-fun(
+    "stat-summary-bin",
+    params.at("fun", default: "mean-se"),
+    mapping.at("weight", default: none),
+  )
   let x-col = mapping.at("x", default: none)
   let y-col = mapping.at("y", default: none)
   if x-col == none or y-col == none {
@@ -110,6 +122,7 @@
     if bucket.ys.len() == 0 { continue }
     let weights = if weight-col == none { none } else { bucket.ws }
     let summary = _apply-summary(
+      "stat-summary-bin",
       fun,
       bucket.ys,
       fun-args: fun-args,

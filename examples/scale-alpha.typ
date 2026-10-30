@@ -35,8 +35,10 @@
     data: manual,
     mapping: aes(x: "x", y: "y", alpha: "g"),
     layers: (geom-point(size: 5pt, fill: accent),),
-    scales: scales(alpha: scale-manual(values: (0.2, 0.55, 1),
-        limits: ("dim", "medium", "full"),)),
+    scales: scales(alpha: scale-manual(
+      values: (0.2, 0.55, 1),
+      limits: ("dim", "medium", "full"),
+    )),
     labels: labels(title: "Scale-Alpha-Manual", x: "X", y: "Y", alpha: "Group"),
     theme: theme-minimal(),
     width: 12cm,

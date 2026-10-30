@@ -8,10 +8,7 @@
 #import "legend.typ" as legend-mod
 #import "common.typ": _tick-cm-sides
 #import "axis-format.typ": _axis-title, _sec-spec, _shared-axis-breaks
-#import "domain.typ": (
-  _apply-coord, _apply-coord-transform, _apply-expand, _apply-flip,
-  _apply-labels, _fixed-inner-size, _is-flipped, _post-train,
-)
+#import "domain.typ": _apply-labels, _post-train
 #import "extents.typ": (
   _AX-TITLE-LABEL-GAP, _LAYOUT-TOLERANCE, _axis-label-extents, _merge-extents,
   _sec-band-cm, _sec-title-offset-cm, _secondary-label-extents, _text-margin-cm,
@@ -92,12 +89,9 @@
     data: spec.data,
     aesthetics: positional-aesthetics,
   )
-  pt = _apply-labels(pt, labels)
+  pt = _apply-labels(pt, labels, layers)
   pt = _post-train(pt, layers)
-  pt = _apply-coord-transform(pt, coord)
-  pt = _apply-coord(pt, coord)
-  pt = _apply-expand(pt, coord)
-  _apply-flip(pt, coord)
+  (coord.train)(pt)
 }
 
 // Shared break sets for a facet canvas. A free axis resets its entry to
@@ -513,8 +507,7 @@
       let panel-trained = if panel-trained-list.len() == 0 {
         trained
       } else { panel-trained-list.at(i) }
-      let (inner-w, inner-h) = _fixed-inner-size(
-        coord,
+      let (inner-w, inner-h) = (coord.panel-size)(
         panel-trained,
         panel-w,
         panel-h,
@@ -548,7 +541,7 @@
         show-y-sec: free-y or all-y or col == ncol - 1,
         show-x-sec-title: false,
         show-y-sec-title: false,
-        flipped: _is-flipped(coord),
+        flipped: coord.flipped,
         axis-breaks: shared-breaks,
         x-extents: _pe.x,
         y-extents: _pe.y,
@@ -592,6 +585,7 @@
   let _grid-labeller = spec.facet.at("labeller", default: none)
   let _col-count(c) = {
     let n = 0
+    if panels.len() == 0 { return n }
     for r in range(n-rows) {
       n += _panel-row-count(panels.at(r * n-cols + c).layers)
     }
@@ -599,6 +593,7 @@
   }
   let _row-count(r) = {
     let n = 0
+    if panels.len() == 0 { return n }
     for c in range(n-cols) {
       n += _panel-row-count(panels.at(r * n-cols + c).layers)
     }
@@ -707,8 +702,7 @@
         let panel-trained = if panel-trained-list.len() == 0 {
           trained
         } else { panel-trained-list.at(r * n-cols + c) }
-        let (inner-w, inner-h) = _fixed-inner-size(
-          coord,
+        let (inner-w, inner-h) = (coord.panel-size)(
           panel-trained,
           panel-w,
           panel-h,
@@ -729,7 +723,7 @@
           show-y-sec: c == n-cols - 1,
           show-x-sec-title: false,
           show-y-sec-title: false,
-          flipped: _is-flipped(coord),
+          flipped: coord.flipped,
           axis-breaks: shared-breaks,
           x-extents: x-extents,
           y-extents: y-extents,
@@ -800,7 +794,7 @@
   // zero so it draws empty rather than inverting into a mirrored rect.
   let box-w = calc.max(0.0, px-hi - px-lo)
   let box-h = calc.max(0.0, py-hi - py-lo)
-  let (inner-w, inner-h) = _fixed-inner-size(coord, trained, box-w, box-h)
+  let (inner-w, inner-h) = (coord.panel-size)(trained, box-w, box-h)
 
   cetz.canvas(length: 1cm, {
     import cetz.draw: hide, rect
@@ -821,7 +815,7 @@
         sec-x-extent: ctx.sec-x-extent,
         right-strip: 0.0,
       ),
-      flipped: _is-flipped(coord),
+      flipped: coord.flipped,
       x-extents: ctx.x-extents,
       y-extents: ctx.y-extents,
       x-title-extents: ctx.x-title-extents,
