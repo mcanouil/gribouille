@@ -158,6 +158,15 @@ Run the survey command at the bottom before extending the table.
 | `extents`   | per-side legend extents | dict `(top, right, bottom, left, inside)` returned by `legend.estimate-extents`; cm totals plus inside-anchor records.      |
 | `side`      | placement side          | `"top"` / `"right"` / `"bottom"` / `"left"` for margin slots, `"inside"` for panel-overlay placement, `"none"` to suppress. |
 
+## keisen adapter
+
+| Term           | Expansion                  | Notes                                                                                                                                         |
+| -------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `renderer`     | keisen nanoplot renderer   | `(kind: "nanoplot-renderer", draw, readings, axis)` dict that `nanoplot()` returns (`src/integration/nanoplot.typ`). keisen reads it as data. |
+| `readings`     | numbers in one cell        | the `domain-field` values of the records in a cell, as floats; `()` for a value with none. keisen builds the column domain from them.        |
+| `domain`       | column domain              | `(low, high)` that keisen passes to every cell and to both axis places; it becomes the x scale `limits`.                                     |
+| `domain-field` | record field of the domain | the record key that `readings` reads.                                                                                                         |
+
 ## Survey
 
 Re-run before extending the table:

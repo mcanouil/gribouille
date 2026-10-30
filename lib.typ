@@ -129,6 +129,7 @@
 #import "src/utils/cut.typ": cut-interval, cut-number, cut-width
 #import "src/utils/resolution.typ": resolution
 #import "src/utils/normal.typ": qnorm
+#import "src/integration/nanoplot.typ": nanoplot
 
 // Wrangle.
 #import "src/wrangle/summarise.typ": count, summarise

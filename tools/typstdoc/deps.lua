@@ -1,7 +1,7 @@
 -- Read the package and Typst compiler versions from typst.toml and every
 -- `@preview/<name>:<version>` import from src/deps.typ.
--- Validate that src/deps.typ is the sole @preview import site under src/, then
--- render docs/_variables.yml.
+-- Validate that src/deps.typ is the sole @preview import site under src/ and
+-- that nothing under src/ imports keisen, then render docs/_variables.yml.
 
 local util = require("util")
 
@@ -30,7 +30,19 @@ local function series(version)
   return major .. "." .. minor
 end
 
+-- keisen draws Gribouille plots in its tables, so a keisen import under src/
+-- would make each package depend on the other. tests/ and docs/ may import it.
+local function refuse_keisen(file, content)
+  local namespace = content:match("@([%w%-_]+)/keisen:")
+  if namespace then
+    util.die(string.format(
+      "%s imports @%s/keisen; nothing under src/ may depend on keisen",
+      file, namespace))
+  end
+end
+
 local function parse_imports(source)
+  refuse_keisen("src/deps.typ", source)
   local imports = {}
   local order = {}
   for name, version in source:gmatch("@preview/([%w%-_]+):([%w%.%-]+)") do
@@ -50,6 +62,7 @@ local function validate_no_stray_imports(src_root, deps_path)
   for _, file in ipairs(util.find_typ_files(src_root)) do
     if file ~= deps_path then
       local content = util.read_file(file) or ""
+      refuse_keisen(file, content)
       if content:match("@preview/[%w%-_]+:") then
         util.die(string.format(
           "%s imports an @preview/* package directly; re-export from deps.typ instead",

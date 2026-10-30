@@ -1951,6 +1951,41 @@ compiler = "0.15.0"
       deps.collect({ toml = toml, deps_file = toml, src = TEST_DIR })
     end, "missing package.version")
   end)
+
+  local function keisen_toml()
+    return tmpfile("deps_toml_keisen", [[
+[package]
+name = "demo"
+version = "1.2.3"
+compiler = "0.15.0"
+]])
+  end
+
+  for _, namespace in ipairs({ "preview", "local" }) do
+    it("refuses @" .. namespace .. "/keisen in src/deps.typ", function()
+      local src = string.format("%s/_tmp_deps_src", TEST_DIR)
+      os.execute(string.format("mkdir -p %q", src))
+      local deps_file = tmpfile("deps_keisen", string.format(
+        '#import "@preview/cetz:0.5.2"\n#import "@%s/keisen:0.2.0"\n', namespace))
+      local ok, err = pcall(deps.collect, { toml = keisen_toml(), deps_file = deps_file, src = src })
+      os.execute(string.format("rm -rf %q", src))
+      assert_true(not ok, "expected an error, got none")
+      assert_contains(tostring(err), string.format(
+        "src/deps.typ imports @%s/keisen; nothing under src/ may depend on keisen", namespace))
+    end)
+  end
+
+  it("refuses @local/keisen in any other file under src/", function()
+    local src = string.format("%s/_tmp_deps_src", TEST_DIR)
+    os.execute(string.format("mkdir -p %q", src))
+    local stray = src .. "/stray.typ"
+    util.write_file(stray, '#import "@local/keisen:0.1.0": *\n')
+    local deps_file = tmpfile("deps_file", '#import "@preview/cetz:0.5.2"\n')
+    local ok, err = pcall(deps.collect, { toml = keisen_toml(), deps_file = deps_file, src = src })
+    os.execute(string.format("rm -rf %q", src))
+    assert_true(not ok, "expected an error, got none")
+    assert_contains(tostring(err), stray .. " imports @local/keisen; nothing under src/ may depend on keisen")
+  end)
 end)
 
 describe("snapshot: compare AE parsing", function()

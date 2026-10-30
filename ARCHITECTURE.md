@@ -38,6 +38,7 @@ Entry points trace the same path:
 | `src/render/` | Rendering pipeline: domain, facet layout, panel draw, canvas, chrome, legend renderer (`render/legend.typ`), and the axis band (`render/axis-parts.typ`), which the chrome stage measures and the panel draws from one stack of guide primitives. |
 | `src/utils/` | Shared leaf helpers: types, formatting, colour, late-binding, binning, errors, rotated-label geometry (`label-geometry.typ`). No cetz drawing lives here. |
 | `src/datasets/` | Built-in example datasets (economics, mpg, penguins). |
+| `src/integration/` | Adapters that make a Gribouille plot part of another package. `nanoplot.typ` returns a keisen nanoplot renderer as a plain dictionary, so neither package imports the other. |
 
 Design tenets worth knowing before editing:
 
@@ -46,7 +47,8 @@ Design tenets worth knowing before editing:
   See [`src/utils/late-binding.typ`](src/utils/late-binding.typ).
 - **Per-facet stat re-training.** Stats such as smooth, bin, and boxplot re-run per panel to respect facet semantics.
 - **Single CeTZ import.** Only [`src/deps.typ`](src/deps.typ) imports third-party packages.
-  `tools/typstdoc` rejects `@preview/*` imports elsewhere under `src/`.
+  `tools/typstdoc` rejects `@preview/*` imports elsewhere under `src/`, and a keisen import anywhere under `src/`, in any namespace.
+  Only `tests/` and `docs/` may import keisen.
 - **Keyed-by-aesthetic plot inputs.** `scales()` ([`src/scales.typ`](src/scales.typ)), `guides()` ([`src/guides.typ`](src/guides.typ)), and `labels()` ([`src/labels.typ`](src/labels.typ)) each build a dict keyed by aesthetic and feed it to `plot()`.
   A later entry for the same aesthetic wins.
   `expand-limits` ([`src/limits.typ`](src/limits.typ)) and `annotate` ([`src/annotate.typ`](src/annotate.typ)) are top-level shortcuts.
