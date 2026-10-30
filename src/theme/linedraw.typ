@@ -78,7 +78,7 @@
   ink,
   paper,
   accent,
-  (
+  (ink, paper) => (
     panel-background: element-rect(fill: paper),
     panel-grid: element-line(
       colour: colour-mix(ink, paper, 0.7),

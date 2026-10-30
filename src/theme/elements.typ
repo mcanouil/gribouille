@@ -4,7 +4,9 @@
 ///! fields consumed internally by `merge-theme`.
 
 #import "../utils/errors.typ": (
-  assert-halign, assert-stroke, assert-text-size, assert-tick-length,
+  assert-angle, assert-colour, assert-font, assert-halign, assert-length,
+  assert-margin, assert-paint, assert-stroke, assert-text-size,
+  assert-tick-length, assert-weight,
 )
 #import "../utils/types.typ": split-stroke-shorthand
 
@@ -137,6 +139,11 @@
 ) = {
   assert-halign("element-text", align)
   assert-text-size("element-text", size)
+  assert-weight("element-text", weight)
+  assert-paint("element-text", "colour", colour)
+  assert-angle("element-text", angle)
+  assert-font("element-text", font)
+  assert-margin("element-text", "margin", margin)
   (
     kind: "element-text",
     size: size,
@@ -241,6 +248,11 @@
 ) = {
   assert-halign("element-typst", align)
   assert-text-size("element-typst", size)
+  assert-weight("element-typst", weight)
+  assert-paint("element-typst", "colour", colour)
+  assert-angle("element-typst", angle)
+  assert-font("element-typst", font)
+  assert-margin("element-typst", "margin", margin)
   (
     kind: "element-typst",
     size: size,
@@ -307,9 +319,11 @@
 /// \@see \@theme, \@element-text, \@element-rect, \@element-blank
 #let element-line(colour: none, stroke: none) = {
   let split = split-stroke-shorthand(stroke, colour, none)
+  let given = stroke
   let stroke = split.stroke
   let colour = split.colour
-  assert-stroke("element-line", stroke)
+  assert-stroke("element-line", stroke, given: given)
+  assert-paint("element-line", "colour", colour)
   (
     kind: "element-line",
     colour: colour,
@@ -386,9 +400,11 @@
 /// \@see \@theme, \@element-line, \@element-blank
 #let element-tick(colour: none, stroke: none, length: none) = {
   let split = split-stroke-shorthand(stroke, colour, none)
+  let given = stroke
   let stroke = split.stroke
   let colour = split.colour
-  assert-stroke("element-tick", stroke)
+  assert-stroke("element-tick", stroke, given: given)
+  assert-paint("element-tick", "colour", colour)
   assert-tick-length("element-tick", length)
   (
     kind: "element-tick",
@@ -520,10 +536,15 @@
   inset: (kind: "margin", top: 5pt, right: 5pt, bottom: 5pt, left: 5pt),
   outset: none,
 ) = {
+  assert-paint("element-rect", "fill", fill)
+  assert-margin("element-rect", "inset", inset)
+  assert-margin("element-rect", "outset", outset)
   let split = split-stroke-shorthand(stroke, colour, none)
+  let given = stroke
   let stroke = split.stroke
   let colour = split.colour
-  assert-stroke("element-rect", stroke)
+  assert-stroke("element-rect", stroke, given: given)
+  assert-paint("element-rect", "colour", colour)
   (
     kind: "element-rect",
     fill: fill,
@@ -781,13 +802,22 @@
   ink: none,
   paper: none,
   accent: none,
-) = (
-  kind: "element-geom",
-  fill: fill,
-  colour: colour,
-  linewidth: linewidth,
-  font: font,
-  ink: ink,
-  paper: paper,
-  accent: accent,
-)
+) = {
+  assert-paint("element-geom", "fill", fill)
+  assert-paint("element-geom", "colour", colour)
+  assert-length("element-geom", "linewidth", linewidth)
+  assert-font("element-geom", font)
+  assert-colour("element-geom", "ink", ink)
+  assert-colour("element-geom", "paper", paper)
+  assert-colour("element-geom", "accent", accent)
+  (
+    kind: "element-geom",
+    fill: fill,
+    colour: colour,
+    linewidth: linewidth,
+    font: font,
+    ink: ink,
+    paper: paper,
+    accent: accent,
+  )
+}

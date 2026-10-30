@@ -124,11 +124,13 @@
   if res.ok { return res.colour }
   let name = "color." + role
   if res.reason == "type" {
-    fail-type(
+    fail(
       _SCOPE,
-      name,
-      res.token,
-      "a hex colour string or a `color.palette` entry name",
+      name
+        + " must be a hex colour string or a `color.palette` entry name"
+        + _through(res.chain)
+        + "; got "
+        + repr(res.token),
     )
   } else if res.reason == "variant" {
     // Bespoke rather than `fail-type`, whose "must be" reads as a demand for a
@@ -152,11 +154,13 @@
       hint: "Give it a hex colour such as \"#e94c3d\", or drop the key.",
     )
   } else if res.reason == "hex" {
-    fail-type(
+    fail(
       _SCOPE,
-      name,
-      res.token,
-      "a 3-, 4-, 6-, or 8-digit hex colour such as \"#e94c3d\"",
+      name
+        + " must be a 3-, 4-, 6-, or 8-digit hex colour such as \"#e94c3d\""
+        + _through(res.chain)
+        + "; got "
+        + repr(res.token),
       hint: "CSS colour functions and named colours are not supported.",
     )
   } else if res.reason == "cycle" {
@@ -173,6 +177,7 @@
       name
         + " names unknown palette entry "
         + repr(res.token)
+        + _through(res.chain.slice(0, -1))
         + "; available entries: "
         + quote-each(palette.keys()),
     )
