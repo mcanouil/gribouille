@@ -3,7 +3,7 @@
 // `tools/check-errors.sh` compiles this file, requires the compile to fail, and
 // requires the `error:` line to carry the phrase below.
 //
-// expect: `collect` must be `auto`, `none`, `"all"`, or an array
+// expect: compose: collect must be `auto`, `none`, `"all"`, or an array of aesthetic names; got "some"
 
 #import "/lib.typ": *
 

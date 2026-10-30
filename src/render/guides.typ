@@ -35,8 +35,8 @@
       lo-open: false,
       hi-open: false,
       hint: (
-        "tick labels read upside down past a quarter turn; the same bound "
-          + "applies to the `angle` of an `axis-text` theme element"
+        "Tick labels read upside down past a quarter turn. The same bound "
+          + "applies to the `angle` of an `axis-text` theme element."
       ),
     )
   }

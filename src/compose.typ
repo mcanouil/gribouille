@@ -1198,9 +1198,11 @@
     }
   }
   if not (collect in (auto, none, "all") or type(collect) == array) {
-    fail(
+    fail-type(
       "compose",
-      "`collect` must be `auto`, `none`, `\"all\"`, or an array of aesthetic names",
+      "collect",
+      collect,
+      "`auto`, `none`, `\"all\"`, or an array of aesthetic names",
     )
   }
   if layout != "grid" and layout != "stack" {
