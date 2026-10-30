@@ -24,10 +24,7 @@
   ),
   guides: guides(
     x: guide-axis-stack(
-      guides: (
-        guide-axis(angle: 30),
-        guide-axis-logticks(),
-      ),
+      (guide-axis(angle: 30), guide-axis-logticks()),
       spacing: 6pt,
     ),
   ),

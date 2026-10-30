@@ -4,14 +4,14 @@
 #import "../../src/guide/axis-stack.typ": guide-axis-stack
 #import "../../src/guides.typ": guides
 
-#let g = guide-axis-stack()
+#let g = guide-axis-stack((guide-axis(),))
 #assert.eq(g.kind, "guide")
 #assert.eq(g.stack, true)
-#assert.eq(g.guides, ())
+#assert.eq(g.guides.len(), 1)
 #assert.eq(g.spacing, 4pt)
 
 #let stacked = guide-axis-stack(
-  guides: (guide-axis(angle: 30), guide-axis-logticks()),
+  (guide-axis(angle: 30), guide-axis-logticks()),
   spacing: 8pt,
 )
 #assert.eq(stacked.guides.len(), 2)
