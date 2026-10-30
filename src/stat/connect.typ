@@ -6,7 +6,7 @@
 ///! render.
 
 #import "../utils/types.typ": parse-number
-#import "../utils/errors.typ": fail, fail-enum
+#import "../utils/errors.typ": fail-enum, fail-type
 
 #let _CONNECTION-MODES = ("hv", "vh", "mid", "sigmoid", "linear")
 
@@ -101,13 +101,10 @@
     fail-enum("stat-connect", "connection", connection, _CONNECTION-MODES)
   }
   if type(smooth) not in (int, float) or smooth <= 0 {
-    fail(
-      "stat-connect",
-      "smooth must be a positive number, got " + repr(smooth),
-    )
+    fail-type("stat-connect", "smooth", smooth, "a positive number")
   }
   if type(n) != int or n < 1 {
-    fail("stat-connect", "n must be a positive integer, got " + repr(n))
+    fail-type("stat-connect", "n", n, "a positive integer")
   }
   (
     kind: "stat",

@@ -7,7 +7,7 @@
 #import "../utils/aes-resolve.typ": stat-output-mapping
 #import "../utils/group.typ": group-key, partition-by-group
 #import "../utils/summaries.typ": read-weight
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail-type
 
 /// Waffle statistic: turn per-group counts into unit grid cells.
 ///
@@ -55,7 +55,7 @@
 /// \@see \@geom-tile, \@stat-count
 #let stat-waffle(rows: 10) = {
   if type(rows) != int or rows < 1 {
-    fail("stat-waffle", "rows must be a positive integer, got " + repr(rows))
+    fail-type("stat-waffle", "rows", rows, "a positive integer")
   }
   (kind: "stat", name: "waffle", params: (rows: rows))
 }

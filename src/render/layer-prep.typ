@@ -3,7 +3,7 @@
 
 #import "../scale/train.typ": all-aesthetics, positional-aesthetics
 #import "../stat/apply.typ": apply-stat, resolve-stat-spec, setup-stat
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail-enum
 #import "../stat/info.typ": stat-info
 #import "../position/apply.typ": apply-position, position-name-of
 #import "../utils/aes-resolve.typ": merge-mapping
@@ -47,12 +47,11 @@
   for (channel, value) in mapping.pairs() {
     if late-binding-kind(value) != "from-theme" { continue }
     if not _FROM-THEME-PARAM-CHANNELS.contains(channel) {
-      fail(
+      fail-enum(
         "from-theme",
-        "unsupported on '"
-          + channel
-          + "'; use one of: "
-          + _FROM-THEME-PARAM-CHANNELS.join(", "),
+        "channel",
+        channel,
+        _FROM-THEME-PARAM-CHANNELS,
       )
     }
     params.insert(channel, resolve-from-theme(theme, value.path))

@@ -8,7 +8,7 @@
 
 #import "../utils/aes-resolve.typ": stat-output-mapping
 #import "../utils/types.typ": parse-number
-#import "../utils/errors.typ": fail
+#import "../utils/errors.typ": fail-type
 
 // Strict sign of the series difference: 1, -1, or 0 on an exact tie.
 #let _sign-of(d) = if d > 0 { 1 } else if d < 0 { -1 } else { 0 }
@@ -105,10 +105,12 @@
       or levels.any(l => type(l) != str)
       or levels.at(0) == levels.at(1)
   ) {
-    fail(
+    fail-type(
       "stat-difference",
-      "levels must be two distinct strings, got " + repr(levels),
-      hint: "e.g., levels: (\"above\", \"below\")",
+      "levels",
+      levels,
+      "two distinct strings",
+      hint: "For example, `levels: (\"above\", \"below\")`.",
     )
   }
   (kind: "stat", name: "difference", params: (levels: levels))

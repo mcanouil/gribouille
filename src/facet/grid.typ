@@ -95,7 +95,11 @@
     )
   }
   if rows == none and columns == none {
-    fail("facet-grid", "needs at least one of rows: or columns:")
+    fail(
+      "facet-grid",
+      "needs rows or columns; got neither",
+      hint: "Set `rows:` or `columns:` to a column name.",
+    )
   }
   (
     kind: "facet",
