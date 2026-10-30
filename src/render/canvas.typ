@@ -585,6 +585,7 @@
   let _grid-labeller = spec.facet.at("labeller", default: none)
   let _col-count(c) = {
     let n = 0
+    if panels.len() == 0 { return n }
     for r in range(n-rows) {
       n += _panel-row-count(panels.at(r * n-cols + c).layers)
     }
@@ -592,6 +593,7 @@
   }
   let _row-count(r) = {
     let n = 0
+    if panels.len() == 0 { return n }
     for c in range(n-cols) {
       n += _panel-row-count(panels.at(r * n-cols + c).layers)
     }

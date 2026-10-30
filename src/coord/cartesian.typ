@@ -5,8 +5,14 @@
 ///! scale limits which remove rows outside the domain.
 
 #import "../scale/train.typ": transform-fwd
+#import "../utils/errors.typ": fail-type
+#import "../utils/types.typ": is-native-numeric
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
+
+#let _is-limit-pair(limits) = (
+  type(limits) == array and limits.len() == 2 and limits.all(is-native-numeric)
+)
 
 // x-limits/y-limits arrive in data space; pre-transformed domains live in stat space.
 #let _coord-limits-to-domain(entry, lim) = {
@@ -113,16 +119,28 @@
   y-limits: none,
   expand: true,
   clip: true,
-) = (
-  coord-base("cartesian")
-    + (
-      x-limits: x-limits,
-      y-limits: y-limits,
-      expand: expand,
-      clip: clip,
-      train: trained => apply-expand(
-        _apply-limits(trained, x-limits, y-limits),
-        no-expand: expand == false,
-      ),
-    )
-)
+) = {
+  for (name, limits) in (("x-limits", x-limits), ("y-limits", y-limits)) {
+    if limits != none and not _is-limit-pair(limits) {
+      fail-type("coord-cartesian", name, limits, "`none` or a (lo, hi) pair of numbers")
+    }
+  }
+  for (name, flag) in (("expand", expand), ("clip", clip)) {
+    if type(flag) != bool {
+      fail-type("coord-cartesian", name, flag, "a boolean")
+    }
+  }
+  (
+    coord-base("cartesian")
+      + (
+        x-limits: x-limits,
+        y-limits: y-limits,
+        expand: expand,
+        clip: clip,
+        train: trained => apply-expand(
+          _apply-limits(trained, x-limits, y-limits),
+          no-expand: expand == false,
+        ),
+      )
+  )
+}

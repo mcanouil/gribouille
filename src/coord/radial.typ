@@ -1,6 +1,7 @@
 ///! Radial coordinate system.
 
-#import "../utils/errors.typ": fail-enum
+#import "../utils/errors.typ": fail-enum, fail-type
+#import "../utils/types.typ": is-native-numeric
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
 #import "../utils/radial.typ": (
@@ -101,6 +102,18 @@
 ) = {
   if theta not in ("x", "y") {
     fail-enum("coord-radial", "theta", theta, ("x", "y"))
+  }
+  if direction not in (1, -1) {
+    fail-enum("coord-radial", "direction", direction, (1, -1))
+  }
+  if not is-native-numeric(start) {
+    fail-type("coord-radial", "start", start, "a number of radians")
+  }
+  if end != none and not is-native-numeric(end) {
+    fail-type("coord-radial", "end", end, "`none` or a number of radians")
+  }
+  if type(clip) != bool {
+    fail-type("coord-radial", "clip", clip, "a boolean")
   }
   // The radial axis, the one theta does not run along: "y" for rose/radar and
   // "x" for pie. Expansion runs before trained scales exist, so it cannot

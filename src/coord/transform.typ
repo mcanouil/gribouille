@@ -1,5 +1,7 @@
 ///! Coordinate-level transformation via `coord_transform()`.
 
+#import "../scale/arguments.typ": _TRANSFORMS
+#import "../utils/errors.typ": fail-enum
 #import "contract.typ": coord-base
 #import "expand.typ": apply-expand
 
@@ -56,13 +58,17 @@
 /// ```
 ///
 /// \@see \@plot, \@scale-continuous
-#let coord-transform(x: "identity", y: "identity") = (
-  coord-base("transform")
-    + (
-      x: x,
-      y: y,
-      train: trained => apply-expand(
-        _apply-coord-transform(trained, (x: x, y: y)),
-      ),
-    )
-)
+#let coord-transform(x: "identity", y: "identity") = {
+  if x not in _TRANSFORMS { fail-enum("coord-transform", "x", x, _TRANSFORMS) }
+  if y not in _TRANSFORMS { fail-enum("coord-transform", "y", y, _TRANSFORMS) }
+  (
+    coord-base("transform")
+      + (
+        x: x,
+        y: y,
+        train: trained => apply-expand(
+          _apply-coord-transform(trained, (x: x, y: y)),
+        ),
+      )
+  )
+}

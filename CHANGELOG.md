@@ -4,6 +4,7 @@
 
 ### Breaking changes
 
+- fix!: `coord-transform()`, `coord-cartesian()`, `coord-radial()`, `coord-fixed()`, `coord-flip()`, `facet-wrap()` and `facet-grid()` check their arguments and fail under their own name. `coord-transform(x: "log")`, `x-limits: (3,)`, `expand: "no"`, `direction: 0` or `2`, `ratio: 0`, `reverse: "yes"`, `facet-wrap(3)` and `ncolumn: 0` used to render in silence or raise a raw Typst error. (#380)
 - fix!: `breaks-quantile()`, `cut-interval()`, `cut-number()`, `cut-width()`, the `format-*` factories, `label-both()`, `label-wrap()`, `labeller()` and the `labeller` argument of `facet-wrap()` and `facet-grid()` check their arguments and fail under their own name, where a wrong type used to raise a raw Typst error. `cut-number()` also fails when its quantile breaks tie, the `format-*` factories fail for a negative `digits`, and `format-wrap()` and `label-wrap()` fail for a `width` below 1. (#379)
 - fix!: The binning, contour, 2D density, quantile, smooth, ellipse, function and boxplot stats and their geoms check their arguments, and fail under the name of the function you called. `bins: 0`, `bins: 2.5`, `binwidth: 0`, `n: 1` for `stat-density-2d()`, `bw: -1`, `breaks: 3`, `quantiles: (1.5,)`, `n-samples: 0`, `level: 1` or a negative `level` for `stat-smooth()` and `stat-ellipse()`, `stat-function(fun: 5)`, `stat-function(n: 0)` and `stat-boxplot(coefficient: -1)` used to raise a raw error, clamp in silence or draw a wrong result. (#378)
 - fix!: `stat-summary()` and `stat-summary-bin()` fail when the layer maps `weight` and `fun` is `median`, `median-hilow`, `quantile`, `quantiles` or `mean-cl-boot`. These helpers have no weighted form and used to drop the weights in silence. A callable `fun` gets the weights as `weights:`, so give it that parameter or a `..args` sink. (#377)
@@ -24,6 +25,8 @@
 - feat: `theme()` takes `guide-spacing`, the gap between the parts of a legend, such as its title and its colour bar. The default is `0cm`. (#372)
 - feat: `theme()` takes `legend-line`, the stroke of a legend spine. It is blank by default, so a legend draws none. (#372)
 - feat: Under `coord-radial`, lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline` and the lines of `geom-smooth` and `geom-function` follow the polar grid as curves, as in ggplot2, instead of straight chords. Polygons keep straight edges. (#359)
+- fix: A facet variable that only the layer data carries no longer fails, and a typo with layer-only data fails instead of drawing a blank plot. (#380)
+- fix: `facet-grid()` with both `rows` and `columns`, where one variable is `none` throughout, renders a blank plot instead of raising `array index out of bounds`. (#380)
 - fix: `breaks-log()` returns no breaks when no value is positive, and `breaks-quantile()` returns one break for each distinct quantile. `breaks-width()` documents that data off its grid gets no breaks. (#379)
 - fix: `cut-interval()`, `cut-number()` and `cut-width()` round the bounds in their labels to three digits, and their messages name the function you called. (#379)
 - fix: `format-number()` and the other `format-*` helpers drop the sign of a value that rounds to zero, so no label reads `-0.00`. (#379)
