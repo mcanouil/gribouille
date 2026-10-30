@@ -27,11 +27,9 @@
 // vertical one is one column.
 #let grid-shape(n, nrow, ncol, direction) = {
   if ncol != none {
-    let cols = calc.max(1, ncol)
-    (rows: calc.max(1, calc.ceil(n / cols)), cols: cols)
+    (rows: calc.max(1, calc.ceil(n / ncol)), cols: ncol)
   } else if nrow != none {
-    let rows = calc.max(1, nrow)
-    (rows: rows, cols: calc.max(1, calc.ceil(n / rows)))
+    (rows: nrow, cols: calc.max(1, calc.ceil(n / nrow)))
   } else if direction == "horizontal" {
     (rows: 1, cols: n)
   } else {

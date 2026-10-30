@@ -3,7 +3,7 @@
 
 #import "../utils/margin.typ": length-to-cm
 #import "../theme/theme.typ": _text-style
-#import "../utils/errors.typ": fail, fail-enum, fail-range
+#import "../utils/errors.typ": fail, fail-enum, fail-range, fail-type
 
 // Normalise a single `guide-axis*` spec to the flat shape consumers expect.
 // Always carries a `stack` flag so callers can branch on the same field
@@ -16,6 +16,15 @@
 // Past a quarter turn the text also reads upside down, so the rotation is
 // bounded rather than silently mis-hung.
 #let _check-axis-angle(angle, scope: "guide-axis") = {
+  if type(angle) not in (int, float) {
+    fail-type(
+      scope,
+      "angle",
+      angle,
+      "a number of degrees such as `45`",
+      hint: "Use `45`, not `45deg`.",
+    )
+  }
   if angle < -90 or angle > 90 {
     fail-range(
       scope,
@@ -36,9 +45,19 @@
 
 #let _normalise-axis-guide(g, default-angle) = {
   let angle = g.at("angle", default: 0)
+  let n-dodge = g.at("n-dodge", default: 1)
+  if type(n-dodge) != int or n-dodge < 1 {
+    fail-type(
+      "guide-axis",
+      "n-dodge",
+      n-dodge,
+      "a whole number of at least 1",
+      hint: "One row per dodge; use 1 for a single row.",
+    )
+  }
   (
     angle: _check-axis-angle(if angle != 0 { angle } else { default-angle }),
-    n-dodge: calc.max(1, g.at("n-dodge", default: 1)),
+    n-dodge: n-dodge,
     logticks: g.at("logticks", default: false),
     stack: false,
   )
@@ -80,7 +99,7 @@
     logticks: subs.any(s => s.logticks),
     stack: true,
     guides: subs,
-    spacing: length-to-cm(g.at("spacing", default: 4pt), 0),
+    spacing: length-to-cm(g.spacing, 0),
     suppress: false,
   )
 }
@@ -114,6 +133,15 @@
   if not _THETA-CAP-VALUES.contains(cap) {
     fail-enum("guide-axis-theta", "cap", cap, _THETA-CAP-VALUES)
   }
+  let minor-ticks = g.at("minor-ticks", default: false)
+  if type(minor-ticks) != bool {
+    fail-type(
+      "guide-axis-theta",
+      "minor-ticks",
+      minor-ticks,
+      "`true` or `false`",
+    )
+  }
   (
     // An angular tick label hangs off the arc the way a cartesian one hangs
     // off its edge, so it takes the same quarter-turn bound: past it the text
@@ -122,7 +150,7 @@
       g.at("angle", default: 0),
       scope: "guide-axis-theta",
     ),
-    minor-ticks: g.at("minor-ticks", default: false),
+    minor-ticks: minor-ticks,
     cap: cap,
     suppress: false,
   )

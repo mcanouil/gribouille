@@ -26,6 +26,15 @@
   }
   // Positive is the whole constraint: a head as long as the line it sits on is
   // ugly rather than wrong, so nothing caps it. The message says only that.
+  if head-length.em != 0 {
+    fail-type(
+      "arrow",
+      "length",
+      head-length,
+      "an absolute length such as `4pt`",
+      hint: "A length with an `em` part cannot size a head.",
+    )
+  }
   if head-length <= 0pt {
     fail-type(
       "arrow",

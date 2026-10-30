@@ -4,6 +4,8 @@
 ///! to render several axis-guide passes on the same side of a panel — for
 ///! example a rotated-label \@guide-axis above a \@guide-axis-logticks pass.
 
+#import "../utils/errors.typ": fail-type
+
 /// Stack multiple x or y guides on a single axis.
 ///
 /// Each sub-guide is rendered as an independent label row using its own
@@ -15,9 +17,9 @@
 /// \@category Guides
 /// \@stability stable
 ///
-/// \@param guides Array of \@guide-axis or \@guide-axis-logticks specs to render in order from the axis outward.
+/// \@param guides Non-empty array of \@guide-axis or \@guide-axis-logticks specs to render in order from the axis outward. Required, and passed first.
 ///
-/// \@param spacing Gap inserted between successive sub-guide rows.
+/// \@param spacing Gap inserted between successive sub-guide rows, a length of at least 0.
 ///
 /// \@returns Guide dictionary tagged `kind: "guide"` with `stack: true`, consumed by \@guides.
 ///
@@ -39,7 +41,7 @@
 ///     y: scale-continuous(transform: "log10"),
 ///   ),
 ///   guides: guides(
-///     x: guide-axis-stack(guides: (
+///     x: guide-axis-stack((
 ///       guide-axis(angle: 30),
 ///       guide-axis-logticks(),
 ///     )),
@@ -50,11 +52,41 @@
 /// ```
 ///
 /// \@see \@guide-axis, \@guide-axis-logticks, \@guides
-#let guide-axis-stack(guides: (), spacing: 4pt) = (
-  kind: "guide",
-  name: "axis-stack",
-  aesthetic: none,
-  stack: true,
-  guides: guides,
-  spacing: spacing,
-)
+#let guide-axis-stack(guides, spacing: 4pt) = {
+  let valid = type(guides) == array and guides.len() > 0
+  if valid {
+    for g in guides {
+      if (
+        type(g) != dictionary
+          or g.at("name", default: none) not in ("axis", "axis-logticks")
+      ) {
+        valid = false
+      }
+    }
+  }
+  if not valid {
+    fail-type(
+      "guide-axis-stack",
+      "guides",
+      guides,
+      "a non-empty array of `guide-axis()` or `guide-axis-logticks()` specs",
+      hint: "Pass the array first: `guide-axis-stack((guide-axis(), guide-axis-logticks()))`.",
+    )
+  }
+  if type(spacing) != length or spacing.abs < 0pt or spacing.em < 0 {
+    fail-type(
+      "guide-axis-stack",
+      "spacing",
+      spacing,
+      "a length of at least 0, such as `4pt`",
+    )
+  }
+  (
+    kind: "guide",
+    name: "axis-stack",
+    aesthetic: none,
+    stack: true,
+    guides: guides,
+    spacing: spacing,
+  )
+}

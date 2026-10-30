@@ -345,6 +345,20 @@
   )
 }
 
+// Panic unless `value` is `none` or an array of non-negative numbers whose sum
+// is positive. `widths` and `heights` are relative weights, so a length or a
+// zero total leaves nothing to divide the panel area by.
+#let _check-ratios(name, value) = {
+  if value == none { return }
+  let expected = "`none` or an array of numbers of at least 0 that add up to more than 0"
+  if type(value) != array or value.any(r => type(r) not in (int, float)) {
+    fail-type("compose", name, value, expected)
+  }
+  if value.any(r => r < 0) or value.sum(default: 0) <= 0 {
+    fail-type("compose", name, value, expected)
+  }
+}
+
 // Track layout: validate `widths`/`heights` against the chosen layout and
 // carve the panel area into column/row tracks.
 #let _panel-tracks(
@@ -668,6 +682,18 @@
           + " cm panel area, with no room left for the panels",
         hint: "Increase the composition `width`/`height`, move the legend to a "
           + "shorter side, or shrink it with `guide-legend(nrow:/ncolumn:)`.",
+      )
+    }
+
+    if area-w <= 0 or area-h <= 0 {
+      fail(
+        "compose",
+        "the composition leaves a "
+          + cm-text(area-w)
+          + " x "
+          + cm-text(area-h)
+          + " cm panel area, with no room for the panels",
+        hint: "Increase the composition `width`/`height`, or shorten its labels.",
       )
     }
 
@@ -1180,6 +1206,45 @@
   if layout != "grid" and layout != "stack" {
     fail-enum("compose", "layout", layout, ("grid", "stack"))
   }
+  if type(columns) == int {
+    if columns < 1 {
+      fail-type(
+        "compose",
+        "columns",
+        columns,
+        "a positive integer or a non-empty array",
+      )
+    }
+  } else if type(columns) != array or columns.len() == 0 {
+    fail-type(
+      "compose",
+      "columns",
+      columns,
+      "a positive integer or a non-empty array",
+    )
+  }
+  _check-ratios("widths", widths)
+  _check-ratios("heights", heights)
+  for (name, value) in (("width", width), ("height", height)) {
+    if value != auto and type(value) != length {
+      fail-type("compose", name, value, "a length or `auto`")
+    }
+  }
+  if type(direction) != type(ttb) {
+    fail-type(
+      "compose",
+      "direction",
+      direction,
+      "a direction such as `ttb` or `ltr`",
+    )
+  }
+  if type(align-panels) != bool {
+    fail-type("compose", "align-panels", align-panels, "`true` or `false`")
+  }
+  if type(guides) != dictionary {
+    fail-type("compose", "guides", guides, "a dictionary built with `guides()`")
+  }
+  let _ = resolve-gutter(gutter, scope: "compose")
   if tag-levels != none {
     let codes = if type(tag-levels) == array { tag-levels } else {
       (tag-levels,)
