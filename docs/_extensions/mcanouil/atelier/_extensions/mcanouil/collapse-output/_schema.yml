@@ -1,0 +1,48 @@
+# Schema for the collapse-output extension
+# Provides configuration validation and IDE support for options
+# and attributes.
+
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+options:
+  method:
+    type: string
+    default: "lua"
+    enum: [lua, javascript]
+    enumCaseInsensitive: true
+    description: "Collapsing method. 'lua' renders server-side; 'javascript' renders client-side."
+  collapse-all-outputs:
+    type: boolean
+    default: false
+    description: "Wrap every cell output in a collapsible details element. Per-cell 'output-fold' still overrides this."
+  default-open:
+    type: boolean
+    default: false
+    description: "Initial state of the collapsible details element."
+  auto-collapse-size:
+    type: integer
+    minimum: 0
+    description: "Line threshold above which outputs are forced closed regardless of 'default-open'."
+  output-types:
+    type: [string, array]
+    description: "Comma-separated list (or YAML list) of output types to fold. Allowed: stdout, stderr, display, output."
+  summary-template:
+    type: string
+    default: "{type}"
+    description: "Template used for the summary text. Placeholders: {type}, {lines}."
+  summaries:
+    type: object
+    description: "Per-output-type summary overrides, keyed by stdout, stderr, display, or output."
+
+attributes:
+  _any:
+    output-fold:
+      type: boolean
+      default: false
+      description: "Wrap cell output in a collapsible details element."
+    output-summary:
+      type: string
+      description: "Summary text shown on the collapsed output toggle, taking precedence over both `summaries` and `summary-template`. Unset, the summary comes from `summaries` for the detected output type, then from `summary-template`."
+    output-open:
+      type: boolean
+      description: "Per-cell override of the document 'default-open' setting."

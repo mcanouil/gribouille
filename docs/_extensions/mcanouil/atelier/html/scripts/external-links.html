@@ -4,7 +4,10 @@
    * @copyright 2026 Mickaël Canouil
    * @author Mickaël Canouil
    */
-  // Workaround for https://github.com/quarto-dev/quarto-cli/issues/10730
+  // Quarto cannot set target on format-links, so sidebar links open in a new tab here.
+  // Upstream: https://github.com/quarto-dev/quarto-cli/issues/10730
+  // Remove when: the minimum Quarto version includes the fix.
+  // Not SCSS: target and rel are attributes, which CSS cannot set.
   const SIDEBAR_LINK_SELECTOR =
     '.quarto-alternate-formats a, .quarto-other-links a';
 

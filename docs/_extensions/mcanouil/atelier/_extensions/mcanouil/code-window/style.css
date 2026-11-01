@@ -1,0 +1,212 @@
+/* Code Window Extension for Quarto
+ * Code block window decorations with multiple styles
+ * MIT License - Mickaël Canouil 2026
+ */
+
+/* ============================================================================
+ * Theming variables (override to customise the window background, window-button icons and chip)
+ * ========================================================================= */
+
+:where(:root) {
+  --code-window-macos-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10'%3E%3Ccircle cx='5' cy='5' r='5' fill='%23ff5f56'/%3E%3Ccircle cx='20' cy='5' r='5' fill='%23ffbd2e'/%3E%3Ccircle cx='35' cy='5' r='5' fill='%2327c93f'/%3E%3C/svg%3E");
+  --code-window-windows-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' fill='none'%3E%3Cline x1='3' y1='5' x2='11' y2='5' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3Crect x='17' y='1' width='8' height='8' rx='1' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3Cline x1='31' y1='1' x2='39' y2='9' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3Cline x1='39' y1='1' x2='31' y2='9' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  --code-window-macos-icon-width: 3.4em;
+  --code-window-windows-icon-width: 3.6em;
+  --code-window-icon-height: 0.85em;
+  /* Window background: Bootstrap theme, then Reveal.js theme, then the system colour */
+  --code-window-bg: var(--bs-body-bg, var(--r-background-color, Canvas));
+  --code-window-title-bg: color-mix(in srgb, currentColor 5%, var(--code-window-bg));
+}
+
+/* ============================================================================
+ * Base container
+ * ========================================================================= */
+
+.code-with-filename {
+  margin: 1.5em 0;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, currentColor 15%, var(--code-window-bg));
+  background-color: var(--code-window-bg);
+  overflow: hidden;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Title bar (shared across all styles) */
+.code-with-filename .code-with-filename-file {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  background-color: var(--code-window-title-bg);
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, var(--code-window-bg));
+  border-radius: 0;
+  padding: 0.2em 1em;
+  line-height: 1.2;
+  margin: 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+/* Outrank Quarto's own title bar colours: its dark-mode grey, and the light
+ * grey that Reveal.js loads after this file. A theme sets
+ * --code-window-title-bg to change the title bar in both modes. */
+.reveal .code-with-filename .code-with-filename-file,
+body.quarto-dark .code-with-filename .code-with-filename-file {
+  background-color: var(--code-window-title-bg);
+}
+
+/* Shrink title bar ~35% on Reveal.js slides (scales padding, decorations, and filename text proportionally) */
+.reveal .code-with-filename .code-with-filename-file {
+  font-size: 0.65em;
+  padding: 0.3em 1em;
+}
+
+/* Filename styling (base) */
+.code-with-filename .code-with-filename-file pre {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  font-size: 0.85em;
+  font-weight: 500;
+  color: color-mix(in srgb, currentColor 80%, var(--code-window-bg));
+  /* Wrap long filenames: a scrolling title bar has no keyboard access */
+  min-width: 0;
+  overflow: visible;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Highlighted-lines chip rendered next to the filename in the title bar */
+.code-with-filename .code-with-filename-file .code-with-filename-lines {
+  flex: 0 0 auto;
+  max-width: 50%;
+  font-size: 0.7em;
+  font-weight: 500;
+  font-family: var(--bs-font-monospace, monospace);
+  color: color-mix(in srgb, currentColor 85%, var(--code-window-bg));
+  background-color: color-mix(in srgb, currentColor 10%, var(--code-window-bg));
+  border: 1px solid color-mix(in srgb, currentColor 15%, var(--code-window-bg));
+  border-radius: 3px;
+  padding: 0.05em 0.4em;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+/* Code block content area */
+.code-with-filename .sourceCode,
+.code-with-filename div.sourceCode,
+.code-with-filename .code-copy-outer-scaffold {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.code-with-filename .sourceCode pre,
+.code-with-filename div.sourceCode pre,
+.code-with-filename .code-copy-outer-scaffold pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+/* Plain code blocks (unknown language without sourceCode wrapper) */
+.code-with-filename > pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+/* Auto-generated filenames display in simulated small caps */
+.code-with-filename.code-window-auto .code-with-filename-file pre strong {
+  text-transform: uppercase;
+  font-size: 0.8em;
+}
+
+/* Code block bottom border-radius */
+.code-with-filename .code-copy-outer-scaffold {
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+
+/* ============================================================================
+ * Style: default (plain filename, no decorations)
+ * ========================================================================= */
+
+.code-with-filename.code-window-default .code-with-filename-file pre {
+  text-align: left;
+}
+
+/* ============================================================================
+ * Style: macos (traffic lights left, filename right)
+ * ========================================================================= */
+
+.code-with-filename.code-window-macos .code-with-filename-file::before {
+  content: '';
+  display: inline-flex;
+  flex-shrink: 0;
+  width: var(--code-window-macos-icon-width);
+  height: var(--code-window-icon-height);
+  background-image: var(--code-window-macos-icon);
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.code-with-filename.code-window-macos .code-with-filename-file pre {
+  text-align: right;
+}
+
+/* ============================================================================
+ * Style: windows (filename left, window buttons right)
+ * ========================================================================= */
+
+.code-with-filename.code-window-windows .code-with-filename-file pre {
+  text-align: left;
+}
+
+.code-with-filename.code-window-windows .code-with-filename-file::after {
+  content: '';
+  display: inline-flex;
+  flex-shrink: 0;
+  width: var(--code-window-windows-icon-width);
+  height: var(--code-window-icon-height);
+  background-image: var(--code-window-windows-icon);
+  background-position: right;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+/* ============================================================================
+ * Collapsible code window (<details>)
+ * ========================================================================= */
+
+.code-with-filename.code-window-collapsible {
+  padding: 0;
+}
+
+.code-with-filename.code-window-collapsible > summary.code-with-filename-file {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.code-with-filename.code-window-collapsible > summary.code-with-filename-file::-webkit-details-marker {
+  display: none;
+}
+
+/* Bottom-border on summary only when expanded so the closed state has no
+ * separator line beneath an already-rounded container. */
+.code-with-filename.code-window-collapsible:not([open]) > summary.code-with-filename-file {
+  border-bottom: none;
+}
+
+/* Round the title bar corners when the window is closed. */
+.code-with-filename.code-window-collapsible:not([open]) {
+  border-radius: 8px;
+}
+
+.code-with-filename.code-window-collapsible:not([open]) > summary.code-with-filename-file {
+  border-radius: 8px;
+}

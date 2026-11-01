@@ -60,6 +60,26 @@ $atelier-chrome-page-bg: if(variable-exists(body-bg), $body-bg, #fff);
 $atelier-chrome-page-fg: if(variable-exists(body-color), $body-color, #212529);
 $atelier-chrome-page-accent: if(variable-exists(primary), $primary, #0d6efd);
 
+// ===========================================================================
+// RADIUS AND MERMAID TOKENS
+// ===========================================================================
+// These sit in this file because it is listed first, so its defaults are
+// evaluated after those of the project theme and of `brand`, which therefore
+// win. The `null` reset in `html/theme.scss` is what leaves them free to apply.
+// The small and large radii follow `$border-radius` at the ratios of these
+// defaults, so a brand that sets only `$border-radius` keeps the three in
+// proportion.
+$border-radius: 0.5rem !default;
+$border-radius-sm: $border-radius * 0.75 !default;
+$border-radius-lg: $border-radius * 1.5 !default;
+
+// Quarto paints a Mermaid subgraph with `--mermaid-fg-color--lightest`, a
+// lightened text colour, which is a dark grey on a light page and white on a
+// dark one. Paint it from the page surface instead.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/9178
+// Remove when: the minimum Quarto version includes the fix.
+$mermaid-fg-color--lightest: mix($atelier-chrome-page-bg, $atelier-chrome-page-fg, 92%) !default;
+
 // In `auto` the bar is a light tint of the page rather than the page colour
 // itself, so it still reads as a bar without a hard colour break, and the
 // mix resolves per bundle: a paler paper in the light one, a lifted slate in

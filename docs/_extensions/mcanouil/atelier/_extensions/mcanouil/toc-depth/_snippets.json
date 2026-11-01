@@ -1,0 +1,7 @@
+{
+	"Hidden from TOC": {
+		"prefix": "depth",
+		"body": "## ${1:Section Title} {toc-depth=0}",
+		"description": "Create a section header hidden from the table of contents"
+	}
+}

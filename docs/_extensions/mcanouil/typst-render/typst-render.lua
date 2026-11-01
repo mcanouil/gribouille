@@ -2062,9 +2062,9 @@ local function process_codeblock(el)
   local block_opts, clean_code, option_lines = cell.parse_options(el.text)
 
   -- The schema resolves the comment-pipe options against the `typst`
-  -- attribute group before anything below strips or rewrites them; every
+  -- cells group before anything below strips or rewrites them; every
   -- read from this point on uses the resolved table, never `block_opts`.
-  local resolved = checker:attributes(block_opts, 'typst')
+  local resolved = checker:cells(block_opts, 'typst')
 
   if resolved['cache-refresh'] ~= nil then
     log.log_warning(

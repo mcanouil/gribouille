@@ -1,0 +1,96 @@
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+options:
+  enabled:
+    type: boolean
+    default: true
+    description: "Enable or disable the code-window filter."
+  auto-filename:
+    type: boolean
+    default: true
+    description: "Automatically generate filename labels from the code block language."
+  style:
+    type: string
+    enum: ["default", "macos", "windows"]
+    default: "macos"
+    description: "Window decoration style: 'macos' (traffic lights), 'windows' (title bar buttons), or 'default' (plain filename). Can be overridden per block with the 'code-window-style' attribute."
+  cell-output:
+    type: boolean
+    default: false
+    description: "Frame the output of an executed cell like a code block. Off by default, so output keeps the shape Quarto gives it."
+  wrapper:
+    type: string
+    default: "code-window"
+    description: "Typst wrapper function name for code-window rendering."
+  collapse:
+    type: [boolean, string]
+    enum: [true, false, "open", "closed"]
+    default: false
+    description: "Wrap every code-window block in a collapsible <details> element (HTML only). Use 'open' to render expanded by default, 'closed' or true to render collapsed by default, false to disable. Per-block overrides use the 'code-window-collapse' attribute."
+  lines-label:
+    type: boolean
+    default: true
+    description: "Render a small chip next to the filename showing the highlighted-line spec for blocks that set 'code-line-numbers' or 'code-window-lines'."
+  hotfix:
+    type: object
+    description: "Temporary hot-fixes for Typst output. These will be removed when Quarto natively supports the corresponding features (see quarto-dev/quarto-cli#14170)."
+    additionalProperties: false
+    properties:
+      code-annotations:
+        type: [boolean, object]
+        default: true
+        description: "Enable the code-annotations hot-fix for Typst output. Use a boolean or a map with 'enabled' and 'quarto-version' keys."
+        additionalProperties: false
+        properties:
+          enabled:
+            type: boolean
+            description: "Explicitly enable or disable this hot-fix."
+          quarto-version:
+            type: string
+            description: "Quarto version at or above which this hot-fix is automatically disabled."
+      skylighting:
+        type: [boolean, object]
+        default: true
+        description: "Enable the Skylighting hot-fix for Typst output (overrides block styling and adds inline code background). Use a boolean or a map with 'enabled' and 'quarto-version' keys."
+        additionalProperties: false
+        properties:
+          enabled:
+            type: boolean
+            description: "Explicitly enable or disable this hot-fix."
+          quarto-version:
+            type: string
+            description: "Quarto version at or above which this hot-fix is automatically disabled."
+      typst-title:
+        type: [boolean, object]
+        default: true
+        description: "Enable the Typst title hot-fix (evaluates theorem title strings as markup). Use a boolean or a map with 'enabled' and 'quarto-version' keys."
+        additionalProperties: false
+        properties:
+          enabled:
+            type: boolean
+            description: "Explicitly enable or disable this hot-fix."
+          quarto-version:
+            type: string
+            description: "Quarto version at or above which this hot-fix is automatically disabled."
+
+attributes:
+  CodeBlock:
+    code-window-enabled:
+      type: boolean
+      default: true
+      description: "Whether to apply window chrome to this specific code block. Set to false to disable. Annotations still render when disabled."
+    code-window-no-auto-filename:
+      type: boolean
+      default: false
+      description: "Suppress the auto-generated filename for this specific code block without changing the global setting."
+    code-window-style:
+      type: string
+      enum: ["default", "macos", "windows"]
+      description: "Override the global window decoration style for this specific code block."
+    code-window-collapse:
+      type: string
+      enum: ["true", "false", "open", "closed"]
+      description: "Wrap this code block in a collapsible <details> element (HTML only). Use 'open' to render expanded, 'closed' or true to render collapsed, false to disable."
+    code-window-lines:
+      type: string
+      description: "Highlighted-lines spec rendered as a chip alongside the filename (e.g. '1,3-5'). When omitted, Quarto's 'code-line-numbers' attribute is used."

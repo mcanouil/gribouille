@@ -219,6 +219,9 @@ local function social_metadata(meta)
   end
 
   local config = meta_mod.get_extension_config(meta, EXTENSION_NAME)
+  -- Quarto's website.open-graph does not emit og:type, so this filter adds it.
+  -- Upstream: https://github.com/quarto-dev/quarto-cli/issues/14306
+  -- Remove when: the minimum Quarto version includes the fix.
   local tags = { '<meta property="og:type" content="website">' }
 
   if not is_not_found_page(relative_output) then

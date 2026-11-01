@@ -4,3 +4,14 @@
 @author Mickaël Canouil
 -->
 <a href="#quarto-document-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
+<script id="skip-link" type="text/javascript">
+	// Before Quarto 1.11.2, include-before-body puts the link inside
+	// #quarto-document-content, after the navbar, the sidebar and the floating
+	// toggle in focus order. Move it to the start of <body>.
+	// Fixed upstream in Quarto 1.11.2: https://github.com/quarto-dev/quarto-cli/issues/14684
+	// Remove when: the minimum Quarto version is 1.11.2 or later.
+	// Not SCSS: focus order follows the DOM order, which CSS cannot change.
+	if (!document.querySelector("body > #quarto-skip-link")) {
+		document.body.prepend(document.currentScript.previousElementSibling);
+	}
+</script>

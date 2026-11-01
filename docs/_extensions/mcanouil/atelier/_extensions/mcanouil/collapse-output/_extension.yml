@@ -1,0 +1,9 @@
+title: Collapse Output
+author: Mickaël Canouil
+version: 1.6.1
+quarto-required: ">=1.8.25"
+contributes:
+  filters:
+    - collapse-output.lua
+source: mcanouil/quarto-collapse-output@1.6.1
+source-type: registry

@@ -1,0 +1,17 @@
+{
+	"Output fold": {
+		"prefix": "output-fold",
+		"body": "#| output-fold: true",
+		"description": "Collapse code cell output with a fold"
+	},
+	"Output fold with summary": {
+		"prefix": "output-summary",
+		"body": ["#| output-fold: true", "#| output-summary: \"${1:Click to view}\""],
+		"description": "Collapse code cell output with a custom summary label"
+	},
+	"Output fold open by default": {
+		"prefix": "output-open",
+		"body": ["#| output-fold: true", "#| output-open: true"],
+		"description": "Collapse code cell output but render it open by default"
+	}
+}

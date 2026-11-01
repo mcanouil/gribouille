@@ -1,0 +1,15 @@
+/* Iconify fallback wrapper. Keeps the iconify-icon and fallback text inline. */
+
+.iconify-icon-wrapper {
+  display: inline-block;
+  vertical-align: -0.125em;
+  line-height: 1;
+}
+
+.iconify-icon-wrapper > .iconify-icon-fallback {
+  display: inline;
+}
+
+.iconify-icon-wrapper > .iconify-icon-fallback[hidden] {
+  display: none;
+}
