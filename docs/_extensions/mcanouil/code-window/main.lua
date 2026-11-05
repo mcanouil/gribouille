@@ -79,11 +79,26 @@ end
 --- rewritten with no reader either. Answering that per block means relabelling
 --- where the name is built, which is a change to the two window paths rather
 --- than to this gate.
+--- A block that carries "code-window-auto-label" asks for a window by itself,
+--- so it takes the pass whatever "auto-filename" says. Without it, a block in
+--- a language Pandoc cannot highlight would get no wrapper to frame. Such a
+--- block that also refuses the window has no reader for the label, so it is
+--- left alone here.
 --- @param block pandoc.CodeBlock
 --- @return pandoc.CodeBlock|nil Relabelled block, or nil when the pass is skipped
 local function normalise_language(block)
-  if not code_window.draws_chrome() or not code_window.CONFIG().auto_filename then
+  if not code_window.draws_chrome() then
     return nil
+  end
+  if not code_window.CONFIG().auto_filename then
+    -- Lowercased to match the schema's boolean coercion. Resolving through the
+    -- schema check here would report each of its warnings twice per block.
+    local enabled = (block.attributes['code-window-enabled'] or ''):lower()
+    local no_auto_filename = (block.attributes['code-window-no-auto-filename'] or ''):lower()
+    local refuses_window = enabled == 'false' or no_auto_filename == 'true'
+    if not language.auto_label(block) or refuses_window then
+      return nil
+    end
   end
   return language.CodeBlock(block)
 end

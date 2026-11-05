@@ -60,18 +60,6 @@ options:
           quarto-version:
             type: string
             description: "Quarto version at or above which this hot-fix is automatically disabled."
-      typst-title:
-        type: [boolean, object]
-        default: true
-        description: "Enable the Typst title hot-fix (evaluates theorem title strings as markup). Use a boolean or a map with 'enabled' and 'quarto-version' keys."
-        additionalProperties: false
-        properties:
-          enabled:
-            type: boolean
-            description: "Explicitly enable or disable this hot-fix."
-          quarto-version:
-            type: string
-            description: "Quarto version at or above which this hot-fix is automatically disabled."
 
 attributes:
   CodeBlock:
@@ -83,6 +71,9 @@ attributes:
       type: boolean
       default: false
       description: "Suppress the auto-generated filename for this specific code block without changing the global setting."
+    code-window-auto-label:
+      type: string
+      description: "Frame this code block with this label, styled as an auto-generated filename, even when auto-filename is false."
     code-window-style:
       type: string
       enum: ["default", "macos", "windows"]

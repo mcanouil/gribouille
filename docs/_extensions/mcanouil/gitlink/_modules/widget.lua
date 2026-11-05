@@ -16,6 +16,9 @@ local html_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/h
 --- @type string Version used for the injected HTML dependency
 local WIDGET_DEPENDENCY_VERSION = '1.9.0'
 
+--- @type string The href of a navigation item that widget.js replaces
+local WIDGET_PLACEHOLDER = '#gitlink-widget'
+
 --- @type table<string, string>|nil Octicon SVG bodies by name (loaded once per render)
 local octicons_cache = nil
 
@@ -66,6 +69,37 @@ local function to_boolean(value, default)
     return value
   end
   return str.stringify(value):lower() == 'true'
+end
+
+--- Tell whether a decoded metadata value holds a string that ends with the
+--- widget placeholder, at any depth, as widget.js matches an href. This
+--- covers an `href` key and the bare-string form of a navigation item.
+--- @param value any A value decoded from JSON
+--- @return boolean
+local function holds_placeholder(value)
+  if type(value) == 'string' then
+    return value:sub(-#WIDGET_PLACEHOLDER) == WIDGET_PLACEHOLDER
+  end
+  if type(value) ~= 'table' then
+    return false
+  end
+  for _, child in pairs(value) do
+    if holds_placeholder(child) then
+      return true
+    end
+  end
+  return false
+end
+
+--- Tell whether the website or book metadata has a widget placeholder
+--- anywhere, as widget.js replaces every link to it on the page.
+--- @param format_meta table|nil The project format.metadata table
+--- @return boolean
+local function has_placeholder(format_meta)
+  if type(format_meta) ~= 'table' then
+    return false
+  end
+  return holds_placeholder(format_meta['website']) or holds_placeholder(format_meta['book'])
 end
 
 --- Percent-encode a string for use as a URL path segment.
@@ -398,11 +432,12 @@ local function build_config(spec)
 end
 
 --- Inject the widget dependency and configuration into the document.
---- No-op outside HTML output. Logs a warning and skips injection when the
---- repository name could not be resolved.
+--- No-op outside HTML output. Skips injection when the repository name could
+--- not be resolved, and logs a warning only when the website navigation has a
+--- widget placeholder, as the widget would show nowhere else.
 --- @param spec table Fields: extension_name (string), widget_meta (table),
 --- platform (string), platform_config (table), base_url (string),
---- repository_name (string|nil), display_name (string)
+--- repository_name (string|nil), format_meta (table|nil), display_name (string)
 --- @return nil
 function widget_module.setup(spec)
   if not quarto.doc.is_format('html:js') then
@@ -410,11 +445,13 @@ function widget_module.setup(spec)
   end
 
   if str.is_empty(spec.repository_name) then
-    log.log_warning(
-      spec.extension_name,
-      "Widget is enabled but no repository could be resolved. " ..
-      "Set 'extensions.gitlink.repository-name' (owner/repo) or add a git remote."
-    )
+    if has_placeholder(spec.format_meta) then
+      log.log_warning(
+        spec.extension_name,
+        "Widget is enabled but no repository could be resolved. " ..
+        "Set 'extensions.gitlink.repository-name' (owner/repo) or add a git remote."
+      )
+    end
     return
   end
 

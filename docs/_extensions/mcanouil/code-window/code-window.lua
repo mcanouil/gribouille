@@ -18,6 +18,7 @@ local meta_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/m
 local pdoc = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/pandoc-helpers.lua'):gsub('%.lua$', ''))
 local html_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/html.lua'):gsub('%.lua$', ''))
 local cell_output = require(quarto.utils.resolve_path('_modules/cell-output.lua'):gsub('%.lua$', ''))
+local language = require(quarto.utils.resolve_path('_modules/language.lua'):gsub('%.lua$', ''))
 local code_annotations = nil
 local checker = nil
 
@@ -76,7 +77,6 @@ local VALID_COLLAPSE = {
 local HOTFIX_DEFAULTS = {
   ['code-annotations'] = true,
   ['skylighting'] = true,
-  ['typst-title'] = true,
 }
 
 local CURRENT_FORMAT = nil
@@ -147,7 +147,7 @@ end
 --- @param block pandoc.CodeBlock Code block element
 --- @return string|nil auto_label Label written by the language module, if any
 local function take_block_attributes(block)
-  local auto_label = block.attributes['code-window-auto-label']
+  local auto_label = language.auto_label(block)
   local owned = {}
   for key, _ in pairs(block.attributes) do
     if key:sub(1, #ATTRIBUTE_PREFIX) == ATTRIBUTE_PREFIX and not cell_output.is_marker(key) then
@@ -539,6 +539,7 @@ local function build_typst_function_def(has_hotfixes)
         below: 0pt,
         radius: 0pt,
         stroke: (bottom: 1pt + border-colour),
+        sticky: true,
         title-bar,
       )
       // Strip code block chrome so content fills flush against the window body.
@@ -706,7 +707,7 @@ local function process_html(block, resolved, auto_label)
     return block
   end
 
-  if not CONFIG.auto_filename or overrides.no_auto_filename then
+  if overrides.no_auto_filename or not (auto_label or CONFIG.auto_filename) then
     return block
   end
 
@@ -919,18 +920,8 @@ function Meta(meta)
     lines_label = opts['lines-label'] == 'true',
     hotfix_code_annotations = hotfix['code-annotations'],
     hotfix_skylighting = hotfix['skylighting'],
-    hotfix_typst_title = hotfix['typst-title'],
     code_annotations = annotations_enabled,
   }
-
-  -- Store hotfix state in metadata so the post-quarto typst-title-fix filter
-  -- can read it (it runs as a separate filter and has no access to CONFIG).
-  if not meta['_code-window-hotfix'] then
-    meta['_code-window-hotfix'] = pandoc.MetaMap({})
-  end
-  meta['_code-window-hotfix']['typst-title'] = pandoc.MetaString(
-    CONFIG.enabled and hotfix['typst-title'] and 'true' or 'false'
-  )
 
   -- Cache syntax highlighting background colour for Typst contrast-aware annotations.
   if CURRENT_FORMAT == 'typst' then
@@ -1046,10 +1037,12 @@ local function resolve_window_params(block, resolved, auto_label)
   local is_auto = false
 
   if (not filename or filename == '') and not overrides.no_auto_filename then
-    if CONFIG.auto_filename and block.classes and #block.classes > 0 then
-      -- Default/unknown/no-language blocks carry their label on
-      -- code-window-auto-label; everything else uses its language class.
-      filename = auto_label or block.classes[1]
+    -- A label asks for a window whatever auto-filename says.
+    if auto_label then
+      filename = auto_label
+      is_auto = true
+    elseif CONFIG.auto_filename and block.classes and #block.classes > 0 then
+      filename = block.classes[1]
       is_auto = true
     end
   end
