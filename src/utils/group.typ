@@ -78,12 +78,10 @@
 #let plan-key(plan, row) = {
   let keys = ()
   for part in plan {
-    // The two reads differ in their default on purpose: a missing cell is not
-    // numeric, and it keys as the empty string rather than as `none`.
-    if part.by-value and is-native-numeric(row.at(part.col, default: none)) {
-      continue
-    }
-    keys.push(cell-key(row.at(part.col, default: "")))
+    // A missing cell keys as a `none` cell does.
+    let v = row.at(part.col, default: none)
+    if part.by-value and is-native-numeric(v) { continue }
+    keys.push(cell-key(v))
   }
   if keys.len() == 0 { "_all" } else { keys.join("\u{1}") }
 }

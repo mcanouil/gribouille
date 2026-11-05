@@ -170,7 +170,7 @@
 
 #let _group-key(row, cols) = {
   if cols.len() == 0 { return "_all" }
-  cols.map(c => cell-key(row.at(c, default: ""))).join("\u{1}")
+  cols.map(c => cell-key(row.at(c, default: none))).join("\u{1}")
 }
 
 // Solve the p×p system `A v = e0` (first unit vector) by Gaussian
