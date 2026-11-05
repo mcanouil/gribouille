@@ -9,6 +9,7 @@
 
 #import "../data.typ": _require-cols, _require-frame, group-by
 #import "../utils/errors.typ": fail, fail-type, quote-each
+#import "../utils/types.typ": cell-key
 
 // Coerce a `by:` argument into an array of column-name strings. `none` means
 // "no grouping" (the whole dataset); a bare string is a single column. `scope`
@@ -37,10 +38,7 @@
 // and an empty `cols` puts every row in one group.
 #let _key-of(row, cols) = {
   cols
-    .map(col => {
-      let v = row.at(col, default: none)
-      if v == none { "\u{0}" } else { str(v) }
-    })
+    .map(col => cell-key(row.at(col, default: none)))
     .join("\u{1}", default: "")
 }
 

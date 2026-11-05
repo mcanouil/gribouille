@@ -2,8 +2,10 @@
 //
 // Left: `colour` maps a column with `none` cells. The `none` rows join in one
 // line, in the fallback ink, apart from the `a` and `b` lines.
-// Right: `group` maps the same column, so each of the three groups draws its
+// Middle: `group` maps the same column, so each of the three groups draws its
 // own line in one ink.
+// Right: `geom-smooth(method: "lm")` fits one line to each `colour` group,
+// with the `none` group in the fallback ink.
 
 #import "../../lib.typ": *
 
@@ -22,7 +24,7 @@
 )
 
 #grid(
-  columns: 2,
+  columns: 3,
   gutter: 0.5cm,
   plot(
     data: rows,
@@ -35,6 +37,13 @@
     data: rows,
     mapping: aes(x: "x", y: "y", group: "g"),
     layers: (geom-line(), geom-point()),
+    width: 6cm,
+    height: 4cm,
+  ),
+  plot(
+    data: rows,
+    mapping: aes(x: "x", y: "y", colour: "g"),
+    layers: (geom-point(), geom-smooth(method: "lm", se: false)),
     width: 6cm,
     height: 4cm,
   ),
