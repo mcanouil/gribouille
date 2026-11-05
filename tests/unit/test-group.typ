@@ -37,6 +37,13 @@
 #assert.ne(group-key(row-num, m-colour-factor), "_all")
 #assert.eq(group-key(row-num, m-colour-factor), "42")
 
+// --- group-key: a none cell keys as its own group ---
+
+#let row-none = (x: 1, y: 2, g: none)
+#assert.eq(group-key(row-none, m-colour-str), "\u{0}")
+#assert.ne(group-key(row-none, m-colour-str), group-key((x: 1, y: 2, g: ""), m-colour-str))
+#assert.ne(group-key(row-none, m-colour-str), group-key((x: 1, y: 2, g: "none"), m-colour-str))
+
 // --- group-key: explicit "group" aesthetic always included regardless of type ---
 
 #let m-group-num = aes(x: "x", y: "y", group: "g")
@@ -172,9 +179,9 @@
   assert.eq(plan-key(group-plan(m-colour), row), group-key(row, m-colour))
 }
 
-// A missing cell keys as the empty string, so a row with no value for the
+// A missing cell keys as a `none` cell does, so a row with no value for the
 // grouping column still lands in a bucket rather than being dropped.
-#assert.eq(group-key((x: 1, y: 2), m-colour), "")
+#assert.eq(group-key((x: 1, y: 2), m-colour), "\u{0}")
 
 // --- partitioning keeps first-appearance order and every row ---
 #let rows = (

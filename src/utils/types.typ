@@ -144,6 +144,10 @@
 
 #let is-native-numeric(v) = type(v) == int or type(v) == float
 
+// The string that one cell adds to a group key. A `none` cell keys as its own
+// group, apart from any string value such as `""` or `"none"`.
+#let cell-key(v) = if v == none { "\u{0}" } else { str(v) }
+
 // Type check for a numeric argument, run before its range check.
 #let check-number(scope, name, value) = {
   if not is-native-numeric(value) {

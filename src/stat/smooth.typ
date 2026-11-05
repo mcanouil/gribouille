@@ -6,7 +6,7 @@
 ///! for the fitted curve and pointwise confidence band.
 
 #import "../utils/bucket.typ": bucket-index
-#import "../utils/types.typ": parse-number
+#import "../utils/types.typ": cell-key, parse-number
 #import "../utils/summaries.typ": read-weight
 #import "../utils/late-binding.typ": after-scale-source
 #import "../scale/train.typ": mapping-ref-col
@@ -170,7 +170,7 @@
 
 #let _group-key(row, cols) = {
   if cols.len() == 0 { return "_all" }
-  cols.map(c => str(row.at(c, default: ""))).join("\u{1}")
+  cols.map(c => cell-key(row.at(c, default: none))).join("\u{1}")
 }
 
 // Solve the p×p system `A v = e0` (first unit vector) by Gaussian

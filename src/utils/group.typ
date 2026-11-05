@@ -6,7 +6,7 @@
 // type.
 
 #import "../utils/bucket.typ": bucket-index
-#import "../utils/types.typ": is-native-numeric
+#import "../utils/types.typ": cell-key, is-native-numeric
 #import "../scale/train.typ": mapping-ref-col, mapping-ref-type
 #import "../utils/late-binding.typ": after-scale-source
 
@@ -78,12 +78,10 @@
 #let plan-key(plan, row) = {
   let keys = ()
   for part in plan {
-    // The two reads differ in their default on purpose: a missing cell is not
-    // numeric, and it keys as the empty string rather than as `none`.
-    if part.by-value and is-native-numeric(row.at(part.col, default: none)) {
-      continue
-    }
-    keys.push(str(row.at(part.col, default: "")))
+    // A missing cell keys as a `none` cell does.
+    let v = row.at(part.col, default: none)
+    if part.by-value and is-native-numeric(v) { continue }
+    keys.push(cell-key(v))
   }
   if keys.len() == 0 { "_all" } else { keys.join("\u{1}") }
 }
