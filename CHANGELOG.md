@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.8.0 (2026-11-05)
+
 ### Breaking changes
 
 - fix!: Guides, `compose()` and `arrow()` check their arguments and fail under the name of the function you called. `guide-axis(n-dodge: 0)`, `guide-legend(ncolumn: 0)`, `compose(gutter: -3cm)` and a gutter dictionary with a bad value used to clamp, overlap or read as 0 in silence. `guide-axis(angle: 45deg)`, `compose(columns: 0)`, `compose(widths: (0, 0))`, `arrow(length: 1em)` and `guides(colour: (a: 1))` used to raise a raw Typst error or pass unnoticed. `guide-axis-stack()` now takes its `guides` as the first argument, so write `guide-axis-stack((guide-axis(),))` where you wrote `guides: (...)`. (#383)
