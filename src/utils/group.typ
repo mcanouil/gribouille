@@ -79,11 +79,13 @@
   let keys = ()
   for part in plan {
     // The two reads differ in their default on purpose: a missing cell is not
-    // numeric, and it keys as the empty string rather than as `none`.
+    // numeric, and it keys as the empty string rather than as `none`. A
+    // present `none` cell keys as its own group, as the wrangle verbs key it.
     if part.by-value and is-native-numeric(row.at(part.col, default: none)) {
       continue
     }
-    keys.push(str(row.at(part.col, default: "")))
+    let v = row.at(part.col, default: "")
+    keys.push(if v == none { "\u{0}" } else { str(v) })
   }
   if keys.len() == 0 { "_all" } else { keys.join("\u{1}") }
 }
