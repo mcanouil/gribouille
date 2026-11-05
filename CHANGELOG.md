@@ -29,6 +29,7 @@
 - feat: `theme()` takes `legend-line`, the stroke of a legend spine. It is blank by default, so a legend draws none. (#372)
 - feat: Under `coord-radial`, lines, paths, steps, areas, ribbons, segments, spokes, `geom-abline` and the lines of `geom-smooth` and `geom-function` follow the polar grid as curves, as in ggplot2, instead of straight chords. Polygons keep straight edges. (#359)
 - feat: Add `nanoplot`, which draws a Gribouille plot in each cell of a keisen column, with a shared axis. (#354)
+- fix: A `none` cell in a column that `group`, `colour`, `fill`, `linetype` or `shape` maps now forms its own group, as it does in the wrangle verbs, and a missing cell joins that group. `geom-line()`, `geom-smooth()` and the other grouped geoms used to fail with a raw Typst error. (#386)
 - fix: Error messages of `from-theme()`, `stat-waffle()`, `stat-connect()`, `stat-difference()`, `compose(collect:)`, `guide-axis(angle:)` and `facet-grid()` follow the house wording, with `; got <value>` and a closing full stop. The text changes, the checks do not. (#384)
 - fix: `geom-label(label: "hi")` draws the constant on every row, as `geom-text()` does. It used to pass the argument check and draw nothing. (#381)
 - fix: An unknown `position` name fails when you build the geom and lists the valid names, and an unknown argument of `annotate()` fails under `annotate`. (#381)
