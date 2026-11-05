@@ -8,7 +8,7 @@
 // option; do not move or rename it without updating that reference.
 
 #import "/lib.typ": *
-#import "@preview/cetz:0.5.2": canvas, draw
+#import "@preview/cetz:0.5.3": canvas, draw
 
 #set page(width: auto, height: auto, margin: 0.5cm)
 

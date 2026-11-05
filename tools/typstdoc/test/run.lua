@@ -1934,7 +1934,7 @@ name = "demo"
 version = "1.2.3"
 compiler = "0.15.0"
 ]])
-    local deps_file = tmpfile("deps_file", '#import "@preview/cetz:0.5.2"\n')
+    local deps_file = tmpfile("deps_file", '#import "@preview/cetz:0.5.3"\n')
     local info = deps.collect({ toml = toml, deps_file = deps_file, src = src })
     os.execute(string.format("rm -rf %q", src))
     assert_eq(info.package_version, "1.2.3")
@@ -1966,7 +1966,7 @@ compiler = "0.15.0"
       local src = string.format("%s/_tmp_deps_src", TEST_DIR)
       os.execute(string.format("mkdir -p %q", src))
       local deps_file = tmpfile("deps_keisen", string.format(
-        '#import "@preview/cetz:0.5.2"\n#import "@%s/keisen:0.2.0"\n', namespace))
+        '#import "@preview/cetz:0.5.3"\n#import "@%s/keisen:0.2.0"\n', namespace))
       local ok, err = pcall(deps.collect, { toml = keisen_toml(), deps_file = deps_file, src = src })
       os.execute(string.format("rm -rf %q", src))
       assert_true(not ok, "expected an error, got none")
@@ -1980,7 +1980,7 @@ compiler = "0.15.0"
     os.execute(string.format("mkdir -p %q", src))
     local stray = src .. "/stray.typ"
     util.write_file(stray, '#import "@local/keisen:0.1.0": *\n')
-    local deps_file = tmpfile("deps_file", '#import "@preview/cetz:0.5.2"\n')
+    local deps_file = tmpfile("deps_file", '#import "@preview/cetz:0.5.3"\n')
     local ok, err = pcall(deps.collect, { toml = keisen_toml(), deps_file = deps_file, src = src })
     os.execute(string.format("rm -rf %q", src))
     assert_true(not ok, "expected an error, got none")
