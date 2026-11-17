@@ -118,6 +118,78 @@ Use `.map()`, `.filter()`, and `.sorted()` only to prepare the rows.
 For example, use `.map()` to derive a column.
 To aggregate rows for each group, use `summarise` or `count`.
 
+## Use the grammar before raw Typst
+
+Try Gribouille first: geoms, stats, positions, scales, guides, labels, themes, and `compose()`.
+Use raw Typst only for what the grammar cannot express, and keep it to the minimum.
+
+| You want | Use | Not |
+| --- | --- | --- |
+| Two plots side by side, a shared title | `compose(defer(plot, ...), labels: labels(title:, subtitle:, caption:))` | `grid` of plots with `text(...)` titles |
+| Fill or stacked bars, stacked areas | `geom-col` or `geom-bar` with `position: "fill"` or `"stack"`; `geom-area` (stacks by default) | `geom-rect` or `place`/`rect` bars, `fold` with `geom-ribbon` |
+| Axis ticks, labels, and gridlines | scale `breaks`, `labels`, `breaks-width`; theme `panel-grid-major-x`; `labels(x:)` | `geom-segment` grids, `geom-typst` tick labels |
+| Categories on rows | `scale-discrete` (`limits`, `labels`) | numeric rows with `scale-continuous(limits: (0.45, n + 0.55), breaks: ())` |
+| A log axis | `scale-log10(breaks:)` | `log10(n)` computed in the data |
+| Quartiles, swarms, jitter | `geom-pointrange(stat: stat-summary(fun: "median-hilow"))`, `geom-beeswarm`, `position-jitter` | `geom-segment` quartiles, hand-placed points |
+| Number formats and summaries | `format-comma`, `format-percent`, `median`, `quantiles`, `pivot-wider` | your own `thousands`, `pct`, or a `.find` for each cell |
+| Colour from a row value | map a derived category, `scale-manual(values:, limits:)` | `colour-of(...)` with `scale-identity()` |
+| Styled labels | `geom-text(font:, size:, colour:)`; theme `element-text` | `geom-typst` with `text(font:, size:, fill:)[...]` |
+| Labels that do not overlap | `repel: true`, and `segment: true` with a nudge, on `geom-text`, `geom-label`, `geom-typst` | an offset dictionary and one `geom-typst` for each anchor |
+| Plots in table cells | `compose()`, or `nanoplot(..., axis: true)` in a Keisen column | one plot for each cell and a separate axis plot |
+| Extra layer data | a layer `mapping`, or `inherit-aes: false` with a full mapping | a layer that relies on the inherited `x` and `y` |
+
+Maps have no grammar form yet.
+Do not draw a pseudo-map with `geom-point` and `coord-fixed`.
+
+### Layout and titles
+
+```typst
+// Wrong: raw layout and a hand-made title.
+#grid(columns: 2,
+  text(14pt)[Title],
+  [],
+  plot(data: penguins, mapping: aes(x: "bill-len", y: "bill-dep"), layers: (geom-point(),)),
+  plot(data: penguins, mapping: aes(x: "species"), layers: (geom-bar(),)),
+)
+
+// Right: compose draws one title, subtitle, and caption.
+#compose(
+  defer(plot, data: penguins, mapping: aes(x: "bill-len", y: "bill-dep"), layers: (geom-point(),)),
+  defer(plot, data: penguins, mapping: aes(x: "species"), layers: (geom-bar(),)),
+  labels: labels(title: "Title", subtitle: "Subtitle", caption: "Caption"),
+)
+```
+
+Pass fonts once with `compose(theme:)`.
+The panels do not need a theme of their own.
+
+### Hand-drawn marks
+
+```typst
+// Wrong: a rectangle for each share, with the heights worked out by hand.
+layers: (geom-rect(),),
+
+// Right: the position does the work.
+mapping: aes(x: "g", y: "n", fill: "s"),
+layers: (geom-col(position: "fill"),),
+scales: scales(y: scale-continuous(labels: format-percent())),
+```
+
+### Fake axes
+
+```typst
+// Wrong: segments for the grid, geom-typst for the tick labels.
+layers: (geom-point(), geom-segment(data: grid-rows), geom-typst(data: tick-rows)),
+
+// Right: the scale owns the ticks, and the theme owns the grid.
+scales: scales(
+  x: scale-continuous(breaks: (180, 200, 220)),
+  y: scale-continuous(breaks: breaks-width(1000), labels: format-comma()),
+),
+theme: theme-minimal() + theme(panel-grid-major-x: element-line(colour: red)),
+labels: labels(x: "Flipper length (mm)"),
+```
+
 ## Symbol inventory
 
 What exists, by family (regenerate with `lua tools/skill-inventory.lua`).
@@ -235,6 +307,32 @@ Legend swatches render the pattern:
 - Unknown `stat`, scale `transform`, `oob`, or `theme()` element names fail fast instead of silently rendering as identity.
 - CSV string-numeric columns stay discrete.
   For a continuous scale, call `as-numeric(data, "col")`.
+- `scale-log10` takes no `expand`.
+  Use `scale-continuous(transform: "log10", expand: (0%, 0%))`.
+- To hide breaks, write `breaks: ()`, not `breaks: none`.
+- `aes()` takes column names, not constants.
+  `aes(x: 0)` fails: add a constant column instead.
+- Text geoms place a label with `anchor: "west"`, not `hjust`.
+  `anchor` is a layer parameter.
+- `segment: true` draws a leader only when the label moves: use `nudge-x`/`nudge-y` or `repel: true`.
+  `position-nudge` moves the label but draws no leader.
+- `geom-point(size:)` is a radius, as in `circle(radius:)`.
+- Rows outside a scale's `limits` are dropped by the default `oob`.
+- `theme-void()` has no plot inset, so the title and caption touch the edge.
+  Use `theme-void(plot-background: element-rect())`.
+- Give `height` a fixed length unless the container has a set height.
+- `geom-col` with a discrete `y` draws nothing.
+  For horizontal bars, use a discrete `x` and `coord-flip()`.
+- A layer with its own `data` that lacks the inherited `x` and `y` columns draws nothing, with no error.
+  Give the layer its own `x` and `y` mapping, or use `inherit-aes: false` with a full mapping.
+- A layer row with a new level adds an entry to an inherited `colour` legend.
+  `inherit-aes: false` avoids it.
+- `geom-rect` has no `linetype`, and `geom-typst` has no `clip`.
+- `labeller` options take plain strings, as in `label-both(separator: ": ")`.
+- Long theta labels of `coord-radial` can overlap or reach the plot edge.
+- Scales expand 5% on each side by default.
+- A bounded measure keeps its full domain: use `limits: (-1, 1)` for a correlation, not the data range.
+- Do not draw maps with points and `coord-fixed`: there are no geo geoms.
 
 ## When Gribouille misbehaves
 
