@@ -136,6 +136,7 @@ Use raw Typst only for what the grammar cannot express, and keep it to the minim
 | Styled labels | `geom-text(font:, size:, colour:)`; theme `element-text` | `geom-typst` with `text(font:, size:, fill:)[...]` |
 | Labels that do not overlap | `repel: true`, and `segment: true` with a nudge, on `geom-text`, `geom-label`, `geom-typst` | an offset dictionary and one `geom-typst` for each anchor |
 | Plots in table cells | `compose()`, or `nanoplot(..., axis: true)` in a Keisen column | one plot for each cell and a separate axis plot |
+| Label colour on filled cells | `after-scale` on the label `colour` (see below) | a hand-made colour recipe for each cell |
 | Extra layer data | a layer `mapping`, or `inherit-aes: false` with a full mapping | a layer that relies on the inherited `x` and `y` |
 
 Maps have no grammar form yet.
@@ -189,6 +190,37 @@ scales: scales(
 theme: theme-minimal() + theme(panel-grid-major-x: element-line(colour: red)),
 labels: labels(x: "Flipper length (mm)"),
 ```
+
+### Label colour on filled cells
+
+Pick a readable label colour from the fill with `after-scale` on the label `colour`.
+The function takes `(value, ctx)`.
+The first argument is the text's own colour, not the fill.
+Rebuild the fill with `ctx.resolve-colour` and `ctx.trained`:
+
+```typst
+#let contrast = (_, ctx) => {
+  let trained = ctx.trained.at("fill", default: none)
+  let c = ((ctx.resolve-colour)(trained, ctx.palette))(ctx.row.v)
+  if luma(c).components().first() > 50% { black } else { white }
+}
+#plot(
+  data: (
+    (k: "a", v: 1), (k: "b", v: 5), (k: "c", v: 9),
+  ),
+  mapping: aes(x: "k", y: "v", fill: "v"),
+  layers: (
+    geom-col(),
+    geom-text(
+      mapping: aes(label: "k", colour: after-scale(contrast)),
+      position: position-nudge(y: -0.5),
+      size: 14pt,
+    ),
+  ),
+)
+```
+
+Here `v` is the column that the `fill` mapping uses.
 
 ## Symbol inventory
 
