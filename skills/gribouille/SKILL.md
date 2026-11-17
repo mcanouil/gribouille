@@ -94,7 +94,7 @@ Do not use the native Typst `.map()` to make one layer for each group:
 ```typst
 // Wrong: one layer for each species, with a hand-made colour.
 layers: species.map(s => geom-point(
-  data: penguins.filter(r => r.species == s),
+  data: rows.filter(r => r.species == s),
   colour: palette.at(s),
 )),
 
