@@ -126,13 +126,13 @@ Use raw Typst only for what the grammar cannot express, and keep it to the minim
 | You want | Use | Not |
 | --- | --- | --- |
 | Two plots side by side, a shared title | `compose(defer(plot, ...), labels: labels(title:, subtitle:, caption:))` | `grid` of plots with `text(...)` titles |
-| Fill or stacked bars, stacked areas | `geom-col` or `geom-bar` with `position: "fill"` or `"stack"`; `geom-area` (stacks by default) | `geom-rect` or `place`/`rect` bars, `fold` with `geom-ribbon` |
+| Fill or stacked bars, stacked areas | `geom-col` or `geom-bar` with `position: "fill"` or `"stack"`; `geom-area` (stacks by default) | `geom-rect` or `place`/`rect` bars, Typst `fold` with `geom-ribbon` |
 | Axis ticks, labels, and gridlines | scale `breaks`, `labels`, `breaks-width`; theme `panel-grid-major-x`; `labels(x:)` | `geom-segment` grids, `geom-typst` tick labels |
 | Categories on rows | `scale-discrete` (`limits`, `labels`) | numeric rows with `scale-continuous(limits: (0.45, n + 0.55), breaks: ())` |
 | A log axis | `scale-log10(breaks:)` | `log10(n)` computed in the data |
 | Quartiles, swarms, jitter | `geom-pointrange(stat: stat-summary(fun: "median-hilow"))`, `geom-beeswarm`, `position-jitter` | `geom-segment` quartiles, hand-placed points |
 | Number formats and summaries | `format-comma`, `format-percent`, `median`, `quantiles`, `pivot-wider` | your own `thousands`, `pct`, or a `.find` for each cell |
-| Colour from a row value | map a derived category, `scale-manual(values:, limits:)` | `colour-of(...)` with `scale-identity()` |
+| Colour from a row value | map a derived category, `scale-manual(values:, limits:)` | a hand-written `colour-of(...)` with `scale-identity()` |
 | Styled labels | `geom-text(font:, size:, colour:)`; theme `element-text` | `geom-typst` with `text(font:, size:, fill:)[...]` |
 | Labels that do not overlap | `repel: true`, and `segment: true` with a nudge, on `geom-text`, `geom-label`, `geom-typst` | an offset dictionary and one `geom-typst` for each anchor |
 | Plots in table cells | `compose()`, or `nanoplot(..., axis: true)` in a Keisen column | one plot for each cell and a separate axis plot |
