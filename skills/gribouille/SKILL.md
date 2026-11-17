@@ -80,6 +80,39 @@ The same constructor adapts to its key (axis for `x`/`y`, palette for `colour`/`
 Unknown constructor arguments, unknown aesthetics, and positional arguments fail at binding.
 The error lists the valid keys.
 
+## Groups belong in `aes()`
+
+Map a grouping variable in `aes()` (`colour`, `fill`, `group`, `linetype`, `shape`).
+Gribouille then splits the data, colours each group, and draws the legend.
+Do not use the native Typst `.map()` to make one layer for each group:
+
+```typst
+// Wrong: one layer for each species, with a hand-made colour.
+layers: species.map(s => geom-point(
+  data: penguins.filter(r => r.species == s),
+  colour: palette.at(s),
+)),
+
+// Right: one layer, and the species goes in the mapping.
+mapping: aes(x: "flipper-len", y: "body-mass", colour: "species"),
+layers: (geom-point(),),
+```
+
+If the data is wide (one column for each series), reshape it with `pivot-longer`.
+Then map the new key column:
+
+```typst
+#plot(
+  data: pivot-longer(mpg, ("cty", "hwy"), names-to: "metric", values-to: "mpg"),
+  mapping: aes(x: "displ", y: "mpg", colour: "metric"),
+  layers: (geom-point(),),
+)
+```
+
+Use `.map()`, `.filter()`, and `.sorted()` only to prepare the rows.
+For example, use `.map()` to derive a column.
+To aggregate rows for each group, use `summarise` or `count`.
+
 ## Symbol inventory
 
 What exists, by family (regenerate with `lua tools/skill-inventory.lua`).
