@@ -82,8 +82,13 @@ The error lists the valid keys.
 
 ## Groups belong in `aes()`
 
-Map a grouping variable in `aes()` (`colour`, `fill`, `group`, `linetype`, `shape`).
-Gribouille then splits the data, colours each group, and draws the legend.
+Map a grouping variable in `aes()`.
+Gribouille then splits the data into one group for each value:
+
+- `colour` and `fill` apply the palette and draw a legend.
+- `shape` and `linetype` draw a legend with their own glyph.
+- `group` only splits the data, with no scale and no legend.
+
 Do not use the native Typst `.map()` to make one layer for each group:
 
 ```typst
