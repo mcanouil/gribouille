@@ -139,9 +139,6 @@ Use raw Typst only for what the grammar cannot express, and keep it to the minim
 | Label colour on filled cells | `after-scale` on the label `colour` (see below) | a hand-made colour recipe for each cell |
 | Extra layer data | a layer `mapping`, or `inherit-aes: false` with a full mapping | a layer that relies on the inherited `x` and `y` |
 
-Maps have no grammar form yet.
-Do not draw a pseudo-map with `geom-point` and `coord-fixed`.
-
 ### Layout and titles
 
 ```typst
@@ -342,8 +339,9 @@ Legend swatches render the pattern:
 - `scale-log10` takes no `expand`.
   Use `scale-continuous(transform: "log10", expand: (0%, 0%))`.
 - To hide breaks, write `breaks: ()`, not `breaks: none`.
-- `aes()` takes column names, not constants.
+- Data channels in `aes()` take column names, not constants.
   `aes(x: 0)` fails: add a constant column instead.
+  The scalar channels `nudge-x`, `nudge-y`, `xintercept`, `yintercept`, `slope`, and `intercept` accept a constant.
 - Text geoms place a label with `anchor: "west"`, not `hjust`.
   `anchor` is a layer parameter.
 - `segment: true` draws a leader only when the label moves: use `nudge-x`/`nudge-y` or `repel: true`.
