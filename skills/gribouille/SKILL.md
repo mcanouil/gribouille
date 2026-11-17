@@ -123,6 +123,10 @@ To aggregate rows for each group, use `summarise` or `count`.
 Try Gribouille first: geoms, stats, positions, scales, guides, labels, themes, and `compose()`.
 Use raw Typst only for what the grammar cannot express, and keep it to the minimum.
 
+When you rewrite a figure, change how a part is drawn, not what the figure shows.
+Keep every element of the old figure: gridlines, the key in the subtitle, connector lines, the place of each header, and the width of the panel.
+Compare the new render with the old render, element by element.
+
 | You want | Use | Not |
 | --- | --- | --- |
 | Two plots side by side, a shared title | `compose(defer(plot, ...), labels: labels(title:, subtitle:, caption:))` | `grid` of plots with `text(...)` titles |
@@ -134,10 +138,13 @@ Use raw Typst only for what the grammar cannot express, and keep it to the minim
 | Number formats and summaries | `format-comma`, `format-percent`, `median`, `quantiles`, `pivot-wider` | your own `thousands`, `pct`, or a `.find` for each cell |
 | Colour from a row value | map a derived category, `scale-manual(values:, limits:)` | a hand-written `colour-of(...)` with `scale-identity()` |
 | Styled labels | `geom-text(font:, size:, colour:)`; theme `element-text` | `geom-typst` with `text(font:, size:, fill:)[...]` |
+| Bold or italic labels | `strong[...]` or `emph[...]` content in the label column, or `label: typst("col")` for Typst markup in a column | `geom-typst` with `text(weight: "bold")[...]` |
 | Labels that do not overlap | `repel: true`, and `segment: true` with a nudge, on `geom-text`, `geom-label`, `geom-typst` | an offset dictionary and one `geom-typst` for each anchor |
 | Plots in table cells | `compose()`, or `nanoplot(..., axis: true)` in a Keisen column | one plot for each cell and a separate axis plot |
 | Label colour on filled cells | `after-scale` on the label `colour` (see below) | a hand-made colour recipe for each cell |
 | Extra layer data | a layer `mapping`, or `inherit-aes: false` with a full mapping | a layer that relies on the inherited `x` and `y` |
+| A header above the panel | `secondary: sec-axis(breaks: (...), labels: (...))` on the scale | extra breaks on the bottom axis, or `geom-typst` headers |
+| Room for a note outside the data | `limits` on that axis, then `annotate(...)` | raw `place` |
 
 ### Layout and titles
 
@@ -363,6 +370,11 @@ Legend swatches render the pattern:
 - Scales expand 5% on each side by default.
 - A bounded measure keeps its full domain: use `limits: (-1, 1)` for a correlation, not the data range.
 - Do not draw maps with points and `coord-fixed`: there are no geo geoms.
+- `annotate()` trains the scales, as in ggplot2.
+  A note outside the data range widens the axis.
+  Set `limits` on that axis to keep the old range.
+- `geom-blank()` trains the scales.
+  Use it to extend an axis without `limits`.
 
 ## When Gribouille misbehaves
 
