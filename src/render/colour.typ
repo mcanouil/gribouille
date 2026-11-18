@@ -5,7 +5,8 @@
 #import "../utils/palette.typ": palette-at, spec-palette
 #import "../utils/colour.typ": resolve-continuous-colour
 #import "../scale/train.typ": level-lookup
-#import "../utils/types.typ": parse-number
+#import "../utils/types.typ": NA-KEY, is-missing, parse-number
+#import "../utils/level-resolve.typ": is-na-index, na-value-of
 
 // Build a colour resolver curried over the (trained, palette) pair so per-row
 // callers resolve the palette once outside the row loop and call the returned
@@ -28,9 +29,12 @@
     // Resolved once here, not per value: the closure below runs on every row.
     let lookup = level-lookup(trained)
     return value => {
-      if value == none or value == "" { return ink }
-      let idx = lookup.at(str(value), default: none)
+      let idx = lookup.at(
+        if is-missing(value) { NA-KEY } else { str(value) },
+        default: none,
+      )
       if idx == none { return ink }
+      if is-na-index(trained, idx) { return na-value-of(trained, "colour", ink) }
       palette-at(pal, idx)
     }
   }

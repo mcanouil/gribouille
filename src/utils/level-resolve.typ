@@ -31,12 +31,37 @@
   )
 }
 
+// Whether `idx` is the trailing `NA` level of a trained discrete scale.
+#let is-na-index(trained, idx) = (
+  idx != none
+    and trained.at("na-level", default: false)
+    and idx == trained.domain.len() - 1
+)
+
+// The value a scale draws the `NA` level with: the scale's own `na-value`,
+// else the default of the aesthetic. Aesthetics with no neutral default of
+// their own take `fallback`, usually the geom default.
+#let na-value-of(trained, aesthetic, fallback) = {
+  let user = spec-attr(trained, "na-value", fallback: none)
+  if user != none { return user }
+  if aesthetic in ("colour", "fill") { return luma(50%) }
+  if aesthetic == "shape" { return "circle-open" }
+  if aesthetic == "linetype" { return "loosely-dotted" }
+  fallback
+}
+
+// Spaces the data levels over `range`. The `NA` level takes no slot and
+// resolves to the scale's `na-value` (`none` when unset, so the caller falls
+// back to the geom default).
 #let discrete-numeric(trained, level, range) = {
-  let n = trained.domain.len()
+  let idx = discrete-index(trained, level)
+  if is-na-index(trained, idx) { return spec-attr(trained, "na-value") }
+  let n = trained.domain.len() - if trained.at("na-level", default: false) {
+    1
+  } else { 0 }
   if n == 0 { return none }
   let (lo, hi) = range
   if n == 1 { return (lo + hi) / 2 }
-  let idx = discrete-index(trained, level)
   if idx == none { return none }
   lo + idx * (hi - lo) / (n - 1)
 }
@@ -84,6 +109,7 @@
   if trained.type == "discrete" {
     let idx = discrete-index(trained, value)
     if idx == none { return ink }
+    if is-na-index(trained, idx) { return na-value-of(trained, "colour", ink) }
     return palette-at(pal, idx)
   }
   resolve-continuous-colour(trained, value, pal, ink)
@@ -92,10 +118,13 @@
 // Shape / linetype: palette-driven on discrete; binned on numeric (returns
 // `none` when the trained scale is not binned, which is treated as
 // "drop this aesthetic" by the caller).
-#let _resolve-palette-aes(trained, value, fallback-palette) = {
+#let _resolve-palette-aes(trained, aesthetic, value, fallback-palette) = {
   if trained.type == "discrete" {
     let idx = discrete-index(trained, value)
     if idx == none { return none }
+    if is-na-index(trained, idx) {
+      return na-value-of(trained, aesthetic, none)
+    }
     return palette-at(spec-palette(trained, fallback-palette), idx)
   }
   resolve-binned(trained, value, fallback-palette)
@@ -110,6 +139,7 @@
     if pal != none and pal.len() > 0 {
       let idx = discrete-index(trained, value)
       if idx == none { return none }
+      if is-na-index(trained, idx) { return spec-attr(trained, "na-value") }
       return palette-at(pal, idx)
     }
     return discrete-numeric(trained, value, range)
@@ -123,8 +153,8 @@
 #let _RESOLVERS = (
   colour: (t, v, p, ink) => _resolve-colour-aes(t, v, p, ink),
   fill: (t, v, p, ink) => _resolve-colour-aes(t, v, p, ink),
-  shape: (t, v, _, _) => _resolve-palette-aes(t, v, default-shapes),
-  linetype: (t, v, _, _) => _resolve-palette-aes(t, v, default-linetypes),
+  shape: (t, v, _, _) => _resolve-palette-aes(t, "shape", v, default-shapes),
+  linetype: (t, v, _, _) => _resolve-palette-aes(t, "linetype", v, default-linetypes),
   size: (t, v, _, _) => _resolve-numeric-aes(t, v, (1pt, 6pt)),
   linewidth: (t, v, _, _) => _resolve-numeric-aes(t, v, (0.4pt, 1.4pt)),
   stroke: (t, v, _, _) => _resolve-numeric-aes(t, v, (0.2pt, 1.4pt)),

@@ -21,6 +21,14 @@
     cetz.draw.circle((cx, cy), radius: size, fill: paint, stroke: stroke-spec)
     return
   }
+  if kind == "circle-open" {
+    // The outline only: the stroke paint, with no body fill.
+    let outline = if stroke-spec == none {
+      (paint: paint, thickness: 0.8pt)
+    } else { stroke-spec }
+    cetz.draw.circle((cx, cy), radius: size, fill: none, stroke: outline)
+    return
+  }
   let r = size-to-units(size)
   if kind == "square" {
     cetz.draw.rect(

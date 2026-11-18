@@ -10,7 +10,9 @@
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/palette.typ": default-shapes, palette-at, spec-palette
-#import "../utils/level-resolve.typ": bin-index, discrete-index
+#import "../utils/level-resolve.typ": (
+  bin-index, discrete-index, is-na-index, na-value-of,
+)
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/aes-pair.typ": resolve-pair-defaults
 #import "../position/dodge.typ": dodge-geometry, project-dodged
@@ -278,7 +280,12 @@
         shape-trained,
         row.at(shape-col, default: none),
       )
-      if idx == none { default-shape-kind } else {
+      if idx == none { default-shape-kind } else if is-na-index(
+        shape-trained,
+        idx,
+      ) {
+        na-value-of(shape-trained, "shape", default-shape-kind)
+      } else {
         palette-at(shape-palette, idx)
       }
     }
