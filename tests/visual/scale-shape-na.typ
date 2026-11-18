@@ -1,8 +1,8 @@
 // A missing value on a discrete shape scale is its own level.
 //
-// The penguins that have no recorded sex draw as open circles, and the
-// legend lists female, male and NA, with NA on an open circle. The other two
-// shapes keep their usual marks.
+// The penguins that have no recorded sex draw as a circle with a cross,
+// and the legend lists female, male and NA, with NA on a circle with a cross.
+// The other two shapes keep their usual marks.
 
 #import "../../lib.typ": *
 

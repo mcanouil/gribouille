@@ -45,7 +45,7 @@
   let user = spec-attr(trained, "na-value", fallback: none)
   if user != none { return user }
   if aesthetic in ("colour", "fill") { return luma(50%) }
-  if aesthetic == "shape" { return "circle-open" }
+  if aesthetic == "shape" { return "circle-cross" }
   if aesthetic == "linetype" { return "loosely-dotted" }
   fallback
 }

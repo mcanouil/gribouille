@@ -55,7 +55,7 @@
 ///
 /// \@param alpha Marker opacity in `[0, 1]`.
 ///
-/// \@param shape Marker shape keyword (e.g., `"circle"`, `"square"`, `"triangle"`, `"circle-open"`). `auto` honours the shape scale.
+/// \@param shape Marker shape keyword (e.g., `"circle"`, `"square"`, `"triangle"`, `"circle-cross"`). `auto` honours the shape scale.
 ///
 /// \@param key Legend glyph override built with a `draw-key-*` helper. `auto` picks the default for the geom.
 ///

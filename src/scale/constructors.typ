@@ -133,7 +133,7 @@
 ///
 /// \@param na-value Value that draws the `NA` level, which holds the rows
 ///   whose column is `none` or empty. `none` (default) takes the default of
-///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-cross"` for
 ///   `shape` and `"loosely-dotted"` for `linetype`. Not for `x`/`y`.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
@@ -274,7 +274,7 @@
 ///
 /// \@param na-value Value that draws the `NA` level, which holds the rows
 ///   whose column is `none` or empty. `none` (default) takes the default of
-///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-cross"` for
 ///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
 ///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
 ///

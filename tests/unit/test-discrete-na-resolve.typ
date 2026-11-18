@@ -35,7 +35,7 @@
 // Defaults.
 #assert.eq(resolve-level("colour", with-na, none, palette: pal), luma(50%))
 #assert.eq(resolve-level("fill", with-na, "", palette: pal), luma(50%))
-#assert.eq(resolve-level("shape", with-na, none), "circle-open")
+#assert.eq(resolve-level("shape", with-na, none), "circle-cross")
 #assert.eq(resolve-level("linetype", with-na, none), "loosely-dotted")
 #assert.eq(resolve-level("size", with-na, none), none)
 
