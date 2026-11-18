@@ -5,6 +5,8 @@
 ### Changes
 
 - fix: Stacked bars and areas follow the order of `scale-discrete(limits:)` on the fill scale, so the first limit sits on top and matches the top legend key. (#393)
+- fix: `geom-linerange()`, `geom-errorbar()`, `geom-rug()` and the point of `geom-pointrange()` apply `alpha` once. An `alpha` of 0.5 used to draw as about 0.25. (#392)
+- fix: A `geom-hline` or `geom-vline` with a mapped intercept draws at the right place on a `scale-log10()` axis. It used to apply the log transform twice, which panicked for a value of 1 or less. (#391)
 - docs: The agent skill tells agents to use Gribouille geoms, stats, positions, scales, guides, and compose before raw Typst, and lists the traps found in real plots. (#389)
 - docs: The agent skill tells agents to map a grouping variable in `aes()` instead of building one geom for each group with `.map()`, and to reshape wide data with `pivot-longer` first. (#388)
 - docs: The agent skill tells agents to keep the design when they rewrite a figure, and shows how to place headers, bold labels, and notes outside the data with Gribouille. (8850c22)
