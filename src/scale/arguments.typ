@@ -207,6 +207,17 @@
   // pre-pass could not censor against it, and a position and a level of the
   // same value would disagree.
   for level in limits {
+    if level == none {
+      fail-type(
+        scope,
+        "limits",
+        level,
+        "a level name as a string",
+        hint: "A missing value is not a level. Set `na-translate: false` to "
+          + "drop missing rows, or leave it on to show them as the last "
+          + "`NA` level.",
+      )
+    }
     if type(level) != str {
       fail-type(
         scope,

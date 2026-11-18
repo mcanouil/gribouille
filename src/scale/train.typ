@@ -240,7 +240,11 @@
   out
 }
 
+// Returns `(levels, missing)`: the data levels, alphabetic, and whether any
+// cell is missing (`none` or `""`), which `_train-entry` turns into the
+// trailing `NA` level.
 #let _discrete-domain-from-cache(cols) = {
+  let missing = false
   let seen = ()
   let seen-set = (:)
   for col in cols {
@@ -251,7 +255,10 @@
     let recorded = col.at("levels", default: none)
     let source = if recorded != none { recorded } else { col.values }
     for v in source {
-      if v == none or v == "" { continue }
+      if is-missing(v) {
+        missing = true
+        continue
+      }
       let s = str(v)
       if seen-set.at(s, default: false) { continue }
       seen-set.insert(s, true)
@@ -260,7 +267,7 @@
   }
   // Alphabetic so palette index, geom draw order, and legend agree.
   // User `limits` override in `_train-entry`.
-  seen.sorted()
+  (levels: seen.sorted(), missing: missing)
 }
 
 // Build a `(level: index)` dict from a discrete domain. O(1) level lookup
@@ -399,6 +406,7 @@
   }
   let integer = false
   let unusable = false
+  let missing = false
   let domain = if scale-type == "identity" {
     ()
   } else if scale-type == "continuous" {
@@ -407,7 +415,9 @@
     unusable = scanned.unusable
     scanned.domain
   } else {
-    _discrete-domain-from-cache(cols)
+    let scanned = _discrete-domain-from-cache(cols)
+    missing = scanned.missing
+    scanned.levels
   }
   // Track which sides the user pinned with an explicit (non-`auto`) limit.
   // Feature 5 (break-driven expansion) only widens sides left unpinned, and
@@ -576,6 +586,14 @@
       domain = (lo, hi)
     }
   }
+  // A missing cell is its own level, last, unless the scale drops it. `limits`
+  // never name it (`check-limits`), so it follows the data levels or the limits.
+  let na-level = (
+    scale-type == "discrete"
+      and missing
+      and (user-scale == none or user-scale.at("na-translate", default: true))
+  )
+  if na-level { domain.push(NA-KEY) }
   let level-index = if scale-type == "discrete" {
     _level-index(domain)
   } else { none }
@@ -603,6 +621,7 @@
     integer: integer,
     unusable: unusable,
   )
+  if scale-type == "discrete" { entry.insert("na-level", na-level) }
   if user-scale != none and user-scale.at("temporal", default: none) != none {
     entry.insert("temporal", user-scale.temporal)
     entry.insert("date-format", user-scale.at("date-format", default: ""))
