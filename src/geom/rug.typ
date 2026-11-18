@@ -10,7 +10,6 @@
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../coord/project.typ": axis-mapper
 #import "../utils/types.typ": parse-number
-#import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let spec = (
@@ -187,8 +186,6 @@
       row,
       theme-colour,
     )
-    let alpha = resolve-channel("alpha", layer.params, mapping, ctx, row, 1)
-    let final-colour = apply-alpha(colour, alpha)
     let thickness = resolve-channel(
       "linewidth",
       layer.params,
@@ -197,7 +194,7 @@
       row,
       0.4pt,
     )
-    let stroke-spec = (paint: final-colour, thickness: thickness)
+    let stroke-spec = (paint: colour, thickness: thickness)
 
     if (want-bottom or want-top) and x-col != none and x-trained != none {
       let cx = map-x(row.at(x-col, default: none))
