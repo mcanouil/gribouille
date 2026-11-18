@@ -20,19 +20,23 @@
 #import "geom/registry.typ": GEOMS
 #import "utils/typst-markup.typ": is-typst-markup, typst
 
-// Keys that the geoms read but that annotate forwards to the constructor as
-// constant layer params, so that no scale maps them.
-#let _annotate-param-keys = ("linewidth", "stroke")
-
-// `text`, `label`, and `typst` take `size` as the text size, a Typst length
-// layer param, not an aesthetic mapping.
-#let _text-geoms = ("text", "label", "typst")
+// Aesthetic keys that annotate forwards to the constructor as constant layer
+// params, so that no scale maps them and no legend key appears. Position
+// aesthetics and `label` still go to the inline row.
+#let _annotate-param-keys = (
+  "colour",
+  "fill",
+  "alpha",
+  "linewidth",
+  "linetype",
+  "shape",
+  "size",
+  "stroke",
+)
 
 // Kwargs that annotate routes to its one-row inline dataset: the keys that the
 // target geom reads, less the keys that stay constant layer params.
-#let _aes-keys-for(geom, reads) = reads.filter(k => (
-  k not in _annotate-param-keys and not (k == "size" and geom in _text-geoms)
-))
+#let _aes-keys-for(reads) = reads.filter(k => k not in _annotate-param-keys)
 
 #let _geom-table = (
   text: geom-text,
@@ -76,12 +80,14 @@
 ///
 /// \@param ..fields Named arguments split between aesthetics and layer
 ///   parameters. An aesthetic name is a key that the target geom reads, for
-///   example `x`, `y`, `label`, `colour`, `nudge-x` for `"text"`, or `xmin`,
-///   `xmax`, `ymin`, `ymax`, `fill` for `"rect"`. For `"text"`, `"label"`, and
-///   `"typst"`, `size` is a layer parameter (the text size, a Typst length),
-///   not an aesthetic. `stroke` and `linewidth` never go to the inline row.
-///   They go to the geom as layer parameters, so a geom that does not take
-///   them, for example `"text"` or `"typst"`, fails on them.
+///   example `x`, `y`, `label`, `nudge-x` for `"text"`, or `xmin`, `xmax`,
+///   `ymin`, `ymax` for `"rect"`. Only these position and label keys go to the
+///   inline row. Like in ggplot2, the other aesthetics (`colour`, `fill`,
+///   `alpha`, `linewidth`, `linetype`, `shape`, `size`, `stroke`) are constants:
+///   they go to the geom as layer parameters, so no scale maps them and no
+///   legend key appears. A geom that does not take one, for example `"text"`
+///   with `stroke`, fails on it. For `"text"`, `"label"`, and `"typst"`,
+///   `size` is the text size, a Typst length.
 ///   Anything else (e.g., `font` or `repel` for `"text"`, `arrow` for
 ///   `"segment"`) is forwarded to the geom constructor as a layer parameter,
 ///   and the constructor fails for a name it does not know.
@@ -165,7 +171,7 @@
     ))
   }
 
-  let aes-keys = _aes-keys-for(geom, GEOMS.at(geom).spec.reads)
+  let aes-keys = _aes-keys-for(GEOMS.at(geom).spec.reads)
   let row = (:)
   let mapping-args = (:)
   let layer-args = (:)
