@@ -5,7 +5,7 @@
 
 #import "../utils/summaries.typ": read-weight
 #import "../utils/aes-resolve.typ": stat-output-mapping
-#import "../utils/types.typ": NA-KEY, level-key
+#import "../utils/types.typ": NA-KEY, is-discrete-column, is-missing, level-key
 
 /// Count statistic: one output row per distinct x level with `y = count`.
 ///
@@ -77,8 +77,13 @@
   } else { none }
   let counts = (:)
   let order = ()
+  // A missing cell is the `NA` level of a discrete axis. On a continuous axis
+  // it has no position, so its row is left out of the counts.
+  let x-discrete = is-discrete-column(data, x-col)
   for row in data {
-    let key = level-key(row.at(x-col, default: none))
+    let xv = row.at(x-col, default: none)
+    if is-missing(xv) and not x-discrete { continue }
+    let key = level-key(xv)
     if key not in counts { order.push(key) }
     counts.insert(
       key,

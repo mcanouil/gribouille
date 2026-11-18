@@ -139,7 +139,8 @@
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
-///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
 ///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@param expand Padding around the domain as a ratio (`5%`), a length
@@ -280,7 +281,8 @@
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
-///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
 ///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
@@ -792,7 +794,8 @@
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
-///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
 ///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
@@ -957,7 +960,8 @@
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
-///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
 ///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
@@ -1014,7 +1018,8 @@
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
-///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
 ///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
@@ -1243,7 +1248,8 @@
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
-///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
 ///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
@@ -1307,7 +1313,8 @@
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
-///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
 ///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.

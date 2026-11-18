@@ -164,7 +164,8 @@
 ///
 /// Resolution order:
 ///
-/// - When `labels` is a function: call `labels(value)`.
+/// - When `labels` is a function: call `labels(value)`. For the missing-value
+///   level the callback gets `none`, and a `none` answer keeps the `NA` text.
 /// - When `labels` is an array and `idx` is in range: index it.
 /// - Otherwise: use `fallback`.
 ///

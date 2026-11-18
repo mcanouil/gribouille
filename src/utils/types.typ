@@ -153,7 +153,9 @@
 #let NA-KEY = cell-key(none)
 
 // Sort key that places the reserved `NA` level after every real level.
-#let na-last-key(k) = (k == NA-KEY, k)
+// A group key joins one part for each grouping aesthetic, so each part sorts
+// on its own.
+#let na-last-key(k) = k.split("\u{1}").map(part => (part == NA-KEY, part))
 
 // A cell is missing when it is `none` or the empty string.
 #let is-missing(v) = v == none or v == ""
