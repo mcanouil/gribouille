@@ -188,7 +188,11 @@
 #let resolve-label(labels, value, idx, fallback, typst-mark: false) = {
   let txt = if type(labels) == function {
     // A callback gets `none` for the missing-value level, as ggplot2 gives `NA`.
-    labels(if value == NA-KEY { none } else { value })
+    // A formatter that answers `none` for it keeps the `NA` text.
+    if value == NA-KEY {
+      let text = labels(none)
+      if text == none { fallback } else { text }
+    } else { labels(value) }
   } else if type(labels) == array and idx < labels.len() {
     labels.at(idx)
   } else { fallback }

@@ -112,3 +112,9 @@
 )
 #assert.eq(counted.data.map(r => r.g), ("a", none))
 #assert.eq(counted.data.map(r => r._count), (2, 2))
+
+// A formatter that answers `none` for the NA level keeps the `NA` text.
+#assert.eq(
+  resolve-label(l => if l == none { none } else { l }, NA-KEY, 2, "NA"),
+  "NA",
+)

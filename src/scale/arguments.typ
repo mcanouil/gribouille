@@ -77,8 +77,13 @@
     if type(value) != str {
       fail-type(scope, "na-value", value, "a string")
     }
-  } else if not is-native-numeric(value) and type(value) != length {
-    fail-type(scope, "na-value", value, "a number or a length")
+  } else if aesthetic == "alpha" {
+    if not is-native-numeric(value) {
+      fail-type(scope, "na-value", value, "a number between 0 and 1")
+    }
+    _check-in(scope, "na-value", value, 0, 1)
+  } else if type(value) != length {
+    fail-type(scope, "na-value", value, "a length")
   }
 }
 
