@@ -4,6 +4,7 @@
 
 ### Changes
 
+- fix: `geom-linerange()`, `geom-errorbar()` and `geom-rug()` apply `alpha` once. An `alpha` of 0.5 used to draw as about 0.25. (#392)
 - docs: The agent skill tells agents to use Gribouille geoms, stats, positions, scales, guides, and compose before raw Typst, and lists the traps found in real plots. (#389)
 - docs: The agent skill tells agents to map a grouping variable in `aes()` instead of building one geom for each group with `.map()`, and to reshape wide data with `pivot-longer` first. (#388)
 - docs: The agent skill tells agents to keep the design when they rewrite a figure, and shows how to place headers, bold labels, and notes outside the data with Gribouille. (8850c22)
