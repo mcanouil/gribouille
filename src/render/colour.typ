@@ -5,7 +5,7 @@
 #import "../utils/palette.typ": palette-at, spec-palette
 #import "../utils/colour.typ": resolve-continuous-colour
 #import "../scale/train.typ": level-lookup
-#import "../utils/types.typ": level-key, parse-number
+#import "../utils/types.typ": cell-key, parse-number
 #import "../utils/level-resolve.typ": is-na-index, na-value-of
 
 // Build a colour resolver curried over the (trained, palette) pair so per-row
@@ -29,7 +29,7 @@
     // Resolved once here, not per value: the closure below runs on every row.
     let lookup = level-lookup(trained)
     return value => {
-      let idx = lookup.at(level-key(value), default: none)
+      let idx = lookup.at(cell-key(value), default: none)
       if idx == none { return ink }
       if is-na-index(trained, idx) {
         return na-value-of(trained, "colour", ink)

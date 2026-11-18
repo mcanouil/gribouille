@@ -4,7 +4,7 @@
 ///! single `(x, y, ymin, ymax)` row using one of the summary helpers in
 ///! `src/utils/summaries.typ`.
 
-#import "../utils/types.typ": level-key, parse-number
+#import "../utils/types.typ": cell-key, parse-number
 #import "../utils/summaries.typ": _apply-summary, check-weighted-fun
 #import "../utils/errors.typ": fail-enum
 
@@ -159,7 +159,7 @@
   let buckets = (:)
   let order = ()
   for row in data {
-    let key = level-key(row.at(key-col, default: none))
+    let key = cell-key(row.at(key-col, default: none))
     if key in buckets {
       let bucket = buckets.at(key)
       bucket.push(row)

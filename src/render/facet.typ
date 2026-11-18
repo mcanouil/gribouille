@@ -10,7 +10,7 @@
 #import "../facet/labellers.typ" as labellers
 #import "../data.typ": group-by
 #import "../utils/aes-resolve.typ": level-text
-#import "../utils/types.typ": level-key
+#import "../utils/types.typ": cell-key
 #import "common.typ": _per-side, _resolve-data
 #import "prestat.typ": _raw-levels-for
 #import "layer-prep.typ": prepare-layers
@@ -205,7 +205,7 @@
 // on which of `rows` / `cols` is set. The row-key-fn is invoked once per data
 // row inside `group-by` and must avoid per-row allocation. `none` values are
 // keyed as the `NA` level, which `_raw-levels-for` appends as the last panel.
-#let _facet-cell-str(row, col) = level-key(row.at(col, default: none))
+#let _facet-cell-str(row, col) = cell-key(row.at(col, default: none))
 
 #let _grid-facet-keyers(spec) = {
   let r = spec.facet.rows

@@ -37,12 +37,16 @@
 #assert.ne(group-key(row-num, m-colour-factor), "_all")
 #assert.eq(group-key(row-num, m-colour-factor), "42")
 
-// --- group-key: a none cell keys as its own group ---
+// --- group-key: none and "" are one missing cell, apart from "none" ---
 
 #let row-none = (x: 1, y: 2, g: none)
 #assert.eq(group-key(row-none, m-colour-str), "\u{0}")
-#assert.ne(group-key(row-none, m-colour-str), group-key((x: 1, y: 2, g: ""), m-colour-str))
+#assert.eq(group-key(row-none, m-colour-str), group-key((x: 1, y: 2, g: ""), m-colour-str))
 #assert.ne(group-key(row-none, m-colour-str), group-key((x: 1, y: 2, g: "none"), m-colour-str))
+
+// Values ("a", none, "") form two groups.
+#let mixed = ((x: 1, y: 1, g: "a"), (x: 2, y: 2, g: none), (x: 3, y: 3, g: ""))
+#assert.eq(partition-by-group(mixed, m-colour-str).len(), 2)
 
 // --- group-key: explicit "group" aesthetic always included regardless of type ---
 

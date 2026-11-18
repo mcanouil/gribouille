@@ -144,20 +144,17 @@
 
 #let is-native-numeric(v) = type(v) == int or type(v) == float
 
-// The string that one cell adds to a group key. A `none` cell keys as its own
-// group, apart from any string value such as `""` or `"none"`.
-#let cell-key(v) = if v == none { "\u{0}" } else { str(v) }
-
-// The reserved level of a missing cell on a discrete scale. It cannot clash
-// with a real level, and a trained domain carries it last.
-#let NA-KEY = cell-key(none)
-
 // A cell is missing when it is `none` or the empty string.
 #let is-missing(v) = v == none or v == ""
 
-// The key a cell has in a discrete level lookup: a missing cell keys as the
-// reserved `NA` level, any other cell as its text.
-#let level-key(v) = if is-missing(v) { NA-KEY } else { str(v) }
+// The reserved level of a missing cell on a discrete scale. It cannot clash
+// with a real level, and a trained domain carries it last.
+#let NA-KEY = "\u{0}"
+
+// The string that one cell adds to a group key or a level lookup. A missing
+// cell (`none` or `""`) keys as the reserved `NA` level, apart from any other
+// string value such as `"none"`.
+#let cell-key(v) = if is-missing(v) { NA-KEY } else { str(v) }
 
 // Type check for a numeric argument, run before its range check.
 #let check-number(scope, name, value) = {

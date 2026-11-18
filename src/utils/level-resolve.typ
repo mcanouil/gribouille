@@ -11,7 +11,7 @@
 // linetype is meaningless): the caller treats `none` as "drop this aesthetic
 // from the composed glyph".
 
-#import "./types.typ": level-key
+#import "./types.typ": cell-key
 #import "./colour.typ": bin-edges, bin-index-edges, resolve-continuous-colour
 #import "./palette.typ": (
   default-linetypes, default-shapes, palette-at, spec-attr, spec-palette,
@@ -25,7 +25,7 @@
 )
 
 #let discrete-index(trained, level) = {
-  level-lookup(trained).at(level-key(level), default: none)
+  level-lookup(trained).at(cell-key(level), default: none)
 }
 
 // Whether `idx` is the trailing `NA` level of a trained discrete scale.

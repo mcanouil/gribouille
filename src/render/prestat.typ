@@ -6,7 +6,7 @@
   mapping-ref-col, scope-of, transform-fwd,
 )
 #import "../utils/types.typ": (
-  NA-KEY, infer-column-type, is-missing, level-key, parse-number,
+  NA-KEY, infer-column-type, is-missing, cell-key, parse-number,
 )
 #import "../utils/aes-resolve.typ": merge-mapping
 #import "../scale/arguments.typ": check-transform-domain
@@ -232,7 +232,7 @@
       let v = row.at(src-col, default: none)
       let spine = row.at(pos-col, default: none)
       if spine == none { return row }
-      let by = shift.at(level-key(v), default: none)
+      let by = shift.at(cell-key(v), default: none)
       let r = row
       r.insert(pos-col, if by == none { none } else { spine + by })
       r

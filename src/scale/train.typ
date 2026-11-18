@@ -8,7 +8,7 @@
 
 #import "../data.typ": _normalise-data, column
 #import "../utils/types.typ": (
-  NA-KEY, infer-column-type, is-missing, level-key, parse-number,
+  NA-KEY, infer-column-type, is-missing, cell-key, parse-number,
 )
 #import "../utils/typst-markup.typ": is-typst-markup
 #import "../utils/errors.typ": fail, fail-type
@@ -748,7 +748,7 @@
 ) = {
   let n = domain.len()
   if n == 0 { return none }
-  let s = level-key(value)
+  let s = cell-key(value)
   let lookup = if level-index == none { _level-index(domain) } else {
     level-index
   }
@@ -786,7 +786,7 @@
 // result and feed it straight back through `map-position`.
 #let level-position(trained, value) = {
   if type(value) == int or type(value) == float { return float(value) }
-  let idx = level-lookup(trained).at(level-key(value), default: none)
+  let idx = level-lookup(trained).at(cell-key(value), default: none)
   if idx == none { none } else { idx + 1 }
 }
 

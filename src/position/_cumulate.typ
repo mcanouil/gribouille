@@ -20,7 +20,9 @@
 
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
-#import "../utils/types.typ": cell-key, level-key, parse-number
+#import "../utils/types.typ": (
+  cell-key, infer-column-type, is-missing, parse-number,
+)
 
 #let cumulate-by-x(
   data,
@@ -37,6 +39,11 @@
   // The plan is the mapping's, not the row's, so it is resolved once here
   // rather than rebuilt for every row.
   let plan = group-plan(mapping)
+  // A missing x is the `NA` level of a discrete x, which stacks as a bucket of
+  // its own. On a continuous x it has no position, so its row is left alone.
+  let discrete-x = (
+    infer-column-type(data.map(row => row.at(x-col, default: none))) == "string"
+  )
   let entries = data
     .enumerate()
     .map(((i, row)) => (
@@ -46,10 +53,10 @@
       x: row.at(x-col, default: none),
       y: parse-number(row.at(y-col, default: none)),
     ))
-    .filter(e => e.y != none)
+    .filter(e => e.y != none and (discrete-x or not is-missing(e.x)))
   let (keys: bucket-order, buckets: cells) = bucket-index(
     entries,
-    e => level-key(e.x),
+    e => cell-key(e.x),
   )
   let buckets = (:)
   for (i, bk) in bucket-order.enumerate() {
