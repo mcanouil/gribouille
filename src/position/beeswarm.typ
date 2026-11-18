@@ -248,7 +248,8 @@
   let (swarm, value) = if orientation == "y" { ("y", "x") } else { ("x", "y") }
   let swarm-col = mapping.at(swarm, default: none)
   let value-col = mapping.at(value, default: none)
-  if swarm-col == none or value-col == none or width == 0 {
+  let inert = width == 0 and method != "center"
+  if swarm-col == none or value-col == none or inert {
     return (data: data, mapping: mapping)
   }
 

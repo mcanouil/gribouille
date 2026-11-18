@@ -68,3 +68,12 @@
 #let ry = run(ydata, binwidth: 1, spacing: 0.1, orientation: "y").data
 #close-all(ry.map(row => row.y - 1), (0.0, 0.1, -0.1))
 #for row in ry { assert(close(row.x, 0.6)) }
+
+// --- width 0 does not disable the centre method ---------------------------------
+#let w0 = run(
+  ((x: 1, y: 0.1), (x: 1, y: 0.2)),
+  width: 0,
+  binwidth: 1,
+  spacing: 0.1,
+).data
+#close-all(w0.map(row => row.x - 1), (0.05, -0.05))
