@@ -192,12 +192,16 @@
 
 // Bars grow along the value axis, so a discrete one has no height to draw.
 // Failing here beats an empty panel the reader cannot explain.
-#let _assert-continuous-value(trained) = check(
+#let _assert-continuous-value(trained, hint) = check(
   trained.type == "continuous",
   "geom-col",
   "the value axis (y) must be continuous",
-  hint: "Map the category to `x` and the value to `y`, then add `coord-flip()` for horizontal bars, for example `aes(x: \"k\", y: \"v\")` with `coord-flip()`.",
+  hint: hint,
 )
+
+#let _flip-hint = "Map the category to `x` and the value to `y`, then add `coord-flip()` for horizontal bars, for example `aes(x: \"k\", y: \"v\")` with `coord-flip()`."
+
+#let _radial-hint = "Map the category to `x` and the value to `y`. `coord-radial()` runs the category around the circle by default, and `coord-radial(theta: \"y\")` runs the value around it."
 
 // Canvas length every sealed segment overlaps its neighbour by.
 #let _overlap = seam-seal-thickness / 1cm
@@ -349,7 +353,7 @@
   let value-trained = ctx.trained.at("y", default: none)
   if cat-trained == none or value-trained == none { return }
   if data.len() == 0 { return }
-  _assert-continuous-value(value-trained)
+  _assert-continuous-value(value-trained, _radial-hint)
 
   let cat-col = mapping.x
   let value-col = mapping.y
@@ -481,7 +485,7 @@
   let cat-col = columns.x
   let cat-range = axes.x-range
   if data.len() == 0 { return }
-  _assert-continuous-value(value-trained)
+  _assert-continuous-value(value-trained, _flip-hint)
 
   let position = layer-position-name(layer)
   let dodge = dodge-geometry(ctx, layer)
