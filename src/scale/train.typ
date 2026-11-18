@@ -257,7 +257,7 @@
     for v in source {
       // A recorded `NA-KEY` is the missing-cell mark of a rewritten column.
       if is-missing(v) or v == NA-KEY {
-        missing = true
+        if col.at("present", default: true) { missing = true }
         continue
       }
       let s = str(v)
@@ -377,6 +377,9 @@
       entry.cols.push((
         name: col-name,
         values: column(layer-data, col-name),
+        // A layer whose own data lacks the column has no missing cells, only
+        // no values.
+        present: layer-data.len() > 0 and col-name in layer-data.first(),
         forced-type: _resolve-forced-type(train-ref, layer-data, col-name),
         levels: layer-factor-levels.at(col-name, default: none),
       ))

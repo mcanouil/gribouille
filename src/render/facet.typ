@@ -205,7 +205,9 @@
 // on which of `rows` / `cols` is set. The row-key-fn is invoked once per data
 // row inside `group-by` and must avoid per-row allocation. `none` values are
 // keyed as the `NA` level, which `_raw-levels-for` appends as the last panel.
-#let _facet-cell-str(row, col) = level-key(row.at(col, default: none))
+#let _facet-cell-str(row, col) = if col in row {
+  level-key(row.at(col))
+} else { "" }
 
 #let _grid-facet-keyers(spec) = {
   let r = spec.facet.rows

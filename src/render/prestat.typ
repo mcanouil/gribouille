@@ -21,6 +21,9 @@
   let any-missing = false
   for layer in spec.layers {
     let d = _resolve-data(layer, spec.data)
+    // A layer whose data lacks the column, such as an `annotate()`, adds no
+    // level and no missing cell.
+    if d.len() == 0 or var not in d.first() { continue }
     for row in d {
       let v = row.at(var, default: none)
       if is-missing(v) {

@@ -113,3 +113,24 @@
 ).x
 #assert.eq(spine-trained.domain, ("a", "b", NA-KEY))
 #assert.eq(spine-trained.na-level, true)
+
+// A layer whose data lacks the column adds no NA level.
+#let absent = train(
+  scales: scales(),
+  layers: (
+    (
+      mapping: aes(x: "x", y: "y", colour: "g"),
+      data: rows(("m", "f")),
+      name: "point",
+    ),
+    (
+      mapping: aes(x: "x", y: "y", colour: "g"),
+      data: ((x: 1, y: 1),),
+      name: "point",
+    ),
+  ),
+  mapping: none,
+  data: none,
+  aesthetics: ("x", "y", "colour"),
+).colour
+#assert.eq(absent.domain, ("f", "m"))

@@ -13,7 +13,9 @@
 #import "../utils/errors.typ": (
   assert-linetype, assert-paint, fail-enum, fail-range, fail-type,
 )
-#import "../utils/types.typ": check-number, is-native-numeric, parse-number
+#import "../utils/types.typ": (
+  check-number, is-missing, is-native-numeric, parse-number,
+)
 #import "../utils/viridis.typ" as viridis-mod
 #import "../utils/palette.typ": brewer-palettes
 #import "expansion.typ": normalise-expansion
@@ -237,7 +239,7 @@
   // pre-pass could not censor against it, and a position and a level of the
   // same value would disagree.
   for level in limits {
-    if level == none {
+    if is-missing(level) {
       fail-type(
         scope,
         "limits",

@@ -118,3 +118,12 @@
   resolve-label(l => if l == none { none } else { l }, NA-KEY, 2, "NA"),
   "NA",
 )
+
+// A layer whose data lacks the facet column adds no NA panel.
+#assert.eq(
+  _raw-levels-for(
+    (layers: ((data: none), (data: ((x: 1),))), data: ((g: "b"), (g: "a"))),
+    "g",
+  ),
+  ("b", "a"),
+)
