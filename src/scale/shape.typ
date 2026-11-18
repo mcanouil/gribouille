@@ -2,7 +2,7 @@
 ///!
 ///! Maps discrete levels onto marker-shape keywords consumed by geom-point
 ///! (`"circle"`, `"square"`, `"triangle"`, `"diamond"`, `"cross"`, `"x"`,
-///! `"star"`, `"triangle-down"`). Any value outside this keyword set renders
+///! `"star"`, `"triangle-down"`, `"circle-open"`). Any value outside this set renders
 ///! as a literal glyph. The public `scale-*` constructors live in
 ///! constructors.typ and reach these builders through scale/bind.typ.
 

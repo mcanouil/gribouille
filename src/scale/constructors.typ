@@ -112,7 +112,7 @@
 ///
 /// \@param args Named arguments forwarded to the bound scale.
 ///
-/// \@named-keys name limits oob labels expand palette
+/// \@named-keys name limits oob labels expand palette na-value na-translate
 ///
 /// \@param name Axis or legend title, as a string or content; `none` (default)
 ///   falls back to the mapped column name.
@@ -247,7 +247,7 @@
 ///
 /// \@param args Named arguments forwarded to the bound scale.
 ///
-/// \@named-keys values name limits oob labels
+/// \@named-keys values name limits oob labels na-value na-translate
 ///
 /// \@param values Array of output values in level order, recycled when shorter
 ///   than the number of levels: any Typst paint for `colour`/`fill`, numbers in
@@ -762,7 +762,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys option name limits oob labels
+/// \@named-keys option name limits oob labels na-value na-translate
 ///
 /// \@param option Viridis variant: `"viridis"` (default), `"magma"`,
 ///   `"plasma"`, `"inferno"`, or `"cividis"`.
@@ -927,7 +927,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys palette name limits oob labels
+/// \@named-keys palette name limits oob labels na-value na-translate
 ///
 /// \@param palette ColorBrewer set name resolved through \@brewer-palette, e.g.
 ///   `"Set1"` or `"Spectral"`; default `"Set1"`.
@@ -987,7 +987,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys name limits oob labels
+/// \@named-keys name limits oob labels na-value na-translate
 ///
 /// \@param name Axis or legend title, as a string or content; `none` (default)
 ///   falls back to the mapped column name.
@@ -1211,7 +1211,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys start end name limits oob labels
+/// \@named-keys start end name limits oob labels na-value na-translate
 ///
 /// \@param start Lightness of the first grey, a number in `[0, 1]`; default
 ///   `0.2`.
@@ -1273,7 +1273,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys hue chroma luminance name limits oob labels
+/// \@named-keys hue chroma luminance name limits oob labels na-value na-translate
 ///
 /// \@param hue `(start, end)` angle pair sweeping the HCL hue circle; default
 ///   `(15deg, 375deg)`.

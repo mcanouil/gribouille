@@ -4,6 +4,8 @@
 
 ### Changes
 
+- feat: Missing values on discrete scales are their own `NA` level, drawn with `na-value`, shown as a legend key, an axis tick or a facet panel, and removable with `na-translate: false`. The shape scale gains the `"circle-open"` marker. (#PR)
+- fix: Discrete shape, linetype and position mappings no longer fail on missing values. (#PR)
 - fix: Custom legend labels stay with their keys when `guide-legend(reverse: true)` reverses them. (#400)
 - fix: `annotate()` treats `colour`, `fill`, `alpha`, `linewidth`, `linetype`, `shape` and `size` as constants, as ggplot2 does. They no longer train a scale or add a legend key. (#397)
 - fix: `geom-col()` and `geom-bar()` fail when the `y` axis is discrete, where they used to draw an empty panel. Map the category to `x` and add `coord-flip()` for horizontal bars. (#396)
