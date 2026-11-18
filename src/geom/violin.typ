@@ -17,7 +17,7 @@
 #import "../utils/band.typ": axis-band
 #import "../utils/flip.typ": user-axes, user-axis-key, user-columns, user-point
 #import "../utils/group.typ": partition-by-group
-#import "../utils/types.typ": cell-key, parse-number
+#import "../utils/types.typ": level-key, parse-number
 #import "../utils/stroke.typ": build-stroke
 #import "../theme/theme.typ": (
   resolve-geom-colour, resolve-geom-defaults, resolve-geom-fill,
@@ -188,7 +188,7 @@
   for g in partition-by-group(data, mapping, trained: ctx.trained) {
     // One silhouette per distinct x bucket within the group, in
     // first-appearance order.
-    let bucket-rows = bucket-index(g.data, row => cell-key(row.at(
+    let bucket-rows = bucket-index(g.data, row => level-key(row.at(
       cols.x,
       default: none,
     ))).buckets

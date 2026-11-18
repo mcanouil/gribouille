@@ -3,7 +3,7 @@
 ///! Drops repeated `(x, y)` observations within a group. The framework already
 ///! partitions data per group, so duplicates are detected within one call.
 
-#import "../utils/types.typ": cell-key
+#import "../utils/types.typ": level-key
 
 /// Unique statistic: keep the first row per `(x, y)` key, drop later duplicates.
 ///
@@ -67,7 +67,7 @@
   for row in data {
     let xv = if x-col != none { row.at(x-col, default: none) } else { none }
     let yv = if y-col != none { row.at(y-col, default: none) } else { none }
-    let key = cell-key(xv) + "\u{1}" + cell-key(yv)
+    let key = level-key(xv) + "\u{1}" + level-key(yv)
     if seen.at(key, default: false) { continue }
     seen.insert(key, true)
     rows.push(row)

@@ -44,9 +44,10 @@ Run the survey command at the bottom before extending the table.
 | `ref`     | mapping reference  | `mapping-ref` annotation (e.g., `as-factor()` forced-discrete).  |
 | `family`  | scale family       | the scale-stub concept naming one internal builder, stored under the stub's `name:` key. `bind-scale` dispatches on `(aesthetic, name)`. |
 | `stub`    | deferred scale spec | `(kind: "scale", name, args)` from a `scale-*` constructor, resolved by `scales()`. |
-| `NA-KEY`  | missing-value level | the reserved level `"\u{0}"`, last in a discrete domain; `cell-key` maps a missing cell to it (src/utils/types.typ). |
+| `NA-KEY`  | missing-value level | `cell-key(none)`, the reserved level `"\u{0}"`, last in a discrete domain (src/utils/types.typ). |
 | `na-level` | NA level flag     | bool on a trained discrete record: `true` when the domain ends with `NA-KEY`. |
 | `is-missing` | missing cell test | `v == none or v == ""` (src/utils/types.typ). |
+| `level-key` | level and group key | the key of a cell in a discrete lookup and in a plot group key: `NA-KEY` for a missing cell, else `str(v)`. |
 | `level-text` | level display text | `"NA"` for `NA-KEY`, else `str(level)` (src/utils/aes-resolve.typ). |
 
 ## Geometry / panel

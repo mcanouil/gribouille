@@ -21,7 +21,7 @@
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": (
-  cell-key, infer-column-type, is-missing, parse-number,
+  cell-key, infer-column-type, is-missing, level-key, parse-number,
 )
 
 #let cumulate-by-x(
@@ -56,7 +56,7 @@
     .filter(e => e.y != none and (discrete-x or not is-missing(e.x)))
   let (keys: bucket-order, buckets: cells) = bucket-index(
     entries,
-    e => cell-key(e.x),
+    e => level-key(e.x),
   )
   let buckets = (:)
   for (i, bk) in bucket-order.enumerate() {

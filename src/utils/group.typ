@@ -6,7 +6,7 @@
 // type.
 
 #import "../utils/bucket.typ": bucket-index
-#import "../utils/types.typ": cell-key, is-native-numeric
+#import "../utils/types.typ": is-native-numeric, level-key
 #import "../scale/train.typ": mapping-ref-col, mapping-ref-type
 #import "../utils/late-binding.typ": after-scale-source
 
@@ -81,7 +81,7 @@
     // `none` and `""` key alike, as one missing cell.
     let v = row.at(part.col, default: none)
     if part.by-value and is-native-numeric(v) { continue }
-    keys.push(cell-key(v))
+    keys.push(level-key(v))
   }
   if keys.len() == 0 { "_all" } else { keys.join("\u{1}") }
 }
@@ -148,7 +148,7 @@
 #let bucket-by-col(data, col) = {
   // A missing cell forms its own bucket, keyed as the `NA` level.
   bucket-index(data, row => {
-    cell-key(row.at(col, default: none))
+    level-key(row.at(col, default: none))
   }).buckets
 }
 
