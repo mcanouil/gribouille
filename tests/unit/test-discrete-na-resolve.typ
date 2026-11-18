@@ -46,7 +46,10 @@
 #assert.eq(resolve-level("size", user-na(3pt), none), 3pt)
 
 // Without an NA level, a missing cell keeps today's answer.
-#assert.eq(resolve-level("colour", plain, none, palette: pal, ink: black), black)
+#assert.eq(
+  resolve-level("colour", plain, none, palette: pal, ink: black),
+  black,
+)
 #assert.eq(resolve-level("shape", plain, none), none)
 
 // The NA level takes no slot in the spacing.
@@ -60,3 +63,25 @@
 #assert.eq(discrete-numeric(plain, "m", (1pt, 5pt)), 5pt)
 
 #assert.eq(na-value-of(with-na, "size", 2pt), 2pt)
+
+// A palette-backed length scale draws the NA level at the geom default, or at
+// its own `na-value`.
+#import "../../src/utils/colour-resolve.typ": _resolve-length-natural
+#let size-scale(spec) = (
+  type: "discrete",
+  domain: ("f", "m", NA-KEY),
+  na-level: true,
+  spec: (palette: (2pt, 5pt), ..spec),
+)
+#let size-of(spec, cell) = _resolve-length-natural(
+  "size",
+  (1pt, 6pt),
+  "g",
+  (trained: (size: size-scale(spec))),
+  (g: cell),
+  3pt,
+)
+#assert.eq(size-of((na-value: none), none), 3pt)
+#assert.eq(size-of((na-value: none), ""), 3pt)
+#assert.eq(size-of((na-value: 8pt), none), 8pt)
+#assert.eq(size-of((na-value: none), "m"), 5pt)

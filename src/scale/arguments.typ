@@ -77,11 +77,12 @@
   if value == none { return }
   if aesthetic in ("colour", "fill") {
     assert-paint(scope, "na-value", value)
-  } else if aesthetic in ("shape", "linetype") {
+  } else if aesthetic == "linetype" {
+    assert-linetype(scope, value)
+  } else if aesthetic == "shape" {
     if type(value) != str {
       fail-type(scope, "na-value", value, "a string")
     }
-    if aesthetic == "linetype" { assert-linetype(scope, value) }
   } else if aesthetic == "alpha" {
     if not is-native-numeric(value) {
       fail-type(scope, "na-value", value, "a number between 0 and 1")

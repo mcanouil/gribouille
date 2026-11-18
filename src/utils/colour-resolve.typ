@@ -1,5 +1,6 @@
 #import "./level-resolve.typ": (
-  continuous-numeric, discrete-index, discrete-numeric, is-na-index, spec-range,
+  continuous-numeric, discrete-index, discrete-numeric, is-na-index,
+  na-value-of, spec-range,
 )
 #import "./palette.typ": spec-attr, spec-palette
 #import "./types.typ": parse-number
@@ -118,7 +119,7 @@
         if pal != none and pal.len() > 0 {
           let idx = discrete-index(trained, raw)
           if idx == none { fallback } else if is-na-index(trained, idx) {
-            spec-attr(trained, "na-value", fallback: fallback)
+            na-value-of(trained, "length", fallback)
           } else { pal.at(calc.rem(idx, pal.len())) }
         } else { discrete-numeric(trained, raw, range) }
       }
@@ -180,7 +181,7 @@
       let idx = discrete-index(trained, raw)
       if idx == none { return fallback }
       if is-na-index(trained, idx) {
-        return spec-attr(trained, "na-value", fallback: fallback)
+        return na-value-of(trained, "length", fallback)
       }
       pal.at(calc.rem(idx, pal.len()))
     } else {
