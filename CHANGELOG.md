@@ -4,6 +4,7 @@
 
 ### Changes
 
+- fix: A `geom-hline` or `geom-vline` with a mapped intercept draws at the right place on a `scale-log10()` axis. It used to apply the log transform twice, which panicked for a value of 1 or less. (#391)
 - docs: The agent skill tells agents to use Gribouille geoms, stats, positions, scales, guides, and compose before raw Typst, and lists the traps found in real plots. (#389)
 - docs: The agent skill tells agents to map a grouping variable in `aes()` instead of building one geom for each group with `.map()`, and to reshape wide data with `pivot-longer` first. (#388)
 - docs: The agent skill tells agents to keep the design when they rewrite a figure, and shows how to place headers, bold labels, and notes outside the data with Gribouille. (8850c22)
