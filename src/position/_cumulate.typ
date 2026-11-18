@@ -21,7 +21,8 @@
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": (
-  NA-KEY, cell-key, is-discrete-column, is-missing, level-key, parse-number,
+  NA-KEY, cell-key, is-discrete-column, is-missing, level-key, na-last-key,
+  parse-number,
 )
 
 #let cumulate-by-x(
@@ -68,7 +69,7 @@
   // slower: 3.6 s against 3.1 s over 200000 rows in five buckets.
   // A missing group sorts after every real one, as its legend key does.
   let rank = if levels == none {
-    e => e.key.replace(NA-KEY, "\u{10FFFF}")
+    e => na-last-key(e.key)
   } else {
     let ranks = (:)
     for (i, level) in levels.order.enumerate() {

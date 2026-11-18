@@ -28,10 +28,13 @@
   level-lookup(trained).at(level-key(level), default: none)
 }
 
+// Whether a trained discrete scale carries the trailing `NA` level.
+#let has-na-level(trained) = trained.at("na-level", default: false)
+
 // Whether `idx` is the trailing `NA` level of a trained discrete scale.
 #let is-na-index(trained, idx) = (
   idx != none
-    and trained.at("na-level", default: false)
+    and has-na-level(trained)
     and idx == trained.domain.len() - 1
 )
 
@@ -51,14 +54,14 @@
 // resolves to the scale's `na-value` (`none` when unset, so the caller falls
 // back to the geom default).
 #let discrete-numeric(trained, level, range) = {
-  let idx = discrete-index(trained, level)
-  if is-na-index(trained, idx) { return spec-attr(trained, "na-value") }
   let n = (
     trained.domain.len()
-      - if trained.at("na-level", default: false) {
+      - if has-na-level(trained) {
         1
       } else { 0 }
   )
+  let idx = discrete-index(trained, level)
+  if is-na-index(trained, idx) { return spec-attr(trained, "na-value") }
   if n == 0 { return none }
   let (lo, hi) = range
   if n == 1 { return (lo + hi) / 2 }

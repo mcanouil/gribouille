@@ -152,6 +152,9 @@
 // with a real level, and a trained domain carries it last.
 #let NA-KEY = cell-key(none)
 
+// Sort key that places the reserved `NA` level after every real level.
+#let na-last-key(k) = (k == NA-KEY, k)
+
 // A cell is missing when it is `none` or the empty string.
 #let is-missing(v) = v == none or v == ""
 

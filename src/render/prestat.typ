@@ -6,7 +6,7 @@
   mapping-ref-col, scope-of, transform-fwd,
 )
 #import "../utils/types.typ": (
-  NA-KEY, infer-column-type, is-missing, level-key, parse-number,
+  NA-KEY, is-discrete-column, is-missing, level-key, parse-number,
 )
 #import "../utils/aes-resolve.typ": merge-mapping
 #import "../scale/arguments.typ": check-transform-domain
@@ -149,10 +149,7 @@
     let discrete = if forced != none {
       forced == "discrete"
     } else {
-      (
-        infer-column-type(new-data.map(row => row.at(col, default: none)))
-          == "string"
-      )
+      is-discrete-column(new-data, col)
     }
     if not discrete { continue }
     let pos-col = _POS-COL-PREFIX + col
