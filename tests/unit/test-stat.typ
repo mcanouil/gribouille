@@ -143,3 +143,12 @@ Stat tests passed.
 )
 #assert.eq(r-sum-num.data.len(), 1)
 #assert.eq(r-sum-num.data.at(0).at("_prop"), 1.0)
+
+// --- stat-summary: a missing x on a continuous axis is left out ---
+#let r-summary = apply-stat(
+  "summary",
+  ((a: 1, b: 2), (a: none, b: 50), (a: 1, b: 4)),
+  (x: "a", y: "b"),
+  (:),
+)
+#assert.eq(r-summary.data.len(), 1)

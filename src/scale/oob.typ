@@ -114,9 +114,10 @@
     let keeps-missing = spec-attr(trained, "na-translate", fallback: true)
     return raw => {
       // A missing cell is the `NA` level, which a scale with `na-translate:
-      // false` does not have, so its rows go.
+      // false` does not have, so its rows go. They are not outside any limits,
+      // so `strict` does not report them.
       if is-missing(raw) {
-        return (if keeps-missing { "in" } else { "drop" }, raw)
+        return (if keeps-missing { "in" } else { "unusable" }, raw)
       }
       // The level name first, then the position, which is the order
       // `map-discrete` reads a cell in. Reading the position first would leave

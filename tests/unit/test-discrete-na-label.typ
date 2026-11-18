@@ -127,3 +127,21 @@
   ),
   ("b", "a"),
 )
+
+// `strict` does not report rows dropped by `na-translate: false`.
+#let strict-kept = {
+  let trained = train(
+    scales: scales(colour: scale-discrete(na-translate: false)),
+    layers: ((mapping: mapping, data: data, name: "point"),),
+    mapping: mapping,
+    data: data,
+    aesthetics: ("x", "y", "colour"),
+  )
+  let layer = (kind: "layer", data: data, mapping: (colour: "g"))
+  filter-oob((layer,), oob-plans((colour: trained.colour)), strict: true)
+    .layers
+    .at(0)
+    .data
+    .len()
+}
+#assert.eq(strict-kept, 2)

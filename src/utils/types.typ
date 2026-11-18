@@ -176,6 +176,12 @@
   "string"
 }
 
+// Whether a column of rows holds discrete (string) values, the only kind whose
+// missing cells become a level of their own.
+#let is-discrete-column(data, col) = (
+  infer-column-type(data.map(row => row.at(col, default: none))) == "string"
+)
+
 /// Desugar a Typst `stroke`-typed value into the separate `stroke` (thickness)
 /// and `colour` (paint) fields gribouille resolves independently.
 ///

@@ -4,7 +4,9 @@
 ///! single `(x, y, ymin, ymax)` row using one of the summary helpers in
 ///! `src/utils/summaries.typ`.
 
-#import "../utils/types.typ": level-key, parse-number
+#import "../utils/types.typ": (
+  is-discrete-column, is-missing, level-key, parse-number,
+)
 #import "../utils/summaries.typ": _apply-summary, check-weighted-fun
 #import "../utils/errors.typ": fail-enum
 
@@ -158,8 +160,13 @@
 #let _bucket-by(data, key-col) = {
   let buckets = (:)
   let order = ()
+  // A missing cell is the `NA` level of a discrete column. On a continuous one
+  // it has no position, so its row is left out.
+  let discrete = is-discrete-column(data, key-col)
   for row in data {
-    let key = level-key(row.at(key-col, default: none))
+    let v = row.at(key-col, default: none)
+    if is-missing(v) and not discrete { continue }
+    let key = level-key(v)
     if key in buckets {
       let bucket = buckets.at(key)
       bucket.push(row)
