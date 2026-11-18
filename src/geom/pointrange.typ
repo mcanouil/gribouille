@@ -169,7 +169,6 @@
       cols.ymax,
       theme-colour,
       dodge,
-      line-alpha: false,
     )
     if res == none { continue }
     res.elem
