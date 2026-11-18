@@ -115,5 +115,6 @@
     key: key,
     inherit-aes: inherit-aes,
     ..split-aes-params("geom-beeswarm", args, point-spec.reads),
+    _scope: "geom-beeswarm",
   )
 }

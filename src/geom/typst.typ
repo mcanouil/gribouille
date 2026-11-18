@@ -1,7 +1,7 @@
 ///! Text geom that always evaluates its `label` aesthetic as Typst markup.
 
 #import "../position/apply.typ": assert-position
-#import "../utils/errors.typ": assert-alpha, assert-anchor
+#import "../utils/errors.typ": assert-alpha, assert-anchor, assert-paint
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
 #import "./text.typ" as text-geom
@@ -141,6 +141,9 @@
 ) = {
   assert-position("geom-typst", position)
   assert-alpha("geom-typst", alpha)
+  if segment-colour != auto {
+    assert-paint("geom-typst", "segment-colour", segment-colour)
+  }
   assert-anchor("geom-typst", anchor)
   assert-arrow("geom-typst", arrow)
   make-layer(

@@ -4,7 +4,7 @@
 ///! fill, stroke, inset, and corner radius.
 
 #import "../position/apply.typ": assert-position
-#import "../utils/errors.typ": assert-alpha, assert-anchor
+#import "../utils/errors.typ": assert-alpha, assert-anchor, assert-paint
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
@@ -192,6 +192,9 @@
 ) = {
   assert-position("geom-label", position)
   assert-alpha("geom-label", alpha)
+  if segment-colour != auto {
+    assert-paint("geom-label", "segment-colour", segment-colour)
+  }
   assert-anchor("geom-label", anchor)
   assert-arrow("geom-label", arrow)
   make-layer(
