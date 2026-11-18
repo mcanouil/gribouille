@@ -1172,13 +1172,20 @@
     let typst-mark = members.any(m => m.at("typst-mark", default: false))
     let g = if first.t.type == "discrete" {
       let levels = first.levels
-      if first.reverse { levels = levels.rev() }
+      let labels = first.labels
+      if first.reverse {
+        if type(labels) == array {
+          let own = labels.slice(0, calc.min(labels.len(), levels.len()))
+          labels = (own + levels.slice(own.len())).rev()
+        }
+        levels = levels.rev()
+      }
       (
         kind: "swatch",
         aesthetics: aesthetics,
         title: first.title,
         levels: levels,
-        labels: first.labels,
+        labels: labels,
         nrow: first.nrow,
         ncolumn: first.ncolumn,
         key: key-kind,
