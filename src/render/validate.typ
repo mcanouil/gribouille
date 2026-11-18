@@ -14,7 +14,7 @@
 #import "../data.typ": column-names
 #import "../scale/train.typ": mapping-ref-col
 #import "../utils/aes-resolve.typ": merge-mapping
-#import "../utils/errors.typ": fail-unknown-column
+#import "../utils/errors.typ": fail, fail-unknown-column, quote-each
 #import "../utils/late-binding.typ": after-scale-source, is-late-binding
 #import "common.typ": _resolve-data
 
@@ -32,13 +32,53 @@
   seen
 }
 
+// Reject a layer that carries its own data but inherits a plot-level aesthetic
+// whose column that data lacks: the layer would otherwise draw nothing. Only a
+// layer on the identity stat is checked, since any other stat may synthesise
+// the column. Empty data carries no column names, so it is skipped; a column
+// that exists with `none` cells counts as present.
+#let _validate-inherited(layer, index, plot-mapping, plot-data) = {
+  if layer.data == none or plot-mapping == none { return }
+  if not layer.at("inherit-aes", default: true) { return }
+  let stat = layer.at("stat", default: "identity")
+  let stat-name = if type(stat) == dictionary {
+    stat.at("name", default: none)
+  } else { stat }
+  if stat-name != none and stat-name != "identity" { return }
+  let input = column-names(_resolve-data(layer, plot-data))
+  if input.len() == 0 { return }
+  let own = layer.at("mapping", default: none)
+  let missing = ()
+  for aesthetic in AES-KEYS {
+    if own != none and own.at(aesthetic, default: none) != none { continue }
+    let raw = plot-mapping.at(aesthetic, default: none)
+    if raw == none { continue }
+    let ref = if is-late-binding(raw) { after-scale-source(raw) } else { raw }
+    if ref == none or is-late-binding(ref) { continue }
+    let col = mapping-ref-col(ref)
+    if type(col) != str { continue }
+    if col not in input and col not in missing { missing.push(col) }
+  }
+  if missing.len() > 0 {
+    fail(
+      "layer " + str(index + 1) + " (geom-" + str(layer.name) + ")",
+      "its own data lacks the inherited column(s) "
+        + quote-each(missing)
+        + "; available columns: "
+        + quote-each(input),
+      hint: "map the layer's own aesthetics in its `mapping`, or set `inherit-aes: false`",
+    )
+  }
+}
+
 // Check every mapped aesthetic across every layer against the accepted column
 // set. Iterates `AES-KEYS` so non-training channels (`group`, `label`,
 // `weight`, `z`, the ellipse/spoke channels) are covered too, not just the
 // scale-trained aesthetics.
 #let _validate-mapping(layers, prepared, plot-mapping, plot-data) = {
   let produced = _produced-columns(prepared)
-  for layer in layers {
+  for (index, layer) in layers.enumerate() {
+    _validate-inherited(layer, index, plot-mapping, plot-data)
     let mapping = merge-mapping(layer, plot-mapping)
     if mapping == none { continue }
     let input = column-names(_resolve-data(layer, plot-data))
