@@ -12,6 +12,7 @@
 
 #import "../aes-keys.typ": AES-KEYS
 #import "../data.typ": column-names
+#import "../geom/registry.typ": GEOMS
 #import "../scale/train.typ": mapping-ref-col
 #import "../utils/aes-resolve.typ": merge-mapping
 #import "../utils/errors.typ": fail, fail-unknown-column, quote-each
@@ -36,7 +37,10 @@
 // whose column that data lacks: the layer would otherwise draw nothing. Only a
 // layer on the identity stat is checked, since any other stat may synthesise
 // the column. Empty data carries no column names, so it is skipped; a column
-// that exists with `none` cells counts as present.
+// that exists with `none` cells counts as present. Only an aesthetic the geom
+// reads (`spec.reads`) is checked, so a rect layer that draws from its own
+// corners does not need the inherited `x` and `y`. Column names are the union
+// over all rows, so a ragged row array does not count a column as missing.
 #let _validate-inherited(layer, index, plot-mapping, plot-data) = {
   if layer.data == none or plot-mapping == none { return }
   if not layer.at("inherit-aes", default: true) { return }
@@ -45,11 +49,20 @@
     stat.at("name", default: none)
   } else { stat }
   if stat-name != none and stat-name != "identity" { return }
-  let input = column-names(_resolve-data(layer, plot-data))
+  let rows = _resolve-data(layer, plot-data)
+  if type(rows) != array or rows.len() == 0 { return }
+  let input = ()
+  for row in rows {
+    for col in column-names((row,)) {
+      if col not in input { input.push(col) }
+    }
+  }
   if input.len() == 0 { return }
+  let geom = GEOMS.at(str(layer.name), default: none)
+  if geom == none { return }
   let own = layer.at("mapping", default: none)
   let missing = ()
-  for aesthetic in AES-KEYS {
+  for aesthetic in geom.spec.reads {
     if own != none and own.at(aesthetic, default: none) != none { continue }
     let raw = plot-mapping.at(aesthetic, default: none)
     if raw == none { continue }

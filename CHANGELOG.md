@@ -4,7 +4,7 @@
 
 ### Changes
 
-- fix: A layer with its own `data` fails when that data lacks a column that the layer inherits from the plot mapping, and names the layer and the missing columns. It used to draw nothing in silence. (#395)
+- fix: A layer with its own `data` fails when that data lacks a column that the geom reads and the layer inherits from the plot mapping, and names the layer and the missing columns. It used to draw nothing in silence. (#395)
 - docs: The agent skill tells agents to use Gribouille geoms, stats, positions, scales, guides, and compose before raw Typst, and lists the traps found in real plots. (#389)
 - docs: The agent skill tells agents to map a grouping variable in `aes()` instead of building one geom for each group with `.map()`, and to reshape wide data with `pivot-longer` first. (#388)
 - docs: The agent skill tells agents to keep the design when they rewrite a figure, and shows how to place headers, bold labels, and notes outside the data with Gribouille. (8850c22)
