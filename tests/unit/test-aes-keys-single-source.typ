@@ -16,7 +16,7 @@
 // Every key annotate routes to its inline dataset is a real aesthetic.
 #for geom in _geom-table.keys().filter(g => g not in _params-only) {
   let reads = GEOMS.at(geom).spec.reads
-  assert(_aes-keys-for(geom, reads).all(k => k in AES-KEYS), message: geom)
+  assert(_aes-keys-for(reads).all(k => k in AES-KEYS), message: geom)
 }
 
 aes-keys single-source drift guard passed.

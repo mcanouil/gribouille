@@ -11,12 +11,25 @@
 // in it (`stat-align`'s zero-pad rows just outside the data range would
 // pinch the stream to y = 0 while the bands float elsewhere), so the
 // streamgraph offsets drop them; plain stacking keeps them at zero.
+//
+// `levels` is `none` or `(col: str, order: array)`: the column of the
+// aesthetic whose discrete scale has explicit limits, and those limits. When
+// set, each bucket sorts by the position of the row's value of `col` in
+// `order` (values it does not list come last, alphabetically by group key),
+// so the first level sits on top, as the first legend key does.
 
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
-#import "../utils/types.typ": parse-number
+#import "../utils/types.typ": cell-key, parse-number
 
-#let cumulate-by-x(data, mapping, slice, shift: none, drop-empty: false) = {
+#let cumulate-by-x(
+  data,
+  mapping,
+  slice,
+  shift: none,
+  drop-empty: false,
+  levels: none,
+) = {
   let x-col = mapping.at("x", default: none)
   let y-col = mapping.at("y", default: none)
   if x-col == none or y-col == none { return (data: data, mapping: mapping) }
@@ -48,6 +61,20 @@
   // after the first write, so the assignment does not clone the array, and
   // collecting the rewritten rows in a patch dict to map over instead measured
   // slower: 3.6 s against 3.1 s over 200000 rows in five buckets.
+  let rank = if levels == none { e => e.key } else {
+    let ranks = (:)
+    for (i, level) in levels.order.enumerate() {
+      let k = cell-key(level)
+      if k not in ranks { ranks.insert(k, i) }
+    }
+    e => (
+      ranks.at(
+        cell-key(e.row.at(levels.col, default: none)),
+        default: levels.order.len(),
+      ),
+      e.key,
+    )
+  }
   let out = data
   let drop = ()
   for bk in bucket-order {
@@ -57,7 +84,7 @@
       for e in bucket.entries { drop.push(e.i) }
       continue
     }
-    let sorted = bucket.entries.sorted(key: e => e.key)
+    let sorted = bucket.entries.sorted(key: rank)
     let base = if shift == none { 0.0 } else { shift(sorted, tot) }
     let cum = 0.0
     for e in sorted {

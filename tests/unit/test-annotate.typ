@@ -33,11 +33,12 @@
 #assert.eq(lt-nudge.mapping.nudge-y, "nudge-y")
 #assert.eq(lt-nudge.data.at(0).nudge-y, 0.3cm)
 
-// Aesthetic kwargs that the geom also accepts as a fixed param (e.g., colour
-// on geom-text) still go into the mapping/data, not the params dict.
+// Non-position aesthetics (e.g., colour) are constants: they go to params, so
+// no scale maps them.
 #let lt3 = annotate("text", x: 1, y: 1, label: "lab", colour: red)
-#assert.eq(lt3.data, ((x: 1, y: 1, label: "lab", colour: red),))
-#assert.eq(lt3.mapping.colour, "colour")
+#assert.eq(lt3.data, ((x: 1, y: 1, label: "lab"),))
+#assert.eq(lt3.mapping.at("colour", default: none), none)
+#assert.eq(lt3.params.colour, red)
 
 // `size` on text is a Typst length controlling the layer's text size, not an
 // aesthetic; it must reach params and stay out of the mapping.
@@ -72,10 +73,11 @@
 #assert.eq(ls-lw.params.linewidth, 2pt)
 #assert.eq(ls-lw.mapping.at("linewidth", default: none), none)
 
-// `size` on `geom-point` stays an aesthetic mapping (default behaviour).
-#let lp-size = annotate("point", x: 3, y: 4, size: 5)
-#assert.eq(lp-size.mapping.size, "size")
-#assert.eq(lp-size.data, ((x: 3, y: 4, size: 5),))
+// `size` on `geom-point` is a constant too.
+#let lp-size = annotate("point", x: 3, y: 4, size: 5pt)
+#assert.eq(lp-size.params.size, 5pt)
+#assert.eq(lp-size.mapping.at("size", default: none), none)
+#assert.eq(lp-size.data, ((x: 3, y: 4),))
 
 // Point annotation: only x, y -> no label column needed.
 #let lp = annotate("point", x: 3, y: 4)
@@ -98,14 +100,14 @@
 #assert.eq(ls.mapping.xend, "xend")
 #assert.eq(ls.mapping.yend, "yend")
 
-// Rect annotation: xmin / xmax / ymin / ymax are aesthetics.
+// Rect annotation: xmin / xmax / ymin / ymax are mapped, fill is a constant.
 #let lr = annotate("rect", xmin: 0, xmax: 1, ymin: 0, ymax: 1, fill: blue)
 #assert.eq(lr.name, "rect")
 #assert.eq(lr.mapping.xmin, "xmin")
 #assert.eq(lr.mapping.xmax, "xmax")
 #assert.eq(lr.mapping.ymin, "ymin")
 #assert.eq(lr.mapping.ymax, "ymax")
-#assert.eq(lr.mapping.fill, "fill")
+#assert.eq(lr.params.fill, blue)
 
 // `fill: none` is a param sentinel ("no fill"), not data: it must reach the
 // geom as a layer parameter, leaving the positional aesthetics still mapped.
@@ -174,8 +176,8 @@
 // annotate routes only the keys that the target geom reads. No annotate geom
 // reads `width`, so it never lands in the inline row, where a `width` column
 // pads the x domain; `geom-point` then rejects it as a constant.
-#assert("width" not in _aes-keys-for("point", GEOMS.point.spec.reads))
-#assert("label" in _aes-keys-for("text", GEOMS.text.spec.reads))
-#assert("label" not in _aes-keys-for("point", GEOMS.point.spec.reads))
+#assert("width" not in _aes-keys-for(GEOMS.point.spec.reads))
+#assert("label" in _aes-keys-for(GEOMS.text.spec.reads))
+#assert("label" not in _aes-keys-for(GEOMS.point.spec.reads))
 
 Annotate tests passed.
