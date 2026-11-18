@@ -7,6 +7,7 @@
 ///! should not be driven by the plot-level data or mapping.
 
 #import "aes.typ": aes
+#import "layer.typ": assert-paint-constant
 #import "geom/text.typ": geom-text
 #import "utils/errors.typ": fail, fail-enum
 #import "geom/typst.typ": geom-typst
@@ -148,6 +149,10 @@
       "positional arguments are not supported",
       hint: "Use named arguments.",
     )
+  }
+
+  for (k, v) in fields.named().pairs() {
+    assert-paint-constant("annotate", k, v)
   }
 
   let constructor = _geom-table.at(geom)

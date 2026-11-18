@@ -4,8 +4,15 @@
 ///! Centralising it here keeps the record's keys discoverable in one place
 ///! and stops drift between geoms when fields are added or renamed.
 
-#import "utils/errors.typ": fail, fail-enum
+#import "utils/errors.typ": assert-paint, fail, fail-enum
 #import "utils/types.typ": split-stroke-shorthand
+
+// Panic unless a `colour` or `fill` constant is a paint; `auto` stays unset.
+#let assert-paint-constant(scope, key, value) = {
+  if key in ("colour", "fill") and value != auto {
+    assert-paint(scope, key, value)
+  }
+}
 
 /// Collect a geom's trailing `..args` into a constant-aesthetic param dict.
 ///
@@ -38,6 +45,7 @@
   let aes-params = (:)
   for (key, value) in named.pairs() {
     if key in keys {
+      assert-paint-constant(scope, key, value)
       aes-params.insert(key, value)
     } else if keys.len() == 0 {
       fail(
@@ -93,6 +101,9 @@
   inherit-aes: true,
   clip: true,
 ) = {
+  for key in ("colour", "fill") {
+    assert-paint-constant("geom-" + geom, key, params.at(key, default: auto))
+  }
   // Desugar a native `1.3pt + accent` stroke into the split `stroke`/`colour`
   // params the resolvers expect; other stroke forms pass through untouched.
   let params = if type(params.at("stroke", default: none)) == stroke {
