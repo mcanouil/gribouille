@@ -126,6 +126,25 @@
   (data: combined, mapping: last-mapping)
 }
 
+// `(col, order)` for the first of `fill` and `colour` that is mapped and has a
+// discrete user scale with explicit `limits`, or `none`. Positions run before
+// scales are trained, so they read the user spec here. `col` is the aesthetic's
+// column, which the stack sort reads because the group key joins every
+// grouping aesthetic.
+#let _group-limits(mapping, user-scales) = {
+  let plain = _strip-mapping-refs(mapping)
+  for aes-name in ("fill", "colour") {
+    let col = plain.at(aes-name, default: none)
+    let user = user-scales.at(aes-name, default: none)
+    if type(col) != str or user == none { continue }
+    let order = user.at("limits", default: none)
+    if user.at("type", default: none) == "discrete" and order != none {
+      return (col: col, order: order)
+    }
+  }
+  none
+}
+
 #let _prepare-layer(
   layer,
   plot-mapping,
@@ -133,6 +152,7 @@
   theme: none,
   coord: none,
   stat-override: none,
+  user-scales: (:),
 ) = {
   // Keep mapping-ref annotations intact on the layer so scale training can
   // read forced types; only strip them when the renderer hands a mapping to
@@ -203,6 +223,12 @@
   let position-name = position-name-of(position-spec)
   let position-params = if type(position-spec) == str { params } else {
     position-spec.at("params", default: (:))
+  }
+  if position-name == "stack" or position-name == "fill" {
+    let levels = _group-limits(stat-mapping, user-scales)
+    if levels != none {
+      position-params.insert("levels", levels)
+    }
   }
   let pos-data = stat-data
   let pos-mapping = stat-mapping
@@ -316,6 +342,7 @@
   plot-data,
   theme: none,
   coord: none,
+  user-scales: (:),
 ) = {
   let memo = ()
   let out = ()
@@ -344,6 +371,7 @@
       theme: theme,
       coord: coord,
       stat-override: override,
+      user-scales: user-scales,
     ))
   }
   out

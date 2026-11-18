@@ -325,6 +325,7 @@
         spec.data,
         theme: theme,
         coord: coord,
+        user-scales: spec.scales,
       ),
     ))
   } else if facet-grid-mode {
@@ -354,6 +355,7 @@
             spec.data,
             theme: theme,
             coord: coord,
+            user-scales: spec.scales,
           ),
         ))
       }
@@ -372,6 +374,7 @@
       spec.data,
       theme: theme,
       coord: coord,
+      user-scales: spec.scales,
     )
   }
 

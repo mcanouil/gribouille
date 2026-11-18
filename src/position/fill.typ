@@ -7,6 +7,8 @@
 ///
 /// Typically set on a layer as `position: "fill"` rather than constructed
 /// directly; the constructor exists for symmetry with the other positions.
+/// Segments stack in the order described for \@position-stack, including
+/// the order of explicit `limits` on the `fill` scale.
 ///
 /// \@category Positions
 /// \@stability stable
@@ -67,5 +69,10 @@
       ((tot - cum - yv) / t, (tot - cum) / t)
     }
   }
-  cumulate-by-x(data, mapping, slice)
+  cumulate-by-x(
+    data,
+    mapping,
+    slice,
+    levels: params.at("levels", default: none),
+  )
 }

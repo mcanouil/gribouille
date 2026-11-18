@@ -21,9 +21,12 @@
 /// Stack position adjustment: cumulate y per x bucket.
 ///
 /// Stacking is per x bucket across all groups. Rows are sorted by the
-/// grouping aesthetic so the first alphabetic level sits at the top of the
-/// bar in cartesian coords (legend top entry = top band). Under any
-/// `coord-radial` the cumulation flips so the first alphabetic level
+/// grouping aesthetic so the first level sits at the top of the bar in
+/// cartesian coords (legend top entry = top band). The levels run in
+/// alphabetical order, unless the `fill` scale (or the `colour` scale when
+/// there is no `fill`) is a `scale-discrete` with explicit `limits`: then
+/// they run in the order of the `limits`, and levels the `limits` omit come
+/// last. Under any `coord-radial` the cumulation flips so the first level
 /// becomes the first slice clockwise from 12 o'clock.
 ///
 /// Typically set on a layer as `position: "stack"` rather than constructed
@@ -134,6 +137,7 @@
 #let apply(data, mapping, params: (:), coord: none) = {
   let offset = params.at("offset", default: "none")
   if offset not in _OFFSETS { offset = "none" }
+  let levels = params.at("levels", default: none)
   if is-radial(coord) {
     if offset != "none" {
       fail(
@@ -142,7 +146,12 @@
         hint: "A shifted baseline has no angular meaning; use the default offset: \"none\".",
       )
     }
-    return cumulate-by-x(data, mapping, (cum, yv, tot) => (cum, cum + yv))
+    return cumulate-by-x(
+      data,
+      mapping,
+      (cum, yv, tot) => (cum, cum + yv),
+      levels: levels,
+    )
   }
   let shift = if offset == "silhouette" {
     (sorted, tot) => -tot / 2
@@ -155,5 +164,6 @@
     (cum, yv, tot) => (tot - cum - yv, tot - cum),
     shift: shift,
     drop-empty: offset != "none",
+    levels: levels,
   )
 }
