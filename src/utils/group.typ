@@ -134,7 +134,9 @@
 }
 
 /// Bucket rows by the string form of one column's value, in first-appearance
-/// order, dropping rows whose value is empty.
+/// order. A missing value (`none` or `""`) forms a bucket of its own, keyed as
+/// the `NA` level, so the value of its first row is `none` or `""`; map it
+/// through the discrete scale to reach the `NA` level.
 ///
 /// Shared by the per-level stats and geoms (boxplot, ydensity,
 /// density-ridges) that reduce each distinct value of a discrete positional

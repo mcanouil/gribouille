@@ -6,6 +6,7 @@
 
 #import "../utils/summaries.typ": read-weight
 #import "../utils/aes-resolve.typ": stat-output-mapping
+#import "../utils/types.typ": is-missing, level-key
 
 /// Sum statistic: one output row per unique `(x, y)` pair with `_n` and `_prop`.
 ///
@@ -77,11 +78,13 @@
   for row in data {
     let xv = row.at(x-col, default: none)
     let yv = row.at(y-col, default: none)
-    if xv == none or yv == none { continue }
-    let key = str(xv) + "\u{1}" + str(yv)
+    let key = level-key(xv) + "\u{1}" + level-key(yv)
     if key not in proto {
       order.push(key)
-      proto.insert(key, (x: xv, y: yv))
+      proto.insert(key, (
+        x: if is-missing(xv) { none } else { xv },
+        y: if is-missing(yv) { none } else { yv },
+      ))
     }
     let w = read-weight(row, weight-col)
     counts.insert(key, counts.at(key, default: 0) + w)

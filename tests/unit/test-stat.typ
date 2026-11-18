@@ -123,3 +123,13 @@
 #assert.eq(r-sb.mapping.fill, "g")
 
 Stat tests passed.
+
+// --- stat-sum: none and "" are one missing cell, written back as none ---
+#let r-sum = apply-stat(
+  "sum",
+  ((a: "x", b: "y"), (a: none, b: "y"), (a: "", b: "y")),
+  (x: "a", y: "b"),
+  (:),
+)
+#assert.eq(r-sum.data.len(), 2)
+#assert.eq(r-sum.data.map(r => r.x), ("x", none))

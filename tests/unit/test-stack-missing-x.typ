@@ -34,3 +34,11 @@
   ymaxs(apply-position("stack", grouped, (x: "x", y: "y", fill: "g")).data),
   (2.0, 3.0),
 )
+
+// A dodge puts the missing group in the last slot, as its legend key sits last.
+#let dodged = apply-position(
+  "dodge",
+  ((x: 1, y: 1, g: none), (x: 1, y: 1, g: "a")),
+  (x: "x", y: "y", fill: "g"),
+)
+#assert.eq(dodged.data.map(r => r.at("_dodge-offset") > 0), (true, false))
