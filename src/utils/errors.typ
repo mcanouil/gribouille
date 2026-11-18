@@ -359,16 +359,21 @@
 
 // Panic unless `linetype` is `none`, `auto`, a Typst dash keyword, or a Typst
 // dash pattern (an array or a dictionary).
-#let assert-linetype(scope, linetype) = {
+#let assert-linetype(
+  scope,
+  linetype,
+  name: "linetype",
+  hint: "Use `auto` to honour the linetype scale.",
+) = {
   if linetype == none or linetype == auto { return }
   if type(linetype) in (array, dictionary) { return }
   if linetype not in LINETYPES {
     fail-enum(
       scope,
-      "linetype",
+      name,
       linetype,
       LINETYPES,
-      hint: "Use `auto` to honour the linetype scale.",
+      hint: hint,
     )
   }
 }

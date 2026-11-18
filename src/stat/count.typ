@@ -9,8 +9,10 @@
 
 /// Count statistic: one output row per distinct x level with `y = count`.
 ///
-/// Empty strings and `none` x values are dropped. Output rows preserve the
-/// first-seen order of x levels.
+/// Missing x values (`none` or an empty string) are counted together as the
+/// trailing `NA` level, in a row whose x is `none`, which a discrete scale
+/// draws in its `NA` slot. Output rows preserve the first-seen order of x
+/// levels.
 ///
 /// \@category Stats
 /// \@subcategory Summaries

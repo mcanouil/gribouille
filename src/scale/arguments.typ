@@ -78,7 +78,12 @@
   if aesthetic in ("colour", "fill") {
     assert-paint(scope, "na-value", value)
   } else if aesthetic == "linetype" {
-    assert-linetype(scope, value)
+    assert-linetype(
+      scope,
+      value,
+      name: "na-value",
+      hint: "Use a dash keyword such as `\"loosely-dotted\"`.",
+    )
   } else if aesthetic == "shape" {
     if type(value) != str {
       fail-type(scope, "na-value", value, "a string")

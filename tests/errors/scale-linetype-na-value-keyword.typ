@@ -3,7 +3,7 @@
 // `tools/check-errors.sh` compiles this file, requires the compile to fail, and
 // requires the `error:` line to carry the phrase below.
 //
-// expect: linetype
+// expect: na-value
 
 #import "/lib.typ": aes, geom-line, plot, scale-discrete, scales
 
