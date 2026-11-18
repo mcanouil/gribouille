@@ -96,6 +96,7 @@
   assert-alpha("geom-qq", alpha)
   make-layer(
     "point",
+    scope: "geom-qq",
     mapping: mapping,
     data: data,
     params: (

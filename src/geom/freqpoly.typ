@@ -98,6 +98,7 @@
   assert-linetype("geom-freqpoly", linetype)
   make-layer(
     "line",
+    scope: "geom-freqpoly",
     mapping: mapping,
     data: data,
     params: (

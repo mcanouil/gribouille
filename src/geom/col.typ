@@ -173,6 +173,7 @@
   assert-position("geom-col", position)
   make-layer(
     "col",
+    scope: args.named().at("_scope", default: "geom-col"),
     mapping: mapping,
     data: data,
     params: (

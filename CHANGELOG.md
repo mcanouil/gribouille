@@ -7,6 +7,7 @@
 - feat: Missing values on discrete scales are their own `NA` level, drawn with `na-value`, shown as a legend key, an axis tick or a facet panel, and removable with `na-translate: false`. The shape scale gains the `"circle-open"` marker. (#404)
 - fix: Discrete shape, linetype and position mappings no longer fail on missing values. (#404)
 - fix: Custom legend labels stay with their keys when `guide-legend(reverse: true)` reverses them. (#400)
+- fix: A string `colour` or `fill` constant on a geom or `annotate()` fails with a clear message, where it used to raise a raw CeTZ error. Pass an `rgb(...)` value. (#398)
 - fix: `annotate()` treats `colour`, `fill`, `alpha`, `linewidth`, `linetype`, `shape` and `size` as constants, as ggplot2 does. They no longer train a scale or add a legend key. (#397)
 - fix: `geom-col()` and `geom-bar()` fail when the `y` axis is discrete, where they used to draw an empty panel. Map the category to `x` and add `coord-flip()` for horizontal bars. (#396)
 - fix: A layer with its own `data` fails when that data lacks a column that the geom reads and the layer inherits from the plot mapping, and names the layer and the missing columns. It used to draw nothing in silence. (#395)

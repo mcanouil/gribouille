@@ -81,6 +81,7 @@
   assert-alpha("geom-bin-2d", alpha)
   make-layer(
     "rect",
+    scope: "geom-bin-2d",
     mapping: mapping,
     data: data,
     params: (

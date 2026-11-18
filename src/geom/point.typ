@@ -172,6 +172,7 @@
   assert-alpha("geom-point", alpha)
   make-layer(
     "point",
+    scope: args.named().at("_scope", default: "geom-point"),
     mapping: mapping,
     data: data,
     params: (

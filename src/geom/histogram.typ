@@ -113,6 +113,7 @@
   assert-alpha("geom-histogram", alpha)
   make-layer(
     "col",
+    scope: "geom-histogram",
     mapping: mapping,
     data: data,
     params: (

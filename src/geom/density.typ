@@ -109,6 +109,7 @@
   assert-alpha("geom-density", alpha)
   make-layer(
     "area",
+    scope: "geom-density",
     mapping: mapping,
     data: data,
     params: (

@@ -90,6 +90,7 @@
   assert-linetype("geom-quantile", linetype)
   make-layer(
     "line",
+    scope: "geom-quantile",
     mapping: mapping,
     data: data,
     params: (

@@ -5,7 +5,7 @@
 ///! receives pre-computed summary rows (`x`, `lower`, `middle`, `upper`,
 ///! `ymin`, `ymax`, optional `outliers`).
 
-#import "../utils/errors.typ": assert-alpha, assert-number
+#import "../utils/errors.typ": assert-alpha, assert-number, assert-paint
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../position/apply.typ": assert-position, layer-position-name
@@ -139,6 +139,9 @@
 ) = {
   assert-position("geom-boxplot", position)
   assert-alpha("geom-boxplot", alpha)
+  if outlier-colour != auto {
+    assert-paint("geom-boxplot", "outlier-colour", outlier-colour)
+  }
   assert-number("geom-boxplot", "width", width, min: 0)
   make-layer(
     "boxplot",
