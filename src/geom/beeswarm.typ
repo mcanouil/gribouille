@@ -13,8 +13,8 @@
 ///
 /// Mapping must provide `x` and `y`. A discrete (categorical) x is swarmed
 /// directly, like \@geom-violin; \@as-factor is only needed to force a
-/// numeric column onto a discrete axis. Customise `width` or `adjust` by
-/// passing `position: position-beeswarm(...)`.
+/// numeric column onto a discrete axis. A discrete y swarms vertically.
+/// Customise `width`, `adjust`, `orientation` or `method` by passing `position: position-beeswarm(...)`.
 ///
 /// \@category Geoms
 /// \@subcategory Points
