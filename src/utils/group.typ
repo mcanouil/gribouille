@@ -6,7 +6,7 @@
 // type.
 
 #import "../utils/bucket.typ": bucket-index
-#import "../utils/types.typ": cell-key, is-native-numeric
+#import "../utils/types.typ": cell-key, is-native-numeric, level-key
 #import "../scale/train.typ": mapping-ref-col, mapping-ref-type
 #import "../utils/late-binding.typ": after-scale-source
 
@@ -146,9 +146,9 @@
 /// \@returns Array of row-dictionary arrays, one bucket per distinct value, in first-appearance order.
 /// \@internal
 #let bucket-by-col(data, col) = {
+  // A missing cell forms its own bucket, keyed as the `NA` level.
   bucket-index(data, row => {
-    let key = str(row.at(col, default: ""))
-    if key == "" { none } else { key }
+    level-key(row.at(col, default: none))
   }).buckets
 }
 

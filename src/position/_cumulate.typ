@@ -20,7 +20,7 @@
 
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
-#import "../utils/types.typ": cell-key, parse-number
+#import "../utils/types.typ": cell-key, level-key, parse-number
 
 #let cumulate-by-x(
   data,
@@ -46,10 +46,10 @@
       x: row.at(x-col, default: none),
       y: parse-number(row.at(y-col, default: none)),
     ))
-    .filter(e => e.x != none and e.y != none)
+    .filter(e => e.y != none)
   let (keys: bucket-order, buckets: cells) = bucket-index(
     entries,
-    e => str(e.x),
+    e => level-key(e.x),
   )
   let buckets = (:)
   for (i, bk) in bucket-order.enumerate() {

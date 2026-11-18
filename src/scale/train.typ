@@ -8,7 +8,7 @@
 
 #import "../data.typ": _normalise-data, column
 #import "../utils/types.typ": (
-  NA-KEY, infer-column-type, is-missing, parse-number,
+  NA-KEY, infer-column-type, is-missing, level-key, parse-number,
 )
 #import "../utils/typst-markup.typ": is-typst-markup
 #import "../utils/errors.typ": fail, fail-type
@@ -588,9 +588,12 @@
   }
   // A missing cell is its own level, last, unless the scale drops it. `limits`
   // never name it (`check-limits`), so it follows the data levels or the limits.
+  // A scale with no level of its own stays empty, so a column of nothing but
+  // missing cells still draws no guide.
   let na-level = (
     scale-type == "discrete"
       and missing
+      and domain.len() > 0
       and (user-scale == none or user-scale.at("na-translate", default: true))
   )
   if na-level { domain.push(NA-KEY) }
@@ -744,7 +747,7 @@
 ) = {
   let n = domain.len()
   if n == 0 { return none }
-  let s = if is-missing(value) { NA-KEY } else { str(value) }
+  let s = level-key(value)
   let lookup = if level-index == none { _level-index(domain) } else {
     level-index
   }
@@ -782,10 +785,7 @@
 // result and feed it straight back through `map-position`.
 #let level-position(trained, value) = {
   if type(value) == int or type(value) == float { return float(value) }
-  let idx = level-lookup(trained).at(
-    if is-missing(value) { NA-KEY } else { str(value) },
-    default: none,
-  )
+  let idx = level-lookup(trained).at(level-key(value), default: none)
   if idx == none { none } else { idx + 1 }
 }
 

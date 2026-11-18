@@ -41,7 +41,13 @@
 //   ("drop",   value)   — caller drops the row
 //   ("unusable", value) — caller drops the row, also under `strict`
 #let _checker(aes, trained) = {
-  if spec-attr(trained, "limits") == none {
+  // A discrete scale with `na-translate: false` censors its missing rows even
+  // when the user set no `limits`.
+  let drops-missing = (
+    trained.type == "discrete"
+      and not spec-attr(trained, "na-translate", fallback: true)
+  )
+  if spec-attr(trained, "limits") == none and not drops-missing {
     if (
       trained.type == "continuous"
         // A position cell that does not parse, on x, y or a feeder such as
@@ -108,8 +114,13 @@
     // The level lookup is resolved once, so the row test is one dict read
     // rather than a scan of the domain.
     let level-index = level-lookup(trained)
+    let keeps-missing = spec-attr(trained, "na-translate", fallback: true)
     return raw => {
-      if raw == none { return ("in", raw) }
+      // A missing cell is the `NA` level, which a scale with `na-translate:
+      // false` does not have, so its rows go.
+      if _is-missing(raw) {
+        return (if keeps-missing { "in" } else { "drop" }, raw)
+      }
       // The level name first, then the position, which is the order
       // `map-discrete` reads a cell in. Reading the position first would leave
       // a level whose name parses as a number impossible to censor, and would

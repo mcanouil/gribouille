@@ -5,7 +5,9 @@
   _SYNTHETIC-FEEDERS, _find-user-scale, _resolve-forced-type, level-position,
   mapping-ref-col, scope-of, transform-fwd,
 )
-#import "../utils/types.typ": infer-column-type, parse-number
+#import "../utils/types.typ": (
+  NA-KEY, infer-column-type, is-missing, level-key, parse-number,
+)
 #import "../utils/aes-resolve.typ": merge-mapping
 #import "../scale/arguments.typ": check-transform-domain
 #import "common.typ": _resolve-data
@@ -16,17 +18,24 @@
 #let _raw-levels-for(spec, var) = {
   let seen = ()
   let seen-set = (:)
+  let any-missing = false
   for layer in spec.layers {
     let d = _resolve-data(layer, spec.data)
     for row in d {
       let v = row.at(var, default: none)
-      if v == none { continue }
+      if is-missing(v) {
+        any-missing = true
+        continue
+      }
       let s = str(v)
       if seen-set.at(s, default: false) { continue }
       seen-set.insert(s, true)
       seen.push(s)
     }
   }
+  // Missing cells get a trailing `NA` panel, unless the variable holds nothing
+  // else, which still lays out no panel.
+  if any-missing and seen.len() > 0 { seen.push(NA-KEY) }
   seen
 }
 
@@ -149,11 +158,18 @@
     // (`idx = value - 1`) indexes the spine into the right slot for any input
     // order. Typst closures capture read-only, so the value rewrite needs a
     // second `.map`.
+    // A missing cell takes the slot after the last level, which is where the
+    // trained scale puts its `NA` level. The recorded levels end with `NA-KEY`
+    // so that training knows the column holds one.
     let seen = (:)
     let levels = ()
+    let any-missing = false
     for row in new-data {
       let v = row.at(col, default: none)
-      if v == none { continue }
+      if is-missing(v) {
+        any-missing = true
+        continue
+      }
       let s = str(v)
       if seen.at(s, default: false) { continue }
       seen.insert(s, true)
@@ -164,12 +180,17 @@
     for (i, s) in levels.enumerate() { level-map.insert(s, i + 1) }
     new-data = new-data.map(row => {
       let v = row.at(col, default: none)
-      if v == none { return row }
       let r = row
-      r.insert(pos-col, level-map.at(str(v)))
+      r.insert(
+        pos-col,
+        if is-missing(v) { levels.len() + 1 } else { level-map.at(str(v)) },
+      )
       r
     })
-    factor-levels.insert(pos-col, levels)
+    factor-levels.insert(
+      pos-col,
+      if any-missing { levels + (NA-KEY,) } else { levels },
+    )
     repoint.insert(axis, pos-col)
   }
   (data: new-data, factor-levels: factor-levels, repoint: repoint)
@@ -210,8 +231,8 @@
     out = out.map(row => {
       let v = row.at(src-col, default: none)
       let spine = row.at(pos-col, default: none)
-      if v == none or spine == none { return row }
-      let by = shift.at(str(v), default: none)
+      if spine == none { return row }
+      let by = shift.at(level-key(v), default: none)
       let r = row
       r.insert(pos-col, if by == none { none } else { spine + by })
       r

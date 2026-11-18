@@ -11,7 +11,7 @@
 // linetype is meaningless): the caller treats `none` as "drop this aesthetic
 // from the composed glyph".
 
-#import "./types.typ": NA-KEY, is-missing
+#import "./types.typ": level-key
 #import "./colour.typ": bin-edges, bin-index-edges, resolve-continuous-colour
 #import "./palette.typ": (
   default-linetypes, default-shapes, palette-at, spec-attr, spec-palette,
@@ -25,10 +25,7 @@
 )
 
 #let discrete-index(trained, level) = {
-  level-lookup(trained).at(
-    if is-missing(level) { NA-KEY } else { str(level) },
-    default: none,
-  )
+  level-lookup(trained).at(level-key(level), default: none)
 }
 
 // Whether `idx` is the trailing `NA` level of a trained discrete scale.
@@ -56,9 +53,12 @@
 #let discrete-numeric(trained, level, range) = {
   let idx = discrete-index(trained, level)
   if is-na-index(trained, idx) { return spec-attr(trained, "na-value") }
-  let n = trained.domain.len() - if trained.at("na-level", default: false) {
-    1
-  } else { 0 }
+  let n = (
+    trained.domain.len()
+      - if trained.at("na-level", default: false) {
+        1
+      } else { 0 }
+  )
   if n == 0 { return none }
   let (lo, hi) = range
   if n == 1 { return (lo + hi) / 2 }
@@ -154,7 +154,12 @@
   colour: (t, v, p, ink) => _resolve-colour-aes(t, v, p, ink),
   fill: (t, v, p, ink) => _resolve-colour-aes(t, v, p, ink),
   shape: (t, v, _, _) => _resolve-palette-aes(t, "shape", v, default-shapes),
-  linetype: (t, v, _, _) => _resolve-palette-aes(t, "linetype", v, default-linetypes),
+  linetype: (t, v, _, _) => _resolve-palette-aes(
+    t,
+    "linetype",
+    v,
+    default-linetypes,
+  ),
   size: (t, v, _, _) => _resolve-numeric-aes(t, v, (1pt, 6pt)),
   linewidth: (t, v, _, _) => _resolve-numeric-aes(t, v, (0.4pt, 1.4pt)),
   stroke: (t, v, _, _) => _resolve-numeric-aes(t, v, (0.2pt, 1.4pt)),

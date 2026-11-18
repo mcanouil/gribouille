@@ -8,7 +8,7 @@
 #import "../utils/extended.typ": extended
 #import "../utils/format.typ": format-break
 #import "../utils/radial.typ": is-radial
-#import "../utils/aes-resolve.typ": resolve-label
+#import "../utils/aes-resolve.typ": level-text, resolve-label
 
 // Axis title fallback: a `labels(x: none)` suppression (`spec.blank`) wins and
 // yields no title; otherwise the trained scale's `spec.name`, else the bare
@@ -236,7 +236,7 @@
 // level itself on a discrete scale, the formatted break on a continuous one.
 #let _tick-label-fallback(trained, value) = if trained.type == "continuous" {
   _axis-label(trained, value)
-} else { value }
+} else if trained.type == "discrete" { level-text(value) } else { value }
 
 // One theta tick label as a radial panel draws it: the breaks sharing a canvas
 // angle, resolved one by one, the `none`s dropped so a callback can hide a

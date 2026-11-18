@@ -155,6 +155,10 @@
 // A cell is missing when it is `none` or the empty string.
 #let is-missing(v) = v == none or v == ""
 
+// The key a cell has in a discrete level lookup: a missing cell keys as the
+// reserved `NA` level, any other cell as its text.
+#let level-key(v) = if is-missing(v) { NA-KEY } else { str(v) }
+
 // Type check for a numeric argument, run before its range check.
 #let check-number(scope, name, value) = {
   if not is-native-numeric(value) {

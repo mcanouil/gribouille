@@ -204,7 +204,7 @@
 #assert.eq(one.at(0).key, "_all")
 #assert.eq(one.at(0).data.map(r => r.x), (1, 2, 3, 4, 5))
 
-// --- bucket-by-col: first-appearance order, empty values dropped ---
+// --- bucket-by-col: first-appearance order, a missing value is its own bucket ---
 #let col-rows = (
   (v: "x", i: 0),
   (v: "y", i: 1),
@@ -212,8 +212,9 @@
   (v: "x", i: 3),
 )
 #let cols = bucket-by-col(col-rows, "v")
-#assert.eq(cols.len(), 2)
+#assert.eq(cols.len(), 3)
 #assert.eq(cols.at(0).map(r => r.i), (0, 3))
 #assert.eq(cols.at(1).map(r => r.i), (1,))
+#assert.eq(cols.at(2).map(r => r.i), (2,))
 
 Group tests passed.

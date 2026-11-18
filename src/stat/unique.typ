@@ -3,6 +3,8 @@
 ///! Drops repeated `(x, y)` observations within a group. The framework already
 ///! partitions data per group, so duplicates are detected within one call.
 
+#import "../utils/types.typ": level-key
+
 /// Unique statistic: keep the first row per `(x, y)` key, drop later duplicates.
 ///
 /// The dedup key concatenates the values referenced by `mapping.x` and
@@ -65,7 +67,7 @@
   for row in data {
     let xv = if x-col != none { row.at(x-col, default: none) } else { none }
     let yv = if y-col != none { row.at(y-col, default: none) } else { none }
-    let key = str(xv) + "\u{1}" + str(yv)
+    let key = level-key(xv) + "\u{1}" + level-key(yv)
     if seen.at(key, default: false) { continue }
     seen.insert(key, true)
     rows.push(row)
