@@ -202,7 +202,11 @@
       let raw = mapping.at(key, default: none)
       if raw == none { continue }
       if is-late-binding(raw) { continue }
-      bound.push((col: mapping-ref-col(raw), ..entry))
+      let col = mapping-ref-col(raw)
+      // A layer whose own data lacks the column has no missing cells, only no
+      // values, as in training.
+      if data.len() == 0 or col not in data.first() { continue }
+      bound.push((col: col, ..entry))
     }
     if bound.len() == 0 {
       new-layers.push(layer)

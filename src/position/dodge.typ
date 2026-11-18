@@ -18,7 +18,7 @@
 #import "../utils/flip.typ": (
   project-user-path, user-axes, user-axis-key, user-columns, user-point,
 )
-#import "../utils/types.typ": NA-KEY, na-last-key, parse-number
+#import "../utils/types.typ": level-key, na-last-key, parse-number
 #import "../scale/train.typ": discrete-slot-width
 
 /// Dodge position adjustment: place grouped marks side by side.
@@ -291,8 +291,7 @@
     .enumerate()
     .map(((i, row)) => (i: i, row: row, key: plan-key(plan, row)))
   let (keys: bucket-order, buckets: cells) = bucket-index(entries, e => {
-    let xv = e.row.at(x-col, default: none)
-    if xv == none { "" } else { str(xv) }
+    level-key(e.row.at(x-col, default: none))
   })
   let level-set = (:)
   for e in entries { level-set.insert(e.key, true) }

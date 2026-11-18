@@ -128,14 +128,13 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself. The last array entry relabels the `NA` level, and a function
-///   gets `none` for it.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
 ///
 /// \@param na-value Value that draws the `NA` level, which holds the rows
 ///   whose column is `none` or empty. `none` (default) takes the default of
 ///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
-///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
-///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///   `shape` and `"loosely-dotted"` for `linetype`. Not for `x`/`y`.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
@@ -270,8 +269,8 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself. The last array entry relabels the `NA` level, and a function
-///   gets `none` for it.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
 ///
 /// \@param na-value Value that draws the `NA` level, which holds the rows
 ///   whose column is `none` or empty. `none` (default) takes the default of
@@ -783,14 +782,11 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself. The last array entry relabels the `NA` level, and a function
-///   gets `none` for it.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
 ///
 /// \@param na-value Value that draws the `NA` level, which holds the rows
-///   whose column is `none` or empty. `none` (default) takes the default of
-///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
-///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
-///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
@@ -949,14 +945,11 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself. The last array entry relabels the `NA` level, and a function
-///   gets `none` for it.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
 ///
 /// \@param na-value Value that draws the `NA` level, which holds the rows
-///   whose column is `none` or empty. `none` (default) takes the default of
-///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
-///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
-///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
@@ -1007,14 +1000,11 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself. The last array entry relabels the `NA` level, and a function
-///   gets `none` for it.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
 ///
 /// \@param na-value Value that draws the `NA` level, which holds the rows
-///   whose column is `none` or empty. `none` (default) takes the default of
-///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
-///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
-///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
@@ -1237,14 +1227,11 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself. The last array entry relabels the `NA` level, and a function
-///   gets `none` for it.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
 ///
 /// \@param na-value Value that draws the `NA` level, which holds the rows
-///   whose column is `none` or empty. `none` (default) takes the default of
-///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
-///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
-///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`
@@ -1302,14 +1289,11 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself. The last array entry relabels the `NA` level, and a function
-///   gets `none` for it.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
 ///
 /// \@param na-value Value that draws the `NA` level, which holds the rows
-///   whose column is `none` or empty. `none` (default) takes the default of
-///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
-///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
-///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
 ///   level (`true`, default), shown as a legend key or an axis tick. `false`

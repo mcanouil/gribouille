@@ -21,8 +21,7 @@
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": (
-  NA-KEY, cell-key, is-discrete-column, is-missing, level-key, na-last-key,
-  parse-number,
+  cell-key, is-discrete-column, is-missing, level-key, na-last-key, parse-number,
 )
 
 #let cumulate-by-x(
