@@ -104,8 +104,10 @@ A difference means commits landed since that build.
 The package may be unchanged, because the Docs workflow only runs when the package sources or the documentation change.
 
 ```bash
-echo "dev:  $(curl -fsSL https://m.canouil.dev/gribouille/dev/gribouille.sha)"
-echo "main: $(git ls-remote https://github.com/mcanouil/gribouille refs/heads/main | cut -f1)"
+dev="$(curl -fsSL https://m.canouil.dev/gribouille/dev/gribouille.sha)"
+main="$(git ls-remote https://github.com/mcanouil/gribouille refs/heads/main | cut -f1)"
+echo "dev:  ${dev}"
+echo "main: ${main}"
 ```
 
 :::
