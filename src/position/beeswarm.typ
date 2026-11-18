@@ -14,9 +14,9 @@
 
 /// Density-shaped per-row offset on x, or on y with `orientation: "y"`.
 ///
-/// For every bucket of rows sharing an x value, each point is offset
-/// sideways by `width × (2·v − 1) × d`, where `v` walks the van der Corput
-/// base-2 sequence in y order and `d` is the point's Gaussian kernel density
+/// For every bucket of rows sharing a swarm-axis value (x by default), each
+/// point is offset along that axis by `width × (2·v − 1) × d`, where `v` walks the van der Corput
+/// base-2 sequence in value order and `d` is the point's Gaussian kernel density
 /// estimate normalised to the bucket's peak. Dense regions spread wide,
 /// sparse tails stay close to the spine, and the result is a violin-shaped
 /// swarm.
@@ -82,7 +82,8 @@
       "position-beeswarm",
       "orientation",
       orientation,
-      ("auto", "x", "y"),
+      ("x", "y"),
+      hint: "Use `auto` to pick the swarm axis from the discrete scale.",
     )
   }
   (
@@ -128,8 +129,8 @@
     return (data: data, mapping: mapping)
   }
 
-  // Bucket row indices by their numeric x value; rows with a non-numeric x
-  // (an unforced discrete level) pass through unchanged.
+  // Bucket row indices by their numeric swarm value; rows with a non-numeric
+  // swarm value (an unforced discrete level) pass through unchanged.
   // One pass to drop the rows with no position, one to bucket what is left by
   // the slot they share.
   let placed = data
