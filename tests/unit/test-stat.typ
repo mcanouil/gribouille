@@ -40,7 +40,7 @@
 #assert.eq(r-order.data.at(1).at("v"), "a")
 #assert.eq(r-order.data.at(2).at("v"), "c")
 
-// --- stat-count: none and empty-string values are skipped ---
+// --- stat-count: none and empty-string values count as one NA bucket ---
 
 #let df-nones = (
   (v: "a"),
@@ -49,8 +49,10 @@
   (v: "a"),
 )
 #let r-nones = apply-stat("count", df-nones, (x: "v"), (:))
-#assert.eq(r-nones.data.len(), 1)
+#assert.eq(r-nones.data.len(), 2)
 #assert.eq(r-nones.data.at(0).at("_count"), 2)
+#assert.eq(r-nones.data.at(1).at("v"), none)
+#assert.eq(r-nones.data.at(1).at("_count"), 2)
 
 // --- stat-bin: preserves grouping aesthetics in output mapping ---
 //

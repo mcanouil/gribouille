@@ -103,3 +103,12 @@
 }
 #assert.eq(kept(scale-discrete(na-translate: false)), 2)
 #assert.eq(kept(scale-discrete(limits: ("a", "b"))), 3)
+
+// `stat-count` counts a missing x as its own bucket, written back as `none`.
+#import "../../src/stat/count.typ" as count
+#let counted = count.apply(
+  ((g: "a"), (g: none), (g: "a"), (g: "")),
+  (x: "g"),
+)
+#assert.eq(counted.data.map(r => r.g), ("a", none))
+#assert.eq(counted.data.map(r => r._count), (2, 2))

@@ -6,6 +6,9 @@
 #import "./late-binding.typ": after-scale-source, apply-after-scale
 #import "../theme/theme.typ": resolve-geom-defaults, resolve-geom-linewidth
 
+// Whether a missing cell has an `NA` level to resolve through.
+#let _has-na(trained) = trained.at("na-level", default: false)
+
 /// Resolve `source-col` for `channel` through the channel's trained
 /// scale, returning `default` when either is missing.
 ///
@@ -100,7 +103,9 @@
   let trained = ctx.trained.at("alpha", default: none)
   let scaled = if col == none or trained == none { fallback } else {
     let raw = sample-row.at(col, default: none)
-    if raw == none { fallback } else if trained.type == "identity" {
+    if raw == none and not _has-na(trained) { fallback } else if (
+      trained.type == "identity"
+    ) {
       let v = parse-number(raw)
       if v == none { fallback } else { _clamp(v, 0, 1) }
     } else {
@@ -155,7 +160,7 @@
   let trained = ctx.trained.at(aesthetic, default: none)
   if col == none or trained == none { return fallback }
   let raw = sample-row.at(col, default: none)
-  if raw == none { return fallback }
+  if raw == none and not _has-na(trained) { return fallback }
   if trained.type == "identity" {
     if type(raw) == length { return raw }
     let v = parse-number(raw)

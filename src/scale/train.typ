@@ -255,7 +255,8 @@
     let recorded = col.at("levels", default: none)
     let source = if recorded != none { recorded } else { col.values }
     for v in source {
-      if is-missing(v) {
+      // A recorded `NA-KEY` is the missing-cell mark of a rewritten column.
+      if is-missing(v) or v == NA-KEY {
         missing = true
         continue
       }

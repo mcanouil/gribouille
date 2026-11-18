@@ -5,6 +5,7 @@
 
 #import "../utils/summaries.typ": read-weight
 #import "../utils/aes-resolve.typ": stat-output-mapping
+#import "../utils/types.typ": NA-KEY, level-key
 
 /// Count statistic: one output row per distinct x level with `y = count`.
 ///
@@ -75,10 +76,7 @@
   let counts = (:)
   let order = ()
   for row in data {
-    let raw = row.at(x-col, default: none)
-    if raw == none { continue }
-    let key = str(raw)
-    if key == "" { continue }
+    let key = level-key(row.at(x-col, default: none))
     if key not in counts { order.push(key) }
     counts.insert(
       key,
@@ -90,7 +88,7 @@
   // rather than clobbering any existing y column.
   let rows = order.map(k => {
     let r = (:)
-    r.insert(x-col, k)
+    r.insert(x-col, if k == NA-KEY { none } else { k })
     r.insert("_count", counts.at(k))
     r
   })

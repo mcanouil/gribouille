@@ -87,3 +87,29 @@
 )
 #assert.eq(t.domain, ("f", "m"))
 #assert.eq(t.na-level, false)
+
+// A column rewritten to its level spine records `NA-KEY` among its levels. It
+// counts as a missing cell, so the domain holds one trailing NA level, even
+// when a second layer maps the same axis with raw missing cells.
+#let spine = "_gribouille-pos-g"
+#let rewritten = (
+  mapping: aes(x: spine, y: "y"),
+  data: ((y: 1, "_gribouille-pos-g": 1), (y: 2, "_gribouille-pos-g": 3)),
+  name: "point",
+  _factor-levels: ("_gribouille-pos-g": ("a", "b", NA-KEY)),
+)
+#let raw-layer = (
+  mapping: aes(x: spine, y: "y"),
+  data: ((y: 1, "_gribouille-pos-g": none),),
+  name: "point",
+  _factor-levels: ("_gribouille-pos-g": ("a", "b", NA-KEY)),
+)
+#let spine-trained = train(
+  scales: scales(),
+  layers: (rewritten, raw-layer),
+  mapping: none,
+  data: none,
+  aesthetics: ("x", "y"),
+).x
+#assert.eq(spine-trained.domain, ("a", "b", NA-KEY))
+#assert.eq(spine-trained.na-level, true)
