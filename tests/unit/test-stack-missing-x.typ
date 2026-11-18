@@ -26,3 +26,11 @@
   1.0,
   4.0,
 ))
+
+// A missing group stacks last, below every real group, as its legend key sits
+// last.
+#let grouped = ((x: 1, y: 2, g: none), (x: 1, y: 1, g: "a"))
+#assert.eq(
+  ymaxs(apply-position("stack", grouped, (x: "x", y: "y", fill: "g")).data),
+  (2.0, 3.0),
+)

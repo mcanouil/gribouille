@@ -21,7 +21,7 @@
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": (
-  cell-key, infer-column-type, is-missing, level-key, parse-number,
+  NA-KEY, cell-key, infer-column-type, is-missing, level-key, parse-number,
 )
 
 #let cumulate-by-x(
@@ -68,7 +68,10 @@
   // after the first write, so the assignment does not clone the array, and
   // collecting the rewritten rows in a patch dict to map over instead measured
   // slower: 3.6 s against 3.1 s over 200000 rows in five buckets.
-  let rank = if levels == none { e => e.key } else {
+  // A missing group sorts after every real one, as its legend key does.
+  let rank = if levels == none {
+    e => e.key.replace(NA-KEY, "\u{10FFFF}")
+  } else {
     let ranks = (:)
     for (i, level) in levels.order.enumerate() {
       let k = cell-key(level)

@@ -10,7 +10,9 @@
 // `check-limits` and `check-breaks` read the built scale, because the rule for
 // `limits` and `breaks` depends on its type and its transform.
 
-#import "../utils/errors.typ": assert-paint, fail-enum, fail-range, fail-type
+#import "../utils/errors.typ": (
+  assert-linetype, assert-paint, fail-enum, fail-range, fail-type,
+)
 #import "../utils/types.typ": check-number, is-native-numeric, parse-number
 #import "../utils/viridis.typ" as viridis-mod
 #import "../utils/palette.typ": brewer-palettes
@@ -77,6 +79,7 @@
     if type(value) != str {
       fail-type(scope, "na-value", value, "a string")
     }
+    if aesthetic == "linetype" { assert-linetype(scope, value) }
   } else if aesthetic == "alpha" {
     if not is-native-numeric(value) {
       fail-type(scope, "na-value", value, "a number between 0 and 1")
