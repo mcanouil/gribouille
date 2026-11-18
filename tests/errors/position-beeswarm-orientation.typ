@@ -3,7 +3,7 @@
 // `tools/check-errors.sh` compiles this file, requires the compile to fail, and
 // requires the `error:` line to carry every phrase below.
 //
-// expect: position-beeswarm: orientation
+// expect: position-beeswarm: orientation must be one of "x", "y"; got "z"
 
 #import "/lib.typ": *
 
