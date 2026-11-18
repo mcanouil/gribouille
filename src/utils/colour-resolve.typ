@@ -116,7 +116,7 @@
         if pal != none and pal.len() > 0 {
           let idx = discrete-index(trained, raw)
           if idx == none { fallback } else if is-na-index(trained, idx) {
-            na-value-of(trained, "length", fallback)
+            na-value-of(trained, "alpha", fallback)
           } else { pal.at(calc.rem(idx, pal.len())) }
         } else { discrete-numeric(trained, raw, range) }
       }
@@ -178,7 +178,7 @@
       let idx = discrete-index(trained, raw)
       if idx == none { return fallback }
       if is-na-index(trained, idx) {
-        return na-value-of(trained, "length", fallback)
+        return na-value-of(trained, aesthetic, fallback)
       }
       pal.at(calc.rem(idx, pal.len()))
     } else {
