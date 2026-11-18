@@ -15,7 +15,9 @@
 #         version and stamped with the source commit.
 # archive stages into a temporary dir then writes <out-dir>/<basename>.tar.gz
 #         and <out-dir>/<basename>.zip. version defaults to the typst.toml
-#         value; basename defaults to gribouille-<version>.
+#         value; basename defaults to gribouille-<version>. When [version] is
+#         given (development build), it also writes <out-dir>/<basename>.sha
+#         holding the full source commit SHA.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -80,6 +82,11 @@ archive() {
   rm -f "${out_dir}/${basename}.tar.gz" "${out_dir}/${basename}.zip"
   tar -czf "${out_dir}/${basename}.tar.gz" -C "${tmp}" "${leaf}"
   (cd "${tmp}" && zip -qr "${out_dir}/${basename}.zip" "${leaf}")
+
+  rm -f "${out_dir}/${basename}.sha"
+  if [[ -n "${override}" ]]; then
+    git rev-parse HEAD >"${out_dir}/${basename}.sha"
+  fi
 }
 
 cmd="${1:-}"

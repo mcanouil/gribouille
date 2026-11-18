@@ -98,6 +98,14 @@ Then import it:
 #import "@local/gribouille:{{< env DEV_VERSION >}}": *
 ```
 
+The development build follows `main` once the Docs workflow ends.
+To check that it matches `main`, compare the two commit SHAs.
+
+```bash
+curl -fsSL https://m.canouil.dev/gribouille/dev/gribouille.sha
+git ls-remote https://github.com/mcanouil/gribouille refs/heads/main | cut -f1
+```
+
 :::
 
 ### From a local clone
