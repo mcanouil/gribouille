@@ -83,12 +83,12 @@
 /// ```
 /// //| alt: "Beeswarm chart with groups a, b on the x-axis; group a holds more points and forms a wider swarm than group b, with points in tidy centred stacks."
 /// #let d = ()
-/// #for i in range(0, 40) { d.push((grp: "a", y: calc.rem(i * 7, 23))) }
-/// #for i in range(0, 12) { d.push((grp: "b", y: calc.rem(i * 5, 23))) }
+/// #for i in range(0, 40) { d.push((grp: "a", y: calc.rem(i * 7, 11))) }
+/// #for i in range(0, 12) { d.push((grp: "b", y: calc.rem(i * 5, 11))) }
 /// #plot(
 ///   data: d,
 ///   mapping: aes(x: as-factor("grp"), y: "y"),
-///   layers: (geom-point(size: 2pt, position: position-beeswarm(method: "center")),),
+///   layers: (geom-point(size: 2pt, position: position-beeswarm(method: "center", binwidth: 1)),),
 ///   width: 10cm,
 ///   height: 6cm,
 /// )
@@ -133,6 +133,13 @@
       "position-beeswarm",
       "adjust applies to method \"quasirandom\" only; got method \"center\"",
       hint: "Use `binwidth` and `spacing` with \"center\", or set `method: \"quasirandom\"`.",
+    )
+  }
+  if method == "center" and width == 0 and spacing == auto {
+    fail(
+      "position-beeswarm",
+      "spacing is auto and width is 0, so stacks have no step; got method \"center\"",
+      hint: "Set `spacing`, because `auto` is `width / 10`.",
     )
   }
   if method == "quasirandom" and (binwidth != auto or spacing != auto) {
@@ -211,7 +218,7 @@
 
   let binned = placed.map(e => (
     ..e,
-    bin: calc.round(e.y / binwidth),
+    bin: int(calc.round(e.y / binwidth)),
   ))
   let buckets = bucket-dict(binned, e => str(e.x) + "|" + str(e.bin))
   let moved = (:)

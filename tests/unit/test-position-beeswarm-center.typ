@@ -78,3 +78,7 @@
   spacing: 0.1,
 ).data
 #close-all(w0.map(row => row.x - 1), (0.05, -0.05))
+
+// --- a bin that straddles zero is one stack -----------------------------------
+#let z = run(((x: 1, y: -0.4), (x: 1, y: 0.4)), binwidth: 1, spacing: 0.1).data
+#close-all(z.map(row => row.x - 1), (0.05, -0.05))
