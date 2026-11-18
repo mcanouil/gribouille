@@ -258,6 +258,9 @@
     for (axis, pos-col) in repoint {
       pos-in.insert(axis, pos-col)
     }
+    if position-name == "beeswarm" {
+      position-params.insert("discrete-axes", repoint.keys())
+    }
     let r = apply-position(
       position-name,
       rewritten.data,
