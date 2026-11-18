@@ -47,7 +47,11 @@
     dash: resolve-channel("linetype", layer.params, mapping, ctx, row, "solid"),
   )
 
-  // Each entry pairs an intercept value with the stroke spec to draw it with.
+  // Each entry pairs an intercept value with the space it is in and the stroke
+// spec to draw it with. A mapped column was moved to stat space when the scale
+// trained, so it is read as `"stat"`; a scalar or array parameter is what the
+// user typed, so it is read as `"data"`.
+// Each entry pairs an intercept value with the stroke spec to draw it with.
   // Mapped: one entry per data row, per-row stroke. Unmapped: the scalar or
   // array parameter, all sharing a single stroke resolved from an empty row.
   // `parse-number` resolves ISO date/datetime/time strings to the numeric
@@ -58,7 +62,7 @@
       .map(row => {
         let v = parse-number(row.at(mapped-col, default: none))
         if v == none { none } else {
-          (value: v, stroke: _stroke-for(row))
+          (value: v, space: "stat", stroke: _stroke-for(row))
         }
       })
       .filter(entry => entry != none)
@@ -70,15 +74,17 @@
     values
       .map(v => {
         let n = parse-number(v)
-        if n == none { none } else { (value: n, stroke: stroke) }
+        if n == none { none } else {
+          (value: n, space: "data", stroke: stroke)
+        }
       })
       .filter(entry => entry != none)
   }
   if lines.len() == 0 { return }
-  let map-value = axis-mapper(
-    ctx,
-    user-axis-key(user-axis, ctx),
-    space: "data",
+  let axis = user-axis-key(user-axis, ctx)
+  let mappers = (
+    stat: axis-mapper(ctx, axis, space: "stat"),
+    data: axis-mapper(ctx, axis, space: "data"),
   )
 
   let radial = ctx.at("radial", default: none)
@@ -88,14 +94,14 @@
     let on-theta = radial.theta-axis == user-axis
     for line in lines {
       if on-theta {
-        let theta = map-value(line.value)
+        let theta = mappers.at(line.space)(line.value)
         cetz.draw.line(
           (cx, cy),
           (cx + r-max * calc.cos(theta), cy + r-max * calc.sin(theta)),
           stroke: line.stroke,
         )
       } else {
-        let r = map-value(line.value)
+        let r = mappers.at(line.space)(line.value)
         if r > 0 and r <= r-max {
           cetz.draw.circle(
             (cx, cy),
@@ -116,13 +122,13 @@
   if horizontal {
     let (px-lo, px-hi) = (ctx.coord.axis-range)(ctx, "x")
     for line in lines {
-      let cy = map-value(line.value)
+      let cy = mappers.at(line.space)(line.value)
       cetz.draw.line((px-lo, cy), (px-hi, cy), stroke: line.stroke)
     }
   } else {
     let (py-lo, py-hi) = (ctx.coord.axis-range)(ctx, "y")
     for line in lines {
-      let cx = map-value(line.value)
+      let cx = mappers.at(line.space)(line.value)
       cetz.draw.line((cx, py-lo), (cx, py-hi), stroke: line.stroke)
     }
   }
