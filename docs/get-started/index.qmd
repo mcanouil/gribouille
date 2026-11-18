@@ -98,6 +98,18 @@ Then import it:
 #import "@local/gribouille:{{< env DEV_VERSION >}}": *
 ```
 
+The published SHA is the commit that produced the current development build, which follows `main` once the Docs workflow ends.
+Compare it with the head of `main`.
+A difference means commits landed since that build.
+The package may be unchanged, because the Docs workflow only runs when the package sources or the documentation change.
+
+```bash
+dev="$(curl -fsSL https://m.canouil.dev/gribouille/dev/gribouille.sha)"
+main="$(git ls-remote https://github.com/mcanouil/gribouille refs/heads/main | cut -f1)"
+echo "dev:  ${dev}"
+echo "main: ${main}"
+```
+
 :::
 
 ### From a local clone
