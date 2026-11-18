@@ -4,6 +4,7 @@
 
 ### Changes
 
+- feat: `position-beeswarm(orientation:)` swarms along either axis. With `auto`, a discrete `y` axis swarms up and down, and `"y"` swarms a continuous or constant `y`. (#PR)
 - fix: Custom legend labels stay with their keys when `guide-legend(reverse: true)` reverses them. (#400)
 - fix: A string `colour` or `fill` constant on a geom or `annotate()` fails with a clear message, where it used to raise a raw CeTZ error. Pass an `rgb(...)` value. (#398)
 - fix: `annotate()` treats `colour`, `fill`, `alpha`, `linewidth`, `linetype`, `shape` and `size` as constants, as ggplot2 does. They no longer train a scale or add a legend key. (#397)

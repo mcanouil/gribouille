@@ -1,7 +1,9 @@
 // position-beeswarm: deterministic density-shaped offsets.
 
 #import "../../src/position/apply.typ": apply-position
-#import "../../src/position/beeswarm.typ": position-beeswarm
+#import "../../src/position/beeswarm.typ": (
+  _resolve-orientation, position-beeswarm,
+)
 
 #let close(a, b, tol: 1e-9) = calc.abs(a - b) < tol
 
@@ -94,6 +96,48 @@
   params: position-beeswarm(adjust: 2).params,
 )
 #assert(not close(ra.data.at(3).x, rb.data.at(3).x))
+
+// --- orientation ---------------------------------------------------------------
+
+// auto without discrete axes keeps the reference offsets.
+#let ro = apply-position(
+  "beeswarm",
+  d,
+  (x: "x", y: "y"),
+  params: position-beeswarm(orientation: auto).params,
+)
+#for (i, e) in expected.enumerate() {
+  assert(close(ro.data.at(i).x, 1 + e))
+}
+
+// "y" swarms along y with the same offsets, and leaves x alone.
+#let dy = ys.map(v => (x: v, y: 1))
+#let rY = apply-position(
+  "beeswarm",
+  dy,
+  (x: "x", y: "y"),
+  params: position-beeswarm(orientation: "y").params,
+)
+#for (i, e) in expected.enumerate() {
+  assert(close(rY.data.at(i).y, 1 + e))
+  assert.eq(rY.data.at(i).x, ys.at(i))
+}
+
+// auto resolves from the discrete axes.
+#assert.eq(_resolve-orientation(auto, ("y",)), "y")
+#assert.eq(_resolve-orientation(auto, ("x", "y")), "x")
+#assert.eq(_resolve-orientation(auto, ()), "x")
+#assert.eq(_resolve-orientation("y", ()), "y")
+#assert.eq(_resolve-orientation("x", ("y",)), "x")
+
+// The resolved orientation follows `discrete-axes` through `apply`.
+#let rAuto = apply-position(
+  "beeswarm",
+  dy,
+  (x: "x", y: "y"),
+  params: (..position-beeswarm().params, discrete-axes: ("y",)),
+)
+#assert.eq(rAuto.data, rY.data)
 
 // --- edge cases -------------------------------------------------------------------
 
