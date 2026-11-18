@@ -36,7 +36,7 @@
 ///
 /// \@param method `"quasirandom"` (default) spreads points by local density. `"center"` bins the value axis and stacks the points of each bin side by side, centred on the row, so the width of a stack shows the number of points. `width` caps nothing under `"center"`.
 ///
-/// \@param binwidth `"center"` only. Size of a bin on the value axis, in data units. `auto` is the range of the value column over the layer divided by 30, or 1 when the range is 0. Each point moves to the centre of its bin.
+/// \@param binwidth `"center"` only. Size of a bin on the value axis, in data units. `auto` is the range of the value column over the layer divided by 30, or 1 when the range is 0. Bins are centred on multiples of `binwidth`, starting from 0. Each point moves to the nearest multiple, so a value already on that grid does not move.
 ///
 /// \@param spacing `"center"` only. Distance between neighbouring points of a stack, in data units of the swarm axis, the same for every row. `auto` is `width / 10`, which keeps points of the default size apart on a panel of ordinary size.
 ///
@@ -195,7 +195,8 @@
   })
 }
 
-// Count-based swarm: bin the value axis, move each point to its bin centre,
+// Count-based swarm: bin the value axis on a grid of `binwidth` anchored at 0,
+// move each point to its nearest grid value,
 // and stack the points of a bin side by side around the row.
 #let _apply-center(data, mapping, placed, swarm-col, value-col, params) = {
   if placed.len() == 0 { return (data: data, mapping: mapping) }
@@ -210,7 +211,7 @@
 
   let binned = placed.map(e => (
     ..e,
-    bin: calc.floor((e.y - lo) / binwidth),
+    bin: calc.round(e.y / binwidth),
   ))
   let buckets = bucket-dict(binned, e => str(e.x) + "|" + str(e.bin))
   let moved = (:)
@@ -220,7 +221,7 @@
     for (e, offset) in ordered.zip(offsets) {
       moved.insert(str(e.i), (
         x: e.x + offset,
-        y: lo + (e.bin + 0.5) * binwidth,
+        y: e.bin * binwidth,
       ))
     }
   }

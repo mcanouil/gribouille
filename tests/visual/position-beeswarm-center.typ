@@ -3,7 +3,7 @@
 // Two discrete rows on one panel: "many" holds 30 points and "few" holds 8.
 // The row with 30 points is wider than the row with 8. In each row, the points
 // of a value bin form a centred stack, and the step between neighbours is the
-// same in both rows. Points at a bin sit on the bin centre, so they line up in
+// same in both rows. Points sit on whole values of the value axis, so they line up in
 // horizontal layers.
 
 #import "../../lib.typ": *
