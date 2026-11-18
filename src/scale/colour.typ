@@ -39,6 +39,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: aesthetic,
@@ -48,6 +50,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _scale-manual(
@@ -57,6 +61,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: aesthetic,
@@ -66,6 +72,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _scale-identity(aesthetic, name: none) = (
@@ -82,6 +90,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: aesthetic,
@@ -91,6 +101,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _scale-viridis-c(
@@ -143,6 +155,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: aesthetic,
@@ -152,6 +166,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _scale-okabe-ito(
@@ -160,6 +176,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = _scale-discrete(
   aesthetic,
   palette: okabe-ito,
@@ -167,6 +185,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _scale-gradient(
@@ -242,6 +262,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: aesthetic,
@@ -251,6 +273,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _scale-hue(
@@ -262,6 +286,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: aesthetic,
@@ -271,6 +297,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _scale-distiller(
@@ -427,6 +455,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: "alpha",
@@ -436,6 +466,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _alpha-binned(

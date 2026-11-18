@@ -13,6 +13,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: "linetype",
@@ -22,6 +24,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _linetype-manual(
@@ -30,6 +34,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: "linetype",
@@ -39,6 +45,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _linetype-identity(name: none) = (

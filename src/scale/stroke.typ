@@ -28,6 +28,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: "stroke",
@@ -37,6 +39,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _stroke-binned(

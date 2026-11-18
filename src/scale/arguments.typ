@@ -10,7 +10,7 @@
 // `check-limits` and `check-breaks` read the built scale, because the rule for
 // `limits` and `breaks` depends on its type and its transform.
 
-#import "../utils/errors.typ": fail-enum, fail-range, fail-type
+#import "../utils/errors.typ": assert-paint, fail-enum, fail-range, fail-type
 #import "../utils/types.typ": check-number, is-native-numeric, parse-number
 #import "../utils/viridis.typ" as viridis-mod
 #import "../utils/palette.typ": brewer-palettes
@@ -66,6 +66,22 @@
   }
 }
 
+// Check `na-value` against the aesthetic it draws: a colour for colour and
+// fill, a keyword string for shape and linetype, a number or length for the
+// rest. `none` leaves the aesthetic default in place.
+#let _check-na-value(scope, aesthetic, value) = {
+  if value == none { return }
+  if aesthetic in ("colour", "fill") {
+    assert-paint(scope, "na-value", value)
+  } else if aesthetic in ("shape", "linetype") {
+    if type(value) != str {
+      fail-type(scope, "na-value", value, "a string")
+    }
+  } else if not is-native-numeric(value) and type(value) != length {
+    fail-type(scope, "na-value", value, "a number or a length")
+  }
+}
+
 // Check the named arguments of a stub of `family` bound to `aesthetic`. Each
 // check runs only when the user passed the argument, because every default
 // passes, except `values` and `colours`, which have no usable default.
@@ -76,6 +92,12 @@
   }
   if "transform" in named and named.transform not in _TRANSFORMS {
     fail-enum(scope, "transform", named.transform, _TRANSFORMS)
+  }
+  if "na-translate" in named and type(named.at("na-translate")) != bool {
+    fail-type(scope, "na-translate", named.at("na-translate"), "a bool")
+  }
+  if "na-value" in named {
+    _check-na-value(scope, aesthetic, named.at("na-value"))
   }
   if "n-breaks" in named {
     let n = named.at("n-breaks")

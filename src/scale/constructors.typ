@@ -128,7 +128,19 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The last array entry relabels the `NA` level, and a function
+///   gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) takes the default of
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
+///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
+///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown in the legend, on the axis or as a facet
+///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
+///   name `NA`.
 ///
 /// \@param expand Padding around the domain as a ratio (`5%`), a length
 ///   (`5pt`), a `relative`, or a `(lo, hi)` pair whose sides may each be
@@ -257,7 +269,19 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The last array entry relabels the `NA` level, and a function
+///   gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) takes the default of
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
+///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
+///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown in the legend, on the axis or as a facet
+///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
+///   name `NA`.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -757,7 +781,19 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The last array entry relabels the `NA` level, and a function
+///   gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) takes the default of
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
+///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
+///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown in the legend, on the axis or as a facet
+///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
+///   name `NA`.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -910,7 +946,19 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The last array entry relabels the `NA` level, and a function
+///   gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) takes the default of
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
+///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
+///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown in the legend, on the axis or as a facet
+///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
+///   name `NA`.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -955,7 +1003,19 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The last array entry relabels the `NA` level, and a function
+///   gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) takes the default of
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
+///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
+///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown in the legend, on the axis or as a facet
+///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
+///   name `NA`.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -1172,7 +1232,19 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The last array entry relabels the `NA` level, and a function
+///   gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) takes the default of
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
+///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
+///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown in the legend, on the axis or as a facet
+///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
+///   name `NA`.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -1224,7 +1296,19 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The last array entry relabels the `NA` level, and a function
+///   gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) takes the default of
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-open"` for
+///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
+///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown in the legend, on the axis or as a facet
+///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
+///   name `NA`.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///

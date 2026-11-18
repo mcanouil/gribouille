@@ -10,6 +10,7 @@
   oob: "drop",
   labels: auto,
   expand: auto,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: aesthetic,
@@ -19,4 +20,5 @@
   oob: oob,
   labels: labels,
   expand: expand,
+  na-translate: na-translate,
 )

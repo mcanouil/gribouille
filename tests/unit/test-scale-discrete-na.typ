@@ -79,3 +79,11 @@
 #assert.eq(off.na-level, false)
 #let on = _train-entry("colour", cached, (type: "discrete"))
 #assert.eq(on.domain, ("f", "m", NA-KEY))
+
+// The same through the public constructor.
+#let t = _train(
+  rows(("m", none, "f")),
+  scale: scale-discrete(na-translate: false),
+)
+#assert.eq(t.domain, ("f", "m"))
+#assert.eq(t.na-level, false)
