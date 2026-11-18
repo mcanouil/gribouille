@@ -1,6 +1,7 @@
 // Smoke render: line geoms apply alpha once.
 //
-// geom-linerange, geom-errorbar, geom-rug and geom-path each draw red at
+// geom-linerange, geom-errorbar, geom-rug, geom-path and the marker of
+// geom-pointrange each draw red at
 // alpha 0.5 over white. Their strokes must show the same opacity, about
 // (255, 160, 154), and none may look lighter than the geom-path panel.
 
@@ -24,10 +25,14 @@
 )
 
 #grid(
-  columns: 4,
+  columns: 5,
   column-gutter: 4pt,
   panel("linerange", geom-linerange(colour: red, stroke: 6pt, alpha: 0.5)),
   panel("errorbar", geom-errorbar(colour: red, linewidth: 6pt, alpha: 0.5)),
   panel("rug", geom-rug(colour: red, linewidth: 6pt, alpha: 0.5)),
   panel("path", geom-path(colour: red, linewidth: 6pt, alpha: 0.5)),
+  panel(
+    "pointrange",
+    geom-pointrange(colour: red, size: 3.5pt, alpha: 0.5),
+  ),
 )
