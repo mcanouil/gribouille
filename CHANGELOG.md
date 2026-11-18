@@ -4,6 +4,7 @@
 
 ### Changes
 
+- fix: `geom-col()` and `geom-bar()` fail when the `y` axis is discrete, where they used to draw an empty panel. Map the category to `x` and add `coord-flip()` for horizontal bars. (#396)
 - docs: The agent skill tells agents to use Gribouille geoms, stats, positions, scales, guides, and compose before raw Typst, and lists the traps found in real plots. (#389)
 - docs: The agent skill tells agents to map a grouping variable in `aes()` instead of building one geom for each group with `.map()`, and to reshape wide data with `pivot-longer` first. (#388)
 - docs: The agent skill tells agents to keep the design when they rewrite a figure, and shows how to place headers, bold labels, and notes outside the data with Gribouille. (8850c22)
