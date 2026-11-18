@@ -48,10 +48,9 @@
   )
 
   // Each entry pairs an intercept value with the space it is in and the stroke
-// spec to draw it with. A mapped column was moved to stat space when the scale
-// trained, so it is read as `"stat"`; a scalar or array parameter is what the
-// user typed, so it is read as `"data"`.
-// Each entry pairs an intercept value with the stroke spec to draw it with.
+  // spec to draw it with. A mapped column was moved to stat space when the
+  // scale trained, so it is read as `"stat"`; a scalar or array parameter is
+  // what the user typed, so it is read as `"data"`.
   // Mapped: one entry per data row, per-row stroke. Unmapped: the scalar or
   // array parameter, all sharing a single stroke resolved from an empty row.
   // `parse-number` resolves ISO date/datetime/time strings to the numeric
