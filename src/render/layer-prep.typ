@@ -126,21 +126,23 @@
   (data: combined, mapping: last-mapping)
 }
 
-// Explicit level order of the discrete scale on the aesthetic that defines the
-// stack groups (`fill`, else `colour`), or `none` when that scale sets no
-// `limits`. Positions run before scales are trained, so they read the user
-// spec here.
+// `(col, order)` for the first of `fill` and `colour` that is mapped and has a
+// discrete user scale with explicit `limits`, or `none`. Positions run before
+// scales are trained, so they read the user spec here. `col` is the aesthetic's
+// column, which the stack sort reads because the group key joins every
+// grouping aesthetic.
 #let _group-limits(mapping, user-scales) = {
-  let aes-name = if mapping.at("fill", default: none) != none {
-    "fill"
-  } else if mapping.at("colour", default: none) != none { "colour" } else {
-    return none
+  let plain = _strip-mapping-refs(mapping)
+  for aes-name in ("fill", "colour") {
+    let col = plain.at(aes-name, default: none)
+    let user = user-scales.at(aes-name, default: none)
+    if type(col) != str or user == none { continue }
+    let order = user.at("limits", default: none)
+    if user.at("type", default: none) == "discrete" and order != none {
+      return (col: col, order: order)
+    }
   }
-  let user = user-scales.at(aes-name, default: none)
-  if user == none or user.at("type", default: none) != "discrete" {
-    return none
-  }
-  user.at("limits", default: none)
+  none
 }
 
 #let _prepare-layer(

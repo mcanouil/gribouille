@@ -12,10 +12,11 @@
 // pinch the stream to y = 0 while the bands float elsewhere), so the
 // streamgraph offsets drop them; plain stacking keeps them at zero.
 //
-// `levels` is the explicit level order of the discrete scale on the grouping
-// aesthetic, or `none`. When set, each bucket sorts by the position of its
-// group in `levels` (levels it does not list come last, alphabetically), so
-// the first level sits on top, as the first legend key does.
+// `levels` is `none` or `(col: str, order: array)`: the column of the
+// aesthetic whose discrete scale has explicit limits, and those limits. When
+// set, each bucket sorts by the position of the row's value of `col` in
+// `order` (values it does not list come last, alphabetically by group key),
+// so the first level sits on top, as the first legend key does.
 
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
@@ -62,11 +63,17 @@
   // slower: 3.6 s against 3.1 s over 200000 rows in five buckets.
   let rank = if levels == none { e => e.key } else {
     let ranks = (:)
-    for (i, level) in levels.enumerate() {
+    for (i, level) in levels.order.enumerate() {
       let k = cell-key(level)
       if k not in ranks { ranks.insert(k, i) }
     }
-    e => (ranks.at(e.key, default: levels.len()), e.key)
+    e => (
+      ranks.at(
+        cell-key(e.row.at(levels.col, default: none)),
+        default: levels.order.len(),
+      ),
+      e.key,
+    )
   }
   let out = data
   let drop = ()
