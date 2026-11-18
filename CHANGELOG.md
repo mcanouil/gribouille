@@ -4,6 +4,9 @@
 
 ### Changes
 
+- fix: `annotate()` treats `colour`, `fill`, `alpha`, `linewidth`, `linetype`, `shape` and `size` as constants, as ggplot2 does. They no longer train a scale or add a legend key. (#397)
+- fix: `geom-col()` and `geom-bar()` fail when the `y` axis is discrete, where they used to draw an empty panel. Map the category to `x` and add `coord-flip()` for horizontal bars. (#396)
+- fix: A layer with its own `data` fails when that data lacks a column that the geom reads and the layer inherits from the plot mapping, and names the layer and the missing columns. It used to draw nothing in silence. (#395)
 - fix: Stacked bars and areas follow the order of `scale-discrete(limits:)` on the fill scale, so the first limit sits on top and matches the top legend key. (#393)
 - fix: `geom-linerange()`, `geom-errorbar()`, `geom-rug()` and the point of `geom-pointrange()` apply `alpha` once. An `alpha` of 0.5 used to draw as about 0.25. (#392)
 - fix: A `geom-hline` or `geom-vline` with a mapped intercept draws at the right place on a `scale-log10()` axis. It used to apply the log transform twice, which panicked for a value of 1 or less. (#391)
