@@ -140,22 +140,26 @@
   // Drop (or clamp under `oob: "squish"`) rows whose value falls outside any
   // user-supplied scale `limits`. Runs after training so the trained domain
   // is the rendered cutoff; before per-panel re-train so panel scales see
-  // the filtered subset.
+  // the filtered subset. Layer mappings keep the user's aesthetics, so under
+  // coord-flip the swapped x and y scales are swapped back for this test.
   let strict = spec.at("strict", default: false)
   // Resolved once for the whole render: the panels below filter against the
   // same trained dict, so a plot with twenty panels would otherwise resolve
   // each limited scale twenty-one times.
-  let oob-plan = oob-plans(trained)
-  // A centre key such as ellipse `x0` is not in the flip swap, so it follows
-  // the trained scales to the other axis here.
-  let centres = if coord.flipped {
-    GEOM-CENTRES.pairs().map(((name, c)) => (name, (x: c.y, y: c.x))).to-dict()
-  } else { GEOM-CENTRES }
+  let user-scales = trained
+  if coord.flipped {
+    for (user-aes, flipped-aes) in (x: "y", y: "x") {
+      if flipped-aes in trained {
+        user-scales.insert(user-aes, trained.at(flipped-aes))
+      } else { let _ = user-scales.remove(user-aes, default: none) }
+    }
+  }
+  let oob-plan = oob-plans(user-scales)
   let oob-pass = filter-oob(
     prepared,
     oob-plan,
     strict: strict,
-    centres: centres,
+    centres: GEOM-CENTRES,
   )
   prepared = oob-pass.layers
   if facet-wrap-mode or facet-grid-mode {
@@ -164,7 +168,7 @@
         p.layers,
         oob-plan,
         strict: strict,
-        centres: centres,
+        centres: GEOM-CENTRES,
       )
       let new = p
       new.layers = pass.layers
