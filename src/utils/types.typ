@@ -148,6 +148,13 @@
 // group, apart from any string value such as `""` or `"none"`.
 #let cell-key(v) = if v == none { "\u{0}" } else { str(v) }
 
+// The reserved level of a missing cell on a discrete scale. It cannot clash
+// with a real level, and a trained domain carries it last.
+#let NA-KEY = cell-key(none)
+
+// A cell is missing when it is `none` or the empty string.
+#let is-missing(v) = v == none or v == ""
+
 // Type check for a numeric argument, run before its range check.
 #let check-number(scope, name, value) = {
   if not is-native-numeric(value) {

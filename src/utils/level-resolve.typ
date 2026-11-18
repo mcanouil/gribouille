@@ -11,6 +11,7 @@
 // linetype is meaningless): the caller treats `none` as "drop this aesthetic
 // from the composed glyph".
 
+#import "./types.typ": NA-KEY, is-missing
 #import "./colour.typ": bin-edges, bin-index-edges, resolve-continuous-colour
 #import "./palette.typ": (
   default-linetypes, default-shapes, palette-at, spec-attr, spec-palette,
@@ -24,7 +25,10 @@
 )
 
 #let discrete-index(trained, level) = {
-  level-lookup(trained).at(str(level), default: none)
+  level-lookup(trained).at(
+    if is-missing(level) { NA-KEY } else { str(level) },
+    default: none,
+  )
 }
 
 #let discrete-numeric(trained, level, range) = {

@@ -7,7 +7,9 @@
 // Mapping turns a trained domain plus a target range into a scalar position.
 
 #import "../data.typ": _normalise-data, column
-#import "../utils/types.typ": infer-column-type, parse-number
+#import "../utils/types.typ": (
+  NA-KEY, infer-column-type, is-missing, parse-number,
+)
 #import "../utils/typst-markup.typ": is-typst-markup
 #import "../utils/errors.typ": fail, fail-type
 #import "../utils/late-binding.typ": (
@@ -723,10 +725,7 @@
 ) = {
   let n = domain.len()
   if n == 0 { return none }
-  // Mirror the continuous branch of `map-position`, which yields `none` for a
-  // value it cannot read, rather than failing inside `str`.
-  if value == none { return none }
-  let s = str(value)
+  let s = if is-missing(value) { NA-KEY } else { str(value) }
   let lookup = if level-index == none { _level-index(domain) } else {
     level-index
   }
@@ -763,9 +762,11 @@
 // matches how `map-discrete` reads a bare number, so callers can offset the
 // result and feed it straight back through `map-position`.
 #let level-position(trained, value) = {
-  if value == none { return none }
   if type(value) == int or type(value) == float { return float(value) }
-  let idx = level-lookup(trained).at(str(value), default: none)
+  let idx = level-lookup(trained).at(
+    if is-missing(value) { NA-KEY } else { str(value) },
+    default: none,
+  )
   if idx == none { none } else { idx + 1 }
 }
 
