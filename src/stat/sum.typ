@@ -6,7 +6,7 @@
 
 #import "../utils/summaries.typ": read-weight
 #import "../utils/aes-resolve.typ": stat-output-mapping
-#import "../utils/types.typ": is-missing, level-key
+#import "../utils/types.typ": infer-column-type, is-missing, level-key
 
 /// Sum statistic: one output row per unique `(x, y)` pair with `_n` and `_prop`.
 ///
@@ -75,9 +75,18 @@
   let order = ()
   let proto = (:)
   let total = 0
+  // A missing cell is the `NA` level of a discrete axis. On a continuous axis
+  // it has no position, so its row is left out of the counts.
+  let discrete(col) = (
+    infer-column-type(data.map(row => row.at(col, default: none))) == "string"
+  )
+  let x-discrete = discrete(x-col)
+  let y-discrete = discrete(y-col)
   for row in data {
     let xv = row.at(x-col, default: none)
     let yv = row.at(y-col, default: none)
+    if is-missing(xv) and not x-discrete { continue }
+    if is-missing(yv) and not y-discrete { continue }
     let key = level-key(xv) + "\u{1}" + level-key(yv)
     if key not in proto {
       order.push(key)

@@ -138,9 +138,9 @@
 ///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
-///   level (`true`, default), shown in the legend, on the axis or as a facet
-///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
-///   name `NA`.
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@param expand Padding around the domain as a ratio (`5%`), a length
 ///   (`5pt`), a `relative`, or a `(lo, hi)` pair whose sides may each be
@@ -279,9 +279,9 @@
 ///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
-///   level (`true`, default), shown in the legend, on the axis or as a facet
-///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
-///   name `NA`.
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -791,9 +791,9 @@
 ///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
-///   level (`true`, default), shown in the legend, on the axis or as a facet
-///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
-///   name `NA`.
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -956,9 +956,9 @@
 ///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
-///   level (`true`, default), shown in the legend, on the axis or as a facet
-///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
-///   name `NA`.
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -1013,9 +1013,9 @@
 ///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
-///   level (`true`, default), shown in the legend, on the axis or as a facet
-///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
-///   name `NA`.
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -1242,9 +1242,9 @@
 ///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
-///   level (`true`, default), shown in the legend, on the axis or as a facet
-///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
-///   name `NA`.
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -1306,9 +1306,9 @@
 ///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
 ///
 /// \@param na-translate Whether a missing cell becomes the trailing `NA`
-///   level (`true`, default), shown in the legend, on the axis or as a facet
-///   panel. `false` drops the rows that hold a missing cell. `limits` cannot
-///   name `NA`.
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///

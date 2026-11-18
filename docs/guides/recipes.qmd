@@ -347,7 +347,7 @@ It comes last, after the data levels or the `limits`.
 It draws with the `na-value` of the scale and shows as a legend key, an axis tick or a facet panel.
 The default `na-value` is 50 % grey for colour and fill, `"circle-open"` for shape, and `"loosely-dotted"` for linetype.
 The `NA` level never takes a palette entry, so the other levels keep their colours and shapes.
-Set `na-translate: false` on a scale to drop the rows with a missing value instead.
+Set `na-translate: false` on a scale to drop the rows with a missing value instead, except for a facet variable, which always gets an `NA` panel.
 A `labels` array relabels `NA` with its last entry, and a `labels` function gets `none` for it.
 
 ```{typst}

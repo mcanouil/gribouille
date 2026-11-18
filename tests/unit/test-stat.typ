@@ -133,3 +133,13 @@ Stat tests passed.
 )
 #assert.eq(r-sum.data.len(), 2)
 #assert.eq(r-sum.data.map(r => r.x), ("x", none))
+
+// A missing cell on a continuous axis is left out of the counts.
+#let r-sum-num = apply-stat(
+  "sum",
+  ((a: 1, b: 2), (a: none, b: 2), (a: 1, b: 2)),
+  (x: "a", y: "b"),
+  (:),
+)
+#assert.eq(r-sum-num.data.len(), 1)
+#assert.eq(r-sum-num.data.at(0).at("_prop"), 1.0)
