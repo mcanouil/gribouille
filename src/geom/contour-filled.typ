@@ -92,6 +92,7 @@
   assert-alpha("geom-contour-filled", alpha)
   make-layer(
     "polygon",
+    scope: "geom-contour-filled",
     mapping: mapping,
     data: data,
     params: (

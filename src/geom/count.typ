@@ -103,6 +103,7 @@
   assert-alpha("geom-count", alpha)
   make-layer(
     "point",
+    scope: "geom-count",
     mapping: mapping,
     data: data,
     params: (

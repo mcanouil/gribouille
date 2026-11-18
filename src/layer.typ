@@ -89,6 +89,8 @@
 ///   `true` (default) follows the usual panel clip; `false` lets the marks
 ///   overflow the panel, set by \@annotate for deliberate out-of-panel marks.
 ///
+/// \@param scope Public constructor name used in paint errors; `auto` uses `"geom-"` plus `geom`.
+///
 /// \@returns Layer dictionary consumed by `plot()`.
 #let make-layer(
   geom,
@@ -100,9 +102,11 @@
   key: auto,
   inherit-aes: true,
   clip: true,
+  scope: auto,
 ) = {
-  for key in ("colour", "fill") {
-    assert-paint-constant("geom-" + geom, key, params.at(key, default: auto))
+  let scope = if scope == auto { "geom-" + geom } else { scope }
+  for name in ("colour", "fill") {
+    assert-paint-constant(scope, name, params.at(name, default: auto))
   }
   // Desugar a native `1.3pt + accent` stroke into the split `stroke`/`colour`
   // params the resolvers expect; other stroke forms pass through untouched.

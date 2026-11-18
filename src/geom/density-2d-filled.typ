@@ -105,6 +105,7 @@
   assert-alpha("geom-density-2d-filled", alpha)
   make-layer(
     "polygon",
+    scope: "geom-density-2d-filled",
     mapping: mapping,
     data: data,
     params: (
