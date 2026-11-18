@@ -7,7 +7,7 @@
 ///! in proportion to the density of their x values.
 ///! Renders are reproducible without a seed.
 
-#import "../utils/errors.typ": assert-number, fail-enum
+#import "../utils/errors.typ": assert-number, fail, fail-enum
 #import "../utils/bucket.typ": bucket-dict
 #import "../utils/types.typ": parse-number
 #import "../utils/kde.typ": bw-nrd0
@@ -33,6 +33,12 @@
 /// \@param adjust Bandwidth multiplier for the density estimate, greater than `0`: `adjust: 0.5` halves the smoothing.
 ///
 /// \@param orientation Axis the swarm spreads along: `"x"`, `"y"`, or `auto`. `auto` picks `"y"` when only the y axis is discrete, and `"x"` otherwise.
+///
+/// \@param method `"quasirandom"` (default) spreads points by local density. `"center"` bins the value axis and stacks the points of each bin side by side, centred on the row, so the width of a stack shows the number of points. `width` caps nothing under `"center"`.
+///
+/// \@param binwidth `"center"` only. Size of a bin on the value axis, in data units. `auto` is the range of the value column over the layer divided by 30, or 1 when the range is 0. Each point moves to the centre of its bin.
+///
+/// \@param spacing `"center"` only. Distance between neighbouring points of a stack, in data units of the swarm axis, the same for every row. `auto` is `width / 10`, which keeps points of the default size apart on a panel of ordinary size.
 ///
 /// \@returns Position dictionary with `name: "beeswarm"`, consumed by \@plot.
 ///
@@ -73,8 +79,30 @@
 /// )
 /// ```
 ///
+/// Count-based stacks: each row grows wider with its number of points.
+/// ```
+/// //| alt: "Beeswarm chart with groups a, b on the x-axis; group a holds more points and forms a wider swarm than group b, with points in tidy centred stacks."
+/// #let d = ()
+/// #for i in range(0, 40) { d.push((grp: "a", y: calc.rem(i * 7, 23))) }
+/// #for i in range(0, 12) { d.push((grp: "b", y: calc.rem(i * 5, 23))) }
+/// #plot(
+///   data: d,
+///   mapping: aes(x: as-factor("grp"), y: "y"),
+///   layers: (geom-point(size: 2pt, position: position-beeswarm(method: "center")),),
+///   width: 10cm,
+///   height: 6cm,
+/// )
+/// ```
+///
 /// \@see \@position-jitter, \@geom-beeswarm
-#let position-beeswarm(width: 0.4, adjust: 1, orientation: auto) = {
+#let position-beeswarm(
+  width: 0.4,
+  adjust: 1,
+  orientation: auto,
+  method: "quasirandom",
+  binwidth: auto,
+  spacing: auto,
+) = {
   assert-number("position-beeswarm", "width", width, min: 0)
   assert-number("position-beeswarm", "adjust", adjust, positive: true)
   if orientation not in (auto, "x", "y") {
@@ -86,10 +114,45 @@
       hint: "Use `auto` to pick the swarm axis from the discrete scale.",
     )
   }
+  if method not in ("quasirandom", "center") {
+    fail-enum(
+      "position-beeswarm",
+      "method",
+      method,
+      ("quasirandom", "center"),
+    )
+  }
+  if binwidth != auto {
+    assert-number("position-beeswarm", "binwidth", binwidth, positive: true)
+  }
+  if spacing != auto {
+    assert-number("position-beeswarm", "spacing", spacing, positive: true)
+  }
+  if method == "center" and adjust != 1 {
+    fail(
+      "position-beeswarm",
+      "adjust applies to method \"quasirandom\" only; got method \"center\"",
+      hint: "Use `binwidth` and `spacing` with \"center\", or set `method: \"quasirandom\"`.",
+    )
+  }
+  if method == "quasirandom" and (binwidth != auto or spacing != auto) {
+    fail(
+      "position-beeswarm",
+      "binwidth and spacing apply to method \"center\" only; got method \"quasirandom\"",
+      hint: "Set `method: \"center\"`, or remove `binwidth` and `spacing`.",
+    )
+  }
   (
     kind: "position",
     name: "beeswarm",
-    params: (width: width, adjust: adjust, orientation: orientation),
+    params: (
+      width: width,
+      adjust: adjust,
+      orientation: orientation,
+      method: method,
+      binwidth: binwidth,
+      spacing: spacing,
+    ),
   )
 }
 
@@ -115,9 +178,69 @@
   if "y" in discrete-axes and "x" not in discrete-axes { "y" } else { "x" }
 }
 
+// Offsets for the `n` points of one bin, in value order: 0, s, -s, 2s, -2s, ...
+// for an odd count and s/2, -s/2, 3s/2, -3s/2, ... for an even count, so the
+// stack stays centred on the row.
+#let _center-offsets(n, spacing) = {
+  range(n).map(k => {
+    let step = if calc.odd(n) { calc.ceil(k / 2) } else { calc.floor(k / 2) + 0.5 }
+    let sign = if calc.odd(n) {
+      if calc.odd(k) { 1 } else { -1 }
+    } else if calc.even(k) {
+      1
+    } else {
+      -1
+    }
+    sign * step * spacing
+  })
+}
+
+// Count-based swarm: bin the value axis, move each point to its bin centre,
+// and stack the points of a bin side by side around the row.
+#let _apply-center(data, mapping, placed, swarm-col, value-col, params) = {
+  if placed.len() == 0 { return (data: data, mapping: mapping) }
+  let width = params.at("width", default: 0.4)
+  let values = placed.map(e => e.y)
+  let lo = calc.min(..values)
+  let span = calc.max(..values) - lo
+  let binwidth = params.at("binwidth", default: auto)
+  if binwidth == auto { binwidth = if span == 0 { 1 } else { span / 30 } }
+  let spacing = params.at("spacing", default: auto)
+  if spacing == auto { spacing = width / 10 }
+
+  let binned = placed.map(e => (
+    ..e,
+    bin: calc.floor((e.y - lo) / binwidth),
+  ))
+  let buckets = bucket-dict(binned, e => str(e.x) + "|" + str(e.bin))
+  let moved = (:)
+  for bucket in buckets.values() {
+    let ordered = bucket.sorted(key: e => e.y)
+    let offsets = _center-offsets(ordered.len(), spacing)
+    for (e, offset) in ordered.zip(offsets) {
+      moved.insert(str(e.i), (
+        x: e.x + offset,
+        y: lo + (e.bin + 0.5) * binwidth,
+      ))
+    }
+  }
+  let new-data = data
+    .enumerate()
+    .map(((i, row)) => {
+      let m = moved.at(str(i), default: none)
+      if m == none { return row }
+      let r = row
+      r.insert(swarm-col, m.x)
+      r.insert(value-col, m.y)
+      r
+    })
+  (data: new-data, mapping: mapping)
+}
+
 #let apply(data, mapping, params: (:), coord: none) = {
   let width = params.at("width", default: 0.4)
   let adjust = params.at("adjust", default: 1)
+  let method = params.at("method", default: "quasirandom")
   let orientation = _resolve-orientation(
     params.at("orientation", default: auto),
     params.at("discrete-axes", default: ()),
@@ -141,6 +264,9 @@
       y: parse-number(row.at(value-col, default: none)),
     ))
     .filter(e => e.x != none and e.y != none)
+  if method == "center" {
+    return _apply-center(data, mapping, placed, swarm-col, value-col, params)
+  }
   let buckets = bucket-dict(placed, e => str(e.x))
 
   let offsets = (:)
