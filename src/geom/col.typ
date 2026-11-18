@@ -4,7 +4,7 @@
 ///! layer to count observations for you. The layer honours `position: "stack"`,
 ///! `"dodge"`, and `"fill"` via the matching position adjustments.
 
-#import "../utils/errors.typ": assert-alpha, assert-fraction
+#import "../utils/errors.typ": assert-alpha, assert-fraction, check
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../position/apply.typ": (
@@ -112,6 +112,8 @@
 ///
 /// \@returns Layer dictionary consumed by \@plot.
 ///
+/// The `y` aesthetic must be continuous. A discrete `y` stops with an error; map the category to `x` and add \@coord-flip for horizontal bars.
+///
 /// \@examples Pre-aggregated heights drawn one bar per row.
 /// ```
 /// //| alt: "Bar chart of revenue by quarter (Q1 through Q4) on the x axis with heights taken directly from the y aesthetic."
@@ -187,6 +189,15 @@
     inherit-aes: inherit-aes,
   )
 }
+
+// Bars grow along the value axis, so a discrete one has no height to draw.
+// Failing here beats an empty panel the reader cannot explain.
+#let _assert-continuous-value(trained) = check(
+  trained.type == "continuous",
+  "geom-col",
+  "the value axis (y) must be continuous",
+  hint: "Map the category to `x` and the value to `y`, then add `coord-flip()` for horizontal bars, for example `aes(x: \"k\", y: \"v\")` with `coord-flip()`.",
+)
 
 // Canvas length every sealed segment overlaps its neighbour by.
 #let _overlap = seam-seal-thickness / 1cm
@@ -337,7 +348,8 @@
   let cat-trained = ctx.trained.at("x", default: none)
   let value-trained = ctx.trained.at("y", default: none)
   if cat-trained == none or value-trained == none { return }
-  if value-trained.type != "continuous" { return }
+  if data.len() == 0 { return }
+  _assert-continuous-value(value-trained)
 
   let cat-col = mapping.x
   let value-col = mapping.y
@@ -468,7 +480,8 @@
   let value-col = columns.y
   let cat-col = columns.x
   let cat-range = axes.x-range
-  if value-trained.type != "continuous" { return }
+  if data.len() == 0 { return }
+  _assert-continuous-value(value-trained)
 
   let position = layer-position-name(layer)
   let dodge = dodge-geometry(ctx, layer)
