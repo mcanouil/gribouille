@@ -9,7 +9,6 @@
 #import "../utils/types.typ": parse-number
 #import "../utils/flip.typ": user-axes, user-columns
 #import "../position/dodge.typ": dodge-geometry, project-dodged-path
-#import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 #let spec = (
@@ -119,8 +118,8 @@
 // when the range sweeps theta under coord-radial; shared with geom-pointrange.
 // Returns `(elem, colour)` — the cetz line element to emit and the resolved
 // line colour for follow-up marks — or `none` when the row does not resolve.
-// `line-alpha: true` folds the alpha channel into the line paint; pointrange
-// keeps the paint opaque so its marker fill inherits the plain colour.
+// The colour already carries the alpha channel, so the line paint and the
+// colour handed back to pointrange for its marker share one opacity.
 //
 // `params` and `dodge` both arrive resolved, and for the same reason: this runs
 // once a row, so it takes the layer's parameters and its dodge slot rather than
@@ -135,7 +134,6 @@
   ymax-col,
   theme-colour,
   dodge,
-  line-alpha: true,
 ) = {
   let xv = row.at(x-col, default: none)
   let lo = parse-number(row.at(ymin-col, default: none))
@@ -152,17 +150,6 @@
     row,
     theme-colour,
   )
-  let paint = if line-alpha {
-    apply-alpha(colour, resolve-channel(
-      "alpha",
-      params,
-      mapping,
-      ctx,
-      row,
-      1,
-    ))
-  } else { colour }
-
   let thickness = resolve-channel(
     "linewidth",
     params,
@@ -175,7 +162,7 @@
     elem: cetz.draw.line(
       ..points,
       stroke: (
-        paint: paint,
+        paint: colour,
         thickness: thickness,
         dash: resolve-linetype(params, mapping, ctx, row),
       ),
