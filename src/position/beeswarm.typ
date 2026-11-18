@@ -1,9 +1,10 @@
 ///! Deterministic density-shaped offsets.
 ///!
 ///! A quasirandom swarm: points at the same x spread sideways in proportion
-///! to the local density of their y values (or, with `orientation: "y"`, points
-///! at the same y spread up and down in proportion to the density of their x values), ordered by a van der Corput
+///! to the local density of their y values, ordered by a van der Corput
 ///! sequence so the cloud fills evenly without a random number generator.
+///! With `orientation: "y"`, points at the same y spread up and down instead,
+///! in proportion to the density of their x values.
 ///! Renders are reproducible without a seed.
 
 #import "../utils/errors.typ": assert-number, fail-enum
@@ -27,7 +28,7 @@
 /// \@category Positions
 /// \@stability stable
 ///
-/// \@param width Maximum absolute offset applied to the x position, in x data units.
+/// \@param width Maximum absolute offset applied along the swarm axis, in that axis's data units.
 ///
 /// \@param adjust Bandwidth multiplier for the density estimate, greater than `0`: `adjust: 0.5` halves the smoothing.
 ///

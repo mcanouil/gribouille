@@ -61,4 +61,19 @@
 #assert.eq(trained.x.type, "discrete")
 #assert.eq(trained.x.domain, ("a", "b", "c"))
 
+// --- end-to-end: a discrete y swarms the y spine and leaves x alone -----------
+#let raw-y = raw.map(row => (v: row.y, grp: row.grp))
+#let prepared-y = _prepare-layer(
+  geom-point(position: position-beeswarm(width: 0.25)),
+  aes(x: "v", y: "grp"),
+  raw-y,
+)
+#assert.eq(prepared-y.at("_factor-levels"), ((pos-col): ("a", "b", "c")))
+#assert.eq(prepared-y.mapping.y.var, pos-col)
+#for (i, row) in prepared-y.data.enumerate() {
+  assert.eq(row.v, raw-y.at(i).v)
+  assert(row.at(pos-col) >= 1 - 0.25 - 1e-9)
+  assert(row.at(pos-col) <= 3 + 0.25 + 1e-9)
+}
+
 beeswarm discrete-x tests passed.
