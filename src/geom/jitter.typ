@@ -105,5 +105,6 @@
     key: key,
     inherit-aes: inherit-aes,
     ..split-aes-params("geom-jitter", args, point-spec.reads),
+    _scope: "geom-jitter",
   )
 }

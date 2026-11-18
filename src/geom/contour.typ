@@ -86,6 +86,7 @@
   assert-linetype("geom-contour", linetype)
   make-layer(
     "path",
+    scope: "geom-contour",
     mapping: mapping,
     data: data,
     params: (

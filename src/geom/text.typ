@@ -4,7 +4,7 @@
 ///! with a fill and border, use \@geom-label.
 
 #import "../position/apply.typ": assert-position
-#import "../utils/errors.typ": assert-alpha, assert-anchor
+#import "../utils/errors.typ": assert-alpha, assert-anchor, assert-paint
 #import "../deps.typ": cetz
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/arrow.typ": assert-arrow
@@ -161,6 +161,9 @@
 ) = {
   assert-position("geom-text", position)
   assert-alpha("geom-text", alpha)
+  if segment-colour != auto {
+    assert-paint("geom-text", "segment-colour", segment-colour)
+  }
   assert-anchor("geom-text", anchor)
   assert-arrow("geom-text", arrow)
   make-layer(

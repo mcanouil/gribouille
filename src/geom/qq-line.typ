@@ -93,6 +93,7 @@
   assert-linetype("geom-qq-line", linetype)
   make-layer(
     "line",
+    scope: "geom-qq-line",
     mapping: mapping,
     data: data,
     params: (

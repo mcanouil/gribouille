@@ -103,6 +103,7 @@
   assert-linetype("geom-density-2d", linetype)
   make-layer(
     "path",
+    scope: "geom-density-2d",
     mapping: mapping,
     data: data,
     params: (
