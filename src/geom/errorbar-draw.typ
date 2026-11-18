@@ -17,7 +17,6 @@
 #import "../utils/flip.typ": user-axis-key
 #import "../utils/radial.typ": polar-canvas, radial-arc, radial-tangent-cap
 #import "../utils/types.typ": parse-number
-#import "../utils/colour-resolve.typ": apply-alpha
 #import "../theme/theme.typ": resolve-geom-colour, resolve-geom-defaults
 
 // Caps for a numeric cap extent under coord-radial. `band` is the cap span on
@@ -102,8 +101,6 @@
       row,
       theme-colour,
     )
-    let alpha = resolve-channel("alpha", layer.params, mapping, ctx, row, 1)
-    let final-colour = apply-alpha(colour, alpha)
     let thickness = resolve-channel(
       "linewidth",
       layer.params,
@@ -114,7 +111,7 @@
     )
 
     let stroke-spec = (
-      paint: final-colour,
+      paint: colour,
       thickness: thickness,
       dash: resolve-linetype(layer.params, mapping, ctx, row),
     )

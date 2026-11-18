@@ -169,19 +169,16 @@
       cols.ymax,
       theme-colour,
       dodge,
-      line-alpha: false,
     )
     if res == none { continue }
     res.elem
     let (cx-mid, cy-mid) = p-mid
-    let final-fill = resolve-channel(
-      "fill",
-      layer.params,
-      mapping,
-      ctx,
-      row,
-      res.colour,
+    let inherits-colour = (
+      layer.params.fill == auto and mapping.at("fill", default: none) == none
     )
+    let final-fill = if inherits-colour { res.colour } else {
+      resolve-channel("fill", layer.params, mapping, ctx, row, res.colour)
+    }
     let radius = resolve-channel(
       "size",
       layer.params,
