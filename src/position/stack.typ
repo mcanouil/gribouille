@@ -151,6 +151,7 @@
       mapping,
       (cum, yv, tot) => (cum, cum + yv),
       levels: levels,
+    discrete: params.at("discrete", default: none),
     )
   }
   let shift = if offset == "silhouette" {
@@ -165,5 +166,6 @@
     shift: shift,
     drop-empty: offset != "none",
     levels: levels,
+    discrete: params.at("discrete", default: none),
   )
 }

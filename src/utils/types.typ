@@ -187,6 +187,15 @@
   infer-column-type(data.map(row => row.at(col, default: none))) == "string"
 )
 
+// Whether `col` is a discrete axis `axis`: the layer's decision when it carries
+// one (`flags`, from `layer-discrete`), the cells otherwise. A stat run on one
+// group of a layer sees only that group's cells, and a forced-discrete numeric
+// column infers continuous, so the cells alone can disagree with the scale.
+#let axis-discrete(flags, axis, data, col) = {
+  if flags != none and axis in flags { return flags.at(axis) }
+  is-discrete-column(data, col)
+}
+
 /// Desugar a Typst `stroke`-typed value into the separate `stroke` (thickness)
 /// and `colour` (paint) fields gribouille resolves independently.
 ///

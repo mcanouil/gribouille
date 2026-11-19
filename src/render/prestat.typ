@@ -9,6 +9,7 @@
   MISSING-KEY, is-discrete-column, is-missing, level-key, parse-number,
 )
 #import "../utils/aes-resolve.typ": merge-mapping
+#import "../utils/late-binding.typ": is-late-binding
 #import "../scale/arguments.typ": check-transform-domain
 #import "common.typ": _resolve-data
 
@@ -117,6 +118,31 @@
 
 // Reserved prefix for the per-axis numeric position column synthesised below.
 #let _POS-COL-PREFIX = "_gribouille-pos-"
+
+// Whether each positional axis of a layer is discrete: the forced type of its
+// mapping (`as-factor`), else a user discrete scale on the aesthetic, else the
+// cells of the whole layer. Decided once for the layer, so a stat that runs on
+// one group, or on a forced-discrete numeric column, agrees with the scale.
+#let layer-discrete(mapping, data, user-scales) = {
+  let out = (x: false, y: false)
+  if mapping == none { return out }
+  for axis in ("x", "y") {
+    let raw = mapping.at(axis, default: none)
+    // An `after-stat` axis names a column the stat has not made yet.
+    if raw == none or is-late-binding(raw) { continue }
+    let col = mapping-ref-col(raw)
+    let forced = _resolve-forced-type(raw, data, col)
+    let user = _find-user-scale(user-scales, axis)
+    out.insert(axis, if forced != none {
+      forced == "discrete"
+    } else if user != none and user.at("type", default: none) == "discrete" {
+      true
+    } else {
+      is-discrete-column(data, col)
+    })
+  }
+  out
+}
 
 // Rewrite each discrete positional column to its 1-indexed level position so
 // position adjustments (`position-jitter`, `position-beeswarm`, ...) operate in

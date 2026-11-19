@@ -6,7 +6,7 @@
 
 #import "../utils/summaries.typ": read-weight
 #import "../utils/aes-resolve.typ": stat-output-mapping
-#import "../utils/types.typ": is-discrete-column, is-missing, level-key
+#import "../utils/types.typ": axis-discrete, is-missing, level-key
 
 /// Sum statistic: one output row per unique `(x, y)` pair with `_n` and `_prop`.
 ///
@@ -77,8 +77,9 @@
   let total = 0
   // A missing cell is the missing level of a discrete axis. On a continuous axis
   // it has no position, so its row is left out of the counts.
-  let x-discrete = is-discrete-column(data, x-col)
-  let y-discrete = is-discrete-column(data, y-col)
+  let flags = params.at("discrete", default: none)
+  let x-discrete = axis-discrete(flags, "x", data, x-col)
+  let y-discrete = axis-discrete(flags, "y", data, y-col)
   for row in data {
     let xv = row.at(x-col, default: none)
     let yv = row.at(y-col, default: none)

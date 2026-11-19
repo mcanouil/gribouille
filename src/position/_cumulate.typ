@@ -21,7 +21,7 @@
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": (
-  cell-key, is-discrete-column, is-missing, level-key, missing-last-key, parse-number,
+  axis-discrete, cell-key, is-missing, level-key, missing-last-key, parse-number,
 )
 
 #let cumulate-by-x(
@@ -31,6 +31,7 @@
   shift: none,
   drop-empty: false,
   levels: none,
+  discrete: none,
 ) = {
   let x-col = mapping.at("x", default: none)
   let y-col = mapping.at("y", default: none)
@@ -41,7 +42,7 @@
   let plan = group-plan(mapping)
   // A missing x is the missing level of a discrete x, which stacks as a bucket of
   // its own. On a continuous x it has no position, so its row is left alone.
-  let discrete-x = is-discrete-column(data, x-col)
+  let discrete-x = axis-discrete(discrete, "x", data, x-col)
   let entries = data
     .enumerate()
     .map(((i, row)) => (
