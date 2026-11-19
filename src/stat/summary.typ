@@ -5,7 +5,7 @@
 ///! `src/utils/summaries.typ`.
 
 #import "../utils/types.typ": (
-  is-discrete-column, is-missing, level-key, parse-number,
+  axis-discrete, is-missing, level-key, parse-number,
 )
 #import "../utils/summaries.typ": _apply-summary, check-weighted-fun
 #import "../utils/errors.typ": fail-enum
@@ -157,12 +157,11 @@
   )
 }
 
-#let _bucket-by(data, key-col) = {
+#let _bucket-by(data, key-col, discrete) = {
   let buckets = (:)
   let order = ()
   // A missing cell is the `NA` level of a discrete column. On a continuous one
   // it has no position, so its row is left out.
-  let discrete = is-discrete-column(data, key-col)
   for row in data {
     let v = row.at(key-col, default: none)
     if is-missing(v) and not discrete { continue }
@@ -235,7 +234,11 @@
       let col = mapping.at(aes, default: none)
       if col != none { xmap.insert(aes, col) }
     }
-    let bucketed = _bucket-by(data, y-col)
+    let bucketed = _bucket-by(
+      data,
+      y-col,
+      axis-discrete(params.at("discrete", default: none), "y", data, y-col),
+    )
     let out = ()
     for key in bucketed.order {
       let rows = bucketed.buckets.at(key)
@@ -274,7 +277,11 @@
     out-mapping.insert("xmin", "xmin")
     out-mapping.insert("xmax", "xmax")
   }
-  let bucketed = _bucket-by(data, x-col)
+  let bucketed = _bucket-by(
+    data,
+    x-col,
+    axis-discrete(params.at("discrete", default: none), "x", data, x-col),
+  )
   let out = ()
   for key in bucketed.order {
     let rows = bucketed.buckets.at(key)

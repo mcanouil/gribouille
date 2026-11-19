@@ -74,5 +74,6 @@
     mapping,
     slice,
     levels: params.at("levels", default: none),
+    discrete: params.at("discrete", default: none),
   )
 }
