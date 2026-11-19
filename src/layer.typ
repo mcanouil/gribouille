@@ -4,7 +4,7 @@
 ///! Centralising it here keeps the record's keys discoverable in one place
 ///! and stops drift between geoms when fields are added or renamed.
 
-#import "utils/errors.typ": assert-paint, fail, fail-enum
+#import "utils/errors.typ": assert-paint, assert-stroke-param, fail, fail-enum
 #import "utils/types.typ": split-stroke-shorthand
 
 // Panic unless a `colour` or `fill` constant is a paint; `auto` stays unset.
@@ -108,6 +108,7 @@
   for name in ("colour", "fill") {
     assert-paint-constant(scope, name, params.at(name, default: auto))
   }
+  assert-stroke-param(scope, params.at("stroke", default: auto))
   // Desugar a native `1.3pt + accent` stroke into the split `stroke`/`colour`
   // params the resolvers expect; other stroke forms pass through untouched.
   let params = if type(params.at("stroke", default: none)) == stroke {

@@ -236,6 +236,24 @@
   )
 }
 
+// Panic unless a geom's `stroke` param is `auto`, `none`, a length, a colour,
+// a native `stroke(...)`, or the dictionary that one collapses to. A string, or a ratio
+// that has no parent stroke to scale, would reach CeTZ as a raw error or be
+// ignored without a word.
+#let assert-stroke-param(scope, value) = {
+  let kind = type(value)
+  if value == auto or value == none or kind in (length, color, dictionary, stroke) {
+    return
+  }
+  fail-type(
+    scope,
+    "stroke",
+    value,
+    "a length (e.g., `1pt`), a colour, `auto`, or `none`",
+    hint: "Set the thickness with a length such as `1pt`, and the paint with `colour`.",
+  )
+}
+
 // Panic unless `value` is a length or ratio of at least 0, or `none` (inherit).
 #let assert-tick-length(scope, value) = _assert-extent(
   scope,

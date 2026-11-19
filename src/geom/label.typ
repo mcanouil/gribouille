@@ -190,13 +190,14 @@
   inherit-aes: true,
   ..args,
 ) = {
-  assert-position("geom-label", position)
-  assert-alpha("geom-label", alpha)
+  let scope = args.named().at("_scope", default: "geom-label")
+  assert-position(scope, position)
+  assert-alpha(scope, alpha)
   if segment-colour != auto {
-    assert-paint("geom-label", "segment-colour", segment-colour)
+    assert-paint(scope, "segment-colour", segment-colour)
   }
-  assert-anchor("geom-label", anchor)
-  assert-arrow("geom-label", arrow)
+  assert-anchor(scope, anchor)
+  assert-arrow(scope, arrow)
   make-layer(
     "label",
     mapping: mapping,
