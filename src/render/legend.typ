@@ -22,6 +22,7 @@
   _tick-length, _zero-margin-cm, resolve-geom-defaults, resolve-theme-palette,
 )
 #import "../guide/draw-key.typ": default-key-for, draw-glyph
+#import "../guide/key-constants.typ": key-constants
 #import "../guide/legend.typ": _normalise-position
 #import "../utils/label-geometry.typ": _rotated-extent
 #import "../guide/gctx.typ": gctx
@@ -1132,6 +1133,32 @@
 // for by building one.
 #let paints-bar(g) = has-part(g.stack.node, "bar")
 
+// The key constants of the group: those of the layers that contribute to a
+// member and whose key kind is the group's, in layer order. The first layer
+// that declares a value wins.
+#let _group-key-constants(spec, members, key-kind, theme) = {
+  let defaults = resolve-geom-defaults(
+    if theme == none { default-theme } else { theme },
+  )
+  let plot-mapping = spec.at("mapping", default: none)
+  let out = (:)
+  for layer in spec.at("layers", default: ()) {
+    if not members.any(m => m.contributors.contains(layer)) { continue }
+    let override = layer.at("key", default: auto)
+    let kind = if override != auto and override != none {
+      override.name
+    } else { default-key-for(layer.at("name", default: "")) }
+    if kind != key-kind { continue }
+    out = key-constants(
+      layer,
+      merge-mapping(layer, plot-mapping),
+      defaults,
+      kind,
+    ) + out
+  }
+  out
+}
+
 #let guides-for(
   spec,
   trained,
@@ -1168,6 +1195,7 @@
     let first = members.first()
     let aesthetics = members.map(c => c.aes)
     let key-kind = _key-kind-for-group(members)
+    let key-consts = _group-key-constants(spec, members, key-kind, theme)
 
     let typst-mark = members.any(m => m.at("typst-mark", default: false))
     let g = if first.t.type == "discrete" {
@@ -1189,6 +1217,7 @@
         nrow: first.nrow,
         ncolumn: first.ncolumn,
         key: key-kind,
+        key-consts: key-consts,
         key-diam-cm: _swatch-key-diam-cm(first.key-size, key-diam-cm),
         typst-mark: typst-mark,
       )
@@ -1257,6 +1286,7 @@
         ncolumn: first.ncolumn,
         labels: info.labels,
         key: key-kind,
+        key-consts: key-consts,
         key-diam-cm: _ladder-key-diam-cm(size-trained, breaks, key-kind),
         typst-mark: typst-mark,
         binned: info.binned,
@@ -1303,9 +1333,10 @@
 }
 
 // Compose an aesthetic bundle for one level/value across every member of the
-// merged group. Returns a dict consumable by `draw-glyph`.
-#let _bundle-for(value, aesthetics, ctx, ink) = {
-  let bundle = (:)
+// merged group. Returns a dict consumable by `draw-glyph`. `consts` is the
+// layer's key constants; a scale value overwrites the constant of its aesthetic.
+#let _bundle-for(value, aesthetics, ctx, ink, consts) = {
+  let bundle = consts
   for aes-name in aesthetics {
     let trained = ctx.trained.at(aes-name, default: none)
     if trained == none { continue }
@@ -1507,7 +1538,13 @@
       pt.at(0),
       pt.at(1),
       radius,
-      _bundle-for(value, guide.at("aesthetics", default: ()), ctx, ink),
+      _bundle-for(
+        value,
+        guide.at("aesthetics", default: ()),
+        ctx,
+        ink,
+        guide.at("key-consts", default: (:)),
+      ),
       ink: ink,
       font: glyph-font,
     ),
