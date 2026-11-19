@@ -139,13 +139,14 @@
   inherit-aes: true,
   ..args,
 ) = {
-  assert-position("geom-typst", position)
-  assert-alpha("geom-typst", alpha)
+  let scope = args.named().at("_scope", default: "geom-typst")
+  assert-position(scope, position)
+  assert-alpha(scope, alpha)
   if segment-colour != auto {
-    assert-paint("geom-typst", "segment-colour", segment-colour)
+    assert-paint(scope, "segment-colour", segment-colour)
   }
-  assert-anchor("geom-typst", anchor)
-  assert-arrow("geom-typst", arrow)
+  assert-anchor(scope, anchor)
+  assert-arrow(scope, arrow)
   make-layer(
     "typst",
     mapping: mapping,
