@@ -242,7 +242,11 @@
 // ignored without a word.
 #let assert-stroke-param(scope, value) = {
   let kind = type(value)
-  if value == auto or value == none or kind in (length, color, dictionary, stroke) {
+  if (
+    value == auto
+      or value == none
+      or kind in (length, color, dictionary, stroke)
+  ) {
     return
   }
   fail-type(

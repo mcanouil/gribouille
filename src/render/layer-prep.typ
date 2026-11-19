@@ -18,7 +18,7 @@
 #import "../utils/typst-markup.typ": is-typst-markup, typst
 #import "../data.typ": _mapping-ref
 #import "common.typ": _resolve-data, _strip-mapping-refs, _typst-marks-of
-#import "prestat.typ": _rewrite-factor-cols
+#import "prestat.typ": _rewrite-factor-cols, layer-discrete
 
 // `from-theme` resolves to a literal scalar that we write into
 // `layer.params.<channel>` so per-row resolvers honour it through their
@@ -67,7 +67,7 @@
 // pass first lets binning stats compute a shared partition over the full
 // data so groups end up on the same bin grid. Returns the stat output rows
 // and mapping.
-#let _stat-pass(resolved-stat, data, mapping, stripped) = {
+#let _stat-pass(resolved-stat, data, mapping, stripped, discrete) = {
   let stat-name = resolved-stat.name
   let resolved-params = setup-stat(
     stat-name,
@@ -75,6 +75,7 @@
     stripped,
     resolved-stat.params,
   )
+  resolved-params.insert("discrete", discrete)
   let gcols = group-cols(mapping)
   let group-list = partition-by-group(data, mapping)
   let combined = ()
@@ -194,6 +195,7 @@
       data,
       mapping,
       stripped,
+      layer-discrete(mapping, data, user-scales),
     )
     stat-data = pass.data
     stat-mapping = pass.mapping
@@ -224,6 +226,10 @@
   let position-params = if type(position-spec) == str { params } else {
     position-spec.at("params", default: (:))
   }
+  position-params.insert(
+    "discrete",
+    layer-discrete(stat-mapping, stat-data, user-scales),
+  )
   if position-name == "stack" or position-name == "fill" {
     let levels = _group-limits(stat-mapping, user-scales)
     if levels != none {
@@ -317,7 +323,13 @@
 // Run only the stat stage for a layer, mirroring `_prepare-layer`'s pre-stat
 // pipeline (from-theme resolution, stage stash, data resolution). Feeds the
 // `stat-override` fast path below; keep the two preambles in sync.
-#let _layer-stat(layer, plot-mapping, plot-data, theme: none) = {
+#let _layer-stat(
+  layer,
+  plot-mapping,
+  plot-data,
+  theme: none,
+  user-scales: (:),
+) = {
   let mapping = merge-mapping(layer, plot-mapping)
   if theme != none {
     let resolved = _apply-from-theme(layer, mapping, theme)
@@ -330,7 +342,13 @@
     layer.at("stat", default: "identity"),
     layer.at("params", default: (:)),
   )
-  _stat-pass(resolved-stat, data, mapping, _strip-mapping-refs(mapping))
+  _stat-pass(
+    resolved-stat,
+    data,
+    mapping,
+    _strip-mapping-refs(mapping),
+    layer-discrete(mapping, data, user-scales),
+  )
 }
 
 // Prepare a list of layers, running a non-identity stat once per unique
@@ -363,7 +381,13 @@
       )
       let hit = memo.find(e => e.key == key)
       if hit != none { override = hit.value } else {
-        override = _layer-stat(layer, plot-mapping, plot-data, theme: theme)
+        override = _layer-stat(
+          layer,
+          plot-mapping,
+          plot-data,
+          theme: theme,
+          user-scales: user-scales,
+        )
         memo.push((key: key, value: override))
       }
     }
