@@ -37,12 +37,16 @@
 #assert.ne(group-key(row-num, m-colour-factor), "_all")
 #assert.eq(group-key(row-num, m-colour-factor), "42")
 
-// --- group-key: a none cell keys as its own group ---
+// --- group-key: none and "" are one missing cell, apart from "none" ---
 
 #let row-none = (x: 1, y: 2, g: none)
 #assert.eq(group-key(row-none, m-colour-str), "\u{0}")
-#assert.ne(group-key(row-none, m-colour-str), group-key((x: 1, y: 2, g: ""), m-colour-str))
+#assert.eq(group-key(row-none, m-colour-str), group-key((x: 1, y: 2, g: ""), m-colour-str))
 #assert.ne(group-key(row-none, m-colour-str), group-key((x: 1, y: 2, g: "none"), m-colour-str))
+
+// Values ("a", none, "") form two groups.
+#let mixed = ((x: 1, y: 1, g: "a"), (x: 2, y: 2, g: none), (x: 3, y: 3, g: ""))
+#assert.eq(partition-by-group(mixed, m-colour-str).len(), 2)
 
 // --- group-key: explicit "group" aesthetic always included regardless of type ---
 
@@ -204,7 +208,7 @@
 #assert.eq(one.at(0).key, "_all")
 #assert.eq(one.at(0).data.map(r => r.x), (1, 2, 3, 4, 5))
 
-// --- bucket-by-col: first-appearance order, empty values dropped ---
+// --- bucket-by-col: first-appearance order, a missing value is its own bucket ---
 #let col-rows = (
   (v: "x", i: 0),
   (v: "y", i: 1),
@@ -212,8 +216,9 @@
   (v: "x", i: 3),
 )
 #let cols = bucket-by-col(col-rows, "v")
-#assert.eq(cols.len(), 2)
+#assert.eq(cols.len(), 3)
 #assert.eq(cols.at(0).map(r => r.i), (0, 3))
 #assert.eq(cols.at(1).map(r => r.i), (1,))
+#assert.eq(cols.at(2).map(r => r.i), (2,))
 
 Group tests passed.

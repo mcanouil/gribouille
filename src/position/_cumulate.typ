@@ -20,7 +20,9 @@
 
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
-#import "../utils/types.typ": cell-key, parse-number
+#import "../utils/types.typ": (
+  cell-key, is-discrete-column, is-missing, level-key, na-last-key, parse-number,
+)
 
 #let cumulate-by-x(
   data,
@@ -37,6 +39,9 @@
   // The plan is the mapping's, not the row's, so it is resolved once here
   // rather than rebuilt for every row.
   let plan = group-plan(mapping)
+  // A missing x is the `NA` level of a discrete x, which stacks as a bucket of
+  // its own. On a continuous x it has no position, so its row is left alone.
+  let discrete-x = is-discrete-column(data, x-col)
   let entries = data
     .enumerate()
     .map(((i, row)) => (
@@ -46,10 +51,10 @@
       x: row.at(x-col, default: none),
       y: parse-number(row.at(y-col, default: none)),
     ))
-    .filter(e => e.x != none and e.y != none)
+    .filter(e => e.y != none and (discrete-x or not is-missing(e.x)))
   let (keys: bucket-order, buckets: cells) = bucket-index(
     entries,
-    e => str(e.x),
+    e => level-key(e.x),
   )
   let buckets = (:)
   for (i, bk) in bucket-order.enumerate() {
@@ -61,7 +66,10 @@
   // after the first write, so the assignment does not clone the array, and
   // collecting the rewritten rows in a patch dict to map over instead measured
   // slower: 3.6 s against 3.1 s over 200000 rows in five buckets.
-  let rank = if levels == none { e => e.key } else {
+  // A missing group sorts after every real one, as its legend key does.
+  let rank = if levels == none {
+    e => na-last-key(e.key)
+  } else {
     let ranks = (:)
     for (i, level) in levels.order.enumerate() {
       let k = cell-key(level)

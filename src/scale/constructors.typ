@@ -112,7 +112,7 @@
 ///
 /// \@param args Named arguments forwarded to the bound scale.
 ///
-/// \@named-keys name limits oob labels expand palette
+/// \@named-keys name limits oob labels expand palette na-value na-translate
 ///
 /// \@param name Axis or legend title, as a string or content; `none` (default)
 ///   falls back to the mapped column name.
@@ -128,7 +128,19 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) takes the default of
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-cross"` for
+///   `shape` and `"loosely-dotted"` for `linetype`. Not for `x`/`y`.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@param expand Padding around the domain as a ratio (`5%`), a length
 ///   (`5pt`), a `relative`, or a `(lo, hi)` pair whose sides may each be
@@ -235,7 +247,7 @@
 ///
 /// \@param args Named arguments forwarded to the bound scale.
 ///
-/// \@named-keys values name limits oob labels
+/// \@named-keys values name limits oob labels na-value na-translate
 ///
 /// \@param values Array of output values in level order, recycled when shorter
 ///   than the number of levels: any Typst paint for `colour`/`fill`, numbers in
@@ -257,7 +269,20 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) takes the default of
+///   the aesthetic: 50 % grey for `colour`/`fill`, `"circle-cross"` for
+///   `shape`, `"loosely-dotted"` for `linetype`, and the geom default for
+///   `size`, `linewidth`, `stroke` and `alpha`. Not for `x`/`y`.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -738,7 +763,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys option name limits oob labels
+/// \@named-keys option name limits oob labels na-value na-translate
 ///
 /// \@param option Viridis variant: `"viridis"` (default), `"magma"`,
 ///   `"plasma"`, `"inferno"`, or `"cividis"`.
@@ -757,7 +782,17 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -891,7 +926,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys palette name limits oob labels
+/// \@named-keys palette name limits oob labels na-value na-translate
 ///
 /// \@param palette ColorBrewer set name resolved through \@brewer-palette, e.g.
 ///   `"Set1"` or `"Spectral"`; default `"Set1"`.
@@ -910,7 +945,17 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -939,7 +984,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys name limits oob labels
+/// \@named-keys name limits oob labels na-value na-translate
 ///
 /// \@param name Axis or legend title, as a string or content; `none` (default)
 ///   falls back to the mapped column name.
@@ -955,7 +1000,17 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -1151,7 +1206,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys start end name limits oob labels
+/// \@named-keys start end name limits oob labels na-value na-translate
 ///
 /// \@param start Lightness of the first grey, a number in `[0, 1]`; default
 ///   `0.2`.
@@ -1172,7 +1227,17 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///
@@ -1201,7 +1266,7 @@
 ///
 /// \@param args Named arguments forwarded to the colour/fill scale.
 ///
-/// \@named-keys hue chroma luminance name limits oob labels
+/// \@named-keys hue chroma luminance name limits oob labels na-value na-translate
 ///
 /// \@param hue `(start, end)` angle pair sweeping the HCL hue circle; default
 ///   `(15deg, 375deg)`.
@@ -1224,7 +1289,17 @@
 ///
 /// \@param labels Array of labels in level order, a function of the level
 ///   returning a string or content, or `auto` (default) to print the level
-///   itself.
+///   itself. The entry at the position of the `NA` level relabels it, and
+///   a function gets `none` for it.
+///
+/// \@param na-value Value that draws the `NA` level, which holds the rows
+///   whose column is `none` or empty. `none` (default) draws it in 50 % grey.
+///
+/// \@param na-translate Whether a missing cell becomes the trailing `NA`
+///   level (`true`, default), shown as a legend key or an axis tick. `false`
+///   drops the rows that hold a missing cell after the stats and positions
+///   ran, so proportions and stack totals still count them. `limits` cannot name `NA`. A
+///   facet variable has no scale and always gets a trailing `NA` panel.
 ///
 /// \@returns Deferred scale spec consumed by \@scales.
 ///

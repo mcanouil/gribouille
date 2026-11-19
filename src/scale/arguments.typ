@@ -10,8 +10,12 @@
 // `check-limits` and `check-breaks` read the built scale, because the rule for
 // `limits` and `breaks` depends on its type and its transform.
 
-#import "../utils/errors.typ": fail-enum, fail-range, fail-type
-#import "../utils/types.typ": check-number, is-native-numeric, parse-number
+#import "../utils/errors.typ": (
+  assert-linetype, assert-paint, fail-enum, fail-range, fail-type,
+)
+#import "../utils/types.typ": (
+  check-number, is-missing, is-native-numeric, parse-number,
+)
 #import "../utils/viridis.typ" as viridis-mod
 #import "../utils/palette.typ": brewer-palettes
 #import "expansion.typ": normalise-expansion
@@ -66,6 +70,34 @@
   }
 }
 
+// Check `na-value` against the aesthetic it draws: a colour for colour and
+// fill, a keyword string for shape and linetype, a number or length for the
+// rest. `none` leaves the aesthetic default in place.
+#let _check-na-value(scope, aesthetic, value) = {
+  if value == none { return }
+  if aesthetic in ("colour", "fill") {
+    assert-paint(scope, "na-value", value)
+  } else if aesthetic == "linetype" {
+    assert-linetype(
+      scope,
+      value,
+      name: "na-value",
+      hint: "Use a dash keyword such as `\"loosely-dotted\"`.",
+    )
+  } else if aesthetic == "shape" {
+    if type(value) != str {
+      fail-type(scope, "na-value", value, "a string")
+    }
+  } else if aesthetic == "alpha" {
+    if not is-native-numeric(value) {
+      fail-type(scope, "na-value", value, "a number between 0 and 1")
+    }
+    _check-in(scope, "na-value", value, 0, 1)
+  } else if type(value) != length {
+    fail-type(scope, "na-value", value, "a length")
+  }
+}
+
 // Check the named arguments of a stub of `family` bound to `aesthetic`. Each
 // check runs only when the user passed the argument, because every default
 // passes, except `values` and `colours`, which have no usable default.
@@ -76,6 +108,12 @@
   }
   if "transform" in named and named.transform not in _TRANSFORMS {
     fail-enum(scope, "transform", named.transform, _TRANSFORMS)
+  }
+  if "na-translate" in named and type(named.at("na-translate")) != bool {
+    fail-type(scope, "na-translate", named.at("na-translate"), "a bool")
+  }
+  if "na-value" in named {
+    _check-na-value(scope, aesthetic, named.at("na-value"))
   }
   if "n-breaks" in named {
     let n = named.at("n-breaks")
@@ -207,6 +245,17 @@
   // pre-pass could not censor against it, and a position and a level of the
   // same value would disagree.
   for level in limits {
+    if is-missing(level) {
+      fail-type(
+        scope,
+        "limits",
+        level,
+        "a level name as a string",
+        hint: "A missing value is not a level. Set `na-translate: false` to "
+          + "drop missing rows, or leave it on to show them as the last "
+          + "`NA` level.",
+      )
+    }
     if type(level) != str {
       fail-type(
         scope,

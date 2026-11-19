@@ -15,6 +15,7 @@
 #import "typst-markup.typ": eval-as-markup
 #import "late-binding.typ": is-late-binding
 #import "errors.typ": fail
+#import "types.typ": NA-KEY
 #import "colour-resolve.typ": (
   resolve-alpha, resolve-linewidth, resolve-size, resolve-stroke-colour,
   resolve-stroke-width,
@@ -150,12 +151,21 @@
   }
 }
 
+/// The text a discrete level shows: `"NA"` for the reserved missing-value
+/// level, the level itself otherwise.
+///
+/// \@internal
+/// \@param level A level of a trained discrete domain.
+/// \@returns The display text of the level.
+#let level-text(level) = if level == NA-KEY { "NA" } else { str(level) }
+
 /// Resolve a break-display label by combining the scale's `labels:`
 /// override (function or array) and a typst-mark eval pass.
 ///
 /// Resolution order:
 ///
-/// - When `labels` is a function: call `labels(value)`.
+/// - When `labels` is a function: call `labels(value)`. For the missing-value
+///   level the callback gets `none`, and a `none` answer keeps the `NA` text.
 /// - When `labels` is an array and `idx` is in range: index it.
 /// - Otherwise: use `fallback`.
 ///
@@ -178,7 +188,12 @@
 /// \@returns The resolved label, possibly evaluated as Typst markup.
 #let resolve-label(labels, value, idx, fallback, typst-mark: false) = {
   let txt = if type(labels) == function {
-    labels(value)
+    // A callback gets `none` for the missing-value level, as ggplot2 gives `NA`.
+    // A formatter that answers `none` for it keeps the `NA` text.
+    if value == NA-KEY {
+      let text = labels(none)
+      if text == none { fallback } else { text }
+    } else { labels(value) }
   } else if type(labels) == array and idx < labels.len() {
     labels.at(idx)
   } else { fallback }

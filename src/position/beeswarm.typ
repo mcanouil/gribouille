@@ -190,7 +190,9 @@
 // stack stays centred on the row.
 #let _center-offsets(n, spacing) = {
   range(n).map(k => {
-    let step = if calc.odd(n) { calc.ceil(k / 2) } else { calc.floor(k / 2) + 0.5 }
+    let step = if calc.odd(n) { calc.ceil(k / 2) } else {
+      calc.floor(k / 2) + 0.5
+    }
     let sign = if calc.odd(n) {
       if calc.odd(k) { 1 } else { -1 }
     } else if calc.even(k) {

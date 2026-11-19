@@ -5,11 +5,14 @@
 
 #import "../utils/summaries.typ": read-weight
 #import "../utils/aes-resolve.typ": stat-output-mapping
+#import "../utils/types.typ": NA-KEY, is-discrete-column, is-missing, level-key
 
 /// Count statistic: one output row per distinct x level with `y = count`.
 ///
-/// Empty strings and `none` x values are dropped. Output rows preserve the
-/// first-seen order of x levels.
+/// Missing x values (`none` or an empty string) are counted together as the
+/// trailing `NA` level, in a row whose x is `none`, which a discrete scale
+/// draws in its `NA` slot. Output rows preserve the first-seen order of x
+/// levels.
 ///
 /// \@category Stats
 /// \@subcategory Summaries
@@ -74,11 +77,13 @@
   } else { none }
   let counts = (:)
   let order = ()
+  // A missing cell is the `NA` level of a discrete axis. On a continuous axis
+  // it has no position, so its row is left out of the counts.
+  let x-discrete = is-discrete-column(data, x-col)
   for row in data {
-    let raw = row.at(x-col, default: none)
-    if raw == none { continue }
-    let key = str(raw)
-    if key == "" { continue }
+    let xv = row.at(x-col, default: none)
+    if is-missing(xv) and not x-discrete { continue }
+    let key = level-key(xv)
     if key not in counts { order.push(key) }
     counts.insert(
       key,
@@ -90,7 +95,7 @@
   // rather than clobbering any existing y column.
   let rows = order.map(k => {
     let r = (:)
-    r.insert(x-col, k)
+    r.insert(x-col, if k == NA-KEY { none } else { k })
     r.insert("_count", counts.at(k))
     r
   })

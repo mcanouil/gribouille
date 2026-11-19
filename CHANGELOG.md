@@ -4,8 +4,10 @@
 
 ### Changes
 
+- feat: Missing values on discrete scales are their own `NA` level, drawn with `na-value`, shown as a legend key, an axis tick or a facet panel, and removable with `na-translate: false`. The shape scale gains the `"circle-cross"` marker. (#404)
 - feat: Stack swarm points by count with `position-beeswarm(method: "center")`. (#402)
 - feat: `position-beeswarm(orientation:)` swarms along either axis. With `auto`, a discrete `y` axis swarms up and down, and `"y"` swarms points that share a constant or repeated `y`. (#401)
+- fix: Discrete shape, linetype and position mappings no longer fail on missing values. (#404)
 - fix: Custom legend labels stay with their keys when `guide-legend(reverse: true)` reverses them. (#400)
 - fix: A string `colour` or `fill` constant on a geom or `annotate()` fails with a clear message, where it used to raise a raw CeTZ error. Pass an `rgb(...)` value. (#398)
 - fix: `annotate()` treats `colour`, `fill`, `alpha`, `linewidth`, `linetype`, `shape` and `size` as constants, as ggplot2 does. They no longer train a scale or add a legend key. (#397)

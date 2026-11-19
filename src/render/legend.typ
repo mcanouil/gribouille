@@ -40,7 +40,7 @@
 #import "../scale/train.typ": mapping-display-name
 #import "../utils/typst-markup.typ": resolve-prose
 #import "../utils/margin.typ": length-to-cm, opposite-side
-#import "../utils/aes-resolve.typ": merge-mapping, resolve-label
+#import "../utils/aes-resolve.typ": level-text, merge-mapping, resolve-label
 #import "../utils/margin.typ": resolve-margin-side-cm
 
 // Aesthetic emission order. `x` and `y` train but never produce a guide; the
@@ -593,7 +593,7 @@
   guide.at("labels", default: auto),
   guide.levels.at(i),
   i,
-  guide.levels.at(i),
+  level-text(guide.levels.at(i)),
   typst-mark: guide.at("typst-mark", default: false),
 )
 
@@ -1176,7 +1176,7 @@
       if first.reverse {
         if type(labels) == array {
           let own = labels.slice(0, calc.min(labels.len(), levels.len()))
-          labels = (own + levels.slice(own.len())).rev()
+          labels = (own + levels.slice(own.len()).map(level-text)).rev()
         }
         levels = levels.rev()
       }

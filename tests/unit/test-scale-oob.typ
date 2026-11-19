@@ -400,3 +400,20 @@
 // the panic cannot be asserted here. It is pinned instead by
 // `tests/errors/scale-oob-strict.typ`, which requires the compile to fail and
 // the message to carry both its body and its hint.
+
+// `na-translate: false` drops the rows that hold a missing cell, but a layer
+// whose own data lacks the column has no missing cells, only no values.
+#{
+  let trained = (
+    fill: (
+      ..(_trained-discrete()),
+      spec: (aesthetic: "fill", type: "discrete", na-translate: false),
+    ),
+  )
+  let plans = oob-plans(trained)
+  let absent = _layer(((w: 1), (w: 2)))
+  let present = _layer(((v: "a"), (v: none), (v: ""), (v: "b")))
+  let out = filter-oob((absent, present), plans)
+  assert.eq(out.layers.at(0).data, ((w: 1), (w: 2)))
+  assert.eq(out.layers.at(1).data, ((v: "a"), (v: "b")))
+}

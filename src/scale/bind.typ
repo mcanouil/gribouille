@@ -73,7 +73,14 @@
   "breaks",
   "labels",
 )
-#let _POS-DISCRETE-KEYS = ("name", "limits", "oob", "labels", "expand")
+#let _POS-DISCRETE-KEYS = (
+  "name",
+  "limits",
+  "oob",
+  "labels",
+  "expand",
+  "na-translate",
+)
 #let _TEMPORAL-KEYS = (
   "name",
   "limits",
@@ -91,7 +98,15 @@
   "breaks",
   "labels",
 )
-#let _PALETTE-DISCRETE-KEYS = ("name", "palette", "limits", "oob", "labels")
+#let _PALETTE-DISCRETE-KEYS = (
+  "name",
+  "palette",
+  "limits",
+  "oob",
+  "labels",
+  "na-value",
+  "na-translate",
+)
 #let _PALETTE-BINNED-KEYS = (
   "n-breaks",
   "breaks",
@@ -101,9 +116,25 @@
   "oob",
   "labels",
 )
-#let _MANUAL-KEYS = ("values", "name", "limits", "oob", "labels")
+#let _MANUAL-KEYS = (
+  "values",
+  "name",
+  "limits",
+  "oob",
+  "labels",
+  "na-value",
+  "na-translate",
+)
 #let _IDENTITY-KEYS = ("name",)
-#let _VIRIDIS-D-KEYS = ("option", "name", "limits", "oob", "labels")
+#let _VIRIDIS-D-KEYS = (
+  "option",
+  "name",
+  "limits",
+  "oob",
+  "labels",
+  "na-value",
+  "na-translate",
+)
 #let _VIRIDIS-C-KEYS = ("option", "name", "limits", "oob", "breaks", "labels")
 #let _VIRIDIS-B-KEYS = (
   "option",
@@ -114,8 +145,23 @@
   "oob",
   "labels",
 )
-#let _BREWER-KEYS = ("palette", "name", "limits", "oob", "labels")
-#let _OKABE-ITO-KEYS = ("name", "limits", "oob", "labels")
+#let _BREWER-KEYS = (
+  "palette",
+  "name",
+  "limits",
+  "oob",
+  "labels",
+  "na-value",
+  "na-translate",
+)
+#let _OKABE-ITO-KEYS = (
+  "name",
+  "limits",
+  "oob",
+  "labels",
+  "na-value",
+  "na-translate",
+)
 #let _GRADIENT-KEYS = (
   "low",
   "high",
@@ -144,7 +190,16 @@
   "breaks",
   "labels",
 )
-#let _GREY-KEYS = ("start", "end", "name", "limits", "oob", "labels")
+#let _GREY-KEYS = (
+  "start",
+  "end",
+  "name",
+  "limits",
+  "oob",
+  "labels",
+  "na-value",
+  "na-translate",
+)
 #let _HUE-KEYS = (
   "hue",
   "chroma",
@@ -153,6 +208,8 @@
   "limits",
   "oob",
   "labels",
+  "na-value",
+  "na-translate",
 )
 #let _DISTILLER-KEYS = (
   "palette",

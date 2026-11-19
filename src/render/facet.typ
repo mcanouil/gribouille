@@ -9,6 +9,8 @@
 #import "../geom/label-draw.typ" as label-draw
 #import "../facet/labellers.typ" as labellers
 #import "../data.typ": group-by
+#import "../utils/aes-resolve.typ": level-text
+#import "../utils/types.typ": level-key
 #import "common.typ": _per-side, _resolve-data
 #import "prestat.typ": _raw-levels-for
 #import "layer-prep.typ": prepare-layers
@@ -133,7 +135,12 @@
 #let _strip-texts(labeller, var, levels, count-of) = {
   levels
     .enumerate()
-    .map(((i, lv)) => labellers.format(labeller, var, lv, count: count-of(i)))
+    .map(((i, lv)) => labellers.format(
+      labeller,
+      var,
+      level-text(lv),
+      count: count-of(i),
+    ))
 }
 
 // cm extent of a strip band sized to the tallest label, floored at `base`.
@@ -197,11 +204,10 @@
 // Build a (row-key-fn, panel-key-fn) pair for a grid facet spec, specialised
 // on which of `rows` / `cols` is set. The row-key-fn is invoked once per data
 // row inside `group-by` and must avoid per-row allocation. `none` values are
-// coerced to "" so rows with missing facet variables drop out (panel levels
-// from `_raw-levels-for` exclude `none`).
+// keyed as the `NA` level, which `_raw-levels-for` appends as the last panel.
 #let _facet-cell-str(row, col) = {
-  let v = row.at(col, default: none)
-  if v == none { "" } else { str(v) }
+  let v = row.at(col, default: auto)
+  if v == auto { "" } else { level-key(v) }
 }
 
 #let _grid-facet-keyers(spec) = {

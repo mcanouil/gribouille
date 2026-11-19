@@ -6,7 +6,7 @@
 // type.
 
 #import "../utils/bucket.typ": bucket-index
-#import "../utils/types.typ": cell-key, is-native-numeric
+#import "../utils/types.typ": is-native-numeric, level-key
 #import "../scale/train.typ": mapping-ref-col, mapping-ref-type
 #import "../utils/late-binding.typ": after-scale-source
 
@@ -78,10 +78,10 @@
 #let plan-key(plan, row) = {
   let keys = ()
   for part in plan {
-    // A missing cell keys as a `none` cell does.
+    // `none` and `""` key alike, as one missing cell.
     let v = row.at(part.col, default: none)
     if part.by-value and is-native-numeric(v) { continue }
-    keys.push(cell-key(v))
+    keys.push(level-key(v))
   }
   if keys.len() == 0 { "_all" } else { keys.join("\u{1}") }
 }
@@ -134,7 +134,9 @@
 }
 
 /// Bucket rows by the string form of one column's value, in first-appearance
-/// order, dropping rows whose value is empty.
+/// order. A missing value (`none` or `""`) forms a bucket of its own, keyed as
+/// the `NA` level, so the value of its first row is `none` or `""`; map it
+/// through the discrete scale to reach the `NA` level.
 ///
 /// Shared by the per-level stats and geoms (boxplot, ydensity,
 /// density-ridges) that reduce each distinct value of a discrete positional
@@ -146,9 +148,9 @@
 /// \@returns Array of row-dictionary arrays, one bucket per distinct value, in first-appearance order.
 /// \@internal
 #let bucket-by-col(data, col) = {
+  // A missing cell forms its own bucket, keyed as the `NA` level.
   bucket-index(data, row => {
-    let key = str(row.at(col, default: ""))
-    if key == "" { none } else { key }
+    level-key(row.at(col, default: none))
   }).buckets
 }
 

@@ -40,7 +40,7 @@
 #assert.eq(r-order.data.at(1).at("v"), "a")
 #assert.eq(r-order.data.at(2).at("v"), "c")
 
-// --- stat-count: none and empty-string values are skipped ---
+// --- stat-count: none and empty-string values count as one NA bucket ---
 
 #let df-nones = (
   (v: "a"),
@@ -49,8 +49,10 @@
   (v: "a"),
 )
 #let r-nones = apply-stat("count", df-nones, (x: "v"), (:))
-#assert.eq(r-nones.data.len(), 1)
+#assert.eq(r-nones.data.len(), 2)
 #assert.eq(r-nones.data.at(0).at("_count"), 2)
+#assert.eq(r-nones.data.at(1).at("v"), none)
+#assert.eq(r-nones.data.at(1).at("_count"), 2)
 
 // --- stat-bin: preserves grouping aesthetics in output mapping ---
 //
@@ -121,3 +123,32 @@
 #assert.eq(r-sb.mapping.fill, "g")
 
 Stat tests passed.
+
+// --- stat-sum: none and "" are one missing cell, written back as none ---
+#let r-sum = apply-stat(
+  "sum",
+  ((a: "x", b: "y"), (a: none, b: "y"), (a: "", b: "y")),
+  (x: "a", y: "b"),
+  (:),
+)
+#assert.eq(r-sum.data.len(), 2)
+#assert.eq(r-sum.data.map(r => r.x), ("x", none))
+
+// A missing cell on a continuous axis is left out of the counts.
+#let r-sum-num = apply-stat(
+  "sum",
+  ((a: 1, b: 2), (a: none, b: 2), (a: 1, b: 2)),
+  (x: "a", y: "b"),
+  (:),
+)
+#assert.eq(r-sum-num.data.len(), 1)
+#assert.eq(r-sum-num.data.at(0).at("_prop"), 1.0)
+
+// --- stat-summary: a missing x on a continuous axis is left out ---
+#let r-summary = apply-stat(
+  "summary",
+  ((a: 1, b: 2), (a: none, b: 50), (a: 1, b: 4)),
+  (x: "a", y: "b"),
+  (:),
+)
+#assert.eq(r-summary.data.len(), 1)

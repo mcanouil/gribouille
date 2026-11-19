@@ -1,5 +1,7 @@
 #import "palette.typ": default-linetypes, palette-at, spec-palette
-#import "level-resolve.typ": discrete-index, resolve-binned
+#import "level-resolve.typ": (
+  discrete-index, is-na-index, na-value-of, resolve-binned,
+)
 #import "late-binding.typ": after-scale-source, apply-after-scale
 
 /// Resolve a per-row linetype dash keyword.
@@ -41,7 +43,9 @@
     } else {
       let palette = spec-palette(linetype-trained, default-linetypes)
       let idx = discrete-index(linetype-trained, sample)
-      if idx == none { "solid" } else { palette-at(palette, idx) }
+      if idx == none { "solid" } else if is-na-index(linetype-trained, idx) {
+        na-value-of(linetype-trained, "linetype", "solid")
+      } else { palette-at(palette, idx) }
     }
   }
   apply-after-scale(scaled, spec, ctx, sample-row)

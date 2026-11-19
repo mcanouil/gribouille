@@ -1,8 +1,9 @@
 #import "./level-resolve.typ": (
-  continuous-numeric, discrete-index, discrete-numeric, spec-range,
+  continuous-numeric, discrete-index, discrete-numeric, has-na-level,
+  is-na-index, na-value-of, spec-range,
 )
 #import "./palette.typ": spec-attr, spec-palette
-#import "./types.typ": parse-number
+#import "./types.typ": is-missing, parse-number
 #import "./late-binding.typ": after-scale-source, apply-after-scale
 #import "../theme/theme.typ": resolve-geom-defaults, resolve-geom-linewidth
 
@@ -100,7 +101,9 @@
   let trained = ctx.trained.at("alpha", default: none)
   let scaled = if col == none or trained == none { fallback } else {
     let raw = sample-row.at(col, default: none)
-    if raw == none { fallback } else if trained.type == "identity" {
+    if is-missing(raw) and not has-na-level(trained) { fallback } else if (
+      trained.type == "identity"
+    ) {
       let v = parse-number(raw)
       if v == none { fallback } else { _clamp(v, 0, 1) }
     } else {
@@ -112,7 +115,9 @@
         let pal = spec-palette(trained, none)
         if pal != none and pal.len() > 0 {
           let idx = discrete-index(trained, raw)
-          if idx == none { fallback } else { pal.at(calc.rem(idx, pal.len())) }
+          if idx == none { fallback } else if is-na-index(trained, idx) {
+            na-value-of(trained, "alpha", fallback)
+          } else { pal.at(calc.rem(idx, pal.len())) }
         } else { discrete-numeric(trained, raw, range) }
       }
       if resolved == none { fallback } else { _clamp(resolved, 0, 1) }
@@ -153,7 +158,7 @@
   let trained = ctx.trained.at(aesthetic, default: none)
   if col == none or trained == none { return fallback }
   let raw = sample-row.at(col, default: none)
-  if raw == none { return fallback }
+  if is-missing(raw) and not has-na-level(trained) { return fallback }
   if trained.type == "identity" {
     if type(raw) == length { return raw }
     let v = parse-number(raw)
@@ -172,6 +177,9 @@
     if pal != none and pal.len() > 0 {
       let idx = discrete-index(trained, raw)
       if idx == none { return fallback }
+      if is-na-index(trained, idx) {
+        return na-value-of(trained, aesthetic, fallback)
+      }
       pal.at(calc.rem(idx, pal.len()))
     } else {
       discrete-numeric(trained, raw, range)

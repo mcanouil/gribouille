@@ -21,6 +21,21 @@
     cetz.draw.circle((cx, cy), radius: size, fill: paint, stroke: stroke-spec)
     return
   }
+  if kind == "circle-cross" {
+    // A circle with the two diagonals of an x inside, ending at 0.7 of the
+    // radius. The diagonals use the stroke paint. With no stroke (a legend key
+    // that carries one paint), the body is an outline in that paint, so the
+    // cross stays visible instead of vanishing into a solid disc.
+    let s = if stroke-spec == none {
+      (paint: paint, thickness: 0.8pt)
+    } else { stroke-spec }
+    let body = if stroke-spec == none { none } else { paint }
+    cetz.draw.circle((cx, cy), radius: size, fill: body, stroke: s)
+    let d = size-to-units(size) * 0.7 / calc.sqrt(2)
+    cetz.draw.line((cx - d, cy - d), (cx + d, cy + d), stroke: s)
+    cetz.draw.line((cx - d, cy + d), (cx + d, cy - d), stroke: s)
+    return
+  }
   let r = size-to-units(size)
   if kind == "square" {
     cetz.draw.rect(

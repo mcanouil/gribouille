@@ -7,7 +7,9 @@
 // Mapping turns a trained domain plus a target range into a scalar position.
 
 #import "../data.typ": _normalise-data, column
-#import "../utils/types.typ": infer-column-type, parse-number
+#import "../utils/types.typ": (
+  NA-KEY, infer-column-type, is-missing, level-key, parse-number,
+)
 #import "../utils/typst-markup.typ": is-typst-markup
 #import "../utils/errors.typ": fail, fail-type
 #import "../utils/late-binding.typ": (
@@ -238,7 +240,11 @@
   out
 }
 
+// Returns `(levels, missing)`: the data levels, alphabetic, and whether any
+// cell is missing (`none` or `""`), which `_train-entry` turns into the
+// trailing `NA` level.
 #let _discrete-domain-from-cache(cols) = {
+  let missing = false
   let seen = ()
   let seen-set = (:)
   for col in cols {
@@ -249,7 +255,11 @@
     let recorded = col.at("levels", default: none)
     let source = if recorded != none { recorded } else { col.values }
     for v in source {
-      if v == none or v == "" { continue }
+      // A recorded `NA-KEY` is the missing-cell mark of a rewritten column.
+      if is-missing(v) or v == NA-KEY {
+        if col.at("present", default: true) { missing = true }
+        continue
+      }
       let s = str(v)
       if seen-set.at(s, default: false) { continue }
       seen-set.insert(s, true)
@@ -258,7 +268,7 @@
   }
   // Alphabetic so palette index, geom draw order, and legend agree.
   // User `limits` override in `_train-entry`.
-  seen.sorted()
+  (levels: seen.sorted(), missing: missing)
 }
 
 // Build a `(level: index)` dict from a discrete domain. O(1) level lookup
@@ -367,6 +377,9 @@
       entry.cols.push((
         name: col-name,
         values: column(layer-data, col-name),
+        // A layer whose own data lacks the column has no missing cells, only
+        // no values.
+        present: layer-data.len() > 0 and col-name in layer-data.first(),
         forced-type: _resolve-forced-type(train-ref, layer-data, col-name),
         levels: layer-factor-levels.at(col-name, default: none),
       ))
@@ -397,6 +410,7 @@
   }
   let integer = false
   let unusable = false
+  let missing = false
   let domain = if scale-type == "identity" {
     ()
   } else if scale-type == "continuous" {
@@ -405,7 +419,9 @@
     unusable = scanned.unusable
     scanned.domain
   } else {
-    _discrete-domain-from-cache(cols)
+    let scanned = _discrete-domain-from-cache(cols)
+    missing = scanned.missing
+    scanned.levels
   }
   // Track which sides the user pinned with an explicit (non-`auto`) limit.
   // Feature 5 (break-driven expansion) only widens sides left unpinned, and
@@ -574,6 +590,17 @@
       domain = (lo, hi)
     }
   }
+  // A missing cell is its own level, last, unless the scale drops it. `limits`
+  // never name it (`check-limits`), so it follows the data levels or the limits.
+  // A scale with no level of its own stays empty, so a column of nothing but
+  // missing cells still draws no guide.
+  let na-level = (
+    scale-type == "discrete"
+      and missing
+      and domain.len() > 0
+      and (user-scale == none or user-scale.at("na-translate", default: true))
+  )
+  if na-level { domain.push(NA-KEY) }
   let level-index = if scale-type == "discrete" {
     _level-index(domain)
   } else { none }
@@ -601,6 +628,7 @@
     integer: integer,
     unusable: unusable,
   )
+  if scale-type == "discrete" { entry.insert("na-level", na-level) }
   if user-scale != none and user-scale.at("temporal", default: none) != none {
     entry.insert("temporal", user-scale.temporal)
     entry.insert("date-format", user-scale.at("date-format", default: ""))
@@ -723,10 +751,7 @@
 ) = {
   let n = domain.len()
   if n == 0 { return none }
-  // Mirror the continuous branch of `map-position`, which yields `none` for a
-  // value it cannot read, rather than failing inside `str`.
-  if value == none { return none }
-  let s = str(value)
+  let s = level-key(value)
   let lookup = if level-index == none { _level-index(domain) } else {
     level-index
   }
@@ -763,9 +788,8 @@
 // matches how `map-discrete` reads a bare number, so callers can offset the
 // result and feed it straight back through `map-position`.
 #let level-position(trained, value) = {
-  if value == none { return none }
   if type(value) == int or type(value) == float { return float(value) }
-  let idx = level-lookup(trained).at(str(value), default: none)
+  let idx = level-lookup(trained).at(level-key(value), default: none)
   if idx == none { none } else { idx + 1 }
 }
 

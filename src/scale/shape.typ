@@ -2,7 +2,7 @@
 ///!
 ///! Maps discrete levels onto marker-shape keywords consumed by geom-point
 ///! (`"circle"`, `"square"`, `"triangle"`, `"diamond"`, `"cross"`, `"x"`,
-///! `"star"`, `"triangle-down"`). Any value outside this keyword set renders
+///! `"star"`, `"triangle-down"`, `"circle-cross"`). Any value outside this set renders
 ///! as a literal glyph. The public `scale-*` constructors live in
 ///! constructors.typ and reach these builders through scale/bind.typ.
 
@@ -14,6 +14,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: "shape",
@@ -23,6 +25,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _shape-manual(
@@ -31,6 +35,8 @@
   limits: none,
   oob: "drop",
   labels: auto,
+  na-value: none,
+  na-translate: true,
 ) = (
   kind: "scale",
   aesthetic: "shape",
@@ -40,6 +46,8 @@
   limits: limits,
   oob: oob,
   labels: labels,
+  na-value: na-value,
+  na-translate: na-translate,
 )
 
 #let _shape-identity(name: none) = (
