@@ -1,8 +1,8 @@
-// A numeric column forced discrete keeps its missing cells as the NA level
+// A numeric column forced discrete keeps its missing cells as the missing level
 // through `stat-count`.
 //
-// The x axis has ticks 1, 2 and NA, and the bar above NA counts the two
-// missing cells. Before, the NA level had no bar.
+// The x axis has ticks 1, 2 and (missing), and the bar above it counts the two
+// missing cells. Before, the missing level had no bar.
 
 #import "../../lib.typ": *
 
