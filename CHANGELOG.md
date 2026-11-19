@@ -4,10 +4,10 @@
 
 ### Changes
 
-- feat: Missing values on discrete scales are their own `NA` level, drawn with `na-value`, shown as a legend key, an axis tick or a facet panel, and removable with `na-translate: false`. The shape scale gains the `"circle-cross"` marker. (#404)
+- feat: Missing values on discrete scales are their own missing level, labelled `(missing)` and drawn with `missing-value`, shown as a legend key, an axis tick or a facet panel, and removable with `missing-translate: false`. The shape scale gains the `"circle-cross"` marker. (#404)
 - feat: Stack swarm points by count with `position-beeswarm(method: "center")`. (#402)
 - feat: `position-beeswarm(orientation:)` swarms along either axis. With `auto`, a discrete `y` axis swarms up and down, and `"y"` swarms points that share a constant or repeated `y`. (#401)
-- fix: `stat-count()`, `stat-sum()`, `stat-summary()` and the stacking positions keep missing cells as the `NA` level when the layer treats the axis as discrete, so a numeric column forced discrete with `as-factor()` shows its `NA` bar. (#407)
+- fix: `stat-count()`, `stat-sum()`, `stat-summary()` and the stacking positions keep missing cells as the missing level when the layer treats the axis as discrete, so a numeric column forced discrete with `as-factor()` shows its `(missing)` bar. (#407)
 - fix: A string or ratio `stroke` on a geom fails with a clear message, where it was ignored or raised a raw CeTZ error. `annotate()` reports its own name for a bad `segment-colour`. (#406)
 - fix: Legend keys draw like the mark of their layer: its shape, size, fill and outline, an `after-scale` or `stage` outline, and the solid point of `geom-pointrange()`. Point keys use the default size of the mark, which makes them smaller than before. (#405)
 - fix: Discrete shape, linetype and position mappings no longer fail on missing values. (#404)

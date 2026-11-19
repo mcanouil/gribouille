@@ -79,7 +79,7 @@
   "oob",
   "labels",
   "expand",
-  "na-translate",
+  "missing-translate",
 )
 #let _TEMPORAL-KEYS = (
   "name",
@@ -104,8 +104,8 @@
   "limits",
   "oob",
   "labels",
-  "na-value",
-  "na-translate",
+  "missing-value",
+  "missing-translate",
 )
 #let _PALETTE-BINNED-KEYS = (
   "n-breaks",
@@ -122,8 +122,8 @@
   "limits",
   "oob",
   "labels",
-  "na-value",
-  "na-translate",
+  "missing-value",
+  "missing-translate",
 )
 #let _IDENTITY-KEYS = ("name",)
 #let _VIRIDIS-D-KEYS = (
@@ -132,8 +132,8 @@
   "limits",
   "oob",
   "labels",
-  "na-value",
-  "na-translate",
+  "missing-value",
+  "missing-translate",
 )
 #let _VIRIDIS-C-KEYS = ("option", "name", "limits", "oob", "breaks", "labels")
 #let _VIRIDIS-B-KEYS = (
@@ -151,16 +151,16 @@
   "limits",
   "oob",
   "labels",
-  "na-value",
-  "na-translate",
+  "missing-value",
+  "missing-translate",
 )
 #let _OKABE-ITO-KEYS = (
   "name",
   "limits",
   "oob",
   "labels",
-  "na-value",
-  "na-translate",
+  "missing-value",
+  "missing-translate",
 )
 #let _GRADIENT-KEYS = (
   "low",
@@ -197,8 +197,8 @@
   "limits",
   "oob",
   "labels",
-  "na-value",
-  "na-translate",
+  "missing-value",
+  "missing-translate",
 )
 #let _HUE-KEYS = (
   "hue",
@@ -208,8 +208,8 @@
   "limits",
   "oob",
   "labels",
-  "na-value",
-  "na-translate",
+  "missing-value",
+  "missing-translate",
 )
 #let _DISTILLER-KEYS = (
   "palette",

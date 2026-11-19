@@ -204,7 +204,7 @@
 // Build a (row-key-fn, panel-key-fn) pair for a grid facet spec, specialised
 // on which of `rows` / `cols` is set. The row-key-fn is invoked once per data
 // row inside `group-by` and must avoid per-row allocation. `none` values are
-// keyed as the `NA` level, which `_raw-levels-for` appends as the last panel.
+// keyed as the missing level, which `_raw-levels-for` appends as the last panel.
 #let _facet-cell-str(row, col) = {
   let v = row.at(col, default: auto)
   if v == auto { "" } else { level-key(v) }

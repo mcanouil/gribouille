@@ -1,7 +1,7 @@
-// A missing value on a manual size scale with no `na-value` draws at the geom
+// A missing value on a manual size scale with no `missing-value` draws at the geom
 // default size, and its legend key does too.
 //
-// The two named levels take the sizes of the scale. The NA mark and the NA
+// The two named levels take the sizes of the scale. The missing mark and the missing
 // key have the same size, the point default.
 
 #import "../../lib.typ": *

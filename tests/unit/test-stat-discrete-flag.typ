@@ -1,5 +1,5 @@
 // A layer decides once whether an axis is discrete, and the stats follow it.
-// A missing cell is an `NA` level on a discrete axis, whatever the cells of
+// A missing cell is the missing level on a discrete axis, whatever the cells of
 // one group infer.
 
 #import "../../src/render/prestat.typ": layer-discrete

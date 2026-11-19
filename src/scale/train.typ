@@ -8,7 +8,7 @@
 
 #import "../data.typ": _normalise-data, column
 #import "../utils/types.typ": (
-  NA-KEY, infer-column-type, is-missing, level-key, parse-number,
+  MISSING-KEY, infer-column-type, is-missing, level-key, parse-number,
 )
 #import "../utils/typst-markup.typ": is-typst-markup
 #import "../utils/errors.typ": fail, fail-type
@@ -242,7 +242,7 @@
 
 // Returns `(levels, missing)`: the data levels, alphabetic, and whether any
 // cell is missing (`none` or `""`), which `_train-entry` turns into the
-// trailing `NA` level.
+// trailing missing level.
 #let _discrete-domain-from-cache(cols) = {
   let missing = false
   let seen = ()
@@ -255,8 +255,8 @@
     let recorded = col.at("levels", default: none)
     let source = if recorded != none { recorded } else { col.values }
     for v in source {
-      // A recorded `NA-KEY` is the missing-cell mark of a rewritten column.
-      if is-missing(v) or v == NA-KEY {
+      // A recorded `MISSING-KEY` is the missing-cell mark of a rewritten column.
+      if is-missing(v) or v == MISSING-KEY {
         if col.at("present", default: true) { missing = true }
         continue
       }
@@ -594,13 +594,13 @@
   // never name it (`check-limits`), so it follows the data levels or the limits.
   // A scale with no level of its own stays empty, so a column of nothing but
   // missing cells still draws no guide.
-  let na-level = (
+  let missing-level = (
     scale-type == "discrete"
       and missing
       and domain.len() > 0
-      and (user-scale == none or user-scale.at("na-translate", default: true))
+      and (user-scale == none or user-scale.at("missing-translate", default: true))
   )
-  if na-level { domain.push(NA-KEY) }
+  if missing-level { domain.push(MISSING-KEY) }
   let level-index = if scale-type == "discrete" {
     _level-index(domain)
   } else { none }
@@ -628,7 +628,7 @@
     integer: integer,
     unusable: unusable,
   )
-  if scale-type == "discrete" { entry.insert("na-level", na-level) }
+  if scale-type == "discrete" { entry.insert("missing-level", missing-level) }
   if user-scale != none and user-scale.at("temporal", default: none) != none {
     entry.insert("temporal", user-scale.temporal)
     entry.insert("date-format", user-scale.at("date-format", default: ""))

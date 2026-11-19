@@ -160,7 +160,7 @@
 #let _bucket-by(data, key-col, discrete) = {
   let buckets = (:)
   let order = ()
-  // A missing cell is the `NA` level of a discrete column. On a continuous one
+  // A missing cell is the missing level of a discrete column. On a continuous one
   // it has no position, so its row is left out.
   for row in data {
     let v = row.at(key-col, default: none)

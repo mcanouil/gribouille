@@ -21,7 +21,7 @@
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": (
-  axis-discrete, cell-key, is-missing, level-key, na-last-key, parse-number,
+  axis-discrete, cell-key, is-missing, level-key, missing-last-key, parse-number,
 )
 
 #let cumulate-by-x(
@@ -40,7 +40,7 @@
   // The plan is the mapping's, not the row's, so it is resolved once here
   // rather than rebuilt for every row.
   let plan = group-plan(mapping)
-  // A missing x is the `NA` level of a discrete x, which stacks as a bucket of
+  // A missing x is the missing level of a discrete x, which stacks as a bucket of
   // its own. On a continuous x it has no position, so its row is left alone.
   let discrete-x = axis-discrete(discrete, "x", data, x-col)
   let entries = data
@@ -69,7 +69,7 @@
   // slower: 3.6 s against 3.1 s over 200000 rows in five buckets.
   // A missing group sorts after every real one, as its legend key does.
   let rank = if levels == none {
-    e => na-last-key(e.key)
+    e => missing-last-key(e.key)
   } else {
     let ranks = (:)
     for (i, level) in levels.order.enumerate() {

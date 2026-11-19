@@ -1,11 +1,11 @@
 // A discrete scale fails when its `limits` carry `none`: a missing value is
-// not a level, and the hint points to `na-translate`.
+// not a level, and the hint points to `missing-translate`.
 //
 // `tools/check-errors.sh` compiles this file, requires the compile to fail, and
 // requires the `error:` line to carry every phrase below.
 //
 // expect: limits
-// expect: na-translate
+// expect: missing-translate
 
 #import "/lib.typ": aes, geom-point, plot, scale-discrete, scales
 
