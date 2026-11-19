@@ -1,10 +1,10 @@
-// The NA level reads `NA` in guides, on axes and in facet strips, and a user
+// The missing level reads `(missing)` in guides, on axes and in facet strips, and a user
 // `labels` array or function can relabel it. Grouping keys a missing cell as
-// its own bucket, and the oob pre-pass drops it only under `na-translate:
+// its own bucket, and the oob pre-pass drops it only under `missing-translate:
 // false`.
 
 #import "../../src/utils/aes-resolve.typ": level-text, resolve-label
-#import "../../src/utils/types.typ": NA-KEY
+#import "../../src/utils/types.typ": MISSING-KEY
 #import "../../src/utils/group.typ": bucket-by-col
 #import "../../src/render/legend.typ": _swatch-label, guides-for
 #import "../../src/render/axis-format.typ": _tick-label-fallback
@@ -15,17 +15,18 @@
 #import "../../src/scales.typ": scales
 #import "../../src/aes.typ": aes
 
-#assert.eq(level-text(NA-KEY), "NA")
+#assert.eq(level-text(MISSING-KEY), "(missing)")
 #assert.eq(level-text("f"), "f")
-#assert.eq(_tick-label-fallback((type: "discrete"), NA-KEY), "NA")
+#assert.eq(level-text("(missing)"), "(missing)")
+#assert.eq(_tick-label-fallback((type: "discrete"), MISSING-KEY), "(missing)")
 
-// A function of the level gets `none` for the NA level.
+// A function of the level gets `none` for the missing level.
 #assert.eq(
-  resolve-label(l => if l == none { "missing" } else { l }, NA-KEY, 2, "NA"),
+  resolve-label(l => if l == none { "missing" } else { l }, MISSING-KEY, 2, "(missing)"),
   "missing",
 )
-#assert.eq(resolve-label(("F", "M", "?"), NA-KEY, 2, "NA"), "?")
-#assert.eq(resolve-label(("F", "M"), NA-KEY, 2, "NA"), "NA")
+#assert.eq(resolve-label(("F", "M", "?"), MISSING-KEY, 2, "(missing)"), "?")
+#assert.eq(resolve-label(("F", "M"), MISSING-KEY, 2, "(missing)"), "(missing)")
 
 #let layer-point = (
   name: "point",
@@ -33,7 +34,7 @@
   inherit-aes: true,
   params: (colour: auto, fill: auto, shape: auto),
 )
-#let na-scale = (type: "discrete", domain: ("f", "m", NA-KEY), na-level: true)
+#let na-scale = (type: "discrete", domain: ("f", "m", MISSING-KEY), missing-level: true)
 #let swatch(labels: auto, reverse: false) = {
   let scale = (..na-scale, spec: (labels: labels))
   guides-for(
@@ -50,12 +51,12 @@
 #let texts(g) = range(g.levels.len()).map(i => _swatch-label(g, i))
 
 #context {
-  // Colour and fill on one column with NA still merge into one guide.
+  // Colour and fill on one column with a missing cell still merge into one guide.
   let g = swatch()
   assert.eq(g.len(), 1)
   assert.eq(g.at(0).aesthetics, ("colour", "fill"))
-  assert.eq(g.at(0).levels, ("f", "m", NA-KEY))
-  assert.eq(texts(g.at(0)), ("f", "m", "NA"))
+  assert.eq(g.at(0).levels, ("f", "m", MISSING-KEY))
+  assert.eq(texts(g.at(0)), ("f", "m", "(missing)"))
 
   let g = swatch(labels: ("F", "M", "Unknown")).at(0)
   assert.eq(texts(g), ("F", "M", "Unknown"))
@@ -63,12 +64,12 @@
   let g = swatch(labels: l => if l == none { "?" } else { upper(l) }).at(0)
   assert.eq(texts(g), ("F", "M", "?"))
 
-  // `reverse: true` keeps each label with its level, NA included.
+  // `reverse: true` keeps each label with its level, missing included.
   let g = swatch(labels: ("F", "M", "Unknown"), reverse: true).at(0)
-  assert.eq(g.levels, (NA-KEY, "m", "f"))
+  assert.eq(g.levels, (MISSING-KEY, "m", "f"))
   assert.eq(texts(g), ("Unknown", "M", "F"))
   let g = swatch(labels: ("F",), reverse: true).at(0)
-  assert.eq(texts(g), ("NA", "m", "F"))
+  assert.eq(texts(g), ("(missing)", "m", "F"))
 }
 
 // A missing x forms its own bucket and does not fail.
@@ -76,16 +77,16 @@
 #assert.eq(bucket-by-col(rows, "x").len(), 2)
 #assert.eq(bucket-by-col(rows, "x").at(1).map(r => r.y), (2, 4))
 
-// Facet panels get a trailing NA panel.
+// Facet panels get a trailing missing panel.
 #assert.eq(
   _raw-levels-for(
     (layers: ((data: none),), data: ((g: "b"), (g: none), (g: "a"))),
     "g",
   ),
-  ("b", "a", NA-KEY),
+  ("b", "a", MISSING-KEY),
 )
 
-// The oob pre-pass keeps a missing cell, or drops it under `na-translate:
+// The oob pre-pass keeps a missing cell, or drops it under `missing-translate:
 // false`.
 #let data = ((x: 1, y: 1, g: "a"), (x: 2, y: 2, g: none), (x: 3, y: 3, g: "b"))
 #let mapping = aes(x: "x", y: "y", colour: "g")
@@ -101,7 +102,7 @@
   let out = filter-oob((layer,), oob-plans((colour: trained.colour)))
   out.layers.at(0).data.len()
 }
-#assert.eq(kept(scale-discrete(na-translate: false)), 2)
+#assert.eq(kept(scale-discrete(missing-translate: false)), 2)
 #assert.eq(kept(scale-discrete(limits: ("a", "b"))), 3)
 
 // `stat-count` counts a missing x as its own bucket, written back as `none`.
@@ -113,13 +114,13 @@
 #assert.eq(counted.data.map(r => r.g), ("a", none))
 #assert.eq(counted.data.map(r => r._count), (2, 2))
 
-// A formatter that answers `none` for the NA level keeps the `NA` text.
+// A formatter that answers `none` for the missing level keeps the `(missing)` text.
 #assert.eq(
-  resolve-label(l => if l == none { none } else { l }, NA-KEY, 2, "NA"),
-  "NA",
+  resolve-label(l => if l == none { none } else { l }, MISSING-KEY, 2, "(missing)"),
+  "(missing)",
 )
 
-// A layer whose data lacks the facet column adds no NA panel.
+// A layer whose data lacks the facet column adds no missing panel.
 #assert.eq(
   _raw-levels-for(
     (layers: ((data: none), (data: ((x: 1),))), data: ((g: "b"), (g: "a"))),
@@ -128,10 +129,10 @@
   ("b", "a"),
 )
 
-// `strict` does not report rows dropped by `na-translate: false`.
+// `strict` does not report rows dropped by `missing-translate: false`.
 #let strict-kept = {
   let trained = train(
-    scales: scales(colour: scale-discrete(na-translate: false)),
+    scales: scales(colour: scale-discrete(missing-translate: false)),
     layers: ((mapping: mapping, data: data, name: "point"),),
     mapping: mapping,
     data: data,

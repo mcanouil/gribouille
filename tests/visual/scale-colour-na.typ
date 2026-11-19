@@ -1,7 +1,7 @@
 // A missing value on a discrete colour scale draws in grey.
 //
 // Points whose sex is missing are grey, and the legend lists female, male and
-// NA, with a grey key for NA. Female and male keep their palette colours.
+// missing, with a grey key for the missing level. Female and male keep their palette colours.
 
 #import "../../lib.typ": *
 

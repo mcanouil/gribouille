@@ -91,7 +91,7 @@
 
 level spine rebase tests passed.
 
-// --- a missing cell takes the NA slot, or no slot under na-translate: false ---
+// --- a missing cell takes the missing slot, or no slot under missing-translate: false ---
 #let na-layer = (
   mapping: (x: pos-col, y: "v"),
   _factor-levels: ((pos-col): ("a", "b", "\u{0}")),
@@ -108,20 +108,20 @@ level spine rebase tests passed.
     x: (
       type: "discrete",
       domain: ("b", "a", "\u{0}"),
-      na-level: true,
+      missing-level: true,
     ),
     y: continuous,
   ),
 )
 #assert.eq(with-na.map(r => r.at(pos-col)), (2.2, 1.1, 3.3))
 
-// The scale drops NA, so the missing row has no slot and is not drawn, while
+// The scale drops the missing level, so the missing row has no slot and is not drawn, while
 // the real levels keep theirs.
 #let without-na = _rebase-level-spine(
   na-data,
   na-layer,
   (
-    x: (type: "discrete", domain: ("a", "b"), na-level: false),
+    x: (type: "discrete", domain: ("a", "b"), missing-level: false),
     y: continuous,
   ),
 )

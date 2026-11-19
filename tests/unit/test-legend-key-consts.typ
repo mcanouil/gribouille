@@ -90,7 +90,7 @@
   assert("shape" not in g.at(0).key-consts)
 }
 
-// A layer that pins `size` does not set the size of the NA key of a merged
+// A layer that pins `size` does not set the size of the missing key of a merged
 // colour and size group. The layer that maps size supplies the constants.
 #context {
   let g = guides-for(

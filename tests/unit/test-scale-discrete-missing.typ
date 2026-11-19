@@ -1,4 +1,4 @@
-// Training appends one trailing NA level when a discrete column holds a
+// Training appends one trailing missing level when a discrete column holds a
 // missing cell (`none` or `""`), after the data levels or the user `limits`.
 // A column with no missing cell trains exactly as before.
 
@@ -6,7 +6,7 @@
 #import "../../src/scale/constructors.typ": scale-discrete
 #import "../../src/scales.typ": scales
 #import "../../src/aes.typ": aes
-#import "../../src/utils/types.typ": NA-KEY
+#import "../../src/utils/types.typ": MISSING-KEY
 
 #let _train(data, scale: none, mapping: aes(x: "x", y: "y", colour: "g")) = {
   let sc = if scale == none { scales() } else { scales(colour: scale) }
@@ -22,22 +22,22 @@
 #let rows(values) = values.map(g => (x: 1, y: 1, g: g))
 
 #let t = _train(rows(("m", none, "f", "")))
-#assert.eq(t.domain, ("f", "m", NA-KEY))
-#assert.eq(t.na-level, true)
-#assert.eq(t.level-index.at(NA-KEY), 2)
+#assert.eq(t.domain, ("f", "m", MISSING-KEY))
+#assert.eq(t.missing-level, true)
+#assert.eq(t.level-index.at(MISSING-KEY), 2)
 
 #let t = _train(rows(("m", "f")))
 #assert.eq(t.domain, ("f", "m"))
-#assert.eq(t.na-level, false)
+#assert.eq(t.missing-level, false)
 
 #let t = _train(
   rows(("m", none, "f")),
   scale: scale-discrete(limits: ("m", "f")),
 )
-#assert.eq(t.domain, ("m", "f", NA-KEY))
-#assert.eq(t.na-level, true)
+#assert.eq(t.domain, ("m", "f", MISSING-KEY))
+#assert.eq(t.missing-level, true)
 
-// Two cached columns, only one with a missing cell: one NA level.
+// Two cached columns, only one with a missing cell: one missing level.
 #let two = train(
   scales: scales(),
   layers: (
@@ -56,10 +56,10 @@
   data: none,
   aesthetics: ("x", "y", "colour"),
 ).colour
-#assert.eq(two.domain, ("f", "m", NA-KEY))
-#assert.eq(two.domain.filter(l => l == NA-KEY).len(), 1)
+#assert.eq(two.domain, ("f", "m", MISSING-KEY))
+#assert.eq(two.domain.filter(l => l == MISSING-KEY).len(), 1)
 
-// `na-translate: false` leaves the missing cell without a level.
+// `missing-translate: false` leaves the missing cell without a level.
 #let cached = (
   cols: (
     (
@@ -73,36 +73,36 @@
 #let off = _train-entry(
   "colour",
   cached,
-  (type: "discrete", na-translate: false),
+  (type: "discrete", missing-translate: false),
 )
 #assert.eq(off.domain, ("f", "m"))
-#assert.eq(off.na-level, false)
+#assert.eq(off.missing-level, false)
 #let on = _train-entry("colour", cached, (type: "discrete"))
-#assert.eq(on.domain, ("f", "m", NA-KEY))
+#assert.eq(on.domain, ("f", "m", MISSING-KEY))
 
 // The same through the public constructor.
 #let t = _train(
   rows(("m", none, "f")),
-  scale: scale-discrete(na-translate: false),
+  scale: scale-discrete(missing-translate: false),
 )
 #assert.eq(t.domain, ("f", "m"))
-#assert.eq(t.na-level, false)
+#assert.eq(t.missing-level, false)
 
-// A column rewritten to its level spine records `NA-KEY` among its levels. It
-// counts as a missing cell, so the domain holds one trailing NA level, even
+// A column rewritten to its level spine records `MISSING-KEY` among its levels. It
+// counts as a missing cell, so the domain holds one trailing missing level, even
 // when a second layer maps the same axis with raw missing cells.
 #let spine = "_gribouille-pos-g"
 #let rewritten = (
   mapping: aes(x: spine, y: "y"),
   data: ((y: 1, "_gribouille-pos-g": 1), (y: 2, "_gribouille-pos-g": 3)),
   name: "point",
-  _factor-levels: ("_gribouille-pos-g": ("a", "b", NA-KEY)),
+  _factor-levels: ("_gribouille-pos-g": ("a", "b", MISSING-KEY)),
 )
 #let raw-layer = (
   mapping: aes(x: spine, y: "y"),
   data: ((y: 1, "_gribouille-pos-g": none),),
   name: "point",
-  _factor-levels: ("_gribouille-pos-g": ("a", "b", NA-KEY)),
+  _factor-levels: ("_gribouille-pos-g": ("a", "b", MISSING-KEY)),
 )
 #let spine-trained = train(
   scales: scales(),
@@ -111,10 +111,10 @@
   data: none,
   aesthetics: ("x", "y"),
 ).x
-#assert.eq(spine-trained.domain, ("a", "b", NA-KEY))
-#assert.eq(spine-trained.na-level, true)
+#assert.eq(spine-trained.domain, ("a", "b", MISSING-KEY))
+#assert.eq(spine-trained.missing-level, true)
 
-// A layer whose data lacks the column adds no NA level.
+// A layer whose data lacks the column adds no missing level.
 #let absent = train(
   scales: scales(),
   layers: (
