@@ -67,3 +67,57 @@
 )
 #assert.eq(bundle.size, 4pt)
 #assert.ne(bundle.shape, "triangle")
+
+// Constants come whole from one layer. A highlight layer that pins a shape
+// does not turn the keys of the main layer into triangles.
+#context {
+  let g = guides-for(
+    (
+      mapping: (colour: "g"),
+      layers: (
+        geom-point(size: 3pt),
+        geom-point(size: 3pt, shape: "triangle"),
+      ),
+      guides: (:),
+    ),
+    (colour: discrete("a", "b")),
+  )
+  assert.eq(g.at(0).key-consts.size, 3pt)
+  assert("shape" not in g.at(0).key-consts)
+}
+
+// A layer that pins `size` does not set the size of the NA key of a merged
+// colour and size group. The layer that maps size supplies the constants.
+#context {
+  let g = guides-for(
+    (
+      mapping: (colour: "g", size: "g"),
+      layers: (
+        geom-point(size: 5pt, shape: "square", alpha: 0.3),
+        geom-point(),
+      ),
+      guides: (:),
+    ),
+    (
+      colour: discrete("a", "b"),
+      size: discrete("a", "b"),
+    ),
+  )
+  assert.eq(g.at(0).aesthetics, ("colour", "size"))
+  assert.eq(g.at(0).key-consts.size, 1.5pt)
+  assert("shape" not in g.at(0).key-consts)
+  assert("alpha" not in g.at(0).key-consts)
+}
+
+// The key box grows with a pinned marker size, so large keys do not overlap.
+#context {
+  let g = guides-for(
+    (
+      mapping: (colour: "g"),
+      layers: (geom-point(size: 8pt),),
+      guides: (:),
+    ),
+    (colour: discrete("a", "b")),
+  )
+  assert(g.at(0).key-diam-cm >= 0.56)
+}

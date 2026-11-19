@@ -654,9 +654,13 @@
 }
 
 // Resolve a swatch key glyph diameter (cm). A per-legend `key-size` length
-// wins; otherwise the themed `base-cm`.
-#let _swatch-key-diam-cm(key-size, base-cm) = {
-  if type(key-size) == length { length-to-cm(key-size, 0) } else { base-cm }
+// wins; otherwise the themed `base-cm`, grown to hold the marker size the
+// layer pins.
+#let _swatch-key-diam-cm(key-size, base-cm, key-consts) = {
+  if type(key-size) == length { return length-to-cm(key-size, 0) }
+  let size = key-consts.at("size", default: none)
+  if type(size) != length { return base-cm }
+  calc.max(base-cm, 2 * length-to-cm(size, 0))
 }
 
 // Number of rendered lines in a label, resolved on its own surface first so an
@@ -1133,30 +1137,41 @@
 // for by building one.
 #let paints-bar(g) = has-part(g.stack.node, "bar")
 
-// The key constants of the group: those of the layers that contribute to a
-// member and whose key kind is the group's, in layer order. The first layer
-// that declares a value wins.
+// The key constants of the group, whole from one layer: the first layer of the
+// group's key kind that contributes to every member, else the first that
+// contributes to any. A layer that pins an aesthetic a member maps does not
+// contribute to that member, so it cannot set the key of a group it only
+// partly belongs to.
 #let _group-key-constants(spec, members, key-kind, theme) = {
   let defaults = resolve-geom-defaults(
     if theme == none { default-theme } else { theme },
   )
   let plot-mapping = spec.at("mapping", default: none)
-  let out = (:)
-  for layer in spec.at("layers", default: ()) {
-    if not members.any(m => m.contributors.contains(layer)) { continue }
-    let override = layer.at("key", default: auto)
-    let kind = if override != auto and override != none {
-      override.name
-    } else { default-key-for(layer.at("name", default: "")) }
-    if kind != key-kind { continue }
-    out = key-constants(
-      layer,
-      merge-mapping(layer, plot-mapping),
-      defaults,
-      kind,
-    ) + out
-  }
-  out
+  let of-kind = spec
+    .at("layers", default: ())
+    .filter(layer => {
+      let override = layer.at("key", default: auto)
+      let kind = if override != auto and override != none {
+        override.name
+      } else { default-key-for(layer.at("name", default: "")) }
+      kind == key-kind
+    })
+  let contributing = of-kind.filter(layer => members.any(m => (
+    m.contributors.contains(layer)
+  )))
+  let full = contributing.filter(layer => members.all(m => (
+    m.contributors.contains(layer)
+  )))
+  let source = if full.len() > 0 { full.first() } else if (
+    contributing.len() > 0
+  ) { contributing.first() } else { none }
+  if source == none { return (:) }
+  key-constants(
+    source,
+    merge-mapping(source, plot-mapping),
+    defaults,
+    key-kind,
+  )
 }
 
 #let guides-for(
@@ -1218,7 +1233,7 @@
         ncolumn: first.ncolumn,
         key: key-kind,
         key-consts: key-consts,
-        key-diam-cm: _swatch-key-diam-cm(first.key-size, key-diam-cm),
+        key-diam-cm: _swatch-key-diam-cm(first.key-size, key-diam-cm, key-consts),
         typst-mark: typst-mark,
       )
     } else if aesthetics.contains("colour") or aesthetics.contains("fill") {
