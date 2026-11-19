@@ -159,13 +159,14 @@
   inherit-aes: true,
   ..args,
 ) = {
-  assert-position("geom-text", position)
-  assert-alpha("geom-text", alpha)
+  let scope = args.named().at("_scope", default: "geom-text")
+  assert-position(scope, position)
+  assert-alpha(scope, alpha)
   if segment-colour != auto {
-    assert-paint("geom-text", "segment-colour", segment-colour)
+    assert-paint(scope, "segment-colour", segment-colour)
   }
-  assert-anchor("geom-text", anchor)
-  assert-arrow("geom-text", arrow)
+  assert-anchor(scope, anchor)
+  assert-arrow(scope, arrow)
   make-layer(
     "text",
     mapping: mapping,
