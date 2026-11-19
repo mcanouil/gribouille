@@ -1,6 +1,6 @@
 // A stack leaves a row with a missing x alone on a continuous x, so the y
 // domain is the one of the same data without that row. On a discrete x the
-// missing x is the NA level and stacks as a bucket of its own.
+// missing x is the missing level and stacks as a bucket of its own.
 
 #import "../../src/position/apply.typ": apply-position
 

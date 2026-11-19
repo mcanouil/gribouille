@@ -134,7 +134,10 @@
 #{
   let rows = ((v: 3), (v: ""))
   let free = (fill: _trained-continuous(unusable: true))
-  assert.eq(filter-oob((_layer(rows),), oob-plans(free)).layers.at(0).data, rows)
+  assert.eq(
+    filter-oob((_layer(rows),), oob-plans(free)).layers.at(0).data,
+    rows,
+  )
   let limited = (fill: _trained-continuous(limits: (2, 5)))
   assert.eq(
     filter-oob((_layer(rows),), oob-plans(limited)).layers.at(0).data,
@@ -401,13 +404,13 @@
 // `tests/errors/scale-oob-strict.typ`, which requires the compile to fail and
 // the message to carry both its body and its hint.
 
-// `na-translate: false` drops the rows that hold a missing cell, but a layer
+// `missing-translate: false` drops the rows that hold a missing cell, but a layer
 // whose own data lacks the column has no missing cells, only no values.
 #{
   let trained = (
     fill: (
       ..(_trained-discrete()),
-      spec: (aesthetic: "fill", type: "discrete", na-translate: false),
+      spec: (aesthetic: "fill", type: "discrete", missing-translate: false),
     ),
   )
   let plans = oob-plans(trained)

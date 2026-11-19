@@ -11,7 +11,7 @@
 
 #let _ZERO-CROSSING-FRACTION = 0.001
 
-// Parse, drop NA, sort by x. Duplicate-x rows are collapsed to one entry
+// Parse, drop missing, sort by x. Duplicate-x rows are collapsed to one entry
 // per x with the mean y; matches `approx(ties = "ordered" / "mean")`
 // semantics so subsequent interpolation cannot silently drop a row.
 #let _parsed-pairs(data, x-col, y-col) = {

@@ -11,7 +11,7 @@
 #import "../layer.typ": make-layer, split-aes-params
 #import "../utils/palette.typ": default-shapes, palette-at, spec-palette
 #import "../utils/level-resolve.typ": (
-  bin-index, discrete-index, is-na-index, na-value-of,
+  bin-index, discrete-index, is-missing-index, missing-value-of,
 )
 #import "../utils/aes-resolve.typ": resolve-channel
 #import "../utils/aes-pair.typ": resolve-pair-defaults
@@ -281,11 +281,11 @@
         shape-trained,
         row.at(shape-col, default: none),
       )
-      if idx == none { default-shape-kind } else if is-na-index(
+      if idx == none { default-shape-kind } else if is-missing-index(
         shape-trained,
         idx,
       ) {
-        na-value-of(shape-trained, "shape", default-shape-kind)
+        missing-value-of(shape-trained, "shape", default-shape-kind)
       } else {
         palette-at(shape-palette, idx)
       }

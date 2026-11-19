@@ -1,9 +1,9 @@
-// A discrete scale fails when `na-translate` is not a bool.
+// A colour scale fails when `missing-value` is a string instead of a colour.
 //
 // `tools/check-errors.sh` compiles this file, requires the compile to fail, and
 // requires the `error:` line to carry the phrase below.
 //
-// expect: na-translate
+// expect: missing-value
 
 #import "/lib.typ": aes, geom-point, plot, scale-discrete, scales
 
@@ -13,5 +13,5 @@
   data: ((x: 1, y: 1, g: "a"), (x: 2, y: 2, g: "b")),
   mapping: aes(x: "x", y: "y", colour: "g"),
   layers: (geom-point(),),
-  scales: scales(colour: scale-discrete(na-translate: "no")),
+  scales: scales(colour: scale-discrete(missing-value: "grey")),
 )

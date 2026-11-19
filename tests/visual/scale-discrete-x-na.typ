@@ -1,8 +1,8 @@
 // A missing value on a discrete x axis gets its own slot at the end.
 //
-// Both plots have the ticks a, b and NA, with NA last. The left plot draws
-// points and the right one draws boxplots, and the rows with a missing x sit in
-// the NA slot of each.
+// Both plots have the ticks a, b and (missing), with (missing) last. The left plot
+// draws points and the right one draws boxplots, and the rows with a missing x
+// sit in the (missing) slot of each.
 
 #import "../../lib.typ": *
 

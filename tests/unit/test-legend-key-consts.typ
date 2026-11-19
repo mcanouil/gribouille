@@ -90,7 +90,7 @@
   assert("shape" not in g.at(0).key-consts)
 }
 
-// A layer that pins `size` does not set the size of the NA key of a merged
+// A layer that pins `size` does not set the size of the missing key of a merged
 // colour and size group. The layer that maps size supplies the constants.
 #context {
   let g = guides-for(
@@ -159,7 +159,10 @@
   let trained = ctx.trained.at("fill")
   ((ctx.resolve-colour)(trained, ctx.palette))(ctx.row.g).darken(40%)
 }
-#for marker in (after-scale(darken-fill), stage(start: "g", after-scale: darken-fill)) {
+#for marker in (
+  after-scale(darken-fill),
+  stage(start: "g", after-scale: darken-fill),
+) {
   context {
     let guide = guides-for(
       (
@@ -170,10 +173,12 @@
       (fill: discrete("a", "b")),
     ).at(0)
     let bundle = _key-bundle("a", guide, late-ctx, black)
-    let fill = ((late-ctx.resolve-colour)(
-      late-ctx.trained.fill,
-      late-ctx.palette,
-    ))("a")
+    let fill = (
+      (late-ctx.resolve-colour)(
+        late-ctx.trained.fill,
+        late-ctx.palette,
+      )
+    )("a")
     assert.eq(bundle.fill, fill)
     assert.eq(bundle.colour, fill.darken(40%))
   }

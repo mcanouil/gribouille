@@ -70,31 +70,31 @@
   }
 }
 
-// Check `na-value` against the aesthetic it draws: a colour for colour and
+// Check `missing-value` against the aesthetic it draws: a colour for colour and
 // fill, a keyword string for shape and linetype, a number or length for the
 // rest. `none` leaves the aesthetic default in place.
-#let _check-na-value(scope, aesthetic, value) = {
+#let _check-missing-value(scope, aesthetic, value) = {
   if value == none { return }
   if aesthetic in ("colour", "fill") {
-    assert-paint(scope, "na-value", value)
+    assert-paint(scope, "missing-value", value)
   } else if aesthetic == "linetype" {
     assert-linetype(
       scope,
       value,
-      name: "na-value",
+      name: "missing-value",
       hint: "Use a dash keyword such as `\"loosely-dotted\"`.",
     )
   } else if aesthetic == "shape" {
     if type(value) != str {
-      fail-type(scope, "na-value", value, "a string")
+      fail-type(scope, "missing-value", value, "a string")
     }
   } else if aesthetic == "alpha" {
     if not is-native-numeric(value) {
-      fail-type(scope, "na-value", value, "a number between 0 and 1")
+      fail-type(scope, "missing-value", value, "a number between 0 and 1")
     }
-    _check-in(scope, "na-value", value, 0, 1)
+    _check-in(scope, "missing-value", value, 0, 1)
   } else if type(value) != length {
-    fail-type(scope, "na-value", value, "a length")
+    fail-type(scope, "missing-value", value, "a length")
   }
 }
 
@@ -109,11 +109,18 @@
   if "transform" in named and named.transform not in _TRANSFORMS {
     fail-enum(scope, "transform", named.transform, _TRANSFORMS)
   }
-  if "na-translate" in named and type(named.at("na-translate")) != bool {
-    fail-type(scope, "na-translate", named.at("na-translate"), "a bool")
+  if (
+    "missing-translate" in named and type(named.at("missing-translate")) != bool
+  ) {
+    fail-type(
+      scope,
+      "missing-translate",
+      named.at("missing-translate"),
+      "a bool",
+    )
   }
-  if "na-value" in named {
-    _check-na-value(scope, aesthetic, named.at("na-value"))
+  if "missing-value" in named {
+    _check-missing-value(scope, aesthetic, named.at("missing-value"))
   }
   if "n-breaks" in named {
     let n = named.at("n-breaks")
@@ -251,9 +258,9 @@
         "limits",
         level,
         "a level name as a string",
-        hint: "A missing value is not a level. Set `na-translate: false` to "
+        hint: "A missing value is not a level. Set `missing-translate: false` to "
           + "drop missing rows, or leave it on to show them as the last "
-          + "`NA` level.",
+          + "missing level.",
       )
     }
     if type(level) != str {

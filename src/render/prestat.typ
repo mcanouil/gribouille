@@ -6,7 +6,7 @@
   mapping-ref-col, scope-of, transform-fwd,
 )
 #import "../utils/types.typ": (
-  NA-KEY, is-discrete-column, is-missing, level-key, parse-number,
+  MISSING-KEY, is-discrete-column, is-missing, level-key, parse-number,
 )
 #import "../utils/aes-resolve.typ": merge-mapping
 #import "../utils/late-binding.typ": is-late-binding
@@ -37,9 +37,9 @@
       seen.push(s)
     }
   }
-  // Missing cells get a trailing `NA` panel, unless the variable holds nothing
+  // Missing cells get a trailing missing panel, unless the variable holds nothing
   // else, which still lays out no panel.
-  if any-missing and seen.len() > 0 { seen.push(NA-KEY) }
+  if any-missing and seen.len() > 0 { seen.push(MISSING-KEY) }
   seen
 }
 
@@ -185,7 +185,7 @@
     // order. Typst closures capture read-only, so the value rewrite needs a
     // second `.map`.
     // A missing cell takes the slot after the last level, which is where the
-    // trained scale puts its `NA` level. The recorded levels end with `NA-KEY`
+    // trained scale puts its missing level. The recorded levels end with `MISSING-KEY`
     // so that training knows the column holds one.
     let seen = (:)
     let levels = ()
@@ -215,7 +215,7 @@
     })
     factor-levels.insert(
       pos-col,
-      if any-missing { levels + (NA-KEY,) } else { levels },
+      if any-missing { levels + (MISSING-KEY,) } else { levels },
     )
     repoint.insert(axis, pos-col)
   }

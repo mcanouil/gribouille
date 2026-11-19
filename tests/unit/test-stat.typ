@@ -40,7 +40,7 @@
 #assert.eq(r-order.data.at(1).at("v"), "a")
 #assert.eq(r-order.data.at(2).at("v"), "c")
 
-// --- stat-count: none and empty-string values count as one NA bucket ---
+// --- stat-count: none and empty-string values count as one missing bucket ---
 
 #let df-nones = (
   (v: "a"),

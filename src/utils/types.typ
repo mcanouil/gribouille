@@ -150,20 +150,22 @@
 
 // The reserved level of a missing cell on a discrete scale. It cannot clash
 // with a real level, and a trained domain carries it last.
-#let NA-KEY = cell-key(none)
+#let MISSING-KEY = cell-key(none)
 
-// Sort key that places the reserved `NA` level after every real level.
+// Sort key that places the reserved missing level after every real level.
 // A group key joins one part for each grouping aesthetic, so each part sorts
 // on its own.
-#let na-last-key(k) = k.split("\u{1}").map(part => (part == NA-KEY, part))
+#let missing-last-key(k) = (
+  k.split("\u{1}").map(part => (part == MISSING-KEY, part))
+)
 
 // A cell is missing when it is `none` or the empty string.
 #let is-missing(v) = v == none or v == ""
 
 // The key a cell has in a discrete level lookup and in a plot group key: a
-// missing cell (`none` or `""`) keys as the reserved `NA` level, any other cell
+// missing cell (`none` or `""`) keys as the reserved missing level, any other cell
 // as its text.
-#let level-key(v) = if is-missing(v) { NA-KEY } else { str(v) }
+#let level-key(v) = if is-missing(v) { MISSING-KEY } else { str(v) }
 
 // Type check for a numeric argument, run before its range check.
 #let check-number(scope, name, value) = {

@@ -38,11 +38,11 @@
 //   ("drop",   value)   — caller drops the row
 //   ("unusable", value) — caller drops the row, also under `strict`
 #let _checker(aes, trained) = {
-  // A discrete scale with `na-translate: false` censors its missing rows even
+  // A discrete scale with `missing-translate: false` censors its missing rows even
   // when the user set no `limits`.
   let drops-missing = (
     trained.type == "discrete"
-      and not spec-attr(trained, "na-translate", fallback: true)
+      and not spec-attr(trained, "missing-translate", fallback: true)
   )
   if spec-attr(trained, "limits") == none and not drops-missing {
     if (
@@ -111,9 +111,9 @@
     // The level lookup is resolved once, so the row test is one dict read
     // rather than a scan of the domain.
     let level-index = level-lookup(trained)
-    let keeps-missing = spec-attr(trained, "na-translate", fallback: true)
+    let keeps-missing = spec-attr(trained, "missing-translate", fallback: true)
     return raw => {
-      // A missing cell is the `NA` level, which a scale with `na-translate:
+      // A missing cell is the missing level, which a scale with `missing-translate:
       // false` does not have, so its rows go. They are not outside any limits,
       // so `strict` does not report them.
       if is-missing(raw) {

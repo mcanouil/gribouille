@@ -1,6 +1,6 @@
-// With `na-translate: false` the missing rows are dropped.
+// With `missing-translate: false` the missing rows are dropped.
 //
-// The left plot shows the NA level. The right plot has no grey points and no NA
+// The left plot shows the missing level. The right plot has no grey points and no (missing)
 // key in its legend: the penguins with no recorded sex are not drawn.
 
 #import "../../lib.typ": *
@@ -21,5 +21,5 @@
   dir: ltr,
   spacing: 0.5cm,
   make("default"),
-  make("na-translate: false", na-translate: false),
+  make("missing-translate: false", missing-translate: false),
 )

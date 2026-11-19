@@ -28,21 +28,19 @@
   level-lookup(trained).at(level-key(level), default: none)
 }
 
-// Whether a trained discrete scale carries the trailing `NA` level.
-#let has-na-level(trained) = trained.at("na-level", default: false)
+// Whether a trained discrete scale carries the trailing missing level.
+#let has-missing-level(trained) = trained.at("missing-level", default: false)
 
-// Whether `idx` is the trailing `NA` level of a trained discrete scale.
-#let is-na-index(trained, idx) = (
-  idx != none
-    and has-na-level(trained)
-    and idx == trained.domain.len() - 1
+// Whether `idx` is the trailing missing level of a trained discrete scale.
+#let is-missing-index(trained, idx) = (
+  idx != none and has-missing-level(trained) and idx == trained.domain.len() - 1
 )
 
-// The value a scale draws the `NA` level with: the scale's own `na-value`,
+// The value a scale draws the missing level with: the scale's own `missing-value`,
 // else the default of the aesthetic. Aesthetics with no neutral default of
 // their own take `fallback`, usually the geom default.
-#let na-value-of(trained, aesthetic, fallback) = {
-  let user = spec-attr(trained, "na-value", fallback: none)
+#let missing-value-of(trained, aesthetic, fallback) = {
+  let user = spec-attr(trained, "missing-value", fallback: none)
   if user != none { return user }
   if aesthetic in ("colour", "fill") { return luma(50%) }
   if aesthetic == "shape" { return "circle-cross" }
@@ -50,18 +48,20 @@
   fallback
 }
 
-// Spaces the data levels over `range`. The `NA` level takes no slot and
-// resolves to the scale's `na-value` (`none` when unset, so the caller falls
+// Spaces the data levels over `range`. The missing level takes no slot and
+// resolves to the scale's `missing-value` (`none` when unset, so the caller falls
 // back to the geom default).
 #let discrete-numeric(trained, level, range) = {
   let n = (
     trained.domain.len()
-      - if has-na-level(trained) {
+      - if has-missing-level(trained) {
         1
       } else { 0 }
   )
   let idx = discrete-index(trained, level)
-  if is-na-index(trained, idx) { return spec-attr(trained, "na-value") }
+  if is-missing-index(trained, idx) {
+    return spec-attr(trained, "missing-value")
+  }
   if n == 0 { return none }
   let (lo, hi) = range
   if n == 1 { return (lo + hi) / 2 }
@@ -112,7 +112,9 @@
   if trained.type == "discrete" {
     let idx = discrete-index(trained, value)
     if idx == none { return ink }
-    if is-na-index(trained, idx) { return na-value-of(trained, "colour", ink) }
+    if is-missing-index(trained, idx) {
+      return missing-value-of(trained, "colour", ink)
+    }
     return palette-at(pal, idx)
   }
   resolve-continuous-colour(trained, value, pal, ink)
@@ -125,8 +127,8 @@
   if trained.type == "discrete" {
     let idx = discrete-index(trained, value)
     if idx == none { return none }
-    if is-na-index(trained, idx) {
-      return na-value-of(trained, aesthetic, none)
+    if is-missing-index(trained, idx) {
+      return missing-value-of(trained, aesthetic, none)
     }
     return palette-at(spec-palette(trained, fallback-palette), idx)
   }
@@ -142,7 +144,9 @@
     if pal != none and pal.len() > 0 {
       let idx = discrete-index(trained, value)
       if idx == none { return none }
-      if is-na-index(trained, idx) { return spec-attr(trained, "na-value") }
+      if is-missing-index(trained, idx) {
+        return spec-attr(trained, "missing-value")
+      }
       return palette-at(pal, idx)
     }
     return discrete-numeric(trained, value, range)
