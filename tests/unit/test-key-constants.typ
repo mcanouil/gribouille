@@ -3,6 +3,7 @@
 
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/geom/line.typ": geom-line
+#import "../../src/geom/pointrange.typ": geom-pointrange
 #import "../../src/guide/key-constants.typ": key-constants
 #import "../../src/theme/defaults.typ": default-theme, merge-theme
 #import "../../src/theme/grey.typ": theme-grey
@@ -75,3 +76,34 @@
 
 // Other key kinds carry no constants.
 #assert.eq(key-constants(geom-point(), none, defaults, "rect"), (:))
+
+// A fill that another guide maps is not painted paper: the key for this guide
+// takes a neutral ink fill and no outline, as the mark with a mapped fill has.
+#let c5 = key-constants(
+  geom-point(),
+  (fill: "g", size: "w"),
+  defaults,
+  "point",
+)
+#assert.eq(c5.fill, defaults.ink)
+#assert("colour" not in c5)
+
+// With both mapped, the neutral key is solid ink.
+#let c6 = key-constants(
+  geom-point(),
+  (fill: "g", colour: "g", size: "w"),
+  defaults,
+  "point",
+)
+#assert.eq(c6.fill, defaults.ink)
+
+// Pointrange paints its point solid in the colour, with no outline.
+#let c7 = key-constants(
+  geom-pointrange(),
+  (colour: "g"),
+  defaults,
+  "point",
+)
+#assert.eq(c7.size, 2.5pt)
+#assert(c7.solid)
+#assert("stroke" not in c7)

@@ -14,6 +14,7 @@
 // value.
 #let _POINT-SIZE = 1.5pt
 #let _LINE-THICKNESS = 0.8pt
+#let _POINTRANGE-SIZE = 2.5pt
 
 // A pinned param is any value but the `auto` and `none` sentinels.
 #let _pinned(params, name) = {
@@ -30,7 +31,23 @@
   out
 }
 
+// Pointrange paints its point solid in the colour, sized by the layer, with no
+// outline of its own.
+#let _pointrange-constants(layer) = {
+  let params = layer.params
+  _present((
+    size: if type(_pinned(params, "size")) == length {
+      params.size
+    } else { _POINTRANGE-SIZE },
+    solid: true,
+    alpha: _pinned(params, "alpha"),
+    colour: _pinned(params, "colour"),
+    fill: _pinned(params, "fill"),
+  ))
+}
+
 #let _point-constants(layer, mapping, defaults) = {
+  if layer.name == "pointrange" { return _pointrange-constants(layer) }
   let params = layer.params
   let (colour, fill) = resolve-pair-defaults(
     layer,
@@ -39,6 +56,13 @@
     resolve-geom-fill(defaults, role: "paper"),
   )
   let pinned-stroke = _pinned(params, "stroke")
+  // A fill that the layer maps to another guide is neutral ink here, not the
+  // paper default: the mark is filled, and its fill is not this guide's.
+  let fill = if (
+    _pinned(params, "fill") == none
+      and mapping != none
+      and mapping.at("fill", default: none) != none
+  ) { resolve-geom-colour(defaults) } else { fill }
   _present((
     shape: _pinned(params, "shape"),
     size: if type(_pinned(params, "size")) == length {

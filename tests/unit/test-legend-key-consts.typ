@@ -4,7 +4,11 @@
 #import "../../src/geom/point.typ": geom-point
 #import "../../src/geom/line.typ": geom-line
 #import "../../src/guide/draw-key.typ": draw-key-line
-#import "../../src/render/legend.typ": _bundle-for, guides-for
+#import "../../src/render/legend.typ": _bundle-for, _key-bundle, guides-for
+#import "../../src/render/colour.typ": _make-resolve-colour
+#import "../../src/utils/late-binding.typ": after-scale, stage
+#import "../../src/theme/defaults.typ": default-theme
+#import "../../src/theme/theme.typ": resolve-theme-palette
 
 #let discrete(..levels) = (type: "discrete", domain: levels.pos())
 
@@ -120,4 +124,57 @@
     (colour: discrete("a", "b")),
   )
   assert(g.at(0).key-diam-cm >= 0.56)
+}
+
+// A `solid` constant paints the key with the colour, as a pointrange does.
+#{
+  let ctx = (
+    trained: (colour: (type: "discrete", domain: ("a", "b"))),
+    palette: resolve-theme-palette(default-theme),
+  )
+  let guide = (
+    aesthetics: ("colour",),
+    columns: (colour: "g"),
+    key-consts: (size: 2.5pt, solid: true),
+    key-late: (:),
+  )
+  let bundle = _key-bundle("a", guide, ctx, black)
+  assert.eq(bundle.size, 2.5pt)
+  assert.eq(type(bundle.fill), color)
+  assert("colour" not in bundle)
+}
+
+// An `after-scale` or `stage` colour on the layer reaches the key: the closure
+// runs on the level of the guide, as it does on a row of the mark.
+#let late-ctx = {
+  let palette = resolve-theme-palette(default-theme)
+  (
+    trained: (fill: (type: "discrete", domain: ("a", "b"))),
+    palette: palette,
+    resolve-colour: _make-resolve-colour(black),
+    theme: default-theme,
+  )
+}
+#let darken-fill = (_, ctx) => {
+  let trained = ctx.trained.at("fill")
+  ((ctx.resolve-colour)(trained, ctx.palette))(ctx.row.g).darken(40%)
+}
+#for marker in (after-scale(darken-fill), stage(start: "g", after-scale: darken-fill)) {
+  context {
+    let guide = guides-for(
+      (
+        mapping: (fill: "g", colour: marker),
+        layers: (geom-point(),),
+        guides: (:),
+      ),
+      (fill: discrete("a", "b")),
+    ).at(0)
+    let bundle = _key-bundle("a", guide, late-ctx, black)
+    let fill = ((late-ctx.resolve-colour)(
+      late-ctx.trained.fill,
+      late-ctx.palette,
+    ))("a")
+    assert.eq(bundle.fill, fill)
+    assert.eq(bundle.colour, fill.darken(40%))
+  }
 }
