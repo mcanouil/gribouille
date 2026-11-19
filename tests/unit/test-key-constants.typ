@@ -85,7 +85,8 @@
   defaults,
   "point",
 )
-#assert.eq(c5.fill, defaults.ink)
+#assert.eq(c5.neutral-fill, defaults.ink)
+#assert("fill" not in c5)
 #assert("colour" not in c5)
 
 // With both mapped, the neutral key is solid ink.
@@ -95,7 +96,7 @@
   defaults,
   "point",
 )
-#assert.eq(c6.fill, defaults.ink)
+#assert.eq(c6.neutral-fill, defaults.ink)
 
 // Pointrange paints its point solid in the colour, with no outline.
 #let c7 = key-constants(

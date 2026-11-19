@@ -1,6 +1,6 @@
 // A legend key runs the late-binding closures of its layer.
 //
-// The top plot sets the outline with `after-scale`, the bottom one with
+// The first plot sets the outline with `after-scale`, the second one with
 // `stage`. In both, each legend key has the outline that its marker has: the
 // fill swatch darkened by 40%.
 
@@ -42,4 +42,21 @@
   layers: (geom-point(size: 5pt, stroke: 0.8pt),),
   width: 8cm,
   height: 4cm,
+)
+
+// With different legend titles, the colour and the fill guides stay apart. The
+// colour guide draws rings in the darkened outline colour, and the fill guide
+// draws filled keys with the same darkened outline as the marks.
+#plot(
+  data: d,
+  mapping: aes(
+    x: "x",
+    y: "y",
+    fill: "sp",
+    colour: stage(start: "sp", after-scale: darken),
+  ),
+  layers: (geom-point(size: 5pt, stroke: 0.8pt),),
+  labels: labels(fill: "Group"),
+  width: 8cm,
+  height: 6cm,
 )

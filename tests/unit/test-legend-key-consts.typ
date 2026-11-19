@@ -178,3 +178,44 @@
     assert.eq(bundle.colour, fill.darken(40%))
   }
 }
+
+// A guide for the outline colour draws a ring: no neutral fill. A guide for
+// another aesthetic, such as a size ladder, draws the neutral ink fill.
+#{
+  let ctx = (
+    trained: (colour: (type: "discrete", domain: ("a", "b"))),
+    palette: resolve-theme-palette(default-theme),
+  )
+  let consts = (colour: black, neutral-fill: black, size: 3pt)
+  let colour-guide = (
+    aesthetics: ("colour",),
+    columns: (colour: "g"),
+    key-consts: consts,
+  )
+  let ladder = (aesthetics: ("size",), columns: (:), key-consts: consts)
+  assert("fill" not in _key-bundle("a", colour-guide, ctx, black))
+  assert.eq(_key-bundle("a", ladder, ctx, black).fill, black)
+}
+
+// A stage closure of a colour scale trained on the column of the guide takes
+// the colour of the level as input, though the guide maps only the fill.
+#{
+  let palette = resolve-theme-palette(default-theme)
+  let ctx = (
+    trained: (
+      fill: (type: "discrete", domain: ("a", "b")),
+      colour: (type: "discrete", domain: ("a", "b")),
+    ),
+    palette: palette,
+    resolve-colour: _make-resolve-colour(black),
+    theme: default-theme,
+  )
+  let guide = (
+    aesthetics: ("fill",),
+    columns: (fill: "g"),
+    key-consts: (colour: black, size: 3pt),
+    key-late: (colour: (expr: (c, _) => c.darken(40%), column: "g")),
+  )
+  let swatch = ((ctx.resolve-colour)(ctx.trained.colour, palette))("a")
+  assert.eq(_key-bundle("a", guide, ctx, black).colour, swatch.darken(40%))
+}

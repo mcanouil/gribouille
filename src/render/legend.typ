@@ -1166,18 +1166,20 @@
 }
 
 // The closures of the `after-scale` and `stage` channels of a mapping, by
-// channel. The key runs them on the level of its guide, as the mark runs them
-// on a row.
+// channel, with the column a `stage` trains its scale on. The key runs them on
+// the level of its guide, as the mark runs them on a row.
 #let _late-exprs(mapping) = {
   let out = (:)
   if mapping == none { return out }
   for (channel, value) in mapping.pairs() {
     let kind = late-binding-kind(value)
     if kind == "after-scale" {
-      out.insert(channel, value.expr)
+      out.insert(channel, (expr: value.expr, column: none))
     } else if kind == "stage" {
       let expr = value.at("after-scale", default: none)
-      if type(expr) == function { out.insert(channel, expr) }
+      if type(expr) == function {
+        out.insert(channel, (expr: expr, column: mapping-display-name(value)))
+      }
     }
   }
   out
@@ -1422,11 +1424,29 @@
   for (_, column) in guide.at("columns", default: (:)) {
     row.insert(column, value)
   }
-  for (channel, expr) in guide.at("key-late", default: (:)) {
+  let columns = guide.at("columns", default: (:)).values()
+  for (channel, late) in guide.at("key-late", default: (:)) {
+    // The scale of the channel gives the input when it is trained on the
+    // column of this guide, though the guide does not map the channel.
+    let trained = ctx.trained.at(channel, default: none)
+    let input = if late.column != none and late.column in columns {
+      resolve-level(channel, trained, value, palette: ctx.palette, ink: ink)
+    } else { none }
     bundle.insert(
       channel,
-      expr(bundle.at(channel, default: ink), (..ctx, row: row)),
+      (late.expr)(
+        if input != none { input } else { bundle.at(channel, default: ink) },
+        (..ctx, row: row),
+      ),
     )
+  }
+  // The neutral fill is for a guide that is not the outline colour: a guide for
+  // the colour draws a ring.
+  let neutral = bundle.remove("neutral-fill", default: none)
+  if neutral != none and "fill" not in bundle {
+    if not guide.at("aesthetics", default: ()).contains("colour") {
+      bundle.insert("fill", neutral)
+    }
   }
   if bundle.at("solid", default: false) {
     let paint = bundle.at("fill", default: bundle.at("colour", default: none))

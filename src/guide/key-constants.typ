@@ -56,13 +56,14 @@
     resolve-geom-fill(defaults, role: "paper"),
   )
   let pinned-stroke = _pinned(params, "stroke")
-  // A fill that the layer maps to another guide is neutral ink here, not the
-  // paper default: the mark is filled, and its fill is not this guide's.
-  let fill = if (
+  // A fill that the layer maps is another guide's, not this one's. The key
+  // gets a neutral ink fill, unless its guide maps the outline colour, which
+  // is a ring (`_key-bundle` decides).
+  let fill-is-mapped = (
     _pinned(params, "fill") == none
       and mapping != none
       and mapping.at("fill", default: none) != none
-  ) { resolve-geom-colour(defaults) } else { fill }
+  )
   _present((
     shape: _pinned(params, "shape"),
     size: if type(_pinned(params, "size")) == length {
@@ -75,7 +76,12 @@
     colour: if _pinned(params, "colour") != none {
       params.colour
     } else { colour },
-    fill: if _pinned(params, "fill") != none { params.fill } else { fill },
+    fill: if _pinned(params, "fill") != none {
+      params.fill
+    } else if fill-is-mapped { none } else { fill },
+    neutral-fill: if fill-is-mapped { resolve-geom-colour(defaults) } else {
+      none
+    },
   ))
 }
 
