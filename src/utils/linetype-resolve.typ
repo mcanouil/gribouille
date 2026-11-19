@@ -1,6 +1,6 @@
 #import "palette.typ": default-linetypes, palette-at, spec-palette
 #import "level-resolve.typ": (
-  discrete-index, is-na-index, na-value-of, resolve-binned,
+  discrete-index, is-missing-index, missing-value-of, resolve-binned,
 )
 #import "late-binding.typ": after-scale-source, apply-after-scale
 
@@ -43,8 +43,8 @@
     } else {
       let palette = spec-palette(linetype-trained, default-linetypes)
       let idx = discrete-index(linetype-trained, sample)
-      if idx == none { "solid" } else if is-na-index(linetype-trained, idx) {
-        na-value-of(linetype-trained, "linetype", "solid")
+      if idx == none { "solid" } else if is-missing-index(linetype-trained, idx) {
+        missing-value-of(linetype-trained, "linetype", "solid")
       } else { palette-at(palette, idx) }
     }
   }

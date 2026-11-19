@@ -75,7 +75,7 @@
   let order = ()
   let proto = (:)
   let total = 0
-  // A missing cell is the `NA` level of a discrete axis. On a continuous axis
+  // A missing cell is the missing level of a discrete axis. On a continuous axis
   // it has no position, so its row is left out of the counts.
   let x-discrete = is-discrete-column(data, x-col)
   let y-discrete = is-discrete-column(data, y-col)

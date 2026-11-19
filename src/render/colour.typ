@@ -6,7 +6,7 @@
 #import "../utils/colour.typ": resolve-continuous-colour
 #import "../scale/train.typ": level-lookup
 #import "../utils/types.typ": level-key, parse-number
-#import "../utils/level-resolve.typ": is-na-index, na-value-of
+#import "../utils/level-resolve.typ": is-missing-index, missing-value-of
 
 // Build a colour resolver curried over the (trained, palette) pair so per-row
 // callers resolve the palette once outside the row loop and call the returned
@@ -31,8 +31,8 @@
     return value => {
       let idx = lookup.at(level-key(value), default: none)
       if idx == none { return ink }
-      if is-na-index(trained, idx) {
-        return na-value-of(trained, "colour", ink)
+      if is-missing-index(trained, idx) {
+        return missing-value-of(trained, "colour", ink)
       }
       palette-at(pal, idx)
     }

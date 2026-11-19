@@ -135,8 +135,8 @@
 
 /// Bucket rows by the string form of one column's value, in first-appearance
 /// order. A missing value (`none` or `""`) forms a bucket of its own, keyed as
-/// the `NA` level, so the value of its first row is `none` or `""`; map it
-/// through the discrete scale to reach the `NA` level.
+/// the missing level, so the value of its first row is `none` or `""`; map it
+/// through the discrete scale to reach the missing level.
 ///
 /// Shared by the per-level stats and geoms (boxplot, ydensity,
 /// density-ridges) that reduce each distinct value of a discrete positional
@@ -148,7 +148,7 @@
 /// \@returns Array of row-dictionary arrays, one bucket per distinct value, in first-appearance order.
 /// \@internal
 #let bucket-by-col(data, col) = {
-  // A missing cell forms its own bucket, keyed as the `NA` level.
+  // A missing cell forms its own bucket, keyed as the missing level.
   bucket-index(data, row => {
     level-key(row.at(col, default: none))
   }).buckets

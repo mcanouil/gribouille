@@ -18,7 +18,7 @@
 #import "../utils/flip.typ": (
   project-user-path, user-axes, user-axis-key, user-columns, user-point,
 )
-#import "../utils/types.typ": level-key, na-last-key, parse-number
+#import "../utils/types.typ": level-key, missing-last-key, parse-number
 #import "../scale/train.typ": discrete-slot-width
 
 /// Dodge position adjustment: place grouped marks side by side.
@@ -298,7 +298,7 @@
   // A missing group sorts last, as its legend key does.
   let levels = level-set
     .keys()
-    .sorted(key: na-last-key)
+    .sorted(key: missing-last-key)
   let level-index = (:)
   for (idx, k) in levels.enumerate() { level-index.insert(k, idx) }
   let n-levels = levels.len()
@@ -335,7 +335,7 @@
     } else {
       // Mixed-width path walks slots left-to-right via cursor, so entries
       // must be sorted by group key to match the uniform path's slot order.
-      let sorted-entries = entries.sorted(key: e => na-last-key(e.key))
+      let sorted-entries = entries.sorted(key: e => missing-last-key(e.key))
       let n = sorted-entries.len()
       let widths-sum = sorted-entries.fold(0.0, (acc, e) => acc + e.w)
       let padding-sum = if n > 1 { (n - 1) * padding } else { 0 }
