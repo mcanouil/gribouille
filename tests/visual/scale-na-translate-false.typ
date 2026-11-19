@@ -1,6 +1,6 @@
 // With `missing-translate: false` the missing rows are dropped.
 //
-// The left plot shows the missing level. The right plot has no grey points and no missing
+// The left plot shows the missing level. The right plot has no grey points and no (missing)
 // key in its legend: the penguins with no recorded sex are not drawn.
 
 #import "../../lib.typ": *

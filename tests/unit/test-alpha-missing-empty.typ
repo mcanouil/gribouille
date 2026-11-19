@@ -1,5 +1,5 @@
 // An empty-string cell resolves like `none` on an alpha scale, with and
-// without an missing level.
+// without a missing level.
 
 #import "../../src/utils/colour-resolve.typ": resolve-alpha
 #import "../../src/utils/types.typ": MISSING-KEY

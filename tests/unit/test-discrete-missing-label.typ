@@ -17,7 +17,7 @@
 
 #assert.eq(level-text(MISSING-KEY), "(missing)")
 #assert.eq(level-text("f"), "f")
-#assert.eq(level-text("(missing)"), "(missing)")
+#assert.eq(level-text("NA"), "NA")
 #assert.eq(_tick-label-fallback((type: "discrete"), MISSING-KEY), "(missing)")
 
 // A function of the level gets `none` for the missing level.

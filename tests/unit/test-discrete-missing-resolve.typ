@@ -45,7 +45,7 @@
 #assert.eq(resolve-level("linetype", user-na("dashed"), none), "dashed")
 #assert.eq(resolve-level("size", user-na(3pt), none), 3pt)
 
-// Without an missing level, a missing cell keeps today's answer.
+// Without a missing level, a missing cell keeps today's answer.
 #assert.eq(
   resolve-level("colour", plain, none, palette: pal, ink: black),
   black,

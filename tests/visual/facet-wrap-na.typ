@@ -1,7 +1,7 @@
 // Rows with a missing facet variable get a trailing panel.
 //
-// The panels read male, female and missing, with missing last, and the missing panel holds
-// the penguins that have no recorded sex.
+// The panels read male, female and (missing), with (missing) last, and that panel
+// holds the penguins that have no recorded sex.
 
 #import "../../lib.typ": *
 

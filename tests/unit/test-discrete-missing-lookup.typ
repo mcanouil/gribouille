@@ -1,5 +1,5 @@
-// A missing cell (`none` or `""`) on a discrete scale keys as the reserved missing level
-// level. The lookups answer its index when the domain holds `MISSING-KEY`, and
+// A missing cell (`none` or `""`) on a discrete scale keys as the reserved missing level.
+// The lookups answer its index when the domain holds `MISSING-KEY`, and
 // `none` when it does not, instead of failing inside `str(none)`.
 
 #import "../../src/scale/train.typ": level-position, map-discrete

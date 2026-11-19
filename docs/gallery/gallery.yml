@@ -930,7 +930,7 @@
   chart: "small multiples"
   title: "Facet grid"
   description: 'Panels laid out on a row × column grid with [`facet-grid`](../reference/facets/facet-grid.qmd).'
-  alt: "Scatter plot arranged on a facet grid of three rows (female, male, and NA for missing sex) and three columns (species A, B, and C)."
+  alt: "Scatter plot arranged on a facet grid of three rows (female, male, and the missing level for missing sex) and three columns (species A, B, and C)."
 
 - slug: facet-grid-free
   intent: layout

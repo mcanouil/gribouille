@@ -2,7 +2,7 @@
 // line.
 //
 // Group a is solid, group b is dashed, and the rows with no group form a third
-// line that is loosely dotted. The legend lists a, b and missing with the matching
+// line that is loosely dotted. The legend lists a, b and (missing) with the matching
 // dashes.
 
 #import "../../lib.typ": *
