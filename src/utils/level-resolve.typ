@@ -33,9 +33,7 @@
 
 // Whether `idx` is the trailing missing level of a trained discrete scale.
 #let is-missing-index(trained, idx) = (
-  idx != none
-    and has-missing-level(trained)
-    and idx == trained.domain.len() - 1
+  idx != none and has-missing-level(trained) and idx == trained.domain.len() - 1
 )
 
 // The value a scale draws the missing level with: the scale's own `missing-value`,
@@ -61,7 +59,9 @@
       } else { 0 }
   )
   let idx = discrete-index(trained, level)
-  if is-missing-index(trained, idx) { return spec-attr(trained, "missing-value") }
+  if is-missing-index(trained, idx) {
+    return spec-attr(trained, "missing-value")
+  }
   if n == 0 { return none }
   let (lo, hi) = range
   if n == 1 { return (lo + hi) / 2 }
@@ -112,7 +112,9 @@
   if trained.type == "discrete" {
     let idx = discrete-index(trained, value)
     if idx == none { return ink }
-    if is-missing-index(trained, idx) { return missing-value-of(trained, "colour", ink) }
+    if is-missing-index(trained, idx) {
+      return missing-value-of(trained, "colour", ink)
+    }
     return palette-at(pal, idx)
   }
   resolve-continuous-colour(trained, value, pal, ink)
@@ -142,7 +144,9 @@
     if pal != none and pal.len() > 0 {
       let idx = discrete-index(trained, value)
       if idx == none { return none }
-      if is-missing-index(trained, idx) { return spec-attr(trained, "missing-value") }
+      if is-missing-index(trained, idx) {
+        return spec-attr(trained, "missing-value")
+      }
       return palette-at(pal, idx)
     }
     return discrete-numeric(trained, value, range)

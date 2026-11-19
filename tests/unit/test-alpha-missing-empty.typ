@@ -18,8 +18,20 @@
 
 #for missing-level in (true, false) {
   assert.eq(
-    resolve-alpha((:), mapping, ctx(missing-level), (g: ""), default-alpha: 0.7),
-    resolve-alpha((:), mapping, ctx(missing-level), (g: none), default-alpha: 0.7),
+    resolve-alpha(
+      (:),
+      mapping,
+      ctx(missing-level),
+      (g: ""),
+      default-alpha: 0.7,
+    ),
+    resolve-alpha(
+      (:),
+      mapping,
+      ctx(missing-level),
+      (g: none),
+      default-alpha: 0.7,
+    ),
   )
 }
 #assert.eq(

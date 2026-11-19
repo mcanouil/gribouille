@@ -43,7 +43,10 @@
     } else {
       let palette = spec-palette(linetype-trained, default-linetypes)
       let idx = discrete-index(linetype-trained, sample)
-      if idx == none { "solid" } else if is-missing-index(linetype-trained, idx) {
+      if idx == none { "solid" } else if is-missing-index(
+        linetype-trained,
+        idx,
+      ) {
         missing-value-of(linetype-trained, "linetype", "solid")
       } else { palette-at(palette, idx) }
     }

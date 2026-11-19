@@ -23,7 +23,10 @@
 #let numeric = ((x: 1), (x: 2), (x: none))
 #assert.eq(count-stat.apply(numeric, (x: "x")).data.len(), 2)
 #assert.eq(
-  count-stat.apply(numeric, (x: "x"), params: (discrete: flags(x: true))).data.len(),
+  count-stat
+    .apply(numeric, (x: "x"), params: (discrete: flags(x: true)))
+    .data
+    .len(),
   3,
 )
 
@@ -38,11 +41,14 @@
 #let grid = ((x: 1, y: none), (x: 1, y: none), (x: 2, y: 3))
 #assert.eq(sum-stat.apply(grid, (x: "x", y: "y")).data.len(), 1)
 #assert.eq(
-  sum-stat.apply(
-    grid,
-    (x: "x", y: "y"),
-    params: (discrete: flags(x: true, y: true)),
-  ).data.len(),
+  sum-stat
+    .apply(
+      grid,
+      (x: "x", y: "y"),
+      params: (discrete: flags(x: true, y: true)),
+    )
+    .data
+    .len(),
   2,
 )
 
@@ -50,11 +56,14 @@
 #let obs = ((x: 1, y: 1), (x: none, y: 2), (x: none, y: 4))
 #assert.eq(summary-stat.apply(obs, (x: "x", y: "y")).data.len(), 1)
 #assert.eq(
-  summary-stat.apply(
-    obs,
-    (x: "x", y: "y"),
-    params: (discrete: flags(x: true)),
-  ).data.len(),
+  summary-stat
+    .apply(
+      obs,
+      (x: "x", y: "y"),
+      params: (discrete: flags(x: true)),
+    )
+    .data
+    .len(),
   2,
 )
 
@@ -68,7 +77,10 @@
   params: (discrete: flags(x: true)),
 )
 #assert.eq(plain.data.filter(r => r.at("ymin", default: none) != none).len(), 1)
-#assert.eq(forced.data.filter(r => r.at("ymin", default: none) != none).len(), 2)
+#assert.eq(
+  forced.data.filter(r => r.at("ymin", default: none) != none).len(),
+  2,
+)
 
 // The layer flags: a forced type wins, then a user discrete scale, then the
 // whole layer data.

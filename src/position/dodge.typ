@@ -296,9 +296,7 @@
   let level-set = (:)
   for e in entries { level-set.insert(e.key, true) }
   // A missing group sorts last, as its legend key does.
-  let levels = level-set
-    .keys()
-    .sorted(key: missing-last-key)
+  let levels = level-set.keys().sorted(key: missing-last-key)
   let level-index = (:)
   for (idx, k) in levels.enumerate() { level-index.insert(k, idx) }
   let n-levels = levels.len()

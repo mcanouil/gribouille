@@ -109,8 +109,15 @@
   if "transform" in named and named.transform not in _TRANSFORMS {
     fail-enum(scope, "transform", named.transform, _TRANSFORMS)
   }
-  if "missing-translate" in named and type(named.at("missing-translate")) != bool {
-    fail-type(scope, "missing-translate", named.at("missing-translate"), "a bool")
+  if (
+    "missing-translate" in named and type(named.at("missing-translate")) != bool
+  ) {
+    fail-type(
+      scope,
+      "missing-translate",
+      named.at("missing-translate"),
+      "a bool",
+    )
   }
   if "missing-value" in named {
     _check-missing-value(scope, aesthetic, named.at("missing-value"))

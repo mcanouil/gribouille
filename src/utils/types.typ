@@ -155,7 +155,9 @@
 // Sort key that places the reserved missing level after every real level.
 // A group key joins one part for each grouping aesthetic, so each part sorts
 // on its own.
-#let missing-last-key(k) = k.split("\u{1}").map(part => (part == MISSING-KEY, part))
+#let missing-last-key(k) = (
+  k.split("\u{1}").map(part => (part == MISSING-KEY, part))
+)
 
 // A cell is missing when it is `none` or the empty string.
 #let is-missing(v) = v == none or v == ""

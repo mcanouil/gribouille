@@ -21,7 +21,8 @@
 #import "../utils/bucket.typ": bucket-index
 #import "../utils/group.typ": group-plan, plan-key
 #import "../utils/types.typ": (
-  axis-discrete, cell-key, is-missing, level-key, missing-last-key, parse-number,
+  axis-discrete, cell-key, is-missing, level-key, missing-last-key,
+  parse-number,
 )
 
 #let cumulate-by-x(

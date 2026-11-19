@@ -157,7 +157,9 @@
 /// \@internal
 /// \@param level A level of a trained discrete domain.
 /// \@returns The display text of the level.
-#let level-text(level) = if level == MISSING-KEY { "(missing)" } else { str(level) }
+#let level-text(level) = if level == MISSING-KEY { "(missing)" } else {
+  str(level)
+}
 
 /// Resolve a break-display label by combining the scale's `labels:`
 /// override (function or array) and a typst-mark eval pass.

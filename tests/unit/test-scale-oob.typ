@@ -134,7 +134,10 @@
 #{
   let rows = ((v: 3), (v: ""))
   let free = (fill: _trained-continuous(unusable: true))
-  assert.eq(filter-oob((_layer(rows),), oob-plans(free)).layers.at(0).data, rows)
+  assert.eq(
+    filter-oob((_layer(rows),), oob-plans(free)).layers.at(0).data,
+    rows,
+  )
   let limited = (fill: _trained-continuous(limits: (2, 5)))
   assert.eq(
     filter-oob((_layer(rows),), oob-plans(limited)).layers.at(0).data,

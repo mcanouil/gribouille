@@ -4,9 +4,7 @@
 ///! single `(x, y, ymin, ymax)` row using one of the summary helpers in
 ///! `src/utils/summaries.typ`.
 
-#import "../utils/types.typ": (
-  axis-discrete, is-missing, level-key, parse-number,
-)
+#import "../utils/types.typ": axis-discrete, is-missing, level-key, parse-number
 #import "../utils/summaries.typ": _apply-summary, check-weighted-fun
 #import "../utils/errors.typ": fail-enum
 
