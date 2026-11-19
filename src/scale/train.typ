@@ -359,9 +359,13 @@
     if layer-mapping == none { continue }
     let layer-data = _layer-data(layer, data)
     let layer-factor-levels = layer.at("_factor-levels", default: (:))
+    let reads = layer.at("reads", default: none)
     for a in aes-list {
       let raw = layer-mapping.at(a, default: none)
       if raw == none { continue }
+      // A geom trains only the aesthetics it reads: an inherited one that the
+      // geom ignores, and that its own data lacks, would train as discrete.
+      if reads != none and a not in reads { continue }
       // Late-binding markers that carry a `source` column (an `after-scale`
       // derived from `stage(start: ...)`) train on that column so the per-row
       // resolver hands the closure the channel's scale-resolved value, as

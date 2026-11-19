@@ -1,6 +1,7 @@
 // Per-layer preparation: resolve `from-theme`, apply stat then position, and
 // evaluate the late-binding lanes, yielding a draw-ready layer.
 
+#import "../geom/registry.typ": GEOMS
 #import "../scale/train.typ": all-aesthetics, positional-aesthetics
 #import "../stat/apply.typ": apply-stat, resolve-stat-spec, setup-stat
 #import "../utils/errors.typ": fail-enum
@@ -307,6 +308,15 @@
   new.insert("data-trusted", true)
   new.mapping = pos-mapping
   new.inherit-aes = false
+  // A layer with its own data trains only the aesthetics its geom reads, so a
+  // plot-level `x` that this data lacks does not turn the axis discrete. A
+  // layer on the plot data keeps training them all, and so does a geom that
+  // reads nothing: `geom-blank()` and `geom-function()` set the axes from
+  // aesthetics they do not draw.
+  let geom = GEOMS.at(str(layer.name), default: none)
+  if geom != none and layer.data != none and geom.spec.reads.len() > 0 {
+    new.insert("reads", geom.spec.reads)
+  }
   new.typst-marks = _typst-marks-of(mapping)
   if factor-levels.len() > 0 {
     new.insert("_factor-levels", factor-levels)
