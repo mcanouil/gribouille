@@ -22,6 +22,9 @@
   _tick-length, _zero-margin-cm, resolve-geom-defaults, resolve-theme-palette,
 )
 #import "../guide/draw-key.typ": default-key-for, draw-glyph
+#import "../guide/key-constants.typ": key-constants
+#import "../utils/late-binding.typ": late-binding-kind
+#import "./colour.typ": _make-resolve-colour
 #import "../guide/legend.typ": _normalise-position
 #import "../utils/label-geometry.typ": _rotated-extent
 #import "../guide/gctx.typ": gctx
@@ -653,9 +656,13 @@
 }
 
 // Resolve a swatch key glyph diameter (cm). A per-legend `key-size` length
-// wins; otherwise the themed `base-cm`.
-#let _swatch-key-diam-cm(key-size, base-cm) = {
-  if type(key-size) == length { length-to-cm(key-size, 0) } else { base-cm }
+// wins; otherwise the themed `base-cm`, grown to hold the marker size the
+// layer pins.
+#let _swatch-key-diam-cm(key-size, base-cm, key-consts) = {
+  if type(key-size) == length { return length-to-cm(key-size, 0) }
+  let size = key-consts.at("size", default: none)
+  if type(size) != length { return base-cm }
+  calc.max(base-cm, 2 * length-to-cm(size, 0))
 }
 
 // Number of rendered lines in a label, resolved on its own surface first so an
@@ -1132,6 +1139,75 @@
 // for by building one.
 #let paints-bar(g) = has-part(g.stack.node, "bar")
 
+// The layer a group draws its keys from: the first layer of the group's key
+// kind that contributes to every member, else the first that contributes to
+// any. A layer that pins an aesthetic a member maps does not contribute to
+// that member, so it cannot set the key of a group it only partly belongs to.
+// Returns `none` when no layer contributes.
+#let _group-key-source(spec, members, key-kind) = {
+  let of-kind = spec
+    .at("layers", default: ())
+    .filter(layer => {
+      let override = layer.at("key", default: auto)
+      let kind = if override != auto and override != none {
+        override.name
+      } else { default-key-for(layer.at("name", default: "")) }
+      kind == key-kind
+    })
+  let contributing = of-kind.filter(layer => members.any(m => (
+    m.contributors.contains(layer)
+  )))
+  let full = contributing.filter(layer => members.all(m => (
+    m.contributors.contains(layer)
+  )))
+  if full.len() > 0 { full.first() } else if contributing.len() > 0 {
+    contributing.first()
+  } else { none }
+}
+
+// The closures of the `after-scale` and `stage` channels of a mapping, by
+// channel, with the column a `stage` trains its scale on. The key runs them on
+// the level of its guide, as the mark runs them on a row.
+#let _late-exprs(mapping) = {
+  let out = (:)
+  if mapping == none { return out }
+  for (channel, value) in mapping.pairs() {
+    let kind = late-binding-kind(value)
+    if kind == "after-scale" {
+      out.insert(channel, (expr: value.expr, column: none))
+    } else if kind == "stage" {
+      let expr = value.at("after-scale", default: none)
+      if type(expr) == function {
+        out.insert(channel, (expr: expr, column: mapping-display-name(value)))
+      }
+    }
+  }
+  out
+}
+
+// The key constants and late closures of a group, from its source layer.
+#let _group-key-parts(spec, members, key-kind, theme) = {
+  let source = _group-key-source(spec, members, key-kind)
+  if source == none { return (consts: (:), late: (:)) }
+  let mapping = merge-mapping(source, spec.at("mapping", default: none))
+  let defaults = resolve-geom-defaults(
+    if theme == none { default-theme } else { theme },
+  )
+  (
+    consts: key-constants(source, mapping, defaults, key-kind),
+    late: _late-exprs(mapping),
+  )
+}
+
+// The data column each aesthetic of a group is drawn from.
+#let _group-columns(members) = {
+  let out = (:)
+  for m in members {
+    if m.column != none { out.insert(m.aes, m.column) }
+  }
+  out
+}
+
 #let guides-for(
   spec,
   trained,
@@ -1168,6 +1244,10 @@
     let first = members.first()
     let aesthetics = members.map(c => c.aes)
     let key-kind = _key-kind-for-group(members)
+    let key-parts = _group-key-parts(spec, members, key-kind, theme)
+    let key-consts = key-parts.consts
+    let key-late = key-parts.late
+    let key-columns = _group-columns(members)
 
     let typst-mark = members.any(m => m.at("typst-mark", default: false))
     let g = if first.t.type == "discrete" {
@@ -1189,7 +1269,10 @@
         nrow: first.nrow,
         ncolumn: first.ncolumn,
         key: key-kind,
-        key-diam-cm: _swatch-key-diam-cm(first.key-size, key-diam-cm),
+        key-consts: key-consts,
+        key-late: key-late,
+        columns: key-columns,
+        key-diam-cm: _swatch-key-diam-cm(first.key-size, key-diam-cm, key-consts),
         typst-mark: typst-mark,
       )
     } else if aesthetics.contains("colour") or aesthetics.contains("fill") {
@@ -1257,6 +1340,9 @@
         ncolumn: first.ncolumn,
         labels: info.labels,
         key: key-kind,
+        key-consts: key-consts,
+        key-late: key-late,
+        columns: key-columns,
         key-diam-cm: _ladder-key-diam-cm(size-trained, breaks, key-kind),
         typst-mark: typst-mark,
         binned: info.binned,
@@ -1303,9 +1389,10 @@
 }
 
 // Compose an aesthetic bundle for one level/value across every member of the
-// merged group. Returns a dict consumable by `draw-glyph`.
-#let _bundle-for(value, aesthetics, ctx, ink) = {
-  let bundle = (:)
+// merged group. Returns a dict consumable by `draw-glyph`. `consts` is the
+// layer's key constants; a scale value overwrites the constant of its aesthetic.
+#let _bundle-for(value, aesthetics, ctx, ink, consts) = {
+  let bundle = consts
   for aes-name in aesthetics {
     let trained = ctx.trained.at(aes-name, default: none)
     if trained == none { continue }
@@ -1318,6 +1405,55 @@
     )
     if v == none { continue }
     bundle.insert(aes-name, v)
+  }
+  bundle
+}
+
+// The bundle for one level of a guide: the scale values over the key
+// constants, then the late-binding closures of the layer run on the level, and
+// a `solid` key painted with its colour.
+#let _key-bundle(value, guide, ctx, ink) = {
+  let bundle = _bundle-for(
+    value,
+    guide.at("aesthetics", default: ()),
+    ctx,
+    ink,
+    guide.at("key-consts", default: (:)),
+  )
+  let row = (:)
+  for (_, column) in guide.at("columns", default: (:)) {
+    row.insert(column, value)
+  }
+  let columns = guide.at("columns", default: (:)).values()
+  for (channel, late) in guide.at("key-late", default: (:)) {
+    // The scale of the channel gives the input when it is trained on the
+    // column of this guide, though the guide does not map the channel.
+    let trained = ctx.trained.at(channel, default: none)
+    let input = if late.column != none and late.column in columns {
+      resolve-level(channel, trained, value, palette: ctx.palette, ink: ink)
+    } else { none }
+    bundle.insert(
+      channel,
+      (late.expr)(
+        if input != none { input } else { bundle.at(channel, default: ink) },
+        (..ctx, row: row),
+      ),
+    )
+  }
+  // The neutral fill is for a guide that is not the outline colour: a guide for
+  // the colour draws a ring.
+  let neutral = bundle.remove("neutral-fill", default: none)
+  if neutral != none and "fill" not in bundle {
+    if not guide.at("aesthetics", default: ()).contains("colour") {
+      bundle.insert("fill", neutral)
+    }
+  }
+  if bundle.at("solid", default: false) {
+    let paint = bundle.at("fill", default: bundle.at("colour", default: none))
+    if paint != none {
+      bundle.insert("fill", paint)
+      let _ = bundle.remove("colour", default: none)
+    }
   }
   bundle
 }
@@ -1507,7 +1643,12 @@
       pt.at(0),
       pt.at(1),
       radius,
-      _bundle-for(value, guide.at("aesthetics", default: ()), ctx, ink),
+      _key-bundle(
+        value,
+        guide,
+        (..ctx, resolve-colour: _make-resolve-colour(ink), theme: theme),
+        ink,
+      ),
       ink: ink,
       font: glyph-font,
     ),

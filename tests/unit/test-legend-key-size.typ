@@ -10,9 +10,9 @@
 )
 
 // Helper: a per-legend `key-size` length wins; `none` defers to the themed base.
-#assert.eq(_swatch-key-diam-cm(0.5cm, 0.24), 0.5)
-#assert.eq(_swatch-key-diam-cm(none, 0.24), 0.24)
-#assert.eq(_swatch-key-diam-cm(none, 0.4), 0.4)
+#assert.eq(_swatch-key-diam-cm(0.5cm, 0.24, (:)), 0.5)
+#assert.eq(_swatch-key-diam-cm(none, 0.24, (:)), 0.24)
+#assert.eq(_swatch-key-diam-cm(none, 0.4, (:)), 0.4)
 
 #let trained = (colour: (type: "discrete", domain: ("a", "b")))
 #let spec(g) = (
@@ -106,3 +106,7 @@
 }
 
 #text("Legend key-size tests passed.")
+
+// A pinned marker size grows the key box to its diameter, never below the base.
+#assert.eq(_swatch-key-diam-cm(none, 0.24, (size: 8pt)), 2 * 8pt.cm())
+#assert.eq(_swatch-key-diam-cm(none, 0.24, (size: 1pt)), 0.24)
