@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.0 (2026-11-19)
+
 ### Changes
 
 - feat: Missing values on discrete scales are their own missing level, labelled `(missing)` and drawn with `missing-value`, shown as a legend key, an axis tick or a facet panel, and removable with `missing-translate: false`. The shape scale gains the `"circle-cross"` marker. (#404)
