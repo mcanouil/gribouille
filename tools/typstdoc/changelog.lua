@@ -13,6 +13,9 @@ title: "Changelog"
 subtitle: "Version history."
 toc: true
 toc-depth: 3
+extensions:
+  gitlink:
+    enabled: true
 ---
 ]]
 
