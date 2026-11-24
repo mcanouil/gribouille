@@ -47,9 +47,9 @@ website:
     logo: assets/images/logo-dark.svg
     logo-alt: "Gribouille"
     left:
-      # - text: "{{< iconify octicon:home-16 aria-hidden='true' >}} Home"
-      #   href: index.qmd
-      #   aria-label: "Home"
+      - text: "{{< iconify octicon:home-16 aria-hidden='true' >}} Home"
+        href: index.qmd
+        aria-label: "Home"
       - text: "{{< iconify octicon:rocket-16 aria-hidden='true' >}} Get Started"
         href: get-started/index.qmd
         aria-label: "Get Started"
