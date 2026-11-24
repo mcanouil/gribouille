@@ -26,13 +26,6 @@ $crayon-mustard-dk:  #FFD166;
 $crayon-mint:        #7FC8A9;
 $crayon-mint-dk:     #9CDCC0;
 
-// Chrome. Atelier derives the navbar, the sidebar, and the footer from these.
-// The navbar stays dark in both colour schemes, in the gribouille dark palette.
-$atelier-chrome: dark;
-$atelier-chrome-dark-bg: $paper-dark;
-$atelier-chrome-dark-fg: $ink-dark;
-$atelier-chrome-dark-accent: $crayon-red-dk;
-
 /*-- scss:mixins --*/
 
 @mixin soft-card {
@@ -120,6 +113,35 @@ $atelier-chrome-dark-accent: $crayon-red-dk;
 
   // Source SVG: assets/images/doodles/grain-dark.svg
   --gb-grain: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCI+CiAgPGcgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjA2Ij4KICAgIDxjaXJjbGUgY3g9IjYiIGN5PSIxMiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIyOCIgY3k9IjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDIiIGN5PSIyMCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1OCIgY3k9IjkiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzIiIGN5PSIzMCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4OCIgY3k9IjE0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjEwNCIgY3k9IjIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyMCIgY3k9IjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTM4IiBjeT0iMTgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU0IiBjeT0iMTAiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTcwIiBjeT0iMjQiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIzOCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIyNCIgY3k9IjU0IiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNTYiIGN5PSI2MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI3MCIgY3k9IjQ4IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9Ijg2IiBjeT0iNTgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNDIiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTE2IiBjeT0iNTYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTMyIiBjeT0iNDYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTQ4IiBjeT0iNjAiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTY0IiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNCIgY3k9Ijc0IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iODgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMzYiIGN5PSI3OCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1MiIgY3k9Ijk0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjY4IiBjeT0iODIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iODQiIGN5PSI5NiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMTYiIGN5PSI5MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMzIiIGN5PSI3OCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDgiIGN5PSI5NCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNjQiIGN5PSI4MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTEwIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjI2IiBjeT0iMTIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQ0IiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iMTI4IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9Ijc2IiBjeT0iMTE2IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjkyIiBjeT0iMTMwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEwOCIgY3k9IjExNCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMjQiIGN5PSIxMjYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTQwIiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE1NiIgY3k9IjEyOCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNzIiIGN5PSIxMTYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTIiIGN5PSIxNDYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMzAiIGN5PSIxNTgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDYiIGN5PSIxNDgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iNjIiIGN5PSIxNjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzgiIGN5PSIxNTIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iOTQiIGN5PSIxNjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTEwIiBjeT0iMTUwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyNiIgY3k9IjE2MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDIiIGN5PSIxNDgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTY0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE3NCIgY3k9IjE1MiIgcj0iMC42Ii8+CiAgPC9nPgo8L3N2Zz4K");
+}
+
+// --- Navbar. -------------------------------------------------------------
+// The navbar stays dark in both colour schemes, as gribouille's signature
+// bar, while the sidebar, the TOC card, and the footer follow the page.
+// Atelier paints all four from one chrome palette, so only the navbar tokens
+// are pinned here. The values are the ones atelier computes, with its contrast
+// checks, from `$atelier-chrome: dark` and the gribouille dark palette.
+.navbar {
+  --atelier-navbar-bg: #{$paper-dark};
+  --atelier-navbar-surface: rgb(44 48 49);
+  --atelier-navbar-surface-strong: rgb(66 69 69);
+  --atelier-navbar-fg: #{$ink-dark};
+  --atelier-navbar-muted: rgb(166 164 155);
+  --atelier-navbar-accent: rgb(255 143 131);
+  --atelier-navbar-accent-soft: rgb(255 143 131 / 0.16);
+  --atelier-navbar-accent-mark: #{$crayon-red-dk};
+  --atelier-navbar-accent-fill: #{$crayon-red-dk};
+  --atelier-navbar-on-accent: #{$paper-dark};
+  --atelier-navbar-border: rgb(244 237 223 / 0.2);
+  --atelier-navbar-control-border: rgb(244 237 223 / 0.55);
+  --bs-navbar-color: var(--atelier-navbar-fg);
+  --bs-navbar-hover-color: var(--atelier-navbar-accent);
+  --bs-navbar-active-color: var(--atelier-navbar-fg);
+  --bs-navbar-brand-color: var(--atelier-navbar-fg);
+  --bs-navbar-brand-hover-color: var(--atelier-navbar-fg);
+  --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28244, 237, 223, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  background-color: var(--atelier-navbar-bg);
+  color: var(--atelier-navbar-fg);
 }
 
 // --- Paper. ---------------------------------------------------------------
@@ -504,6 +526,27 @@ header#title-block-header .subtitle {
 // Home page — sketch/crayon landing blocks.
 // ========================================================================
 
+// --- Inline code. -------------------------------------------------------
+// Atelier draws the frame; gribouille keeps its teal ink. The code patch is
+// darker than the page, so 85% teal holds 4.5:1 on it in the light scheme.
+code:not(.sourceCode):not(pre code) {
+  color: color-mix(in srgb, var(--gb-secondary) 85%, var(--gb-ink));
+}
+
+// --- Outline button (landing). ------------------------------------------
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--gb-ink);
+  color: var(--gb-ink);
+}
+
+.btn-outline:hover,
+.btn-outline:focus-visible {
+  background: var(--gb-ink);
+  color: var(--gb-paper);
+  border-color: var(--gb-ink);
+}
+
 // --- Hero. --------------------------------------------------------------
 .hero {
   display: grid;
@@ -610,7 +653,8 @@ header#title-block-header .subtitle {
   margin: 0 0 0.35rem;
   font-size: 1.15rem;
   font-weight: 600;
-  color: var(--gb-primary);
+  // The link ink: crayon red held to 4.5:1 by atelier.
+  color: var(--atelier-link);
   border: none;
   padding: 0;
 }
@@ -620,7 +664,8 @@ header#title-block-header .subtitle {
 .step:nth-child(2) { border-left-color: var(--gb-secondary); }
 .step:nth-child(2) h3 { color: var(--gb-secondary); }
 .step:nth-child(3) { border-left-color: var(--gb-accent); }
-.step:nth-child(3) h3 { color: color-mix(in srgb, var(--gb-accent) 70%, var(--gb-ink)); }
+// 55% keeps the mint ink at 4.5:1 on the light surface.
+.step:nth-child(3) h3 { color: color-mix(in srgb, var(--gb-accent) 55%, var(--gb-ink)); }
 
 // --- Showcase (code | output). ------------------------------------------
 .showcase {
