@@ -5,10 +5,8 @@
 
 // Palette. Mirrors docs/_brand.yml, which is the source of truth; the keys here
 // must match its color.palette names exactly. Quarto does not expose the brand
-// palette as Sass variables to a user theme sheet (only as runtime
-// --quarto-scss-export-brand-* custom properties), and this runtime engine needs
-// both the light and dark hexes at compile time to emit the per-scheme --gb-*
-// tokens in a single sheet, so the values are duplicated here deliberately.
+// palette as Sass variables to a user theme sheet, and the dark navbar needs the
+// dark values in the light bundle too, so the values are duplicated here.
 $paper-light:        #FFFAF0;
 $paper-dark:         #161B1E;
 $ink-light:          #1A1A1A;
@@ -26,6 +24,14 @@ $crayon-mustard-dk:  #FFD166;
 $crayon-mint:        #7FC8A9;
 $crayon-mint-dk:     #9CDCC0;
 
+// Chrome. The navbar stays dark in both colour schemes, in the gribouille dark
+// palette, so atelier derives it, with its contrast checks, from these. The
+// sidebar and the TOC card follow the page instead: see "Sidebar" below.
+$atelier-chrome: dark;
+$atelier-chrome-dark-bg: $paper-dark;
+$atelier-chrome-dark-fg: $ink-dark;
+$atelier-chrome-dark-accent: $crayon-red-dk;
+
 /*-- scss:mixins --*/
 
 @mixin soft-card {
@@ -33,8 +39,8 @@ $crayon-mint-dk:     #9CDCC0;
   border: 1px solid var(--gb-hairline);
   border-radius: var(--gb-radius-lg);
   box-shadow: var(--gb-shadow-soft);
-  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
-              box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 180ms var(--gb-ease),
+              box-shadow 180ms var(--gb-ease);
 
   &:hover {
     transform: translateY(-2px);
@@ -61,10 +67,10 @@ $crayon-mint-dk:     #9CDCC0;
   --gb-underline: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMTQiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPgogIDxwYXRoIGQ9Ik0zIDkgQyAyMCAzLCA0MCAxMiwgNjAgNyBTIDEwMCAzLCAxMjAgOSBTIDE2MCA0LCAxOTcgOCIKICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=");
 }
 
-// --- Light mode (default + explicit). ------------------------------------
-:root,
-[data-bs-theme="light"],
-.quarto-light {
+// --- Scheme tokens. ------------------------------------------------------
+// Each bundle compiles for one scheme, so it carries only that scheme's tokens.
+@if $atelier-scheme == light {
+:root {
   --gb-paper:     #{$paper-light};
   --gb-ink:       #{$ink-light};
   --gb-muted:     #{$muted-light};
@@ -75,12 +81,17 @@ $crayon-mint-dk:     #9CDCC0;
   --gb-accent:    #{$crayon-mint};
 
   --gb-hairline:          rgb(26 26 26 / 0.10);
-  // Divider that must read as a line rather than whisper (page footer).
-  --gb-rule:              rgb(26 26 26 / 0.16);
   --gb-tint-primary:      rgb(233 76 61 / 0.10);
-  --gb-tint-secondary:    rgb(31 122 140 / 0.10);
-  --gb-tint-signal:       rgb(244 183 64 / 0.14);
-  --gb-tint-accent:       rgb(127 200 169 / 0.16);
+
+  // Atelier takes muted text from the brand secondary, teal here; gribouille's
+  // muted text is its warm grey.
+  --atelier-muted: #{$muted-light};
+
+  // Crayon inks held to 4.5:1 on the card surface.
+  --gb-ink-secondary: #{atelier-contrast($crayon-teal, $surface-light, 4.5)};
+  --gb-ink-signal:    #{atelier-contrast($crayon-mustard, $surface-light, 4.5)};
+  --gb-ink-accent:    #{atelier-contrast($crayon-mint, $surface-light, 4.5)};
+  --atelier-code-ink: #{atelier-contrast($crayon-teal, $atelier-surface-strong, 4.5)};
 
   --gb-shadow-soft: 0 2px 4px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
   --gb-shadow-lift: 0 6px 10px rgb(0 0 0 / 0.06), 0 24px 48px rgb(0 0 0 / 0.08);
@@ -88,10 +99,8 @@ $crayon-mint-dk:     #9CDCC0;
   // Source SVG: assets/images/doodles/grain.svg
   --gb-grain: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCI+CiAgPGcgZmlsbD0iIzAwMCIgZmlsbC1vcGFjaXR5PSIwLjA1Ij4KICAgIDxjaXJjbGUgY3g9IjYiIGN5PSIxMiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIyOCIgY3k9IjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDIiIGN5PSIyMCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1OCIgY3k9IjkiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzIiIGN5PSIzMCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4OCIgY3k9IjE0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjEwNCIgY3k9IjIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyMCIgY3k9IjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTM4IiBjeT0iMTgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU0IiBjeT0iMTAiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTcwIiBjeT0iMjQiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIzOCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIyNCIgY3k9IjU0IiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNTYiIGN5PSI2MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI3MCIgY3k9IjQ4IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9Ijg2IiBjeT0iNTgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNDIiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTE2IiBjeT0iNTYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTMyIiBjeT0iNDYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTQ4IiBjeT0iNjAiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTY0IiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNCIgY3k9Ijc0IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iODgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMzYiIGN5PSI3OCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1MiIgY3k9Ijk0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjY4IiBjeT0iODIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iODQiIGN5PSI5NiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMTYiIGN5PSI5MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMzIiIGN5PSI3OCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDgiIGN5PSI5NCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNjQiIGN5PSI4MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTEwIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjI2IiBjeT0iMTIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQ0IiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iMTI4IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9Ijc2IiBjeT0iMTE2IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjkyIiBjeT0iMTMwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEwOCIgY3k9IjExNCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMjQiIGN5PSIxMjYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTQwIiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE1NiIgY3k9IjEyOCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNzIiIGN5PSIxMTYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTIiIGN5PSIxNDYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMzAiIGN5PSIxNTgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDYiIGN5PSIxNDgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iNjIiIGN5PSIxNjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzgiIGN5PSIxNTIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iOTQiIGN5PSIxNjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTEwIiBjeT0iMTUwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyNiIgY3k9IjE2MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDIiIGN5PSIxNDgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTY0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE3NCIgY3k9IjE1MiIgcj0iMC42Ii8+CiAgPC9nPgo8L3N2Zz4K");
 }
-
-// --- Dark mode. ----------------------------------------------------------
-[data-bs-theme="dark"],
-.quarto-dark {
+} @else {
+:root {
   --gb-paper:     #{$paper-dark};
   --gb-ink:       #{$ink-dark};
   --gb-muted:     #{$muted-dark};
@@ -102,11 +111,17 @@ $crayon-mint-dk:     #9CDCC0;
   --gb-accent:    #{$crayon-mint-dk};
 
   --gb-hairline:          rgb(244 237 223 / 0.12);
-  --gb-rule:              rgb(244 237 223 / 0.28);
   --gb-tint-primary:      rgb(255 111 96 / 0.14);
-  --gb-tint-secondary:    rgb(91 181 199 / 0.14);
-  --gb-tint-signal:       rgb(255 209 102 / 0.16);
-  --gb-tint-accent:       rgb(156 220 192 / 0.16);
+
+  // Atelier takes muted text from the brand secondary, teal here; gribouille's
+  // muted text is its warm grey.
+  --atelier-muted: #{$muted-dark};
+
+  // Crayon inks held to 4.5:1 on the card surface.
+  --gb-ink-secondary: #{atelier-contrast($crayon-teal-dk, $surface-dark, 4.5)};
+  --gb-ink-signal:    #{atelier-contrast($crayon-mustard-dk, $surface-dark, 4.5)};
+  --gb-ink-accent:    #{atelier-contrast($crayon-mint-dk, $surface-dark, 4.5)};
+  --atelier-code-ink: #{atelier-contrast($crayon-teal-dk, $atelier-surface-strong, 4.5)};
 
   --gb-shadow-soft: 0 2px 4px rgb(0 0 0 / 0.30), 0 8px 24px rgb(0 0 0 / 0.40);
   --gb-shadow-lift: 0 6px 10px rgb(0 0 0 / 0.35), 0 24px 48px rgb(0 0 0 / 0.50);
@@ -114,34 +129,25 @@ $crayon-mint-dk:     #9CDCC0;
   // Source SVG: assets/images/doodles/grain-dark.svg
   --gb-grain: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCI+CiAgPGcgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjA2Ij4KICAgIDxjaXJjbGUgY3g9IjYiIGN5PSIxMiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIyOCIgY3k9IjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDIiIGN5PSIyMCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1OCIgY3k9IjkiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzIiIGN5PSIzMCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4OCIgY3k9IjE0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjEwNCIgY3k9IjIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyMCIgY3k9IjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTM4IiBjeT0iMTgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU0IiBjeT0iMTAiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTcwIiBjeT0iMjQiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIzOCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIyNCIgY3k9IjU0IiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNTYiIGN5PSI2MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI3MCIgY3k9IjQ4IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9Ijg2IiBjeT0iNTgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNDIiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTE2IiBjeT0iNTYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTMyIiBjeT0iNDYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTQ4IiBjeT0iNjAiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTY0IiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNCIgY3k9Ijc0IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iODgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMzYiIGN5PSI3OCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1MiIgY3k9Ijk0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjY4IiBjeT0iODIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iODQiIGN5PSI5NiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMTYiIGN5PSI5MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMzIiIGN5PSI3OCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDgiIGN5PSI5NCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNjQiIGN5PSI4MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTEwIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjI2IiBjeT0iMTIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQ0IiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iMTI4IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9Ijc2IiBjeT0iMTE2IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjkyIiBjeT0iMTMwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEwOCIgY3k9IjExNCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMjQiIGN5PSIxMjYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTQwIiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE1NiIgY3k9IjEyOCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNzIiIGN5PSIxMTYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTIiIGN5PSIxNDYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMzAiIGN5PSIxNTgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDYiIGN5PSIxNDgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iNjIiIGN5PSIxNjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzgiIGN5PSIxNTIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iOTQiIGN5PSIxNjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTEwIiBjeT0iMTUwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyNiIgY3k9IjE2MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDIiIGN5PSIxNDgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTY0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE3NCIgY3k9IjE1MiIgcj0iMC42Ii8+CiAgPC9nPgo8L3N2Zz4K");
 }
+}
 
-// --- Navbar. -------------------------------------------------------------
-// The navbar stays dark in both colour schemes, as gribouille's signature
-// bar, while the sidebar, the TOC card, and the footer follow the page.
-// Atelier paints all four from one chrome palette, so only the navbar tokens
-// are pinned here. The values are the ones atelier computes, with its contrast
-// checks, from `$atelier-chrome: dark` and the gribouille dark palette.
-.navbar {
-  --atelier-navbar-bg: #{$paper-dark};
-  --atelier-navbar-surface: rgb(44 48 49);
-  --atelier-navbar-surface-strong: rgb(66 69 69);
-  --atelier-navbar-fg: #{$ink-dark};
-  --atelier-navbar-muted: rgb(166 164 155);
-  --atelier-navbar-accent: rgb(255 143 131);
-  --atelier-navbar-accent-soft: rgb(255 143 131 / 0.16);
-  --atelier-navbar-accent-mark: #{$crayon-red-dk};
-  --atelier-navbar-accent-fill: #{$crayon-red-dk};
-  --atelier-navbar-on-accent: #{$paper-dark};
-  --atelier-navbar-border: rgb(244 237 223 / 0.2);
-  --atelier-navbar-control-border: rgb(244 237 223 / 0.55);
-  --bs-navbar-color: var(--atelier-navbar-fg);
-  --bs-navbar-hover-color: var(--atelier-navbar-accent);
-  --bs-navbar-active-color: var(--atelier-navbar-fg);
-  --bs-navbar-brand-color: var(--atelier-navbar-fg);
-  --bs-navbar-brand-hover-color: var(--atelier-navbar-fg);
-  --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28244, 237, 223, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-  background-color: var(--atelier-navbar-bg);
-  color: var(--atelier-navbar-fg);
+// --- Sidebar. ------------------------------------------------------------
+// Atelier's sidebar tokens default to the navbar ones. The navbar is dark in
+// both schemes, so the sidebar, and the TOC card that follows it, point back
+// at the page tokens instead.
+:root {
+  --atelier-sidebar-bg: var(--atelier-surface);
+  --atelier-sidebar-surface: var(--atelier-surface-strong);
+  --atelier-sidebar-surface-strong: var(--atelier-surface-strong);
+  --atelier-sidebar-fg: var(--atelier-fg);
+  --atelier-sidebar-muted: var(--atelier-muted);
+  --atelier-sidebar-accent: var(--atelier-accent-ink);
+  --atelier-sidebar-accent-soft: var(--atelier-accent-soft);
+  --atelier-sidebar-accent-mark: var(--atelier-accent-mark);
+  --atelier-sidebar-accent-fill: var(--atelier-accent-fill);
+  --atelier-sidebar-on-accent: var(--atelier-on-accent);
+  --atelier-sidebar-border: var(--atelier-border);
+  --atelier-sidebar-control-border: var(--atelier-control-border);
 }
 
 // --- Paper. ---------------------------------------------------------------
@@ -198,7 +204,6 @@ header#title-block-header {
 header#title-block-header .subtitle {
   font-family: $headings-font-family;
   font-style: italic;
-  color: var(--gb-muted);
   font-weight: 400;
 }
 
@@ -210,20 +215,6 @@ header#title-block-header .subtitle {
 .quarto-figure img, figure img {
   border-radius: var(--gb-radius-md);
   background: transparent;
-}
-
-// GLightbox builds a fresh <img> in its modal from the anchor's href.
-// Use vw units (not %) because .gslide-media is a flex item with width:auto,
-// so a percentage width resolves against the image's own intrinsic size.
-// The .glightbox-container prefix lifts specificity above GLightbox's
-// .desc-* .gslide-image img rules.
-.glightbox-container .gslide-image img[src$=".svg"] {
-  width: 75vw;
-  height: auto;
-  max-width: 75vw;
-  max-height: 90vh;
-  min-width: 0;
-  object-fit: contain;
 }
 
 
@@ -242,20 +233,12 @@ header#title-block-header .subtitle {
 }
 
 .gallery-item {
+  @include soft-card;
+  border: 0;
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--gb-surface);
-  border-radius: var(--gb-radius-lg);
-  box-shadow: var(--gb-shadow-soft);
   padding: 1rem;
-  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
-              box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--gb-shadow-lift);
-  }
 
   a.lightbox {
     display: block;
@@ -336,20 +319,12 @@ header#title-block-header .subtitle {
 }
 
 .intent-card {
+  @include soft-card;
+  border: 0;
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--gb-surface);
-  border-radius: var(--gb-radius-lg);
-  box-shadow: var(--gb-shadow-soft);
   padding: 1rem;
-  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
-              box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--gb-shadow-lift);
-  }
 
   // The overlay swallows the link's own focus ring, so the card carries it.
   &:focus-within {
@@ -408,7 +383,7 @@ header#title-block-header .subtitle {
   margin-top: auto;
   background: var(--gb-paper);
   color: var(--gb-ink);
-  border: 1px solid var(--gb-border, rgba(0, 0, 0, 0.12));
+  border: 1px solid var(--gb-hairline);
   border-radius: var(--gb-radius-md);
   box-shadow: var(--gb-shadow-soft);
   font-size: 0.9rem;
@@ -523,15 +498,8 @@ header#title-block-header .subtitle {
 }
 
 // ========================================================================
-// Home page — sketch/crayon landing blocks.
+// Home page: sketch and crayon landing blocks.
 // ========================================================================
-
-// --- Inline code. -------------------------------------------------------
-// Atelier draws the frame; gribouille keeps its teal ink. The code patch is
-// darker than the page, so 85% teal holds 4.5:1 on it in the light scheme.
-code:not(.sourceCode):not(pre code) {
-  color: color-mix(in srgb, var(--gb-secondary) 85%, var(--gb-ink));
-}
 
 // --- Outline button (landing). ------------------------------------------
 .btn-outline {
@@ -598,39 +566,6 @@ code:not(.sourceCode):not(pre code) {
   margin-bottom: 1.5rem;
 }
 
-.hero-content .pill {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.7rem;
-  border-radius: 999px;
-  background: var(--gb-tint-signal);
-  color: color-mix(in srgb, var(--gb-signal) 40%, var(--gb-ink));
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-family: $font-family-sans-serif;
-}
-
-.hero-highlight {
-  position: relative;
-  display: inline-block;
-  color: var(--gb-primary);
-}
-
-.hero-highlight::after {
-  content: "";
-  position: absolute;
-  left: -0.05em;
-  right: -0.05em;
-  bottom: -0.1em;
-  height: 0.32em;
-  background: var(--gb-primary);
-  -webkit-mask: var(--gb-underline) no-repeat center / 100% 100%;
-          mask: var(--gb-underline) no-repeat center / 100% 100%;
-  opacity: 0.75;
-  pointer-events: none;
-}
-
 .hero-content .btn + .btn { margin-left: 0.5rem; }
 
 // --- 3-step explainer. --------------------------------------------------
@@ -662,10 +597,9 @@ code:not(.sourceCode):not(pre code) {
 .step p { margin: 0; color: var(--gb-muted); }
 
 .step:nth-child(2) { border-left-color: var(--gb-secondary); }
-.step:nth-child(2) h3 { color: var(--gb-secondary); }
+.step:nth-child(2) h3 { color: var(--gb-ink-secondary); }
 .step:nth-child(3) { border-left-color: var(--gb-accent); }
-// 55% keeps the mint ink at 4.5:1 on the light surface.
-.step:nth-child(3) h3 { color: color-mix(in srgb, var(--gb-accent) 55%, var(--gb-ink)); }
+.step:nth-child(3) h3 { color: var(--gb-ink-accent); }
 
 // --- Showcase (code | output). ------------------------------------------
 .showcase {
@@ -737,10 +671,10 @@ code:not(.sourceCode):not(pre code) {
 
 .feature p { margin: 0; color: var(--gb-muted); font-size: 0.95em; }
 
-.feature:nth-child(6n+2) h4 { color: var(--gb-secondary); }
-.feature:nth-child(6n+3) h4 { color: color-mix(in srgb, var(--gb-signal) 55%, var(--gb-ink)); }
-.feature:nth-child(6n+4) h4 { color: color-mix(in srgb, var(--gb-accent) 65%, var(--gb-ink)); }
-.feature:nth-child(6n+5) h4 { color: var(--gb-secondary); }
+.feature:nth-child(6n+2) h4 { color: var(--gb-ink-secondary); }
+.feature:nth-child(6n+3) h4 { color: var(--gb-ink-signal); }
+.feature:nth-child(6n+4) h4 { color: var(--gb-ink-accent); }
+.feature:nth-child(6n+5) h4 { color: var(--gb-ink-secondary); }
 
 // --- Gallery preview. ---------------------------------------------------
 .gallery-preview {
@@ -832,31 +766,11 @@ code:not(.sourceCode):not(pre code) {
   border-color: var(--gb-hairline);
 }
 
-// Bootstrap's .btn-close uses a baked-in black SVG. Repaint it via an SVG
-// mask so the glyph follows currentColor and theming works in both schemes.
-.modal .btn-close {
-  --bs-btn-close-opacity: 1;
-  background-image: none;
-  background-color: var(--gb-muted);
-  opacity: 1;
-  border-radius: var(--gb-radius-sm);
-  -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="black"><path d="M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z"/></svg>');
-          mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="black"><path d="M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z"/></svg>');
-  -webkit-mask-size: 0.75em;
-          mask-size: 0.75em;
-  -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-          mask-position: center;
-  transition: background-color 150ms var(--gb-ease),
-              box-shadow 150ms var(--gb-ease);
-}
-
+// Atelier masks the close glyph from currentColor; gribouille turns it red on
+// hover.
 .modal .btn-close:hover,
 .modal .btn-close:focus-visible {
-  background-color: var(--gb-primary);
-  box-shadow: 0 0 0 0.2rem var(--gb-tint-primary);
-  outline: none;
+  color: var(--gb-primary);
 }
 
 // --- Responsive. --------------------------------------------------------

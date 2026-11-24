@@ -114,10 +114,9 @@ format:
   # language, date, and colour-scheme options; only gribouille's own differ.
   atelier-html:
     fig-align: center
+    # Wider than atelier's 1000px, so a plot and its code fit side by side.
     grid:
-      sidebar-width: 300px
       body-width: 1100px
-      margin-width: 300px
     # theme.scss stays last, so it wins the cascade over the brand.
     theme:
       light: &theme
