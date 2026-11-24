@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changes
+
+- docs: The documentation website uses the atelier layout, with a Home tab, while keeping the Gribouille fonts, colours and dark navbar. (#411)
+
 ## 0.9.0 (2026-11-19)
 
 ### Changes

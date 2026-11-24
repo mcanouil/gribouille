@@ -43,8 +43,9 @@ website:
       Licence: [MIT](https://github.com/mcanouil/gribouille?tab=MIT-1-ov-file#readme).
 
   navbar:
-    # The logo is the wordmark, so a text title would repeat it.
-    title: false
+    # The logo is the wordmark, so theme.scss hides this title. It stays in the
+    # markup because atelier names the logo link from it.
+    title: "Gribouille"
     logo: assets/images/logo-dark.svg
     logo-alt: "Gribouille"
     left:

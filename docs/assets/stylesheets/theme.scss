@@ -77,7 +77,6 @@ $atelier-chrome-dark-accent: $crayon-red-dk;
   --gb-surface:   #{$surface-light};
   --gb-primary:   #{$crayon-red};
   --gb-secondary: #{$crayon-teal};
-  --gb-signal:    #{$crayon-mustard};
   --gb-accent:    #{$crayon-mint};
 
   --gb-hairline:          rgb(26 26 26 / 0.10);
@@ -107,7 +106,6 @@ $atelier-chrome-dark-accent: $crayon-red-dk;
   --gb-surface:   #{$surface-dark};
   --gb-primary:   #{$crayon-red-dk};
   --gb-secondary: #{$crayon-teal-dk};
-  --gb-signal:    #{$crayon-mustard-dk};
   --gb-accent:    #{$crayon-mint-dk};
 
   --gb-hairline:          rgb(244 237 223 / 0.12);
@@ -129,6 +127,14 @@ $atelier-chrome-dark-accent: $crayon-red-dk;
   // Source SVG: assets/images/doodles/grain-dark.svg
   --gb-grain: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCI+CiAgPGcgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjA2Ij4KICAgIDxjaXJjbGUgY3g9IjYiIGN5PSIxMiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIyOCIgY3k9IjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDIiIGN5PSIyMCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1OCIgY3k9IjkiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzIiIGN5PSIzMCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4OCIgY3k9IjE0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjEwNCIgY3k9IjIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyMCIgY3k9IjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTM4IiBjeT0iMTgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU0IiBjeT0iMTAiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTcwIiBjeT0iMjQiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIzOCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIyNCIgY3k9IjU0IiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNTYiIGN5PSI2MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI3MCIgY3k9IjQ4IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9Ijg2IiBjeT0iNTgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNDIiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTE2IiBjeT0iNTYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTMyIiBjeT0iNDYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTQ4IiBjeT0iNjAiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTY0IiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNCIgY3k9Ijc0IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iODgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMzYiIGN5PSI3OCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1MiIgY3k9Ijk0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjY4IiBjeT0iODIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iODQiIGN5PSI5NiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMTYiIGN5PSI5MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMzIiIGN5PSI3OCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDgiIGN5PSI5NCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNjQiIGN5PSI4MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTEwIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjI2IiBjeT0iMTIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQ0IiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iMTI4IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9Ijc2IiBjeT0iMTE2IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjkyIiBjeT0iMTMwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEwOCIgY3k9IjExNCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMjQiIGN5PSIxMjYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTQwIiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE1NiIgY3k9IjEyOCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNzIiIGN5PSIxMTYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTIiIGN5PSIxNDYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMzAiIGN5PSIxNTgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDYiIGN5PSIxNDgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iNjIiIGN5PSIxNjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzgiIGN5PSIxNTIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iOTQiIGN5PSIxNjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTEwIiBjeT0iMTUwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyNiIgY3k9IjE2MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDIiIGN5PSIxNDgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTY0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE3NCIgY3k9IjE1MiIgcj0iMC42Ii8+CiAgPC9nPgo8L3N2Zz4K");
 }
+}
+
+// --- Navbar title. ------------------------------------------------------
+// The logo is the wordmark, so the text title would repeat it. Its link is
+// removed from display, and so from the tab order, but stays in the markup:
+// atelier names the logo link from the title's text.
+.navbar-brand:has(> .navbar-title) {
+  display: none;
 }
 
 // --- Sidebar. ------------------------------------------------------------
