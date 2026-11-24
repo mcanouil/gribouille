@@ -1,0 +1,27 @@
+{
+	"Define reusable div": {
+		"prefix": "div-source",
+		"body": ["::: {#${1:my-div}}", "${2:Content to reuse.}", ":::"],
+		"description": "Define a named div for reuse"
+	},
+	"Reuse a div": {
+		"prefix": "div-reuse",
+		"body": ["::: {reuse=\"${1:my-div}\"}", ":::"],
+		"description": "Reuse the content of a previously defined div by ID"
+	},
+	"Reuse a div with heading shift": {
+		"prefix": "div-reuse-shift",
+		"body": ["::: {reuse=\"${1:my-div}\" reuse-filter=\"shift-headings=${2:1}\"}", ":::"],
+		"description": "Reuse a div and shift heading levels"
+	},
+	"Reuse first N blocks of a div": {
+		"prefix": "div-reuse-take",
+		"body": ["::: {reuse=\"${1:my-div}\" reuse-take=\"${2:1}\"}", ":::"],
+		"description": "Reuse only the first N top-level blocks of a div"
+	},
+	"Reuse a div with identifier remap": {
+		"prefix": "div-reuse-remap",
+		"body": ["::: {reuse=\"${1:my-div}\" reuse-filter=\"id-remap=${2:old-id}->${3:new-id}\"}", ":::"],
+		"description": "Reuse a div and rename element identifiers in the copied content"
+	}
+}

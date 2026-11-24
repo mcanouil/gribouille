@@ -1,0 +1,89 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-course-stepper" type="text/javascript">
+	(function () {
+		// The sidebar menu shows each module with a number, its duration, and a
+		// tick when all its pages are visited. A summary above the menu shows
+		// the module position and the total time. Quarto's markup stays: the
+		// script adds classes and elements only. All modules other than the
+		// current module are collapsed, and Quarto's toggle opens them again.
+		//
+		// This script is in the head. It runs on the "sidebar" stage of
+		// page-load.html, after course-model.html built the course, so the
+		// stepper is in the first paint.
+		var element = window.atelierStages.element;
+
+		window.atelierStages.on("sidebar", function () {
+			var course = window.atelierCourse;
+			if (!course || course.mode !== "workshop") return;
+
+			var menu = document.querySelector("#quarto-sidebar .sidebar-menu-container");
+			var items = course.moduleItems;
+			if (!menu || !items.length) return;
+
+			menu.classList.add("atelier-stepper");
+			var hasCurrent = course.currentModule !== -1;
+
+			items.forEach(function (item, index) {
+				var module = course.modules[index];
+				// A section with its own page has the label in a link and a separate
+				// toggle with the chevron only. Other sections have the label in the
+				// toggle. A page has the label in its link.
+				var container = item.querySelector(":scope > .sidebar-item-container");
+				var toggle = container && container.querySelector(":scope > .sidebar-item-toggle");
+				var control = (container && container.querySelector(":scope > a.sidebar-link")) || toggle;
+				var text = control && control.querySelector(".menu-text");
+				if (!text) return;
+
+				var done = course.isComplete(index);
+				var current = index === course.currentModule;
+				item.classList.add("atelier-step");
+				if (done) item.classList.add("atelier-step-done");
+				if (current) item.classList.add("atelier-step-current");
+
+				var dot = element("span", "atelier-step-dot", done ? "✓" : String(index + 1));
+				dot.setAttribute("aria-hidden", "true");
+				control.insertBefore(dot, control.firstChild);
+
+				// The wrapper moves the label node with its id, so the section
+				// list keeps its accessible name.
+				var label = element("span", "atelier-step-label");
+				text.parentNode.insertBefore(label, text);
+				label.appendChild(text);
+				if (done) {
+					label.appendChild(element("span", "visually-hidden", " " + course.label("workshop-completed")));
+				}
+				if (module.minutes !== null) {
+					label.appendChild(element("small", "atelier-step-time", course.format(module.minutes)));
+				}
+
+				if (toggle && hasCurrent && !current) {
+					var target = item.querySelector(":scope > .sidebar-section");
+					if (target) target.classList.remove("show");
+					toggle.classList.add("collapsed");
+					toggle.setAttribute("aria-expanded", "false");
+				}
+			});
+
+			var summary = element("div", "atelier-course-summary");
+			var parts = [];
+			var m = course.modules.length;
+			var n = course.currentModule + 1;
+			if (hasCurrent) parts.push(course.label("workshop-position", { n: n, m: m }));
+			if (course.totalMinutes !== null) {
+				parts.push(course.label("workshop-total", { time: course.format(course.totalMinutes) }));
+			}
+			if (parts.length) summary.appendChild(element("p", "", parts.join(" · ")));
+			var progress = element("div", "atelier-course-progress");
+			progress.setAttribute("aria-hidden", "true");
+			var fill = element("span");
+			fill.style.width = (m ? (n / m) * 100 : 0) + "%";
+			progress.appendChild(fill);
+			summary.appendChild(progress);
+			menu.parentNode.insertBefore(summary, menu);
+		});
+	})();
+</script>

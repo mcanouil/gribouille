@@ -1,0 +1,107 @@
+<script id="atelier-table-scroll" type="text/javascript">
+  /**
+   * @license MIT
+   * @copyright 2026 Mickaël Canouil
+   * @author Mickaël Canouil
+   */
+  // A wide table cannot wrap, so it scrolls in its own box on a narrow screen.
+  // Remove when: never.
+  // Not SCSS: a table that scrolls by itself loses its table layout, so the
+  // scroll box has to be a new element around the table.
+  (() => {
+    // A box that clips its content does not scroll, so a table in it still
+    // gets a scroll box of its own. A Bootstrap `table-responsive-*` box
+    // scrolls only below its breakpoint, so it counts at every width.
+    const SCROLLS = ['auto', 'scroll'];
+    const RESPONSIVE = '[class*="table-responsive"]';
+    // Marks the attributes that this script adds, so that it removes only those.
+    const MARKER = 'data-atelier-table-scroll';
+    // The same selector as Quarto's scrollable-regions.js. Content that the
+    // keyboard reaches already scrolls the box, so the box needs no tab stop.
+    const FOCUSABLE =
+      'a[href]:not([tabindex="-1"]), ' +
+      'button:not([tabindex="-1"]):not(:disabled), ' +
+      'input:not([tabindex="-1"]):not(:disabled), ' +
+      'select:not([tabindex="-1"]):not(:disabled), ' +
+      'textarea:not([tabindex="-1"]):not(:disabled), ' +
+      '[tabindex]:not([tabindex="-1"]):not(:disabled)';
+    // For each box: whether the box needs a tab stop of its own, because the
+    // table holds no focusable content, and the caption that names the box.
+    const boxes = new Map();
+    let captions = 0;
+    let label = '';
+
+    function scrollsAlready(table, checked) {
+      for (let node = table.parentElement; node && node !== document.body; node = node.parentElement) {
+        if (!checked.has(node)) {
+          checked.set(
+            node,
+            node.matches(RESPONSIVE) || SCROLLS.includes(getComputedStyle(node).overflowX),
+          );
+        }
+        if (checked.get(node)) return true;
+      }
+      return false;
+    }
+
+    // A box that scrolls takes the keyboard focus, so that a keyboard user can
+    // scroll it (WCAG 2.1.1), as Quarto does for code. It is a group named by
+    // the table caption, or the caption of the figure of a cross-referenced
+    // table, or the `atelier-table-scroll` label, so that a screen reader says
+    // what gets the focus. A group adds no landmark for each wide table.
+    // A box that fits adds no tab stop. A box keeps its tab stop while it has
+    // the focus, so that the focus does not move from under the user.
+    function syncFocus(box) {
+      const entry = boxes.get(box);
+      if (!entry || !entry.needsTabStop) return;
+      const scrolls = box.scrollWidth - box.clientWidth > 1 && box.clientHeight > 1;
+      if (scrolls === box.hasAttribute(MARKER)) return;
+      if (scrolls) {
+        box.setAttribute('tabindex', '0');
+        box.setAttribute('role', 'group');
+        if (entry.caption) {
+          if (!entry.caption.id) entry.caption.id = `atelier-table-caption-${++captions}`;
+          box.setAttribute('aria-labelledby', entry.caption.id);
+        } else if (label) {
+          box.setAttribute('aria-label', label);
+        }
+        box.setAttribute(MARKER, '');
+      } else if (box !== document.activeElement) {
+        box.removeAttribute('tabindex');
+        box.removeAttribute('role');
+        box.removeAttribute('aria-labelledby');
+        box.removeAttribute('aria-label');
+        box.removeAttribute(MARKER);
+      }
+    }
+
+    // The box and the table are both observed: a web font that loads late makes
+    // the table wider without a change to the size of the box.
+    document.addEventListener('DOMContentLoaded', () => {
+      label = ((window.atelierOptions || {}).labels || {})['table-scroll'] || '';
+      const checked = new Map();
+      const tables = [...document.querySelectorAll('main table')]
+        .filter((table) => !scrollsAlready(table, checked));
+      const resize = new ResizeObserver((entries) => {
+        new Set(entries.map((entry) => entry.target.closest('.atelier-table-scroll')))
+          .forEach(syncFocus);
+      });
+      // A table in the cell of a wrapped table scrolls with the outer box.
+      tables.forEach((table) => {
+        if (table.parentElement.closest('.atelier-table-scroll')) return;
+        const box = document.createElement('div');
+        box.className = 'atelier-table-scroll';
+        table.before(box);
+        box.append(table);
+        boxes.set(box, {
+          needsTabStop: !table.querySelector(FOCUSABLE),
+          caption: table.querySelector(':scope > caption')
+            || table.closest('figure.quarto-float-tbl')?.querySelector(':scope > figcaption'),
+        });
+        box.addEventListener('focusout', () => syncFocus(box));
+        resize.observe(box);
+        resize.observe(table);
+      });
+    });
+  })();
+</script>

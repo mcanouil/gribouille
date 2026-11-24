@@ -1,0 +1,122 @@
+/*-- scss:rules --*/
+
+// ===========================================================================
+// SYNTAX HIGHLIGHTING
+// ===========================================================================
+// The rules apply when the active highlighting theme is arrow, or an Atelier
+// `.theme` file. They come from the token maps in
+// `html/highlighting-tokens.scss`: the map of the active preset for arrow, the
+// map of the file for a `.theme` file. Any other theme keeps its own colours.
+// Each rule names its scheme, because the light bundle stays active under the
+// dark one. The terminal preset is pinned dark: both bundles take the dark map
+// and the rules match either scheme class.
+// With arrow active, the map of the preset replaces every arrow token. This
+// fills the tokens that arrow-light leaves without a colour (BuiltIn,
+// Extension, RegionMarker) and removes the light band that arrow-dark paints
+// under RegionMarker (1.54:1).
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/14299
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15222
+// Remove when: arrow sets every token at AA. Keep the rules for the presets.
+$_atelier-arrow-sentinels: (
+  "light": (#5e5e5e, #4758ab),
+  "dark": (#f8f8f2, #ffa07a),
+);
+
+$_atelier-hl-preset: null;
+$_atelier-hl-scheme: null;
+$_atelier-arrow: map-get($_atelier-arrow-sentinels, "#{$atelier-scheme}");
+
+@if nth($_atelier-arrow, 1) == $btn-code-copy-color and nth($_atelier-arrow, 2) == $btn-code-copy-color-active {
+  $_atelier-hl-preset: $atelier-preset;
+  $_atelier-hl-scheme: $atelier-scheme;
+} @else {
+  @each $preset, $schemes in $atelier-highlighting {
+    @each $scheme, $tokens in $schemes {
+      $sentinel: map-get($atelier-highlighting-sentinels, "#{$preset}-#{$scheme}");
+      @if $sentinel and nth($sentinel, 1) == $btn-code-copy-color and nth($sentinel, 2) == $btn-code-copy-color-active {
+        $_atelier-hl-preset: $preset;
+        $_atelier-hl-scheme: $scheme;
+      }
+    }
+  }
+}
+
+// Quarto sets the body class from the tone of the bundle background, so a
+// bundle with a dark background gets the dark class, whatever its name.
+// Quarto picks the highlighting variant from the slot of the theme, not from
+// its tone, so a dark light bundle gets light tokens. The scope follows the
+// tone, so the rules give that bundle a map that reads on its background.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/14640
+// Remove when: Quarto picks the highlighting variant from the tone. Keep the
+// tone-based scope, which the body class needs.
+$_atelier-hl-scope: "body.quarto-light";
+@if tone($body-bg) == "dark" {
+  $_atelier-hl-scope: "body.quarto-dark";
+}
+@if $atelier-preset == terminal {
+  $_atelier-hl-scheme: dark;
+  $_atelier-hl-scope: "body:is(.quarto-light, .quarto-dark)";
+}
+
+// Write the rules of one token map under $scope. Each colour is held at 4.5:1
+// on every background in $bgs, which must share one tone. Normal is the empty
+// key: it goes on every span, and the class rules outrank it.
+@mixin atelier-highlighting-rules($tokens, $scope, $bgs, $normal) {
+  @each $class, $style in $tokens {
+    @if $class != "" or $normal {
+      $selector: "#{$scope} code span";
+      @if $class != "" {
+        $selector: "#{$selector}.#{$class}";
+      }
+      #{$selector} {
+        color: atelier-contrast-all(map-get($style, "color"), $bgs, 4.5);
+        @if $class != "" {
+          background-color: transparent;
+        }
+        @if map-get($style, "bold") {
+          font-weight: bold;
+        }
+        @if map-get($style, "italic") {
+          font-style: italic;
+        }
+        @if map-get($style, "underline") {
+          text-decoration: underline;
+        }
+      }
+
+      // Only a code block resets the weight, the style, and the decoration.
+      // Inline code in a heading or in bold text keeps what it inherits.
+      #{$selector}:is(pre *) {
+        @if not map-get($style, "bold") {
+          font-weight: normal;
+        }
+        @if not map-get($style, "italic") {
+          font-style: normal;
+        }
+        @if not map-get($style, "underline") {
+          text-decoration: none;
+        }
+      }
+    }
+  }
+}
+
+@if $_atelier-hl-preset {
+  $_atelier-hl-maps: map-get($atelier-highlighting, $_atelier-hl-preset);
+
+  @include atelier-highlighting-rules(
+    map-get($_atelier-hl-maps, $_atelier-hl-scheme),
+    $_atelier-hl-scope,
+    ($atelier-surface, body-mix(95%), $atelier-chrome-page-bg, $atelier-accent-soft),
+    true
+  );
+
+  // The K2 terminal block is dark in both bundles, so it takes the dark map.
+  // Its lines keep their own colours, so Normal is not written there.
+  @include atelier-highlighting-rules(
+    map-get($_atelier-hl-maps, "dark"),
+    "#{$_atelier-hl-scope} .atelier-terminal",
+    ($atelier-terminal-bg, $atelier-terminal-highlight),
+    false
+  );
+}

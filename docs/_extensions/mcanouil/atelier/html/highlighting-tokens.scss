@@ -1,0 +1,219 @@
+// Generated file. Do not edit.
+// Regenerate it with `uv run scripts/generate-highlighting.py`.
+/*-- scss:defaults --*/
+
+$atelier-highlighting: (
+  "default": (
+    "light": (
+        "": ("color": #003b4f, "bold": false, "italic": false, "underline": false), // Normal
+        "kw": ("color": #003b4f, "bold": true, "italic": false, "underline": false), // Keyword
+        "dt": ("color": #ad0000, "bold": false, "italic": false, "underline": false), // DataType
+        "dv": ("color": #ad0000, "bold": false, "italic": false, "underline": false), // DecVal
+        "bn": ("color": #ad0000, "bold": false, "italic": false, "underline": false), // BaseN
+        "fl": ("color": #ad0000, "bold": false, "italic": false, "underline": false), // Float
+        "cn": ("color": #8e5802, "bold": false, "italic": false, "underline": false), // Constant
+        "ch": ("color": #1e7248, "bold": false, "italic": false, "underline": false), // Char
+        "sc": ("color": #5e5e5e, "bold": false, "italic": false, "underline": false), // SpecialChar
+        "st": ("color": #1e7248, "bold": false, "italic": false, "underline": false), // String
+        "vs": ("color": #1e7248, "bold": false, "italic": false, "underline": false), // VerbatimString
+        "ss": ("color": #1e7248, "bold": false, "italic": false, "underline": false), // SpecialString
+        "im": ("color": #006b90, "bold": false, "italic": false, "underline": false), // Import
+        "co": ("color": #595959, "bold": false, "italic": false, "underline": false), // Comment
+        "do": ("color": #5e5e5e, "bold": false, "italic": true, "underline": false), // Documentation
+        "an": ("color": #5e5e5e, "bold": false, "italic": false, "underline": false), // Annotation
+        "cv": ("color": #5e5e5e, "bold": false, "italic": true, "underline": false), // CommentVar
+        "ot": ("color": #003b4f, "bold": false, "italic": false, "underline": false), // Other
+        "fu": ("color": #4758ab, "bold": false, "italic": false, "underline": false), // Function
+        "va": ("color": #111111, "bold": false, "italic": false, "underline": false), // Variable
+        "cf": ("color": #003b4f, "bold": true, "italic": false, "underline": false), // ControlFlow
+        "op": ("color": #5e5e5e, "bold": false, "italic": false, "underline": false), // Operator
+        "bu": ("color": #4758ab, "bold": false, "italic": false, "underline": false), // BuiltIn
+        "ex": ("color": #006b90, "bold": false, "italic": false, "underline": false), // Extension
+        "pp": ("color": #ad0000, "bold": false, "italic": false, "underline": false), // Preprocessor
+        "at": ("color": #5d6b1f, "bold": false, "italic": false, "underline": false), // Attribute
+        "re": ("color": #003b4f, "bold": false, "italic": false, "underline": false), // RegionMarker
+        "in": ("color": #5e5e5e, "bold": false, "italic": false, "underline": false), // Information
+        "wa": ("color": #5e5e5e, "bold": true, "italic": true, "underline": false), // Warning
+        "al": ("color": #ad0000, "bold": true, "italic": false, "underline": false), // Alert
+        "er": ("color": #ad0000, "bold": true, "italic": false, "underline": false), // Error
+    ),
+    "dark": (
+        "": ("color": #f8f8f2, "bold": false, "italic": false, "underline": false), // Normal
+        "kw": ("color": #ffa07a, "bold": true, "italic": false, "underline": false), // Keyword
+        "dt": ("color": #c792ea, "bold": false, "italic": false, "underline": false), // DataType
+        "dv": ("color": #d4d0ab, "bold": false, "italic": false, "underline": false), // DecVal
+        "bn": ("color": #d4d0ab, "bold": false, "italic": false, "underline": false), // BaseN
+        "fl": ("color": #d4d0ab, "bold": false, "italic": false, "underline": false), // Float
+        "cn": ("color": #ffd700, "bold": false, "italic": false, "underline": false), // Constant
+        "ch": ("color": #abe338, "bold": false, "italic": false, "underline": false), // Char
+        "sc": ("color": #abe338, "bold": false, "italic": false, "underline": false), // SpecialChar
+        "st": ("color": #abe338, "bold": false, "italic": false, "underline": false), // String
+        "vs": ("color": #abe338, "bold": false, "italic": false, "underline": false), // VerbatimString
+        "ss": ("color": #abe338, "bold": false, "italic": false, "underline": false), // SpecialString
+        "im": ("color": #abe338, "bold": false, "italic": false, "underline": false), // Import
+        "co": ("color": #a8a8a0, "bold": false, "italic": true, "underline": false), // Comment
+        "do": ("color": #a8a8a0, "bold": false, "italic": true, "underline": false), // Documentation
+        "an": ("color": #d4d0ab, "bold": false, "italic": false, "underline": false), // Annotation
+        "cv": ("color": #ffd700, "bold": false, "italic": false, "underline": false), // CommentVar
+        "ot": ("color": #00e0e0, "bold": false, "italic": false, "underline": false), // Other
+        "fu": ("color": #82aaff, "bold": false, "italic": false, "underline": false), // Function
+        "va": ("color": #00e0e0, "bold": false, "italic": false, "underline": false), // Variable
+        "cf": ("color": #ffa07a, "bold": true, "italic": false, "underline": false), // ControlFlow
+        "op": ("color": #d4d0ab, "bold": false, "italic": false, "underline": false), // Operator
+        "bu": ("color": #abe338, "bold": false, "italic": false, "underline": false), // BuiltIn
+        "ex": ("color": #00e0e0, "bold": true, "italic": false, "underline": false), // Extension
+        "pp": ("color": #dcc6e0, "bold": false, "italic": false, "underline": false), // Preprocessor
+        "at": ("color": #00e0e0, "bold": false, "italic": false, "underline": false), // Attribute
+        "re": ("color": #00e0e0, "bold": false, "italic": false, "underline": false), // RegionMarker
+        "in": ("color": #d4d0ab, "bold": false, "italic": false, "underline": false), // Information
+        "wa": ("color": #dcc6e0, "bold": true, "italic": false, "underline": false), // Warning
+        "al": ("color": #f07178, "bold": true, "italic": false, "underline": false), // Alert
+        "er": ("color": #f07178, "bold": false, "italic": false, "underline": true), // Error
+    ),
+  ),
+  "quarto": (
+    "light": (
+        "": ("color": #1f2a36, "bold": false, "italic": false, "underline": false), // Normal
+        "kw": ("color": #2a5680, "bold": true, "italic": false, "underline": false), // Keyword
+        "dt": ("color": #6b4c9a, "bold": false, "italic": false, "underline": false), // DataType
+        "dv": ("color": #a0461f, "bold": false, "italic": false, "underline": false), // DecVal
+        "bn": ("color": #a0461f, "bold": false, "italic": false, "underline": false), // BaseN
+        "fl": ("color": #a0461f, "bold": false, "italic": false, "underline": false), // Float
+        "cn": ("color": #a0461f, "bold": false, "italic": false, "underline": false), // Constant
+        "ch": ("color": #2a6848, "bold": false, "italic": false, "underline": false), // Char
+        "sc": ("color": #8a5300, "bold": false, "italic": false, "underline": false), // SpecialChar
+        "st": ("color": #2a6848, "bold": false, "italic": false, "underline": false), // String
+        "vs": ("color": #2a6848, "bold": false, "italic": false, "underline": false), // VerbatimString
+        "ss": ("color": #8a5300, "bold": false, "italic": false, "underline": false), // SpecialString
+        "im": ("color": #7a3f8a, "bold": false, "italic": false, "underline": false), // Import
+        "co": ("color": #4f5c69, "bold": false, "italic": true, "underline": false), // Comment
+        "do": ("color": #4f5c69, "bold": false, "italic": true, "underline": false), // Documentation
+        "an": ("color": #4f5c69, "bold": false, "italic": false, "underline": false), // Annotation
+        "cv": ("color": #4f5c69, "bold": false, "italic": true, "underline": false), // CommentVar
+        "ot": ("color": #1f2a36, "bold": false, "italic": false, "underline": false), // Other
+        "fu": ("color": #365e88, "bold": false, "italic": false, "underline": false), // Function
+        "va": ("color": #273848, "bold": false, "italic": false, "underline": false), // Variable
+        "cf": ("color": #2a5680, "bold": true, "italic": false, "underline": false), // ControlFlow
+        "op": ("color": #4a5866, "bold": false, "italic": false, "underline": false), // Operator
+        "bu": ("color": #22629a, "bold": false, "italic": false, "underline": false), // BuiltIn
+        "ex": ("color": #22629a, "bold": true, "italic": false, "underline": false), // Extension
+        "pp": ("color": #7a3f8a, "bold": false, "italic": false, "underline": false), // Preprocessor
+        "at": ("color": #6f5a00, "bold": false, "italic": false, "underline": false), // Attribute
+        "re": ("color": #4f5c69, "bold": false, "italic": false, "underline": false), // RegionMarker
+        "in": ("color": #4f5c69, "bold": false, "italic": false, "underline": false), // Information
+        "wa": ("color": #8a5300, "bold": true, "italic": false, "underline": false), // Warning
+        "al": ("color": #b0302a, "bold": true, "italic": false, "underline": false), // Alert
+        "er": ("color": #b0302a, "bold": true, "italic": false, "underline": true), // Error
+    ),
+    "dark": (
+        "": ("color": #dbe6f0, "bold": false, "italic": false, "underline": false), // Normal
+        "kw": ("color": #74aadb, "bold": true, "italic": false, "underline": false), // Keyword
+        "dt": ("color": #c3a6f0, "bold": false, "italic": false, "underline": false), // DataType
+        "dv": ("color": #f0a875, "bold": false, "italic": false, "underline": false), // DecVal
+        "bn": ("color": #f0a875, "bold": false, "italic": false, "underline": false), // BaseN
+        "fl": ("color": #f0a875, "bold": false, "italic": false, "underline": false), // Float
+        "cn": ("color": #f0a875, "bold": false, "italic": false, "underline": false), // Constant
+        "ch": ("color": #9fd4a6, "bold": false, "italic": false, "underline": false), // Char
+        "sc": ("color": #e3c77a, "bold": false, "italic": false, "underline": false), // SpecialChar
+        "st": ("color": #9fd4a6, "bold": false, "italic": false, "underline": false), // String
+        "vs": ("color": #9fd4a6, "bold": false, "italic": false, "underline": false), // VerbatimString
+        "ss": ("color": #e3c77a, "bold": false, "italic": false, "underline": false), // SpecialString
+        "im": ("color": #d6a5e8, "bold": false, "italic": false, "underline": false), // Import
+        "co": ("color": #9aa8b6, "bold": false, "italic": true, "underline": false), // Comment
+        "do": ("color": #9aa8b6, "bold": false, "italic": true, "underline": false), // Documentation
+        "an": ("color": #9aa8b6, "bold": false, "italic": false, "underline": false), // Annotation
+        "cv": ("color": #9aa8b6, "bold": false, "italic": true, "underline": false), // CommentVar
+        "ot": ("color": #dbe6f0, "bold": false, "italic": false, "underline": false), // Other
+        "fu": ("color": #9cc6ec, "bold": false, "italic": false, "underline": false), // Function
+        "va": ("color": #c8d6e3, "bold": false, "italic": false, "underline": false), // Variable
+        "cf": ("color": #74aadb, "bold": true, "italic": false, "underline": false), // ControlFlow
+        "op": ("color": #aebbc8, "bold": false, "italic": false, "underline": false), // Operator
+        "bu": ("color": #8ab8e3, "bold": false, "italic": false, "underline": false), // BuiltIn
+        "ex": ("color": #8ab8e3, "bold": true, "italic": false, "underline": false), // Extension
+        "pp": ("color": #d6a5e8, "bold": false, "italic": false, "underline": false), // Preprocessor
+        "at": ("color": #e3c77a, "bold": false, "italic": false, "underline": false), // Attribute
+        "re": ("color": #9aa8b6, "bold": false, "italic": false, "underline": false), // RegionMarker
+        "in": ("color": #9aa8b6, "bold": false, "italic": false, "underline": false), // Information
+        "wa": ("color": #e3c77a, "bold": true, "italic": false, "underline": false), // Warning
+        "al": ("color": #ff8f87, "bold": true, "italic": false, "underline": false), // Alert
+        "er": ("color": #ff8f87, "bold": true, "italic": false, "underline": true), // Error
+    ),
+  ),
+  "terminal": (
+    "light": (
+        "": ("color": #1f2328, "bold": false, "italic": false, "underline": false), // Normal
+        "kw": ("color": #1a7f37, "bold": true, "italic": false, "underline": false), // Keyword
+        "dt": ("color": #1b7c83, "bold": false, "italic": false, "underline": false), // DataType
+        "dv": ("color": #a04100, "bold": false, "italic": false, "underline": false), // DecVal
+        "bn": ("color": #a04100, "bold": false, "italic": false, "underline": false), // BaseN
+        "fl": ("color": #a04100, "bold": false, "italic": false, "underline": false), // Float
+        "cn": ("color": #a04100, "bold": false, "italic": false, "underline": false), // Constant
+        "ch": ("color": #7d5f00, "bold": false, "italic": false, "underline": false), // Char
+        "sc": ("color": #a04100, "bold": false, "italic": false, "underline": false), // SpecialChar
+        "st": ("color": #7d5f00, "bold": false, "italic": false, "underline": false), // String
+        "vs": ("color": #7d5f00, "bold": false, "italic": false, "underline": false), // VerbatimString
+        "ss": ("color": #7d5f00, "bold": false, "italic": false, "underline": false), // SpecialString
+        "im": ("color": #8250df, "bold": false, "italic": false, "underline": false), // Import
+        "co": ("color": #57606a, "bold": false, "italic": true, "underline": false), // Comment
+        "do": ("color": #57606a, "bold": false, "italic": true, "underline": false), // Documentation
+        "an": ("color": #57606a, "bold": false, "italic": false, "underline": false), // Annotation
+        "cv": ("color": #57606a, "bold": false, "italic": true, "underline": false), // CommentVar
+        "ot": ("color": #1f2328, "bold": false, "italic": false, "underline": false), // Other
+        "fu": ("color": #0969da, "bold": false, "italic": false, "underline": false), // Function
+        "va": ("color": #1f2328, "bold": false, "italic": false, "underline": false), // Variable
+        "cf": ("color": #1a7f37, "bold": true, "italic": false, "underline": false), // ControlFlow
+        "op": ("color": #424a53, "bold": false, "italic": false, "underline": false), // Operator
+        "bu": ("color": #1b7c83, "bold": false, "italic": false, "underline": false), // BuiltIn
+        "ex": ("color": #8250df, "bold": true, "italic": false, "underline": false), // Extension
+        "pp": ("color": #8250df, "bold": false, "italic": false, "underline": false), // Preprocessor
+        "at": ("color": #1b7c83, "bold": false, "italic": false, "underline": false), // Attribute
+        "re": ("color": #57606a, "bold": false, "italic": false, "underline": false), // RegionMarker
+        "in": ("color": #57606a, "bold": false, "italic": false, "underline": false), // Information
+        "wa": ("color": #7d5f00, "bold": true, "italic": false, "underline": false), // Warning
+        "al": ("color": #cf222e, "bold": true, "italic": false, "underline": false), // Alert
+        "er": ("color": #cf222e, "bold": true, "italic": false, "underline": true), // Error
+    ),
+    "dark": (
+        "": ("color": #d8dee9, "bold": false, "italic": false, "underline": false), // Normal
+        "kw": ("color": #7ee08a, "bold": true, "italic": false, "underline": false), // Keyword
+        "dt": ("color": #56d4dd, "bold": false, "italic": false, "underline": false), // DataType
+        "dv": ("color": #f0a35e, "bold": false, "italic": false, "underline": false), // DecVal
+        "bn": ("color": #f0a35e, "bold": false, "italic": false, "underline": false), // BaseN
+        "fl": ("color": #f0a35e, "bold": false, "italic": false, "underline": false), // Float
+        "cn": ("color": #f0a35e, "bold": false, "italic": false, "underline": false), // Constant
+        "ch": ("color": #e3c45c, "bold": false, "italic": false, "underline": false), // Char
+        "sc": ("color": #f0a35e, "bold": false, "italic": false, "underline": false), // SpecialChar
+        "st": ("color": #e3c45c, "bold": false, "italic": false, "underline": false), // String
+        "vs": ("color": #e3c45c, "bold": false, "italic": false, "underline": false), // VerbatimString
+        "ss": ("color": #e3c45c, "bold": false, "italic": false, "underline": false), // SpecialString
+        "im": ("color": #d2a8ff, "bold": false, "italic": false, "underline": false), // Import
+        "co": ("color": #8b949e, "bold": false, "italic": true, "underline": false), // Comment
+        "do": ("color": #8b949e, "bold": false, "italic": true, "underline": false), // Documentation
+        "an": ("color": #8b949e, "bold": false, "italic": false, "underline": false), // Annotation
+        "cv": ("color": #8b949e, "bold": false, "italic": true, "underline": false), // CommentVar
+        "ot": ("color": #d8dee9, "bold": false, "italic": false, "underline": false), // Other
+        "fu": ("color": #6cb6ff, "bold": false, "italic": false, "underline": false), // Function
+        "va": ("color": #d8dee9, "bold": false, "italic": false, "underline": false), // Variable
+        "cf": ("color": #7ee08a, "bold": true, "italic": false, "underline": false), // ControlFlow
+        "op": ("color": #a9b1bd, "bold": false, "italic": false, "underline": false), // Operator
+        "bu": ("color": #56d4dd, "bold": false, "italic": false, "underline": false), // BuiltIn
+        "ex": ("color": #d2a8ff, "bold": true, "italic": false, "underline": false), // Extension
+        "pp": ("color": #d2a8ff, "bold": false, "italic": false, "underline": false), // Preprocessor
+        "at": ("color": #56d4dd, "bold": false, "italic": false, "underline": false), // Attribute
+        "re": ("color": #8b949e, "bold": false, "italic": false, "underline": false), // RegionMarker
+        "in": ("color": #8b949e, "bold": false, "italic": false, "underline": false), // Information
+        "wa": ("color": #e3c45c, "bold": true, "italic": false, "underline": false), // Warning
+        "al": ("color": #ff7b72, "bold": true, "italic": false, "underline": false), // Alert
+        "er": ("color": #ff7b72, "bold": true, "italic": false, "underline": true), // Error
+    ),
+  ),
+) !default;
+
+$atelier-highlighting-sentinels: (
+  "default-light": (#595959, #4758ab),
+  "default-dark": (#a8a8a0, #82aaff),
+  "quarto-light": (#4f5c69, #365e88),
+  "quarto-dark": (#9aa8b6, #9cc6ec),
+  "terminal-light": (#57606a, #0969da),
+  "terminal-dark": (#8b949e, #6cb6ff),
+) !default;

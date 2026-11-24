@@ -1,0 +1,771 @@
+/*-- scss:rules --*/
+
+// ===========================================================================
+// N3 BAR
+// ===========================================================================
+// Without a navbar, `html/scripts/reading-bar.html` puts a bar at the top of
+// the content: the reading bar in documentation mode, the workshop bar in
+// workshop mode. With a navbar in workshop mode, the workshop bar is the
+// module row under the navbar. The colours come from the
+// `--atelier-workshop-bar-*` tokens, which are on the chrome surface. The bar
+// has a bottom border, as the navbar has.
+
+// The row is 50 px, the progress track is 5 px, and the bottom border is 1 px.
+// The script writes the measured height to `--atelier-bar-height`; the sum is
+// the fallback. The `$_atelier-` variables of this file are layout values of
+// the rules, not project options, so they have no `!default` in `chrome.scss`.
+$_atelier-bar-row-height: 50px;
+$_atelier-bar-track-height: 5px;
+$_atelier-bar-border-width: 1px;
+$_atelier-bar-one-line-height: $_atelier-bar-row-height + $_atelier-bar-track-height + $_atelier-bar-border-width;
+$_atelier-bar-height: var(--atelier-bar-height, #{$_atelier-bar-one-line-height});
+
+// The script inserts the bar after the first paint. The served page already
+// tells that it will come: a page with no navbar (no `nav-fixed` on `body`
+// and no `nav.navbar` in the header) and with the current page in the
+// sidebar gets the bar, unless it is a workshop page that no listed sidebar
+// holds. The layout around the bar uses both selectors, so the row is there
+// from the first paint.
+$_atelier-bar-navbar: "#quarto-header > nav.navbar";
+$_atelier-bar-current: "#quarto-sidebar .sidebar-link.active";
+$_atelier-bar-expected: "html:not(.atelier-workshop-unlisted) > body:not(.nav-fixed, :has(#{$_atelier-bar-navbar})) #quarto-content:has(#{$_atelier-bar-current})";
+$_atelier-bar-content: "#quarto-content:has(> .atelier-bar), #{$_atelier-bar-expected}";
+// `:has()` does not nest, so the root puts the navbar test on `html`.
+$_atelier-bar-root: "html:has(#quarto-content > .atelier-bar), html:not(.atelier-workshop-unlisted, :has(#{$_atelier-bar-navbar})):has(> body:not(.nav-fixed) #{$_atelier-bar-current})";
+
+.atelier-bar {
+  grid-column: screen-start / screen-end;
+  grid-row: bar-top / content-top;
+  z-index: 10;
+  border-bottom: $_atelier-bar-border-width solid var(--atelier-workshop-bar-border);
+  background-color: var(--atelier-workshop-bar-bg);
+  color: var(--atelier-workshop-bar-fg);
+
+  // The ring is the accent of the bar, as on the navbar, so that it holds 3:1
+  // on a pinned dark bar.
+  :is(a, button):focus-visible {
+    outline-color: var(--atelier-workshop-bar-accent-text);
+  }
+}
+
+// Quarto pads the top of every child of `#quarto-content` with an id selector.
+#quarto-content > .atelier-bar {
+  padding-top: 0;
+}
+
+// Quarto pads the sides of every `nav` in the header with an id selector. The
+// module row has its own padding.
+#quarto-header > .atelier-bar {
+  padding-inline: 0;
+}
+
+#{$_atelier-bar-content} {
+  grid-template-rows:
+    // The floor is the one-line height. The measured height would only grow,
+    // because the bar stretches to the row it measures.
+    [bar-top] minmax(#{$_atelier-bar-one-line-height}, auto)
+    [content-top] minmax(max-content, 1fr)
+    [content-bottom] minmax(60px, max-content)
+    [page-bottom];
+}
+
+.atelier-bar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  min-height: $_atelier-bar-row-height;
+  padding: 0.5rem 1.1rem;
+}
+
+.atelier-bar-crumb {
+  margin: 0;
+  color: var(--atelier-workshop-bar-muted);
+  font-size: 0.85rem;
+
+  b {
+    color: var(--atelier-workshop-bar-fg);
+    font-weight: 650;
+  }
+}
+
+.atelier-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  font-size: 0.82rem;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    min-height: 28px;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid currentColor;
+    border-radius: $border-radius-sm;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .atelier-bar-next {
+    border-color: var(--atelier-workshop-bar-accent);
+    background-color: var(--atelier-workshop-bar-accent);
+    color: var(--atelier-workshop-bar-on-accent);
+    font-weight: 650;
+  }
+}
+
+// The toggle and the time read as one pill, as in the mockup: the toggle is
+// the left end and the time is the right end.
+.atelier-timer-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 0.2rem 0 0.45rem;
+  border: 1px solid currentColor;
+  border-right: 0;
+  border-radius: 999px 0 0 999px;
+  background: none;
+  color: inherit;
+
+  &[aria-pressed="true"] {
+    background-color: var(--atelier-workshop-bar-surface);
+  }
+}
+
+.atelier-timer {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin-left: -0.5rem;
+  padding: 0 0.55rem 0 0.2rem;
+  border: 1px solid currentColor;
+  border-left: 0;
+  border-radius: 0 999px 999px 0;
+  font: 500 0.78rem / 1 var(--bs-font-monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+// Until the script inserts the bar, its row shows the frame of the bar: the
+// background, the empty progress track, and the bottom border. The text, the
+// links, and the progress fill then fade in, so only they change.
+#{$_atelier-bar-expected}:not(:has(> .atelier-bar))::before {
+  content: "";
+  grid-column: screen-start / screen-end;
+  grid-row: bar-top / content-top;
+  border-bottom: $_atelier-bar-border-width solid var(--atelier-workshop-bar-border);
+  background: linear-gradient(
+    to top,
+    var(--atelier-workshop-bar-track) $_atelier-bar-track-height,
+    var(--atelier-workshop-bar-bg) $_atelier-bar-track-height
+  );
+}
+
+// `page-load.html` puts this frame of the module row under the navbar before
+// the first paint, and `reading-bar.html` swaps it for the row.
+#quarto-header > .atelier-bar-frame {
+  height: $_atelier-bar-one-line-height;
+  border-bottom: $_atelier-bar-border-width solid var(--atelier-workshop-bar-border);
+  background: linear-gradient(
+    to top,
+    var(--atelier-workshop-bar-track) $_atelier-bar-track-height,
+    var(--atelier-workshop-bar-bg) $_atelier-bar-track-height
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :is(#quarto-content, #quarto-header) > .atelier-bar :is(.atelier-bar-row, .atelier-bar-progress > span) {
+    animation: atelier-bar-fade 150ms ease-out;
+  }
+}
+
+.atelier-bar-progress {
+  height: $_atelier-bar-track-height;
+  background-color: var(--atelier-workshop-bar-track);
+
+  > span {
+    display: block;
+    height: 100%;
+    background-color: var(--atelier-workshop-bar-accent);
+  }
+}
+
+// From `lg` the bar sits beside the full-height sidebar and stays at the top
+// while the page scrolls. The table of contents sticks below it, and anchors
+// and focused elements scroll to below it.
+@include media-breakpoint-up(lg) {
+  #{$_atelier-bar-root} {
+    scroll-padding-top: $_atelier-bar-height;
+  }
+
+  #quarto-content > .atelier-bar,
+  #{$_atelier-bar-expected}::before {
+    grid-column: body-start / screen-end;
+  }
+
+  #quarto-content > .atelier-bar {
+    position: sticky;
+    top: 0;
+  }
+
+  #{$_atelier-bar-content} {
+    > #quarto-sidebar {
+      grid-row: bar-top / page-bottom;
+    }
+
+    // Quarto writes `top` and `max-height` inline on every `.sidebar`, so
+    // only `!important` puts the table of contents below the bar.
+    > #quarto-margin-sidebar {
+      top: $_atelier-bar-height !important;
+      max-height: calc(100vh - #{$_atelier-bar-height}) !important;
+    }
+  }
+}
+
+// Below `md` the bar keeps one line, so it keeps the height that the page
+// reserves for it. The crumb shows only the page title, with an ellipsis, and
+// the previous and next links show only their arrows; their labels stay for
+// screen readers.
+@include media-breakpoint-down(md) {
+  .atelier-bar-row {
+    flex-wrap: nowrap;
+  }
+
+  .atelier-bar-crumb {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .atelier-bar-module {
+    display: none;
+  }
+
+  .atelier-bar-actions {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+
+    a {
+      padding-inline: 0.4rem;
+    }
+  }
+
+  .atelier-bar-label {
+    @include visually-hidden;
+  }
+}
+
+// ===========================================================================
+// S3 COURSE STEPPER
+// ===========================================================================
+// In workshop mode, `html/scripts/course-stepper.html` turns the sidebar menu
+// into a course stepper: a numbered dot before each module, a vertical line
+// between the dots, and the duration under the module title. The current page
+// in the open module keeps the S2 current item.
+
+// The dot column starts at the inset of the module row. The line runs through
+// the centre of the dots.
+$_atelier-step-dot: 24px;
+$_atelier-step-inset: 0.3rem;
+$_atelier-step-pad: 0.4rem;
+$_atelier-step-gap: 0.7rem;
+$_atelier-step-centre: calc(#{$_atelier-step-pad} + #{$_atelier-step-dot * 0.5});
+
+.atelier-course-summary {
+  margin: 0 0.75rem 1rem;
+  padding: 0 0.4rem 1rem;
+  border-bottom: 1px solid var(--atelier-sidebar-border);
+
+  p {
+    margin: 0;
+    color: var(--atelier-sidebar-muted);
+    font-size: 0.82rem;
+  }
+}
+
+.atelier-course-progress {
+  height: 6px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background-color: var(--atelier-sidebar-surface-strong);
+
+  > span {
+    display: block;
+    height: 100%;
+    background-color: var(--atelier-sidebar-accent-fill);
+  }
+}
+
+// Quarto pads the top of every block in the sidebar with `.sidebar.sidebar-navigation > *`.
+// The summary above the menu already gives the space.
+#quarto-sidebar > .atelier-stepper {
+  padding-top: 0;
+}
+
+#quarto-sidebar .atelier-stepper > ul > .atelier-step {
+  position: relative;
+  margin: 0;
+  padding: 0;
+
+  // Each module draws the line from its dot to the dot of the next module.
+  // A top-level link that is not a page, such as an external link, is not a
+  // module, so the last module draws no line.
+  &:has(~ .atelier-step)::before {
+    content: "";
+    position: absolute;
+    top: $_atelier-step-centre;
+    bottom: calc(-1 * #{$_atelier-step-centre});
+    left: calc(#{$_atelier-step-inset} + #{$_atelier-step-dot * 0.5} - 1px);
+    width: 2px;
+    background-color: var(--atelier-sidebar-border);
+  }
+
+  // The S2 section button keeps its colours. The row puts the dot at the
+  // start and the title at normal weight. A section with its own page has
+  // its title in a link and the chevron in a separate toggle, which keeps
+  // its own size.
+  > .sidebar-item-container > .sidebar-link {
+    display: flex;
+    align-items: flex-start;
+    gap: $_atelier-step-gap;
+    width: 100%;
+    padding: $_atelier-step-pad $_atelier-step-inset;
+    font-weight: 400;
+    text-align: start;
+
+    > .bi-chevron-right {
+      align-self: center;
+    }
+  }
+
+  // A module title that is a page link, such as a one-page module, takes the
+  // ink of a section button, not the muted ink of a page link. Only the docked
+  // sidebar gives page links the muted ink, and the floating sidebar keeps its
+  // hover colour. The current page keeps its own colour.
+  body.docked & > .sidebar-item-container > a.sidebar-link:not(.active) {
+    color: var(--atelier-sidebar-fg);
+  }
+
+  > .sidebar-item-container > .sidebar-item-toggle:not(.sidebar-link) {
+    align-self: center;
+  }
+
+  &.atelier-step-current > .sidebar-item-container > .sidebar-link {
+    font-weight: 650;
+  }
+
+  // The pages of the open module align with the module title.
+  > .sidebar-section {
+    padding-inline-start: calc(#{$_atelier-step-inset} + #{$_atelier-step-dot} + #{$_atelier-step-gap} - 0.6rem);
+  }
+}
+
+.atelier-step-dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: $_atelier-step-dot;
+  height: $_atelier-step-dot;
+  border: 2px solid var(--atelier-sidebar-control-border);
+  border-radius: 50%;
+  background-color: var(--atelier-sidebar-bg);
+  color: var(--atelier-sidebar-muted);
+  font: 600 0.72rem / 1 var(--bs-font-monospace);
+
+  .atelier-step-done & {
+    border-color: var(--atelier-sidebar-accent-fill);
+    background-color: var(--atelier-sidebar-accent-fill);
+    color: var(--atelier-sidebar-on-accent);
+  }
+
+  .atelier-step-current & {
+    box-shadow: 0 0 0 4px var(--atelier-sidebar-accent-soft);
+  }
+
+  .atelier-step-current:not(.atelier-step-done) & {
+    border-color: var(--atelier-sidebar-accent);
+    color: var(--atelier-sidebar-accent);
+  }
+}
+
+.atelier-step-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  // The label centres on the dot when it has one line.
+  padding-top: 0.1rem;
+}
+
+.atelier-step-time {
+  display: block;
+  color: var(--atelier-sidebar-muted);
+  font-size: 0.76rem;
+  font-weight: 400;
+
+  // On the current page, the time sits on the accent-soft pill of the link.
+  // The muted ink is held on the sidebar, not on that pill, so the time takes
+  // the link accent, which is held on the pill.
+  .sidebar-link.active & {
+    color: inherit;
+  }
+}
+
+// ===========================================================================
+// T3 PROGRESS DOTS
+// ===========================================================================
+// In workshop mode, the table of contents shows progress dots: a ring with
+// the share of the module read, and a dot before each entry that fills once
+// the heading is read. `html/scripts/toc-early.html` adds the structure, and
+// `html/scripts/course.html` updates it. The same rules apply to the clone in
+// the toggle that Quarto adds when content spans into the margin. The
+// selector matches the id selectors of the T2 card rules, which these rules
+// replace.
+:is(#quarto-margin-sidebar, .quarto-sidebar-toggle-contents) #TOC.atelier-toc-dots {
+  .atelier-toc-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 0.9rem;
+    color: var(--atelier-toc-muted);
+    font-size: 0.8rem;
+  }
+
+  .atelier-ring {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: conic-gradient(var(--atelier-toc-accent-fill) 0 var(--atelier-ring, 0%), var(--atelier-toc-surface-strong) 0);
+
+    &::after {
+      content: "";
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--atelier-toc-bg);
+    }
+  }
+
+  li {
+    position: relative;
+  }
+
+  .nav-link {
+    position: relative;
+    padding: 0.3rem 0 0.3rem 1.4rem;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0.72rem;
+      left: 3px;
+      box-sizing: border-box;
+      width: 8px;
+      height: 8px;
+      border: 2px solid var(--atelier-toc-control-border);
+      border-radius: 50%;
+      background: var(--atelier-toc-bg);
+    }
+
+    // An entry with no heading on the page cannot be read, so it gets no dot.
+    &:not(.atelier-toc-tracked)::before {
+      content: none;
+    }
+
+    &.atelier-read {
+      color: var(--atelier-toc-fg);
+
+      &::before {
+        border-color: var(--atelier-toc-accent-fill);
+        background: var(--atelier-toc-accent-fill);
+      }
+    }
+
+    &.active {
+      font-weight: 650;
+
+      &::before {
+        border-color: var(--atelier-toc-accent-fill);
+        box-shadow: 0 0 0 3px var(--atelier-toc-accent-soft);
+      }
+    }
+  }
+
+  ul ul .nav-link {
+    padding-left: 2.4rem;
+    font-size: 0.8rem;
+
+    &::before {
+      top: 0.78rem;
+      left: 21px;
+      width: 6px;
+      height: 6px;
+      border-width: 1.5px;
+    }
+  }
+}
+
+// ===========================================================================
+// W1 TO W3 BLOCKS
+// ===========================================================================
+// Objectives, exercises, and solutions are blocks with a hairline border and
+// a large radius. The Lua filter writes them in workshop mode only.
+
+.atelier-objectives,
+.atelier-exercise,
+.atelier-solution {
+  margin: 1rem 0;
+  overflow: hidden;
+  border: 1px solid var(--atelier-border);
+  border-radius: $border-radius-lg;
+  font-size: 0.9rem;
+}
+
+.atelier-block-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.6rem 1rem;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.atelier-block-time {
+  margin-left: auto;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid currentcolor;
+  border-radius: 99px;
+  font-family: var(--bs-font-monospace);
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+$_atelier-icon-check: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M3 8.5l3.2 3L13 4.5'/%3e%3c/svg%3e");
+
+.atelier-block-body {
+  padding: 0.8rem 1rem;
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 24px;
+    margin: 0.25rem 0;
+  }
+
+  // The box comes from the tokens, so its border holds 3:1 on the block. The
+  // span after the box holds the tick, drawn as a mask in the on-accent colour
+  // over the accent fill. The global focus ring stays. Only the objective
+  // checkboxes have the tick span, so a task list keeps the native box.
+  // The browser gives a form control its own text colour. Every checkbox in
+  // the block takes the colour of its label.
+  input[type="checkbox"] {
+    color: inherit;
+  }
+
+  input[data-atelier-objective] {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 2px solid var(--atelier-control-border);
+    border-radius: $border-radius-sm;
+    background-color: var(--atelier-bg);
+    appearance: none;
+
+    &:checked {
+      border-color: var(--atelier-accent-fill);
+      background-color: var(--atelier-accent-fill);
+    }
+  }
+
+  .atelier-check {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: -9px;
+    pointer-events: none;
+    @include atelier-icon-mask(
+      $_atelier-icon-check,
+      14px,
+      var(--atelier-on-accent),
+      $forced: null
+    );
+  }
+
+  input[data-atelier-objective]:checked + .atelier-check {
+    display: block;
+  }
+
+  // In forced colours the system draws the box and its tick.
+  @media (forced-colors: active) {
+    input[data-atelier-objective] {
+      appearance: auto;
+    }
+
+    input[data-atelier-objective]:checked + .atelier-check {
+      display: none;
+    }
+  }
+}
+
+.atelier-objectives > .atelier-block-head {
+  background: var(--atelier-accent-soft);
+  color: var(--atelier-accent-ink);
+}
+
+.atelier-exercise > .atelier-block-head {
+  background: var(--atelier-workshop-bar-bg);
+  color: var(--atelier-workshop-bar-fg);
+}
+
+.atelier-solution {
+  border-style: dashed;
+  border-color: var(--atelier-control-border);
+
+  > summary {
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &::marker {
+      color: var(--atelier-accent-ink);
+    }
+  }
+}
+
+// ===========================================================================
+// TERMINAL BLOCK
+// ===========================================================================
+// A `.terminal` code block is dark in both colour schemes. The code-blocks
+// script adds `atelier-terminal` to the Code Window, and the filter adds it to
+// the code. Code Window reads its surfaces from the two variables.
+html .code-with-filename.atelier-terminal {
+  --code-window-bg: var(--atelier-terminal-bg);
+  --code-window-title-bg: var(--atelier-terminal-bg);
+
+  color: var(--atelier-terminal-fg);
+  border-color: var(--atelier-terminal-border);
+
+  .code-with-filename-file {
+    color: var(--atelier-terminal-muted);
+    border-bottom-color: var(--atelier-terminal-border);
+
+    // Three dots, drawn with one dot and two shadows.
+    &::before {
+      content: "";
+      flex: none;
+      width: 9px;
+      height: 9px;
+      margin-right: 28px;
+      background: var(--atelier-terminal-dot);
+      border-radius: 50%;
+      box-shadow:
+        14px 0 0 var(--atelier-terminal-dot),
+        28px 0 0 var(--atelier-terminal-dot);
+    }
+  }
+
+  // Code Window sets the label of a generated name in small caps. It marks
+  // that window `code-window-auto` when its post-render filter runs, as with
+  // a project copy, and marks the code block `cw-auto` when it does not, as
+  // with the embedded copy.
+  &:is(.code-window-auto, :has(pre.cw-auto)) .code-with-filename-file pre {
+    text-align: start;
+
+    strong {
+      font-size: inherit;
+      text-transform: none;
+    }
+  }
+
+  .code-with-filename-lines {
+    color: var(--atelier-terminal-muted);
+    background-color: var(--atelier-terminal-bg);
+    border-color: var(--atelier-terminal-border);
+  }
+
+  // The scaffold in the selector outranks the annotated-code rules for the
+  // button in content.scss and theme.scss. Without it, an annotated block takes
+  // the page border.
+  .code-copy-outer-scaffold > .code-copy-button {
+    color: var(--atelier-terminal-fg);
+    background-color: transparent;
+    border-color: var(--atelier-terminal-control-border);
+
+    &:is(:hover, :focus-visible) {
+      border-color: var(--atelier-terminal-fg);
+    }
+  }
+}
+
+// The line takes the foreground on a command and the muted ink on output.
+// A token takes the line colour only under a theme that is not an Atelier
+// theme. Under an Atelier theme, the token rules of highlighting.scss win.
+html pre.sourceCode.atelier-terminal {
+  color: var(--atelier-terminal-fg);
+  background-color: var(--atelier-terminal-bg);
+
+  code > span {
+    color: var(--atelier-terminal-muted);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  // A prompt line and a line that continues a command take the command colour.
+  // Only the prompt line draws the prompt.
+  code > span:is(.atelier-prompt-line, .atelier-command-line) {
+    color: var(--atelier-terminal-fg);
+  }
+
+  code > span.atelier-prompt-line {
+
+    // The empty alternative text keeps the prompt out of the accessible text.
+    // A browser without alternative text reads the first declaration.
+    &::before {
+      content: "$ ";
+      content: "$ " / "";
+      color: var(--atelier-terminal-prompt);
+      user-select: none;
+    }
+  }
+
+  // A token class can set its own background, such as `.al` or `.er`, which
+  // would paint a light box on the dark ground.
+  code span span {
+    color: inherit;
+    background-color: transparent;
+  }
+
+  // The highlight band of the page is a light tint, so the terminal has its
+  // own dark band and a marker in the prompt colour.
+  code > span.atelier-line-highlight {
+    background-color: var(--atelier-terminal-highlight);
+    box-shadow: inset 3px 0 0 var(--atelier-terminal-prompt);
+  }
+}
+
+html pre.numberSource.atelier-terminal code > span.atelier-line-highlight {
+  background-image: linear-gradient(var(--atelier-terminal-prompt), var(--atelier-terminal-prompt));
+  box-shadow: none;
+}

@@ -1,0 +1,10 @@
+title: Offset Headings
+author: Mickaël Canouil
+version: 0.5.2
+quarto-required: ">=1.11.9"
+contributes:
+  filters:
+    - path: offset-headings.lua
+      at: pre-ast
+source: mcanouil/quarto-offset-headings@0.5.2
+source-type: github

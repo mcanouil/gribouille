@@ -1,0 +1,186 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-reading-bar" type="text/javascript">
+	(function () {
+		// Without a navbar, a bar sits at the top of the content, beside the
+		// sidebar. In documentation mode it shows the section, the page, the page
+		// position, and the previous and next links. In workshop mode it shows the
+		// module, the module position, and a session timer when the page has a
+		// duration. With a navbar, only workshop mode has the bar: it is the module
+		// row under the navbar, inside the header, so it stays with the navbar.
+		// page-load.html puts a frame of the module row under the navbar. The
+		// row takes its place, and a page that gets no row loses the frame.
+		var frame = document.querySelector("#quarto-header > .atelier-bar-frame");
+		function noBar() {
+			if (frame) frame.remove();
+		}
+		if (!window.atelierCourse || window.atelierCourse.current < 0) return noBar();
+		var content = document.getElementById("quarto-content");
+		if (!content) return noBar();
+
+		var course = window.atelierCourse;
+		var workshop = course.mode === "workshop";
+		var navbar = document.querySelector("#quarto-header > nav.navbar");
+		if (navbar && !workshop) return noBar();
+		var page = course.pages[course.current];
+		var module = course.modules[course.currentModule];
+
+		var element = window.atelierStages.element;
+		// An empty label sets no attribute, so a control never gets an empty name.
+		function setLabel(node, name, text) {
+			if (text) node.setAttribute(name, text);
+		}
+
+		function icon(name) {
+			var node = element("i", "bi " + name);
+			node.setAttribute("aria-hidden", "true");
+			return node;
+		}
+
+		var bar = element("nav", "atelier-bar");
+		setLabel(bar, "aria-label", course.label(workshop ? "workshop-bar" : "reading-bar"));
+
+		var row = element("div", "atelier-bar-row");
+		var crumb = element("p", "atelier-bar-crumb");
+		// In documentation mode a top-level page has no section, so the crumb
+		// shows the page title only. A module with the same title as the page,
+		// such as a module of one page, also shows the page title only.
+		var active = document.querySelector("#quarto-sidebar .sidebar-link.active");
+		var inSection = Boolean(active && active.closest(".sidebar-item-section"));
+		if (module && module.title && module.title !== page.title && (workshop || inSection)) {
+			crumb.appendChild(element("span", "atelier-bar-module", module.title + " / "));
+		}
+		crumb.appendChild(element("b", "", page.title));
+		row.appendChild(crumb);
+
+		var actions = element("div", "atelier-bar-actions");
+		if (workshop && course.duration !== null) {
+			actions.appendChild(timer(course.duration * 60));
+		}
+		// Quarto's bottom page navigation holds the link relative to this page.
+		function navLink(kind, target, iconName) {
+			if (!target) return;
+			var link = element("a", "atelier-bar-" + kind);
+			var quartoLink = document.querySelector(".page-navigation .nav-page-" + kind + " a");
+			link.href = quartoLink.href;
+			var label = course.label(kind);
+			if (!label) setLabel(link, "aria-label", quartoLink.textContent.trim());
+			var text = element("span", "atelier-bar-label", label);
+			if (kind === "previous") {
+				link.appendChild(icon(iconName));
+				link.appendChild(text);
+			} else {
+				link.appendChild(text);
+				link.appendChild(icon(iconName));
+			}
+			actions.appendChild(link);
+		}
+		navLink("previous", course.previous, "bi-arrow-left-short");
+		navLink("next", course.next, "bi-arrow-right-short");
+		row.appendChild(actions);
+		bar.appendChild(row);
+
+		var n = workshop ? course.currentModule + 1 : course.current + 1;
+		var m = workshop ? course.modules.length : course.pages.length;
+		var progress = element("div", "atelier-bar-progress");
+		progress.setAttribute("role", "progressbar");
+		setLabel(progress, "aria-label", course.label(workshop ? "workshop-progress" : "reading-progress"));
+		progress.setAttribute("aria-valuemin", "0");
+		progress.setAttribute("aria-valuemax", String(m));
+		progress.setAttribute("aria-valuenow", String(n));
+		setLabel(progress, "aria-valuetext", course.label(workshop ? "workshop-position" : "reading-position", { n: n, m: m }));
+		var fill = element("span");
+		fill.style.width = (m ? (n / m) * 100 : 0) + "%";
+		progress.appendChild(fill);
+		bar.appendChild(progress);
+
+		// In the header, Quarto measures the module row with the navbar when it
+		// sets the page offset, so the row needs no measurement of its own.
+		if (navbar) {
+			bar.classList.add("atelier-bar-module-row");
+			if (frame) frame.replaceWith(bar);
+			else navbar.after(bar);
+		} else {
+			content.insertBefore(bar, content.firstChild);
+			// The table of contents and the scroll padding sit below the bar. The
+			// bar grows when the crumb wraps, so its height is kept current.
+			var measure = function () {
+				document.documentElement.style.setProperty("--atelier-bar-height", bar.getBoundingClientRect().height + "px");
+			};
+			measure();
+			if (typeof ResizeObserver === "function") new ResizeObserver(measure).observe(bar);
+		}
+
+		// The timer counts down from the page duration. It is not a live region,
+		// so it does not announce each second.
+		function timer(total) {
+			var group = document.createDocumentFragment();
+			var toggle = element("button", "atelier-timer-toggle");
+			toggle.type = "button";
+			toggle.setAttribute("aria-pressed", "false");
+			setLabel(toggle, "aria-label", course.label("timer-pause"));
+			var glyph = icon("bi-pause-fill");
+			toggle.appendChild(glyph);
+
+			var display = element("span", "atelier-timer");
+			display.setAttribute("role", "timer");
+			setLabel(display, "aria-label", course.label("timer-label"));
+
+			var remaining = total;
+			var end = 0;
+			var interval = null;
+
+			function pad(value) {
+				return (value < 10 ? "0" : "") + value;
+			}
+
+			function show() {
+				var hours = Math.floor(remaining / 3600);
+				var minutes = Math.floor((remaining % 3600) / 60);
+				var seconds = remaining % 60;
+				display.textContent = hours > 0 ? hours + ":" + pad(minutes) + ":" + pad(seconds) : minutes + ":" + pad(seconds);
+			}
+
+			function stop() {
+				clearInterval(interval);
+				interval = null;
+			}
+
+			function start() {
+				end = Date.now() + remaining * 1000;
+				interval = setInterval(function () {
+					remaining = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+					if (!document.hidden || remaining === 0) show();
+					if (remaining === 0) {
+						stop();
+						toggle.disabled = true;
+					}
+				}, 1000);
+			}
+
+			document.addEventListener("visibilitychange", function () {
+				if (document.hidden || interval === null) return;
+				remaining = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+				show();
+			});
+
+			toggle.addEventListener("click", function () {
+				if (remaining === 0) return;
+				var paused = interval !== null;
+				if (paused) stop();
+				else start();
+				toggle.setAttribute("aria-pressed", String(paused));
+				glyph.className = "bi " + (paused ? "bi-play-fill" : "bi-pause-fill");
+			});
+
+			show();
+			start();
+			group.appendChild(toggle);
+			group.appendChild(display);
+			return group;
+		}
+	})();
+</script>

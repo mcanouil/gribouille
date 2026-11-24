@@ -1,0 +1,23 @@
+{
+  "Preview colour config": {
+    "prefix": "meta",
+    "body": [
+      "filters:",
+      "  - preview-colour",
+      "extensions:",
+      "  preview-colour:",
+      "    code: ${1:true}",
+      "    text: ${2:false}"
+    ],
+    "description": "Configure preview-colour extension settings"
+  },
+  "Preview colour JSON export": {
+    "prefix": "preview-colour-json",
+    "body": [
+      "extensions:",
+      "  preview-colour:",
+      "    json: ${1:preview-colour.json}"
+    ],
+    "description": "Bulk-export detected colours to JSON for downstream tooling"
+  }
+}

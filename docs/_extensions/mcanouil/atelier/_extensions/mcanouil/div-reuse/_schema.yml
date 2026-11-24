@@ -1,0 +1,39 @@
+# _schema.yml for "div-reuse" filter extension
+# Describes options and attributes for IDE tooling and runtime validation.
+#
+# Options are read from `div-reuse:` or `extensions.div-reuse:`.
+# Attributes are accepted by the filter on Div elements.
+# Used in: ::: {#target reuse="source-id"}
+
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+options:
+  limit:
+    type: number
+    minimum: 0
+    description: >-
+      Maximum number of times each source div may be reused per document. Additional
+      reuses beyond the limit are skipped with a warning. Defaults to unlimited.
+  vars:
+    type: object
+    description: >-
+      Variables available for "{{name}}" substitution inside reused content. Nested
+      keys are accessed with dotted paths ("{{user.name}}").
+
+attributes:
+  _any:
+    reuse:
+      type: string
+      description: "Identifier of another div whose content should replace this div's content."
+    reuse-filter:
+      type: string
+      description: >-
+        Comma-separated key=value transforms applied to reused content. Supported keys:
+        "shift-headings=N" (shift heading levels, clamped to [1, 6]),
+        "take=N" (keep only the first N top-level blocks),
+        "id-remap=old1->new1;old2->new2" (rename element identifiers).
+    reuse-take:
+      type: number
+      description: >-
+        Shortcut for "reuse-filter=take=N". Keeps only the first N top-level blocks of the
+        reused content. Overrides any "take" value in "reuse-filter".

@@ -1,0 +1,7 @@
+# _schema.yml for "mobile-toc" filter extension
+# The extension has no options and no element attributes.
+# The only text it exposes is the `language` key `mobile-toc-close`.
+
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+options: {}

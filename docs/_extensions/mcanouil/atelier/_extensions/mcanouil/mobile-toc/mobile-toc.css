@@ -1,0 +1,220 @@
+/*
+ * Mobile TOC - Narrow-screen table of contents
+ * Styles the pill and the bottom sheet.
+ *
+ * @license MIT
+ * @copyright 2026 Mickaël Canouil
+ * @author Mickaël Canouil
+ */
+
+.mobile-toc-pill,
+.mobile-toc-sheet {
+  background: var(--mobile-toc-bg, var(--bs-body-bg, #fff));
+  color: var(--mobile-toc-fg, var(--bs-body-color, #212529));
+}
+
+/*
+ * z-index 1020 sits above page content, the docked sidebar and the back-to-top
+ * button (1000), and below Bootstrap's modal layers (1055) and Quarto's search
+ * overlay, so an open overlay covers the pill.
+ */
+.mobile-toc-pill {
+  position: fixed;
+  right: calc(var(--mobile-toc-inset-inline, 1rem) + env(safe-area-inset-right) + var(--mobile-toc-offset-x, 0px));
+  bottom: calc(var(--mobile-toc-inset-block, 1rem) + env(safe-area-inset-bottom) + var(--mobile-toc-offset-y, 0px));
+  z-index: 1020;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 1rem;
+  border: 1px solid var(--mobile-toc-edge, var(--bs-border-color, #dee2e6));
+  border-radius: 999px;
+  box-shadow: var(--mobile-toc-shadow, 0 2px 8px rgba(0, 0, 0, 0.15));
+  font-family: var(--bs-font-sans-serif, system-ui, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: none;
+}
+
+.mobile-toc-pill:dir(rtl) {
+  right: auto;
+  left: calc(var(--mobile-toc-inset-inline, 1rem) + env(safe-area-inset-left) + var(--mobile-toc-offset-left, 0px));
+}
+
+.mobile-toc-pill:focus-visible,
+.mobile-toc-close:focus-visible,
+.mobile-toc-sheet a:focus-visible {
+  outline: 2px solid var(--mobile-toc-accent, var(--bs-link-color, #0d6efd));
+  outline-offset: 2px;
+}
+
+:root:has(.mobile-toc-pill) {
+  --mobile-toc-clearance: calc(
+    var(--mobile-toc-pill-height, 44px) + var(--mobile-toc-inset-block, 1rem) + env(safe-area-inset-bottom)
+  );
+  scroll-padding-bottom: calc(var(--mobile-toc-clearance) + var(--mobile-toc-offset-y, 0px));
+}
+
+/* Scroll padding cannot lift the end of the page above the pill, so the page gets room to scroll further.
+   The zoom offset stays out of it, because it changes on every frame of a pan and would resize the page.
+   Print hides the pill but keeps it in the page, so only the screen query stops the room from printing. */
+@media screen {
+  body:has(.mobile-toc-pill) {
+    padding-bottom: var(--mobile-toc-clearance);
+  }
+
+  /* Back-to-top sits above the pill, so the end of the page also needs room for it and a gap on each side.
+     Before Quarto first shows it, its height is not known, and 2.5rem is about its size. */
+  body:has(.mobile-toc-pill):has(#quarto-back-to-top) {
+    padding-bottom: calc(var(--mobile-toc-clearance) + var(--mobile-toc-back-to-top-height, 2.5rem) + 1.5rem);
+  }
+}
+
+body:has(.mobile-toc-pill) #quarto-back-to-top {
+  left: calc(50% + (var(--mobile-toc-offset-left, 0px) - var(--mobile-toc-offset-x, 0px)) / 2);
+  bottom: calc(var(--mobile-toc-clearance) + var(--mobile-toc-offset-y, 0px) + 0.75rem);
+}
+
+.mobile-toc-sheet {
+  inset: auto var(--mobile-toc-offset-x, 0px) var(--mobile-toc-offset-y, 0px) var(--mobile-toc-offset-left, 0px);
+  box-sizing: border-box;
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: 70vh;
+  max-height: 70dvh;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem 0.75rem calc(1rem + env(safe-area-inset-bottom));
+  border: 0;
+  border-top: 1px solid var(--mobile-toc-edge, var(--bs-border-color, #dee2e6));
+  border-radius: var(--mobile-toc-radius, var(--bs-border-radius-lg, 0.5rem))
+    var(--mobile-toc-radius, var(--bs-border-radius-lg, 0.5rem)) 0 0;
+  box-shadow: var(--mobile-toc-sheet-shadow, 0 -4px 18px rgba(0, 0, 0, 0.18));
+  transition: transform 0.2s ease-out;
+}
+
+.mobile-toc-sheet::backdrop {
+  background: var(--mobile-toc-backdrop, rgba(0, 0, 0, 0.45));
+}
+
+.mobile-toc-sheet ul {
+  margin: 0;
+  padding-inline-start: 0;
+  list-style: none;
+}
+
+.mobile-toc-sheet ul ul a {
+  padding-inline-start: 1.2rem;
+}
+
+.mobile-toc-sheet ul ul ul a {
+  padding-inline-start: 1.9rem;
+}
+
+.mobile-toc-sheet a {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  color: inherit;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.mobile-toc-sheet a.active {
+  background: var(
+    --mobile-toc-active-bg,
+    color-mix(
+      in srgb,
+      var(--mobile-toc-accent, var(--bs-link-color, #0d6efd)) 15%,
+      var(--mobile-toc-bg, var(--bs-body-bg, #fff))
+    )
+  );
+  color: var(--mobile-toc-fg, var(--bs-body-color, #212529));
+  font-weight: 700;
+  border-radius: 0 999px 999px 0;
+  box-shadow: inset 3px 0 0 var(--mobile-toc-accent, var(--bs-link-color, #0d6efd));
+}
+
+.mobile-toc-sheet a.active:dir(rtl) {
+  border-radius: 999px 0 0 999px;
+  box-shadow: inset -3px 0 0 var(--mobile-toc-accent, var(--bs-link-color, #0d6efd));
+}
+
+.mobile-toc-sheet .header-section-number {
+  margin-inline-end: 0.35rem;
+}
+
+@starting-style {
+  dialog.mobile-toc-sheet[open] {
+    transform: translateY(100%);
+  }
+}
+
+.mobile-toc-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 0.4rem;
+  margin-inline-start: 0.5rem;
+}
+
+.mobile-toc-sheet-label {
+  color: var(--mobile-toc-muted, var(--bs-secondary-color, #6c757d));
+  font-family: var(--bs-font-sans-serif, system-ui, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mobile-toc-close {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 1px solid var(--mobile-toc-edge, var(--bs-border-color, #dee2e6));
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-toc-sheet {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .mobile-toc-sheet a.active {
+    border-inline-start: 3px solid Highlight;
+    padding-inline-start: calc(0.5rem - 3px);
+  }
+
+  .mobile-toc-sheet ul ul a.active {
+    padding-inline-start: calc(1.2rem - 3px);
+  }
+
+  .mobile-toc-sheet ul ul ul a.active {
+    padding-inline-start: calc(1.9rem - 3px);
+  }
+}
+
+@media print {
+  .mobile-toc-pill,
+  .mobile-toc-sheet {
+    display: none !important;
+  }
+}
+
+body:has(#quarto-sidebar-glass.show) .mobile-toc-pill {
+  visibility: hidden;
+}

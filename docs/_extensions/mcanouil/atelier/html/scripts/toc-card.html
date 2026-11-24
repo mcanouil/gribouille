@@ -1,0 +1,129 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-toc-card" type="text/javascript">
+	(function () {
+		var toc = document.querySelector("#quarto-margin-sidebar #TOC");
+		if (!toc) return;
+
+		// In workshop mode, the table of contents shows progress dots in place of
+		// this card. html/scripts/toc-early.html adds them, and
+		// html/scripts/course.html updates them.
+		if (window.atelierCourse && window.atelierCourse.mode === "workshop") return;
+
+		// html/scripts/toc-early.html adds the rows of the card in the head. This
+		// script fills the reading time, and handles the copy-link button.
+		var labels = (window.atelierOptions || {}).labels || {};
+		var readingTime = labels["toc-reading-time"];
+		var copyLabel = labels["toc-copy-link"];
+		var copiedLabel = labels["toc-link-copied"];
+
+		// Reading time counts 200 words a minute, at least one minute, of the
+		// content that shows: the veil extension hides content with the hidden
+		// attribute.
+		var content = document.getElementById("quarto-document-content");
+		function countWords() {
+			if (!content) return 0;
+			var walker = document.createTreeWalker(content, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+				acceptNode: function (node) {
+					if (node.nodeType === Node.TEXT_NODE) return NodeFilter.FILTER_ACCEPT;
+					if (node.hidden || node.id === "title-block-header") return NodeFilter.FILTER_REJECT;
+					return NodeFilter.FILTER_SKIP;
+				}
+			});
+			var text = [];
+			while (walker.nextNode()) {
+				text.push(walker.currentNode.nodeValue);
+			}
+			return text.join("").split(/\s+/).filter(Boolean).length;
+		}
+		// toc-early.html adds the reading time only when it has a label.
+		var readingSlot = toc.querySelector(".atelier-toc-reading-time");
+		if (readingSlot) {
+			// When content spans into the margin, Quarto clones the table of
+			// contents into a toggle, so an update writes to each copy.
+			var updateReadingTime = function () {
+				var text = readingTime.replace("{n}", Math.max(1, Math.round(countWords() / 200)));
+				document.querySelectorAll(".atelier-toc-reading-time").forEach(function (copy) {
+					copy.textContent = text;
+				});
+			};
+			updateReadingTime();
+			// The first text makes the meta row visible to assistive technology,
+			// and fades it in. Quarto makes the clone later, on DOMContentLoaded,
+			// so the clone copies the row as it is now.
+			var meta = readingSlot.closest(".atelier-toc-meta");
+			meta.removeAttribute("aria-hidden");
+			meta.classList.add("atelier-filled");
+			// Veil starts on DOMContentLoaded, after this script runs. It sends
+			// veil:ready once it has applied the start state, and veil:change
+			// after each later change.
+			if (document.getElementById("veil-config")) {
+				document.addEventListener("veil:ready", updateReadingTime);
+				document.addEventListener("veil:change", updateReadingTime);
+			}
+		}
+
+		// When content spans into the margin, Quarto clones the table of
+		// contents into a toggle, and a clone has no listeners. Delegate from
+		// the document so that the original and the clone both work.
+		var timers = new WeakMap();
+		document.addEventListener("click", function (event) {
+			var target = event.target;
+			var copy = target && target.closest && target.closest(".atelier-copy-link");
+			if (!copy) {
+				return;
+			}
+			function failed(error) {
+				console.warn("Atelier: copying the page link failed.", error);
+			}
+			if (!navigator.clipboard || !navigator.clipboard.writeText) {
+				failed(new Error("the clipboard is not available"));
+				return;
+			}
+			var written;
+			try {
+				written = navigator.clipboard.writeText(location.href.split("#")[0]);
+			} catch (error) {
+				failed(error);
+				return;
+			}
+			var scope = copy.closest("#TOC, .quarto-sidebar-toggle-contents") || document;
+			var live = scope.querySelector('[aria-live="polite"]');
+			var label = copy.lastChild;
+			written.then(
+				function () {
+					if (live) {
+						live.textContent = copiedLabel || "";
+					}
+					label.nodeValue = copiedLabel || "";
+					clearTimeout(timers.get(copy));
+					timers.set(copy, setTimeout(function () {
+						label.nodeValue = copyLabel || "";
+						if (live) {
+							live.textContent = "";
+						}
+					}, 2000));
+				},
+				failed
+			);
+		});
+
+		// Quarto marks the current entry with a class only. Mirror it in
+		// aria-current so assistive technology announces it.
+		var links = toc.querySelectorAll(".nav-link");
+		function syncCurrent() {
+			links.forEach(function (link) {
+				if (link.classList.contains("active")) {
+					link.setAttribute("aria-current", "location");
+				} else {
+					link.removeAttribute("aria-current");
+				}
+			});
+		}
+		syncCurrent();
+		new MutationObserver(syncCurrent).observe(toc, { subtree: true, attributes: true, attributeFilter: ["class"] });
+	})();
+</script>

@@ -1,0 +1,33 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-title-block" type="text/javascript">
+	(function () {
+		// Quarto writes the keywords as one comma-separated paragraph by design.
+		// The chip design needs one element for each keyword, so the paragraph is
+		// split here. Without JavaScript the paragraph stays as Quarto wrote it.
+		// The split is on each comma, so a keyword that holds a comma becomes two
+		// chips.
+		var paragraph = document.querySelector("#title-block-header .keywords > p");
+		if (!paragraph) {
+			return;
+		}
+		var keywords = paragraph.textContent
+			.split(",")
+			.map(function (keyword) {
+				return keyword.trim();
+			})
+			.filter(Boolean);
+		paragraph.replaceChildren.apply(
+			paragraph,
+			keywords.map(function (keyword) {
+				var chip = document.createElement("span");
+				chip.className = "atelier-keyword";
+				chip.textContent = keyword;
+				return chip;
+			}),
+		);
+	})();
+</script>

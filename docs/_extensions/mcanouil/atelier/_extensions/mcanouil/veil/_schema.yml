@@ -1,0 +1,80 @@
+# Schema for the veil extension.
+# Options live under extensions.veil in the document or project metadata.
+
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+options:
+  groups:
+    type: array
+    description: |
+      Declared groups, in the order of the popover.
+      A group name matches `^[a-z][a-z0-9_-]*$`.
+    items:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          required: true
+          description: "The group name, as used in `group=\"...\"`."
+        level:
+          type: integer
+          minimum: 1
+          description: "The position on the ladder. Without it, the group is independent."
+        shown:
+          type: boolean
+          default: true
+          description: "The default state of the group."
+        label:
+          type: string
+          description: "The text in the popover and the toast. Defaults to the name."
+  state:
+    type: string
+    description: "A state that replaces the `shown` values, for example `level:1,-backup`."
+  keys:
+    type: object
+    additionalProperties: false
+    description: "Keyboard shortcuts."
+    properties:
+      menu:
+        type: string
+        default: "u"
+        description: "Opens and closes the popover."
+      level-up:
+        type: string
+        default: "]"
+        description: "Moves the ladder setting one level up."
+      level-down:
+        type: string
+        default: "["
+        description: "Moves the ladder setting one level down."
+  button:
+    type: object
+    additionalProperties: false
+    description: "The button that opens the popover."
+    properties:
+      enabled:
+        type: [string, boolean]
+        enum: [auto, true, false, "true", "false"]
+        default: auto
+        description: "`auto` shows the button in `html` and not in `revealjs`."
+      position:
+        type: string
+        enum: [top-left, top-right, bottom-left, bottom-right]
+        default: bottom-left
+        description: "The corner of the button."
+  toast:
+    type: [string, boolean]
+    enum: [auto, main, speaker, false, "false"]
+    default: auto
+    description: "Where the toast shows."
+
+classes:
+  veil:
+    description: "Content that the reader can hide or show by group."
+
+attributes:
+  veil:
+    group:
+      type: string
+      description: "One or more group names, separated by spaces."

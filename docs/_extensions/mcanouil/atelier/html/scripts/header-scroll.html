@@ -1,0 +1,35 @@
+<script id="header-scroll" type="text/javascript">
+	/**
+	 * @license MIT
+	 * @copyright 2026 Mickaël Canouil
+	 * @author Mickaël Canouil
+	 */
+	// Quarto starts Headroom with no offset, so the fixed header unpins after
+	// 5 px of scroll and slides away. The body keeps its top padding, which
+	// leaves an empty band as tall as the header above the page. Wrap Headroom
+	// to give it the header height as its offset, so that the header unpins
+	// only after the page scrolls past it. Headroom reads the offset object on
+	// each scroll, so the wrapper updates it when the header changes height.
+	// This runs before Quarto makes the header Headroom, on DOMContentLoaded.
+	// Upstream: https://github.com/quarto-dev/quarto-cli/pull/15397
+	// Remove when: the minimum Quarto version includes the fix.
+	(function () {
+		var QuartoHeadroom = window.Headroom;
+		if (typeof QuartoHeadroom !== "function") return;
+		var OffsetHeadroom = function (elem, options) {
+			var headroom = new QuartoHeadroom(
+				elem,
+				Object.assign({}, options, { offset: elem.offsetHeight })
+			);
+			if (window.ResizeObserver) {
+				new ResizeObserver(function () {
+					headroom.offset.up = headroom.offset.down = elem.offsetHeight;
+				}).observe(elem);
+			}
+			return headroom;
+		};
+		Object.assign(OffsetHeadroom, QuartoHeadroom);
+		OffsetHeadroom.prototype = QuartoHeadroom.prototype;
+		window.Headroom = OffsetHeadroom;
+	})();
+</script>

@@ -1,0 +1,118 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-listings" type="text/javascript">
+	(function () {
+		var listings = document.querySelectorAll(".quarto-listing");
+		if (listings.length === 0) return;
+
+		var generatedIds = 0;
+
+		// The filter and sort controls have a placeholder or an aria-label, but no
+		// visible label, so the name disappears when the user types. Add a label
+		// before the input group, with the text that Quarto already gives the
+		// control. The label sits outside the group, so the Bootstrap join rules do
+		// not move the icon box or square its corners. The label and the group share
+		// a wrapper, so they stay on one line when the row wraps.
+		// Upstream: none filed (WCAG 3.3.2)
+		// Remove when: Quarto gives the listing filter and sort controls a visible label.
+		function labelControl(control, text, suffix) {
+			if (!control || !text) return;
+			var group = control.closest(".input-group");
+			if (!group || group.parentElement.classList.contains("atelier-listing-field")) return;
+			if (!control.id) {
+				generatedIds += 1;
+				control.id = "atelier-listing-" + suffix + "-" + generatedIds;
+			}
+			var label = document.createElement("label");
+			label.className = "atelier-listing-label";
+			label.htmlFor = control.id;
+			label.textContent = text;
+			var field = document.createElement("div");
+			field.className = "atelier-listing-field";
+			group.parentElement.insertBefore(field, group);
+			field.appendChild(label);
+			field.appendChild(group);
+		}
+
+		// Quarto marks the current page of a listing by a class only, so a screen
+		// reader does not announce it.
+		// Upstream: none filed (WCAG 4.1.2)
+		// Remove when: Quarto sets aria-current on the link of the current listing page.
+		function markCurrentPage(listing) {
+			listing.querySelectorAll(".pagination .page-link").forEach(function (link) {
+				var item = link.closest(".page-item");
+				var current = !!item && item.classList.contains("active");
+				if (current && link.getAttribute("aria-current") !== "page") {
+					link.setAttribute("aria-current", "page");
+				} else if (!current && link.hasAttribute("aria-current")) {
+					link.removeAttribute("aria-current");
+				}
+			});
+		}
+
+		// Quarto writes a sort header as a link with no href, so the keyboard
+		// cannot reach it, and nothing says which column is sorted. Make the link
+		// a button that answers Enter and Space, and set aria-sort on its cell.
+		// Upstream: none filed (WCAG 2.1.1, 4.1.2)
+		// Remove when: Quarto writes sortable headers as buttons with aria-sort.
+		function sortHeaders(listing) {
+			listing.querySelectorAll("th > a.sort").forEach(function (header) {
+				if (header.getAttribute("role") !== "button") {
+					header.setAttribute("role", "button");
+				}
+				if (!header.hasAttribute("tabindex")) {
+					header.setAttribute("tabindex", "0");
+				}
+				if (!header.dataset.atelierSortKeys) {
+					header.dataset.atelierSortKeys = "true";
+					header.addEventListener("keydown", function (event) {
+						if (event.key !== "Enter" && event.key !== " ") return;
+						if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+						event.preventDefault();
+						if (!event.repeat) header.click();
+					});
+				}
+				var cell = header.parentElement;
+				var direction = null;
+				if (header.classList.contains("asc")) direction = "ascending";
+				if (header.classList.contains("desc")) direction = "descending";
+				if (direction && cell.getAttribute("aria-sort") !== direction) {
+					cell.setAttribute("aria-sort", direction);
+				} else if (!direction && cell.hasAttribute("aria-sort")) {
+					cell.removeAttribute("aria-sort");
+				}
+			});
+		}
+
+		function apply(listing) {
+			var filter = listing.querySelector(".quarto-listing-filter input");
+			var sort = listing.querySelector(".quarto-listing-sort select");
+			labelControl(filter, filter && filter.getAttribute("placeholder"), "filter");
+			labelControl(sort, sort && sort.getAttribute("aria-label"), "sort");
+			markCurrentPage(listing);
+			sortHeaders(listing);
+		}
+
+		// list.js builds the pagination again after each page change, filter, or
+		// sort, so the changes are applied again from an observer. Class changes
+		// mark the current page and the sorted column. A burst of mutations runs
+		// apply() once, in the next frame. apply() cannot trigger itself in a loop:
+		// it writes only attributes outside the class filter, and it builds the
+		// label wrapper once, on the first pass, before the observer starts.
+		listings.forEach(function (listing) {
+			apply(listing);
+			var scheduled = false;
+			new MutationObserver(function () {
+				if (scheduled) return;
+				scheduled = true;
+				requestAnimationFrame(function () {
+					scheduled = false;
+					apply(listing);
+				});
+			}).observe(listing, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+		});
+	})();
+</script>
