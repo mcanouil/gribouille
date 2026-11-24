@@ -150,5 +150,4 @@ typography:
     size: 0.9em
   link:
     decoration: underline
-    color: primary
     weight: 500

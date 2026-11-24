@@ -25,54 +25,13 @@ $crayon-mustard:     #F4B740;
 $crayon-mustard-dk:  #FFD166;
 $crayon-mint:        #7FC8A9;
 $crayon-mint-dk:     #9CDCC0;
-$danger-ink:         #B23A2B;
 
-// Fonts.
-$font-family-sans-serif: "Inter", "Helvetica Neue", Arial, sans-serif !default;
-$font-family-serif:      "Fraunces", Georgia, serif !default;
-$font-family-monospace:  "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace !default;
-$headings-font-family:   $font-family-serif !default;
-$headings-font-weight:   600 !default;
-$headings-line-height:   1.2 !default;
-
-// Bootstrap spacing, radius, shadow.
-$border-radius:    0.625rem !default;
-$border-radius-sm: 0.375rem !default;
-$border-radius-lg: 1rem !default;
-$box-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04) !default;
-$box-shadow:    0 2px 4px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06) !default;
-$box-shadow-lg: 0 4px 8px rgb(0 0 0 / 0.05), 0 20px 48px rgb(0 0 0 / 0.08) !default;
-
-// Brand colour mapping for Bootstrap — fallback only.
-// Brand compiles these per scheme (light vs dark); !default lets brand win.
-$primary:   $crayon-red !default;
-$secondary: $crayon-teal !default;
-$success:   $crayon-mint !default;
-$info:      $crayon-teal !default;
-$warning:   $crayon-mustard !default;
-$danger:    $danger-ink !default;
-
-// Typography scale.
-$font-size-base: 1rem !default;
-$line-height-base: 1.6 !default;
-$h1-font-size: 2.5rem !default;
-$h2-font-size: 1.875rem !default;
-$h3-font-size: 1.5rem !default;
-$h4-font-size: 1.25rem !default;
-$h5-font-size: 1.125rem !default;
-
-// Bootstrap table defaults — calm rules, no zebra.
-$table-striped-bg: transparent !default;
-$table-border-color: rgb(0 0 0 / 0.08) !default;
-$table-cell-padding-y: 0.6rem !default;
-$table-cell-padding-x: 0.9rem !default;
-
-// Navbar defaults.
-$navbar-padding-y: 0.9rem !default;
-
-// Sun/moon toggle icons (Bootstrap Icons bi-sun-fill and bi-moon-stars-fill).
-$_icon-sun: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" class="bi bi-sun-fill" viewBox="0 0 16 16"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/></svg>');
-$_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" class="bi bi-moon-stars-fill" viewBox="0 0 16 16"><path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/><path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.73 1.73 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.73 1.73 0 0 0 9.31 6.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.73 1.73 0 0 0 1.097-1.097zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/></svg>');
+// Chrome. Atelier derives the navbar, the sidebar, and the footer from these.
+// The navbar stays dark in both colour schemes, in the gribouille dark palette.
+$atelier-chrome: dark;
+$atelier-chrome-dark-bg: $paper-dark;
+$atelier-chrome-dark-fg: $ink-dark;
+$atelier-chrome-dark-accent: $crayon-red-dk;
 
 /*-- scss:mixins --*/
 
@@ -96,48 +55,6 @@ $_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
   box-shadow: 4px 4px 0 0 var(--gb-ink);
 }
 
-// Shared shell for every right-side navbar control (version switcher, GitHub
-// widget trigger, search button, colour-scheme toggle) so they read as one set.
-// Size (text pill vs square icon) is layered on top per control.
-@mixin pill-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--gb-navbar-surface);
-  border: 1px solid var(--gb-navbar-hairline);
-  border-radius: var(--gb-radius-sm);
-  color: var(--gb-navbar-fg) !important;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: background 150ms var(--gb-ease), border-color 150ms var(--gb-ease),
-              color 150ms var(--gb-ease);
-}
-
-@mixin pill-button-active {
-  background: var(--gb-navbar-tint);
-  border-color: var(--gb-navbar-primary);
-  color: var(--gb-navbar-primary) !important;
-}
-
-// Paint a Bootstrap .bi::before glyph from an SVG mask, so the shape follows
-// the SVG path and the colour follows the supplied fill.
-@mixin toggle-icon($icon, $color) {
-  content: "";
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  background-image: none;
-  background-color: $color;
-  -webkit-mask-image: $icon;
-          mask-image: $icon;
-  -webkit-mask-size: contain;
-          mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-          mask-position: center;
-}
-
 /*-- scss:rules --*/
 
 // --- Mode-agnostic design tokens. ---------------------------------------
@@ -148,19 +65,6 @@ $_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
 
   --gb-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  // Navbar is dark-pinned in both schemes (see .navbar): these fixed tokens come
-  // from the dark palette so the bar, its dropdowns, the right-side widgets, and
-  // their tooltips stay dark and never invert in light mode. Defined once here
-  // (not per [data-bs-theme]) so both compiles resolve them identically.
-  --gb-navbar-bg:       #{$paper-dark};
-  --gb-navbar-surface:  #{$surface-dark};
-  --gb-navbar-fg:       #{$ink-dark};
-  --gb-navbar-muted:    #{$muted-dark};
-  --gb-navbar-primary:  #{$crayon-red-dk};
-  --gb-navbar-hairline: rgb(244 237 223 / 0.12);
-  --gb-navbar-tint:     rgb(255 111 96 / 0.14);
-
-  // Source SVG: assets/images/doodles/underline.svg
   --gb-underline: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMTQiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPgogIDxwYXRoIGQ9Ik0zIDkgQyAyMCAzLCA0MCAxMiwgNjAgNyBTIDEwMCAzLCAxMjAgOSBTIDE2MCA0LCAxOTcgOCIKICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=");
 }
 
@@ -218,62 +122,18 @@ $_icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
   --gb-grain: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCI+CiAgPGcgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjA2Ij4KICAgIDxjaXJjbGUgY3g9IjYiIGN5PSIxMiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIyOCIgY3k9IjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDIiIGN5PSIyMCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1OCIgY3k9IjkiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzIiIGN5PSIzMCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4OCIgY3k9IjE0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjEwNCIgY3k9IjIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyMCIgY3k9IjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTM4IiBjeT0iMTgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU0IiBjeT0iMTAiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTcwIiBjeT0iMjQiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIzOCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIyNCIgY3k9IjU0IiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNTYiIGN5PSI2MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI3MCIgY3k9IjQ4IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9Ijg2IiBjeT0iNTgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNDIiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTE2IiBjeT0iNTYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTMyIiBjeT0iNDYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTQ4IiBjeT0iNjAiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iMTY0IiBjeT0iNDQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNCIgY3k9Ijc0IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iODgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMzYiIGN5PSI3OCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSI1MiIgY3k9Ijk0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjY4IiBjeT0iODIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iODQiIGN5PSI5NiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMTYiIGN5PSI5MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMzIiIGN5PSI3OCIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDgiIGN5PSI5NCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNjQiIGN5PSI4MiIgcj0iMC42Ii8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTEwIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjI2IiBjeT0iMTIyIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjQ0IiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iMTI4IiByPSIwLjYiLz4KICAgIDxjaXJjbGUgY3g9Ijc2IiBjeT0iMTE2IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjkyIiBjeT0iMTMwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEwOCIgY3k9IjExNCIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMjQiIGN5PSIxMjYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTQwIiBjeT0iMTEyIiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE1NiIgY3k9IjEyOCIgcj0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNzIiIGN5PSIxMTYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTIiIGN5PSIxNDYiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMzAiIGN5PSIxNTgiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNDYiIGN5PSIxNDgiIHI9IjAuNyIvPgogICAgPGNpcmNsZSBjeD0iNjIiIGN5PSIxNjQiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iNzgiIGN5PSIxNTIiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iOTQiIGN5PSIxNjYiIHI9IjAuNSIvPgogICAgPGNpcmNsZSBjeD0iMTEwIiBjeT0iMTUwIiByPSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyNiIgY3k9IjE2MiIgcj0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDIiIGN5PSIxNDgiIHI9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTY0IiByPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE3NCIgY3k9IjE1MiIgcj0iMC42Ii8+CiAgPC9nPgo8L3N2Zz4K");
 }
 
-// --- Base typography and body. ------------------------------------------
-html {
-  font-feature-settings: "ss01", "cv11", "tnum";
-}
-
+// --- Paper. ---------------------------------------------------------------
+// Atelier paints the page from the brand; the grain texture sits on top.
 body {
-  background-color: var(--gb-paper);
   background-image: var(--gb-grain);
   background-repeat: repeat;
   background-size: 180px 180px;
-  color: var(--gb-ink);
-  font-family: $font-family-sans-serif;
-  font-size: 1rem;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: $font-family-serif;
-  font-optical-sizing: auto;
-  letter-spacing: -0.01em;
-  color: var(--gb-ink);
-}
-
-h1 { font-weight: 600; }
-h2 { font-weight: 600; border-bottom: 1px solid var(--gb-hairline); padding-bottom: 0.4rem; margin-top: 2.5rem; }
-h3 { font-weight: 500; margin-top: 2rem; }
-
-p, li { color: var(--gb-ink); }
-
-// Muted meta text (subtitle, caption, frontmatter-rendered dates).
-.subtitle, .quarto-title-meta, .figure-caption, figcaption, .page-footer {
-  color: var(--gb-muted);
 }
 
 // Inline ink emphasis used in hero subtitle ("Typst").
 .ink {
   color: var(--gb-ink);
   font-weight: 600;
-}
-
-// --- Links. --------------------------------------------------------------
-a {
-  color: var(--gb-ink);
-  text-decoration: underline;
-  text-decoration-color: var(--gb-hairline);
-  text-underline-offset: 0.2em;
-  text-decoration-thickness: 1px;
-  transition: color 150ms var(--gb-ease), text-decoration-color 150ms var(--gb-ease);
-}
-
-a:hover, a:focus-visible {
-  color: var(--gb-primary);
-  text-decoration-color: var(--gb-primary);
-  text-decoration-thickness: 2px;
 }
 
 // Hand-drawn underline on text-link hover; scoped to body prose so it never
@@ -306,615 +166,6 @@ main li a:not(.btn):not(:has(img)):not(:has(svg)):not(:has(iconify-icon)):focus-
   pointer-events: none;
 }
 
-// --- Focus outline. ------------------------------------------------------
-// Quarto leaves interactive controls with only the browser default focus ring;
-// give every control a visible outline (the link rule above only recolours
-// text, which is not a sufficient keyboard-focus indicator on buttons/icons).
-a:focus-visible,
-button:focus-visible,
-.btn:focus-visible,
-.nav-link:focus-visible {
-  outline: 2px solid var(--gb-primary);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-// --- Skip link. ----------------------------------------------------------
-// Quarto/Bootstrap ships the skip link visually-hidden-focusable but unstyled,
-// so it is near-invisible when focused; give it a visible chip on focus.
-.skip-link:focus {
-  position: fixed;
-  top: 0.5rem;
-  left: 0.5rem;
-  z-index: 2000;
-  padding: 0.5rem 0.9rem;
-  border-radius: $border-radius-sm;
-  background-color: var(--gb-ink);
-  color: var(--gb-paper);
-  font-weight: 600;
-  box-shadow: 4px 4px 0 0 var(--gb-ink);
-}
-
-// --- Navbar. -------------------------------------------------------------
-// Dark-pinned in both schemes via the fixed --gb-navbar-* tokens, matching the
-// other sites: the bar, its dropdowns, widgets, and tooltips cannot invert or
-// go invisible in light mode. !important beats Quarto's `.navbar a` colour.
-.navbar {
-  background: var(--gb-navbar-bg) !important;
-  border-bottom: 1px solid var(--gb-navbar-hairline);
-  padding-top: 0.9rem;
-  padding-bottom: 0.9rem;
-  backdrop-filter: saturate(180%) blur(6px);
-}
-
-.navbar-brand, .navbar .nav-link {
-  font-family: $font-family-sans-serif;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--gb-navbar-fg) !important;
-  text-transform: none;
-  text-decoration: none;
-}
-
-// Hide the redundant text brand link; logo anchor carries the home link.
-a.navbar-brand {
-  display: none;
-}
-
-.navbar .nav-link {
-  position: relative;
-  padding: 0.4rem 0.8rem;
-}
-
-.navbar .nav-link:hover,
-.navbar .nav-link.active {
-  color: var(--gb-navbar-primary) !important;
-}
-
-.navbar .nav-link.active::after {
-  content: "";
-  position: absolute;
-  left: 0.6rem;
-  right: 0.6rem;
-  bottom: -0.05rem;
-  height: 0.4em;
-  background: var(--gb-navbar-primary);
-  -webkit-mask: var(--gb-underline) no-repeat center / 100% 100%;
-          mask: var(--gb-underline) no-repeat center / 100% 100%;
-}
-
-// --- Navbar dropdown (version selector). --------------------------------
-.navbar .dropdown-menu {
-  background: var(--gb-navbar-surface);
-  border: 1px solid var(--gb-navbar-hairline);
-  border-radius: var(--gb-radius-md);
-  box-shadow: var(--gb-shadow-soft);
-  font-family: $font-family-sans-serif;
-  padding: 0.35rem;
-  min-width: 12rem;
-}
-
-.navbar .dropdown-item {
-  color: var(--gb-navbar-fg);
-  border-radius: var(--gb-radius-sm);
-  padding: 0.4rem 0.7rem;
-  transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease);
-}
-
-.navbar .dropdown-item:hover,
-.navbar .dropdown-item:focus,
-.navbar .dropdown-item:focus-visible {
-  background: var(--gb-navbar-tint);
-  color: var(--gb-navbar-primary);
-}
-
-.navbar .dropdown-item.active,
-.navbar .dropdown-item:active {
-  background: var(--gb-navbar-primary);
-  color: var(--gb-navbar-bg);
-}
-
-.navbar .dropdown-divider {
-  border-top-color: var(--gb-navbar-hairline);
-  margin: 0.35rem 0;
-}
-
-// --- Right-side navbar buttons/widgets. ---------------------------------
-// One pill shell (see @mixin pill-button) for the whole navbar-right set: the
-// version switcher, the GitHub widget trigger, the search button, and the
-// colour-scheme toggle. Text controls get horizontal padding; icon-only tools
-// are square. Spacing is harmonised to 0.4rem across the set: the collapse is
-// grown so `justify-content: space-between` cannot open a gap before the tools,
-// then every boundary (ms-auto gap, tool margins) uses the same 0.4rem.
-.navbar .navbar-collapse {
-  flex-grow: 1;
-}
-
-// Layout, sizing, and the pill shell for the widget trigger, search button,
-// and colour-scheme toggle ship with the gitlink extension (widget.css and
-// widget-navbar-tools.css via `widget.style-navbar-tools`); these tokens
-// repaint them from the navbar palette, dark-pinned in both schemes.
-.navbar {
-  --gitlink-widget-border: var(--gb-navbar-hairline);
-  --gitlink-widget-accent: var(--gb-navbar-primary);
-  --gitlink-widget-accent-soft: var(--gb-navbar-tint);
-  --gitlink-widget-pill-bg: var(--gb-navbar-surface);
-  --gitlink-widget-menu-bg: var(--gb-navbar-surface);
-  --gitlink-widget-menu-fg: var(--gb-navbar-fg);
-}
-
-// The version switcher keeps the same pill shell locally.
-.navbar .navbar-nav.ms-auto > .nav-item > .nav-link {
-  @include pill-button;
-  padding: 0.3rem 0.6rem;
-}
-
-// Hover/open state for the version switcher.
-.navbar .navbar-nav.ms-auto > .nav-item > .nav-link:hover,
-.navbar .navbar-nav.ms-auto > .nav-item.show > .nav-link {
-  @include pill-button-active;
-}
-
-// --- Gitlink widget (navbar). --------------------------------------------
-// Structure ships with the extension's widget.css; the site keeps its own
-// menu width, radius, and shadow, painted from the navbar tokens set above.
-body .navbar .gitlink-widget-dropdown {
-  min-width: 12rem;
-  border-radius: var(--gb-radius-md);
-  box-shadow: var(--gb-shadow-soft);
-}
-
-// Below the navbar-collapse breakpoint, wrap the nav into a left-aligned
-// horizontal row instead of a full-width vertical stack, and neutralise
-// Bootstrap's `navbar-nav-scroll` region (max-height + overflow-y: auto) which
-// otherwise clips the absolute dropdown. Re-anchor the menu to the left so it
-// overlays on top and stays on screen.
-//
-// Reusable rule: below this breakpoint Bootstrap forces navbar `.dropdown-menu`
-// back to `position: static`, so an open menu flows in-document and grows the
-// navbar instead of overlaying. Re-anchor it (like the widget menu) to
-// `position: absolute` against a `position: relative` `.nav-item` so any navbar
-// dropdown overlays on top and leaves the navbar height untouched.
-@media (max-width: 991.98px) {
-  .navbar .navbar-collapse .navbar-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem;
-    width: auto;
-    max-height: none;
-    overflow: visible;
-
-    .nav-link {
-      width: auto;
-    }
-  }
-
-  .navbar .navbar-collapse .navbar-nav .nav-item.dropdown {
-    position: relative;
-  }
-
-  .navbar .dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-  }
-
-  // Quarto orders the collapsed bar as toggler, brand, tools, search, pins the
-  // brand's inline margins to 0 !important, and hands all the free space to the
-  // search's `margin-left: auto`; that strands the colour-scheme toggle beside
-  // the brand while the search sits alone at the far right. Cut the search
-  // margin back from `auto` to the 0.4rem navbar-right gap (gitlink's
-  // widget.css spaces the whole tools set on it) and give the brand the auto
-  // margins instead, so the free space lands either side of it: toggler left,
-  // brand centred, toggle and search grouped right with a gap between them.
-  // !important is required to beat Quarto's own !important margins.
-  .navbar.navbar-expand-lg .navbar-container > .navbar-brand-container {
-    margin-inline: auto !important;
-  }
-
-  .navbar.navbar-expand-lg .navbar-container > #quarto-search {
-    margin-left: 0.4rem;
-  }
-}
-
-// --- Scrollbars. ---------------------------------------------------------
-// Quarto leaves the browser default scrollbar, a light-grey bar that clashes
-// with the tinted surfaces; derive it from the page tokens so it tracks the
-// active scheme, with the primary crayon on hover. Global rules cover the code
-// blocks, tables, and TOC that scroll, so no default bar reappears.
-:root {
-  scrollbar-width: thin;
-  scrollbar-color: var(--gb-muted) var(--gb-surface);
-}
-
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--gb-surface);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gb-muted);
-  border-radius: var(--gb-radius-sm);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gb-primary);
-}
-
-// --- Colour-scheme toggle (sun/moon). -----------------------------------
-// Quarto auto-injects the toggle when both light and dark themes are set, and
-// adds `.alternate` to the element when the non-default scheme is active.
-// Override Bootstrap's default glyph with an SVG mask so the icon follows
-// currentColor and matches the mcanouil extension style.
-.quarto-color-scheme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 999px;
-  color: var(--gb-ink) !important;
-  text-decoration: none;
-  transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease);
-
-  .bi {
-    font-size: 1.05rem;
-    line-height: 1;
-  }
-
-}
-
-// Override Quarto's default toggle-off/toggle-on glyphs across every context
-// (navbar, sidebar, top-right) so the sun/moon shape wins regardless of where
-// the toggle is rendered.
-.navbar .quarto-color-scheme-toggle,
-.sidebar-navigation .quarto-color-scheme-toggle,
-.top-right.quarto-color-scheme-toggle {
-  &:not(.alternate) .bi::before {
-    @include toggle-icon($_icon-sun, currentColor);
-  }
-
-  &.alternate .bi::before {
-    @include toggle-icon($_icon-moon, currentColor);
-  }
-}
-
-.quarto-color-scheme-toggle:hover,
-.quarto-color-scheme-toggle:focus-visible {
-  color: var(--gb-primary) !important;
-  background: var(--gb-tint-primary);
-  text-decoration: none;
-}
-
-// --- Sidebar. ------------------------------------------------------------
-.sidebar {
-  background: transparent;
-  font-family: $font-family-sans-serif;
-}
-
-.sidebar nav .sidebar-item a.sidebar-link {
-  color: var(--gb-ink);
-  text-decoration: none;
-  border-left: 2px solid transparent;
-  padding: 0.3rem 0.8rem;
-  border-radius: 0 var(--gb-radius-sm) var(--gb-radius-sm) 0;
-  transition: background 150ms var(--gb-ease), border-color 150ms var(--gb-ease);
-}
-
-.sidebar nav .sidebar-item a.sidebar-link:hover {
-  background: var(--gb-tint-primary);
-}
-
-.sidebar nav .sidebar-item.active > a.sidebar-link,
-.sidebar nav .sidebar-item a.sidebar-link.active {
-  background: var(--gb-tint-primary);
-  border-left-color: var(--gb-primary);
-  color: var(--gb-primary);
-  font-weight: 500;
-}
-
-.sidebar nav .sidebar-section .sidebar-item-text {
-  font-family: $font-family-serif;
-  font-weight: 500;
-  color: var(--gb-ink);
-  letter-spacing: -0.005em;
-}
-
-// --- Tabsets (.panel-tabset). -------------------------------------------
-.panel-tabset .nav-tabs {
-  // This line is the panel box's top edge. --gb-hairline is only 12% alpha, so
-  // it went invisible in dark; mix ink into paper (the runtime equivalent of
-  // the other sites' body-mix) for a border that reads in both schemes and
-  // matches the tab-content edges below.
-  border-bottom: 1px solid color-mix(in srgb, var(--gb-ink) 15%, var(--gb-paper));
-}
-
-.panel-tabset .nav-tabs .nav-link {
-  color: var(--gb-muted);
-  background: transparent;
-  border: 1px solid transparent;
-  border-top-left-radius: var(--gb-radius-sm);
-  border-top-right-radius: var(--gb-radius-sm);
-  font-family: $font-family-sans-serif;
-  transition: color 150ms var(--gb-ease), border-color 150ms var(--gb-ease);
-}
-
-.panel-tabset .nav-tabs .nav-link:hover,
-.panel-tabset .nav-tabs .nav-link:focus-visible {
-  color: var(--gb-primary);
-}
-
-.panel-tabset .nav-tabs .nav-link.active {
-  color: var(--gb-primary);
-  background: transparent;
-  border-color: color-mix(in srgb, var(--gb-ink) 15%, var(--gb-paper));
-  border-bottom-color: var(--gb-paper);
-}
-
-// Quarto hard-codes #dee2e6 on the panel's left/right/bottom edges, which does
-// not adapt to dark; re-derive them so all four edges match the tab borders.
-// html (not the never-set data-bs-theme) raises specificity over Quarto's rule.
-html .panel-tabset > .tab-content {
-  border-color: color-mix(in srgb, var(--gb-ink) 15%, var(--gb-paper));
-}
-
-// --- Cards (landing and category index). --------------------------------
-.card, .quarto-listing-default .quarto-post {
-  @include soft-card;
-  padding: 1.25rem 1.4rem;
-}
-
-.card .card-title, .card h3 {
-  font-family: $font-family-serif;
-  margin-top: 0;
-}
-
-// --- Code blocks. -------------------------------------------------------
-// Pandoc's github-light/github-dark themes hard-code a background on the
-// .sourceCode wrapper and Bootstrap sets --bs-code-color on inline code, so
-// the brand surface and brand inline tint need !important to win.
-// Token colours stay with Quarto's --quarto-hl-* variables.
-div.sourceCode,
-pre.sourceCode,
-pre > code.sourceCode,
-pre.sourceCode > code,
-.cell-output,
-.cell-output-stdout,
-.cell-output-stderr,
-.cell-output-display,
-.cell-output pre {
-  background: var(--gb-surface) !important;
-  color: var(--gb-ink);
-  font-family: $font-family-monospace;
-  font-size: 0.9em;
-  line-height: 1.55;
-}
-
-pre {
-  background: var(--gb-surface);
-  color: var(--gb-ink);
-  border: 1px solid var(--gb-hairline);
-  border-radius: var(--gb-radius-md);
-  font-family: $font-family-monospace;
-  font-size: 0.9em;
-  line-height: 1.55;
-  padding: 1rem 1.1rem;
-  box-shadow: none;
-}
-
-// Outer .sourceCode wrapper carries the brand chrome; the inner <pre>
-// drops its own border so we don't get a double box.
-div.sourceCode {
-  border: 1px solid var(--gb-hairline);
-  border-radius: var(--gb-radius-md);
-  margin: 1rem 0;
-}
-
-div.sourceCode > pre,
-div.sourceCode > pre.sourceCode {
-  border: 0;
-  border-radius: 0;
-  margin: 0;
-}
-
-// Pandoc tokens drive their own colour; reset any inherited background.
-pre code.sourceCode,
-pre code.sourceCode span {
-  background: transparent !important;
-}
-
-// Cell output panels.
-.cell-output,
-.cell-output pre {
-  border: 1px solid var(--gb-hairline);
-  border-radius: var(--gb-radius-md);
-  color: var(--gb-muted);
-}
-
-// Code-with-filename header sits on top of the brand surface.
-.code-with-filename .code-with-filename-file {
-  background: var(--gb-surface) !important;
-  color: var(--gb-muted);
-  border: 1px solid var(--gb-hairline);
-  border-bottom: 0;
-  border-radius: var(--gb-radius-md) var(--gb-radius-md) 0 0;
-  font-family: $font-family-monospace;
-  font-size: 0.85em;
-  padding: 0.4rem 0.9rem;
-
-  pre {
-    background: transparent !important;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-}
-
-// Quarto injects a spacer ::after on the filename bar; collapse it.
-.code-with-filename-file::after {
-  width: 0px !important;
-}
-
-.code-with-filename div.sourceCode {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  margin-top: 0;
-}
-
-// --- Inline code. -------------------------------------------------------
-// Restrict to true inline contexts so tokens inside pre.sourceCode stay
-// untouched. !important beats Pandoc's td code:not(.sourceCode) tint,
-// which otherwise leaves a near-white patch on the dark surface.
-:not(pre) > code {
-  --bs-code-color: var(--gb-secondary);
-  background: var(--gb-surface) !important;
-  color: var(--gb-secondary) !important;
-  border: 1px solid var(--gb-hairline);
-  border-radius: var(--gb-radius-sm);
-  padding: 0.1em 0.35em;
-  font-size: 0.9em;
-  font-family: $font-family-monospace;
-}
-
-// --- Copy-to-clipboard button. ------------------------------------------
-// Size the box from the 1rem icon: left to the inherited body line-height the
-// button is taller than a one-line code block and hangs past its bottom edge.
-.code-copy-button {
-  --bs-btn-color: var(--gb-muted);
-  --bs-btn-hover-color: var(--gb-primary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 1.5rem;
-  padding: 0 0.35rem;
-  line-height: 1;
-  color: var(--gb-muted);
-  background: transparent;
-  border: 1px solid var(--gb-hairline);
-  border-radius: var(--gb-radius-sm);
-  transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease);
-}
-
-.code-copy-button:hover,
-.code-copy-button-checked {
-  color: var(--gb-primary);
-  background: var(--gb-tint-primary);
-}
-
-// --- Callouts — rebuilt with left rule + tint. --------------------------
-.callout {
-  border: 1px solid var(--gb-hairline);
-  border-left: 4px solid var(--gb-callout-accent, var(--gb-muted));
-  border-radius: var(--gb-radius-md);
-  background: var(--gb-surface);
-  box-shadow: none;
-  padding: 0;
-  margin: 1.25rem 0;
-}
-
-.callout-header {
-  background: var(--gb-callout-tint, transparent) !important;
-  border-bottom: 1px solid var(--gb-hairline);
-  font-family: $font-family-serif;
-  font-weight: 500;
-  padding: 0.6rem 1rem;
-}
-
-.callout-body-container {
-  padding: 0.25rem 0.25rem;
-}
-
-// Per type: drive header tint + left accent from one pair of tokens.
-.callout.callout-note      { --gb-callout-accent: var(--gb-secondary); --gb-callout-tint: var(--gb-tint-secondary); }
-.callout.callout-tip       { --gb-callout-accent: var(--gb-accent);    --gb-callout-tint: var(--gb-tint-accent); }
-.callout.callout-important { --gb-callout-accent: var(--gb-primary);   --gb-callout-tint: var(--gb-tint-primary); }
-.callout.callout-warning   { --gb-callout-accent: var(--gb-signal);    --gb-callout-tint: var(--gb-tint-signal); }
-.callout.callout-caution   {
-  --gb-caution: color-mix(in srgb, var(--gb-signal) 60%, var(--gb-primary));
-  --gb-callout-accent: var(--gb-caution);
-  --gb-callout-tint: color-mix(in srgb, var(--gb-caution) 16%, transparent);
-}
-
-// --- Tables — thin rules, tabular numerals. -----------------------------
-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 0.95rem;
-}
-
-table th, table td {
-  border-top: 1px solid var(--gb-hairline);
-  border-bottom: none;
-  padding: 0.6rem 0.9rem;
-  vertical-align: top;
-}
-
-table thead th {
-  border-top: none;
-  border-bottom: 1px solid var(--gb-hairline);
-  font-family: $font-family-sans-serif;
-  font-weight: 600;
-  color: var(--gb-muted);
-  text-align: left;
-}
-
-table tbody tr:last-child td {
-  border-bottom: 1px solid var(--gb-hairline);
-}
-
-table code {
-  font-variant-numeric: tabular-nums;
-}
-
-// --- Buttons. ------------------------------------------------------------
-.btn {
-  border-radius: var(--gb-radius-md);
-  font-family: $font-family-sans-serif;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  padding: 0.5rem 1rem;
-  transition: background 150ms var(--gb-ease), color 150ms var(--gb-ease),
-              border-color 150ms var(--gb-ease), transform 150ms var(--gb-ease);
-}
-
-.btn:hover { transform: translateY(-1px); }
-
-.btn-lg {
-  padding: 0.7rem 1.4rem;
-  font-size: 1.05rem;
-}
-
-.btn-primary {
-  background: var(--gb-primary);
-  border-color: var(--gb-primary);
-  color: var(--gb-paper);
-}
-
-.btn-primary:hover,
-.btn-primary:focus-visible {
-  background: color-mix(in srgb, var(--gb-primary) 88%, var(--gb-ink));
-  border-color: color-mix(in srgb, var(--gb-primary) 88%, var(--gb-ink));
-  color: var(--gb-paper);
-}
-
-.btn-outline {
-  background: transparent;
-  border: 1.5px solid var(--gb-ink);
-  color: var(--gb-ink);
-}
-
-.btn-outline:hover,
-.btn-outline:focus-visible {
-  background: var(--gb-ink);
-  color: var(--gb-paper);
-  border-color: var(--gb-ink);
-}
-
 // --- Reference-page title block. ----------------------------------------
 header#title-block-header {
   border-bottom: 1px solid var(--gb-hairline);
@@ -923,7 +174,7 @@ header#title-block-header {
 }
 
 header#title-block-header .subtitle {
-  font-family: $font-family-serif;
+  font-family: $headings-font-family;
   font-style: italic;
   color: var(--gb-muted);
   font-weight: 400;
@@ -953,73 +204,6 @@ header#title-block-header .subtitle {
   object-fit: contain;
 }
 
-// --- Footer. ------------------------------------------------------------
-// The `body ` prefix matches the specificity of Quarto's own
-// `body .nav-footer` border rule, which hard-codes rgba(0, 0, 0, 0.08) and so
-// vanished on the dark paper. --gb-rule (not --gb-hairline) keeps the line
-// legible in both schemes.
-body .page-footer, body .nav-footer {
-  border-top: 1px solid var(--gb-rule);
-  background: transparent;
-  color: var(--gb-muted);
-  font-size: 0.9rem;
-  padding: 1.5rem 0;
-}
-
-// Quarto emits its own `.nav-footer a` colour, which outranks the bare `a`
-// element rule, so the footer links stayed muted grey against the muted
-// footer text. The `body ` prefix lifts these past it onto the ink token.
-body .page-footer a, body .nav-footer a {
-  color: var(--gb-ink);
-  text-decoration-color: var(--gb-hairline);
-}
-
-body .page-footer a:hover, body .page-footer a:focus-visible,
-body .nav-footer a:hover, body .nav-footer a:focus-visible {
-  color: var(--gb-primary);
-  text-decoration-color: var(--gb-primary);
-}
-
-// --- Tooltips. -----------------------------------------------------------
-// Tippy.js (loaded by Quarto in tippy.umd.min.js) styled with the gribouille
-// palette. Bound by assets/scripts/tooltips.html on navbar/footer surfaces.
-.tippy-box[data-theme~="gb"] {
-  background: var(--gb-navbar-bg);
-  color: var(--gb-navbar-fg);
-  border: 1px solid var(--gb-navbar-primary);
-  border-radius: var(--gb-radius-sm);
-  box-shadow: var(--gb-shadow-lift);
-  font-family: $font-family-sans-serif;
-  font-size: 0.85rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  padding: 0.15rem 0.25rem;
-  animation: gb-fade-in 0.15s var(--gb-ease);
-}
-
-// Bootstrap tooltips (e.g., code-copy "Copied!") fade in to match.
-.tooltip { animation: gb-fade-in 0.2s var(--gb-ease); }
-
-@keyframes gb-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-// --- Misc. --------------------------------------------------------------
-hr {
-  border: 0;
-  border-top: 1px solid var(--gb-hairline);
-  margin: 2rem 0;
-}
-
-blockquote {
-  border-left: 3px solid var(--gb-secondary);
-  background: var(--gb-tint-secondary);
-  margin: 1.25rem 0;
-  padding: 0.6rem 1rem;
-  border-radius: 0 var(--gb-radius-md) var(--gb-radius-md) 0;
-  color: var(--gb-ink);
-}
 
 // Selection colour.
 ::selection {
@@ -1289,7 +473,7 @@ blockquote {
 }
 
 .news-release-title {
-  font-family: $font-family-serif;
+  font-family: $headings-font-family;
   font-size: 1.35rem;
   margin: 0.6rem 0 0.4rem;
   border-bottom: 0;
@@ -1314,44 +498,6 @@ blockquote {
   &:hover, &:focus-visible {
     text-decoration: underline;
   }
-}
-
-// ========================================================================
-// 404 page — ghost numeral hero.
-// ========================================================================
-// Quarto renders 404.qmd as an ordinary page with no distinguishing class;
-// the page opts in by wrapping its content in a .atelier-404 div.
-.atelier-404 {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 1rem;
-  min-height: 55vh;
-}
-
-.atelier-404 .atelier-404-code {
-  font-size: clamp(6rem, 20vw, 11rem);
-  font-weight: 700;
-  line-height: 1;
-  color: color-mix(in srgb, var(--gb-paper) 88%, var(--gb-ink));
-  user-select: none;
-}
-
-.atelier-404 .atelier-404-home {
-  display: inline-block;
-  padding: 0.45rem 1.1rem;
-  border: 1px solid var(--gb-primary);
-  border-radius: var(--gb-radius-md);
-  color: var(--gb-primary);
-  text-decoration: none;
-}
-
-.atelier-404 .atelier-404-home:hover,
-.atelier-404 .atelier-404-home:focus-visible {
-  background: color-mix(in srgb, var(--gb-paper) 92%, var(--gb-ink));
-  text-decoration: underline;
 }
 
 // ========================================================================
@@ -1395,7 +541,7 @@ blockquote {
 }
 
 .hero-content h3 {
-  font-family: $font-family-serif;
+  font-family: $headings-font-family;
   font-weight: 400;
   font-style: italic;
   color: var(--gb-muted);
@@ -1540,7 +686,7 @@ blockquote {
 .feature h4 {
   margin: 0 0 0.4rem;
   color: var(--gb-primary);
-  font-family: $font-family-serif;
+  font-family: $headings-font-family;
   font-weight: 600;
 }
 
@@ -1620,41 +766,10 @@ blockquote {
   margin: 2rem 0;
 }
 
-// --- Announcement banner. -----------------------------------------------
-// Bootstrap 5.3 alert tokens flip on scheme change, which can leave text at
-// poor contrast on a bright tint. Pin each alert type to a mode-invariant
-// ink/background pair drawn from the brand palette so contrast is stable.
-#quarto-announcement {
-  &.alert-primary   { --gb-announcement-ink: #{$paper-light}; --gb-announcement-bg: #{$crayon-red};     --gb-announcement-border: #{$crayon-red}; }
-  &.alert-secondary { --gb-announcement-ink: #{$paper-light}; --gb-announcement-bg: #{$crayon-teal};    --gb-announcement-border: #{$crayon-teal}; }
-  &.alert-success   { --gb-announcement-ink: #{$ink-light};   --gb-announcement-bg: #{mix($crayon-mint, $paper-light, 28%)};    --gb-announcement-border: #{$crayon-mint}; }
-  &.alert-info      { --gb-announcement-ink: #{$ink-light};   --gb-announcement-bg: #{mix($crayon-teal, $paper-light, 18%)};    --gb-announcement-border: #{$crayon-teal}; }
-  &.alert-warning   { --gb-announcement-ink: #{$ink-light};   --gb-announcement-bg: #{mix($crayon-mustard, $paper-light, 30%)}; --gb-announcement-border: #{$crayon-mustard}; }
-  &.alert-danger    { --gb-announcement-ink: #{$paper-light}; --gb-announcement-bg: #{$danger-ink};      --gb-announcement-border: #{$danger-ink}; }
-  &.alert-light     { --gb-announcement-ink: #{$ink-light};   --gb-announcement-bg: #{$surface-light};   --gb-announcement-border: #{$muted-light}; }
-  &.alert-dark      { --gb-announcement-ink: #{$paper-light}; --gb-announcement-bg: #{$ink-light};       --gb-announcement-border: #{$ink-light}; }
-
-  background: var(--gb-announcement-bg) !important;
-  border-color: var(--gb-announcement-border) !important;
-
-  &,
-  .quarto-announcement-content,
-  .quarto-announcement-content p,
-  .quarto-announcement-content a,
-  .quarto-announcement-icon,
-  .quarto-announcement-action {
-    color: var(--gb-announcement-ink) !important;
-  }
-
-  .quarto-announcement-content a {
-    text-decoration-color: var(--gb-announcement-ink);
-  }
-}
-
 // --- Modal (quarto-modal extension). ------------------------------------
 .modal-header .modal-title {
   margin: 0;
-  font-family: $font-family-serif;
+  font-family: $headings-font-family;
   font-weight: 600;
   font-size: 1.25rem;
   color: var(--gb-ink);

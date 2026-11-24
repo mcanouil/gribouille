@@ -43,7 +43,8 @@ website:
       Licence: [MIT](https://github.com/mcanouil/gribouille?tab=MIT-1-ov-file#readme).
 
   navbar:
-    title: "Gribouille"
+    # The logo is the wordmark, so a text title would repeat it.
+    title: false
     logo: assets/images/logo-dark.svg
     logo-alt: "Gribouille"
     left:
