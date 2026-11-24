@@ -163,23 +163,122 @@ local function icon_tags(config)
   return tags
 end
 
+--- The page background of each preset that paints the page, per scheme.
+--- Keep in step with `$body-bg` in `html/presets.scss`.
+--- @type table<string, table<string, string>>
+local PRESET_BACKGROUNDS = {
+  terminal = { light = '#101216', dark = '#101216' },
+  quarto = { light = '#eef4fa', dark = '#0f1b2a' },
+}
+
+-- Quarto's Lua `quarto.brand` API gives no access to the brand `defaults`, so
+-- this reads the brand data from Quarto's internal `param('brand')`.
+-- Upstream: https://github.com/quarto-dev/quarto-cli/issues/15383
+-- Remove when: the minimum Quarto version includes the fix.
+
+--- Read the Bootstrap defaults that the brand sets for one colour scheme.
+--- A mode without its own brand uses the light brand, as Quarto does.
+--- @param scheme string The colour scheme, `light` or `dark`
+--- @return table The `defaults.bootstrap.defaults` table, empty when the brand sets none
+local function brand_bootstrap_defaults(scheme)
+  if type(_G.param) ~= 'function' then
+    return {}
+  end
+  local brand = _G.param('brand')
+  local mode = brand and (brand[scheme] or brand.light)
+  local defaults = mode and mode.data and mode.data.defaults
+  return defaults and defaults.bootstrap and defaults.bootstrap.defaults or {}
+end
+
+--- The relative luminance of a hex colour, as WCAG defines it.
+--- @param colour string A colour such as `#101216` or `#fff`
+--- @return number|nil The luminance, or nil when the colour is not in hex
+local function luminance(colour)
+  local hex = colour:match('^#(%x+)$')
+  if hex ~= nil and #hex == 3 then
+    hex = hex:gsub('.', '%0%0')
+  end
+  if hex == nil or #hex ~= 6 then
+    return nil
+  end
+  local channels = {}
+  for index = 1, 3 do
+    local value = tonumber(hex:sub(index * 2 - 1, index * 2), 16) / 255
+    channels[index] = value <= 0.04045 and value / 12.92 or ((value + 0.055) / 1.055) ^ 2.4
+  end
+  return 0.2126 * channels[1] + 0.7152 * channels[2] + 0.0722 * channels[3]
+end
+
+--- Tell whether the dark bundle keeps a `body-bg` value.
+--- `html/dark.scss` replaces a light-toned value with the Atelier dark page
+--- colour, using the `tone()` test of Quarto: a colour is light when its
+--- contrast with white is under 3.1 and less than its contrast with black.
+--- @param colour string The `body-bg` value
+--- @return boolean
+local function kept_in_dark(colour)
+  local value = luminance(colour)
+  if value == nil then
+    return false
+  end
+  local with_white = 1.05 / (value + 0.05)
+  local with_black = (value + 0.05) / 0.05
+  return not (with_white < 3.1 and with_black > with_white)
+end
+
+--- The page colour of the dark bundle when the brand and the preset give
+--- none, or only a light one. Keep in step with `$_atelier-dark-bg` in
+--- `html/chrome.scss`.
+--- @type string
+local ATELIER_DARK_BACKGROUND = '#1b242e'
+
+--- The presets that pin the page to the dark bundle in both schemes.
+--- @type table<string, boolean>
+local DARK_PINNED_PRESETS = {
+  terminal = true,
+}
+
+--- The page background that the theme bundle of one scheme is painted with.
+--- This follows the order of the Sass layers: the brand background, then the
+--- brand `body-bg` default, then the background of the preset. The dark
+--- bundle replaces a missing or light-toned value with the Atelier dark page
+--- colour, as `html/dark.scss` does.
+--- @param scheme string The colour scheme, `light` or `dark`
+--- @return string|nil The colour, or nil when the light bundle has none
+local function painted_background(scheme)
+  local background
+  if quarto.brand.has_mode(scheme) then
+    background = str.to_string(quarto.brand.get_color_css(scheme, BRAND_BACKGROUND_COLOUR))
+  end
+  local defaults = brand_bootstrap_defaults(scheme)
+  background = background or str.to_string(defaults['body-bg'])
+  if background == nil then
+    local preset = PRESET_BACKGROUNDS[str.to_string(defaults['atelier-preset']) or '']
+    background = preset and preset[scheme]
+  end
+  if scheme == 'dark' and (background == nil or not kept_in_dark(background)) then
+    return ATELIER_DARK_BACKGROUND
+  end
+  return background
+end
+
 --- The browser UI tint for one colour scheme.
---- Falls back to the brand background of that mode, which is the colour Quarto
---- compiles into `$body-bg` for the matching theme bundle, and so the colour
---- the page is actually painted with. A configured value wins per scheme.
+--- A configured value wins per scheme. Otherwise the tint is the background
+--- that the page of that scheme is painted with. A preset that pins the page
+--- dark paints both schemes with the dark bundle.
 --- @param config table|nil The `extensions.atelier` configuration table
 --- @param scheme string The colour scheme, `light` or `dark`
---- @return string|nil The colour, or nil when neither source supplies one
+--- @return string|nil The colour, or nil when no source supplies one
 local function theme_colour(config, scheme)
   local colours = config and config['theme-color']
   local configured = colours and colours[scheme] and str.stringify(colours[scheme])
   if not str.is_empty(configured) then
     return configured
   end
-  if quarto.brand.has_mode(scheme) then
-    return quarto.brand.get_color_css(scheme, BRAND_BACKGROUND_COLOUR)
+  local preset = str.to_string(brand_bootstrap_defaults(scheme)['atelier-preset'])
+  if DARK_PINNED_PRESETS[preset or ''] then
+    return painted_background('dark')
   end
-  return nil
+  return painted_background(scheme)
 end
 
 --- Collect the `theme-color` tags for the page.
@@ -219,6 +318,9 @@ local function social_metadata(meta)
   end
 
   local config = meta_mod.get_extension_config(meta, EXTENSION_NAME)
+  -- Quarto's website.open-graph does not emit og:type, so this filter adds it.
+  -- Upstream: https://github.com/quarto-dev/quarto-cli/issues/14306
+  -- Remove when: the minimum Quarto version includes the fix.
   local tags = { '<meta property="og:type" content="website">' }
 
   if not is_not_found_page(relative_output) then

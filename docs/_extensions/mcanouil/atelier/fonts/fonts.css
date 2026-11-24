@@ -1,0 +1,56 @@
+/* Latin subsets of Alegreya Sans, Fira Code, and JetBrains Mono. The OFL-*.txt files hold the licences. */
+@font-face {
+  font-family: "Alegreya Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("./alegreya-sans-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Alegreya Sans";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("./alegreya-sans-latin-400-italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Alegreya Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("./alegreya-sans-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Alegreya Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("./alegreya-sans-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Fira Code";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url("./fira-code-latin-wght-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url("./jetbrains-mono-latin-wght-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url("./jetbrains-mono-latin-wght-italic.woff2") format("woff2");
+}

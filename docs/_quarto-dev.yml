@@ -12,8 +12,12 @@ website:
     type: warning
     position: above-navbar
 
+extensions:
+  atelier:
+    site-url: https://m.canouil.dev/gribouille/dev
+
 format:
-  html:
+  atelier-html:
     include-in-header:
       - text: |
           <meta name="robots" content="noindex">

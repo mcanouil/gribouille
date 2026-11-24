@@ -1,0 +1,82 @@
+# Schema for the offset-headings extension
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+# Document-level options, configured under:
+#   extensions:
+#     offset-headings:
+#       by: 1
+#       recursive: true
+#       max-level: 6
+#       depth: 0
+options:
+  by:
+    type: integer
+    default: 0
+    title: Document heading offset
+    description: "Amount added to every heading level in the document; the resulting level is clamped to the range 1 to 6."
+    examples:
+      - 1
+      - -1
+  recursive:
+    type: boolean
+    default: true
+    title: Default cascade behaviour
+    description: "Default cascade behaviour for per-heading offsets, used when a heading omits the offset-headings-recursive attribute."
+  max-level:
+    type: integer
+    default: 6
+    minimum: 1
+    maximum: 6
+    title: Default maximum target level
+    description: "Deepest level a heading may be pushed to by a positive offset, used when a heading omits the offset-headings-max-level attribute; values outside the range 1 to 6 are clamped and a warning is emitted."
+    examples:
+      - 4
+      - 6
+  depth:
+    type: integer
+    default: 0
+    title: Default cascade depth limit
+    description: "Default limit on how many descendant heading levels inherit a cascading offset, used when a heading omits the offset-headings-depth attribute; a value of 0 means unlimited depth."
+    examples:
+      - 0
+      - 1
+  quarto-shift-warning:
+    type: boolean
+    default: true
+    title: Warn about Quarto's automatic heading shift
+    description: "Whether to warn when Quarto's automatic shift-heading-level-by: -1 can apply to the output. Set to false once shift-heading-level-by: 0 is set explicitly, since an explicit shift-heading-level-by is invisible to Lua filters."
+# Attributes accepted on Header elements, e.g.:
+#   ## Section {offset-headings-by="1" offset-headings-recursive="false"}
+attributes:
+  Header:
+    offset-headings-by:
+      type: integer
+      default: 0
+      title: Per-heading offset
+      description: "Amount added to this heading level; positive values push it deeper, negative values pull it up, and the resulting level is clamped to the range 1 to 6."
+      examples:
+        - 1
+        - -1
+    offset-headings-recursive:
+      type: boolean
+      default: true
+      title: Cascade to descendants
+      description: "When true, the offset cascades to every descendant heading until a sibling or ancestor stops it, and a heading inside a nested block such as a div stops it only inside that block; defaults to the document-level recursive option."
+    offset-headings-max-level:
+      type: integer
+      default: 6
+      minimum: 1
+      maximum: 6
+      title: Maximum target level
+      description: "Caps the combined heading level (document offset + this heading's offset); the resulting level never goes below this value and the global range 1 to 6 still applies. Values outside 1 to 6 are clamped and a warning is emitted. Defaults to the document-level max-level option."
+      examples:
+        - 4
+        - 6
+    offset-headings-depth:
+      type: integer
+      default: 0
+      title: Cascade depth limit
+      description: "Bounds how many descendant heading levels inherit the cascade, relative to this heading's original level; a value of 0 means unlimited depth. Defaults to the document-level depth option."
+      examples:
+        - 0
+        - 1

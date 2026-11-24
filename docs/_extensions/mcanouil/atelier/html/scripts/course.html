@@ -1,0 +1,215 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-course" type="text/javascript">
+	(function () {
+		// In workshop mode, these components show the course from
+		// window.atelierCourse. Each block below is one component.
+		var course = window.atelierCourse;
+		if (!course || course.mode !== "workshop") return;
+
+		var element = window.atelierStages.element;
+
+		// =====================================================================
+		// T3 PROGRESS DOTS
+		// =====================================================================
+		// The table of contents gets a dot for each heading, filled once the
+		// heading has passed the top of the viewport, and a ring with the share
+		// of the module read. The read headings are stored under the page in
+		// the course progress. Quarto clones the table of contents into a
+		// toggle on narrow pages. The clone is found again on every update, so
+		// it shows the same dots.
+		(function () {
+			var toc = document.querySelector("#quarto-margin-sidebar #TOC");
+			if (!toc) return;
+
+			var anchors = Array.prototype.filter.call(toc.querySelectorAll("a.nav-link[data-scroll-target^='#']"), function (link) {
+				return link.getAttribute("data-scroll-target").length > 1;
+			});
+			// Another script makes the href of a link absolute, so the entries
+			// are matched on the target that Quarto keeps in a data attribute.
+			var headings = [];
+			anchors.forEach(function (link) {
+				var target = link.getAttribute("data-scroll-target");
+				var id;
+				try {
+					id = decodeURIComponent(target.slice(1));
+				} catch (error) {
+					console.warn("Atelier: the table of contents target " + target + " is not a valid URL fragment; the entry gets no progress dot.", error);
+					return;
+				}
+				var heading = document.getElementById(id);
+				if (heading) headings.push({ href: target, node: heading });
+			});
+			// html/scripts/toc-early.html adds the class and the line in the head,
+			// from the links of the table of contents only. When no link has its
+			// heading on the page, nothing is tracked, and the table of contents
+			// goes back to the card.
+			if (!headings.length) {
+				toc.classList.remove("atelier-toc-dots");
+				toc.querySelectorAll(".atelier-toc-progress").forEach(function (line) {
+					line.remove();
+				});
+				return;
+			}
+
+			var key = course.current !== -1 ? course.pages[course.current].href : location.pathname;
+			var stored = course.progress.read[key];
+			// Only the headings that are on the page now count as read.
+			var read = (Array.isArray(stored) ? stored : []).filter(function (href) {
+				return headings.some(function (heading) { return heading.href === href; });
+			});
+			var inModule = course.currentModule !== -1;
+
+			// html/scripts/toc-early.html adds the class and the line in the head,
+			// so a clone that Quarto makes on DOMContentLoaded has them. A clone
+			// made in another way can lack them, so render() calls this on every
+			// root, and a root without the line gets a copy of the line of the
+			// margin. It returns the ring and the text node of the line, or null
+			// outside a module.
+			var originalLine = toc.querySelector(".atelier-toc-progress");
+			function prepare(root) {
+				root.classList.add("atelier-toc-dots");
+				if (!inModule || !originalLine) return null;
+				var line = root.querySelector(".atelier-toc-progress");
+				if (!line) {
+					line = originalLine.cloneNode(true);
+					window.atelierStages.afterTitle(root, line);
+				}
+				return { ring: line.querySelector(".atelier-ring"), text: line.lastChild };
+			}
+
+			function render() {
+				var percent = inModule ? course.moduleShare(read.length / headings.length) : 0;
+				document.querySelectorAll("#quarto-margin-sidebar #TOC, .quarto-sidebar-toggle-contents #TOC").forEach(function (root) {
+					var line = prepare(root);
+					headings.forEach(function (heading) {
+						var link = root.querySelector('a.nav-link[data-scroll-target="' + heading.href + '"]');
+						if (!link) return;
+						var done = read.indexOf(heading.href) !== -1;
+						var hidden = link.querySelector(":scope > .atelier-read-text");
+						link.classList.add("atelier-toc-tracked");
+						link.classList.toggle("atelier-read", done);
+						if (done && !hidden) {
+							link.appendChild(element("span", "visually-hidden atelier-read-text", " " + course.label("toc-read")));
+						} else if (!done && hidden) {
+							hidden.remove();
+						}
+					});
+					if (line) {
+						line.ring.style.setProperty("--atelier-ring", percent + "%");
+						line.text.nodeValue = course.label("toc-module-read", { n: percent });
+					}
+				});
+			}
+
+			var pending = false;
+			function mark(hrefs) {
+				var added = hrefs.filter(function (href) { return read.indexOf(href) === -1; });
+				if (!added.length) return;
+				read = read.concat(added);
+				added.forEach(function (href) { observer.unobserve(nodeByHref.get(href)); });
+				stopWatchingWhenRead();
+				if (pending) return;
+				pending = true;
+				requestAnimationFrame(function () {
+					pending = false;
+					course.progress.read[key] = read;
+					course.save();
+					render();
+				});
+			}
+
+			var byNode = new Map(headings.map(function (heading) { return [heading.node, heading.href]; }));
+			var nodeByHref = new Map(headings.map(function (heading) { return [heading.href, heading.node]; }));
+			var observer = new IntersectionObserver(function (entries) {
+				mark(entries.filter(function (entry) {
+					return entry.boundingClientRect.top < 0;
+				}).map(function (entry) { return byNode.get(entry.target); }));
+			}, { threshold: [0, 1] });
+			headings.forEach(function (heading) {
+				if (read.indexOf(heading.href) === -1) observer.observe(heading.node);
+			});
+
+			// The last headings of a short final section never reach the top.
+			function checkEnd() {
+				var root = document.documentElement;
+				if (window.innerHeight + window.scrollY >= root.scrollHeight - 2) {
+					mark(headings.map(function (heading) { return heading.href; }));
+				}
+			}
+			// A scroll fires many events in one frame, so the check runs once a frame.
+			var endCheckQueued = false;
+			function onScroll() {
+				if (endCheckQueued) return;
+				endCheckQueued = true;
+				window.requestAnimationFrame(function () {
+					endCheckQueued = false;
+					checkEnd();
+				});
+			}
+			window.addEventListener("scroll", onScroll, { passive: true });
+
+			// Once every heading is read, nothing is left to watch.
+			function stopWatchingWhenRead() {
+				if (read.length < headings.length) return;
+				observer.disconnect();
+				window.removeEventListener("scroll", onScroll);
+			}
+			checkEnd();
+			stopWatchingWhenRead();
+
+			// Quarto marks the current entry with a class only. Mirror it in
+			// aria-current so assistive technology announces it.
+			var links = toc.querySelectorAll(".nav-link");
+			function syncCurrent() {
+				links.forEach(function (link) {
+					if (link.classList.contains("active")) {
+						link.setAttribute("aria-current", "location");
+					} else {
+						link.removeAttribute("aria-current");
+					}
+				});
+			}
+			syncCurrent();
+			new MutationObserver(syncCurrent).observe(toc, { subtree: true, attributes: true, attributeFilter: ["class"] });
+
+			render();
+		})();
+
+		// =====================================================================
+		// W1 OBJECTIVES
+		// =====================================================================
+		// The Lua filter writes a checkbox for each objective, with an id made
+		// from the objective text. The ticked boxes are stored under the page in
+		// the course progress, as these ids. Only the ids of the boxes that are
+		// on the page now count, so the id of a changed objective goes on the
+		// next save.
+		(function () {
+			var boxes = document.querySelectorAll(".atelier-objectives input[data-atelier-objective]");
+			if (!boxes.length) return;
+
+			var key = course.current !== -1 ? course.pages[course.current].href : location.pathname;
+			var stored = course.progress.objectives[key];
+			var ids = Array.prototype.map.call(boxes, function (box) {
+				return box.getAttribute("data-atelier-objective");
+			});
+			var ticked = (Array.isArray(stored) ? stored : []).filter(function (value) {
+				return ids.indexOf(value) !== -1;
+			});
+
+			boxes.forEach(function (box) {
+				var id = box.getAttribute("data-atelier-objective");
+				box.checked = ticked.indexOf(id) !== -1;
+				box.addEventListener("change", function () {
+					ticked = ticked.filter(function (value) { return value !== id; });
+					if (box.checked) ticked.push(id);
+					course.progress.objectives[key] = ticked.slice().sort();
+					course.save();
+				});
+			});
+		})();
+	})();
+</script>

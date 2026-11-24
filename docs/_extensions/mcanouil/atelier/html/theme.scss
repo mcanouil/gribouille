@@ -1,9 +1,18 @@
 /*-- scss:defaults --*/
 
-$border-radius: 0.5rem !default;
-$border-radius-sm: 0.375rem !default;
-$border-radius-lg: 0.75rem !default;
 $enable-smooth-scroll: true !default;
+
+// Space that a focused control keeps clear at the top of the page, for the
+// fixed navbar. The first value fits the navbar alone (about 42px). The second
+// fits the navbar with the secondary bar below it, as on a page with a sidebar
+// below the `lg` breakpoint (up to about 104px, when the navbar wraps).
+// Jumps to an anchor are not affected: Quarto offsets those itself.
+$atelier-focus-scroll-margin: 3.5rem !default;
+$atelier-focus-scroll-margin-narrow: 7.25rem !default;
+
+// Quarto draws one focus ring on every control. Paint it with the Atelier
+// focus token, which `:root` sets below and which follows the colour scheme.
+$focus-ring-outer-color: var(--atelier-focus) !default;
 
 // `.btn-close-white` asks Bootstrap to invert the dismiss icon to force a light
 // one. The icon follows the text around it instead, see DISMISS BUTTON below,
@@ -11,6 +20,19 @@ $enable-smooth-scroll: true !default;
 $btn-close-white-filter: none !default;
 
 /*-- scss:functions --*/
+
+// Quarto's website listing file sets `$border-radius`, `$border-radius-sm`,
+// and `$border-color` (to a Bootstrap grey) with `!default` in the functions
+// layer, which is written before every defaults layer, so the `!default` of
+// this theme or of a project theme would find them taken. A `null` counts as
+// unset for `!default`, so clearing them here lets the first defaults layer
+// set them: the project's own value, or the brand's, when it has one,
+// otherwise the value from `html/chrome.scss`.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15176
+// Remove when: the minimum Quarto version includes the fix.
+$border-radius: null;
+$border-radius-sm: null;
+$border-color: null;
 
 // Mix the page background and foreground. brand injects different
 // $body-bg / $body-color into the light and dark compiles, so body-mix()
@@ -21,16 +43,41 @@ $btn-close-white-filter: none !default;
 
 /*-- scss:mixins --*/
 
-// Dropdown menus render on both bars, each from its own tokens.
-@mixin atelier-dropdown($surface, $border, $fg, $accent, $accent-soft) {
+// The navbar and the docked sidebar are two bars with the same parts, each
+// painted from its own tokens: `$bar` is `navbar` or `sidebar`, the prefix of
+// the `--atelier-<bar>-*` properties.
+@mixin atelier-bar($bar) {
+  // The gitlink widget pill, trigger, and menu take the tokens of the bar they
+  // sit on. The menu takes the page colours. Inert when the gitlink extension
+  // is not installed.
+  --gitlink-widget-menu-bg: var(--atelier-bg);
+  --gitlink-widget-menu-fg: var(--atelier-fg);
+  --gitlink-widget-border: var(--atelier-#{$bar}-control-border);
+  --gitlink-widget-count-bg: var(--atelier-surface-strong);
+  --gitlink-widget-accent: var(--atelier-#{$bar}-accent);
+  --gitlink-widget-accent-soft: var(--atelier-#{$bar}-accent-soft);
+
+  // One 2px ring, in the bar's accent, so that it holds 3:1 on the bar.
+  :is(a, button):focus-visible {
+    outline-color: var(--atelier-#{$bar}-accent);
+  }
+
+  // Dropdown menus on the bar.
   .dropdown-menu {
-    background: $surface;
-    border: 1px solid $border;
+    background: var(--atelier-#{$bar}-surface);
+    border: 1px solid var(--atelier-#{$bar}-border);
     border-radius: $border-radius-sm;
   }
 
   .dropdown-item {
-    color: $fg;
+    color: var(--atelier-#{$bar}-fg);
+  }
+
+  // A menu header and a disabled item take the muted ink of the bar, where the
+  // `$dropdown-*` defaults give the muted ink of the page.
+  .dropdown-header,
+  .dropdown-item.disabled {
+    color: var(--atelier-#{$bar}-muted);
   }
 
   // The colour above outranks Bootstrap's colour for the active item but not
@@ -39,8 +86,41 @@ $btn-close-white-filter: none !default;
   .dropdown-item:focus,
   .dropdown-item.active,
   .dropdown-item:active {
-    background: $accent-soft;
-    color: $accent;
+    background: var(--atelier-#{$bar}-accent-soft);
+    color: var(--atelier-#{$bar}-accent);
+  }
+}
+
+// An icon drawn as a mask over a fill colour, for an icon whose image bakes in
+// a fixed colour. A browser without the unprefixed `mask` keeps Quarto's own
+// icon, because the fill without the mask paints a solid square.
+// In forced colours the system replaces the fill, which hides the icon, so
+// `$forced` names the system colour of the text of the control, or is `null`
+// when the system draws the control itself. `currentcolor` does not work here,
+// because it keeps the author colour once the icon opts out of forced colours.
+@mixin atelier-icon-mask(
+  $icon: none,
+  $size: 1rem,
+  $colour: currentcolor,
+  $important: false,
+  $forced: ButtonText
+) {
+  @supports (mask-image: none) {
+    background-color: $colour;
+    mask: $icon center / $size no-repeat;
+
+    @if $important {
+      background-image: none !important;
+    } @else {
+      background-image: none;
+    }
+
+    @if $forced {
+      @media (forced-colors: active) {
+        forced-color-adjust: none;
+        background-color: $forced;
+      }
+    }
   }
 }
 
@@ -56,6 +136,28 @@ $btn-close-white-filter: none !default;
 // a bar; re-point the Sass variables instead when the change should also reach
 // the colours Quarto bakes into its own markup.
 :root {
+  --atelier-bg: #{$atelier-chrome-page-bg};
+  --atelier-fg: #{$atelier-chrome-page-fg};
+  --atelier-surface: #{$atelier-surface};
+  --atelier-surface-strong: #{$atelier-surface-strong};
+  --atelier-border: #{$atelier-border};
+  --atelier-control-border: #{$atelier-control-border};
+  --atelier-code-border: var(--atelier-border);
+  --atelier-muted: #{$atelier-text-muted};
+  --atelier-accent-soft: #{$atelier-accent-soft};
+  --atelier-accent-ink: #{$atelier-accent-ink};
+  --atelier-accent-mark: #{$atelier-accent-mark};
+  --atelier-accent-text: #{$atelier-accent-text};
+  --atelier-accent-fill: #{$atelier-accent-fill};
+  --atelier-on-accent: #{$atelier-on-accent};
+  --atelier-code-ink: #{$atelier-code-ink};
+  --atelier-heading: #{$atelier-heading};
+  --atelier-shadow: #{$atelier-shadow-color};
+  --atelier-overlay: #{$atelier-overlay-color};
+  --atelier-link: #{$link-color};
+  --atelier-link-hover: #{$link-hover-color};
+  --atelier-code-accent-mark: #{$atelier-code-accent-mark};
+
   --atelier-navbar-bg: #{$atelier-chrome-bg};
   --atelier-navbar-surface: #{$atelier-chrome-surface};
   --atelier-navbar-fg: #{$atelier-chrome-fg};
@@ -67,6 +169,30 @@ $btn-close-white-filter: none !default;
   // A boxed control (a search field, a widget pill) needs a boundary that can
   // be seen, where the hairline above only has to separate two surfaces.
   --atelier-navbar-control-border: #{$atelier-chrome-control-border};
+  --atelier-navbar-accent-mark: #{$atelier-chrome-accent-mark};
+  --atelier-navbar-surface-strong: #{$atelier-chrome-surface-strong};
+  --atelier-navbar-accent-fill: #{$atelier-chrome-accent-fill};
+  --atelier-navbar-on-accent: #{$atelier-chrome-on-accent};
+
+  // The workshop bar is on the chrome surface, and the terminal block is
+  // dark in both colour schemes.
+  --atelier-workshop-bar-bg: #{$atelier-workshop-bar-bg};
+  --atelier-workshop-bar-fg: #{$atelier-workshop-bar-fg};
+  --atelier-workshop-bar-muted: #{$atelier-workshop-bar-muted};
+  --atelier-workshop-bar-surface: #{$atelier-workshop-bar-surface};
+  --atelier-workshop-bar-track: #{$atelier-workshop-bar-track};
+  --atelier-workshop-bar-accent: #{$atelier-workshop-bar-accent};
+  --atelier-workshop-bar-on-accent: #{$atelier-workshop-bar-on-accent};
+  --atelier-workshop-bar-accent-text: #{$atelier-workshop-bar-accent-text};
+  --atelier-workshop-bar-border: #{$atelier-workshop-bar-border};
+  --atelier-terminal-bg: #{$atelier-terminal-bg};
+  --atelier-terminal-fg: #{$atelier-terminal-fg};
+  --atelier-terminal-muted: #{$atelier-terminal-muted};
+  --atelier-terminal-border: #{$atelier-terminal-border};
+  --atelier-terminal-control-border: #{$atelier-terminal-control-border};
+  --atelier-terminal-prompt: #{$atelier-terminal-prompt};
+  --atelier-terminal-dot: #{$atelier-terminal-dot};
+  --atelier-terminal-highlight: #{$atelier-terminal-highlight};
 
   // A docked sidebar is the third bar, so its tokens default to the navbar
   // ones: overriding the navbar palette carries the sidebar with it, and a
@@ -79,25 +205,102 @@ $btn-close-white-filter: none !default;
   --atelier-sidebar-accent-soft: var(--atelier-navbar-accent-soft);
   --atelier-sidebar-border: var(--atelier-navbar-border);
   --atelier-sidebar-control-border: var(--atelier-navbar-control-border);
+  --atelier-sidebar-accent-mark: var(--atelier-navbar-accent-mark);
+  --atelier-sidebar-surface-strong: var(--atelier-navbar-surface-strong);
+  --atelier-sidebar-accent-fill: var(--atelier-navbar-accent-fill);
+  --atelier-sidebar-on-accent: var(--atelier-navbar-on-accent);
+
+  // The table of contents is a fourth panel, so its tokens default to the
+  // sidebar ones in the same way.
+  --atelier-toc-bg: var(--atelier-sidebar-bg);
+  --atelier-toc-fg: var(--atelier-sidebar-fg);
+  --atelier-toc-muted: var(--atelier-sidebar-muted);
+  --atelier-toc-accent: var(--atelier-sidebar-accent);
+  --atelier-toc-accent-soft: var(--atelier-sidebar-accent-soft);
+  --atelier-toc-border: var(--atelier-sidebar-border);
+  --atelier-toc-control-border: var(--atelier-sidebar-control-border);
+  --atelier-toc-surface-strong: var(--atelier-sidebar-surface-strong);
+  --atelier-toc-accent-fill: var(--atelier-sidebar-accent-fill);
+
+  // The mobile-toc extension reads these in its pill and its bottom sheet.
+  --mobile-toc-bg: var(--atelier-toc-bg);
+  --mobile-toc-fg: var(--atelier-toc-fg);
+  --mobile-toc-muted: var(--atelier-toc-muted);
+  --mobile-toc-edge: var(--atelier-toc-control-border);
+  --mobile-toc-accent: var(--atelier-toc-accent);
+  --mobile-toc-active-bg: var(--atelier-toc-accent-soft);
+  --mobile-toc-radius: #{$border-radius};
+  --mobile-toc-shadow: 0 6px 20px var(--atelier-shadow);
+  --mobile-toc-sheet-shadow: 0 -6px 20px var(--atelier-shadow);
+  --mobile-toc-backdrop: var(--atelier-overlay);
+
+  // The veil extension reads these in its button, popover and toast. They sit
+  // on `:root`, because the toast is not inside the button.
+  --veil-border: var(--atelier-control-border);
+  --veil-shadow: var(--atelier-shadow);
+  --veil-toast-bg: var(--atelier-fg);
+  --veil-active-bg: var(--atelier-accent-soft);
+  --veil-bg: var(--atelier-bg);
+  --veil-fg: var(--atelier-fg);
+  --veil-radius: #{$border-radius};
+  --veil-accent: var(--atelier-accent-mark);
+}
+
+// Quarto inks breadcrumb links with the raw link colour, which a pale or deep
+// primary leaves under 4.5:1 on the page. The resting ink is the muted text and
+// the hover ink is the link hover token. The breadcrumb in the secondary
+// navigation bar takes the sidebar tokens in the rules below.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15175
+// Remove when: the minimum Quarto version includes the fix.
+.quarto-page-breadcrumbs a {
+  color: var(--atelier-muted);
+}
+
+.quarto-page-breadcrumbs a:hover {
+  color: var(--atelier-link-hover);
 }
 
 // ===========================================================================
 // ACCESSIBILITY (focus, skip link, ordinal dates)
 // ===========================================================================
-// Quarto leaves interactive controls with only the browser default focus ring;
-// give every control a visible outline.
+// The focus ring, shared by every control. Quarto draws it from the
+// `$focus-ring-*` defaults at the top of this file. Atelier keeps one tone:
+// the accent ink, with no inner shadow ring.
+$atelier-focus-ring-color: $atelier-accent-ink !default;
+
+:root {
+  --atelier-focus: #{$atelier-focus-ring-color};
+  --quarto-focus-ring-shadow: none;
+}
+
 a:focus-visible,
 button:focus-visible,
 .btn:focus-visible,
 .nav-link:focus-visible {
-  outline: 2px solid $primary;
-  outline-offset: 2px;
   border-radius: 2px;
+}
+
+@media (forced-colors: active) {
+  :root {
+    --atelier-focus: Highlight;
+  }
+}
+
+// The navbar is fixed, so keep focused controls below it when the browser
+// scrolls them into view.
+:is(a[href], button, input, select, textarea, summary, [tabindex]) {
+  scroll-margin-top: $atelier-focus-scroll-margin;
+
+  @media (max-width: 991.98px) {
+    html:has(.quarto-secondary-nav) & {
+      scroll-margin-top: $atelier-focus-scroll-margin-narrow;
+    }
+  }
 }
 
 // Quarto/Bootstrap ships the skip link visually-hidden-focusable but unstyled,
 // so it is near-invisible when focused; give it a visible chip on focus.
-.skip-link:focus {
+#quarto-skip-link:focus {
   position: fixed;
   top: 0.5rem;
   left: 0.5rem;
@@ -107,7 +310,7 @@ button:focus-visible,
   background-color: var(--atelier-navbar-accent);
   color: var(--atelier-navbar-bg);
   font-weight: 600;
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.35);
+  box-shadow: 0 6px 20px var(--atelier-shadow);
 }
 
 // Quarto renders dates as plain text; the ordinal-dates script wraps the
@@ -131,6 +334,20 @@ h4,
 h5,
 h6 {
   letter-spacing: var(--atelier-heading-letter-spacing, 0.012em);
+}
+
+// Quarto fades h3 to h6 with opacity, which also fades the links inside them
+// below AA (3.97:1 on an h4 link in light mode). Fade the heading text by its
+// colour instead, so a link keeps its own ink. The faded ink is the
+// `--atelier-heading` token, resolved in `html/chrome.scss`.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15169
+// Remove when: the minimum Quarto version includes the fix.
+h3,
+h4,
+h5,
+h6 {
+  opacity: 1;
+  color: var(--atelier-heading);
 }
 
 // ===========================================================================
@@ -177,6 +394,369 @@ embed.embed-art:not([width]) {
 }
 
 // ===========================================================================
+// LANDING PAGE
+// ===========================================================================
+// Opt-in blocks for a landing page: a hero, feature rows and a card grid.
+// An author writes them as fenced divs on a page with `page-layout: full`.
+// Quarto copies the classes of a heading onto the <section> that wraps it, so
+// each heading is styled through its block, and the author puts no class on it.
+$atelier-landing-max-width: 1140px !default;
+$atelier-landing-gap: 3rem !default;
+$atelier-hero-title-size: clamp(2.2rem, 5vw, 3.4rem) !default;
+$atelier-hero-figure-max-width: 320px !default;
+$atelier-hero-gradient-shift: 40deg !default;
+$atelier-card-min-width: 13rem !default;
+
+$atelier-landing-accent: atelier-theme-contrast($primary, $body-bg) !default;
+$atelier-landing-muted: atelier-theme-contrast($text-muted, $body-bg) !default;
+$atelier-landing-surface: atelier-rendered(body-mix(95%)) !default;
+$atelier-landing-border: var(--atelier-border) !default;
+$atelier-card-muted: atelier-theme-contrast($text-muted, $atelier-landing-surface) !default;
+$atelier-card-link: atelier-theme-contrast($link-color, $atelier-landing-surface) !default;
+
+:root {
+  --atelier-card-link: #{$atelier-card-link};
+}
+
+// Each stop of the title gradient is moved until it has 4.5:1 against the
+// page. The middle stop is calculated too, because a mix of two colours that
+// pass can have less contrast than both. If a stop cannot pass, the title
+// stays in the plain accent colour. This check also applies to stops that a
+// project sets itself.
+$atelier-hero-gradient-start: $atelier-landing-accent !default;
+$atelier-hero-gradient-end: atelier-theme-contrast(adjust-hue($primary, $atelier-hero-gradient-shift), $body-bg) !default;
+$atelier-hero-gradient-middle: atelier-theme-contrast(mix($atelier-hero-gradient-start, $atelier-hero-gradient-end), $body-bg) !default;
+$atelier-hero-gradient: null;
+
+@if atelier-ratio($atelier-hero-gradient-start, $body-bg) >= 4.5 and atelier-ratio($atelier-hero-gradient-middle, $body-bg) >= 4.5 and atelier-ratio($atelier-hero-gradient-end, $body-bg) >= 4.5 {
+  $atelier-hero-gradient: linear-gradient(92deg, $atelier-hero-gradient-start, $atelier-hero-gradient-middle, $atelier-hero-gradient-end);
+}
+
+// The title block of the page is hidden only on a page that holds a landing
+// container, because the hero has the visible h1. The front matter title still
+// gives the page its <title> and its social metadata.
+main:has(> .atelier-landing) > #title-block-header {
+  display: none;
+}
+
+.atelier-landing {
+  max-width: $atelier-landing-max-width;
+  margin-inline: auto;
+  padding: 0 1.5rem 3rem;
+}
+
+.atelier-hero,
+.atelier-feature {
+  display: grid;
+  gap: 1.5rem;
+  align-items: center;
+  margin-block: 2rem;
+
+  // A grid item is as wide as its content by default, so a long code line
+  // would make the column wider than the screen.
+  > * {
+    min-width: 0;
+  }
+
+  :is(h1, h2) {
+    margin-top: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+    text-wrap: balance;
+  }
+}
+
+.atelier-eyebrow {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $atelier-landing-accent;
+}
+
+.atelier-hero {
+  padding-block: 1rem;
+
+  :is(h1, h2) {
+    margin: 0.35rem 0 0.75rem;
+    font-size: $atelier-hero-title-size;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+}
+
+.atelier-lead {
+  display: block;
+  max-width: 34rem;
+  font-size: 1.25rem;
+  color: $atelier-landing-muted;
+}
+
+.atelier-actions p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.atelier-hero .panel-tabset {
+  max-width: 34rem;
+  margin-top: 1.5rem;
+}
+
+.atelier-hero-figure {
+  display: grid;
+  place-items: center;
+
+  img {
+    width: 100%;
+    max-width: $atelier-hero-figure-max-width;
+    height: auto;
+  }
+
+  img.atelier-wide-image {
+    max-width: 100%;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.atelier-feature-figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: $border-radius-lg;
+}
+
+.atelier-hero.centred {
+  text-align: center;
+
+  :is(h1, h2),
+  .atelier-lead,
+  .panel-tabset {
+    margin-inline: auto;
+  }
+
+  .panel-tabset {
+    text-align: start;
+  }
+
+  .atelier-actions p {
+    justify-content: center;
+  }
+}
+
+.atelier-hero.banner {
+  padding: 2.5rem;
+  border: 1px solid $atelier-landing-border;
+  border-radius: $border-radius-lg;
+  background: $atelier-landing-surface;
+}
+
+// The gradient fills the title only where the browser can clip a background
+// to text. Elsewhere, in print and in forced colours mode, the title is plain
+// text. The title is only as wide as its text, so that a short title shows
+// all of the gradient.
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .atelier-hero.gradient :is(h1, h2) {
+    width: fit-content;
+    max-width: 100%;
+    color: $atelier-landing-accent;
+
+    @if $atelier-hero-gradient {
+      background: $atelier-hero-gradient;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+}
+
+// A browser prints without background images by default, which would leave a
+// transparent title with no gradient behind it.
+@media print, (forced-colors: active) {
+  .atelier-hero.gradient :is(h1, h2) {
+    background: none;
+    -webkit-text-fill-color: currentcolor;
+  }
+}
+
+.atelier-feature {
+  padding-block: 1.5rem;
+
+  + .atelier-feature {
+    border-top: 1px solid $atelier-landing-border;
+  }
+
+  h2 {
+    margin: 0.3rem 0 0.6rem;
+    font-size: 1.7rem;
+    line-height: 1.2;
+  }
+}
+
+.atelier-legend ol {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: atelier-legend;
+
+  > li {
+    position: relative;
+    padding-inline-start: 2.5rem;
+    font-weight: 600;
+    counter-increment: atelier-legend;
+
+    &::before {
+      content: counter(atelier-legend);
+      position: absolute;
+      top: 0.05rem;
+      inset-inline-start: 0;
+      display: grid;
+      place-items: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 50%;
+      background: $atelier-landing-accent;
+      color: $body-bg;
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+.atelier-detail {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: $atelier-landing-muted;
+}
+
+.atelier-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min($atelier-card-min-width, 100%), 1fr));
+  gap: 1.25rem;
+  margin-block: 1.5rem;
+}
+
+// The one link of a card covers the whole card with its `::after` box, so a
+// click anywhere on the card follows the link. The link text stays the
+// accessible name, and the focus ring is drawn on that box, around the card.
+.atelier-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  border: 1px solid $atelier-landing-border;
+  border-radius: $border-radius-lg;
+  background: $atelier-landing-surface;
+  color: $body-color;
+
+  &:hover {
+    border-color: $atelier-landing-accent;
+  }
+
+  :is(h2, h3, h4) {
+    margin: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+    font-size: 1.1rem;
+  }
+
+  section {
+    display: contents;
+  }
+
+  p {
+    margin: 0;
+    color: $atelier-card-muted;
+  }
+
+  p:has(> a) {
+    margin-top: auto;
+  }
+
+  a {
+    color: var(--atelier-card-link);
+    font-weight: 600;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible::after {
+      @include focus-ring;
+      border-radius: $border-radius-lg;
+    }
+  }
+
+  // A heading anchor would be a second link under the stretched one.
+  .anchorjs-link {
+    display: none;
+  }
+
+  iconify-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid $atelier-landing-border;
+    border-radius: $border-radius;
+    background: $body-bg;
+    color: $atelier-landing-accent;
+    font-size: 1.25rem;
+  }
+}
+
+.atelier-cards.compact .atelier-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+
+  iconify-icon {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+  }
+}
+
+@include media-breakpoint-up(md) {
+  .atelier-hero,
+  .atelier-feature {
+    grid-template-columns: 1fr 1fr;
+    gap: $atelier-landing-gap;
+  }
+
+  .atelier-hero:not(.centred) {
+    grid-template-columns: 1.3fr 1fr;
+  }
+
+  // `atelier-chrome.lua` marks a hero whose image is wide, such as a social
+  // card. Its text is only readable at about the full width of the hero, so
+  // the figure goes below the text, as on a small screen.
+  .atelier-hero.centred,
+  .atelier-hero.atelier-wide-figure {
+    grid-template-columns: 1fr;
+  }
+
+  .atelier-feature.reverse > .atelier-feature-text {
+    order: 2;
+  }
+}
+
+// ===========================================================================
 // CODE SURFACES
 // ===========================================================================
 // Quarto bakes a fixed grey into div.sourceCode. Quarto marks the scheme with
@@ -185,9 +765,9 @@ embed.embed-art:not([width]) {
 // Quarto's rule; body-mix() derives the surface per bundle, correct in both.
 html div.sourceCode {
   @if $code-block-bg {
-    background-color: body-mix(95%);
+    background-color: var(--atelier-surface);
   }
-  border: 1px solid body-mix(85%);
+  border: 1px solid var(--atelier-code-border);
   border-radius: $border-radius-sm;
 }
 
@@ -197,11 +777,11 @@ html div.sourceCode {
 // div.sourceCode, so blocks become outlines and a plain block drops its tint.
 html pre:not(.sourceCode) {
   @if $code-block-bg {
-    background-color: body-mix(95%);
+    background-color: var(--atelier-surface);
   } @else {
     background-color: transparent;
   }
-  border: 1px solid body-mix(85%);
+  border: 1px solid var(--atelier-code-border);
   border-radius: $border-radius-sm;
   padding: $code-block-bg-padding;
 }
@@ -214,9 +794,32 @@ html pre.sourceCode {
   }
 }
 
+// Quarto's `overflow-y: visible !important` on pre.sourceCode outranks the
+// `overflow: hidden !important` of `.visually-hidden`. A hidden code block then
+// stays a 1px box that scrolls and that the keyboard cannot reach. Clip it on
+// both axes again.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15174
+// Remove when: the minimum Quarto version includes the fix.
+html pre.sourceCode.visually-hidden {
+  overflow: hidden !important;
+}
+
+// The div.sourceCode around a hidden block is not hidden, so the frame above
+// would show as a thin line. Remove it.
+html div.sourceCode:has(> pre.visually-hidden) {
+  border: none;
+}
+
+// The copy button of a hidden block is outside the hidden `pre`, so it would
+// float over the text, and a Tab stop for code that is not on screen. Remove it.
+html .code-copy-outer-scaffold:has(> div.sourceCode > pre.visually-hidden) > .code-copy-button {
+  display: none;
+}
+
 // Quarto drops the left inset of highlighted code in a callout; the frame is
 // still drawn there, so restore it.
 // Upstream: https://github.com/quarto-dev/quarto-cli/issues/15058
+// Remove when: the minimum Quarto version includes the fix.
 html .callout pre.sourceCode {
   padding-left: $code-block-bg-padding;
 }
@@ -231,13 +834,14 @@ html pre.code-annotation-code {
 // over a page-coloured backing that hides code scrolled under it; a strip on
 // the code surface. Clear the grey and back the gutter with the code surface.
 // Upstream: https://github.com/quarto-dev/quarto-cli/issues/15059
+// Remove when: the minimum Quarto version includes the fix.
 html .code-annotation-gutter {
   background-color: transparent;
 }
 
 @if $code-block-bg {
   html .code-annotation-gutter-bg {
-    background-color: body-mix(95%);
+    background-color: var(--atelier-surface);
   }
 }
 
@@ -255,8 +859,8 @@ html .code-with-filename .code-with-filename-file pre {
 // derives the border, filename and chip colours from --code-window-bg. Its
 // defaults sit in :where(:root), so this rule wins in each scheme bundle.
 :root {
-  --code-window-bg: #{body-mix(95%)};
-  --code-window-title-bg: #{body-mix(90%)};
+  --code-window-bg: var(--atelier-surface);
+  --code-window-title-bg: var(--atelier-surface-strong);
 }
 
 // The window draws the frame and the surface, so code inside it takes the
@@ -281,6 +885,48 @@ html .quarto-dark .code-with-filename .code-with-filename-file {
   background-color: var(--code-window-title-bg);
 }
 
+// Code Window draws its frame with an 8px radius, a 1.5em margin and a border
+// mixed from the text colour. Use the frame of a plain code block for all
+// three, so that a window and a plain block look the same in both schemes. The
+// title bar divider uses the same border colour.
+html .code-with-filename {
+  margin: 1rem 0;
+  border-color: var(--atelier-code-border);
+  border-radius: $border-radius-sm;
+}
+
+html .code-with-filename .code-with-filename-file {
+  border-bottom-color: var(--atelier-code-border);
+}
+
+html .code-with-filename .code-copy-outer-scaffold {
+  border-radius: 0 0 $border-radius-sm $border-radius-sm;
+}
+
+// Quarto pads the last child of a titled callout body, and the last child of
+// each `div` in it. In a filename block, that child is the copy scaffold, or
+// the block itself when it ends the callout or a cell, so an empty band shows
+// below the code inside the frame. Remove the padding. A block that ends the
+// callout or a cell keeps the space as a margin, outside the frame.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15382
+// Remove when: the minimum Quarto version includes the fix.
+html .callout.callout-titled .callout-body > .code-with-filename > .code-copy-outer-scaffold:last-child {
+  padding-bottom: 0;
+}
+
+html .callout.callout-titled .callout-body > .code-with-filename:last-child,
+html .callout.callout-titled .callout-body > div > .code-with-filename:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0.5rem;
+}
+
+// A closed collapsible window sets its 8px radius again, on the window and on
+// its title bar, with a more specific selector.
+html .code-with-filename.code-window-collapsible:not([open]),
+html .code-with-filename.code-window-collapsible:not([open]) > summary.code-with-filename-file {
+  border-radius: $border-radius-sm;
+}
+
 // The window surface also backs the annotation gutter of code inside it.
 html .code-with-filename .code-annotation-gutter-bg {
   background-color: var(--code-window-bg);
@@ -302,90 +948,67 @@ html .code-with-filename > pre:not(.sourceCode) {
 // The patch is darker than the page, so a primary that passes on the page can
 // fail on it; hold the ink to AA on the patch.
 code:not(.sourceCode):not(pre code) {
-  color: theme-contrast($primary, body-mix(90%), "AA");
-  background-color: body-mix(90%);
+  color: var(--atelier-code-ink);
+  background-color: var(--atelier-surface-strong);
+  padding: 0.1em 0.35em;
+  white-space: pre-wrap;
+  border-radius: 0.3em;
+}
+
+// Quarto gives highlighted inline code Bootstrap's grey code background, not
+// the surface of a code block, and in dark mode that grey is so light that the
+// token colours fail. Put it on the code block surface, which the token colours
+// are checked against.
+// Related upstream: https://github.com/quarto-dev/quarto-cli/issues/14135
+// Remove when: never, because Atelier sets its own code surface.
+code.sourceCode:not(pre code) {
+  background-color: var(--atelier-surface);
   padding: 0.1em 0.35em;
   border-radius: 0.3em;
 }
 
-// Quarto fades a callout title with opacity, which also fades the inline code
-// in it below AA. Fade the title text by its colour instead, so code keeps its
-// own ink.
-html .callout.callout-style-default > .callout-header {
-  opacity: 1;
-  color: rgba($body-color, 0.85);
+// Quarto gives code blocks inside a list, paragraph, or table cell the inline
+// code background, which fails in dark mode. Make that code transparent again.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/13390
+// Remove when: the minimum Quarto version includes the fix.
+html pre > code.sourceCode {
+  background-color: transparent;
 }
 
-html .callout.callout-style-simple > .callout-header {
-  opacity: 1;
-  color: rgba($body-color, 0.75);
+// In a link, the text of highlighted inline code that has no token colour
+// takes the link colour, which can fail AA on the code surface. Hold it to AA.
+a code.sourceCode:not(pre code) {
+  color: atelier-theme-contrast($link-color, body-mix(95%));
 }
 
-// A callout with no type gets a $text-muted title band, a mid grey that title
-// text cannot clear AA on. Tint it from the page as the typed ones are tinted
-// from their colour.
-div.callout.callout-style-default:where(
-    :not(.callout-note, .callout-tip, .callout-warning, .callout-caution, .callout-important)
-  )
-  > .callout-header {
-  background-color: mix($body-bg, $text-muted, 70%);
-}
-
-// Quarto bakes a fixed grey into the copy button, which reads poorly on the
-// body-mix() code surface; use the palette accent in both schemes.
+// The copy button takes the palette accent in both schemes. The terminal
+// block in workshop.scss sets its own colour.
 .code-copy-button {
-  color: $primary;
+  color: var(--atelier-accent-ink);
 }
 
-// Quarto moves the copy button clear of the annotation gutter with
-// `.code-annotated .code-copy-button`, but the button is a sibling of the
-// annotated pre, so that rule never matches and the button covers the
-// markers. Apply Quarto's declarations from the scaffold instead. The gutter
-// is 20px + 0.5em at the code size; 0.5em at the button's size clears it while
-// code is no larger than body text, plus the button's usual 5px margin.
-// Upstream: https://github.com/quarto-dev/quarto-cli/issues/13444
-html .code-copy-outer-scaffold:has(pre.code-annotated) > .code-copy-button {
-  margin-right: calc(20px + 0.5em + 5px);
-  margin-top: 0;
-  padding-top: 3px;
-  padding-bottom: 0;
+// The icon keeps one colour, so the frame marks the hover and the focus. The
+// second selector matches the annotated-code border rule in content.scss.
+html .code-copy-button:is(:hover, :focus-visible),
+html .code-copy-outer-scaffold:has(pre.code-annotated) > .code-copy-button:is(:hover, :focus-visible) {
+  border-color: var(--atelier-accent-mark);
 }
 
-// Quarto spaces the first and last child of a callout body for a paragraph.
-// With code there, that child is the copy scaffold, or the cell around it,
-// and the code block's own margin adds to that spacing.
-// In every style, drop the block's margin on that side so code starts and ends
-// where text would. In the default style, the copy button, placed from a bare
-// scaffold's padded top, also sits above the frame: move it down by that
-// padding. In a cell, Quarto pads both the cell and the scaffold inside it at
-// the bottom; keep one. An untitled callout nests its content one level
-// deeper, in .callout-body-container. A code window at the edge keeps the
-// spacing the Code Window extension gives it.
-// Upstream: https://github.com/quarto-dev/quarto-cli/issues/13446
-html .callout.callout-style-default :is(.callout-body, .callout-body-container)
-  > .code-copy-outer-scaffold:first-child
-  > .code-copy-button {
-  top: 0.5rem;
+// Quarto bakes a grey fill into the copy and copied icons, so they ignore the
+// button colour. Draw each icon as a mask over the current colour. Quarto's
+// hover rules outrank these selectors, hence the !important.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15303
+// Remove when: the minimum Quarto version includes the fix.
+$atelier-icon-copy: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>');
+$atelier-icon-copied: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>');
+
+html .code-copy-button > .bi::before {
+  display: block;
+  @include atelier-icon-mask($atelier-icon-copy, $important: true);
 }
 
-html .callout :is(.callout-body, .callout-body-container) {
-  > .code-copy-outer-scaffold:first-child,
-  > .cell:first-child > .code-copy-outer-scaffold:first-child {
-    > div.sourceCode {
-      margin-top: 0;
-    }
-  }
-
-  > .code-copy-outer-scaffold:last-child,
-  > .cell:last-child > .code-copy-outer-scaffold:last-child {
-    > div.sourceCode {
-      margin-bottom: 0;
-    }
-  }
-
-  > .cell:last-child > .code-copy-outer-scaffold:last-child {
-    padding-bottom: 0;
-  }
+html .code-copy-button-checked > .bi::before {
+  mask-image: $atelier-icon-copied;
 }
 
 // ===========================================================================
@@ -393,8 +1016,8 @@ html .callout :is(.callout-body, .callout-body-container) {
 // ===========================================================================
 .panel-tabset .nav-tabs {
   // This line is the panel box's top edge (Quarto leaves .tab-content without a
-  // border-top); body-mix() keeps it visible in dark mode and matches the sides.
-  border-bottom: 1px solid body-mix(85%);
+  // border-top); the border token matches the sides in both schemes.
+  border-bottom: 1px solid var(--atelier-border);
   // Bootstrap bakes the active tab colour to near-black; override the variables.
   --bs-nav-tabs-link-active-color: var(--bs-body-color);
   --bs-nav-tabs-link-active-bg: transparent;
@@ -402,39 +1025,28 @@ html .callout :is(.callout-body, .callout-body-container) {
 }
 
 // Quarto hard-codes #dee2e6 on the panel's left/right/bottom edges, which does
-// not adapt to dark; re-derive them from body-mix() so all four edges match.
+// not adapt to dark; paint them from the border token so all four edges match.
 html .panel-tabset > .tab-content {
-  border-color: body-mix(85%);
+  border-color: var(--atelier-border);
 }
 
 .panel-tabset .nav-tabs .nav-link {
-  color: var(--bs-secondary-color);
+  color: var(--atelier-muted);
   transition: color 0.15s ease-in-out;
 }
 
 .panel-tabset .nav-tabs .nav-link:hover,
 .panel-tabset .nav-tabs .nav-link:focus {
-  color: $primary;
+  color: var(--atelier-accent-ink);
   border-color: transparent;
 }
 
 .panel-tabset .nav-tabs .nav-link.active {
   color: var(--bs-body-color);
   border-color: transparent;
-  border-bottom: 2px solid $primary;
+  border-bottom: 2px solid var(--atelier-accent-mark);
   background: transparent;
   font-weight: 600;
-}
-
-// ===========================================================================
-// TOC
-// ===========================================================================
-// Quarto marks the current section with .active but leaves it in the body
-// colour, and gives its border the baked grey; the margin TOC sits on the page
-// surface, so both take the palette accent.
-#TOC .active {
-  color: $primary;
-  border-left-color: $primary;
 }
 
 // ===========================================================================
@@ -445,6 +1057,19 @@ html .panel-tabset > .tab-content {
 // other two bars. What is left here is the treatment Quarto has no variable
 // for, plus the handful of colours it bakes past those two.
 //
+// The crumbs in the secondary navigation bar are muted as they are on the page,
+// from the sidebar token because the bar sits on the sidebar surface, docked or
+// floating, and can be pinned to another scheme than the page.
+.quarto-secondary-nav nav.quarto-page-breadcrumbs,
+.quarto-secondary-nav nav.quarto-page-breadcrumbs a,
+.quarto-secondary-nav nav.quarto-page-breadcrumbs .breadcrumb-item::before {
+  color: var(--atelier-sidebar-muted);
+}
+
+.quarto-secondary-nav nav.quarto-page-breadcrumbs a:hover {
+  color: var(--atelier-sidebar-accent);
+}
+
 // Everything below is scoped to `body.docked`, the class Quarto adds when the
 // sidebar style is `docked`, which is also what raises these rules over the
 // Quarto rules they replace; only the sidebar edge, which Quarto draws with
@@ -475,16 +1100,6 @@ body.docked {
 
   .sidebar-item-container.disabled {
     color: var(--atelier-sidebar-muted);
-  }
-
-  // The current page reads as a pill rather than as a colour change alone,
-  // which matches the navbar dropdown treatment.
-  .sidebar-item-container .sidebar-link.active {
-    background: var(--atelier-sidebar-accent-soft);
-    border-radius: $border-radius-sm;
-    padding: 0.15rem 0.4rem;
-    margin: -0.15rem -0.4rem;
-    font-weight: 600;
   }
 
   // A sidebar entry with text and no href or contents is a group label; Quarto
@@ -518,30 +1133,6 @@ body.docked {
     color: var(--atelier-sidebar-accent);
   }
 
-  // Quarto renders the sidebar tools inside `.sidebar-title` whenever the
-  // sidebar has a title and the project has no navbar, as an inline-flex
-  // pulled up 6px, which lands the colour-scheme toggle on the title's line.
-  // A block-level flex row breaks it onto its own line, which the document
-  // order then places above the search field. Nothing here is forced: the
-  // gitlink extension stacks the same container into a column from an id
-  // selector when its widget is one of the tools.
-  .sidebar-title .sidebar-tools-main {
-    display: flex;
-    justify-content: flex-start;
-    margin-top: 0.5rem;
-  }
-
-  // `sidebar.align` reaches the header as a text class, which a flex row does
-  // not follow. Bootstrap has no `text-left`, so the rule above covers the
-  // left-aligned case on its own.
-  .sidebar-header.text-center .sidebar-title .sidebar-tools-main {
-    justify-content: center;
-  }
-
-  .sidebar-header.text-end .sidebar-title .sidebar-tools-main {
-    justify-content: flex-end;
-  }
-
   // Quarto dims the sidebar tools to 0.7, which on the dark column drops the
   // colour-scheme toggle and the repo links below the contrast floor.
   .sidebar-navigation .quarto-navigation-tool {
@@ -554,15 +1145,10 @@ body.docked {
     color: var(--atelier-sidebar-accent);
   }
 
-  // A sidebar tool with a `menu` opens a Bootstrap dropdown on the dark column.
+  // The sidebar is the second bar. A sidebar tool with a `menu` opens a
+  // Bootstrap dropdown on the column.
   .sidebar-navigation {
-    @include atelier-dropdown(
-      var(--atelier-sidebar-surface),
-      var(--atelier-sidebar-border),
-      var(--atelier-sidebar-fg),
-      var(--atelier-sidebar-accent),
-      var(--atelier-sidebar-accent-soft)
-    );
+    @include atelier-bar(sidebar);
   }
 
   // Inline sidebar search (`website.sidebar.search: true` with a textbox
@@ -613,25 +1199,19 @@ body.docked {
 
   .quarto-secondary-nav .quarto-btn-toggle,
   .quarto-secondary-nav .quarto-search-button,
-  .quarto-secondary-nav-title,
-  .quarto-secondary-nav .quarto-page-breadcrumbs,
-  .quarto-secondary-nav .quarto-page-breadcrumbs a {
+  .quarto-secondary-nav-title {
     color: var(--atelier-sidebar-fg);
   }
 
   .quarto-secondary-nav .quarto-btn-toggle:hover,
-  .quarto-secondary-nav .quarto-search-button:hover,
-  .quarto-secondary-nav .quarto-page-breadcrumbs a:hover {
+  .quarto-secondary-nav .quarto-search-button:hover {
     color: var(--atelier-sidebar-accent);
   }
 
-  .quarto-secondary-nav .breadcrumb-item::before {
-    color: var(--atelier-sidebar-muted);
-  }
-
-  // The page focus ring is $primary, which on the dark column is far too dim;
-  // keep its geometry and swap the colour for the sidebar accent.
-  :is(#quarto-sidebar, .quarto-secondary-nav) :is(a, button):focus-visible {
+  // The page focus ring is the page accent ink, which is held to the page and
+  // not to the sidebar column. Keep its geometry and swap the colour for the
+  // sidebar accent.
+  .quarto-secondary-nav :is(a, button):focus-visible {
     outline-color: var(--atelier-sidebar-accent);
   }
 
@@ -654,10 +1234,47 @@ body.docked {
   }
 }
 
+// Quarto sizes a section toggle to its 0.7rem icon, about 20 by 18 px, and
+// puts page links 23.8 px apart, so both miss the 24 px target size of WCAG
+// 2.5.8. Give the toggle a 24 px box, with negative margins that keep the row
+// height, and add enough space between items to put links 24 px apart.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15096
+// Remove when: the minimum Quarto version includes the fix.
+.sidebar-navigation .sidebar-item .sidebar-item-toggle:not(.sidebar-item-text) {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  margin-block: -3px;
+}
+
+.sidebar-navigation .sidebar-item {
+  margin-top: 0.45rem;
+}
+
 // Quarto's floating back-to-top pill has no edge on tinted surfaces; give it
-// the same hairline as the code surfaces.
+// the border token, which a pinned chrome palette does not change.
 #quarto-back-to-top {
-  border: 1px solid body-mix(85%);
+  border: 1px solid var(--atelier-border);
+}
+
+// Quarto hides the back-to-top pill with its stylesheet before the first
+// scroll, and with an inline `display: none` after it, and focus cannot reach
+// a hidden element. Keep the pill in the layout, but transparent and out of
+// reach of the pointer, until it has focus. The rule matches only these two
+// hidden states, and only after `html/scripts/a11y-fixes.html` has put the
+// pill in the Tab order, so any other display that Quarto sets wins.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15187
+// Remove when: the minimum Quarto version includes the fix.
+#quarto-back-to-top[data-atelier-focusable]:is(:not([style*="display"]), [style*="display: none"]) {
+  display: inline-block !important;
+
+  &:not(:focus-visible) {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 // ===========================================================================
@@ -669,37 +1286,7 @@ body.docked {
 .navbar {
   border-bottom: 1px solid var(--atelier-navbar-border);
 
-  @include atelier-dropdown(
-    var(--atelier-navbar-surface),
-    var(--atelier-navbar-border),
-    var(--atelier-navbar-fg),
-    var(--atelier-navbar-accent),
-    var(--atelier-navbar-accent-soft)
-  );
-}
-
-// The pill visuals on the search button and the colour-scheme toggle, the
-// border and its hover fill, ship with the gitlink widget
-// (widget-navbar-tools.css via `widget.style-navbar-tools`); their geometry
-// comes from the control tokens below. Bridge the navbar tokens onto the
-// widget's own custom properties so the pill, trigger, and dropdown match the
-// bar they sit on. Inert when the gitlink extension is not installed.
-.navbar {
-  --gitlink-widget-border: var(--atelier-navbar-control-border);
-  --gitlink-widget-accent: var(--atelier-navbar-accent);
-  --gitlink-widget-accent-soft: var(--atelier-navbar-accent-soft);
-  --gitlink-widget-menu-bg: var(--atelier-navbar-surface);
-  --gitlink-widget-menu-fg: var(--atelier-navbar-fg);
-}
-
-// The same widget can render in the sidebar tools, where it takes the sidebar
-// tokens instead.
-body.docked .sidebar-navigation {
-  --gitlink-widget-border: var(--atelier-sidebar-control-border);
-  --gitlink-widget-accent: var(--atelier-sidebar-accent);
-  --gitlink-widget-accent-soft: var(--atelier-sidebar-accent-soft);
-  --gitlink-widget-menu-bg: var(--atelier-sidebar-surface);
-  --gitlink-widget-menu-fg: var(--atelier-sidebar-fg);
+  @include atelier-bar(navbar);
 }
 
 // Quarto gives the sidebar `overflow-y: auto` and leaves `overflow-x` at
@@ -869,67 +1456,6 @@ body .navbar .gitlink-widget-dropdown {
 }
 
 // ===========================================================================
-// FOOTER
-// ===========================================================================
-// Quarto paints the surface, the text, the links, and the top edge from the
-// chrome palette, the edge because `html/chrome.scss` sets
-// `$footer-border-color` alongside the rest. Only the link treatment is left:
-// Quarto underlines nothing and gives no hover colour of its own.
-.nav-footer a {
-  text-decoration: none;
-}
-
-.nav-footer a:hover,
-.nav-footer a:focus-visible {
-  color: var(--atelier-navbar-accent);
-  text-decoration: underline;
-}
-
-// Quarto gives footer text $text-muted, which is held to AA on the page rather
-// than on the bar; use the chrome muted ink instead.
-.nav-footer-contents {
-  color: var(--atelier-navbar-muted);
-}
-
-.sidebar .sidebar-footer {
-  color: var(--atelier-sidebar-muted);
-}
-
-// ===========================================================================
-// ANNOUNCEMENT BANNER
-// ===========================================================================
-// Bootstrap 5.3 alert tokens flip on scheme change, which can leave the
-// banner text at poor contrast on a bright tint. Pin each alert type to a
-// light tint of its theme colour with a contrast-picked ink so the banner
-// reads the same in both schemes; inert when no announcement is configured,
-// and each type re-pinnable per .alert-<type> via the custom properties.
-#quarto-announcement {
-  @each $name, $value in $theme-colors {
-    &.alert-#{$name} {
-      --atelier-announcement-bg: #{mix($value, $white, 20%)};
-      --atelier-announcement-border: #{$value};
-      --atelier-announcement-ink: #{color-contrast(mix($value, $white, 20%))};
-    }
-  }
-
-  background: var(--atelier-announcement-bg) !important;
-  border-color: var(--atelier-announcement-border) !important;
-
-  &,
-  .quarto-announcement-content,
-  .quarto-announcement-content p,
-  .quarto-announcement-content a,
-  .quarto-announcement-icon,
-  .quarto-announcement-action {
-    color: var(--atelier-announcement-ink) !important;
-  }
-
-  .quarto-announcement-content a {
-    text-decoration-color: var(--atelier-announcement-ink);
-  }
-}
-
-// ===========================================================================
 // DISMISS BUTTON
 // ===========================================================================
 // Bootstrap bakes black into the .btn-close icon and lightens it under
@@ -944,16 +1470,18 @@ body .navbar .gitlink-widget-dropdown {
 // masked from the text colour around it instead, so it follows the surface it
 // sits on, whichever bundle is active.
 // Upstream: https://github.com/quarto-dev/quarto-cli/issues/15060
+// Remove when: the minimum Quarto version includes the fix.
 .btn-close,
 .btn-close:hover {
   color: inherit;
-}
 
-.btn-close {
-  background-image: none;
-  background-color: currentcolor;
-  mask: var(--bs-btn-close-bg) center / $btn-close-width auto no-repeat;
-  -webkit-mask: var(--bs-btn-close-bg) center / $btn-close-width auto no-repeat;
+  // Bootstrap fades the button, which would also fade the system colour of
+  // the icon in forced colours.
+  @media (forced-colors: active) {
+    opacity: 1;
+  }
+
+  @include atelier-icon-mask(var(--bs-btn-close-bg), $btn-close-width auto);
 }
 
 // ===========================================================================
@@ -975,57 +1503,25 @@ body .navbar .gitlink-widget-dropdown {
   font-size: clamp(6rem, 20vw, 11rem);
   font-weight: 700;
   line-height: 1;
-  color: body-mix(88%);
+  color: var(--atelier-control-border);
   user-select: none;
 }
 
 .atelier-404 .atelier-404-home {
   display: inline-block;
   padding: 0.45rem 1.1rem;
-  border: 1px solid $primary;
+  border: 1px solid var(--atelier-accent-mark);
   border-radius: $border-radius;
-  color: $primary;
+  color: var(--atelier-accent-ink);
   text-decoration: none;
 }
 
+// The accent ink is held to AA on the accent-soft tint, and the mark to 3:1 on
+// the page, so a pale or deep primary keeps the link readable.
 .atelier-404 .atelier-404-home:hover,
 .atelier-404 .atelier-404-home:focus-visible {
-  background: body-mix(92%);
+  background: var(--atelier-accent-soft);
   text-decoration: underline;
-}
-
-// ===========================================================================
-// TOOLTIPS
-// ===========================================================================
-// Bootstrap tooltips plus the tippy theme used by navbar-tooltips.html; both
-// take the navbar tokens, since every control they are bound to sits on the
-// navbar.
-.tooltip {
-  --bs-tooltip-bg: var(--atelier-navbar-bg);
-  --bs-tooltip-color: var(--atelier-navbar-fg);
-  --bs-tooltip-opacity: 1;
-  --bs-tooltip-border-radius: #{$border-radius-sm};
-}
-
-.tooltip .tooltip-inner {
-  border: 1px solid var(--atelier-navbar-accent);
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.35);
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.tippy-box[data-theme~="atelier"] {
-  background-color: var(--atelier-navbar-bg);
-  color: var(--atelier-navbar-fg);
-  border: 1px solid var(--atelier-navbar-accent);
-  border-radius: $border-radius-sm;
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.35);
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.tippy-box[data-theme~="atelier"] .tippy-content {
-  padding: 0.2rem 0.55rem;
 }
 
 // ===========================================================================
@@ -1045,14 +1541,7 @@ $atelier-icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/s
   width: 1rem;
   height: 1rem;
   vertical-align: -0.125em;
-  background-image: none;
-  background-color: currentcolor;
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
+  @include atelier-icon-mask($size: contain);
 }
 
 // Quarto ships its own glyph at the same specificity, so scope to every place
@@ -1064,16 +1553,39 @@ $atelier-icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/s
   // wins on order); otherwise its glyph paints through and is clipped by the
   // mask, leaving a shape that does not fill on hover.
   &:not(.alternate) .bi::before {
-    background-image: none;
-    mask-image: $atelier-icon-sun;
-    -webkit-mask-image: $atelier-icon-sun;
+    @include atelier-icon-mask($atelier-icon-sun, contain);
   }
 
   &.alternate .bi::before {
-    background-image: none;
-    mask-image: $atelier-icon-moon;
-    -webkit-mask-image: $atelier-icon-moon;
+    @include atelier-icon-mask($atelier-icon-moon, contain);
   }
+}
+
+// On a page with no navbar or sidebar the toggle floats at the top right, and
+// the browser paints a button black unless told otherwise.
+.top-right.quarto-color-scheme-toggle {
+  color: var(--atelier-fg);
+}
+
+// Quarto places the floating toggle 1em from the top of the document, under the
+// fixed header that holds the announcement bar. With `top: auto`, the toggle
+// starts where a11y-fixes.html puts its container: after the header, below the
+// body padding for the header. The toggle then stays 1em below the bar.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15294
+// Remove when: the minimum Quarto version includes the fix.
+.top-right.quarto-color-scheme-toggle {
+  top: auto;
+  margin-top: 1em;
+}
+
+// In the sidebar tools row, Quarto sizes the tool icons from the font size of
+// the row, but the toggle glyph from the root font size, so the toggle is
+// larger than the icons beside it. Size the glyph from the row instead.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15179
+// Remove when: the minimum Quarto version includes the fix.
+.sidebar-navigation .quarto-color-scheme-toggle .bi::before {
+  width: 1em;
+  height: 1em;
 }
 
 // ===========================================================================
@@ -1081,7 +1593,7 @@ $atelier-icon-moon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/s
 // ===========================================================================
 // Quarto leaves the browser default scrollbar, a light-grey bar that clashes
 // with the dark navbar and the tinted code surfaces; derive it from the page so
-// it tracks the active scheme, with $primary on hover.
+// it tracks the active scheme, with the accent mark on hover.
 $scrollbar-track: body-mix(94%);
 $scrollbar-thumb: body-mix(72%);
 
@@ -1107,20 +1619,185 @@ $scrollbar-thumb: body-mix(72%);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: $primary;
+  background: var(--atelier-accent-mark);
+}
+
+// ===========================================================================
+// BOOTSTRAP BUTTONS AND ALERTS
+// ===========================================================================
+// Bootstrap derives the primary button text from the primary colour, the
+// outline secondary button from the secondary colour, and the secondary alert
+// from its grey. All three read the page tokens instead: the fill is the accent
+// held to 3:1 with its ink at 4.5:1, the outline button is a neutral control
+// in the page ink, and the alert is a quiet panel. A brand secondary colour is
+// not held to 4.5:1 against the page, so it cannot be the text of a button.
+.btn-primary {
+  --bs-btn-color: var(--atelier-on-accent);
+  --bs-btn-bg: var(--atelier-accent-fill);
+  --bs-btn-border-color: var(--atelier-accent-fill);
+  --bs-btn-hover-color: var(--atelier-bg);
+  --bs-btn-hover-bg: var(--atelier-accent-text);
+  --bs-btn-hover-border-color: var(--atelier-accent-text);
+  --bs-btn-active-color: var(--atelier-bg);
+  --bs-btn-active-bg: var(--atelier-accent-text);
+  --bs-btn-active-border-color: var(--atelier-accent-text);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--atelier-fg);
+  --bs-btn-border-color: var(--atelier-control-border);
+  --bs-btn-hover-color: var(--atelier-fg);
+  --bs-btn-hover-bg: var(--atelier-surface-strong);
+  --bs-btn-hover-border-color: var(--atelier-fg);
+  --bs-btn-active-color: var(--atelier-fg);
+  --bs-btn-active-bg: var(--atelier-surface-strong);
+  --bs-btn-active-border-color: var(--atelier-fg);
+  --bs-btn-disabled-color: var(--atelier-fg);
+  --bs-btn-disabled-border-color: var(--atelier-control-border);
+}
+
+.alert-secondary {
+  --bs-alert-color: var(--atelier-fg);
+  --bs-alert-bg: var(--atelier-surface-strong);
+  --bs-alert-border-color: var(--atelier-border);
+  --bs-alert-link-color: var(--atelier-code-ink);
+}
+
+// ===========================================================================
+// BLOCKQUOTES AND SECTION NUMBERS
+// ===========================================================================
+// A blockquote has an inset bar in the primary colour and a decorative opening
+// quote. The alternative text after the slash in `content` is empty, so a
+// screen reader does not read the quote character. Quarto sets the padding and
+// the size on the `.blockquote` class, so the selector list matches its
+// specificity and comes later.
+blockquote:not(.twitter-tweet),
+.blockquote:not(.twitter-tweet) {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 0.125rem 0;
+  padding-inline-start: 2.5rem;
+  border: 0;
+  background: none;
+  font-style: normal;
+  font-size: 1.0625em;
+  color: var(--atelier-muted);
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    inset-inline-start: 0.375rem;
+    width: 0.25rem;
+    border-radius: 0.125rem;
+    background: var(--atelier-accent-mark);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "\201C" / "";
+    position: absolute;
+    top: -0.1rem;
+    inset-inline-start: 1rem;
+    font-family: Georgia, serif;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--atelier-accent-mark);
+    pointer-events: none;
+  }
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  footer,
+  > cite,
+  .attribution {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85em;
+    font-style: normal;
+    color: var(--atelier-muted);
+  }
+
+  // A `cite` inside an attribution is part of its line: keep it inline, at the
+  // size of the line.
+  footer cite,
+  .attribution cite {
+    display: inline;
+    margin-top: 0;
+    font-size: inherit;
+  }
+}
+
+// Section numbers are smaller, use tabular numerals, and take the primary
+// colour, held to AA on the page. Listing headings and appendix headings keep
+// the default look.
+h1.anchored:not(:where(.quarto-listing *, .quarto-appendix-heading)),
+h2.anchored:not(:where(.quarto-listing *, .quarto-appendix-heading)),
+h3.anchored:not(:where(.quarto-listing *, .quarto-appendix-heading)),
+h4.anchored:not(:where(.quarto-listing *, .quarto-appendix-heading)),
+h5.anchored:not(:where(.quarto-listing *, .quarto-appendix-heading)),
+h6.anchored:not(:where(.quarto-listing *, .quarto-appendix-heading)) {
+  .header-section-number {
+    margin-right: 0.55em;
+    font-size: 0.82em;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums lining-nums;
+    color: var(--atelier-accent-text);
+  }
+}
+
+// ===========================================================================
+// PRINT
+// ===========================================================================
+// A browser prints without background colours by default. A filled button
+// then loses its fill but keeps its light text, so the label is not visible on
+// the white paper. In print, a filled button has no fill, a text colour with
+// 4.5:1 or more against white, and a border in the same colour. Outline
+// buttons and link buttons do not change.
+@media print {
+  .btn:not([class*="btn-outline-"], .btn-link) {
+    --bs-btn-color: #{atelier-theme-contrast($primary, #fff)};
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: currentcolor;
+  }
+}
+
+// ===========================================================================
+// FADE IN
+// ===========================================================================
+// Content that a script fills after the first paint fades in: the reading bar
+// in `workshop.scss` and the reading time in `navigation.scss`.
+@keyframes atelier-bar-fade {
+  from {
+    opacity: 0;
+  }
 }
 
 // ===========================================================================
 // MOTION GUARD
 // ===========================================================================
-// Every motion the theme owns or inherits is cancelled here, in one place. The
-// navbar selectors carry no transition from this file: they cancel Bootstrap's.
+// Every motion the theme owns or inherits is cancelled here, in one place.
+// The `!important` flags are needed: the guard must beat every component rule,
+// including the ones that Bootstrap and Quarto write.
 @media (prefers-reduced-motion: reduce) {
-  .navbar .nav-link,
-  .navbar .dropdown-item,
-  .panel-tabset .nav-tabs .nav-link,
-  .embed-art {
-    transition: none;
+  // The durations are near zero rather than `none`: GLightbox and Tippy wait
+  // for `animationend` and `transitionend` before they close, and those events
+  // do not fire when the animation or transition is removed.
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 
   // Dropping the transition alone would leave the tilt change as an instant

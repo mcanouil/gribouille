@@ -1,0 +1,10 @@
+title: Div Reuse
+author: Mickaël Canouil
+version: 1.5.1
+quarto-required: ">=1.9.38"
+contributes:
+  filters:
+    - path: div-reuse.lua
+      at: post-quarto
+source: mcanouil/quarto-div-reuse@1.5.1
+source-type: github

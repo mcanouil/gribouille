@@ -1,0 +1,15 @@
+# Schema for the prism extension
+#
+# The filter rewrites dynamic format-prefixed attributes (e.g. `revealjs:style`,
+# `html:style`, `slide:style`, `default:style`) on Div, Span, CodeBlock, and
+# Header elements; these are dynamic prefixed keys, not a fixed attribute set, so only
+# the document option below is described here.
+
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+options:
+  warn-on-drop:
+    type: boolean
+    default: false
+    title: Warn when a format-scoped attribute is dropped
+    description: Emit a Quarto warning each time a format-scoped attribute is dropped because no prefix matched the active target format; useful to surface typos in prefixes that would otherwise vanish silently.

@@ -1,0 +1,192 @@
+/**
+ * Remember Extension - Resume Banner Styles
+ * Styles for the banner that offers to resume reading
+ *
+ * @author Mickaël Canouil
+ *
+ * The banner sits in the page flow and does not cover the page. On a
+ * Reveal.js deck it is fixed at the bottom centre, above the slide footer,
+ * clear of the menu button in the bottom left corner and of the controls in
+ * the bottom right corner. It moves to the top edge while keyboard focus is
+ * on an element behind it.
+ *
+ * Every colour, the radius, and the font come from the page theme: the
+ * Bootstrap 5 custom properties on an HTML page, the Reveal.js theme
+ * properties on a slide deck, and the system colours elsewhere. The theme
+ * variables change with the colour scheme, so the banner follows the scheme
+ * that the page shows, not the scheme of the operating system.
+ *
+ * The buttons also carry the Bootstrap `btn` classes. The button rules below
+ * sit inside `:where()`, which has no specificity, so Bootstrap's own button
+ * rules win on a Bootstrap page and these rules apply only where it is absent.
+ */
+
+.remember-banner {
+  --remember-bg: var(--bs-body-bg, var(--r-background-color, Canvas));
+  --remember-fg: var(--bs-body-color, var(--r-main-color, CanvasText));
+  --remember-accent: var(--bs-primary, var(--r-link-color, LinkText));
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 1rem 0 1.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--remember-bg);
+  color: var(--remember-fg);
+  font-family: var(--bs-body-font-family, var(--r-main-font, inherit));
+  font-size: 1rem;
+  border: var(--bs-border-width, 1px) solid var(--bs-border-color, currentColor);
+  border-inline-start: 0.25rem solid var(--remember-accent);
+  border-radius: var(--bs-border-radius, 0.375rem);
+  animation: remember-fade-in 0.2s ease-out;
+}
+
+.remember-banner-fixed {
+  position: fixed;
+  inset-block-end: var(--remember-offset, 1rem);
+  inset-inline: 0;
+  z-index: 40;
+  margin-inline: auto;
+  width: max-content;
+  max-width: min(36rem, calc(100% - 12rem));
+  margin-block: 0;
+  font-size: 1rem;
+  box-shadow: var(--bs-box-shadow, 0 0.5rem 1rem rgb(0 0 0 / 15%));
+}
+
+.remember-banner-fixed.remember-banner-top {
+  inset-block-start: 1rem;
+  inset-block-end: auto;
+}
+
+.remember-message {
+  flex: 1 1 18rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.remember-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.remember-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Keep the targets large enough to tap, whichever rules style the buttons. */
+.remember-btn {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+:where(.remember-btn) {
+  padding: 0.375rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--bs-border-radius, 0.375rem);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+:where(.remember-btn-accept) {
+  background-color: var(--remember-accent);
+  color: var(--remember-bg);
+}
+
+:where(.remember-btn-decline) {
+  background-color: transparent;
+  color: inherit;
+  border-color: currentColor;
+}
+
+@media (hover: hover) {
+  :where(.remember-btn-accept:hover) {
+    background-color: color-mix(in srgb, var(--remember-accent) 85%, black);
+  }
+
+  :where(.remember-btn-decline:hover) {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+  }
+}
+
+.remember-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.remember-btn:focus-visible {
+  outline: 3px solid var(--remember-fg);
+  outline-offset: 2px;
+}
+
+@keyframes remember-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .remember-banner {
+    animation: none;
+  }
+
+  :where(.remember-btn) {
+    transition: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .remember-banner-fixed {
+    inset-block-end: calc(var(--remember-offset, 1rem) + 3rem);
+    max-width: calc(100% - 2rem);
+  }
+
+  .remember-buttons {
+    width: 100%;
+  }
+
+  .remember-btn {
+    flex: 1;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .remember-banner {
+    border: 2px solid currentColor;
+  }
+
+  .remember-btn {
+    border: 2px solid currentColor;
+  }
+
+  .remember-btn:focus-visible {
+    outline: 4px solid currentColor;
+    outline-offset: 3px;
+  }
+}
+
+@media (forced-colors: active) {
+  .remember-banner {
+    border: 2px solid CanvasText;
+  }
+
+  .remember-btn {
+    border: 1px solid ButtonText;
+  }
+
+  .remember-btn:focus-visible {
+    outline: 3px solid Highlight;
+  }
+}

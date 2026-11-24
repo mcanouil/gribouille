@@ -1,0 +1,52 @@
+# Schema for the preview-colour extension
+# Describes options for IDE tooling and runtime validation.
+
+# Extension-level metadata options.
+# Configured in _quarto.yml, _metadata.yml, or document front matter:
+#   extensions:
+#     preview-colour:
+#       text: false
+#       code: true
+
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+options:
+  text:
+    type: boolean
+    default: false
+    description: Enable colour preview in plain text.
+  code:
+    type: boolean
+    default: true
+    description: Enable colour preview in inline code.
+  glyph:
+    type: [string, object]
+    description: Glyph character for colour preview marks, or an object with per-format glyphs.
+    additionalProperties: false
+    properties:
+      html:
+        type: string
+        description: Glyph used for HTML output.
+      latex:
+        type: string
+        description: Glyph used for LaTeX output.
+      typst:
+        type: string
+        description: Glyph used for Typst output.
+      docx:
+        type: string
+        description: Glyph used for DOCX output.
+      pptx:
+        type: string
+        description: Glyph used for PPTX output.
+      default:
+        type: string
+        description: Glyph used when no format-specific glyph is set.
+  json:
+    type: boolean
+    default: false
+    description: Export detected colours to a JSON file. The file is named by 'json-file'.
+  json-file:
+    type: string
+    default: "preview-colour.json"
+    description: Path of the JSON export, relative to the document. Read only when 'json' is true.

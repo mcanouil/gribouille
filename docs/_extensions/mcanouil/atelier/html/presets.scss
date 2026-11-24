@@ -1,0 +1,188 @@
+/*-- scss:defaults --*/
+
+// ===========================================================================
+// PRESET
+// ===========================================================================
+// This file is listed second, so Quarto evaluates it after `brand` and before
+// `html/chrome.scss`. A brand value or a project value therefore wins over any
+// `!default` value set here. Set the preset in `_brand.yml`:
+//
+//   defaults:
+//     bootstrap:
+//       defaults:
+//         atelier-preset: terminal
+//
+//   default   The Atelier look.
+//   quarto    A look close to the Quarto website.
+//   terminal  A dark, monospace look.
+$atelier-preset: default !default;
+
+@if not index((default, quarto, terminal), $atelier-preset) {
+  @error "atelier-preset must be default, quarto, or terminal, but was #{$atelier-preset}.";
+}
+
+// The terminal preset draws a prompt and a cursor. Set this to false to turn
+// that decoration off. It has no effect on the other presets.
+$atelier-terminal-decoration: true !default;
+
+@if $atelier-terminal-decoration != true and $atelier-terminal-decoration != false {
+  @error "atelier-terminal-decoration must be true or false, but was #{$atelier-terminal-decoration}.";
+}
+
+// A preset assigns these inside an `@if`, which cannot declare a new global.
+// Each is declared here as `null`. A `null` value counts as unset for
+// `!default`, so a brand or Bootstrap value still wins, and a later check
+// must test for `null` instead of for existence.
+//
+// Quarto tests if `$body-bg`, `$body-color`, and `$primary` exist. A `null`
+// value then breaks a site with no preset, so these three are not declared
+// here. A preset sets them with `!global`.
+// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15304
+// Remove when: the minimum Quarto version accepts a `null` value for them.
+$blue: null !default;
+$green: null !default;
+$red: null !default;
+$orange: null !default;
+$yellow: null !default;
+$border-radius: null !default;
+$font-size-base: null !default;
+$font-family-sans-serif: null !default;
+$font-family-monospace: null !default;
+$headings-font-family: null !default;
+$pre-color: null !default;
+$atelier-chrome: null !default;
+$atelier-chrome-bg: null !default;
+$atelier-chrome-fg: null !default;
+$atelier-chrome-muted: null !default;
+$atelier-chrome-accent: null !default;
+$atelier-chrome-accent-soft-alpha: null !default;
+$atelier-text-muted: null !default;
+$atelier-code-ink: null !default;
+$link-color: null !default;
+$atelier-chrome-dark-bg: null !default;
+$atelier-chrome-dark-fg: null !default;
+$atelier-chrome-dark-accent: null !default;
+$atelier-terminal-bg: null !default;
+$atelier-terminal-prompt: null !default;
+
+// ===========================================================================
+// QUARTO PRESET
+// ===========================================================================
+// A blue tinted page, a filled blue chrome, and two typefaces, with no rules of
+// its own. The chrome values are set here as they are, so the contrast
+// functions in `html/chrome.scss` skip them: each one already passes AA. A
+// brand colour or font wins over every value, because each is a default. A
+// brand primary also drives the chrome accent, so the chrome accent here is
+// only set when the brand has no primary.
+@if $atelier-preset == quarto {
+  // The guard reads `$primary` before this block assigns it, so it sees only a
+  // primary that the brand or the project has set.
+  $_quarto-brand-primary: atelier-meta.variable-exists(primary) and $primary != null;
+
+  @if $atelier-scheme == dark {
+    @if not $_quarto-brand-primary {
+      $atelier-chrome-accent: #75aadb !default;
+    }
+    $body-bg: #0f1b2a !default !global;
+    $body-color: #dbe6f0 !default !global;
+    $primary: #74aadb !default !global;
+    $atelier-chrome-bg: #0a1524 !default;
+    $atelier-chrome-fg: #e8edf2 !default;
+    $atelier-chrome-accent-soft-alpha: 0.16 !default;
+  } @else {
+    @if not $_quarto-brand-primary {
+      $atelier-chrome-accent: #ffffff !default;
+      $atelier-code-ink: #325c83 !default;
+      $link-color: #406993 !default;
+    }
+    $body-bg: #eef4fa !default !global;
+    $body-color: #1f2a36 !default !global;
+    $primary: #47709a !default !global;
+    $atelier-chrome-bg: #365f84 !default;
+    $atelier-chrome-fg: #ffffff !default;
+    $atelier-chrome-muted: #f4f8fb !default;
+    $atelier-chrome-accent-soft-alpha: 0.12 !default;
+
+    // The Bootstrap yellow and orange fall under 4.5:1 as callout ink on the
+    // tinted page, so the chrome would have to correct them. These two steps
+    // pass without it. A brand colour of the same name wins.
+    @if not atelier-meta.variable-exists("brand-yellow") {
+      $yellow: #b8860b !default;
+    }
+    @if not atelier-meta.variable-exists("brand-orange") {
+      $orange: #e8590c !default;
+    }
+
+    // The derived muted ink reaches 4.5:1 only by correction, so it is set to
+    // a value with a margin. A brand secondary colour wins.
+    @if not atelier-meta.variable-exists(secondary) {
+      $atelier-text-muted: #55626f !default;
+    }
+  }
+
+  $font-family-sans-serif: "Alegreya Sans", sans-serif !default;
+  $headings-font-family: "Alegreya Sans", sans-serif !default;
+  $font-family-monospace: "Fira Code", monospace !default;
+}
+
+// ===========================================================================
+// TERMINAL PRESET
+// ===========================================================================
+// A dark, monospace look, pinned: both bundles get the same values, so a
+// reader whose system prefers light still gets the dark look. The chrome is
+// pinned dark, and the terminal block takes the chrome background and the
+// accent. Every value is a default, so a brand colour or font wins. A brand
+// light value in the light bundle is kept, and a warning says so.
+@if $atelier-preset == terminal {
+  $_terminal-green: #7ee08a;
+  $_terminal-bg: #16191e;
+  $_terminal-fg: #d8dee9;
+  $_terminal-font: "JetBrains Mono", monospace;
+
+  $body-bg: #101216 !default !global;
+  $body-color: $_terminal-fg !default !global;
+  $primary: $_terminal-green !default !global;
+
+  // `html/chrome.scss` maps a brand palette colour to these names, and it runs
+  // after this file. A name that the brand sets is left unset here.
+  @if not atelier-meta.variable-exists("brand-blue") {
+    $blue: #6cb6ff !default;
+  }
+  @if not atelier-meta.variable-exists("brand-green") {
+    $green: $_terminal-green !default;
+  }
+  @if not atelier-meta.variable-exists("brand-red") {
+    $red: #ff7b72 !default;
+  }
+  @if not atelier-meta.variable-exists("brand-orange") {
+    $orange: #f0a35e !default;
+  }
+  @if not atelier-meta.variable-exists("brand-yellow") {
+    $yellow: #e3c45c !default;
+  }
+
+  $atelier-chrome: dark !default;
+  $atelier-chrome-dark-bg: $_terminal-bg !default;
+  $atelier-chrome-dark-fg: $_terminal-fg !default;
+  $atelier-chrome-dark-accent: $_terminal-green !default;
+  $atelier-terminal-bg: $_terminal-bg !default;
+  $atelier-terminal-prompt: $_terminal-green !default;
+
+  $border-radius: 0 !default;
+  $font-size-base: 0.95rem !default;
+  $font-family-monospace: $_terminal-font !default;
+  $font-family-sans-serif: $_terminal-font !default;
+  $headings-font-family: $_terminal-font !default;
+
+  // Quarto does not show a Sass `@warn` in the render log, so a reader does
+  // not see this warning yet.
+  // Upstream: https://github.com/quarto-dev/quarto-cli/issues/15307
+  // Remove when: Quarto shows the warning. Then remove only this note.
+  @if $atelier-scheme == light and tone($body-bg) == "light" {
+    @warn "The terminal preset is dark; brand light values are ignored.";
+  }
+}
+
+@if $atelier-preset != default {
+  $pre-color: $body-color !default;
+}

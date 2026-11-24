@@ -1,0 +1,121 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-toc-early" type="text/javascript">
+	(function () {
+		// This script is in the head. It runs on the "toc" stage of page-load.html,
+		// when the margin table of contents is complete and the headings are not.
+		// It adds the rows of the table of contents first, so the table of contents
+		// has its final layout at the first paint. A row that is still empty, for
+		// a script after the body to fill, is hidden from assistive technology
+		// until then. When content spans into the margin, Quarto clones the table
+		// of contents into a toggle on DOMContentLoaded, so the clone gets these
+		// rows too.
+		var element = window.atelierStages.element;
+		var afterTitle = window.atelierStages.afterTitle;
+
+		// In workshop mode, the table of contents shows progress dots. On a page
+		// in a module, a line holds a ring and the share of the module read. The
+		// headings are not written yet, so the share counts the entries of the
+		// table of contents. This script is the only one that builds the line.
+		// html/scripts/course.html checks the headings, and updates the line as
+		// the reader scrolls.
+		function addDots(toc, course) {
+			var targets = Array.prototype.map.call(toc.querySelectorAll("a.nav-link[data-scroll-target^='#']"), function (link) {
+				return link.getAttribute("data-scroll-target");
+			}).filter(function (target) {
+				return target.length > 1;
+			});
+			if (!targets.length) return;
+			toc.classList.add("atelier-toc-dots");
+			if (course.currentModule === -1) return;
+			var key = course.current !== -1 ? course.pages[course.current].href : location.pathname;
+			var stored = course.progress.read[key];
+			var read = (Array.isArray(stored) ? stored : []).filter(function (target) {
+				return targets.indexOf(target) !== -1;
+			});
+			var percent = course.moduleShare(read.length / targets.length);
+			var progress = element("p", "atelier-toc-progress");
+			var ring = element("span", "atelier-ring");
+			ring.setAttribute("aria-hidden", "true");
+			ring.style.setProperty("--atelier-ring", percent + "%");
+			progress.appendChild(ring);
+			progress.appendChild(document.createTextNode(course.label("toc-module-read", { n: percent })));
+			afterTitle(toc, progress);
+		}
+
+		// On other pages, the table of contents is a card. The meta row sits
+		// between the title and the entries. The reading time and the date of the
+		// last change share the row, so the first of the two to come builds it.
+		function ensureMeta(toc) {
+			var meta = toc.querySelector(".atelier-toc-meta");
+			if (!meta) {
+				meta = element("div", "atelier-toc-meta");
+				afterTitle(toc, meta);
+			}
+			return meta;
+		}
+
+		// html/scripts/toc-card.html fills the reading time, and handles the
+		// copy-link button.
+		function addCard(toc, labels) {
+			if (labels["toc-reading-time"]) {
+				var meta = ensureMeta(toc);
+				meta.setAttribute("aria-hidden", "true");
+				meta.appendChild(element("span", "atelier-toc-reading-time"));
+			}
+
+			// Quarto writes the actions list only when the site has actions.
+			var actions = toc.querySelector(".toc-actions");
+			if (!actions) {
+				actions = element("div", "toc-actions");
+				toc.appendChild(actions);
+			}
+			var list = actions.querySelector("ul");
+			if (!list) {
+				list = document.createElement("ul");
+				actions.appendChild(list);
+			}
+			var button = element("button", "toc-action atelier-copy-link");
+			button.type = "button";
+			button.innerHTML = '<i class="bi bi-link-45deg" aria-hidden="true"></i>';
+			button.appendChild(document.createTextNode(labels["toc-copy-link"] || ""));
+			var item = document.createElement("li");
+			item.appendChild(button);
+			list.appendChild(item);
+
+			// The copy-link feedback. It is not a late fill, so it stays live.
+			var status = element("span", "visually-hidden");
+			status.setAttribute("aria-live", "polite");
+			toc.appendChild(status);
+		}
+
+		// The date of the last change is in the title block, which is complete on
+		// the "title" stage. A row that has the reading time exists already. A
+		// page with only the date gets its row here, with its text, so no empty
+		// row is ever in the table of contents.
+		function addUpdated(toc, label) {
+			var modified = document.querySelector(".quarto-title-meta .date-modified");
+			var date = modified && modified.textContent.trim();
+			if (!label || !date) return;
+			ensureMeta(toc).appendChild(element("span", "atelier-toc-updated", label.replace("{date}", date)));
+		}
+
+		window.atelierStages.on("toc", function () {
+			var toc = document.querySelector("#quarto-margin-sidebar #TOC");
+			if (!toc) return;
+			var course = window.atelierCourse;
+			if (course && course.mode === "workshop") {
+				addDots(toc, course);
+				return;
+			}
+			var labels = window.atelierStages.options().labels || {};
+			addCard(toc, labels);
+			window.atelierStages.on("title", function () {
+				addUpdated(toc, labels["toc-updated"]);
+			});
+		});
+	})();
+</script>

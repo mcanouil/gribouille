@@ -1,0 +1,343 @@
+<script id="atelier-page-load" type="text/javascript">
+	/**
+	 * @license MIT
+	 * @copyright 2026 Mickaël Canouil
+	 * @author Mickaël Canouil
+	 */
+	// This script is in the head. It changes the page once the parser has
+	// written each part, before the browser paints the page. A mutation observer
+	// callback runs before the next paint, so each change is in the first paint.
+	// A change that comes later moves the content.
+	// The changes run in four stages, in this order:
+	// - "header" when #quarto-content exists, so the header is complete.
+	// - "sidebar" when #quarto-margin-sidebar or #quarto-document-content
+	//   exists, so the sidebar is complete.
+	// - "toc" when #quarto-document-content exists, so the table of contents
+	//   is complete.
+	// - "title" when the title block has a next element, or the main content
+	//   has more than one child, so the title block is complete.
+	// Other scripts in the head add their changes to a stage with
+	// window.atelierStages.on(name, fn). A stage that the parser does not
+	// reach runs on DOMContentLoaded. A function added after its stage ran
+	// runs at once. window.atelierStages also gives the options and the small
+	// builders that the Atelier scripts share: element, afterTitle and
+	// versionPill.
+	(function () {
+		function pageOf(path) {
+			return path.replace(/index\.html$/, "");
+		}
+
+		// The toggle of a navbar menu has href="#", which opens no page.
+		function opensPage(link) {
+			var href = link.getAttribute("href");
+			return href !== "" && href.charAt(0) !== "#" && link.origin === location.origin && link.hash === "";
+		}
+
+		function opens(link, page) {
+			return opensPage(link) && pageOf(link.pathname) === page;
+		}
+
+		function markTab(links, tab, value) {
+			links.forEach(function (link) {
+				if (link !== tab) {
+					link.classList.remove("active");
+					link.removeAttribute("aria-current");
+				}
+			});
+			if (tab) {
+				tab.classList.add("active");
+				tab.setAttribute("aria-current", value);
+			}
+		}
+
+		// Quarto marks the first navbar link whose page is also in the sidebar.
+		// With one sidebar that holds every page, that link is "Home" on every
+		// page. The mark moves to the link of the current page, with
+		// aria-current="page".
+		// A page in a navbar menu marks the toggle of the menu, with
+		// aria-current="true", and its menu item gets aria-current="page".
+		// Any other page gets the tab of its closest sidebar section, with
+		// aria-current="true", because that tab is a section and not the page.
+		// The tab of a section is the first navbar link whose page is in the
+		// section. A page in no such section gets a tab only when one navbar
+		// link opens a page of the sidebar, as on a site with one sidebar for
+		// each tab. The sidebar link is handled in a11y-fixes.html.
+		// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15392 (mark)
+		// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15190 (aria-current)
+		// Related upstream: https://github.com/quarto-dev/quarto-cli/issues/11481
+		// Remove when: the minimum Quarto version includes both fixes.
+		function markCurrentTab() {
+			var here = pageOf(location.pathname);
+			var links = Array.prototype.slice.call(document.querySelectorAll(".navbar .nav-link[href]"));
+			var current = links.find(function (link) {
+				return opens(link, here);
+			});
+			if (current) {
+				markTab(links, current, "page");
+				return;
+			}
+			var menuItem = Array.prototype.find.call(document.querySelectorAll(".navbar .dropdown-item[href]"), function (item) {
+				return opens(item, here);
+			});
+			var menu = menuItem && menuItem.closest(".dropdown");
+			var toggle = menu && menu.querySelector(".dropdown-toggle");
+			if (links.indexOf(toggle) !== -1) {
+				markTab(links, toggle, "true");
+				menuItem.setAttribute("aria-current", "page");
+				return;
+			}
+			// The sidebar comes after the navbar, so the section tab waits for it.
+			markTab(links, null);
+			window.atelierStages.on("sidebar", function () {
+				markSectionTab(links);
+			});
+		}
+
+		function tabOf(scope, links) {
+			var pages = Array.prototype.map.call(scope.querySelectorAll("a.sidebar-link[href]"), function (link) {
+				return opensPage(link) ? pageOf(link.pathname) : null;
+			});
+			return links.filter(function (link) {
+				return opensPage(link) && pages.indexOf(pageOf(link.pathname)) !== -1;
+			});
+		}
+
+		function markSectionTab(links) {
+			var sidebar = document.getElementById("quarto-sidebar");
+			if (!sidebar) return;
+			var item = sidebar.querySelector("a.sidebar-link.active");
+			var section = item && item.closest(".sidebar-item-section");
+			while (section) {
+				var tabs = tabOf(section, links);
+				if (tabs.length > 0) {
+					markTab(links, tabs[0], "true");
+					return;
+				}
+				section = section.parentElement.closest(".sidebar-item-section");
+			}
+			var sidebarTabs = tabOf(sidebar, links);
+			if (sidebarTabs.length === 1) markTab(links, sidebarTabs[0], "true");
+		}
+
+		function element(tag, className, text) {
+			var node = document.createElement(tag);
+			if (className) node.className = className;
+			if (text) node.textContent = text;
+			return node;
+		}
+
+		// A row of the table of contents goes after its title, or first when the
+		// table of contents has no title.
+		function afterTitle(toc, node) {
+			var title = toc.querySelector("#toc-title");
+			if (title) {
+				title.after(node);
+			} else {
+				toc.prepend(node);
+			}
+		}
+
+		function versionPill(version) {
+			return element("span", "atelier-version", version);
+		}
+
+		// The version pill follows the brand in the navbar. A navbar with a logo
+		// has two brand links in one container, so the pill goes once after the
+		// last child of the container. sidebar-header.html adds the pill of the
+		// sidebar, because the parser has not written the sidebar when this
+		// script runs. A page without a navbar shows the pill also at the end of
+		// the phone bar, because the sidebar drawer that holds the other pill is
+		// closed on narrow screens. A page with a navbar keeps the navbar pill
+		// there, so the phone bar gets no second pill. In the phone bar the pill
+		// does not follow the site title, so a hidden label names it for screen
+		// readers.
+		function addVersionPill(version, labels) {
+			if (!version) return;
+			var brand = document.querySelector(".navbar-brand-container > :last-child");
+			var bar = document.querySelector(".quarto-secondary-nav .container-fluid");
+			if (brand) {
+				brand.after(versionPill(version));
+			} else if (bar) {
+				var pill = versionPill(version);
+				if (labels.version) {
+					pill.prepend(element("span", "visually-hidden", labels.version + " "));
+				}
+				bar.append(pill);
+				titleBarText(bar);
+			}
+		}
+
+		// Next to the pill, the crumbs or the page title of the phone bar can end
+		// with an ellipsis, so each one carries its full text in a tooltip.
+		function titleBarText(bar) {
+			bar.querySelectorAll(".breadcrumb-item, .quarto-secondary-nav-title").forEach(function (item) {
+				item.title = item.textContent.replace(/\s+/g, " ").trim();
+			});
+		}
+
+		// The label of the announcement names its type. The theme colours map
+		// to the notice label.
+		function labelAnnouncement(bar, labels) {
+			var typeClass = Array.prototype.find.call(bar.classList, function (name) {
+				return name.indexOf("alert-") === 0;
+			});
+			var type = (typeClass || "").slice(6);
+			var key = "announcement-" + (["info", "warning", "danger", "success"].includes(type) ? type : "notice");
+			var label = element("span", "atelier-announcement-label");
+			var icon = bar.querySelector(".quarto-announcement-icon");
+			if (icon) {
+				icon.setAttribute("aria-hidden", "true");
+				label.appendChild(icon);
+			}
+			if (labels[key]) label.appendChild(document.createTextNode(labels[key]));
+			bar.insertBefore(label, bar.firstChild);
+		}
+
+		// Quarto shows the announcement and sets the top padding of the body
+		// only on DOMContentLoaded. Until then, the bar is hidden and the padding
+		// is 64px, which is less than the two rows of the Atelier header. Thus
+		// the content moves down after the first paint. This function sets the
+		// bar and the padding first, with the values that Quarto gives them later.
+		// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15405
+		// Remove when: the minimum Quarto version includes the fix.
+		function showAnnouncement(bar) {
+			var dismissed;
+			try {
+				dismissed = window.localStorage.getItem("quarto-announce-" + bar.getAttribute("data-announcement-id"));
+			} catch (error) {
+				// Blocked storage: Quarto then keeps the bar hidden, so the bar stays hidden here too.
+				return;
+			}
+			if (dismissed) {
+				bar.remove();
+			} else {
+				bar.classList.remove("hidden");
+			}
+		}
+
+		function settleHeader(bar) {
+			if (bar && bar.classList.contains("hidden")) showAnnouncement(bar);
+			var header = document.querySelector("header.fixed-top");
+			if (header) document.body.style.paddingTop = header.clientHeight + "px";
+		}
+
+		// On a workshop page with a navbar, reading-bar.html puts the module row
+		// right after the navbar. The frame of the row goes there first, so the
+		// header has its final height and order before the first paint, and the
+		// script swaps the frame for the row.
+		function addModuleRowFrame() {
+			var root = document.documentElement.classList;
+			var navbar = document.querySelector("#quarto-header > nav.navbar");
+			if (!navbar || !root.contains("atelier-workshop") || root.contains("atelier-workshop-unlisted")) return;
+			var frame = element("div", "atelier-bar-frame");
+			frame.setAttribute("aria-hidden", "true");
+			navbar.after(frame);
+		}
+
+		// The options block comes after the head scripts, so it is read on the
+		// first call after the parser has written it. Each later call gives the
+		// same object. The other Atelier scripts read the options from here.
+		var parsedOptions = null;
+		function readOptions() {
+			if (parsedOptions) return parsedOptions;
+			var block = document.getElementById("atelier-options");
+			if (!block) return {};
+			try {
+				parsedOptions = JSON.parse(block.textContent || "{}");
+			} catch (error) {
+				console.warn("Atelier: the options block is not valid JSON.", error);
+				parsedOptions = {};
+			}
+			return parsedOptions;
+		}
+
+		function settlePage() {
+			var options = readOptions();
+			var bar = document.getElementById("quarto-announcement");
+			markCurrentTab();
+			addVersionPill(options.version, options.labels || {});
+			addModuleRowFrame();
+			if (bar) labelAnnouncement(bar, options.labels || {});
+			settleHeader(bar);
+		}
+
+		// An element that a ready check finds stays the same, so it is kept.
+		var found = {};
+		function byId(id) {
+			if (!found[id]) found[id] = document.getElementById(id);
+			return found[id];
+		}
+
+		var order = ["header", "sidebar", "toc", "title"];
+		var ready = {
+			header: function () {
+				return byId("quarto-content");
+			},
+			sidebar: function () {
+				return byId("quarto-margin-sidebar") || byId("quarto-document-content");
+			},
+			toc: function () {
+				return byId("quarto-document-content");
+			},
+			title: function () {
+				var title = byId("title-block-header");
+				var main = byId("quarto-document-content");
+				return (title && title.nextElementSibling) || (main && main.children.length > 1);
+			},
+		};
+		var tasks = { header: [settlePage], sidebar: [], toc: [], title: [] };
+		// The stages before this index have run.
+		var next = 0;
+
+		// A failed task warns and does not stop the other tasks of the page.
+		function runTask(name, fn) {
+			try {
+				fn();
+			} catch (error) {
+				console.warn("Atelier: a task of the \"" + name + "\" page load stage failed.", error);
+			}
+		}
+
+		// A stage runs only after the stages before it.
+		function advance(force) {
+			while (next < order.length) {
+				var name = order[next];
+				if (!force && !ready[name]()) return;
+				next += 1;
+				var list = tasks[name];
+				tasks[name] = [];
+				list.forEach(function (fn) {
+					runTask(name, fn);
+				});
+			}
+			observer.disconnect();
+		}
+
+		window.atelierStages = {
+			options: readOptions,
+			element: element,
+			afterTitle: afterTitle,
+			versionPill: versionPill,
+			on: function (name, fn) {
+				var index = order.indexOf(name);
+				if (index === -1) {
+					console.warn("Atelier: window.atelierStages.on needs a stage: header, sidebar, toc or title.", name);
+					return;
+				}
+				if (index < next) runTask(name, fn);
+				else tasks[name].push(fn);
+			},
+		};
+
+		var observer = new MutationObserver(function () {
+			advance(false);
+		});
+		observer.observe(document, { childList: true, subtree: true });
+		document.addEventListener("DOMContentLoaded", function () {
+			if (next <= order.indexOf("sidebar") && document.getElementById("quarto-sidebar")) {
+				console.warn("Atelier: the side columns were set up on DOMContentLoaded, after the first paint. The scripts after the body may have read window.atelierCourse as null.");
+			}
+			advance(true);
+		}, { once: true });
+	})();
+</script>

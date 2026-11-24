@@ -1,7 +1,7 @@
 project:
-  # Atelier gives the project plumbing only. The format below stays `html`,
-  # which replaces atelier's `atelier-html` format, so atelier's chrome and theme
-  # SCSS, scripts and filter never reach the site and gribouille keeps its look.
+  # Atelier gives the project type, the layout, the chrome, and the bundled
+  # extensions. The format below is `atelier-html`, configured by name: naming
+  # `html` would replace it and drop atelier's theme, scripts, and filters.
   type: atelier
   output-dir: _site
   # pre-render.sh is shared with keisen and writes a changelog.qmd. typstdoc
@@ -24,28 +24,17 @@ project:
     - assets/images/favicon-dark.svg
     - assets/images/social-card.png
 
-lang: en-GB
-date-format: "dddd[, the] Do [of] MMMM, YYYY"
 image: /assets/images/social-card.png
 
 website:
   title: "Gribouille"
   description: "Create elegant graphics with the Grammar of Graphics for Typst."
   favicon: assets/images/favicon.svg
-  site-url: https://m.canouil.dev/gribouille
+  site-url: &site-url https://m.canouil.dev/gribouille
   repo-url: https://github.com/mcanouil/gribouille
   repo-subdir: docs
-  repo-actions: [ edit, issue ]
-  repo-link-target: _blank
-  repo-link-rel: noopener noreferrer
-  open-graph: true
-  twitter-card: true
-  page-navigation: true
-  back-to-top-navigation: true
-  llms-txt: true
 
   page-footer:
-    border: true
     left: |
       Powered by [{{< iconify simple-icons:quarto aria-hidden='true' >}} Quarto](https://quarto.org).
     center: |
@@ -57,9 +46,6 @@ website:
     title: "Gribouille"
     logo: assets/images/logo-dark.svg
     logo-alt: "Gribouille"
-    background: dark
-    foreground: light
-    search: true
     left:
       # - text: "{{< iconify octicon:home-16 aria-hidden='true' >}} Home"
       #   href: index.qmd
@@ -112,41 +98,33 @@ website:
         href: "#gitlink-widget"
         aria-label: "GitHub"
 
+# Quarto keeps the `website` block out of the metadata it hands to Lua filters,
+# so atelier's social-metadata filter reads the site URL here to build `og:url`
+# and the canonical link. The anchor republishes `website.site-url`.
+extensions:
+  atelier:
+    site-url: *site-url
+
 brand: _brand.yml
 
 format:
-  html:
-    toc: true
-    toc-depth: 3
-    code-copy: true
-    code-link: false
-    code-overflow: wrap
-    anchor-sections: true
-    link-external-newwindow: true
+  # Configure the extension format by name. Declaring `html` would replace
+  # `atelier-html` rather than configure it. Atelier sets the TOC, code, link,
+  # language, date, and colour-scheme options; only gribouille's own differ.
+  atelier-html:
     fig-align: center
     grid:
       sidebar-width: 300px
       body-width: 1100px
       margin-width: 300px
+    # theme.scss stays last, so it wins the cascade over the brand.
     theme:
       light: &theme
-        - cosmo
         - brand
         - assets/stylesheets/theme.scss
       dark: *theme
-    respect-user-color-scheme: true
-    syntax-highlighting:
-      light: github-light
-      dark: github-dark
-    include-before-body:
-      - file: assets/scripts/skip-link.html
     include-after-body:
-      - file: assets/scripts/current-year.html
-      - file: assets/scripts/external-links.html
       - file: assets/scripts/gallery-toc.html
-      - file: assets/scripts/ordinal-dates.html
-      - file: assets/scripts/a11y-fixes.html
-      - file: assets/scripts/navbar-tooltips.html
       - file: assets/scripts/version-switcher.html
 
 execute:

@@ -1,0 +1,119 @@
+/*-- scss:rules --*/
+
+// The terminal preset is dark in both bundles. The pin script in
+// `html/scripts/chrome.html` reads this property.
+@if $atelier-preset == terminal {
+  :root {
+    --atelier-scheme-pin: dark;
+  }
+
+  // !important is needed: Quarto adds the floating toggle after the pin script runs, and the gitlink widget sets display on the navbar toggle.
+  .quarto-color-scheme-toggle {
+    display: none !important;
+  }
+}
+
+// The terminal decoration: prompts, a cursor, dashed rules, and bracketed
+// markers. It applies to the terminal preset only, and a brand turns it off
+// with `atelier-terminal-decoration: false`. Each `content` has an empty
+// alternative text, so a screen reader skips the decoration. A browser without
+// alternative text reads the first declaration of each pair.
+@if $atelier-preset == terminal and $atelier-terminal-decoration {
+  // The cursor blinks four times, 1.1 s each, and then stays steady. This is
+  // slower than three flashes a second and stops within five seconds.
+  @keyframes atelier-terminal-cursor {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .quarto-title .title::before,
+  .quarto-title .title::after {
+    color: var(--atelier-accent-ink);
+  }
+
+  .quarto-title .title::before {
+    content: "$ ";
+    content: "$ " / "";
+  }
+
+  .quarto-title .title::after {
+    content: "\2588";
+    content: "\2588" / "";
+    margin-left: 0.15em;
+    animation: atelier-terminal-cursor 1.1s steps(1) 4;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .quarto-title .title::after {
+      animation: none;
+    }
+  }
+
+  main h2:not(.listing-title) {
+    border-bottom-style: dashed;
+  }
+
+  // Quarto gives an h3 no rule, so it takes the rule of an h2 in full.
+  main h3:not(.listing-title) {
+    border-bottom: 1px dashed var(--atelier-border);
+    padding-bottom: 0.5rem;
+  }
+
+  main :is(h2, h3):not(.listing-title)::before {
+    color: var(--atelier-muted);
+  }
+
+  main h2:not(.listing-title)::before {
+    content: "## ";
+    content: "## " / "";
+  }
+
+  main h3:not(.listing-title)::before {
+    content: "### ";
+    content: "### " / "";
+  }
+
+  .navbar .navbar-nav .nav-link.active::before {
+    content: "[";
+    content: "[" / "";
+  }
+
+  .navbar .navbar-nav .nav-link.active::after {
+    content: "]";
+    content: "]" / "";
+  }
+
+  .sidebar-navigation .sidebar-menu-container:not(.atelier-stepper) .sidebar-link:is(.active, [aria-current="page"])::before {
+    content: "> ";
+    content: "> " / "";
+    color: var(--atelier-sidebar-accent);
+  }
+
+  html div.callout.callout {
+    border-style: dashed;
+    border-left-style: solid;
+    border-left-width: 1ch;
+  }
+
+  // Every code frame takes the control border. A `.terminal` block keeps the
+  // page border.
+  :root {
+    --atelier-code-border: var(--atelier-control-border);
+  }
+
+  html div.sourceCode:has(> pre.atelier-terminal) {
+    --atelier-code-border: var(--atelier-border);
+  }
+
+  html main a:not(.btn):not(.nav-link) {
+    text-decoration-style: dotted;
+    text-underline-offset: 0.25em;
+  }
+
+  main ul:not([class]) > li::marker {
+    content: "- ";
+    content: "- " / "";
+    color: var(--atelier-accent-ink);
+  }
+}

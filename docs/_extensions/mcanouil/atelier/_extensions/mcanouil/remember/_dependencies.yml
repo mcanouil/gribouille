@@ -1,0 +1,33 @@
+schema: 1
+sources:
+  quarto-lua-modules:
+    origin: "https://github.com/mcanouil/quarto-lua-modules"
+    fetch: "{origin}/releases/download/{version}/{file}"
+    version: "2.10.0"
+    licence: MIT
+    files:
+      html.lua:
+        sha256: "7ca4f4af8f9ee2062452bef59d536a5582f1b4c5387fcaf2e1a1d3231ff89f6f"
+        runtime: any
+      logging.lua:
+        sha256: "5d99ceb89c813fbe4491310e42b4a4cff62e11dda42f01b4f61f969aa58e0706"
+        runtime: any
+      metadata.lua:
+        sha256: "29d7a6c7568d5e2e03838fdd9f175de98a185d139cd83813d33ee2164cdb5f2e"
+        runtime: any
+      schema-check.lua:
+        sha256: "6858ca45239565c0f0fac270b5a541c8fb46ba39f7ee55c94f006044e3db3fe3"
+        runtime: any
+      string.lua:
+        sha256: "7801d2f217e803951313ef86f1f899cb6350a44cbb468b2d7c28dd6911a0fadc"
+        runtime: any
+  quarto-wizard:
+    origin: "https://github.com/mcanouil/quarto-wizard"
+    fetch: "{origin}/releases/download/{version}/{file}"
+    version: "2.3.0"
+    licence: MIT
+    tag-prefix: schema-v
+    files:
+      schema.lua:
+        sha256: "e76f30ad7578c08768ebc598bc4986d0f1d4c391720585bf976a42174b50ca48"
+        runtime: any

@@ -1,0 +1,33 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-sidebar-header" type="text/javascript">
+	(function () {
+		// This script is in the head. It runs on the "sidebar" stage of
+		// page-load.html, so the sidebar header is complete at the first paint
+		// and does not move the menu.
+		window.atelierStages.on("sidebar", function () {
+			// The version pill follows the title link in the sidebar. Without a
+			// version, no pill is added. page-load.html adds the pill of the navbar.
+			var version = window.atelierStages.options().version;
+			if (version) {
+				document.querySelectorAll(".sidebar-title > a").forEach(function (title) {
+					title.after(window.atelierStages.versionPill(version));
+				});
+			}
+
+			// With a search field in the sidebar header, the tools follow the field
+			// instead of sitting under the title. The field sits in a wrapper, so the
+			// tools become the wrapper's next sibling.
+			var sidebar = document.getElementById("quarto-sidebar");
+			if (!sidebar) return;
+			var search = sidebar.querySelector(".sidebar-search");
+			var tools = sidebar.querySelector(".sidebar-tools-main");
+			if (search && tools && search.parentElement) {
+				search.parentElement.after(tools);
+			}
+		});
+	})();
+</script>

@@ -1,0 +1,46 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-announcement" type="text/javascript">
+	(function () {
+		var bar = document.getElementById("quarto-announcement");
+		if (!bar) return;
+
+		var labels = (window.atelierOptions || {}).labels || {};
+
+		bar.setAttribute("role", "region");
+		if (labels["announcement-region"]) bar.setAttribute("aria-label", labels["announcement-region"]);
+
+		var button = bar.querySelector("button.quarto-announcement-action");
+		if (button) {
+			// Quarto removes the bar on dismissal, and the focused button goes with it,
+			// so focus would fall to the body. This runs before Quarto's handler and only moves focus.
+			function isVisible(element) {
+				if (typeof element.checkVisibility === "function") {
+					return element.checkVisibility({ visibilityProperty: true });
+				}
+				return element.getClientRects().length > 0;
+			}
+			button.addEventListener("click", function () {
+				if (document.activeElement !== button) return;
+				var focusable = "a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex='-1'])";
+				var next = Array.prototype.find.call(document.querySelectorAll(focusable), function (element) {
+					return (
+						!bar.contains(element) &&
+						Boolean(bar.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+						!element.disabled &&
+						!element.closest("[inert]") &&
+						isVisible(element)
+					);
+				});
+				if (!next) {
+					next = document.querySelector("main");
+					if (next && !next.hasAttribute("tabindex")) next.setAttribute("tabindex", "-1");
+				}
+				if (next) next.focus();
+			});
+		}
+	})();
+</script>

@@ -1,0 +1,84 @@
+# Schema for the highlight-text extension
+# Provides configuration validation and IDE support for the named styles
+# option and for the attributes on Span and Div elements.
+
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+options:
+  styles:
+    type: object
+    description: "Named styles. Each key is a class name, and each value is a map of the attributes that class applies, e.g. `[text]{.alert}`."
+    propertyNames: "^[A-Za-z_][A-Za-z0-9_-]*$"
+    additionalProperties:
+      type: object
+      additionalProperties: false
+      properties:
+        colour:
+          type: string
+          aliases: [color, ink, fg]
+          description: "Text (foreground) colour."
+          completion:
+            type: color
+        bg-colour:
+          type: string
+          aliases: [bg-color, bg, paper]
+          description: "Background colour."
+          completion:
+            type: color
+        border-colour:
+          type: string
+          aliases: [border-color, bc]
+          description: "Border colour."
+          completion:
+            type: color
+        border-style:
+          type: string
+          aliases: [bs]
+          description: "Border line style."
+          enum: [solid, dashed, dotted, double]
+        par:
+          type: boolean
+          description: "Enable paragraph box wrapping for LaTeX output."
+        opacity:
+          type: string
+          description: "Opacity in [0, 1] or as a percentage (e.g. \"50%\")."
+        gradient:
+          type: string
+          description: "Block-level gradient fill."
+
+attributes:
+  _any:
+    colour:
+      type: string
+      aliases: [color, ink, fg]
+      description: "Text (foreground) colour. Accepts CSS colour values, brand colour names, or CSS `var(...)` references (HTML only)."
+      completion:
+        type: color
+    bg-colour:
+      type: string
+      aliases: [bg-color, bg, paper]
+      description: "Background colour. Accepts CSS colour values, brand colour names, or CSS `var(...)` references (HTML only)."
+      completion:
+        type: color
+    border-colour:
+      type: string
+      aliases: [border-color, bc]
+      description: "Border colour. Accepts CSS colour values, brand colour names, or CSS `var(...)` references (HTML only)."
+      completion:
+        type: color
+    border-style:
+      type: string
+      default: "solid"
+      aliases: [bs]
+      description: "Border line style."
+      enum: [solid, dashed, dotted, double]
+    par:
+      type: boolean
+      default: false
+      description: "Enable paragraph box wrapping for LaTeX output."
+    opacity:
+      type: string
+      description: "Opacity in [0, 1] or as a percentage (e.g. \"50%\"). HTML and Typst; applied to the background when present, otherwise to the element/text."
+    gradient:
+      type: string
+      description: "Block-level gradient fill. Accepts a full `linear-gradient(...)`/`radial-gradient(...)` value, or a comma-separated list of colour stops (becomes a left-to-right linear gradient). HTML and Typst (block-level only)."

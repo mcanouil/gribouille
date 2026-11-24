@@ -1,13 +1,11 @@
 # Project-wide filter chain. Order matters: gallery-data must run before
 # `typst-render` and `modal` so they see the blocks it injects on the gallery
-# pages.
+# pages. Atelier runs its bundled gitlink, code-window, and iconify itself, so
+# none of them is listed here.
 filters:
   - assets/lua/gallery-data.lua
   - typst-render
   - modal
-  - at: post-quarto
-    path: gitlink
-  - code-window
 
 extensions:
   typst-render:
@@ -24,11 +22,10 @@ extensions:
     size: lg
     scrollable: true
   gitlink:
-    # The platform and repository come from `website.repo-url`. The widget
-    # replaces the `#gitlink-widget` navbar placeholder with the star/fork
-    # button and project menu.
+    # The platform and repository come from `website.repo-url`. Atelier turns
+    # the widget on and link rewriting off; the generated changelog page turns
+    # rewriting back on in its own front matter.
     widget:
-      enabled: true
       extra-links:
         - text: "Ideas"
           href: "/discussions/categories/ideas"

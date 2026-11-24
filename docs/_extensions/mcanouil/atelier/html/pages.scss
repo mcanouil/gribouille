@@ -1,0 +1,31 @@
+/*-- scss:rules --*/
+
+// Quarto lightens the about link colour by 20% of the body colour. That passes
+// with its own colours, but the link takes the muted ink here, so it follows the
+// brand and the colour scheme, and the border and hover state match the other
+// controls.
+// The selectors match the strength of Quarto's own, and this file comes last.
+div[class*="quarto-about-"] {
+  .about-links .about-link {
+    color: var(--atelier-muted);
+    border: 1px solid var(--atelier-control-border);
+    border-radius: var(--bs-border-radius-sm);
+    min-height: 24px;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--atelier-accent-ink);
+      background-color: var(--atelier-accent-soft);
+    }
+  }
+
+  // The image keeps the 340px width that Quarto gives it, which overflows a 320px viewport.
+  .about-image {
+    max-width: 100%;
+    border: 1px solid var(--atelier-border);
+  }
+}
+
+div.quarto-about-trestles .about-contents {
+  border-left-color: var(--atelier-border);
+}

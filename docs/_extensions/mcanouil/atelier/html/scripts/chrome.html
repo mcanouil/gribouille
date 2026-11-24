@@ -1,0 +1,189 @@
+<!--
+@license MIT
+@copyright 2026 Mickaël Canouil
+@author Mickaël Canouil
+-->
+<script id="atelier-chrome" type="text/javascript">
+	(function () {
+		// The other Atelier scripts that run after the body read the options from
+		// here. Of those scripts, this script runs first. page-load.html, in the
+		// head, reads the block.
+		var options = window.atelierStages.options();
+		window.atelierOptions = options;
+		var labels = options.labels || {};
+
+		// A preset can pin one colour scheme. The terminal preset is dark, so its
+		// SCSS sets --atelier-scheme-pin on the root. The dark bundle becomes the
+		// active one through Quarto's own toggle. The SCSS hides the toggles,
+		// because they would only switch to a look the preset does not have.
+		// A page without the property does nothing here.
+		if (getComputedStyle(document.documentElement).getPropertyValue("--atelier-scheme-pin").trim() === "dark") {
+			// The body class alone cannot tell: Quarto takes it from the data-mode of
+			// the light bundle, and that bundle is already dark under this preset.
+			// So the dark bundle counts as active only when the alternate (dark)
+			// sheets are enabled and the body is dark.
+			var darkSheets = document.querySelectorAll("link.quarto-color-scheme.quarto-color-alternate");
+			var darkBundleInactive = function () {
+				return darkSheets.length > 0 && !(
+					document.body.classList.contains("quarto-dark") &&
+					[].every.call(darkSheets, function (sheet) { return sheet.rel === "stylesheet"; })
+				);
+			};
+			var needsToggle = darkBundleInactive();
+			if (needsToggle) {
+				applyDarkScheme(darkBundleInactive);
+			}
+		}
+
+		// Quarto saves the choice under a key that every Quarto site on this origin
+		// shares. The stored value is put back after the toggle, so the reader's
+		// choice on other sites does not change. Quarto reads and writes that key
+		// in localStorage, which can throw. Then the toggle runs again with a
+		// stand-in that stores nothing, but only when the first toggle did not
+		// already switch the sheets before it failed. One warning says what
+		// happened, with the error that caused it.
+		// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15305
+		// Upstream: https://github.com/quarto-dev/quarto-cli/issues/15296
+		// Remove when: the minimum Quarto version includes both fixes.
+		function applyDarkScheme(darkBundleInactive) {
+			var storageKey = "quarto-color-scheme";
+			var stored = null;
+			var canRestore = false;
+			var warning = null;
+			function warn(message, error) {
+				warning = [message, error];
+			}
+			try {
+				stored = window.localStorage.getItem(storageKey);
+				canRestore = true;
+			} catch (readError) {
+				canRestore = false;
+			}
+			try {
+				window.quartoToggleColorScheme();
+				if (canRestore) {
+					restoreStored();
+				}
+			} catch (error) {
+				warn("Atelier: the dark colour scheme could not be applied cleanly.", error);
+				if (darkBundleInactive()) {
+					toggleWithoutStorage();
+				}
+			}
+			if (warning) {
+				console.warn(warning[0], warning[1]);
+			}
+
+			function restoreStored() {
+				try {
+					if (stored === null) {
+						window.localStorage.removeItem(storageKey);
+					} else {
+						window.localStorage.setItem(storageKey, stored);
+					}
+				} catch (writeError) {
+					warn("Atelier: the stored colour scheme choice cannot be restored.", writeError);
+				}
+			}
+
+			function toggleWithoutStorage() {
+				var original = Object.getOwnPropertyDescriptor(window, "localStorage");
+				var swapped = false;
+				try {
+					Object.defineProperty(window, "localStorage", {
+						configurable: true,
+						value: { getItem: function () { return null; }, setItem: function () {}, removeItem: function () {} },
+					});
+					swapped = true;
+					window.quartoToggleColorScheme();
+				} catch (retryError) {
+					warn("Atelier: the dark colour scheme cannot be applied.", retryError);
+				}
+				if (!swapped) {
+					return;
+				}
+				try {
+					if (original) {
+						Object.defineProperty(window, "localStorage", original);
+					} else {
+						delete window.localStorage;
+					}
+				} catch (restoreError) {
+					warn("Atelier: the browser storage cannot be restored after applying the dark colour scheme.", restoreError);
+				}
+			}
+		}
+
+		// Quarto marks the current page in the breadcrumbs by class only, so the
+		// last crumb, a link or a span, gets aria-current when it has none.
+		// Upstream: none filed (WCAG 4.1.2)
+		// Remove when: Quarto marks the current breadcrumb.
+		document.querySelectorAll(".quarto-page-breadcrumbs .breadcrumb, .quarto-title-breadcrumbs .breadcrumb").forEach(function (list) {
+			var last = list.querySelector(".breadcrumb-item:last-child");
+			if (!last) return;
+			var target = last.querySelector("a") || last;
+			if (!target.hasAttribute("aria-current")) target.setAttribute("aria-current", "page");
+		});
+
+		// Quarto writes the label of a numbered, cross-referenced float as plain
+		// text ("Figure 1: ..."), so the text up to the first colon is wrapped to
+		// give the label its own style. A caption that is not a numbered float
+		// is left alone, because its words before a colon are not a label.
+		// Not SCSS: CSS cannot select a part of a text node.
+		document.querySelectorAll(".quarto-float figcaption").forEach(function (caption) {
+			var first = caption.firstChild;
+			if (!first || first.nodeType !== Node.TEXT_NODE || caption.querySelector(".atelier-caption-label")) return;
+			var match = /^(\s*[^:\d]{1,30}\d[\d.]*:)/.exec(first.textContent);
+			if (!match) return;
+			var label = document.createElement("span");
+			label.className = "atelier-caption-label";
+			label.textContent = match[1];
+			first.textContent = first.textContent.slice(match[1].length);
+			caption.insertBefore(label, first);
+		});
+
+		// The search button keeps Quarto's own accessible name. The label and the
+		// shortcut are decoration for sighted users, so both are hidden from
+		// assistive technology.
+		var searchOptions = {};
+		try {
+			searchOptions = JSON.parse(document.getElementById("quarto-search-options")?.textContent || "{}");
+		} catch (error) {
+			console.warn("Atelier: the search options block is not valid JSON.", error);
+		}
+		var shortcut = [].concat(searchOptions["keyboard-shortcut"] || [])[0];
+
+		function decorate(button) {
+			if (button.querySelector(".atelier-search-label")) return;
+			if (labels["search-label"]) {
+				var label = document.createElement("span");
+				label.className = "atelier-search-label";
+				label.setAttribute("aria-hidden", "true");
+				label.textContent = labels["search-label"];
+				button.appendChild(label);
+			}
+			if (shortcut) {
+				var key = document.createElement("kbd");
+				key.setAttribute("aria-hidden", "true");
+				key.textContent = shortcut;
+				button.appendChild(key);
+			}
+		}
+
+		var searchHost = document.querySelector(".navbar #quarto-search");
+		if (!searchHost) return;
+		var selector = ".aa-DetachedSearchButton";
+		var found = searchHost.querySelector(selector);
+		if (found) {
+			decorate(found);
+		} else {
+			var observer = new MutationObserver(function () {
+				var button = searchHost.querySelector(selector);
+				if (!button) return;
+				observer.disconnect();
+				decorate(button);
+			});
+			observer.observe(searchHost, { childList: true, subtree: true });
+		}
+	})();
+</script>

@@ -1,0 +1,32 @@
+# Schema for the remember extension
+# Configuration options live under extensions.remember in the document or
+# project metadata. All options are optional.
+
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+options:
+  enabled:
+    type: boolean
+    default: true
+    description: |
+      When `false`, the filter does nothing: no page gets the remember script,
+      stylesheet, or configuration. Use it to keep `remember` in `filters` and
+      turn it on or off from metadata.
+  page-exclude:
+    type: [string, array]
+    items:
+      type: string
+    default: []
+    description: |
+      Source files to keep out of navigation persistence, as paths relative
+      to the project root (for example `index.qmd` or `drafts/*.qmd`).
+      Each entry must match the whole path. A `*` matches any text inside one
+      path segment. An excluded page gets no remember script, stylesheet, or
+      configuration.
+  separate-chapter-state:
+    type: boolean
+    default: false
+    description: |
+      When `true`, the current chapter (which page of a Quarto book the
+      reader was on) is stored independently from the scroll position
+      inside that chapter. Has no effect outside book projects.
