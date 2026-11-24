@@ -117,10 +117,10 @@ format:
     # Wider than atelier's 1000px, so a plot and its code fit side by side.
     grid:
       body-width: 1100px
-    # theme.scss stays last, so it wins the cascade over the brand.
+    # Atelier's own list already holds `brand`; the project's layers are
+    # appended after atelier's, so theme.scss comes last and wins the cascade.
     theme:
       light: &theme
-        - brand
         - assets/stylesheets/theme.scss
       dark: *theme
     include-after-body:

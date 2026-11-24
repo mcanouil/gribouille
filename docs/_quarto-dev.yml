@@ -2,7 +2,7 @@ project:
   output-dir: _site/dev
 
 website:
-  site-url: https://m.canouil.dev/gribouille/dev
+  site-url: &site-url https://m.canouil.dev/gribouille/dev
   announcement:
     icon: exclamation-circle
     dismissable: false
@@ -14,7 +14,7 @@ website:
 
 extensions:
   atelier:
-    site-url: https://m.canouil.dev/gribouille/dev
+    site-url: *site-url
 
 format:
   atelier-html:
