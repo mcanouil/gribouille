@@ -224,7 +224,6 @@ header#title-block-header .subtitle {
   background: transparent;
 }
 
-
 // Selection colour.
 ::selection {
   background: var(--gb-tint-primary);
@@ -461,8 +460,9 @@ header#title-block-header .subtitle {
 }
 
 .news-version {
-  background: var(--gb-tint-primary);
-  color: var(--gb-primary);
+  // Atelier holds the accent ink to 4.5:1 on its accent tint.
+  background: var(--atelier-accent-soft);
+  color: var(--atelier-accent-ink);
   border: 1px solid var(--gb-primary);
   border-radius: var(--gb-radius-sm);
   font-family: $font-family-monospace;
@@ -491,7 +491,7 @@ header#title-block-header .subtitle {
 
 .news-read {
   display: inline-block;
-  color: var(--gb-primary);
+  color: var(--atelier-link);
   font-weight: 600;
   text-decoration: none;
 
