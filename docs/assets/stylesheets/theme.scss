@@ -24,9 +24,10 @@ $crayon-mustard-dk:  #FFD166;
 $crayon-mint:        #7FC8A9;
 $crayon-mint-dk:     #9CDCC0;
 
-// Chrome. The navbar stays dark in both colour schemes, in the gribouille dark
-// palette, so atelier derives it, with its contrast checks, from these. The
-// sidebar and the TOC card follow the page instead: see "Sidebar" below.
+// Chrome. The navbar and the page footer stay dark in both colour schemes, in
+// the gribouille dark palette, so atelier derives them, with its contrast
+// checks, from these; the footer frames the page like the navbar. The sidebar
+// and the TOC card follow the page instead: see "Sidebar" below.
 $atelier-chrome: dark;
 $atelier-chrome-dark-bg: $paper-dark;
 $atelier-chrome-dark-fg: $ink-dark;
